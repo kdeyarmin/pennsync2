@@ -145,8 +145,8 @@ export default function CustomValidationRuleManager() {
           <ScrollArea className="h-96">
             <div className="space-y-3 pr-4">
               {rules.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Settings className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                <div className="text-center py-8 text-slate-500">
+                  <Settings className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                   <p className="text-sm">No custom validation rules defined</p>
                 </div>
               ) : (
@@ -164,12 +164,12 @@ export default function CustomValidationRuleManager() {
                                 {rule.severity}
                               </Badge>
                               {!rule.is_active && (
-                                <Badge variant="outline" className="bg-gray-100">
+                                <Badge variant="outline" className="bg-slate-100">
                                   Inactive
                                 </Badge>
                               )}
                             </div>
-                            <div className="text-sm text-gray-600 space-y-1">
+                            <div className="text-sm text-slate-600 space-y-1">
                               <p><strong>Entity:</strong> {rule.entity_type}</p>
                               <p><strong>Field:</strong> {rule.field_name}</p>
                               <p><strong>Type:</strong> {rule.validation_type}</p>

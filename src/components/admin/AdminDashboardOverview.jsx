@@ -16,8 +16,8 @@ const StatCard = ({ icon: Icon, label, value, trend }) => (
     <CardContent className="p-6">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-600 mb-1">{label}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm text-slate-600 mb-1">{label}</p>
+          <p className="text-3xl font-bold text-slate-900">{value}</p>
           {trend && <p className="text-xs text-green-600 mt-1">↑ {trend}</p>}
         </div>
         <div className="p-3 bg-blue-100 rounded-lg">
@@ -112,7 +112,7 @@ export default function AdminDashboardOverview() {
       case 'declined':
         return 'bg-red-100 text-red-700';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-slate-100 text-slate-700';
     }
   };
 
@@ -120,8 +120,8 @@ export default function AdminDashboardOverview() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">System overview and administrative controls</p>
+        <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+        <p className="text-slate-600 mt-1">System overview and administrative controls</p>
       </div>
 
       {/* Quick Health Overview */}
@@ -177,11 +177,11 @@ export default function AdminDashboardOverview() {
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 group-hover:text-gray-600">{link.title}</h3>
-                        <p className="text-sm text-gray-600">{link.description}</p>
+                        <h3 className="font-semibold text-slate-900 group-hover:text-slate-600">{link.title}</h3>
+                        <p className="text-sm text-slate-600">{link.description}</p>
                       </div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 mt-1" />
+                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 flex-shrink-0 mt-1" />
                   </div>
                 </Link>
               );
@@ -202,11 +202,11 @@ export default function AdminDashboardOverview() {
           <CardContent>
             <div className="space-y-3">
               {normalizedRecentDocuments.slice(0, 5).map((doc) => (
-                <div key={doc.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={doc.id} className="flex items-start justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-900">{doc.normalizedName}</p>
-                    <p className="text-sm text-gray-600">{doc.document_type}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="font-medium text-slate-900">{doc.normalizedName}</p>
+                    <p className="text-sm text-slate-600">{doc.document_type}</p>
+                    <p className="text-xs text-slate-500 mt-1">
                       Created: {format(new Date(doc.created_date), 'MMM d, yyyy')}
                     </p>
                   </div>
@@ -242,8 +242,8 @@ export default function AdminDashboardOverview() {
               {[...pendingSignatures, ...inProgressSignatures].slice(0, 5).map((doc) => (
                 <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-orange-100">
                   <div>
-                    <p className="font-medium text-gray-900">{doc.normalizedName}</p>
-                    <p className="text-sm text-gray-600">{doc.document_type || 'Document signature request'}</p>
+                    <p className="font-medium text-slate-900">{doc.normalizedName}</p>
+                    <p className="text-sm text-slate-600">{doc.document_type || 'Document signature request'}</p>
                   </div>
                   <Button asChild size="sm" variant="outline">
                     <Link to={createPageUrl('DocumentSignatures')}>Review</Link>

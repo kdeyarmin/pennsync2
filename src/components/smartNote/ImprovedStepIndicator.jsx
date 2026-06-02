@@ -41,7 +41,7 @@ export default function ImprovedStepIndicator({ currentStep, completedSteps = []
                           ? 'bg-blue-100 text-blue-700 scale-105' 
                           : isCompleted || isPast 
                             ? 'text-green-600 hover:bg-green-50 cursor-pointer' 
-                            : 'text-gray-300 cursor-not-allowed'
+                            : 'text-slate-300 cursor-not-allowed'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -49,7 +49,7 @@ export default function ImprovedStepIndicator({ currentStep, completedSteps = []
                           ? 'bg-blue-600 text-white' 
                           : isCompleted || isPast 
                             ? 'bg-green-100 text-green-600' 
-                            : 'bg-gray-100 text-gray-400'
+                            : 'bg-slate-100 text-slate-400'
                       }`}>
                         {isCompleted || isPast ? (
                           <CheckCircle2 className="w-5 h-5" />
@@ -59,7 +59,7 @@ export default function ImprovedStepIndicator({ currentStep, completedSteps = []
                       </div>
                       <span className={`text-xs font-medium ${
                         isCurrent ? 'text-blue-700' : 
-                        isCompleted || isPast ? 'text-green-600' : 'text-gray-400'
+                        isCompleted || isPast ? 'text-green-600' : 'text-slate-400'
                       }`}>
                         {step.label}
                       </span>
@@ -72,7 +72,7 @@ export default function ImprovedStepIndicator({ currentStep, completedSteps = []
 
                 {index < stepConfig.length - 1 && (
                   <div className={`flex-1 h-0.5 mx-1 rounded ${
-                    index < currentIndex ? 'bg-green-400' : 'bg-gray-200'
+                    index < currentIndex ? 'bg-green-400' : 'bg-slate-200'
                   }`} />
                 )}
               </React.Fragment>
@@ -82,8 +82,8 @@ export default function ImprovedStepIndicator({ currentStep, completedSteps = []
 
         {/* Progress text */}
         <div className="mt-2 text-center">
-          <p className="text-xs text-gray-500">
-            Step {currentIndex + 1} of {stepConfig.length}: <span className="font-medium text-gray-700">{stepConfig[currentIndex]?.tip}</span>
+          <p className="text-xs text-slate-500">
+            Step {currentIndex + 1} of {stepConfig.length}: <span className="font-medium text-slate-700">{stepConfig[currentIndex]?.tip}</span>
           </p>
         </div>
       </div>

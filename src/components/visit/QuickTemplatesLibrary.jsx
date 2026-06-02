@@ -1900,7 +1900,7 @@ Next contact: [Scheduled visit on [date] / Follow-up call on [date] / Patient to
           {/* Search and Filter */}
           <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search templates..."
                 value={searchTerm}
@@ -1939,7 +1939,7 @@ Next contact: [Scheduled visit on [date] / Follow-up call on [date] / Patient to
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                        <h3 className="font-semibold text-slate-900 text-sm mb-1">
                           {template.name}
                         </h3>
                         <Badge variant="outline" className="text-xs">
@@ -1954,13 +1954,13 @@ Next contact: [Scheduled visit on [date] / Follow-up call on [date] / Patient to
           </ScrollArea>
 
           {filteredTemplates.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <div className="text-center py-8 text-slate-500">
+              <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p>No templates found matching your search</p>
             </div>
           )}
 
-          <p className="text-xs text-gray-600 italic">
+          <p className="text-xs text-slate-600 italic">
             💡 Tip: Click any template to insert it into your documentation. Edit as needed for your specific patient.
           </p>
         </div>

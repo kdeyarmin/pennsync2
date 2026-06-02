@@ -166,7 +166,7 @@ Provide detailed analysis with:
       medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
       low: 'bg-blue-100 text-blue-800 border-blue-300'
     };
-    return colors[severity] || 'bg-gray-100 text-gray-800';
+    return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
   if (isAnalyzing) {
@@ -174,7 +174,7 @@ Provide detailed analysis with:
       <Card className="border-2 border-orange-200">
         <CardContent className="p-8 text-center">
           <Brain className="w-12 h-12 text-orange-600 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-600">Analyzing compliance gaps across all documentation...</p>
+          <p className="text-slate-600">Analyzing compliance gaps across all documentation...</p>
         </CardContent>
       </Card>
     );
@@ -222,11 +222,11 @@ Provide detailed analysis with:
         </CardHeader>
         <CardContent className="space-y-4">
           {Object.entries(visitTypeGaps).map(([type, data]) => (
-            <div key={type} className="border rounded-lg p-4 bg-gray-50">
+            <div key={type} className="border rounded-lg p-4 bg-slate-50">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h4 className="font-semibold text-gray-900 capitalize">{type.replace(/_/g, ' ')}</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-semibold text-slate-900 capitalize">{type.replace(/_/g, ' ')}</h4>
+                  <p className="text-sm text-slate-600">
                     {data.incomplete_visits} of {data.total_visits} visits incomplete ({data.completion_rate}% complete)
                   </p>
                 </div>
@@ -249,14 +249,14 @@ Provide detailed analysis with:
                 <div className="mt-3 space-y-2">
                   {data.issues.slice(0, 5).map((issue, idx) => (
                     <div key={idx} className="text-sm bg-white p-2 rounded border">
-                      <p className="text-gray-700">
+                      <p className="text-slate-700">
                         <strong>Issue:</strong> {issue.issue}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">Visit ID: {issue.visit_id}</p>
+                      <p className="text-xs text-slate-500 mt-1">Visit ID: {issue.visit_id}</p>
                     </div>
                   ))}
                   {data.issues.length > 5 && (
-                    <p className="text-xs text-gray-500 text-center">+ {data.issues.length - 5} more issues</p>
+                    <p className="text-xs text-slate-500 text-center">+ {data.issues.length - 5} more issues</p>
                   )}
                 </div>
               )}
@@ -282,7 +282,7 @@ Provide detailed analysis with:
             {/* Gap Priorities */}
             {aiRecommendations.gap_priorities?.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Priority Gap Analysis</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Priority Gap Analysis</h3>
                 <div className="space-y-3">
                   {aiRecommendations.gap_priorities.map((gap, idx) => (
                     <div key={idx} className="bg-white p-3 rounded-lg border">
@@ -290,10 +290,10 @@ Provide detailed analysis with:
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <Badge className={getSeverityColor(gap.priority)}>{gap.priority}</Badge>
-                            <p className="font-semibold text-gray-900">{gap.gap_type}</p>
+                            <p className="font-semibold text-slate-900">{gap.gap_type}</p>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{gap.root_cause}</p>
-                          <p className="text-xs text-gray-500"><strong>Impact:</strong> {gap.business_impact}</p>
+                          <p className="text-sm text-slate-600 mb-2">{gap.root_cause}</p>
+                          <p className="text-xs text-slate-500"><strong>Impact:</strong> {gap.business_impact}</p>
                         </div>
                         <Badge variant="outline">{gap.affected_count} affected</Badge>
                       </div>
@@ -306,12 +306,12 @@ Provide detailed analysis with:
             {/* Actionable Recommendations */}
             {aiRecommendations.actionable_recommendations?.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Actionable Recommendations</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Actionable Recommendations</h3>
                 <div className="space-y-3">
                   {aiRecommendations.actionable_recommendations.map((rec, idx) => (
                     <div key={idx} className="bg-white p-4 rounded-lg border border-blue-200">
                       <div className="flex items-start justify-between mb-2">
-                        <p className="font-semibold text-gray-900 flex-1">{rec.recommendation}</p>
+                        <p className="font-semibold text-slate-900 flex-1">{rec.recommendation}</p>
                         {rec.quick_win && (
                           <Badge className="bg-green-600 text-white flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
@@ -319,7 +319,7 @@ Provide detailed analysis with:
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-slate-600 mb-2">
                         <strong>Addresses:</strong> {rec.gap_addressed}
                       </p>
                       <div className="bg-blue-50 p-2 rounded mb-2">
@@ -331,7 +331,7 @@ Provide detailed analysis with:
                         </ol>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">
+                        <span className="text-slate-500">
                           <strong>Effort:</strong> {rec.estimated_effort}
                         </span>
                         <span className="text-green-600">
@@ -347,18 +347,18 @@ Provide detailed analysis with:
             {/* Training Recommendations */}
             {aiRecommendations.training_recommendations?.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Recommended Training</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Recommended Training</h3>
                 <div className="grid md:grid-cols-2 gap-3">
                   {aiRecommendations.training_recommendations.map((training, idx) => (
                     <div key={idx} className="bg-purple-50 p-3 rounded-lg border border-purple-200">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="font-semibold text-gray-900">{training.topic}</p>
+                        <p className="font-semibold text-slate-900">{training.topic}</p>
                         <Badge className={getSeverityColor(training.priority)}>{training.priority}</Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mb-1">
+                      <p className="text-sm text-slate-600 mb-1">
                         <strong>For:</strong> {training.target_audience}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         <strong>Delivery:</strong> {training.delivery_method}
                       </p>
                     </div>
@@ -370,11 +370,11 @@ Provide detailed analysis with:
             {/* Workflow Improvements */}
             {aiRecommendations.workflow_improvements?.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">System & Workflow Improvements</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">System & Workflow Improvements</h3>
                 <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
                   <ul className="space-y-2">
                     {aiRecommendations.workflow_improvements.map((improvement, idx) => (
-                      <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                      <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                         <CheckCircle2 className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
                         <span>{improvement}</span>
                       </li>

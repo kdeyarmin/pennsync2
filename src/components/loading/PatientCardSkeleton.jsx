@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PatientCardSkeleton() {
   return (
-    <Card className="border-l-4 border-l-gray-300">
+    <Card className="border-l-4 border-l-slate-300">
       <CardContent className="p-6">
         <div className="flex items-start gap-3 mb-4">
           <Skeleton className="w-12 h-12 rounded-full" />

@@ -129,13 +129,13 @@ export default function RealtimeFaxStatusTracker() {
             const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
 
             return (
-              <div key={key} className={`${config.color} rounded-lg p-3 border border-gray-200`}>
+              <div key={key} className={`${config.color} rounded-lg p-3 border border-slate-200`}>
                 <div className="flex items-center gap-2 mb-1">
                   <Icon className="w-4 h-4" />
-                  <span className="text-xs font-medium text-gray-600">{label}</span>
+                  <span className="text-xs font-medium text-slate-600">{label}</span>
                 </div>
-                <p className="text-xl font-bold text-gray-900">{count}</p>
-                <p className="text-xs text-gray-500">{percentage}% of recent faxes</p>
+                <p className="text-xl font-bold text-slate-900">{count}</p>
+                <p className="text-xs text-slate-500">{percentage}% of recent faxes</p>
               </div>
             );
           })}
@@ -193,7 +193,7 @@ export default function RealtimeFaxStatusTracker() {
               </AlertDescription>
             </Alert>
           ) : faxLogs.length === 0 ? (
-            <p className="text-center text-gray-500 py-6">No faxes sent in the last 24 hours</p>
+            <p className="text-center text-slate-500 py-6">No faxes sent in the last 24 hours</p>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {faxLogs.map((fax) => {
@@ -204,7 +204,7 @@ export default function RealtimeFaxStatusTracker() {
                 return (
                   <div
                     key={fax.id}
-                    className={`${config.color} rounded-lg p-3 border border-gray-200 flex items-start justify-between gap-3 cursor-pointer hover:shadow-sm transition`}
+                    className={`${config.color} rounded-lg p-3 border border-slate-200 flex items-start justify-between gap-3 cursor-pointer hover:shadow-sm transition`}
                     onClick={() => setSelectedFax(fax)}
                     role="button"
                     tabIndex={0}
@@ -218,10 +218,10 @@ export default function RealtimeFaxStatusTracker() {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm text-gray-900 truncate">
+                        <p className="font-medium text-sm text-slate-900 truncate">
                           To: {fax.to_number || fax.recipient_fax_number || 'Unknown'}
                         </p>
-                        <p className="text-xs text-gray-600 mt-0.5">
+                        <p className="text-xs text-slate-600 mt-0.5">
                           {fax.document_name || 'Untitled'} · {getRelativeTimeLabel(fax.created_date)}
                         </p>
                         {(fax.failure_reason || fax.error_message) && (
@@ -260,22 +260,22 @@ export default function RealtimeFaxStatusTracker() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-xs font-medium text-gray-600 uppercase">Recipient</p>
-                <p className="text-sm font-semibold text-gray-900">{selectedFax.to_number || selectedFax.recipient_fax_number || 'Unknown'}</p>
+                <p className="text-xs font-medium text-slate-600 uppercase">Recipient</p>
+                <p className="text-sm font-semibold text-slate-900">{selectedFax.to_number || selectedFax.recipient_fax_number || 'Unknown'}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-600 uppercase">Document</p>
-                <p className="text-sm text-gray-900">{selectedFax.document_name || 'Untitled'}</p>
+                <p className="text-xs font-medium text-slate-600 uppercase">Document</p>
+                <p className="text-sm text-slate-900">{selectedFax.document_name || 'Untitled'}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-600 uppercase">Status</p>
+                <p className="text-xs font-medium text-slate-600 uppercase">Status</p>
                 <span className={`${statusConfig[selectedFax.status?.toLowerCase()]?.badge || statusConfig.pending.badge} text-xs font-semibold px-2 py-1 rounded inline-block mt-1`}>
                   {statusConfig[selectedFax.status?.toLowerCase()]?.label || 'Unknown'}
                 </span>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-600 uppercase">Sent</p>
-                <p className="text-sm text-gray-900">{new Date(selectedFax.created_date).toLocaleString()}</p>
+                <p className="text-xs font-medium text-slate-600 uppercase">Sent</p>
+                <p className="text-sm text-slate-900">{new Date(selectedFax.created_date).toLocaleString()}</p>
               </div>
               {(selectedFax.failure_reason || selectedFax.error_message) && (
                 <div className="bg-red-50 border border-red-200 rounded p-3">
@@ -285,8 +285,8 @@ export default function RealtimeFaxStatusTracker() {
               )}
               {(selectedFax.telnyx_fax_id || selectedFax.twilio_sid) && (
                 <div>
-                  <p className="text-xs font-medium text-gray-600 uppercase">Tracking ID</p>
-                  <p className="text-xs font-mono text-gray-600 break-all">{selectedFax.telnyx_fax_id || selectedFax.twilio_sid}</p>
+                  <p className="text-xs font-medium text-slate-600 uppercase">Tracking ID</p>
+                  <p className="text-xs font-mono text-slate-600 break-all">{selectedFax.telnyx_fax_id || selectedFax.twilio_sid}</p>
                 </div>
               )}
 

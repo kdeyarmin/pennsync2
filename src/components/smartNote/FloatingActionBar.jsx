@@ -27,13 +27,13 @@ export default function FloatingActionBar({
 
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 border border-gray-200 flex items-center gap-2">
+      <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 border border-slate-200 flex items-center gap-2">
         {/* Character count */}
-        <div className="text-[10px] text-gray-500 hidden sm:block">
-          <span className={roughNoteLength >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}>
+        <div className="text-[10px] text-slate-500 hidden sm:block">
+          <span className={roughNoteLength >= 20 ? 'text-green-600 font-medium' : 'text-slate-400'}>
             {roughNoteLength}
           </span>
-          <span className="text-gray-400"> chars</span>
+          <span className="text-slate-400"> chars</span>
         </div>
 
         {/* Compliance score indicator */}
@@ -93,7 +93,7 @@ export default function FloatingActionBar({
             onClick={onClear}
             size="sm"
             variant="ghost"
-            className="rounded-full text-gray-500 hover:text-gray-700 p-1"
+            className="rounded-full text-slate-500 hover:text-slate-700 p-1"
           >
             <RotateCcw className="w-3 h-3" />
           </Button>

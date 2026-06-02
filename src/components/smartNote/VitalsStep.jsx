@@ -13,18 +13,18 @@ export default function VitalsStep({
   };
 
   return (
-    <Card id="step-vitals" className={`border-2 transition-all duration-300 ${currentStep === 'vitals' ? 'border-green-500 shadow-lg' : 'border-gray-300'}`}>
+    <Card id="step-vitals" className={`border-2 transition-all duration-300 ${currentStep === 'vitals' ? 'border-green-500 shadow-lg' : 'border-slate-300'}`}>
       <CardHeader 
-        className={`py-4 md:py-5 cursor-pointer ${currentStep === 'vitals' ? 'bg-gradient-to-r from-green-100 to-emerald-100' : 'bg-gray-50'}`}
+        className={`py-4 md:py-5 cursor-pointer ${currentStep === 'vitals' ? 'bg-gradient-to-r from-green-100 to-emerald-100' : 'bg-slate-50'}`}
         onClick={() => isCollapsed && onToggleCollapse()}
       >
         <CardTitle className="text-base md:text-lg flex items-center gap-3">
-          <div className={`p-2 rounded-full ${(vitalSigns.bp_systolic || vitalSigns.hr) ? 'bg-green-500' : 'bg-gray-400'}`}>
+          <div className={`p-2 rounded-full ${(vitalSigns.bp_systolic || vitalSigns.hr) ? 'bg-green-500' : 'bg-slate-400'}`}>
             <Activity className="w-4 h-4 text-white" />
           </div>
           <span>2. Vitals</span>
           {(vitalSigns.bp_systolic || vitalSigns.hr) && (
-            <span className="text-sm text-gray-600 ml-2">BP: {vitalSigns.bp_systolic}{vitalSigns.bp_diastolic ? '/' + vitalSigns.bp_diastolic : ''} | HR: {vitalSigns.hr || '-'}</span>
+            <span className="text-sm text-slate-600 ml-2">BP: {vitalSigns.bp_systolic}{vitalSigns.bp_diastolic ? '/' + vitalSigns.bp_diastolic : ''} | HR: {vitalSigns.hr || '-'}</span>
           )}
           {(vitalSigns.bp_systolic || vitalSigns.hr) && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
         </CardTitle>

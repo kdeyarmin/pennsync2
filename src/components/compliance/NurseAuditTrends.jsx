@@ -133,7 +133,7 @@ export default function NurseAuditTrends({ audits = [], nurseEmail }) {
   if (filteredAudits.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-gray-500">
+        <CardContent className="p-6 text-center text-slate-500">
           No audit history available for trend analysis.
         </CardContent>
       </Card>
@@ -149,7 +149,7 @@ export default function NurseAuditTrends({ audits = [], nurseEmail }) {
       case 'increasing':
         return <TrendingDown className="w-4 h-4 text-red-600" />;
       default:
-        return <Minus className="w-4 h-4 text-gray-600" />;
+        return <Minus className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -162,7 +162,7 @@ export default function NurseAuditTrends({ audits = [], nurseEmail }) {
       case 'increasing':
         return 'text-red-600';
       default:
-        return 'text-gray-600';
+        return 'text-slate-600';
     }
   };
 
@@ -192,7 +192,7 @@ export default function NurseAuditTrends({ audits = [], nurseEmail }) {
           <Card className={`bg-gradient-to-br ${
             overallStats.trend === 'improving' ? 'from-emerald-500 to-emerald-600' :
             overallStats.trend === 'declining' ? 'from-red-500 to-red-600' :
-            'from-gray-500 to-gray-600'
+            'from-slate-500 to-slate-600'
           } text-white`}>
             <CardContent className="p-3 text-center">
               <div className="flex items-center justify-center gap-1">
@@ -256,16 +256,16 @@ export default function NurseAuditTrends({ audits = [], nurseEmail }) {
         <CardContent className="p-4">
           <div className="space-y-2">
             {categoryTrends.slice(0, 6).map((cat, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900">{cat.name}</span>
+                  <span className="text-sm font-medium text-slate-900">{cat.name}</span>
                   <Badge variant="outline" className="text-[10px]">{cat.total} total</Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className={`text-[10px] ${
                     cat.trend === 'decreasing' ? 'bg-green-100 text-green-800' :
                     cat.trend === 'increasing' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
+                    'bg-slate-100 text-slate-800'
                   }`}>
                     {cat.recent} recent
                   </Badge>

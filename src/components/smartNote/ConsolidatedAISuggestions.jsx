@@ -323,8 +323,8 @@ Return comprehensive JSON with all categories.`,
         {analyzing && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Running comprehensive AI analysis...</p>
-            <p className="text-xs text-gray-500 mt-2">Analyzing compliance, PDGM, tasks, and OASIS opportunities</p>
+            <p className="text-slate-600 font-medium">Running comprehensive AI analysis...</p>
+            <p className="text-xs text-slate-500 mt-2">Analyzing compliance, PDGM, tasks, and OASIS opportunities</p>
           </div>
         )}
 
@@ -407,7 +407,7 @@ Return comprehensive JSON with all categories.`,
                             </Badge>
                             <span className="text-xs font-semibold">{gap.category}</span>
                           </div>
-                          <p className="text-xs text-gray-700 mb-2">{gap.gap}</p>
+                          <p className="text-xs text-slate-700 mb-2">{gap.gap}</p>
                           <div className="bg-blue-50 border border-blue-200 rounded p-2">
                             <p className="text-xs text-blue-900">{gap.suggested_text}</p>
                           </div>
@@ -471,7 +471,7 @@ Return comprehensive JSON with all categories.`,
                             <Badge className="text-xs bg-green-600">+${opp.revenue_impact || 0}</Badge>
                             <span className="text-xs font-semibold">{opp.category}</span>
                           </div>
-                          <p className="text-xs text-gray-700 mb-2">{opp.finding}</p>
+                          <p className="text-xs text-slate-700 mb-2">{opp.finding}</p>
                           <div className="bg-green-50 border border-green-200 rounded p-2">
                             <p className="text-xs text-green-900">{opp.suggested_text}</p>
                           </div>
@@ -519,7 +519,7 @@ Return comprehensive JSON with all categories.`,
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <p className="text-sm font-medium mb-1">{task.title}</p>
-                          <p className="text-xs text-gray-600 mb-2">{task.description}</p>
+                          <p className="text-xs text-slate-600 mb-2">{task.description}</p>
                           <div className="flex gap-1">
                             <Badge className="text-xs">{task.type}</Badge>
                             <Badge className="text-xs">{task.priority}</Badge>
@@ -579,12 +579,12 @@ Return comprehensive JSON with all categories.`,
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 mb-1">{plan.problem}</p>
+                          <p className="text-sm font-medium text-slate-900 mb-1">{plan.problem}</p>
                           <p className="text-xs text-indigo-700 font-medium mb-2">Goal: {plan.goal}</p>
                           <div className="bg-blue-50 rounded p-2">
                             <p className="text-xs font-semibold mb-1">Interventions:</p>
                             {plan.interventions?.map((int, iIdx) => (
-                              <p key={iIdx} className="text-xs text-gray-700">• {int}</p>
+                              <p key={iIdx} className="text-xs text-slate-700">• {int}</p>
                             ))}
                           </div>
                         </div>
@@ -652,13 +652,13 @@ Return comprehensive JSON with all categories.`,
                               {item.confidence}% confident
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-600 mb-2">{item.item_description}</p>
+                          <p className="text-xs text-slate-600 mb-2">{item.item_description}</p>
                           <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
                             <p className="text-xs text-blue-900">
                               <strong>Suggested Value:</strong> {item.suggested_value}
                             </p>
                           </div>
-                          <p className="text-xs text-gray-700 italic">
+                          <p className="text-xs text-slate-700 italic">
                             Evidence: "{item.evidence}"
                           </p>
                         </div>

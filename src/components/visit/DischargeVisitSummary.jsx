@@ -141,8 +141,8 @@ DO NOT include any meta-commentary at the end. Just provide the clinical narrati
           <div className="flex items-center justify-center py-6 gap-3">
             <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-900">Generating Discharge Summary...</p>
-              <p className="text-xs text-gray-600">Analyzing patient history and care outcomes</p>
+              <p className="text-sm font-medium text-slate-900">Generating Discharge Summary...</p>
+              <p className="text-xs text-slate-600">Analyzing patient history and care outcomes</p>
             </div>
           </div>
         ) : hasGenerated ? (
@@ -174,17 +174,17 @@ DO NOT include any meta-commentary at the end. Just provide the clinical narrati
         <div className="grid grid-cols-3 gap-2 text-xs">
           <div className="bg-white p-2 rounded border text-center">
             <p className="text-lg font-bold text-orange-600">{allVisits?.length || 0}</p>
-            <p className="text-gray-500">Total Visits</p>
+            <p className="text-slate-500">Total Visits</p>
           </div>
           <div className="bg-white p-2 rounded border text-center">
             <p className="text-lg font-bold text-green-600">
               {carePlans?.filter(cp => cp.status === 'met').length || 0}
             </p>
-            <p className="text-gray-500">Goals Met</p>
+            <p className="text-slate-500">Goals Met</p>
           </div>
           <div className="bg-white p-2 rounded border text-center">
             <p className="text-lg font-bold text-blue-600">{carePlans?.length || 0}</p>
-            <p className="text-gray-500">Care Plans</p>
+            <p className="text-slate-500">Care Plans</p>
           </div>
         </div>
       </CardContent>

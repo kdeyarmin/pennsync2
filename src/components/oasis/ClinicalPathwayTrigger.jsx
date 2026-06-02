@@ -156,7 +156,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -217,12 +217,12 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
                     {pathway.documentation_prompts.map((prompt, pIdx) => (
                       <div key={pIdx} className="bg-white p-2 rounded border">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-800">{prompt.category}</span>
+                          <span className="text-sm font-medium text-slate-800">{prompt.category}</span>
                           <Badge className={`text-xs ${getPriorityColor(prompt.priority)}`}>
                             {prompt.priority}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700">{prompt.prompt}</p>
+                        <p className="text-sm text-slate-700">{prompt.prompt}</p>
                         {prompt.m_items_affected && prompt.m_items_affected.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
                             {prompt.m_items_affected.map((item, mIdx) => (
@@ -257,10 +257,10 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 mb-1">
+                        <p className="text-xs text-slate-600 mb-1">
                           Typical Range: <span className="font-medium">{opp.typical_score_range}</span>
                         </p>
-                        <p className="text-sm text-gray-800">{opp.documentation_to_support}</p>
+                        <p className="text-sm text-slate-800">{opp.documentation_to_support}</p>
                       </div>
                     ))}
                   </div>
@@ -327,7 +327,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
                     {pathway.recommended_tasks.map((task, tIdx) => (
                       <div key={tIdx} className="bg-white p-2 rounded border">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-800">{task.task_title}</span>
+                          <span className="text-sm font-medium text-slate-800">{task.task_title}</span>
                           <div className="flex gap-1">
                             <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
                               {task.priority}
@@ -337,7 +337,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
                             </Badge>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-600">{task.task_description}</p>
+                        <p className="text-xs text-slate-600">{task.task_description}</p>
                       </div>
                     ))}
                   </div>
@@ -360,19 +360,19 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
             <div className="bg-white p-2 rounded">
-              <p className="text-gray-500">Documentation Items</p>
+              <p className="text-slate-500">Documentation Items</p>
               <p className="text-lg font-bold text-blue-700">
                 {triggeredPathways.reduce((sum, p) => sum + (p.documentation_prompts?.length || 0), 0)}
               </p>
             </div>
             <div className="bg-white p-2 rounded">
-              <p className="text-gray-500">Rescore Opportunities</p>
+              <p className="text-slate-500">Rescore Opportunities</p>
               <p className="text-lg font-bold text-green-700">
                 {triggeredPathways.reduce((sum, p) => sum + (p.rescore_opportunities?.length || 0), 0)}
               </p>
             </div>
             <div className="bg-white p-2 rounded">
-              <p className="text-gray-500">Recommended Tasks</p>
+              <p className="text-slate-500">Recommended Tasks</p>
               <p className="text-lg font-bold text-cyan-700">
                 {triggeredPathways.reduce((sum, p) => sum + (p.recommended_tasks?.length || 0), 0)}
               </p>
@@ -390,6 +390,6 @@ const getPriorityColor = (priority) => {
     case 'high': return 'bg-orange-500 text-white';
     case 'medium': return 'bg-yellow-500 text-white';
     case 'low': return 'bg-blue-500 text-white';
-    default: return 'bg-gray-500 text-white';
+    default: return 'bg-slate-500 text-white';
   }
 };

@@ -253,7 +253,7 @@ Return ONLY the enhanced documentation text.`
       case "high": return "bg-green-100 text-green-800 border-green-300";
       case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-300";
       case "low": return "bg-red-100 text-red-800 border-red-300";
-      default: return "bg-gray-100 text-gray-800 border-gray-300";
+      default: return "bg-slate-100 text-slate-800 border-slate-300";
     }
   };
 
@@ -347,27 +347,27 @@ Return ONLY the enhanced documentation text.`
             <CardContent className="p-6">
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Overall Completeness</p>
+                  <p className="text-sm text-slate-600 mb-1">Overall Completeness</p>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-slate-200 rounded-full h-2">
                       <div
                         className="bg-blue-600 h-2 rounded-full"
                         style={{ width: `${documentationSections.overall_completeness}%` }}
                       />
                     </div>
-                    <span className="font-bold text-gray-900">
+                    <span className="font-bold text-slate-900">
                       {documentationSections.overall_completeness}%
                     </span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Sections</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-slate-600 mb-1">Sections</p>
+                  <p className="text-2xl font-bold text-slate-900">
                     {documentationSections.sections.length}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Critical Gaps</p>
+                  <p className="text-sm text-slate-600 mb-1">Critical Gaps</p>
                   <p className="text-2xl font-bold text-red-600">
                     {documentationSections.critical_gaps?.length || 0}
                   </p>
@@ -412,8 +412,8 @@ Return ONLY the enhanced documentation text.`
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <Badge className="bg-orange-600 mb-2">{prompt.section}</Badge>
-                        <p className="font-semibold text-gray-900">{prompt.prompt}</p>
-                        <p className="text-xs text-gray-600 mt-1">{prompt.reason}</p>
+                        <p className="font-semibold text-slate-900">{prompt.prompt}</p>
+                        <p className="text-xs text-slate-600 mt-1">{prompt.reason}</p>
                       </div>
                     </div>
                     <Textarea
@@ -470,9 +470,9 @@ Return ONLY the enhanced documentation text.`
                       )}
                     </div>
                     {expandedSections[idx] ? (
-                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                      <ChevronUp className="w-5 h-5 text-slate-400" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                      <ChevronDown className="w-5 h-5 text-slate-400" />
                     )}
                   </div>
                 </CardHeader>
@@ -506,7 +506,7 @@ Return ONLY the enhanced documentation text.`
                       </div>
                     ) : (
                       <>
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 whitespace-pre-wrap font-mono text-sm">
+                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 whitespace-pre-wrap font-mono text-sm">
                           {section.content}
                         </div>
 

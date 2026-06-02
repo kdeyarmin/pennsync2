@@ -106,7 +106,7 @@ Rules:
 
   if (!transcript?.trim()) {
     return (
-      <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-4 text-center text-sm text-gray-500">
+      <div className="bg-slate-50 border border-dashed border-slate-300 rounded-lg p-4 text-center text-sm text-slate-500">
         Transcription appears empty—record or paste dictation to auto-map sections.
       </div>
     );
@@ -133,7 +133,7 @@ Rules:
         </Button>
       ) : (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-gray-600">Dictation mapped to sections:</p>
+          <p className="text-xs font-semibold text-slate-600">Dictation mapped to sections:</p>
           
           {Object.entries(SECTION_LABELS).map(([key, label]) => {
             const Icon = SECTION_ICONS[key];
@@ -153,7 +153,7 @@ Rules:
                 >
                   <Icon className="w-4 h-4 shrink-0" />
                   <span className="text-xs font-semibold flex-1 text-left">{label}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-slate-500">
                     {content.split(" ").length} words
                   </span>
                   {isExpanded ? (
@@ -168,7 +168,7 @@ Rules:
                     <textarea
                       value={getSectionContent(key)}
                       onChange={(e) => handleSectionEdit(key, e.target.value)}
-                      className="w-full text-xs border border-gray-200 rounded p-2 font-mono focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 resize-none min-h-[80px]"
+                      className="w-full text-xs border border-slate-200 rounded p-2 font-mono focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 resize-none min-h-[80px]"
                       placeholder={`Enter ${label.toLowerCase()}...`}
                     />
                   </div>
@@ -178,7 +178,7 @@ Rules:
           })}
 
           {mapping?.unmapped?.trim() && (
-            <div className="rounded-lg border-2 border-gray-200 bg-gray-50 overflow-hidden">
+            <div className="rounded-lg border-2 border-slate-200 bg-slate-50 overflow-hidden">
               <button
                 onClick={() => setExpandedSection(expandedSection === "unmapped" ? null : "unmapped")}
                 className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/50 transition-colors"
@@ -196,7 +196,7 @@ Rules:
                   <textarea
                     value={editedSections.unmapped !== undefined ? editedSections.unmapped : mapping.unmapped}
                     onChange={(e) => handleSectionEdit("unmapped", e.target.value)}
-                    className="w-full text-xs border border-gray-200 rounded p-2 font-mono focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 resize-none min-h-[80px]"
+                    className="w-full text-xs border border-slate-200 rounded p-2 font-mono focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 resize-none min-h-[80px]"
                   />
                 </div>
               )}

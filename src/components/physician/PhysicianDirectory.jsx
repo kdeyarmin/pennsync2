@@ -85,7 +85,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center text-gray-500">Loading provider directory...</div>
+          <div className="text-center text-slate-500">Loading provider directory...</div>
         </CardContent>
       </Card>
     );
@@ -117,7 +117,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
           {/* Search & Filters */}
           <div className="space-y-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search by provider, practice, specialty, or tags..."
                 value={searchTerm}
@@ -145,10 +145,10 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
           {/* Results */}
           <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
             {filteredPhysicians.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <UserPlus className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium text-gray-700">No providers found</p>
-                <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filters</p>
+              <div className="text-center py-12 text-slate-500">
+                <UserPlus className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                <p className="text-lg font-medium text-slate-700">No providers found</p>
+                <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filters</p>
               </div>
             ) : (
               filteredPhysicians.map((physician) => (
@@ -164,9 +164,9 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-slate-900">
                               {physician.full_name}
-                              {physician.credentials && <span className="text-sm text-gray-600 ml-1">{physician.credentials}</span>}
+                              {physician.credentials && <span className="text-sm text-slate-600 ml-1">{physician.credentials}</span>}
                             </h3>
                             {(physician.referral_count || 0) > 10 && (
                               <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
@@ -184,7 +184,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                             </Badge>
                           )}
                           {physician.practice_name && (
-                            <p className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                            <p className="text-sm text-slate-600 flex items-center gap-1 mb-1">
                               <FileText className="w-3 h-3" />
                               {physician.practice_name}
                             </p>
@@ -221,7 +221,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                         )}
                       </div>
 
-                      <div className="space-y-1 text-sm text-gray-600">
+                      <div className="space-y-1 text-sm text-slate-600">
                         {physician.fax_number && (
                           <div className="flex items-center gap-2">
                             <Send className="w-3 h-3" />
@@ -259,7 +259,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                       )}
 
                       {physician.referral_count > 0 && (
-                        <div className="text-xs text-gray-500 pt-1">
+                        <div className="text-xs text-slate-500 pt-1">
                           {physician.referral_count} referral{physician.referral_count !== 1 ? 's' : ''}
                           {physician.last_referral_date && ` • Last: ${new Date(physician.last_referral_date).toLocaleDateString()}`}
                         </div>
@@ -271,7 +271,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
             )}
           </div>
 
-          <div className="text-sm text-gray-500 text-center pt-4 border-t">
+          <div className="text-sm text-slate-500 text-center pt-4 border-t">
             {filteredPhysicians.length} provider{filteredPhysicians.length !== 1 ? 's' : ''} found
           </div>
         </CardContent>

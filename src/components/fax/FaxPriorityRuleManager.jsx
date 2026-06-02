@@ -118,8 +118,8 @@ export default function FaxPriorityRuleManager() {
       case 'urgent': return 'bg-red-600 text-white';
       case 'high': return 'bg-orange-500 text-white';
       case 'normal': return 'bg-blue-500 text-white';
-      case 'low': return 'bg-gray-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'low': return 'bg-slate-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -131,7 +131,7 @@ export default function FaxPriorityRuleManager() {
             <Brain className="w-5 h-5 text-purple-600" />
             AI Priority Rules
           </h3>
-          <p className="text-sm text-gray-600">Define rules to automatically prioritize faxes</p>
+          <p className="text-sm text-slate-600">Define rules to automatically prioritize faxes</p>
         </div>
         <Button onClick={() => setIsCreating(!isCreating)} variant={isCreating ? "outline" : "default"}>
           {isCreating ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
@@ -230,9 +230,9 @@ export default function FaxPriorityRuleManager() {
         {rules.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
-              <AlertCircle className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500">No priority rules defined yet</p>
-              <p className="text-sm text-gray-400 mt-1">AI will use default analysis</p>
+              <AlertCircle className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+              <p className="text-slate-500">No priority rules defined yet</p>
+              <p className="text-sm text-slate-400 mt-1">AI will use default analysis</p>
             </CardContent>
           </Card>
         ) : (
@@ -242,7 +242,7 @@ export default function FaxPriorityRuleManager() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-gray-900">{rule.name}</h4>
+                      <h4 className="font-semibold text-slate-900">{rule.name}</h4>
                       <Badge className={getPriorityColor(rule.priority_level)}>
                         {rule.priority_level}
                       </Badge>
@@ -254,17 +254,17 @@ export default function FaxPriorityRuleManager() {
                       )}
                     </div>
                     {rule.keywords?.length > 0 && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         Keywords: {rule.keywords.join(', ')}
                       </p>
                     )}
                     {rule.sender_patterns?.length > 0 && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         Patterns: {rule.sender_patterns.join(', ')}
                       </p>
                     )}
                     {rule.notify_users?.length > 0 && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         Notify: {rule.notify_users.join(', ')}
                       </p>
                     )}

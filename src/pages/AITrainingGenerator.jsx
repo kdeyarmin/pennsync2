@@ -97,8 +97,8 @@ export default function AITrainingGenerator() {
           <Sparkles className="w-7 h-7 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">AI Training Course Generator</h1>
-          <p className="text-gray-600">Create audit-ready in-service training with AI</p>
+          <h1 className="text-3xl font-bold text-slate-900">AI Training Course Generator</h1>
+          <p className="text-slate-600">Create audit-ready in-service training with AI</p>
         </div>
       </div>
 
@@ -204,10 +204,10 @@ export default function AITrainingGenerator() {
           {/* Policy Selection */}
           <div className="space-y-2">
             <Label>Include Internal Policies (optional)</Label>
-            <p className="text-sm text-gray-600 mb-2">Select policies to use as primary authority</p>
+            <p className="text-sm text-slate-600 mb-2">Select policies to use as primary authority</p>
             <div className="max-h-48 overflow-y-auto border rounded-lg p-3 space-y-2">
               {policies.length === 0 ? (
-                <p className="text-sm text-gray-500">No active policies available</p>
+                <p className="text-sm text-slate-500">No active policies available</p>
               ) : (
                 policies.map(policy => (
                   <div key={policy.id} className="flex items-center space-x-2">
@@ -270,7 +270,7 @@ export default function AITrainingGenerator() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-1">{generatedCourse.title}</h3>
+              <h3 className="font-semibold text-slate-900 mb-1">{generatedCourse.title}</h3>
               <Badge className="bg-yellow-500">Pending Review</Badge>
               {generatedCourse.needs_sme_review && (
                 <Badge className="bg-orange-500 ml-2">SME Review Required</Badge>

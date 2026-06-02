@@ -155,9 +155,9 @@ export default function ConsolidatedFeedbackCenter({
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-800 font-medium">{item.title || item.message}</p>
+                    <p className="text-xs text-slate-800 font-medium">{item.title || item.message}</p>
                     {item.description && (
-                      <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+                      <p className="text-xs text-slate-600 mt-1">{item.description}</p>
                     )}
                     
                     <div className="flex items-center gap-2 mt-2">
@@ -187,7 +187,7 @@ export default function ConsolidatedFeedbackCenter({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
                     onClick={() => handleDismiss(item.id || idx)}
                   >
                     <X className="w-3 h-3" />

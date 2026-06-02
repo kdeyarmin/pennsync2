@@ -63,7 +63,7 @@ export default function DischargeSummaries() {
   }, [summaries]);
 
   const statusConfig = {
-    draft: { color: 'bg-gray-100 text-gray-800', label: 'Draft', icon: Clock },
+    draft: { color: 'bg-slate-100 text-slate-800', label: 'Draft', icon: Clock },
     pending_review: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending Review', icon: Clock },
     reviewed: { color: 'bg-blue-100 text-blue-800', label: 'Reviewed', icon: Eye },
     signed: { color: 'bg-green-100 text-green-800', label: 'Signed', icon: CheckCircle },
@@ -74,8 +74,8 @@ export default function DischargeSummaries() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Discharge Summaries</h1>
-        <p className="text-gray-600">Review, sign, and manage patient discharge documentation</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Discharge Summaries</h1>
+        <p className="text-slate-600">Review, sign, and manage patient discharge documentation</p>
       </div>
 
       {/* Stats */}
@@ -83,15 +83,15 @@ export default function DischargeSummaries() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Total Summaries</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+              <p className="text-slate-500 text-sm mb-1">Total Summaries</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Pending Review</p>
+              <p className="text-slate-500 text-sm mb-1">Pending Review</p>
               <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
             </div>
           </CardContent>
@@ -99,7 +99,7 @@ export default function DischargeSummaries() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Reviewed</p>
+              <p className="text-slate-500 text-sm mb-1">Reviewed</p>
               <p className="text-3xl font-bold text-blue-600">{stats.reviewed}</p>
             </div>
           </CardContent>
@@ -107,7 +107,7 @@ export default function DischargeSummaries() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Signed</p>
+              <p className="text-slate-500 text-sm mb-1">Signed</p>
               <p className="text-3xl font-bold text-green-600">{stats.signed}</p>
             </div>
           </CardContent>
@@ -119,7 +119,7 @@ export default function DischargeSummaries() {
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search by patient name or diagnosis..."
                 value={searchTerm}
@@ -151,13 +151,13 @@ export default function DischargeSummaries() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="py-12 text-center text-gray-500">
+            <div className="py-12 text-center text-slate-500">
               Loading summaries...
             </div>
           ) : filteredSummaries.length === 0 ? (
             <div className="py-12 text-center">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No discharge summaries found</p>
+              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500">No discharge summaries found</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -169,13 +169,13 @@ export default function DischargeSummaries() {
                   <div key={summary.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">
+                        <h3 className="font-semibold text-slate-900 mb-1">
                           {summary.patient_name}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600">
                           {summary.primary_diagnosis}
                         </p>
-                        <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                        <div className="flex gap-4 mt-2 text-xs text-slate-500">
                           <span>Discharge: {new Date(summary.discharge_date).toLocaleDateString()}</span>
                           <span>•</span>
                           <span>Generated by: {summary.generated_by}</span>

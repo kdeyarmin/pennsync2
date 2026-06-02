@@ -95,27 +95,27 @@ export default function ComplianceImpactReport({ noteConversions }) {
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="p-4 bg-white rounded-lg border-2 border-orange-200">
-            <p className="text-sm text-gray-600 mb-1">Before AI</p>
+            <p className="text-sm text-slate-600 mb-1">Before AI</p>
             <p className="text-4xl font-bold text-orange-600">{avgRoughCompliance.toFixed(1)}%</p>
-            <p className="text-xs text-gray-500 mt-1">Avg rough draft compliance</p>
+            <p className="text-xs text-slate-500 mt-1">Avg rough draft compliance</p>
           </div>
           <div className="p-4 bg-white rounded-lg border-2 border-green-200">
-            <p className="text-sm text-gray-600 mb-1">After AI</p>
+            <p className="text-sm text-slate-600 mb-1">After AI</p>
             <p className="text-4xl font-bold text-green-600">{avgEnhancedCompliance.toFixed(1)}%</p>
-            <p className="text-xs text-gray-500 mt-1">Avg enhanced compliance</p>
+            <p className="text-xs text-slate-500 mt-1">Avg enhanced compliance</p>
           </div>
           <div className="p-4 bg-white rounded-lg border-2 border-purple-200">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-5 h-5 text-purple-600" />
-              <p className="text-sm text-gray-600">AI Impact</p>
+              <p className="text-sm text-slate-600">AI Impact</p>
             </div>
             <p className="text-4xl font-bold text-purple-600">+{avgImprovement.toFixed(1)}%</p>
-            <p className="text-xs text-gray-500 mt-1">Avg improvement</p>
+            <p className="text-xs text-slate-500 mt-1">Avg improvement</p>
           </div>
           <div className="p-4 bg-white rounded-lg border-2 border-blue-200">
-            <p className="text-sm text-gray-600 mb-1">Notes Analyzed</p>
+            <p className="text-sm text-slate-600 mb-1">Notes Analyzed</p>
             <p className="text-4xl font-bold text-blue-600">{conversionsWithCompliance.length}</p>
-            <p className="text-xs text-gray-500 mt-1">With compliance tracking</p>
+            <p className="text-xs text-slate-500 mt-1">With compliance tracking</p>
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export default function ComplianceImpactReport({ noteConversions }) {
                 {nurseStats.map((stat, idx) => (
                   <div key={idx} className="p-3 bg-white rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">{stat.nurse}</span>
+                      <span className="font-medium text-slate-900">{stat.nurse}</span>
                       <Badge className="bg-purple-100 text-purple-800">
                         {stat.count} note{stat.count > 1 ? 's' : ''}
                       </Badge>
@@ -159,14 +159,14 @@ export default function ComplianceImpactReport({ noteConversions }) {
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div className="text-center p-2 bg-orange-50 rounded">
                         <p className="text-orange-600 font-bold">{stat.avgRough}%</p>
-                        <p className="text-gray-600">Before</p>
+                        <p className="text-slate-600">Before</p>
                       </div>
                       <div className="flex items-center justify-center">
                         <ArrowRight className="w-4 h-4 text-purple-600" />
                       </div>
                       <div className="text-center p-2 bg-green-50 rounded">
                         <p className="text-green-600 font-bold">{stat.avgEnhanced}%</p>
-                        <p className="text-gray-600">After</p>
+                        <p className="text-slate-600">After</p>
                       </div>
                     </div>
                     <div className="mt-2 flex items-center gap-2">

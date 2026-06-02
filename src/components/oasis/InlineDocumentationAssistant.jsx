@@ -135,7 +135,7 @@ Return JSON:
                 )}
               </div>
             </div>
-            <p className="text-sm text-gray-800 leading-relaxed italic">
+            <p className="text-sm text-slate-800 leading-relaxed italic">
               "{suggestion.documentation_text}"
             </p>
           </div>
@@ -168,15 +168,15 @@ Return JSON:
 
           {/* Alternative Phrases */}
           {suggestion.alternative_phrases?.length > 0 && (
-            <details className="bg-gray-50 p-2 rounded border">
-              <summary className="text-xs font-medium text-gray-700 cursor-pointer">
+            <details className="bg-slate-50 p-2 rounded border">
+              <summary className="text-xs font-medium text-slate-700 cursor-pointer">
                 Alternative Phrasing Options ({suggestion.alternative_phrases.length})
               </summary>
               <div className="mt-2 space-y-2">
                 {suggestion.alternative_phrases.map((alt, idx) => (
                   <div key={idx} className="bg-white p-2 rounded border">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="text-xs text-gray-800 italic flex-1">"{alt.text}"</p>
+                      <p className="text-xs text-slate-800 italic flex-1">"{alt.text}"</p>
                       <Button
                         onClick={() => handleCopy(alt.text)}
                         size="sm"
@@ -186,7 +186,7 @@ Return JSON:
                         <Copy className="w-3 h-3" />
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-500">Use: {alt.use_case}</p>
+                    <p className="text-xs text-slate-500">Use: {alt.use_case}</p>
                   </div>
                 ))}
               </div>

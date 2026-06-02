@@ -149,7 +149,7 @@ Return as JSON:
           </Alert>
         ) : !generatedNote ? (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Generate a complete Medicare-compliant note from your structured data.
             </p>
             <Button
@@ -175,7 +175,7 @@ Return as JSON:
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span className="font-semibold text-gray-900">Note Generated</span>
+                <span className="font-semibold text-slate-900">Note Generated</span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-green-600">Quality: {generatedNote.quality_score}%</Badge>
@@ -183,8 +183,8 @@ Return as JSON:
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 border border-gray-200 max-h-96 overflow-y-auto">
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">{generatedNote.note}</p>
+            <div className="bg-white rounded-lg p-4 border border-slate-200 max-h-96 overflow-y-auto">
+              <p className="text-sm text-slate-800 whitespace-pre-wrap">{generatedNote.note}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">

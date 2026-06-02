@@ -111,11 +111,11 @@ export default function SessionTimeoutManager({
 
         {/* Body */}
         <div className="px-6 py-5 text-center bg-white">
-          <p className="text-gray-500 text-sm mb-2">Auto sign-out in</p>
-          <p className="text-5xl font-bold text-gray-900 tabular-nums tracking-tight mb-1">
+          <p className="text-slate-500 text-sm mb-2">Auto sign-out in</p>
+          <p className="text-5xl font-bold text-slate-900 tabular-nums tracking-tight mb-1">
             {formatTime(secondsRemaining)}
           </p>
-          <p className="text-xs text-gray-400 mb-6">to protect patient data (HIPAA)</p>
+          <p className="text-xs text-slate-400 mb-6">to protect patient data (HIPAA)</p>
 
           <div className="space-y-2">
             <Button
@@ -128,7 +128,7 @@ export default function SessionTimeoutManager({
             <Button
               variant="ghost"
               onClick={handleLogout}
-              className="w-full text-gray-400 hover:text-gray-600 h-9 text-sm"
+              className="w-full text-slate-400 hover:text-slate-600 h-9 text-sm"
             >
               Sign Out Now
             </Button>

@@ -106,7 +106,7 @@ export default function ClinicalPhraseExpander({
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
             <div className="text-center">
               <Loader2 className="w-6 h-6 animate-spin text-indigo-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Expanding phrase...</p>
+              <p className="text-sm text-slate-600">Expanding phrase...</p>
             </div>
           </div>
         )}
@@ -118,7 +118,7 @@ export default function ClinicalPhraseExpander({
           <CardContent className="p-2">
             <div className="flex items-center gap-2 px-2 py-1 border-b mb-2">
               <Sparkles className="w-4 h-4 text-indigo-600" />
-              <span className="text-xs font-medium text-gray-700">Quick Phrase Suggestions</span>
+              <span className="text-xs font-medium text-slate-700">Quick Phrase Suggestions</span>
             </div>
             <div className="space-y-1 max-h-64 overflow-y-auto">
               {suggestions.map((template) => (
@@ -130,18 +130,18 @@ export default function ClinicalPhraseExpander({
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <code className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                        <code className="text-xs font-mono bg-slate-100 px-2 py-0.5 rounded">
                           {template.phrase}
                         </code>
                         {template.template_type === 'patient_specific' && (
                           <span className="text-xs text-purple-600">Patient-Specific</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-1">
+                      <p className="text-xs text-slate-600 mt-1 line-clamp-1">
                         {template.expanded_text || template.ai_prompt_instructions}
                       </p>
                     </div>
-                    <CheckCircle className="w-4 h-4 text-gray-400" />
+                    <CheckCircle className="w-4 h-4 text-slate-400" />
                   </div>
                 </button>
               ))}

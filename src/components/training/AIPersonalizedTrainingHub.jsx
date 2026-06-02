@@ -237,7 +237,7 @@ Create a personalized 4-week learning path with:
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Avg Compliance</p>
+                <p className="text-sm text-slate-600">Avg Compliance</p>
                 <p className="text-3xl font-bold text-blue-600">{performanceMetrics.avgCompliance}%</p>
               </div>
               <BarChart3 className="w-10 h-10 text-blue-600" />
@@ -255,12 +255,12 @@ Create a personalized 4-week learning path with:
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Training Modules</p>
+                <p className="text-sm text-slate-600">Training Modules</p>
                 <p className="text-3xl font-bold text-green-600">{performanceMetrics.completedModules}</p>
               </div>
               <Award className="w-10 h-10 text-green-600" />
             </div>
-            <p className="text-sm text-gray-500 mt-2">Avg Score: {performanceMetrics.avgScore}%</p>
+            <p className="text-sm text-slate-500 mt-2">Avg Score: {performanceMetrics.avgScore}%</p>
           </CardContent>
         </Card>
 
@@ -268,12 +268,12 @@ Create a personalized 4-week learning path with:
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Priority Issues</p>
+                <p className="text-sm text-slate-600">Priority Issues</p>
                 <p className="text-3xl font-bold text-orange-600">{performanceMetrics.criticalIssues + performanceMetrics.highIssues}</p>
               </div>
               <AlertTriangle className="w-10 h-10 text-orange-600" />
             </div>
-            <p className="text-sm text-gray-500 mt-2">{performanceMetrics.criticalIssues} critical, {performanceMetrics.highIssues} high</p>
+            <p className="text-sm text-slate-500 mt-2">{performanceMetrics.criticalIssues} critical, {performanceMetrics.highIssues} high</p>
           </CardContent>
         </Card>
 
@@ -281,12 +281,12 @@ Create a personalized 4-week learning path with:
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">AI Recommendations</p>
+                <p className="text-sm text-slate-600">AI Recommendations</p>
                 <p className="text-3xl font-bold text-purple-600">{performanceMetrics.totalRecommendations}</p>
               </div>
               <Brain className="w-10 h-10 text-purple-600" />
             </div>
-            <p className="text-sm text-gray-500 mt-2">To be addressed</p>
+            <p className="text-sm text-slate-500 mt-2">To be addressed</p>
           </CardContent>
         </Card>
       </div>
@@ -304,7 +304,7 @@ Create a personalized 4-week learning path with:
             <div className="text-center py-8">
               <Brain className="w-16 h-16 mx-auto text-indigo-600 mb-4" />
               <h3 className="text-lg font-semibold mb-2">Generate Your Custom Learning Path</h3>
-              <p className="text-gray-600 mb-6">AI will analyze your performance data, compliance history, and skill gaps to create a personalized 4-week training plan.</p>
+              <p className="text-slate-600 mb-6">AI will analyze your performance data, compliance history, and skill gaps to create a personalized 4-week training plan.</p>
               <Button
                 onClick={generateLearningPath}
                 disabled={isGeneratingPath}
@@ -339,14 +339,14 @@ Create a personalized 4-week learning path with:
                               {area.severity}
                             </Badge>
                           </div>
-                          <div className="text-sm text-gray-600 space-y-1">
+                          <div className="text-sm text-slate-600 space-y-1">
                             <p>Current: <span className="font-medium">{area.current_proficiency}</span></p>
                             <p>Target: <span className="font-medium text-green-600">{area.target_proficiency}</span></p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <Clock className="w-4 h-4 inline mr-1 text-gray-500" />
-                          <span className="text-sm text-gray-600">{area.estimated_hours}h</span>
+                          <Clock className="w-4 h-4 inline mr-1 text-slate-500" />
+                          <span className="text-sm text-slate-600">{area.estimated_hours}h</span>
                         </div>
                       </div>
                     </div>
@@ -367,10 +367,10 @@ Create a personalized 4-week learning path with:
                         <h4 className="font-semibold text-sm mb-2">Modules:</h4>
                         <div className="space-y-2">
                           {week.modules?.map((module, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                               <div>
                                 <p className="font-medium text-sm">{module.title}</p>
-                                <p className="text-xs text-gray-600">{module.description}</p>
+                                <p className="text-xs text-slate-600">{module.description}</p>
                               </div>
                               <Badge variant="outline">{module.duration_minutes}min</Badge>
                             </div>
@@ -379,7 +379,7 @@ Create a personalized 4-week learning path with:
                       </div>
                       <div>
                         <h4 className="font-semibold text-sm mb-2">Goals:</h4>
-                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                        <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
                           {week.goals?.map((goal, idx) => (
                             <li key={idx}>{goal}</li>
                           ))}
@@ -406,7 +406,7 @@ Create a personalized 4-week learning path with:
                     <CardContent className="pt-4 space-y-3">
                       <div>
                         <h4 className="font-semibold text-sm mb-2">Content:</h4>
-                        <p className="text-sm text-gray-700">{lesson.content}</p>
+                        <p className="text-sm text-slate-700">{lesson.content}</p>
                       </div>
                       <div>
                         <h4 className="font-semibold text-sm mb-2">Practice Scenario:</h4>
@@ -416,7 +416,7 @@ Create a personalized 4-week learning path with:
                       </div>
                       <div>
                         <h4 className="font-semibold text-sm mb-2">Key Points:</h4>
-                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                        <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
                           {lesson.key_points?.map((point, pidx) => (
                             <li key={pidx}>{point}</li>
                           ))}
@@ -449,7 +449,7 @@ Create a personalized 4-week learning path with:
                           <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
                             <span className="text-sm font-semibold text-indigo-600">{idx + 1}</span>
                           </div>
-                          <p className="text-sm text-gray-700 pt-1">{milestone}</p>
+                          <p className="text-sm text-slate-700 pt-1">{milestone}</p>
                         </div>
                       ))}
                     </div>
@@ -487,7 +487,7 @@ Create a personalized 4-week learning path with:
                 </div>
                 <div className="space-y-1">
                   {gap.examples.slice(0, 2).map((example, eidx) => (
-                    <p key={eidx} className="text-xs text-gray-600 italic">• {example.substring(0, 100)}...</p>
+                    <p key={eidx} className="text-xs text-slate-600 italic">• {example.substring(0, 100)}...</p>
                   ))}
                 </div>
               </div>

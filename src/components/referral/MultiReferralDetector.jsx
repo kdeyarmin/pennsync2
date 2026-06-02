@@ -111,7 +111,7 @@ export default function MultiReferralDetector({ fileUrl, onDetectionComplete, on
             <Card key={referral.index} className={`cursor-pointer transition-all ${
               selectedReferrals.includes(referral.index)
                 ? 'border-blue-400 bg-blue-50'
-                : 'border-gray-200 bg-white hover:border-blue-300'
+                : 'border-slate-200 bg-white hover:border-blue-300'
             }`}>
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
@@ -128,10 +128,10 @@ export default function MultiReferralDetector({ fileUrl, onDetectionComplete, on
                     className="mt-1"
                   />
                   <div className="flex-1 min-w-0">
-                    <Label htmlFor={`ref-${referral.index}`} className="font-semibold text-gray-900 cursor-pointer">
+                    <Label htmlFor={`ref-${referral.index}`} className="font-semibold text-slate-900 cursor-pointer">
                       Referral #{referral.index}
                     </Label>
-                    <div className="mt-2 space-y-1 text-sm text-gray-700">
+                    <div className="mt-2 space-y-1 text-sm text-slate-700">
                       {referral.patient_name && (
                         <div><span className="font-medium">Patient:</span> {referral.patient_name}</div>
                       )}
@@ -142,7 +142,7 @@ export default function MultiReferralDetector({ fileUrl, onDetectionComplete, on
                         <div><span className="font-medium">Date:</span> {referral.referral_date}</div>
                       )}
                       {referral.estimated_start_page && (
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-slate-600">
                           Pages {referral.estimated_start_page}-{referral.estimated_end_page}
                         </div>
                       )}

@@ -124,12 +124,12 @@ export default function ActionableInsightsWidget() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{insight.title}</h4>
+                      <h4 className="font-semibold text-slate-900">{insight.title}</h4>
                       {insight.priority === 'critical' && (
                         <Badge className="bg-red-600 text-white text-xs">Urgent</Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">{insight.description}</p>
+                    <p className="text-sm text-slate-600">{insight.description}</p>
                   </div>
                 </div>
                 <Link to={insight.link}>

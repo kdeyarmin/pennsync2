@@ -154,7 +154,7 @@ Provide comprehensive predictive insights including:
   const getDirectionIcon = (direction) => {
     if (direction === 'increasing') return <TrendingUp className="w-4 h-4 text-orange-600" />;
     if (direction === 'decreasing') return <TrendingUp className="w-4 h-4 text-green-600 rotate-180" />;
-    return <span className="w-4 h-4 text-gray-500">→</span>;
+    return <span className="w-4 h-4 text-slate-500">→</span>;
   };
 
   return (
@@ -210,12 +210,12 @@ Provide comprehensive predictive insights including:
               </CardHeader>
               <CardContent className="space-y-3">
                 {insights.population_trends?.map((trend, idx) => (
-                  <div key={idx} className="p-3 bg-gray-50 rounded-lg border">
+                  <div key={idx} className="p-3 bg-slate-50 rounded-lg border">
                     <div className="flex items-center gap-2 mb-1">
                       {getDirectionIcon(trend.direction)}
                       <span className="font-medium text-sm">{trend.trend}</span>
                     </div>
-                    <p className="text-xs text-gray-600 mb-1">{trend.impact}</p>
+                    <p className="text-xs text-slate-600 mb-1">{trend.impact}</p>
                     <p className="text-xs text-blue-700 bg-blue-50 p-1 rounded">
                       💡 {trend.recommendation}
                     </p>
@@ -241,7 +241,7 @@ Provide comprehensive predictive insights including:
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-700">Key Risk Drivers:</p>
+                  <p className="text-xs font-medium text-slate-700">Key Risk Drivers:</p>
                   {insights.risk_stratification?.key_risk_drivers?.map((driver, idx) => (
                     <Badge key={idx} variant="outline" className="mr-1 mb-1 text-xs">
                       {driver}
@@ -250,9 +250,9 @@ Provide comprehensive predictive insights including:
                 </div>
 
                 <div className="mt-3 space-y-1">
-                  <p className="text-xs font-medium text-gray-700">Intervention Priorities:</p>
+                  <p className="text-xs font-medium text-slate-700">Intervention Priorities:</p>
                   {insights.risk_stratification?.intervention_priorities?.slice(0, 3).map((priority, idx) => (
-                    <p key={idx} className="text-xs text-gray-600">• {priority}</p>
+                    <p key={idx} className="text-xs text-slate-600">• {priority}</p>
                   ))}
                 </div>
               </CardContent>
@@ -271,7 +271,7 @@ Provide comprehensive predictive insights including:
                   <div key={idx} className="p-2 bg-yellow-50 rounded border border-yellow-200">
                     <p className="text-sm font-medium text-yellow-800">{opp.opportunity}</p>
                     <p className="text-xs text-yellow-700">Impact: {opp.potential_impact}</p>
-                    <p className="text-xs text-gray-600">{opp.implementation}</p>
+                    <p className="text-xs text-slate-600">{opp.implementation}</p>
                   </div>
                 ))}
               </CardContent>
@@ -290,7 +290,7 @@ Provide comprehensive predictive insights including:
                   <div key={idx} className="p-2 bg-green-50 rounded border border-green-200">
                     <p className="text-sm font-medium text-green-800">{fin.insight}</p>
                     <p className="text-xs text-green-700">Est. Impact: {fin.estimated_impact}</p>
-                    <p className="text-xs text-gray-600">{fin.action}</p>
+                    <p className="text-xs text-slate-600">{fin.action}</p>
                   </div>
                 ))}
               </CardContent>
@@ -328,7 +328,7 @@ Provide comprehensive predictive insights including:
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-slate-100">
                     <tr>
                       <th className="text-left p-2">Area</th>
                       <th className="text-left p-2">Current State</th>
@@ -340,7 +340,7 @@ Provide comprehensive predictive insights including:
                     {insights.resource_recommendations?.map((rec, idx) => (
                       <tr key={idx}>
                         <td className="p-2 font-medium">{rec.area}</td>
-                        <td className="p-2 text-gray-600">{rec.current_state}</td>
+                        <td className="p-2 text-slate-600">{rec.current_state}</td>
                         <td className="p-2 text-blue-700">{rec.recommended_action}</td>
                         <td className="p-2 text-green-700">{rec.expected_outcome}</td>
                       </tr>
@@ -354,7 +354,7 @@ Provide comprehensive predictive insights including:
       )}
 
       {!insights && !isGenerating && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-slate-500">
           <Brain className="w-16 h-16 mx-auto mb-4 opacity-20" />
           <p>Click "Generate Insights" to run AI analysis on your patient population</p>
         </div>

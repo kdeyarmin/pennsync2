@@ -168,7 +168,7 @@ export default function OASISToPatientChartPusher({
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-slate-600 mb-4">
           Select AI-generated recommendations to add to the patient's chart as suggested actions
         </p>
 
@@ -179,7 +179,7 @@ export default function OASISToPatientChartPusher({
               className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                 selectedRecs.includes(rec.id)
                   ? 'bg-blue-50 border-blue-300'
-                  : 'bg-white border-gray-200 hover:border-blue-200'
+                  : 'bg-white border-slate-200 hover:border-blue-200'
               }`}
               onClick={() => toggleRecommendation(rec.id)}
             >
@@ -191,7 +191,7 @@ export default function OASISToPatientChartPusher({
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="font-semibold text-gray-900 text-sm">{rec.title}</p>
+                    <p className="font-semibold text-slate-900 text-sm">{rec.title}</p>
                     <Badge className={
                       rec.priority === 'critical' ? 'bg-red-600' :
                       rec.priority === 'high' ? 'bg-orange-500' :
@@ -201,7 +201,7 @@ export default function OASISToPatientChartPusher({
                       {rec.priority}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-600 mb-1">{rec.description}</p>
+                  <p className="text-xs text-slate-600 mb-1">{rec.description}</p>
                   <Badge variant="outline" className="text-xs">{rec.type.replace(/_/g, ' ')}</Badge>
                 </div>
               </div>

@@ -247,8 +247,8 @@ Be constructive and educational.`,
     return (
       <div className="space-y-4">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Clinical Simulations</h2>
-          <p className="text-sm text-gray-600">Practice real-world scenarios with AI-powered feedback</p>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Clinical Simulations</h2>
+          <p className="text-sm text-slate-600">Practice real-world scenarios with AI-powered feedback</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -265,7 +265,7 @@ Be constructive and educational.`,
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900">{scenario.title}</h3>
+                      <h3 className="font-semibold text-slate-900">{scenario.title}</h3>
                       <Badge variant="outline" className={`text-xs ${
                         scenario.difficulty === 'Hard' ? 'bg-red-50 text-red-700' :
                         scenario.difficulty === 'Medium' ? 'bg-yellow-50 text-yellow-700' :
@@ -274,7 +274,7 @@ Be constructive and educational.`,
                         {scenario.difficulty}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">{scenario.description}</p>
+                    <p className="text-sm text-slate-600">{scenario.description}</p>
                     <Badge variant="outline" className="mt-2 text-xs">{scenario.category}</Badge>
                   </div>
                 </div>
@@ -312,14 +312,14 @@ Be constructive and educational.`,
             <Star className={`w-10 h-10 ${passed ? 'text-green-600' : 'text-orange-600'}`} />
           </div>
           
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Simulation Complete!</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Simulation Complete!</h2>
           
           <Badge className={`text-xl px-6 py-2 mb-4 ${passed ? 'bg-green-600' : 'bg-orange-600'}`}>
             Final Score: {finalScore}%
           </Badge>
 
           <div className="text-left bg-white rounded-lg p-4 mb-6 max-h-60 overflow-auto">
-            <h3 className="font-semibold text-gray-900 mb-3">Step-by-Step Review:</h3>
+            <h3 className="font-semibold text-slate-900 mb-3">Step-by-Step Review:</h3>
             {userResponses.map((r, idx) => (
               <div key={idx} className="mb-3 pb-3 border-b last:border-0">
                 <div className="flex items-center justify-between mb-1">
@@ -328,7 +328,7 @@ Be constructive and educational.`,
                     {r.feedback?.score}%
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-600">{r.feedback?.teaching_point}</p>
+                <p className="text-xs text-slate-600">{r.feedback?.teaching_point}</p>
               </div>
             ))}
           </div>
@@ -357,9 +357,9 @@ Be constructive and educational.`,
               <User className="w-6 h-6 text-blue-700" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{simulation?.patient_profile.name}, {simulation?.patient_profile.age} y/o</h3>
-              <p className="text-sm text-gray-700">{simulation?.patient_profile.diagnosis}</p>
-              <p className="text-xs text-gray-600 mt-1">{simulation?.patient_profile.history}</p>
+              <h3 className="font-semibold text-slate-900">{simulation?.patient_profile.name}, {simulation?.patient_profile.age} y/o</h3>
+              <p className="text-sm text-slate-700">{simulation?.patient_profile.diagnosis}</p>
+              <p className="text-xs text-slate-600 mt-1">{simulation?.patient_profile.history}</p>
             </div>
           </div>
         </CardContent>
@@ -379,8 +379,8 @@ Be constructive and educational.`,
         
         <CardContent className="p-4 space-y-4">
           {/* Situation */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-800">{step?.situation}</p>
+          <div className="bg-slate-50 p-4 rounded-lg">
+            <p className="text-sm text-slate-800">{step?.situation}</p>
           </div>
 
           {/* Prompt */}
@@ -394,10 +394,10 @@ Be constructive and educational.`,
           {/* Available Info */}
           {step?.available_info?.length > 0 && (
             <div className="text-sm">
-              <p className="font-medium text-gray-700 mb-1">Available Information:</p>
+              <p className="font-medium text-slate-700 mb-1">Available Information:</p>
               <ul className="space-y-1">
                 {step.available_info.map((info, idx) => (
-                  <li key={idx} className="text-xs text-gray-600">• {info}</li>
+                  <li key={idx} className="text-xs text-slate-600">• {info}</li>
                 ))}
               </ul>
             </div>
@@ -431,7 +431,7 @@ Be constructive and educational.`,
           {feedback && (
             <div className="space-y-4 mt-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-gray-900">Feedback</h4>
+                <h4 className="font-semibold text-slate-900">Feedback</h4>
                 <Badge className={feedback.score >= 70 ? 'bg-green-600' : 'bg-orange-600'}>
                   Score: {feedback.score}%
                 </Badge>

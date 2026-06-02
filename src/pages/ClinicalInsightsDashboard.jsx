@@ -49,8 +49,8 @@ export default function ClinicalInsightsDashboard() {
             <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Clinical Insights</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Population health trends and patient monitoring</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Clinical Insights</h1>
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Population health trends and patient monitoring</p>
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function ClinicalInsightsDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">My Active Patients</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">My Active Patients</p>
                 <p className="text-xl sm:text-2xl font-bold">{patients.length}</p>
               </div>
               <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
@@ -73,7 +73,7 @@ export default function ClinicalInsightsDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Total Visits</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">Total Visits</p>
                 <p className="text-xl sm:text-2xl font-bold">{myVisitsCount}</p>
               </div>
               <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0" />
@@ -85,7 +85,7 @@ export default function ClinicalInsightsDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Completion Rate</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">Completion Rate</p>
                 <p className="text-xl sm:text-2xl font-bold">{completionRate}%</p>
               </div>
               <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
@@ -97,7 +97,7 @@ export default function ClinicalInsightsDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Recent Incidents</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">Recent Incidents</p>
                 <p className="text-xl sm:text-2xl font-bold">
                   {incidents.filter(i => i.created_by === currentUser?.email).length}
                 </p>

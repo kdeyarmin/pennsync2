@@ -80,8 +80,8 @@ export default function ReferralDocumentViewer({ patientId }) {
   if (processedReferrals.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+        <CardContent className="p-8 text-center text-slate-500">
+          <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p>No referral documents available</p>
         </CardContent>
       </Card>
@@ -102,7 +102,7 @@ export default function ReferralDocumentViewer({ patientId }) {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="w-4 h-4 text-purple-600" />
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-slate-900">
                     {referral.patient_name || 'Unknown Patient'}
                   </p>
                   {isProcessed && (
@@ -120,7 +120,7 @@ export default function ReferralDocumentViewer({ patientId }) {
                     </Badge>
                   )}
                 </div>
-                <div className="space-y-1 text-xs text-gray-600">
+                <div className="space-y-1 text-xs text-slate-600">
                   <p>Source: {referral.referral_source || 'N/A'}</p>
                   <p>Date: {referral.referral_date ? format(new Date(referral.referral_date), 'MMM d, yyyy') : 'N/A'}</p>
                   {referral.assigned_to && (
@@ -166,7 +166,7 @@ export default function ReferralDocumentViewer({ patientId }) {
             {referral.diagnosis && (
               <div className="bg-purple-50 p-2 rounded">
                 <p className="text-xs font-semibold text-purple-900">Primary Diagnosis</p>
-                <p className="text-sm text-gray-900">{referral.diagnosis}</p>
+                <p className="text-sm text-slate-900">{referral.diagnosis}</p>
               </div>
             )}
           </CardContent>

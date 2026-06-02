@@ -461,12 +461,12 @@ Return JSON format:
       'Medium': 'bg-yellow-500',
       'Low': 'bg-blue-500'
     };
-    return colors[impact] || 'bg-gray-500';
+    return colors[impact] || 'bg-slate-500';
   };
 
   return (
     <>
-      <Card className={`border-2 ${{red: 'border-red-300', orange: 'border-orange-300', yellow: 'border-yellow-300', green: 'border-green-300'}[riskAssessment.riskColor] || 'border-gray-300'}`}>
+      <Card className={`border-2 ${{red: 'border-red-300', orange: 'border-orange-300', yellow: 'border-yellow-300', green: 'border-green-300'}[riskAssessment.riskColor] || 'border-slate-300'}`}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
@@ -521,7 +521,7 @@ Return JSON format:
           {/* Risk Factors */}
           {riskAssessment.riskFactors.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                 <Target className="w-4 h-4" />
                 Contributing Risk Factors
               </h4>
@@ -548,7 +548,7 @@ Return JSON format:
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
                       <div className="space-y-2 text-sm">
-                        <p className="text-gray-600">{factor.details}</p>
+                        <p className="text-slate-600">{factor.details}</p>
                         <Alert className="bg-blue-50 border-blue-200">
                           <Lightbulb className="w-4 h-4 text-blue-600" />
                           <AlertDescription className="text-blue-900">
@@ -657,7 +657,7 @@ Return JSON format:
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium">{param.parameter}</p>
-                          <p className="text-sm text-gray-600">Target: {param.target}</p>
+                          <p className="text-sm text-slate-600">Target: {param.target}</p>
                         </div>
                         <Badge className="bg-purple-600">{param.frequency}</Badge>
                       </div>
@@ -711,7 +711,7 @@ Return JSON format:
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-medium">{ref.discipline}</p>
-                            <p className="text-sm text-gray-600">{ref.reason}</p>
+                            <p className="text-sm text-slate-600">{ref.reason}</p>
                           </div>
                           <Badge className={
                             ref.priority === 'high' ? 'bg-red-600' :

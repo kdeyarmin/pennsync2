@@ -31,9 +31,9 @@ export default function TemplateGenerator({
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 mb-2">AI Smart Template</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">AI Smart Template</h3>
             <Alert className="bg-white border-purple-200 mb-4">
-              <AlertDescription className="text-sm text-gray-700">
+              <AlertDescription className="text-sm text-slate-700">
                 Generate a pre-filled Medicare-compliant template based on:
                 <ul className="list-disc ml-5 mt-2 space-y-1">
                   <li>Visit type: {getVisitTypeDescription(visit?.visit_type)}</li>
@@ -63,7 +63,7 @@ export default function TemplateGenerator({
                 )}
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-3">
+            <p className="text-xs text-slate-500 mt-3">
               💡 Tip: Generate the template first, then add your observations via voice dictation. The AI will merge everything intelligently.
             </p>
           </div>

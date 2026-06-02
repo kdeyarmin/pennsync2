@@ -78,15 +78,15 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
       signature: "bg-purple-100",
     };
 
-    return colorMap[type] || "bg-gray-100";
+    return colorMap[type] || "bg-slate-100";
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Visual Field Editor</h3>
-          <p className="text-sm text-gray-600">Add fields, then drag them over the PDF where signatures and carried-forward patient data should appear.</p>
+          <h3 className="text-lg font-semibold text-slate-900">Visual Field Editor</h3>
+          <p className="text-sm text-slate-600">Add fields, then drag them over the PDF where signatures and carried-forward patient data should appear.</p>
         </div>
         <Button onClick={() => setShowAddPanel(!showAddPanel)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
@@ -102,7 +102,7 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
         <div className="lg:col-span-2">
           <div
             ref={containerRef}
-            className="relative w-full rounded-lg border-2 border-gray-300 overflow-hidden bg-white min-h-[720px]"
+            className="relative w-full rounded-lg border-2 border-slate-300 overflow-hidden bg-white min-h-[720px]"
             onDragOver={handleDragOver}
           >
             {pdfUrl ? (
@@ -115,7 +115,7 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                 <div className="absolute inset-0 bg-white/10" />
               </>
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-gray-500 bg-gray-50">
+              <div className="absolute inset-0 flex items-center justify-center text-slate-500 bg-slate-50">
                 Upload a PDF to place fields.
               </div>
             )}
@@ -129,7 +129,7 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                   onDrop={(event) => handleDrop(event, field.id)}
                   onClick={() => setSelectedFieldId(field.id)}
                   className={`absolute bg-white/95 border-2 rounded cursor-move transition-all shadow-sm ${
-                    selectedFieldId === field.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-400 hover:border-gray-600'
+                    selectedFieldId === field.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-400 hover:border-slate-600'
                   } ${getFieldTypeColor(field.field_type)}`}
                   style={{
                     left: `${field.position?.x || 50}px`,
@@ -141,8 +141,8 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                   }}
                 >
                   <div className="flex items-center justify-between p-1 h-full gap-2">
-                    <span className="text-xs font-medium text-gray-800 truncate px-1">{field.label}</span>
-                    <span className="text-[10px] uppercase tracking-wide text-gray-500 bg-white/80 px-1 rounded">{field.field_type}</span>
+                    <span className="text-xs font-medium text-slate-800 truncate px-1">{field.label}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-slate-500 bg-white/80 px-1 rounded">{field.field_type}</span>
                   </div>
                 </div>
               ))}
@@ -151,10 +151,10 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
         </div>
 
         <div className="space-y-3">
-          <h4 className="font-semibold text-gray-900">Fields ({fields.length})</h4>
+          <h4 className="font-semibold text-slate-900">Fields ({fields.length})</h4>
           <div className="space-y-2 max-h-[32rem] overflow-y-auto pr-1">
             {fields.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">No fields added yet</p>
+              <p className="text-sm text-slate-500 text-center py-4">No fields added yet</p>
             ) : (
               fields.map((field) => (
                 <Card
@@ -165,8 +165,8 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{field.label}</p>
-                        <p className="text-xs text-gray-500">{field.field_type}</p>
+                        <p className="text-sm font-medium text-slate-900 truncate">{field.label}</p>
+                        <p className="text-xs text-slate-500">{field.field_type}</p>
                       </div>
                       <button
                         onClick={(event) => {
@@ -178,14 +178,14 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
-                    <p className="text-xs text-gray-600">Position: {field.position?.x || 0}, {field.position?.y || 0}</p>
+                    <p className="text-xs text-slate-600">Position: {field.position?.x || 0}, {field.position?.y || 0}</p>
                     {field.data_source && (
-                      <p className="text-xs text-gray-600 bg-gray-50 p-1 rounded">
+                      <p className="text-xs text-slate-600 bg-slate-50 p-1 rounded">
                         Source: {field.data_source}{field.field_path ? ` → ${field.field_path}` : ''}
                       </p>
                     )}
                     {field.default_value && (
-                      <p className="text-xs text-gray-600 bg-gray-50 p-1 rounded">Default: {field.default_value}</p>
+                      <p className="text-xs text-slate-600 bg-slate-50 p-1 rounded">Default: {field.default_value}</p>
                     )}
                     {field.conditional && (
                       <p className="text-xs text-purple-600 bg-purple-50 p-1 rounded">Conditional visibility</p>
@@ -198,7 +198,7 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
 
           {selectedFieldId && (
             <div className="pt-2 border-t">
-              <p className="text-xs font-semibold text-gray-700 mb-2">Selected field</p>
+              <p className="text-xs font-semibold text-slate-700 mb-2">Selected field</p>
               <Button size="sm" variant="outline" className="w-full text-xs">
                 <Settings className="w-3 h-3 mr-2" />
                 Drag on canvas to reposition

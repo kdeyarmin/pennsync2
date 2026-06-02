@@ -194,11 +194,11 @@ export default function AdminTraining() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
           <GraduationCap className="w-8 h-8 text-indigo-600" />
           Training & Education Management
         </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
+        <p className="text-sm sm:text-base text-slate-600 mt-2">
           Manage courses, assign learning paths, monitor skill gaps, and generate AI-powered training
         </p>
       </div>
@@ -260,7 +260,7 @@ export default function AdminTraining() {
                   >
                     <CardContent className="p-4">
                       <p className="font-medium text-sm">{plan.name}</p>
-                      <p className="text-xs text-gray-600 mt-1">{plan.year}</p>
+                      <p className="text-xs text-slate-600 mt-1">{plan.year}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -277,11 +277,11 @@ export default function AdminTraining() {
                     {enrollments.length > 0 ? (
                       <div className="space-y-3">
                         {enrollments.map((enrollment) => (
-                          <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                          <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
                             <div className="flex-1">
                               <p className="font-medium text-sm">{enrollment.user_name}</p>
-                              <p className="text-xs text-gray-600">{enrollment.user_id}</p>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-slate-600">{enrollment.user_id}</p>
+                              <p className="text-xs text-slate-500 mt-1">
                                 {enrollment.courses_completed}/{enrollment.courses_total} courses completed
                               </p>
                             </div>
@@ -291,21 +291,21 @@ export default function AdminTraining() {
                               }>
                                 {enrollment.status}
                               </Badge>
-                              <p className="text-sm font-semibold text-gray-700">{enrollment.progress_percentage}%</p>
+                              <p className="text-sm font-semibold text-slate-700">{enrollment.progress_percentage}%</p>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-center text-gray-600 py-8">No enrollments yet</p>
+                      <p className="text-center text-slate-600 py-8">No enrollments yet</p>
                     )}
                   </CardContent>
                 </Card>
               ) : (
                 <Card>
                   <CardContent className="py-12 text-center">
-                    <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-600">Select a learning plan to view enrollments</p>
+                    <Users className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                    <p className="text-slate-600">Select a learning plan to view enrollments</p>
                   </CardContent>
                 </Card>
               )}

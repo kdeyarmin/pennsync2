@@ -1294,9 +1294,9 @@ export default function FeaturesPage() {
       orange: "from-orange-500 to-red-500",
       red: "from-red-500 to-pink-500",
       pink: "from-pink-500 to-rose-500",
-      gray: "from-gray-500 to-gray-600"
+      gray: "from-slate-500 to-slate-600"
     };
-    return colors[color] || "from-gray-500 to-gray-600";
+    return colors[color] || "from-slate-500 to-slate-600";
   };
 
   const getImpactBadge = (impact) => {
@@ -1304,7 +1304,7 @@ export default function FeaturesPage() {
       critical: "bg-red-500 text-white",
       high: "bg-orange-500 text-white",
       medium: "bg-blue-500 text-white",
-      low: "bg-gray-500 text-white"
+      low: "bg-slate-500 text-white"
     };
     return styles[impact] || styles.medium;
   };
@@ -1313,12 +1313,12 @@ export default function FeaturesPage() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-4 sm:mb-6 md:mb-8 text-center">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 sm:mb-3">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 sm:mb-3">
           <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Penn Sync Features
           </span>
         </h1>
-        <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-3 sm:mb-4">
+        <p className="text-base sm:text-lg md:text-xl text-slate-600 mb-3 sm:mb-4">
           AI-powered home health documentation, OASIS analytics, and clinical decision support
         </p>
         
@@ -1354,32 +1354,32 @@ export default function FeaturesPage() {
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
               <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-1 sm:mb-2" />
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{totalTimeSavedPerVisit}</p>
-              <p className="text-xs sm:text-sm text-gray-600">min saved per visit</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900">{totalTimeSavedPerVisit}</p>
+              <p className="text-xs sm:text-sm text-slate-600">min saved per visit</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
               <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-1 sm:mb-2" />
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{Math.round(totalTimeSavedPerWeek / 60)}</p>
-              <p className="text-xs sm:text-sm text-gray-600">hours saved per week</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900">{Math.round(totalTimeSavedPerWeek / 60)}</p>
+              <p className="text-xs sm:text-sm text-slate-600">hours saved per week</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
               <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-1 sm:mb-2" />
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{Math.round(totalTimeSavedPerMonth / 60)}</p>
-              <p className="text-xs sm:text-sm text-gray-600">hours saved per month</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900">{Math.round(totalTimeSavedPerMonth / 60)}</p>
+              <p className="text-xs sm:text-sm text-slate-600">hours saved per month</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
               <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-1 sm:mb-2" />
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{Math.round(totalTimeSavedPerYear / 60 / 24)}</p>
-              <p className="text-xs sm:text-sm text-gray-600">days saved per year</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900">{Math.round(totalTimeSavedPerYear / 60 / 24)}</p>
+              <p className="text-xs sm:text-sm text-slate-600">days saved per year</p>
             </CardContent>
           </Card>
         </div>
@@ -1420,8 +1420,8 @@ export default function FeaturesPage() {
                   <CategoryIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{category.category}</h2>
-                  <p className="text-xs sm:text-sm text-gray-600">{category.items.length} feature{category.items.length !== 1 ? 's' : ''}</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">{category.category}</h2>
+                  <p className="text-xs sm:text-sm text-slate-600">{category.items.length} feature{category.items.length !== 1 ? 's' : ''}</p>
                 </div>
               </div>
 
@@ -1432,8 +1432,8 @@ export default function FeaturesPage() {
                     <Card key={feature.name} className="hover:shadow-lg transition-all duration-200">
                       <CardHeader className="p-3 sm:p-4 md:p-6 pb-2 sm:pb-3">
                         <div className="flex items-start justify-between mb-2">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FeatureIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FeatureIcon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
                           </div>
                           <div className="flex gap-1">
                             <Badge className={`${getImpactBadge(feature.impact)} text-xs`}>
@@ -1444,7 +1444,7 @@ export default function FeaturesPage() {
                         <CardTitle className="text-base sm:text-lg">{feature.name}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3 sm:p-4 md:p-6 pt-0 space-y-2 sm:space-y-3">
-                        <p className="text-sm text-gray-600">{feature.description}</p>
+                        <p className="text-sm text-slate-600">{feature.description}</p>
                         
                         <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
                           <Clock className="w-4 h-4 text-green-600" />

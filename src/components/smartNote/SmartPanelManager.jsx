@@ -35,11 +35,11 @@ export default function SmartPanelManager({
       <Card className="opacity-50 border-dashed">
         <CardHeader className="py-2 px-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xs flex items-center gap-2 text-gray-500">
+            <CardTitle className="text-xs flex items-center gap-2 text-slate-500">
               {Icon && <Icon className="w-4 h-4" />}
               {title}
             </CardTitle>
-            <Badge variant="outline" className="text-xs text-gray-400">
+            <Badge variant="outline" className="text-xs text-slate-400">
               {relevanceReason || 'Not applicable'}
             </Badge>
           </div>
@@ -51,7 +51,7 @@ export default function SmartPanelManager({
   return (
     <Card className={`transition-all ${isCompleted ? 'border-green-200 bg-green-50/50' : ''}`}>
       <CardHeader 
-        className={`py-2 px-3 cursor-pointer ${isCompleted ? 'bg-green-50' : 'hover:bg-gray-50'}`}
+        className={`py-2 px-3 cursor-pointer ${isCompleted ? 'bg-green-50' : 'hover:bg-slate-50'}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">

@@ -474,7 +474,7 @@ export default function WorkflowExecutionEngine({
         {executing && (
           <div className="mb-4">
             <Progress value={progress} className="h-2" />
-            <p className="text-xs text-gray-500 mt-2">Evaluating rules and executing actions... {currentRunId}</p>
+            <p className="text-xs text-slate-500 mt-2">Evaluating rules and executing actions... {currentRunId}</p>
           </div>
         )}
 
@@ -509,7 +509,7 @@ export default function WorkflowExecutionEngine({
 
         {executionResults.length > 0 && (
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-slate-900">
               Workflows Triggered: {executionResults.length}
             </p>
             {executionResults.map((result, idx) => (
@@ -526,8 +526,8 @@ export default function WorkflowExecutionEngine({
                 <CardContent className="p-3">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-gray-900">{result.rule_name}</p>
-                      <p className="text-xs text-gray-600">{result.trigger_reason}</p>
+                      <p className="font-semibold text-slate-900">{result.rule_name}</p>
+                      <p className="text-xs text-slate-600">{result.trigger_reason}</p>
                     </div>
                     {result.status === "completed" && <CheckCircle2 className="w-5 h-5 text-green-600" />}
                     {result.status === "failed" && <XCircle className="w-5 h-5 text-red-600" />}
@@ -540,7 +540,7 @@ export default function WorkflowExecutionEngine({
                         <div key={`${action.action_type}-${actionIndex}`} className="flex items-center gap-2 text-sm">
                           {action.status === "completed" && <CheckCircle2 className="w-3 h-3 text-green-600" />}
                           {(action.status === "failed" || action.status === "skipped") && <XCircle className="w-3 h-3 text-red-600" />}
-                          <span className="text-gray-700">
+                          <span className="text-slate-700">
                             {ACTION_LABELS[action.action_type] || action.action_type.replace(/_/g, " ")}
                           </span>
                           {(action.status === "failed" || action.status === "skipped") && action.error && (

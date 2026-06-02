@@ -34,7 +34,7 @@ export default function GamificationDashboard({ userId }) {
   });
 
   const rarityColors = {
-    common: 'bg-gray-400',
+    common: 'bg-slate-400',
     uncommon: 'bg-green-500',
     rare: 'bg-blue-500',
     epic: 'bg-purple-500',
@@ -52,7 +52,7 @@ export default function GamificationDashboard({ userId }) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Points</p>
+                <p className="text-sm text-slate-600">Total Points</p>
                 <p className="text-2xl font-bold text-yellow-600">{leaderboard?.total_points || 0}</p>
               </div>
               <Trophy className="w-8 h-8 text-yellow-500" />
@@ -64,7 +64,7 @@ export default function GamificationDashboard({ userId }) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Badges Earned</p>
+                <p className="text-sm text-slate-600">Badges Earned</p>
                 <p className="text-2xl font-bold text-blue-600">{leaderboard?.badges_earned || 0}</p>
               </div>
               <Award className="w-8 h-8 text-blue-500" />
@@ -76,7 +76,7 @@ export default function GamificationDashboard({ userId }) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Current Streak</p>
+                <p className="text-sm text-slate-600">Current Streak</p>
                 <p className="text-2xl font-bold text-green-600">{leaderboard?.current_streak || 0}</p>
               </div>
               <Zap className="w-8 h-8 text-green-500" />
@@ -88,7 +88,7 @@ export default function GamificationDashboard({ userId }) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Rank</p>
+                <p className="text-sm text-slate-600">Rank</p>
                 <p className="text-2xl font-bold text-purple-600">#{userRank || 'N/A'}</p>
               </div>
               <Crown className="w-8 h-8 text-purple-500" />
@@ -108,12 +108,12 @@ export default function GamificationDashboard({ userId }) {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {badges.slice(0, 8).map(badge => (
-              <div key={badge.id} className="flex flex-col items-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border-2 border-gray-200 hover:border-blue-300 transition">
+              <div key={badge.id} className="flex flex-col items-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg border-2 border-slate-200 hover:border-blue-300 transition">
                 <div className={`w-16 h-16 rounded-full ${rarityColors[badge.trigger_context?.rarity || 'common']} flex items-center justify-center mb-2`}>
                   <Medal className="w-8 h-8 text-white" />
                 </div>
-                <p className="text-sm font-semibold text-gray-900 text-center">{badge.badge_name}</p>
-                <p className="text-xs text-gray-600 mt-1">{badge.points_awarded} pts</p>
+                <p className="text-sm font-semibold text-slate-900 text-center">{badge.badge_name}</p>
+                <p className="text-xs text-slate-600 mt-1">{badge.points_awarded} pts</p>
                 <Badge variant="outline" className="mt-2 text-xs">
                   {new Date(badge.earned_at).toLocaleDateString()}
                 </Badge>
@@ -139,31 +139,31 @@ export default function GamificationDashboard({ userId }) {
                 <div
                   key={performer.id}
                   className={`flex items-center justify-between p-4 rounded-lg border-2 transition ${
-                    isCurrentUser ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200'
+                    isCurrentUser ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
                       idx === 0 ? 'bg-yellow-500' :
-                      idx === 1 ? 'bg-gray-400' :
+                      idx === 1 ? 'bg-slate-400' :
                       idx === 2 ? 'bg-orange-600' :
                       'bg-blue-600'
                     }`}>
                       {idx + 1}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-slate-900">
                         {performer.user_name}
                         {isCurrentUser && <Badge className="ml-2 bg-blue-500">You</Badge>}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         {performer.courses_completed} courses • {performer.badges_earned} badges
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">{performer.total_points}</p>
-                    <p className="text-xs text-gray-600">points</p>
+                    <p className="text-2xl font-bold text-slate-900">{performer.total_points}</p>
+                    <p className="text-xs text-slate-600">points</p>
                   </div>
                 </div>
               );

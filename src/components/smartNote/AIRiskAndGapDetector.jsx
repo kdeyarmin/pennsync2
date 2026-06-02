@@ -193,7 +193,7 @@ Return JSON:
       medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
       low: 'bg-green-100 text-green-800 border-green-300'
     };
-    return colors[level] || 'bg-gray-100 text-gray-800';
+    return colors[level] || 'bg-slate-100 text-slate-800';
   };
 
   const getRiskIcon = (type) => {
@@ -255,8 +255,8 @@ Return JSON:
   if (!noteContent || noteContent.length < 50) {
     return (
       <Card className="border-orange-200">
-        <CardContent className="p-4 text-center text-gray-500 text-sm">
-          <ShieldAlert className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+        <CardContent className="p-4 text-center text-slate-500 text-sm">
+          <ShieldAlert className="w-8 h-8 mx-auto mb-2 text-slate-300" />
           Start documenting to enable AI risk detection
         </CardContent>
       </Card>
@@ -317,14 +317,14 @@ Return JSON:
           {isAnalyzing && !analysis ? (
             <div className="text-center py-6">
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-600 mb-2" />
-              <p className="text-xs text-gray-500">Analyzing for risks and gaps...</p>
+              <p className="text-xs text-slate-500">Analyzing for risks and gaps...</p>
             </div>
           ) : analysis ? (
             <>
               {/* Risk Score */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Risk Score</span>
+                  <span className="text-slate-600">Risk Score</span>
                   <span className={`font-bold ${
                     analysis.risk_score >= 70 ? 'text-red-600' :
                     analysis.risk_score >= 40 ? 'text-yellow-600' : 'text-green-600'
@@ -379,7 +379,7 @@ Return JSON:
               {/* Clinical Risks */}
               {analysis.clinical_risks?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700">Clinical Risks Identified</p>
+                  <p className="text-xs font-semibold text-slate-700">Clinical Risks Identified</p>
                   {analysis.clinical_risks.slice(0, 5).map((risk, idx) => (
                     <div key={idx} className={`p-2 rounded border ${getRiskColor(risk.severity)}`}>
                       <div className="flex items-start justify-between gap-2">
@@ -393,7 +393,7 @@ Return JSON:
                       </div>
                       <p className="text-xs mt-1">{risk.description}</p>
                       {risk.evidence && (
-                        <p className="text-xs text-gray-500 italic mt-1">Evidence: "{risk.evidence}"</p>
+                        <p className="text-xs text-slate-500 italic mt-1">Evidence: "{risk.evidence}"</p>
                       )}
                       <div className="flex gap-1 mt-2 flex-wrap">
                         {risk.suggested_documentation && onInsertText && (
@@ -445,7 +445,7 @@ Return JSON:
               {/* Care Gaps */}
               {analysis.care_gaps?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <FileWarning className="w-3 h-3 text-yellow-600" />
                     Care Gaps Detected
                   </p>
@@ -521,7 +521,7 @@ Return JSON:
                   </p>
                   {analysis.hospitalization_risk.preventive_actions?.length > 0 && (
                     <div className="mt-1">
-                      <p className="text-xs text-gray-600">Preventive Actions:</p>
+                      <p className="text-xs text-slate-600">Preventive Actions:</p>
                       <ul className="text-xs list-disc list-inside">
                         {analysis.hospitalization_risk.preventive_actions.slice(0, 2).map((a, i) => (
                           <li key={i}>{a}</li>
@@ -536,12 +536,12 @@ Return JSON:
               {analysis.documentation_completeness && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Documentation Completeness</span>
+                    <span className="text-slate-600">Documentation Completeness</span>
                     <span className="font-medium">{analysis.documentation_completeness.score}%</span>
                   </div>
                   <Progress value={analysis.documentation_completeness.score} className="h-1.5" />
                   {analysis.documentation_completeness.missing_elements?.length > 0 && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       Missing: {analysis.documentation_completeness.missing_elements.slice(0, 2).join(', ')}
                     </p>
                   )}

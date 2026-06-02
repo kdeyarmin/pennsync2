@@ -212,7 +212,7 @@ ${draftDocumentation.caregiver_support}`;
 
       <CardContent>
         {!draftDocumentation && !isGenerating && (
-          <div className="text-center py-8 text-gray-600">
+          <div className="text-center py-8 text-slate-600">
             <FileText className="w-12 h-12 text-purple-400 mx-auto mb-3" />
             <p>Click "Generate Draft" to create comprehensive OASIS documentation</p>
           </div>
@@ -289,7 +289,7 @@ ${draftDocumentation.caregiver_support}`;
                         <Copy className="w-3 h-3" />
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-700">{value}</p>
+                    <p className="text-sm text-slate-700">{value}</p>
                   </div>
                 ))}
               </TabsContent>
@@ -309,7 +309,7 @@ ${draftDocumentation.caregiver_support}`;
                         <Copy className="w-3 h-3" />
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-700">{value}</p>
+                    <p className="text-sm text-slate-700">{value}</p>
                   </div>
                 ))}
 
@@ -317,10 +317,10 @@ ${draftDocumentation.caregiver_support}`;
                   <h4 className="font-semibold mb-2">Cognitive/Behavioral</h4>
                   {Object.entries(draftDocumentation.cognitive_behavioral || {}).map(([key, value]) => (
                     <div key={key} className="mb-3">
-                      <p className="text-xs text-gray-500 font-medium">
+                      <p className="text-xs text-slate-500 font-medium">
                         {key.replace(/_/g, ' ').toUpperCase()}
                       </p>
-                      <p className="text-sm text-gray-700">{value}</p>
+                      <p className="text-sm text-slate-700">{value}</p>
                     </div>
                   ))}
                 </div>
@@ -361,11 +361,11 @@ ${draftDocumentation.caregiver_support}`;
                     <div key={idx} className="bg-white p-3 rounded mb-2">
                       <Badge className="mb-2">Goal {idx + 1}</Badge>
                       <p className="text-sm font-medium text-purple-900 mb-1">{goal.goal}</p>
-                      <p className="text-xs text-gray-600 mb-2">Problem: {goal.problem}</p>
-                      <p className="text-xs text-gray-700 mb-1">
+                      <p className="text-xs text-slate-600 mb-2">Problem: {goal.problem}</p>
+                      <p className="text-xs text-slate-700 mb-1">
                         <strong>Interventions:</strong> {goal.interventions.join('; ')}
                       </p>
-                      <p className="text-xs text-gray-500">Timeframe: {goal.timeframe}</p>
+                      <p className="text-xs text-slate-500">Timeframe: {goal.timeframe}</p>
                     </div>
                   ))}
                 </div>

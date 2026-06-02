@@ -89,8 +89,8 @@ export default function FaxOCRExtractor({ fileUrl, onExtracted }) {
         <div className="grid grid-cols-2 gap-1.5 pt-1">
           {Object.entries(extracted).map(([key, value]) => (
             <div key={key} className="bg-white rounded border border-blue-100 px-2 py-1.5">
-              <p className="text-xs text-gray-500">{FIELD_LABELS[key] || key}</p>
-              <p className="text-xs font-medium text-gray-800 truncate">{value}</p>
+              <p className="text-xs text-slate-500">{FIELD_LABELS[key] || key}</p>
+              <p className="text-xs font-medium text-slate-800 truncate">{value}</p>
             </div>
           ))}
         </div>

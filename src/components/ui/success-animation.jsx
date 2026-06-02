@@ -27,7 +27,7 @@ export default function SuccessAnimation({ show, message, duration = 2000, onCom
               <CheckCircle2 className="w-10 h-10 text-white animate-in zoom-in duration-500" />
             </div>
           </div>
-          <p className="text-lg font-semibold text-gray-900">{message}</p>
+          <p className="text-lg font-semibold text-slate-900">{message}</p>
         </div>
       </div>
     </div>

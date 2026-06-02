@@ -37,7 +37,7 @@ export default function FaxHistory({ patientId }) {
       case 'sending':
         return <Clock className="w-4 h-4 text-yellow-600 animate-pulse" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-600" />;
+        return <Clock className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -52,20 +52,20 @@ export default function FaxHistory({ patientId }) {
       case 'sending':
         return 'bg-yellow-100 text-yellow-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-800';
     }
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-500">Loading fax history...</div>;
+    return <div className="text-center py-8 text-slate-500">Loading fax history...</div>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Fax History</h3>
+        <h3 className="text-lg font-semibold text-slate-900">Fax History</h3>
         <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search faxes..."
             value={searchTerm}
@@ -78,8 +78,8 @@ export default function FaxHistory({ patientId }) {
       {filteredLogs.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">No faxes sent yet</p>
+            <FileText className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+            <p className="text-slate-500">No faxes sent yet</p>
           </CardContent>
         </Card>
       ) : (
@@ -90,13 +90,13 @@ export default function FaxHistory({ patientId }) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-4 h-4 text-gray-600" />
-                      <span className="font-medium text-gray-900">
+                      <FileText className="w-4 h-4 text-slate-600" />
+                      <span className="font-medium text-slate-900">
                         {log.document_name || 'Untitled Fax'}
                       </span>
                       {getStatusIcon(log.status)}
                     </div>
-                    <div className="space-y-1 text-sm text-gray-600">
+                    <div className="space-y-1 text-sm text-slate-600">
                       <p>
                         <span className="font-medium">To:</span> {log.to_name || log.to_number}
                       </p>
@@ -108,7 +108,7 @@ export default function FaxHistory({ patientId }) {
                           <span className="font-medium">Pages:</span> {log.pages}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         Sent {format(new Date(log.created_date), 'MMM d, yyyy h:mm a')} by {log.sent_by}
                       </p>
                     </div>

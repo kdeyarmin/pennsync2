@@ -116,7 +116,7 @@ export default function LearningPlanManager() {
             >
               <CardContent className="p-4">
                 <p className="font-medium text-sm">{plan.name}</p>
-                <p className="text-xs text-gray-600 mt-1">{plan.year}</p>
+                <p className="text-xs text-slate-600 mt-1">{plan.year}</p>
                 <div className="flex gap-1 mt-2">
                   <Button
                     size="sm"
@@ -153,16 +153,16 @@ export default function LearningPlanManager() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl">{selectedPlan.name}</CardTitle>
-                <p className="text-sm text-gray-600 mt-2">{selectedPlan.description}</p>
+                <p className="text-sm text-slate-600 mt-2">{selectedPlan.description}</p>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600">Year:</span>
+                    <span className="text-slate-600">Year:</span>
                     <p className="font-medium">{selectedPlan.year}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Type:</span>
+                    <span className="text-slate-600">Type:</span>
                     <p className="font-medium">{selectedPlan.plan_type}</p>
                   </div>
                 </div>
@@ -185,7 +185,7 @@ export default function LearningPlanManager() {
                     </DialogHeader>
                     <div className="space-y-2">
                       {availableCourses.map((course) => (
-                        <Card key={course.id} className="cursor-pointer hover:bg-gray-50">
+                        <Card key={course.id} className="cursor-pointer hover:bg-slate-50">
                           <CardContent className="p-3">
                             <div className="flex items-center justify-between">
                               <div>
@@ -216,7 +216,7 @@ export default function LearningPlanManager() {
                     <CardContent className="p-4 flex items-center justify-between">
                       <div>
                         <p className="font-medium">{pc.course_title}</p>
-                        <p className="text-xs text-gray-600">{pc.due_date_offset_days} days to complete</p>
+                        <p className="text-xs text-slate-600">{pc.due_date_offset_days} days to complete</p>
                       </div>
                       <Button
                         size="sm"
@@ -229,15 +229,15 @@ export default function LearningPlanManager() {
                   </Card>
                 ))
               ) : (
-                <p className="text-sm text-gray-600 text-center py-8">No courses added yet</p>
+                <p className="text-sm text-slate-600 text-center py-8">No courses added yet</p>
               )}
             </div>
           </div>
         ) : (
           <Card>
             <CardContent className="py-12 text-center">
-              <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-600">Select a learning plan to manage courses</p>
+              <Target className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p className="text-slate-600">Select a learning plan to manage courses</p>
             </CardContent>
           </Card>
         )}

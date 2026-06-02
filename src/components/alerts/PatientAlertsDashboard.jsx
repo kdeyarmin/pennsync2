@@ -208,7 +208,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -218,7 +218,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
       case 'high': return 'border-l-orange-500';
       case 'medium': return 'border-l-yellow-500';
       case 'low': return 'border-l-blue-500';
-      default: return 'border-l-gray-500';
+      default: return 'border-l-slate-500';
     }
   };
 
@@ -228,7 +228,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
       case 'acknowledged': return <Badge className="bg-blue-100 text-blue-800">Acknowledged</Badge>;
       case 'in_progress': return <Badge className="bg-yellow-100 text-yellow-800">In Progress</Badge>;
       case 'resolved': return <Badge className="bg-green-100 text-green-800">Resolved</Badge>;
-      case 'dismissed': return <Badge className="bg-gray-100 text-gray-800">Dismissed</Badge>;
+      case 'dismissed': return <Badge className="bg-slate-100 text-slate-800">Dismissed</Badge>;
       default: return null;
     }
   };
@@ -247,7 +247,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-red-600">{alertCounts.critical}</p>
-                <p className="text-xs text-gray-600">Critical</p>
+                <p className="text-xs text-slate-600">Critical</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-200" />
             </div>
@@ -258,7 +258,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-orange-600">{alertCounts.high}</p>
-                <p className="text-xs text-gray-600">High</p>
+                <p className="text-xs text-slate-600">High</p>
               </div>
               <Bell className="w-8 h-8 text-orange-200" />
             </div>
@@ -269,7 +269,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-yellow-600">{alertCounts.medium}</p>
-                <p className="text-xs text-gray-600">Medium</p>
+                <p className="text-xs text-slate-600">Medium</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-200" />
             </div>
@@ -280,7 +280,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-blue-600">{alertCounts.low}</p>
-                <p className="text-xs text-gray-600">Low</p>
+                <p className="text-xs text-slate-600">Low</p>
               </div>
               <Eye className="w-8 h-8 text-blue-200" />
             </div>
@@ -294,7 +294,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                 <Input
                   placeholder="Search alerts..."
                   value={searchQuery}
@@ -352,12 +352,12 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
         <TabsContent value={activeTab} className="mt-4">
           {isLoading ? (
             <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-slate-400" />
             </div>
           ) : filteredAlerts.length === 0 ? (
             <Card>
-              <CardContent className="p-8 text-center text-gray-500">
-                <BellOff className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <CardContent className="p-8 text-center text-slate-500">
+                <BellOff className="w-12 h-12 mx-auto mb-4 text-slate-300" />
                 <p>No alerts found</p>
               </CardContent>
             </Card>
@@ -373,7 +373,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3 flex-1">
-                          <div className={`p-2 rounded-lg ${alert.severity === 'critical' ? 'bg-red-100' : alert.severity === 'high' ? 'bg-orange-100' : 'bg-gray-100'}`}>
+                          <div className={`p-2 rounded-lg ${alert.severity === 'critical' ? 'bg-red-100' : alert.severity === 'high' ? 'bg-orange-100' : 'bg-slate-100'}`}>
                             {getAlertIcon(alert.alert_type)}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -392,7 +392,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                               </Badge>
                             </div>
                             
-                            <h3 className="font-semibold text-gray-900">{alert.title}</h3>
+                            <h3 className="font-semibold text-slate-900">{alert.title}</h3>
                             
                             {patient && (
                               <Link 
@@ -403,7 +403,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                               </Link>
                             )}
                             
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{alert.message}</p>
+                            <p className="text-sm text-slate-600 mt-1 line-clamp-2">{alert.message}</p>
 
                             {alert.data_sources?.clinical_event_id && (
                               <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs">
@@ -428,8 +428,8 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
 
                             {alert.risk_score && (
                               <div className="flex items-center gap-2 mt-2">
-                                <span className="text-xs text-gray-500">Risk Score:</span>
-                                <div className="flex-1 max-w-[100px] bg-gray-200 rounded-full h-2">
+                                <span className="text-xs text-slate-500">Risk Score:</span>
+                                <div className="flex-1 max-w-[100px] bg-slate-200 rounded-full h-2">
                                   <div 
                                     className={`h-2 rounded-full ${alert.risk_score >= 70 ? 'bg-red-500' : alert.risk_score >= 40 ? 'bg-yellow-500' : 'bg-green-500'}`}
                                     style={{ width: `${alert.risk_score}%` }}
@@ -439,7 +439,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                               </div>
                             )}
 
-                            <p className="text-xs text-gray-400 mt-2">
+                            <p className="text-xs text-slate-400 mt-2">
                               Created {formatDistanceToNow(new Date(alert.created_date), { addSuffix: true })}
                             </p>
                           </div>
@@ -511,8 +511,8 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                   )}
                 </div>
 
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">{selectedAlert.message}</p>
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-700">{selectedAlert.message}</p>
                 </div>
 
                 {/* Clinical Event Details */}
@@ -527,25 +527,25 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                     <CardContent className="space-y-2">
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <span className="font-semibold text-gray-700">Event Type:</span>
-                          <p className="text-gray-600">{selectedAlert.data_sources.event_type?.replace(/_/g, ' ')}</p>
+                          <span className="font-semibold text-slate-700">Event Type:</span>
+                          <p className="text-slate-600">{selectedAlert.data_sources.event_type?.replace(/_/g, ' ')}</p>
                         </div>
                         {selectedAlert.data_sources.visit_id && (
                           <div>
-                            <span className="font-semibold text-gray-700">Visit ID:</span>
-                            <p className="text-gray-600 font-mono text-xs">{selectedAlert.data_sources.visit_id.slice(0, 8)}...</p>
+                            <span className="font-semibold text-slate-700">Visit ID:</span>
+                            <p className="text-slate-600 font-mono text-xs">{selectedAlert.data_sources.visit_id.slice(0, 8)}...</p>
                           </div>
                         )}
                       </div>
                       
                       {selectedAlert.data_sources.structured_data && (
                         <div>
-                          <span className="font-semibold text-gray-700 text-sm">Event Data:</span>
+                          <span className="font-semibold text-slate-700 text-sm">Event Data:</span>
                           <div className="mt-1 p-2 bg-white rounded border text-xs space-y-1">
                             {Object.entries(selectedAlert.data_sources.structured_data).map(([key, value]) => (
                               <div key={key} className="flex gap-2">
                                 <span className="font-medium text-purple-700">{key}:</span>
-                                <span className="text-gray-600">{String(value)}</span>
+                                <span className="text-slate-600">{String(value)}</span>
                               </div>
                             ))}
                           </div>
@@ -572,13 +572,13 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-semibold text-gray-700">Created:</span>
-                    <p className="text-gray-600">{format(new Date(selectedAlert.created_date), 'PPpp')}</p>
+                    <span className="font-semibold text-slate-700">Created:</span>
+                    <p className="text-slate-600">{format(new Date(selectedAlert.created_date), 'PPpp')}</p>
                   </div>
                   {selectedAlert.expires_at && (
                     <div>
-                      <span className="font-semibold text-gray-700">Expires:</span>
-                      <p className="text-gray-600">{format(new Date(selectedAlert.expires_at), 'PPp')}</p>
+                      <span className="font-semibold text-slate-700">Expires:</span>
+                      <p className="text-slate-600">{format(new Date(selectedAlert.expires_at), 'PPp')}</p>
                     </div>
                   )}
                 </div>
@@ -623,7 +623,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                 )}
 
                 {selectedAlert.acknowledged_by && (
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-slate-600">
                     <p>Acknowledged by: {selectedAlert.acknowledged_by}</p>
                     <p>At: {format(new Date(selectedAlert.acknowledged_at), 'PPpp')}</p>
                   </div>

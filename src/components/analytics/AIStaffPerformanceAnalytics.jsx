@@ -358,7 +358,7 @@ Return detailed analysis suitable for management dashboard.`,
       medium: 'bg-yellow-100 text-yellow-800',
       high: 'bg-red-100 text-red-800'
     };
-    return colors[level] || 'bg-gray-100 text-gray-800';
+    return colors[level] || 'bg-slate-100 text-slate-800';
   };
 
   const nurses = users.filter(u => u.role === 'user');
@@ -368,8 +368,8 @@ Return detailed analysis suitable for management dashboard.`,
       <Card className="border-2 border-purple-300">
         <CardContent className="p-8 text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
-          <p className="text-lg font-medium text-gray-900 mb-2">AI Performance Analysis in Progress</p>
-          <p className="text-sm text-gray-600">
+          <p className="text-lg font-medium text-slate-900 mb-2">AI Performance Analysis in Progress</p>
+          <p className="text-sm text-slate-600">
             Analyzing {audits.length} audits, {visits.length} visits, {trainingCompletions.length} training records...
           </p>
         </CardContent>
@@ -473,8 +473,8 @@ Return detailed analysis suitable for management dashboard.`,
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {Object.entries(performanceData.kpis || {}).map(([key, value]) => (
-              <div key={key} className="bg-gradient-to-br from-white to-gray-50 p-4 rounded-lg border-2">
-                <p className="text-xs text-gray-600 mb-2 capitalize">
+              <div key={key} className="bg-gradient-to-br from-white to-slate-50 p-4 rounded-lg border-2">
+                <p className="text-xs text-slate-600 mb-2 capitalize">
                   {key.replace(/_/g, ' ')}
                 </p>
                 <p className={`text-3xl font-bold mb-2 ${value >= 80 ? 'text-green-600' : value >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
@@ -529,7 +529,7 @@ Return detailed analysis suitable for management dashboard.`,
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="font-bold text-gray-900">{user?.full_name || profile.nurse_email}</p>
+                      <p className="font-bold text-slate-900">{user?.full_name || profile.nurse_email}</p>
                       <div className="flex gap-2 mt-1">
                         <Badge className={
                           profile.performance_level === 'excellent' ? 'bg-green-600' :
@@ -547,7 +547,7 @@ Return detailed analysis suitable for management dashboard.`,
                     </div>
                     <div className="text-right">
                       <p className="text-3xl font-bold text-purple-600">{profile.overall_score}</p>
-                      <p className="text-xs text-gray-500">Overall Score</p>
+                      <p className="text-xs text-slate-500">Overall Score</p>
                     </div>
                   </div>
 
@@ -609,7 +609,7 @@ Return detailed analysis suitable for management dashboard.`,
             {performanceData.predictive_insights.map((insight, idx) => (
               <div key={idx} className="bg-white p-3 rounded border-l-4 border-l-red-500">
                 <div className="flex items-start justify-between mb-2">
-                  <p className="font-medium text-gray-900">{insight.insight}</p>
+                  <p className="font-medium text-slate-900">{insight.insight}</p>
                   <Badge className={
                     insight.severity === 'high' ? 'bg-red-600' :
                     insight.severity === 'medium' ? 'bg-yellow-600' : 'bg-blue-600'
@@ -649,7 +649,7 @@ Return detailed analysis suitable for management dashboard.`,
               return (
                 <div key={idx} className="bg-white p-4 rounded border">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="font-bold text-gray-900">{user?.full_name || rec.nurse_email}</p>
+                    <p className="font-bold text-slate-900">{user?.full_name || rec.nurse_email}</p>
                     <Badge className={
                       rec.priority === 'urgent' ? 'bg-red-600' :
                       rec.priority === 'high' ? 'bg-orange-600' : 'bg-blue-600'
@@ -676,11 +676,11 @@ Return detailed analysis suitable for management dashboard.`,
                     </div>
                   </div>
                   {rec.mentorship_pairing && (
-                    <p className="text-xs text-gray-600 mt-2">
+                    <p className="text-xs text-slate-600 mt-2">
                       <strong>Mentorship:</strong> {rec.mentorship_pairing}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     <Clock className="w-3 h-3 inline mr-1" />
                     {rec.timeline}
                   </p>
@@ -702,7 +702,7 @@ Return detailed analysis suitable for management dashboard.`,
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-white p-4 rounded border">
-              <p className="text-sm text-gray-600 mb-2">Team Average Performance</p>
+              <p className="text-sm text-slate-600 mb-2">Team Average Performance</p>
               <p className="text-4xl font-bold text-green-600">{performanceData.benchmarking.team_average}</p>
               <Progress value={performanceData.benchmarking.team_average} className="h-3 mt-2" />
             </div>
@@ -715,7 +715,7 @@ Return detailed analysis suitable for management dashboard.`,
                   {performanceData.benchmarking.top_performers?.map((email, i) => {
                     const user = users.find(u => u.email === email);
                     return (
-                      <li key={i} className="text-sm text-gray-700">
+                      <li key={i} className="text-sm text-slate-700">
                         🏆 {user?.full_name || email}
                       </li>
                     );
@@ -728,7 +728,7 @@ Return detailed analysis suitable for management dashboard.`,
                   {performanceData.benchmarking.needs_support?.map((email, i) => {
                     const user = users.find(u => u.email === email);
                     return (
-                      <li key={i} className="text-sm text-gray-700">
+                      <li key={i} className="text-sm text-slate-700">
                         🤝 {user?.full_name || email}
                       </li>
                     );
@@ -737,10 +737,10 @@ Return detailed analysis suitable for management dashboard.`,
               </div>
             </div>
             <div className="bg-white p-3 rounded border">
-              <p className="font-semibold text-gray-900 mb-2">Best Practices from Top Performers</p>
+              <p className="font-semibold text-slate-900 mb-2">Best Practices from Top Performers</p>
               <ul className="space-y-1">
                 {performanceData.benchmarking.best_practices?.map((practice, i) => (
-                  <li key={i} className="text-sm text-gray-700">✓ {practice}</li>
+                  <li key={i} className="text-sm text-slate-700">✓ {practice}</li>
                 ))}
               </ul>
             </div>

@@ -263,8 +263,8 @@ Return JSON:
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Brain className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">AI Skills Assessment</h3>
-          <p className="text-gray-600 mb-6 max-w-lg mx-auto">
+          <h3 className="text-xl font-bold text-slate-900 mb-2">AI Skills Assessment</h3>
+          <p className="text-slate-600 mb-6 max-w-lg mx-auto">
             Get a comprehensive analysis of your skills across all training modules. AI will evaluate your performance, identify strengths and growth areas, and recommend personalized advanced training pathways.
           </p>
           <Button
@@ -285,7 +285,7 @@ Return JSON:
             )}
           </Button>
           {trainingCompletions.length === 0 && (
-            <p className="text-sm text-gray-500 mt-3">
+            <p className="text-sm text-slate-500 mt-3">
               Complete some training modules first to generate your assessment
             </p>
           )}
@@ -307,7 +307,7 @@ Return JSON:
                 <Award className="w-6 h-6 text-indigo-600" />
                 Your Skill Profile
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">AI-powered comprehensive assessment</p>
+              <p className="text-sm text-slate-600 mt-1">AI-powered comprehensive assessment</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge className={`${levelColors.bg} ${levelColors.text} text-lg px-4 py-2`}>
@@ -332,14 +332,14 @@ Return JSON:
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {Object.entries(assessment.skill_scores).map(([skill, score]) => (
-              <Card key={skill} className="bg-white border border-gray-200">
+              <Card key={skill} className="bg-white border border-slate-200">
                 <CardContent className="p-4">
-                  <p className="text-xs text-gray-600 mb-2 capitalize">
+                  <p className="text-xs text-slate-600 mb-2 capitalize">
                     {skill.replace(/_/g, ' ')}
                   </p>
                   <div className="flex items-end gap-2">
-                    <span className="text-2xl font-bold text-gray-900">{Math.round(score)}</span>
-                    <span className="text-sm text-gray-500 mb-1">/100</span>
+                    <span className="text-2xl font-bold text-slate-900">{Math.round(score)}</span>
+                    <span className="text-sm text-slate-500 mb-1">/100</span>
                   </div>
                   <Progress value={score} className="h-2 mt-2" />
                 </CardContent>
@@ -363,9 +363,9 @@ Return JSON:
               {assessment.strengths.map((strength, idx) => (
                 <Card key={idx} className="bg-white border-green-200">
                   <CardContent className="p-4">
-                    <h4 className="font-semibold text-gray-900 mb-1">{strength.skill}</h4>
-                    <p className="text-sm text-gray-700 mb-2">{strength.description}</p>
-                    <p className="text-xs text-gray-600 italic">Evidence: {strength.evidence}</p>
+                    <h4 className="font-semibold text-slate-900 mb-1">{strength.skill}</h4>
+                    <p className="text-sm text-slate-700 mb-2">{strength.description}</p>
+                    <p className="text-xs text-slate-600 italic">Evidence: {strength.evidence}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -389,24 +389,24 @@ Return JSON:
                 <Card key={idx} className={`bg-white border-2 ${priorityColors[area.priority]}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h4 className="font-semibold text-gray-900">{area.skill}</h4>
+                      <h4 className="font-semibold text-slate-900">{area.skill}</h4>
                       <Badge className={priorityColors[area.priority]}>
                         {area.priority} priority
                       </Badge>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-600">Current:</span>
-                        <span className="text-gray-900">{area.current_level}</span>
+                        <span className="text-slate-600">Current:</span>
+                        <span className="text-slate-900">{area.current_level}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <ArrowRight className="w-4 h-4 text-gray-400" />
+                        <ArrowRight className="w-4 h-4 text-slate-400" />
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-600">Target:</span>
-                        <span className="text-gray-900 font-medium">{area.target_level}</span>
+                        <span className="text-slate-600">Target:</span>
+                        <span className="text-slate-900 font-medium">{area.target_level}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600 mt-2">
+                      <div className="flex items-center gap-2 text-xs text-slate-600 mt-2">
                         <AlertCircle className="w-3 h-3" />
                         <span>Est. time to proficiency: {area.estimated_time_to_proficiency}</span>
                       </div>
@@ -432,7 +432,7 @@ Return JSON:
             <div className="grid md:grid-cols-3 gap-4">
               <Card className="bg-white border-purple-200">
                 <CardContent className="p-4">
-                  <p className="text-xs text-gray-600 mb-1">Primary Learning Style</p>
+                  <p className="text-xs text-slate-600 mb-1">Primary Learning Style</p>
                   <p className="font-semibold text-purple-900 capitalize">
                     {assessment.learning_style.primary_style}
                   </p>
@@ -440,14 +440,14 @@ Return JSON:
               </Card>
               <Card className="bg-white border-purple-200">
                 <CardContent className="p-4">
-                  <p className="text-xs text-gray-600 mb-1">Engagement Pattern</p>
-                  <p className="text-sm text-gray-900">{assessment.learning_style.engagement_pattern}</p>
+                  <p className="text-xs text-slate-600 mb-1">Engagement Pattern</p>
+                  <p className="text-sm text-slate-900">{assessment.learning_style.engagement_pattern}</p>
                 </CardContent>
               </Card>
               <Card className="bg-white border-purple-200">
                 <CardContent className="p-4">
-                  <p className="text-xs text-gray-600 mb-1">Optimal Learning Time</p>
-                  <p className="text-sm text-gray-900">{assessment.learning_style.optimal_learning_time}</p>
+                  <p className="text-xs text-slate-600 mb-1">Optimal Learning Time</p>
+                  <p className="text-sm text-slate-900">{assessment.learning_style.optimal_learning_time}</p>
                 </CardContent>
               </Card>
             </div>
@@ -463,7 +463,7 @@ Return JSON:
               <BookOpen className="w-5 h-5" />
               Personalized Training Pathways
             </CardTitle>
-            <p className="text-sm text-gray-600">Recommended advanced training based on your profile</p>
+            <p className="text-sm text-slate-600">Recommended advanced training based on your profile</p>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-96">
@@ -472,16 +472,16 @@ Return JSON:
                   <Card key={idx} className={`bg-white border-2 ${priorityColors[pathway.priority]}`}>
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between gap-2 mb-3">
-                        <h4 className="font-bold text-lg text-gray-900">{pathway.pathway_name}</h4>
+                        <h4 className="font-bold text-lg text-slate-900">{pathway.pathway_name}</h4>
                         <Badge className={priorityColors[pathway.priority]}>
                           {pathway.priority}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-700 mb-3">{pathway.description}</p>
+                      <p className="text-sm text-slate-700 mb-3">{pathway.description}</p>
                       
                       <div className="space-y-3">
                         <div>
-                          <p className="text-xs font-semibold text-gray-600 mb-2">Modules:</p>
+                          <p className="text-xs font-semibold text-slate-600 mb-2">Modules:</p>
                           <div className="flex flex-wrap gap-2">
                             {pathway.modules.map((module, mIdx) => (
                               <Badge key={mIdx} variant="outline" className="bg-blue-50">
@@ -492,8 +492,8 @@ Return JSON:
                         </div>
                         
                         <div>
-                          <p className="text-xs font-semibold text-gray-600 mb-2">Expected Outcomes:</p>
-                          <ul className="text-xs text-gray-700 space-y-1">
+                          <p className="text-xs font-semibold text-slate-600 mb-2">Expected Outcomes:</p>
+                          <ul className="text-xs text-slate-700 space-y-1">
                             {pathway.expected_outcomes.map((outcome, oIdx) => (
                               <li key={oIdx} className="flex items-start gap-2">
                                 <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
@@ -503,7 +503,7 @@ Return JSON:
                           </ul>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-xs text-gray-600 pt-2 border-t">
+                        <div className="flex items-center gap-4 text-xs text-slate-600 pt-2 border-t">
                           <span className="flex items-center gap-1">
                             <AlertCircle className="w-3 h-3" />
                             Duration: {pathway.estimated_duration}
@@ -539,11 +539,11 @@ Return JSON:
                   {assessment.performance_trends.trend}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-700">{assessment.performance_trends.insights}</p>
+              <p className="text-sm text-slate-700">{assessment.performance_trends.insights}</p>
               <Card className="bg-white border-blue-200">
                 <CardContent className="p-4">
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Recommendations:</p>
-                  <p className="text-sm text-gray-900">{assessment.performance_trends.recommendations}</p>
+                  <p className="text-xs font-semibold text-slate-600 mb-2">Recommendations:</p>
+                  <p className="text-sm text-slate-900">{assessment.performance_trends.recommendations}</p>
                 </CardContent>
               </Card>
             </div>
@@ -570,9 +570,9 @@ Return JSON:
                         {idx + 1}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 mb-1">{step.action}</h4>
-                        <p className="text-sm text-gray-700 mb-2">{step.reason}</p>
-                        <p className="text-xs text-gray-600">Timeline: {step.timeline}</p>
+                        <h4 className="font-semibold text-slate-900 mb-1">{step.action}</h4>
+                        <p className="text-sm text-slate-700 mb-2">{step.reason}</p>
+                        <p className="text-xs text-slate-600">Timeline: {step.timeline}</p>
                       </div>
                     </div>
                   </CardContent>

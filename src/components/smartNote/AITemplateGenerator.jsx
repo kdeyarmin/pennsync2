@@ -176,8 +176,8 @@ Return JSON:
           {isGenerating && (
             <div className="text-center py-6">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-indigo-600" />
-              <p className="text-sm text-gray-600">Generating personalized template...</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-sm text-slate-600">Generating personalized template...</p>
+              <p className="text-xs text-slate-500 mt-1">
                 Based on {visitType.replace(/_/g, ' ')} visit for {diagnosis}
               </p>
             </div>
@@ -194,7 +194,7 @@ Return JSON:
           {!template && !isGenerating && !error && (
             <div className="text-center py-6">
               <Sparkles className="w-8 h-8 mx-auto mb-2 text-indigo-400" />
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Get a smart documentation template for this visit
               </p>
               <Button
@@ -217,11 +217,11 @@ Return JSON:
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div className="bg-blue-50 p-2 rounded">
                     <p className="text-xs text-blue-600 font-semibold">Est. Time</p>
-                    <p className="text-xs text-gray-700">{template.estimated_completion_time}</p>
+                    <p className="text-xs text-slate-700">{template.estimated_completion_time}</p>
                   </div>
                   <div className="bg-green-50 p-2 rounded">
                     <p className="text-xs text-green-600 font-semibold">Compliance</p>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-slate-700">
                       {template.compliance_elements_included?.length || 0} elements
                     </p>
                   </div>
@@ -229,7 +229,7 @@ Return JSON:
 
                 {template.key_focus_areas?.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Key Focus Areas:</p>
+                    <p className="text-xs font-semibold text-slate-700 mb-1">Key Focus Areas:</p>
                     <div className="flex flex-wrap gap-1">
                       {template.key_focus_areas.map((area, idx) => (
                         <Badge key={idx} variant="outline" className="text-xs bg-indigo-50 text-indigo-700">
@@ -247,8 +247,8 @@ Return JSON:
                   </AlertDescription>
                 </Alert>
 
-                <div className="bg-gray-50 p-3 rounded border max-h-64 overflow-y-auto">
-                  <pre className="text-xs whitespace-pre-wrap font-mono text-gray-800">
+                <div className="bg-slate-50 p-3 rounded border max-h-64 overflow-y-auto">
+                  <pre className="text-xs whitespace-pre-wrap font-mono text-slate-800">
                     {template.template_text}
                   </pre>
                 </div>

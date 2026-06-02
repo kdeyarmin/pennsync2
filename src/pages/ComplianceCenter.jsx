@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -296,16 +297,16 @@ export default function ComplianceCenter() {
       case 'critical': return 'bg-red-600 text-white';
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
   if (!isAdmin) {
     return (
       <div className="p-8 text-center">
-        <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Admin Access Required</h2>
-        <p className="text-gray-600">Compliance Center is available to administrators only.</p>
+        <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">Admin Access Required</h2>
+        <p className="text-slate-600">Compliance Center is available to administrators only.</p>
       </div>
     );
   }
@@ -314,15 +315,14 @@ export default function ComplianceCenter() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Shield className="w-8 h-8 text-indigo-600" />
-          Compliance Center
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          Medicare compliance monitoring, real-time alerts, and regulatory tracking
-        </p>
-      </div>
+      <PageHeader
+        icon={Shield}
+        iconColor="bg-indigo-600"
+        eyebrow="Quality & Compliance"
+        title="Compliance Center"
+        description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
+        favoritePage="ComplianceCenter"
+      />
 
       <Tabs defaultValue="medicare" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
@@ -471,11 +471,11 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
               <CardContent className="space-y-4">
                 <div className="bg-white p-4 rounded-lg border-2 border-purple-200">
                   <h3 className="font-bold text-purple-900 mb-2">Overall Assessment</h3>
-                  <p className="text-gray-700">{aiInsights.overall_assessment}</p>
+                  <p className="text-slate-700">{aiInsights.overall_assessment}</p>
                 </div>
                 {aiInsights.action_plan && (
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-3">30-Day Action Plan</h3>
+                    <h3 className="font-bold text-slate-900 mb-3">30-Day Action Plan</h3>
                     <div className="space-y-2">
                       {aiInsights.action_plan.map((action, idx) => (
                         <div key={idx} className="bg-white p-3 rounded border flex gap-3">
@@ -483,8 +483,8 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                             <span className="text-xs font-bold text-blue-600">{idx + 1}</span>
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{action.action}</p>
-                            <p className="text-xs text-gray-600 mt-1">{action.timeline}</p>
+                            <p className="text-sm font-medium text-slate-900">{action.action}</p>
+                            <p className="text-xs text-slate-600 mt-1">{action.timeline}</p>
                           </div>
                         </div>
                       ))}
@@ -567,7 +567,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
             <CardContent className="p-4">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     placeholder="Search by employee or issue..."
                     value={searchTerm}
@@ -612,8 +612,8 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
             <Card>
               <CardContent className="py-12 text-center">
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">All Clear!</h3>
-                <p className="text-gray-600">No compliance issues found.</p>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">All Clear!</h3>
+                <p className="text-slate-600">No compliance issues found.</p>
               </CardContent>
             </Card>
           ) : (
@@ -625,7 +625,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                 return (
                   <Card key={userId} className={`border-l-4 ${
                     isSelected ? 'border-l-orange-500 bg-orange-50' : 
-                    criticalIssues > 0 ? 'border-l-red-500' : 'border-l-gray-300'
+                    criticalIssues > 0 ? 'border-l-red-500' : 'border-l-slate-300'
                   }`}>
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -641,8 +641,8 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                             className="w-5 h-5 rounded"
                           />
                           <div>
-                            <h3 className="text-lg font-bold text-gray-900">{userData.userName}</h3>
-                            <p className="text-sm text-gray-600">{userData.userRole} • {userId}</p>
+                            <h3 className="text-lg font-bold text-slate-900">{userData.userName}</h3>
+                            <p className="text-sm text-slate-600">{userData.userRole} • {userId}</p>
                           </div>
                         </div>
                         <Badge variant="outline">{userData.issues.length} issue(s)</Badge>
@@ -653,10 +653,10 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                         {userData.issues.map((issue, idx) => (
                           <div key={idx} className="p-3 bg-white rounded-lg border">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900">{issue.title}</h4>
+                              <h4 className="font-semibold text-slate-900">{issue.title}</h4>
                               <Badge className={getSeverityColor(issue.severity)}>{issue.severity}</Badge>
                             </div>
-                            <p className="text-sm text-gray-700">{issue.details}</p>
+                            <p className="text-sm text-slate-700">{issue.details}</p>
                           </div>
                         ))}
                       </div>

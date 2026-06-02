@@ -249,7 +249,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
   const getTrendIcon = (trend) => {
     if (trend === 'decreasing') return <TrendingDown className="w-4 h-4 text-green-600" />;
     if (trend === 'increasing') return <TrendingUp className="w-4 h-4 text-red-600" />;
-    return <ChevronRight className="w-4 h-4 text-gray-600" />;
+    return <ChevronRight className="w-4 h-4 text-slate-600" />;
   };
 
   if (isAnalyzing) {
@@ -257,8 +257,8 @@ Return detailed JSON analysis suitable for executive dashboard.`,
       <Card className="border-2 border-purple-300">
         <CardContent className="p-8 text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
-          <p className="text-lg font-medium text-gray-900 mb-2">AI Risk Analysis in Progress</p>
-          <p className="text-sm text-gray-600">
+          <p className="text-lg font-medium text-slate-900 mb-2">AI Risk Analysis in Progress</p>
+          <p className="text-sm text-slate-600">
             Analyzing {audits.length} audits, {alerts.length} alerts, and compliance patterns...
           </p>
         </CardContent>
@@ -276,7 +276,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             AI-powered predictive risk analysis with mitigation strategies and resource allocation recommendations.
           </p>
           <Button onClick={analyzeRisk} className="w-full bg-purple-600 hover:bg-purple-700">
@@ -351,7 +351,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
             {riskAnalysis.category_risk_scores?.map((cat, idx) => {
               const catColors = getRiskColor(cat.risk_score);
               return (
-                <div key={idx} className="p-3 bg-gray-50 rounded border">
+                <div key={idx} className="p-3 bg-slate-50 rounded border">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm">{cat.category}</span>
@@ -359,7 +359,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
                     </div>
                     <Badge className={catColors.bg}>{cat.risk_score}</Badge>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-600">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
                     <span>{cat.issue_count} issues</span>
                     <span>{cat.cop_reference}</span>
                   </div>
@@ -389,15 +389,15 @@ Return detailed JSON analysis suitable for executive dashboard.`,
               const forecastColors = getRiskColor(forecast.data?.predicted_score || 0);
               return (
                 <div key={idx} className="bg-white p-4 rounded-lg border-2 border-blue-200">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">{forecast.label}</p>
+                  <p className="text-sm font-semibold text-slate-700 mb-2">{forecast.label}</p>
                   <p className={`text-3xl font-bold ${forecastColors.text} mb-1`}>
                     {forecast.data?.predicted_score || 0}
                   </p>
                   <Badge variant="outline" className="mb-3">{forecast.data?.confidence}</Badge>
                   {forecast.data?.risk_areas?.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-1">Risk Areas:</p>
-                      <ul className="text-xs text-gray-700 space-y-0.5">
+                      <p className="text-xs font-semibold text-slate-600 mb-1">Risk Areas:</p>
+                      <ul className="text-xs text-slate-700 space-y-0.5">
                         {forecast.data.risk_areas.slice(0, 3).map((area, i) => (
                           <li key={i}>• {area}</li>
                         ))}
@@ -425,7 +425,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
               {riskAnalysis.root_causes.map((cause, idx) => (
                 <li key={idx} className="flex items-start gap-2 bg-white p-3 rounded border">
                   <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-gray-900">{cause}</span>
+                  <span className="text-sm text-slate-900">{cause}</span>
                 </li>
               ))}
             </ul>
@@ -443,9 +443,9 @@ Return detailed JSON analysis suitable for executive dashboard.`,
           <CardContent className="pt-4 space-y-2">
             {riskAnalysis.immediate_actions?.map((action, idx) => (
               <div key={idx} className="bg-white p-2 rounded border">
-                <p className="text-sm font-medium text-gray-900">{action.action}</p>
+                <p className="text-sm font-medium text-slate-900">{action.action}</p>
                 <Badge variant="outline" className="text-xs mt-1">{action.category}</Badge>
-                <p className="text-xs text-gray-600 mt-1">{action.impact}</p>
+                <p className="text-xs text-slate-600 mt-1">{action.impact}</p>
               </div>
             ))}
           </CardContent>
@@ -491,10 +491,10 @@ Return detailed JSON analysis suitable for executive dashboard.`,
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded border">
-              <p className="font-semibold text-gray-900 mb-2">🎯 QA Audit Focus Areas</p>
+              <p className="font-semibold text-slate-900 mb-2">🎯 QA Audit Focus Areas</p>
               <ul className="space-y-1">
                 {riskAnalysis.resource_allocation?.qa_audit_focus?.map((focus, idx) => (
-                  <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                  <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                     <span className="text-purple-600">•</span>
                     {focus}
                   </li>
@@ -503,10 +503,10 @@ Return detailed JSON analysis suitable for executive dashboard.`,
             </div>
 
             <div className="bg-white p-4 rounded border">
-              <p className="font-semibold text-gray-900 mb-2">📚 Priority Training Topics</p>
+              <p className="font-semibold text-slate-900 mb-2">📚 Priority Training Topics</p>
               <ul className="space-y-1">
                 {riskAnalysis.resource_allocation?.priority_training_topics?.map((topic, idx) => (
-                  <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                  <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                     <span className="text-blue-600">•</span>
                     {topic}
                   </li>
@@ -515,10 +515,10 @@ Return detailed JSON analysis suitable for executive dashboard.`,
             </div>
 
             <div className="bg-white p-4 rounded border">
-              <p className="font-semibold text-gray-900 mb-2">👥 High-Risk Nurses (1-on-1 Coaching)</p>
+              <p className="font-semibold text-slate-900 mb-2">👥 High-Risk Nurses (1-on-1 Coaching)</p>
               <ul className="space-y-1">
                 {riskAnalysis.resource_allocation?.high_risk_nurses?.map((nurse, idx) => (
-                  <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                  <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                     <span className="text-red-600">•</span>
                     {nurse}
                   </li>
@@ -527,10 +527,10 @@ Return detailed JSON analysis suitable for executive dashboard.`,
             </div>
 
             <div className="bg-white p-4 rounded border">
-              <p className="font-semibold text-gray-900 mb-2">🤝 Staff Support Interventions</p>
+              <p className="font-semibold text-slate-900 mb-2">🤝 Staff Support Interventions</p>
               <ul className="space-y-1">
                 {riskAnalysis.resource_allocation?.staff_support_interventions?.map((intervention, idx) => (
-                  <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                  <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                     <span className="text-green-600">•</span>
                     {intervention}
                   </li>
@@ -554,10 +554,10 @@ Return detailed JSON analysis suitable for executive dashboard.`,
             {riskAnalysis.early_warning_indicators?.map((indicator, idx) => (
               <div key={idx} className="bg-white p-3 rounded border-l-4 border-l-red-500">
                 <div className="flex items-start justify-between mb-1">
-                  <p className="font-medium text-sm text-gray-900">{indicator.indicator}</p>
+                  <p className="font-medium text-sm text-slate-900">{indicator.indicator}</p>
                   <Badge variant="outline" className="text-xs">Monitor</Badge>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-2">
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-2">
                   <span><strong>Current:</strong> {indicator.current_value}</span>
                   <span><strong>Threshold:</strong> {indicator.threshold}</span>
                 </div>

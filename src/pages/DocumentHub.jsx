@@ -48,8 +48,8 @@ export default function DocumentHub() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Document Hub</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Document Hub</h1>
+          <p className="text-sm sm:text-base text-slate-600 mt-1">
             Manage signatures, templates, and patient documents
           </p>
         </div>

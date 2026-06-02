@@ -81,7 +81,7 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-gray-600">
+        <CardContent className="p-6 text-center text-slate-600">
           Loading signatures...
         </CardContent>
       </Card>
@@ -145,7 +145,7 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                   {/* Signature Header */}
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 flex items-center gap-2">
+                      <p className="font-semibold text-slate-900 flex items-center gap-2">
                         <FileCheck className="w-4 h-4" />
                         {signature.signed_by_name || signature.normalizedName}
                         {signature.signed_by_credentials && (
@@ -154,7 +154,7 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                           </Badge>
                         )}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-slate-600 mt-1">
                         {signature.signed_by || signature.signature_role || signature.document_type}
                       </p>
                     </div>
@@ -163,7 +163,7 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                         {signature.integrity.isValid ? "Verified" : "Tampered"}
                       </Badge>
                       {signature.device_type && (
-                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                        <div className="flex items-center gap-1 text-xs text-slate-600">
                           {getDeviceIcon(signature.device_type)}
                           <span>{signature.device_type}</span>
                         </div>
@@ -172,7 +172,7 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                   </div>
 
                   {/* Key Metadata */}
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-3">
                     <div className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
                       {signature.normalizedSignedAt ? format(new Date(signature.normalizedSignedAt), "MMM d, yyyy HH:mm") : 'Pending'}
@@ -196,11 +196,11 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
 
                   {/* Expanded Details */}
                   {expandedSignatures[signature.id] && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-2 text-xs">
+                    <div className="mt-3 pt-3 border-t border-slate-200 space-y-2 text-xs">
                       {signature.location_data && (
                         <div>
-                          <p className="font-medium text-gray-700">Location:</p>
-                          <p className="text-gray-600">
+                          <p className="font-medium text-slate-700">Location:</p>
+                          <p className="text-slate-600">
                             {signature.location_data.latitude?.toFixed(6)}, {signature.location_data.longitude?.toFixed(6)}
                             {signature.location_data.accuracy && (
                               <span> (±{signature.location_data.accuracy.toFixed(0)}m)</span>
@@ -210,34 +210,34 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                       )}
 
                       <div>
-                        <p className="font-medium text-gray-700">Signature Method:</p>
-                        <p className="text-gray-600">{signature.signature_method}</p>
+                        <p className="font-medium text-slate-700">Signature Method:</p>
+                        <p className="text-slate-600">{signature.signature_method}</p>
                       </div>
 
                       <div>
-                        <p className="font-medium text-gray-700">Signature Hash:</p>
-                        <p className="text-gray-600 font-mono break-all">{signature.signature_hash}</p>
+                        <p className="font-medium text-slate-700">Signature Hash:</p>
+                        <p className="text-slate-600 font-mono break-all">{signature.signature_hash}</p>
                       </div>
 
                       {signature.attestation_text && (
-                        <div className="bg-white p-2 rounded border border-gray-200">
-                          <p className="font-medium text-gray-700 mb-1">Attestation:</p>
-                          <p className="text-gray-600 italic">"{signature.attestation_text}"</p>
+                        <div className="bg-white p-2 rounded border border-slate-200">
+                          <p className="font-medium text-slate-700 mb-1">Attestation:</p>
+                          <p className="text-slate-600 italic">"{signature.attestation_text}"</p>
                         </div>
                       )}
 
-                      <div className="bg-white p-2 rounded border border-gray-200">
-                        <p className="font-medium text-gray-700 mb-1">User Agent:</p>
-                        <p className="text-gray-600 text-xs break-all">{signature.user_agent}</p>
+                      <div className="bg-white p-2 rounded border border-slate-200">
+                        <p className="font-medium text-slate-700 mb-1">User Agent:</p>
+                        <p className="text-slate-600 text-xs break-all">{signature.user_agent}</p>
                       </div>
 
                       {signature.signature_data && (
-                        <div className="bg-white p-2 rounded border border-gray-200">
-                          <p className="font-medium text-gray-700 mb-2">Signature Image:</p>
+                        <div className="bg-white p-2 rounded border border-slate-200">
+                          <p className="font-medium text-slate-700 mb-2">Signature Image:</p>
                           <img
                             src={signature.signature_data}
                             alt="Electronic Signature"
-                            className="max-w-full h-auto border border-gray-300 rounded"
+                            className="max-w-full h-auto border border-slate-300 rounded"
                           />
                         </div>
                       )}
@@ -255,20 +255,20 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-600" />
+              <FileText className="w-5 h-5 text-slate-600" />
               Audit Trail ({documentLogs.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {documentLogs.map((log, index) => (
-                <div key={index} className="flex items-start gap-3 p-2 bg-gray-50 rounded text-sm">
-                  <Lock className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                <div key={index} className="flex items-start gap-3 p-2 bg-slate-50 rounded text-sm">
+                  <Lock className="w-4 h-4 text-slate-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-slate-900">
                       {log.user_name} signed document
                     </p>
-                    <p className="text-xs text-gray-600 mt-0.5">
+                    <p className="text-xs text-slate-600 mt-0.5">
                       {format(new Date(log.created_date), "MMM d, yyyy HH:mm:ss")} from {log.ip_address || 'Unknown IP'}
                     </p>
                   </div>

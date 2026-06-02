@@ -126,7 +126,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
         )}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Patient</label>
+          <label className="text-sm font-medium text-slate-700">Patient</label>
           <SearchablePatientSelect
             patients={patients}
             value={form.patient_id}
@@ -137,7 +137,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Incident type</label>
+            <label className="text-sm font-medium text-slate-700">Incident type</label>
             <Select value={form.incident_type} onValueChange={(value) => setForm((prev) => ({ ...prev, incident_type: value }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -149,7 +149,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Severity</label>
+            <label className="text-sm font-medium text-slate-700">Severity</label>
             <Select value={form.severity} onValueChange={(value) => setForm((prev) => ({ ...prev, severity: value }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -163,17 +163,17 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Date</label>
+            <label className="text-sm font-medium text-slate-700">Date</label>
             <Input type="date" value={form.incident_date} onChange={(event) => setForm((prev) => ({ ...prev, incident_date: event.target.value }))} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Time</label>
+            <label className="text-sm font-medium text-slate-700">Time</label>
             <Input type="time" value={form.incident_time} onChange={(event) => setForm((prev) => ({ ...prev, incident_time: event.target.value }))} />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Short title</label>
+          <label className="text-sm font-medium text-slate-700">Short title</label>
           <Input
             value={form.incident_name}
             onChange={(event) => setForm((prev) => ({ ...prev, incident_name: event.target.value }))}
@@ -183,7 +183,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
 
         {form.incident_type === "wound_concern" || form.incident_type === "pressure_injury" ? (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Wound location</label>
+            <label className="text-sm font-medium text-slate-700">Wound location</label>
             <Input
               value={form.wound_location}
               onChange={(event) => setForm((prev) => ({ ...prev, wound_location: event.target.value }))}
@@ -194,7 +194,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
 
         {form.incident_type === "safety_event" || form.incident_type === "fall" ? (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Event location</label>
+            <label className="text-sm font-medium text-slate-700">Event location</label>
             <Input
               value={form.safety_location}
               onChange={(event) => setForm((prev) => ({ ...prev, safety_location: event.target.value }))}
@@ -204,7 +204,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
         ) : null}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Narrative report</label>
+          <label className="text-sm font-medium text-slate-700">Narrative report</label>
           <Textarea
             rows={6}
             value={form.report}
@@ -214,7 +214,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
             <Camera className="w-4 h-4" />
             Photo capture
           </div>
@@ -228,8 +228,8 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
               onCheckedChange={(checked) => setForm((prev) => ({ ...prev, immediate_alert: !!checked }))}
             />
             <div>
-              <p className="text-sm font-medium text-gray-900">Trigger immediate admin alert</p>
-              <p className="text-xs text-gray-500">Creates urgent notifications for clinical admins right away.</p>
+              <p className="text-sm font-medium text-slate-900">Trigger immediate admin alert</p>
+              <p className="text-xs text-slate-500">Creates urgent notifications for clinical admins right away.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -238,8 +238,8 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
               onCheckedChange={(checked) => setForm((prev) => ({ ...prev, physician_notified: !!checked }))}
             />
             <div>
-              <p className="text-sm font-medium text-gray-900">Physician already notified</p>
-              <p className="text-xs text-gray-500">Use this to document that you already contacted the provider.</p>
+              <p className="text-sm font-medium text-slate-900">Physician already notified</p>
+              <p className="text-xs text-slate-500">Use this to document that you already contacted the provider.</p>
             </div>
           </div>
         </div>

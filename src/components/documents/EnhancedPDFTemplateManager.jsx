@@ -73,8 +73,8 @@ export default function EnhancedPDFTemplateManager() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Template Library</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-slate-900">Template Library</h2>
+          <p className="text-sm text-slate-600 mt-1">
             {filteredTemplates.length} of {templates.length} templates
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function EnhancedPDFTemplateManager() {
       <div className="space-y-3">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search templates by name or description..."
             value={searchQuery}
@@ -117,7 +117,7 @@ export default function EnhancedPDFTemplateManager() {
           </div>
 
           {/* View Toggle */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
             <Button
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="icon"
@@ -140,18 +140,18 @@ export default function EnhancedPDFTemplateManager() {
 
       {/* Templates Grid/List View */}
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">Loading templates...</div>
+        <div className="text-center py-12 text-slate-500">Loading templates...</div>
       ) : filteredTemplates.length === 0 ? (
         <Card className="p-8 text-center">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-600">No templates found</p>
-          <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filters</p>
+          <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <p className="text-slate-600">No templates found</p>
+          <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filters</p>
         </Card>
       ) : viewMode === "grid" ? (
         <div className="space-y-8">
           {templatesByCategory.map((group) => (
             <div key={group.category}>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
                 <span className="text-2xl">{getCategoryIcon(group.category)}</span>
                 {getCategoryLabel(group.category)}
                 <Badge variant="outline">{group.templates.length}</Badge>
@@ -174,7 +174,7 @@ export default function EnhancedPDFTemplateManager() {
         <div className="space-y-2">
           {templatesByCategory.map((group) => (
             <div key={group.category}>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mt-4 mb-2 px-2">
+              <h3 className="text-sm font-semibold text-slate-600 uppercase mt-4 mb-2 px-2">
                 {getCategoryIcon(group.category)} {getCategoryLabel(group.category)}
               </h3>
               {group.templates.map((template) => (
@@ -205,10 +205,10 @@ function TemplateGridCard({ template, onDelete, onViewVersions }) {
   return (
     <Card className="p-4 flex flex-col hover:shadow-md transition-shadow h-full">
       <div className="flex-1">
-        <h4 className="font-semibold text-gray-900 text-sm line-clamp-2">
+        <h4 className="font-semibold text-slate-900 text-sm line-clamp-2">
           {template.template_name}
         </h4>
-        <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+        <p className="text-xs text-slate-600 mt-2 line-clamp-2">
           {template.description}
         </p>
       </div>
@@ -219,14 +219,14 @@ function TemplateGridCard({ template, onDelete, onViewVersions }) {
             v{template.version}
           </Badge>
           {template.usage_count > 0 && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-slate-500">
               Used {template.usage_count} time{template.usage_count !== 1 ? "s" : ""}
             </span>
           )}
         </div>
 
         {!template.is_active && (
-          <Badge className="bg-gray-100 text-gray-700 text-xs w-full text-center">
+          <Badge className="bg-slate-100 text-slate-700 text-xs w-full text-center">
             Inactive
           </Badge>
         )}
@@ -262,22 +262,22 @@ function TemplateGridCard({ template, onDelete, onViewVersions }) {
 
 function TemplateListRow({ template, onDelete, onViewVersions }) {
   return (
-    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors gap-2">
+    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors gap-2">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h4 className="font-medium text-sm text-gray-900 truncate">
+          <h4 className="font-medium text-sm text-slate-900 truncate">
             {template.template_name}
           </h4>
           <Badge variant="outline" className="text-xs shrink-0">
             v{template.version}
           </Badge>
           {!template.is_active && (
-            <Badge className="bg-gray-200 text-gray-700 text-xs shrink-0">
+            <Badge className="bg-slate-200 text-slate-700 text-xs shrink-0">
               Inactive
             </Badge>
           )}
         </div>
-        <p className="text-xs text-gray-600 mt-0.5 truncate">
+        <p className="text-xs text-slate-600 mt-0.5 truncate">
           {template.description}
         </p>
       </div>
@@ -319,7 +319,7 @@ function VersionHistoryModal({ parentId, onClose }) {
           <h3 className="text-lg font-semibold">Version History</h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-slate-500 hover:text-slate-700"
           >
             ✕
           </button>
@@ -327,7 +327,7 @@ function VersionHistoryModal({ parentId, onClose }) {
 
         <div className="space-y-3">
           {versions.length === 0 ? (
-            <p className="text-sm text-gray-600">No versions found</p>
+            <p className="text-sm text-slate-600">No versions found</p>
           ) : (
             versions.map((version) => (
               <div key={version.id} className="p-3 border rounded-lg">
@@ -336,7 +336,7 @@ function VersionHistoryModal({ parentId, onClose }) {
                     <p className="font-medium text-sm">
                       Version {version.version}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       {new Date(version.created_date).toLocaleDateString()}
                     </p>
                   </div>
@@ -347,7 +347,7 @@ function VersionHistoryModal({ parentId, onClose }) {
                   )}
                 </div>
                 {version.change_notes && (
-                  <p className="text-xs text-gray-700 mt-2 bg-gray-50 p-2 rounded">
+                  <p className="text-xs text-slate-700 mt-2 bg-slate-50 p-2 rounded">
                     {version.change_notes}
                   </p>
                 )}

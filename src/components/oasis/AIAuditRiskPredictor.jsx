@@ -153,7 +153,7 @@ Return JSON:
       case 'high': return { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300' };
       case 'moderate': return { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300' };
       case 'low': return { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' };
-      default: return { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300' };
+      default: return { bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-300' };
     }
   };
 
@@ -188,7 +188,7 @@ Return JSON:
         {isLoading ? (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-amber-500" />
-            <p className="text-sm text-gray-500 mt-2">Analyzing audit risk patterns...</p>
+            <p className="text-sm text-slate-500 mt-2">Analyzing audit risk patterns...</p>
           </div>
         ) : prediction ? (
           <div className="space-y-4">
@@ -198,7 +198,7 @@ Return JSON:
                 <div className="flex items-center gap-2">
                   <Shield className={`w-6 h-6 ${getRiskColor(prediction.risk_level).text}`} />
                   <div>
-                    <p className="text-xs text-gray-600">Predicted Audit Risk</p>
+                    <p className="text-xs text-slate-600">Predicted Audit Risk</p>
                     <p className={`text-xl font-bold ${getRiskColor(prediction.risk_level).text}`}>
                       {prediction.risk_level?.toUpperCase()} RISK
                     </p>
@@ -210,18 +210,18 @@ Return JSON:
                   </p>
                   <div className="flex items-center gap-1 justify-end">
                     {getTrendIcon(prediction.trend)}
-                    <span className="text-xs text-gray-600 capitalize">{prediction.trend}</span>
+                    <span className="text-xs text-slate-600 capitalize">{prediction.trend}</span>
                   </div>
                 </div>
               </div>
               <Progress value={prediction.overall_risk_score} className="h-2" />
-              <p className="text-xs text-gray-600 mt-2">{prediction.audit_probability}</p>
+              <p className="text-xs text-slate-600 mt-2">{prediction.audit_probability}</p>
             </div>
 
             {/* Trend Explanation */}
-            <div className="flex items-start gap-2 p-2 bg-gray-50 rounded border">
+            <div className="flex items-start gap-2 p-2 bg-slate-50 rounded border">
               {getTrendIcon(prediction.trend)}
-              <p className="text-sm text-gray-700">{prediction.trend_explanation}</p>
+              <p className="text-sm text-slate-700">{prediction.trend_explanation}</p>
             </div>
 
             {expanded && (
@@ -244,7 +244,7 @@ Return JSON:
                 {/* Future Risks */}
                 {prediction.future_risks?.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                    <p className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
                       <FileWarning className="w-4 h-4" />
                       Predicted Future Risks
                     </p>
@@ -258,7 +258,7 @@ Return JSON:
                               risk.probability === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
                             }>{risk.probability}</Badge>
                           </div>
-                          <p className="text-xs text-gray-600">Timeframe: {risk.timeframe}</p>
+                          <p className="text-xs text-slate-600">Timeframe: {risk.timeframe}</p>
                           <p className="text-xs text-green-700 mt-1">Prevention: {risk.prevention}</p>
                         </div>
                       ))}
@@ -281,7 +281,7 @@ Return JSON:
                             action.urgency === 'soon' ? 'bg-yellow-600 text-white' : 'bg-blue-600 text-white'
                           } variant="outline">{action.urgency}</Badge>
                           <div className="flex-1">
-                            <p className="text-sm text-gray-800">{action.action}</p>
+                            <p className="text-sm text-slate-800">{action.action}</p>
                             <p className="text-xs text-green-700">Impact: {action.impact}</p>
                           </div>
                         </div>
@@ -293,7 +293,7 @@ Return JSON:
                 {/* Pattern Insights */}
                 {prediction.pattern_insights?.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Pattern Insights</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Pattern Insights</p>
                     {prediction.pattern_insights.map((insight, idx) => (
                       <div key={idx} className="p-2 bg-indigo-50 rounded border border-indigo-200 mb-2">
                         <p className="text-sm font-medium text-indigo-800">{insight.pattern}</p>
@@ -316,7 +316,7 @@ Return JSON:
 
                 {/* Peer Comparison */}
                 {prediction.comparison_to_peers && (
-                  <p className="text-xs text-gray-500 text-center italic">
+                  <p className="text-xs text-slate-500 text-center italic">
                     {prediction.comparison_to_peers}
                   </p>
                 )}

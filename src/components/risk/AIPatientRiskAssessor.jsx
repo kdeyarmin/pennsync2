@@ -246,7 +246,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
       case 'moderate': return 'bg-yellow-500';
       case 'high': return 'bg-orange-500';
       case 'critical': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -256,7 +256,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
       case '24_hours': return 'bg-orange-600';
       case 'this_week': return 'bg-yellow-600';
       case 'routine': return 'bg-blue-600';
-      default: return 'bg-gray-600';
+      default: return 'bg-slate-600';
     }
   };
 
@@ -315,14 +315,14 @@ Analyze the following risk domains and provide detailed scores and explanations:
               {/* Overall Risk Score */}
               <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg border-2 border-purple-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-bold text-gray-900">Overall Risk Profile</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Overall Risk Profile</h3>
                   <Badge className={`${getRiskColor(displayAssessment.overall_risk_level)} text-white text-lg px-4 py-2`}>
                     {displayAssessment.overall_risk_level.toUpperCase()}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-4 mb-3">
                   <span className="text-4xl font-bold text-purple-600">{displayAssessment.overall_risk_score}</span>
-                  <span className="text-gray-600">/100</span>
+                  <span className="text-slate-600">/100</span>
                   <Progress value={displayAssessment.overall_risk_score} className="flex-1" />
                 </div>
                 {displayAssessment.flagged_for_review && (
@@ -355,7 +355,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                     </div>
                     <div className="space-y-1">
                       {displayAssessment.fall_risk_factors?.slice(0, 3).map((factor, i) => (
-                        <p key={i} className="text-xs text-gray-600">• {factor}</p>
+                        <p key={i} className="text-xs text-slate-600">• {factor}</p>
                       ))}
                     </div>
                   </CardContent>
@@ -379,7 +379,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                     </div>
                     <div className="space-y-1">
                       {displayAssessment.readmission_risk_factors?.slice(0, 3).map((factor, i) => (
-                        <p key={i} className="text-xs text-gray-600">• {factor}</p>
+                        <p key={i} className="text-xs text-slate-600">• {factor}</p>
                       ))}
                     </div>
                   </CardContent>
@@ -403,7 +403,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                     </div>
                     <div className="space-y-1">
                       {displayAssessment.medication_adherence_risk_factors?.slice(0, 3).map((factor, i) => (
-                        <p key={i} className="text-xs text-gray-600">• {factor}</p>
+                        <p key={i} className="text-xs text-slate-600">• {factor}</p>
                       ))}
                     </div>
                   </CardContent>
@@ -427,7 +427,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                     </div>
                     <div className="space-y-1">
                       {displayAssessment.clinical_deterioration_risk_factors?.slice(0, 3).map((factor, i) => (
-                        <p key={i} className="text-xs text-gray-600">• {factor}</p>
+                        <p key={i} className="text-xs text-slate-600">• {factor}</p>
                       ))}
                     </div>
                   </CardContent>
@@ -447,12 +447,12 @@ Analyze the following risk domains and provide detailed scores and explanations:
                     {displayAssessment.priority_actions.map((action, i) => (
                       <div key={i} className="bg-white p-3 rounded-lg border border-yellow-200">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <p className="font-semibold text-gray-900">{action.action}</p>
+                          <p className="font-semibold text-slate-900">{action.action}</p>
                           <Badge className={getUrgencyColor(action.urgency)}>
                             {action.urgency.replace('_', ' ')}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-600">{action.rationale}</p>
+                        <p className="text-sm text-slate-600">{action.rationale}</p>
                       </div>
                     ))}
                   </CardContent>
@@ -466,7 +466,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                     <CardTitle className="text-base">Detailed Clinical Analysis</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
                       {displayAssessment.detailed_analysis}
                     </p>
                   </CardContent>
@@ -484,7 +484,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                       {displayAssessment.recommended_interventions.map((intervention, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{intervention}</span>
+                          <span className="text-sm text-slate-700">{intervention}</span>
                         </li>
                       ))}
                     </ul>
@@ -493,7 +493,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
               )}
 
               {/* Assessment Metadata */}
-              <div className="text-xs text-gray-500 space-y-1">
+              <div className="text-xs text-slate-500 space-y-1">
                 <p>Assessment Date: {new Date(displayAssessment.assessment_date).toLocaleString()}</p>
                 <p>Data Sources: {displayAssessment.data_sources_analyzed?.visit_count || 0} visits, {displayAssessment.data_sources_analyzed?.incident_count || 0} incidents, {displayAssessment.data_sources_analyzed?.care_plan_count || 0} care plans</p>
               </div>

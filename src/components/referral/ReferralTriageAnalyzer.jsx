@@ -112,7 +112,7 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">
+            <label className="text-sm font-semibold text-slate-700 block mb-2">
               Paste referral documentation or fax text
             </label>
             <Textarea
@@ -199,21 +199,21 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Patient Name</p>
-                  <p className="text-sm font-semibold text-gray-900">{analysis.patient_name}</p>
+                  <p className="text-xs text-slate-600 uppercase font-semibold">Patient Name</p>
+                  <p className="text-sm font-semibold text-slate-900">{analysis.patient_name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Date of Birth</p>
-                  <p className="text-sm font-semibold text-gray-900">{analysis.date_of_birth}</p>
+                  <p className="text-xs text-slate-600 uppercase font-semibold">Date of Birth</p>
+                  <p className="text-sm font-semibold text-slate-900">{analysis.date_of_birth}</p>
                 </div>
               </div>
               <div>
-                <p className="text-xs text-gray-600 uppercase font-semibold">Primary Diagnosis</p>
-                <p className="text-sm text-gray-900">{analysis.primary_diagnosis}</p>
+                <p className="text-xs text-slate-600 uppercase font-semibold">Primary Diagnosis</p>
+                <p className="text-sm text-slate-900">{analysis.primary_diagnosis}</p>
               </div>
               {analysis.secondary_diagnoses?.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold mb-2">Secondary Diagnoses</p>
+                  <p className="text-xs text-slate-600 uppercase font-semibold mb-2">Secondary Diagnoses</p>
                   <div className="flex flex-wrap gap-1">
                     {analysis.secondary_diagnoses.map((dx, i) => (
                       <Badge key={i} variant="outline">
@@ -232,7 +232,7 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
               <CardTitle className="text-lg">Clinical Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-700 leading-relaxed">
+              <p className="text-sm text-slate-700 leading-relaxed">
                 {analysis.clinical_summary}
               </p>
             </CardContent>
@@ -250,7 +250,7 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
               <CardContent>
                 <ul className="space-y-2">
                   {analysis.key_risk_factors.map((risk, i) => (
-                    <li key={i} className="text-sm text-gray-700 flex gap-2">
+                    <li key={i} className="text-sm text-slate-700 flex gap-2">
                       <span className="text-yellow-600 font-bold">•</span>
                       {risk}
                     </li>
@@ -268,14 +268,14 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Nursing Frequency</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-xs text-slate-600 uppercase font-semibold">Nursing Frequency</p>
+                  <p className="text-sm font-semibold text-slate-900">
                     {analysis.preliminary_care_plan?.skilled_nursing_frequency}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Medications to Reconcile</p>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-xs text-slate-600 uppercase font-semibold">Medications to Reconcile</p>
+                  <p className="text-sm text-slate-900">
                     {analysis.preliminary_care_plan?.medications_to_reconcile}
                   </p>
                 </div>
@@ -283,10 +283,10 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
 
               {analysis.preliminary_care_plan?.initial_focus_areas?.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold mb-2">Initial Focus Areas</p>
+                  <p className="text-xs text-slate-600 uppercase font-semibold mb-2">Initial Focus Areas</p>
                   <ul className="space-y-1">
                     {analysis.preliminary_care_plan.initial_focus_areas.map((area, i) => (
-                      <li key={i} className="text-sm text-gray-700 flex gap-2">
+                      <li key={i} className="text-sm text-slate-700 flex gap-2">
                         <span className="text-indigo-600">✓</span>
                         {area}
                       </li>
@@ -297,7 +297,7 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
 
               {analysis.preliminary_care_plan?.equipment_needed?.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold mb-2">Equipment Needed</p>
+                  <p className="text-xs text-slate-600 uppercase font-semibold mb-2">Equipment Needed</p>
                   <div className="flex flex-wrap gap-1">
                     {analysis.preliminary_care_plan.equipment_needed.map((equip, i) => (
                       <Badge key={i} variant="secondary">
@@ -310,7 +310,7 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
 
               {analysis.preliminary_care_plan?.safety_concerns?.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold mb-2">Safety Concerns</p>
+                  <p className="text-xs text-slate-600 uppercase font-semibold mb-2">Safety Concerns</p>
                   <div className="bg-red-50 p-2 rounded border border-red-200">
                     {analysis.preliminary_care_plan.safety_concerns.map((concern, i) => (
                       <p key={i} className="text-sm text-red-800 mb-1">
@@ -325,15 +325,15 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
 
           {/* Data Gaps */}
           {analysis.data_gaps?.length > 0 && (
-            <Card className="border-gray-300">
+            <Card className="border-slate-300">
               <CardHeader>
                 <CardTitle className="text-lg">Data Gaps - Info Needed</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xs text-gray-600 mb-2">Request the following from referral source:</p>
+                <p className="text-xs text-slate-600 mb-2">Request the following from referral source:</p>
                 <ul className="space-y-1">
                   {analysis.data_gaps.map((gap, i) => (
-                    <li key={i} className="text-sm text-gray-700">
+                    <li key={i} className="text-sm text-slate-700">
                       • {gap}
                     </li>
                   ))}
@@ -348,8 +348,8 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
               <CardTitle className="text-lg">Admission Nurse Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                <p className="text-sm text-gray-700">{analysis.admission_notes}</p>
+              <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                <p className="text-sm text-slate-700">{analysis.admission_notes}</p>
               </div>
             </CardContent>
           </Card>

@@ -235,7 +235,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
                   className={`border-2 rounded-lg p-4 transition-all ${
                     selectedActions.includes(idx)
                       ? 'bg-white border-purple-400 shadow-md'
-                      : 'bg-white border-gray-200'
+                      : 'bg-white border-slate-200'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -248,21 +248,21 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
                           {getImpactIcon(action.impact_category)}
-                          <h4 className="font-semibold text-gray-900">{action.title}</h4>
+                          <h4 className="font-semibold text-slate-900">{action.title}</h4>
                         </div>
                         <Badge className={getPriorityColor(action.priority)}>
                           {action.priority}
                         </Badge>
                       </div>
 
-                      <p className="text-sm text-gray-700">{action.description}</p>
+                      <p className="text-sm text-slate-700">{action.description}</p>
 
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-slate-600">
                           <Clock className="w-3 h-3" />
                           Due in {action.due_in_days} days
                         </div>
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-slate-600">
                           <Users className="w-3 h-3" />
                           {action.assign_to_role || 'Clinician'}
                         </div>
@@ -290,7 +290,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
                         </div>
                       )}
 
-                      <p className="text-xs text-gray-500 italic">
+                      <p className="text-xs text-slate-500 italic">
                         Source: {action.source_finding}
                       </p>
                     </div>
@@ -301,7 +301,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
           </ScrollArea>
 
           <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-600">
               <span className="font-medium">{selectedActions.length}</span> action{selectedActions.length !== 1 ? 's' : ''} selected
             </div>
             <div className="flex gap-2">

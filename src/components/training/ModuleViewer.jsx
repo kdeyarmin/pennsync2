@@ -88,7 +88,7 @@ export default function ModuleViewer({ module, userEmail, onComplete }) {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <CardTitle className="text-xl mb-2">{module.title}</CardTitle>
-              <p className="text-sm text-gray-600">{module.description}</p>
+              <p className="text-sm text-slate-600">{module.description}</p>
               <div className="flex flex-wrap gap-2 mt-3">
                 <Badge className="bg-blue-100 text-blue-800">{module.category}</Badge>
                 <Badge variant="outline">{module.difficulty_level}</Badge>
@@ -156,7 +156,7 @@ export default function ModuleViewer({ module, userEmail, onComplete }) {
             <Card>
               <CardContent className="p-6 text-center">
                 <FileText className="w-12 h-12 text-blue-500 mx-auto mb-3" />
-                <p className="text-sm text-gray-700 mb-3">Training document available</p>
+                <p className="text-sm text-slate-700 mb-3">Training document available</p>
                 <Button
                   onClick={() => window.open(module.content.document_url, '_blank')}
                   variant="outline"
@@ -212,7 +212,7 @@ export default function ModuleViewer({ module, userEmail, onComplete }) {
                     >
                       <Star
                         className={`w-8 h-8 ${
-                          num <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                          num <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'
                         }`}
                       />
                     </button>

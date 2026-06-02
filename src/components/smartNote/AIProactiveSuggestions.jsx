@@ -281,8 +281,8 @@ Return JSON with:
                           }`}>
                             {alert.severity}
                           </Badge>
-                          <p className="text-sm font-medium text-gray-900">{alert.finding}</p>
-                          <p className="text-xs text-gray-700 mt-1">
+                          <p className="text-sm font-medium text-slate-900">{alert.finding}</p>
+                          <p className="text-xs text-slate-700 mt-1">
                             <strong>Recommendation:</strong> {alert.recommendation}
                           </p>
                         </div>
@@ -306,7 +306,7 @@ Return JSON with:
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-medium text-gray-900">{task.title}</p>
+                            <p className="text-sm font-medium text-slate-900">{task.title}</p>
                             <Badge variant="outline" className={
                               task.priority === 'high' ? 'bg-red-100 text-red-800' :
                               task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -315,8 +315,8 @@ Return JSON with:
                               {task.priority}
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-700">{task.description}</p>
-                          <p className="text-xs text-gray-600 mt-1 italic">
+                          <p className="text-xs text-slate-700">{task.description}</p>
+                          <p className="text-xs text-slate-600 mt-1 italic">
                             Reason: {task.reasoning}
                           </p>
                         </div>
@@ -355,14 +355,14 @@ Return JSON with:
                           <Badge className="mb-2 bg-green-600">
                             {cp.action === 'update' ? 'Update' : 'New'} Care Plan
                           </Badge>
-                          <p className="text-sm font-medium text-gray-900">{cp.problem}</p>
-                          <p className="text-xs text-gray-700 mt-1">
+                          <p className="text-sm font-medium text-slate-900">{cp.problem}</p>
+                          <p className="text-xs text-slate-700 mt-1">
                             <strong>Goal:</strong> {cp.goal}
                           </p>
-                          <p className="text-xs text-gray-700 mt-1">
+                          <p className="text-xs text-slate-700 mt-1">
                             <strong>Interventions:</strong> {cp.interventions.join(', ')}
                           </p>
-                          <p className="text-xs text-gray-600 mt-1 italic">
+                          <p className="text-xs text-slate-600 mt-1 italic">
                             Reason: {cp.reasoning}
                           </p>
                         </div>
@@ -398,11 +398,11 @@ Return JSON with:
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{gap.missing_element}</p>
-                          <p className="text-xs text-gray-700 mt-1">
+                          <p className="text-sm font-medium text-slate-900">{gap.missing_element}</p>
+                          <p className="text-xs text-slate-700 mt-1">
                             <strong>Why important:</strong> {gap.importance}
                           </p>
-                          <p className="text-xs text-gray-700 mt-1">
+                          <p className="text-xs text-slate-700 mt-1">
                             <strong>Suggested text:</strong> {gap.suggestion}
                           </p>
                         </div>
@@ -436,11 +436,11 @@ Return JSON with:
                 {suggestions.medication_concerns.map((med, idx) => (
                   <Card key={`med-${idx}`} className="border-2 border-orange-200 bg-orange-50">
                     <CardContent className="p-3">
-                      <p className="text-sm font-medium text-gray-900">{med.concern}</p>
+                      <p className="text-sm font-medium text-slate-900">{med.concern}</p>
                       {med.medication && (
                         <Badge className="mt-1 bg-orange-600">{med.medication}</Badge>
                       )}
-                      <p className="text-xs text-gray-700 mt-1">
+                      <p className="text-xs text-slate-700 mt-1">
                         <strong>Action:</strong> {med.action}
                       </p>
                     </CardContent>
@@ -460,7 +460,7 @@ Return JSON with:
                   <Card key={`edu-${idx}`} className="border-2 border-indigo-200 bg-indigo-50">
                     <CardContent className="p-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-gray-900">{edu.topic}</p>
+                        <p className="text-sm font-medium text-slate-900">{edu.topic}</p>
                         <Badge variant="outline" className={
                           edu.priority === 'high' ? 'bg-red-100 text-red-800' :
                           edu.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -469,7 +469,7 @@ Return JSON with:
                           {edu.priority}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-700">{edu.reason}</p>
+                      <p className="text-xs text-slate-700">{edu.reason}</p>
                     </CardContent>
                   </Card>
                 ))}

@@ -42,11 +42,11 @@ export default function PatientAlerts() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-4 sm:mb-6 md:mb-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center gap-2 sm:gap-3">
           <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 flex-shrink-0" />
           <span className="truncate">Patient Alerts</span>
         </h1>
-        <p className="text-sm sm:text-base text-gray-600">
+        <p className="text-sm sm:text-base text-slate-600">
           AI-powered proactive identification of critical events and potential deteriorations
         </p>
       </div>
@@ -103,12 +103,12 @@ export default function PatientAlerts() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-3">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">{analysisResults.analysis_summary}</p>
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-700">{analysisResults.analysis_summary}</p>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600">Overall Risk:</span>
+                  <span className="text-xs text-slate-600">Overall Risk:</span>
                   <Badge className={
                     analysisResults.overall_risk_level === 'critical' ? 'bg-red-600 text-white' :
                     analysisResults.overall_risk_level === 'high' ? 'bg-orange-500 text-white' :

@@ -133,7 +133,7 @@ export default function OASISAutomationSettings() {
       score_threshold: "bg-blue-100 text-blue-800",
       clinical_concern: "bg-purple-100 text-purple-800"
     };
-    return colors[type] || "bg-gray-100 text-gray-800";
+    return colors[type] || "bg-slate-100 text-slate-800";
   };
 
   return (
@@ -220,7 +220,7 @@ export default function OASISAutomationSettings() {
                   </div>
                 </div>
 
-                <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="border rounded-lg p-4 bg-slate-50">
                   <h4 className="font-semibold mb-3 flex items-center gap-2">
                     <Zap className="w-4 h-4" />
                     Trigger Conditions
@@ -262,7 +262,7 @@ export default function OASISAutomationSettings() {
                   </div>
                 </div>
 
-                <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="border rounded-lg p-4 bg-slate-50">
                   <h4 className="font-semibold mb-3">Action Configuration</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -337,13 +337,13 @@ export default function OASISAutomationSettings() {
               <div
                 key={rule.id}
                 className={`border rounded-lg p-4 ${
-                  rule.is_active ? 'bg-white border-blue-200' : 'bg-gray-50 border-gray-300 opacity-60'
+                  rule.is_active ? 'bg-white border-blue-200' : 'bg-slate-50 border-slate-300 opacity-60'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-gray-900">{rule.rule_name}</h4>
+                      <h4 className="font-semibold text-slate-900">{rule.rule_name}</h4>
                       <Badge className={getTriggerBadge(rule.trigger_type)}>
                         {rule.trigger_type.replace(/_/g, ' ')}
                       </Badge>
@@ -354,8 +354,8 @@ export default function OASISAutomationSettings() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{rule.description}</p>
-                    <div className="flex gap-4 text-xs text-gray-500">
+                    <p className="text-sm text-slate-600 mb-2">{rule.description}</p>
+                    <div className="flex gap-4 text-xs text-slate-500">
                       <span>Action: {rule.action_type.replace(/_/g, ' ')}</span>
                       <span>Priority: {rule.action_config?.task_priority || 'medium'}</span>
                       <span>Due: {rule.action_config?.due_in_days || 7} days</span>

@@ -116,7 +116,7 @@ export default function RevenueImpactAnalysis({ data = [], compact = false }) {
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No revenue data available</p>
+          <p className="text-center text-slate-500 py-8">No revenue data available</p>
         ) : (
           <>
             {/* Summary metrics */}
@@ -139,9 +139,9 @@ export default function RevenueImpactAnalysis({ data = [], compact = false }) {
                     <p className="text-xl font-bold text-purple-900">{metrics.totalEpisodes}</p>
                     <p className="text-xs text-purple-700">Episodes</p>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-xl font-bold text-gray-900">${metrics.avgPerEpisode.toFixed(0)}</p>
-                    <p className="text-xs text-gray-700">Avg/Episode</p>
+                  <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <p className="text-xl font-bold text-slate-900">${metrics.avgPerEpisode.toFixed(0)}</p>
+                    <p className="text-xs text-slate-700">Avg/Episode</p>
                   </div>
                 </>
               )}
@@ -175,14 +175,14 @@ export default function RevenueImpactAnalysis({ data = [], compact = false }) {
               {/* Revenue by category */}
               {!compact && revenueByCategory.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-3">Revenue by Clinical Group</p>
+                  <p className="text-sm font-medium text-slate-700 mb-3">Revenue by Clinical Group</p>
                   <div className="space-y-2">
                     {revenueByCategory.slice(0, 5).map((cat) => (
-                      <div key={cat.name} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div key={cat.name} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                         <span className="text-sm font-medium">{cat.name}</span>
                         <div className="text-right">
-                          <p className="text-sm font-bold text-gray-900">${(cat.amount / 1000).toFixed(1)}k</p>
-                          <p className="text-xs text-gray-500">{cat.count} episodes</p>
+                          <p className="text-sm font-bold text-slate-900">${(cat.amount / 1000).toFixed(1)}k</p>
+                          <p className="text-xs text-slate-500">{cat.count} episodes</p>
                         </div>
                       </div>
                     ))}

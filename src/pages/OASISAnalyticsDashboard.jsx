@@ -210,13 +210,13 @@ export default function OASISAnalyticsDashboard() {
   const getTrendIcon = (trend) => {
     if (trend > 2) return <TrendingUp className="w-4 h-4 text-green-600" />;
     if (trend < -2) return <TrendingDown className="w-4 h-4 text-red-600" />;
-    return <Minus className="w-4 h-4 text-gray-600" />;
+    return <Minus className="w-4 h-4 text-slate-600" />;
   };
 
   const getTrendColor = (trend) => {
     if (trend > 2) return "text-green-600";
     if (trend < -2) return "text-red-600";
-    return "text-gray-600";
+    return "text-slate-600";
   };
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -226,7 +226,7 @@ export default function OASISAnalyticsDashboard() {
       <div className="p-6 max-w-7xl mx-auto">
         <div className="text-center py-12">
           <Activity className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading analytics data...</p>
+          <p className="text-slate-600">Loading analytics data...</p>
         </div>
       </div>
     );
@@ -237,8 +237,8 @@ export default function OASISAnalyticsDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">OASIS Analytics Dashboard</h1>
-          <p className="text-gray-600 mt-1">Performance insights and trends across all OASIS submissions</p>
+          <h1 className="text-3xl font-bold text-slate-900">OASIS Analytics Dashboard</h1>
+          <p className="text-slate-600 mt-1">Performance insights and trends across all OASIS submissions</p>
         </div>
         <Button variant="outline" className="gap-2">
           <Download className="w-4 h-4" />
@@ -251,8 +251,8 @@ export default function OASISAnalyticsDashboard() {
         <CardContent className="p-4">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filters:</span>
+              <Filter className="w-4 h-4 text-slate-500" />
+              <span className="text-sm font-medium text-slate-700">Filters:</span>
             </div>
             <Select value={timeRange} onValueChange={setTimeRange}>
               <SelectTrigger className="w-[180px]">
@@ -294,12 +294,12 @@ export default function OASISAnalyticsDashboard() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Avg Overall Score</span>
+                  <span className="text-sm text-slate-600">Avg Overall Score</span>
                   {getTrendIcon(metrics.trend)}
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-3xl font-bold text-gray-900">{metrics.avgOverall.toFixed(1)}%</p>
+                    <p className="text-3xl font-bold text-slate-900">{metrics.avgOverall.toFixed(1)}%</p>
                     <p className={`text-xs mt-1 ${getTrendColor(metrics.trend)}`}>
                       {metrics.trend > 0 ? '+' : ''}{metrics.trend.toFixed(1)}% trend
                     </p>
@@ -313,13 +313,13 @@ export default function OASISAnalyticsDashboard() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Avg Accuracy</span>
+                  <span className="text-sm text-slate-600">Avg Accuracy</span>
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-3xl font-bold text-gray-900">{metrics.avgAccuracy.toFixed(1)}%</p>
-                    <p className="text-xs text-gray-500 mt-1">{metrics.totalAccuracyIssues} issues found</p>
+                    <p className="text-3xl font-bold text-slate-900">{metrics.avgAccuracy.toFixed(1)}%</p>
+                    <p className="text-xs text-slate-500 mt-1">{metrics.totalAccuracyIssues} issues found</p>
                   </div>
                   <CheckCircle2 className="w-8 h-8 text-green-500 opacity-20" />
                 </div>
@@ -330,13 +330,13 @@ export default function OASISAnalyticsDashboard() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Avg Compliance</span>
+                  <span className="text-sm text-slate-600">Avg Compliance</span>
                   <AlertTriangle className="w-4 h-4 text-orange-600" />
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-3xl font-bold text-gray-900">{metrics.avgCompliance.toFixed(1)}%</p>
-                    <p className="text-xs text-gray-500 mt-1">{metrics.totalComplianceIssues} concerns</p>
+                    <p className="text-3xl font-bold text-slate-900">{metrics.avgCompliance.toFixed(1)}%</p>
+                    <p className="text-xs text-slate-500 mt-1">{metrics.totalComplianceIssues} concerns</p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-orange-500 opacity-20" />
                 </div>
@@ -347,13 +347,13 @@ export default function OASISAnalyticsDashboard() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Total PDGM Payment</span>
+                  <span className="text-sm text-slate-600">Total PDGM Payment</span>
                   <DollarSign className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(metrics.totalEstimatedPayment)}</p>
-                    <p className="text-xs text-gray-500 mt-1">{formatCurrency(metrics.avgPayment)} avg</p>
+                    <p className="text-3xl font-bold text-slate-900">{formatCurrency(metrics.totalEstimatedPayment)}</p>
+                    <p className="text-xs text-slate-500 mt-1">{formatCurrency(metrics.avgPayment)} avg</p>
                   </div>
                   <DollarSign className="w-8 h-8 text-green-500 opacity-20" />
                 </div>
@@ -510,23 +510,23 @@ export default function OASISAnalyticsDashboard() {
               {topOpportunities.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-slate-50">
                       <tr>
-                        <th className="text-left p-3 font-medium text-gray-700">Patient</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Category</th>
-                        <th className="text-left p-3 font-medium text-gray-700">Opportunity</th>
-                        <th className="text-center p-3 font-medium text-gray-700">Impact</th>
-                        <th className="text-center p-3 font-medium text-gray-700">Date</th>
+                        <th className="text-left p-3 font-medium text-slate-700">Patient</th>
+                        <th className="text-left p-3 font-medium text-slate-700">Category</th>
+                        <th className="text-left p-3 font-medium text-slate-700">Opportunity</th>
+                        <th className="text-center p-3 font-medium text-slate-700">Impact</th>
+                        <th className="text-center p-3 font-medium text-slate-700">Date</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-slate-100">
                       {topOpportunities.map((opp, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="p-3 text-gray-900">{opp.patient || 'Unknown'}</td>
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="p-3 text-slate-900">{opp.patient || 'Unknown'}</td>
                           <td className="p-3">
                             <Badge variant="outline">{opp.category}</Badge>
                           </td>
-                          <td className="p-3 text-gray-700">{opp.opportunity}</td>
+                          <td className="p-3 text-slate-700">{opp.opportunity}</td>
                           <td className="p-3 text-center">
                             <Badge className={
                               opp.impact === 'high' ? 'bg-green-600 text-white' :
@@ -536,7 +536,7 @@ export default function OASISAnalyticsDashboard() {
                               {opp.impact}
                             </Badge>
                           </td>
-                          <td className="p-3 text-center text-gray-600">
+                          <td className="p-3 text-center text-slate-600">
                             {format(new Date(opp.date), 'MM/dd/yy')}
                           </td>
                         </tr>
@@ -545,7 +545,7 @@ export default function OASISAnalyticsDashboard() {
                   </table>
                 </div>
               ) : (
-                <p className="text-center text-gray-500 py-8">No optimization opportunities identified yet</p>
+                <p className="text-center text-slate-500 py-8">No optimization opportunities identified yet</p>
               )}
             </CardContent>
           </Card>
@@ -561,24 +561,24 @@ export default function OASISAnalyticsDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {filteredData.slice(0, 5).map((upload) => (
-                  <div key={upload.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={upload.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <FileText className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{upload.patient_name || 'Unknown Patient'}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="font-medium text-slate-900">{upload.patient_name || 'Unknown Patient'}</p>
+                        <p className="text-xs text-slate-500">
                           {upload.assessment_type} - {format(new Date(upload.created_date), 'MMM dd, yyyy')}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-slate-900">
                           Score: {upload.scores?.overall?.toFixed(1) || 'N/A'}%
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {formatCurrency(upload.estimated_payment || 0)}
                         </p>
                       </div>
@@ -601,9 +601,9 @@ export default function OASISAnalyticsDashboard() {
       {!metrics && filteredData.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 mb-2">No OASIS analyses found for the selected filters</p>
-            <p className="text-sm text-gray-500">Upload and analyze OASIS documents to see insights here</p>
+            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-600 mb-2">No OASIS analyses found for the selected filters</p>
+            <p className="text-sm text-slate-500">Upload and analyze OASIS documents to see insights here</p>
           </CardContent>
         </Card>
       )}

@@ -711,7 +711,7 @@ Return JSON:
       <Button
         size="sm"
         variant="ghost"
-        className={`h-6 px-2 ${flagged ? 'text-orange-600' : 'text-gray-400 hover:text-orange-600'}`}
+        className={`h-6 px-2 ${flagged ? 'text-orange-600' : 'text-slate-400 hover:text-orange-600'}`}
         onClick={(e) => {
           e.stopPropagation();
           if (!flagged) {
@@ -768,7 +768,7 @@ Return JSON:
       today: 'bg-yellow-100 text-yellow-800',
       this_week: 'bg-blue-100 text-blue-800'
     };
-    return colors[urgency] || 'bg-gray-100 text-gray-800';
+    return colors[urgency] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -798,7 +798,7 @@ Return JSON:
           {!reviewResult ? (
             <div className="text-center py-4">
               <FileCheck className="w-10 h-10 text-blue-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 AI will review your note against clinical protocols, compliance requirements, and safety standards
               </p>
               <Button
@@ -813,7 +813,7 @@ Return JSON:
                 )}
               </Button>
               {diagnosis && (
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-slate-400 mt-2">
                   <Stethoscope className="w-3 h-3 inline mr-1" />
                   Will cross-reference: {getClinicalProtocols(diagnosis).map(p => p.name).join(', ')}
                 </p>
@@ -822,16 +822,16 @@ Return JSON:
           ) : (
             <div className="space-y-4">
               {/* Score and Summary */}
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
                 <div className="text-center">
                   <p className={`text-3xl font-bold ${getScoreColor(reviewResult.overall_score)}`}>
                     {reviewResult.overall_score}
                   </p>
-                  <p className="text-xs text-gray-500">Score</p>
+                  <p className="text-xs text-slate-500">Score</p>
                 </div>
                 <div className="flex-1">
                   <Progress value={reviewResult.overall_score} className="h-2 mb-2" />
-                  <p className="text-sm text-gray-700">{reviewResult.review_summary}</p>
+                  <p className="text-sm text-slate-700">{reviewResult.review_summary}</p>
                 </div>
               </div>
 
@@ -900,7 +900,7 @@ Return JSON:
                             </div>
                             <p className="text-red-700">Action: {alert.action_needed}</p>
                             {alert.clinical_rationale && (
-                              <p className="text-gray-500 mt-1 italic">Rationale: {alert.clinical_rationale}</p>
+                              <p className="text-slate-500 mt-1 italic">Rationale: {alert.clinical_rationale}</p>
                             )}
                           </AlertDescription>
                         </Alert>
@@ -933,9 +933,9 @@ Return JSON:
                             </div>
                             <FlagButton itemType="gap" itemId={idx} content={`${gap.element}: ${gap.suggestion}`} />
                           </div>
-                          <p className="text-gray-600">{gap.suggestion}</p>
+                          <p className="text-slate-600">{gap.suggestion}</p>
                           {gap.guideline_reference && (
-                            <p className="text-gray-400 mt-1 text-xs italic">
+                            <p className="text-slate-400 mt-1 text-xs italic">
                               <BookOpen className="w-3 h-3 inline mr-1" />
                               Ref: {gap.guideline_reference}
                             </p>
@@ -969,7 +969,7 @@ Return JSON:
                               )}
                               <div>
                                 <p className="font-medium">{finding.finding}</p>
-                                <p className="text-gray-600">
+                                <p className="text-slate-600">
                                   <span className="font-medium">History:</span> {finding.patient_history_factor} → 
                                   <span className="font-medium"> Symptom:</span> {finding.current_symptom}
                                 </p>
@@ -1053,7 +1053,7 @@ Return JSON:
                               className={`flex items-start gap-2 p-1.5 rounded text-xs ${
                                 element.status === 'met' ? 'bg-green-50' :
                                 element.status === 'partial' ? 'bg-yellow-50' :
-                                element.status === 'not_applicable' ? 'bg-gray-50' : 'bg-red-50'
+                                element.status === 'not_applicable' ? 'bg-slate-50' : 'bg-red-50'
                               }`}
                             >
                               {element.status === 'met' ? (
@@ -1061,7 +1061,7 @@ Return JSON:
                               ) : element.status === 'partial' ? (
                                 <Clock className="w-3 h-3 text-yellow-600 shrink-0 mt-0.5" />
                               ) : element.status === 'not_applicable' ? (
-                                <span className="w-3 h-3 text-gray-400 shrink-0">—</span>
+                                <span className="w-3 h-3 text-slate-400 shrink-0">—</span>
                               ) : (
                                 <AlertTriangle className="w-3 h-3 text-red-600 shrink-0 mt-0.5" />
                               )}
@@ -1073,7 +1073,7 @@ Return JSON:
                                   )}
                                 </div>
                                 {element.found_text && (
-                                  <p className="text-gray-500 italic truncate">"{element.found_text}"</p>
+                                  <p className="text-slate-500 italic truncate">"{element.found_text}"</p>
                                 )}
                                 {element.status !== 'met' && element.status !== 'not_applicable' && element.recommendation && (
                                   <p className="text-orange-700 mt-0.5">→ {element.recommendation}</p>
@@ -1088,8 +1088,8 @@ Return JSON:
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                      <BookOpen className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <div className="text-center py-4 text-slate-500 text-sm">
+                      <BookOpen className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                       No protocol data available
                     </div>
                   )}
@@ -1118,7 +1118,7 @@ Return JSON:
                               </Button>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-700 mb-1">{followup.issue}</p>
+                          <p className="text-xs text-slate-700 mb-1">{followup.issue}</p>
                           <p className="text-xs text-orange-700">
                             → {followup.suggested_task.title}
                           </p>
@@ -1146,7 +1146,7 @@ Return JSON:
                             <p className="font-medium text-purple-900">{gap.area}</p>
                             <FlagButton itemType="training" itemId={idx} content={`Training: ${gap.recommended_training}`} />
                           </div>
-                          <p className="text-gray-600 mb-1">{gap.evidence}</p>
+                          <p className="text-slate-600 mb-1">{gap.evidence}</p>
                           <Link to={`${createPageUrl("NurseTraining")}?topic=${encodeURIComponent(gap.recommended_training)}`}>
                             <Button size="sm" variant="link" className="h-5 p-0 text-xs text-purple-600">
                               <GraduationCap className="w-3 h-3 mr-1" />
@@ -1198,7 +1198,7 @@ Return JSON:
                             <div key={idx} className="p-2 bg-orange-50 rounded border border-orange-200">
                               <p className="text-xs font-medium text-orange-900">{gap.area}</p>
                               <div className="mt-1 p-1.5 bg-white rounded">
-                                <p className="text-xs text-gray-500 line-through">{gap.current_text}</p>
+                                <p className="text-xs text-slate-500 line-through">{gap.current_text}</p>
                                 <p className="text-xs text-green-700 mt-1 font-medium">→ {gap.improved_text}</p>
                               </div>
                               <p className="text-xs text-orange-700 mt-1">{gap.explanation}</p>
@@ -1222,8 +1222,8 @@ Return JSON:
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                      <Brain className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <div className="text-center py-4 text-slate-500 text-sm">
+                      <Brain className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                       No clinical reasoning analysis available
                     </div>
                   )}
@@ -1253,8 +1253,8 @@ Return JSON:
 
                       {/* Secondary ICD-10 */}
                       {reviewResult.coding_recommendations.secondary_icd10?.length > 0 && (
-                        <div className="p-2 bg-gray-50 rounded border">
-                          <p className="text-xs font-semibold text-gray-700 mb-2">Secondary Diagnoses:</p>
+                        <div className="p-2 bg-slate-50 rounded border">
+                          <p className="text-xs font-semibold text-slate-700 mb-2">Secondary Diagnoses:</p>
                           <div className="flex flex-wrap gap-1">
                             {reviewResult.coding_recommendations.secondary_icd10.map((code, idx) => (
                               <Badge key={idx} variant="outline" className="font-mono text-xs">
@@ -1268,7 +1268,7 @@ Return JSON:
                       {/* CPT Codes */}
                       {reviewResult.coding_recommendations.cpt_codes?.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold text-gray-700">CPT Codes:</p>
+                          <p className="text-xs font-semibold text-slate-700">CPT Codes:</p>
                           {reviewResult.coding_recommendations.cpt_codes.map((cpt, idx) => (
                             <div key={idx} className={`p-2 rounded border ${cpt.documentation_adequate ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
                               <div className="flex items-center justify-between">
@@ -1285,7 +1285,7 @@ Return JSON:
                                 )}
                               </div>
                               {cpt.time_requirement && (
-                                <p className="text-xs text-gray-600 mt-1">Time requirement: {cpt.time_requirement}</p>
+                                <p className="text-xs text-slate-600 mt-1">Time requirement: {cpt.time_requirement}</p>
                               )}
                               {!cpt.documentation_adequate && cpt.missing_for_billing?.length > 0 && (
                                 <p className="text-xs text-yellow-700 mt-1">
@@ -1322,8 +1322,8 @@ Return JSON:
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                      <FileCode className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <div className="text-center py-4 text-slate-500 text-sm">
+                      <FileCode className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                       No coding recommendations available
                     </div>
                   )}
@@ -1348,9 +1348,9 @@ Return JSON:
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="p-3 bg-gray-50 rounded-lg text-sm">
-              <p className="font-medium text-gray-700">Flagging:</p>
-              <p className="text-gray-600">{currentFlagItem?.content}</p>
+            <div className="p-3 bg-slate-50 rounded-lg text-sm">
+              <p className="font-medium text-slate-700">Flagging:</p>
+              <p className="text-slate-600">{currentFlagItem?.content}</p>
             </div>
             <div>
               <label className="text-sm font-medium">Add a note (optional):</label>

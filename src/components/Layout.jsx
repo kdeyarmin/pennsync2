@@ -3,16 +3,13 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
-import {
-  Home, Users, FileText, ClipboardList, Shield, GraduationCap,
-  BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Phone
-} from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
+import { buildNavCategories, buildAdminItems, NAV_MANIFEST } from "@/lib/nav.manifest";
 
 import DesktopSidebar from "@/components/layout/DesktopSidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -133,86 +130,62 @@ export default function Layout({ children, currentPageName }) {
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
-  const navCategories = useMemo(() => [
-    { category: "Overview", items: [{ name: "Dashboard", icon: Home, page: "Dashboard" }] },
-    {
-      category: "Patient Care",
-      items: [
-        { name: "Patients", icon: Users, page: "Patients" },
-        { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
-        { name: "OASIS Assessment", icon: Brain, page: "SmartOASISAssessment" },
-        { name: "Incidents", icon: AlertTriangle, page: "Incidents" },
-      ],
-    },
-    {
-      category: "Documentation",
-      items: [
-        { name: "Clinical Notes", icon: Brain, page: "ClinicalDocumentation" },
-        { name: "Documents", icon: FileText, page: "DocumentHub" },
-        { name: "Referrals", icon: FileText, page: "ReferralIntake" },
-      ],
-    },
-    {
-      category: "Communication",
-      items: [
-        { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
-        { name: "Phone Center", icon: Phone, page: "PhoneCenter", badge: unreadSmsCount },
-        { name: "Fax", icon: BookUser, page: "SendFax" },
-        { name: "Providers", icon: Users, page: "PhysicianDirectory" },
-        { name: "Telehealth", icon: Video, page: "Telehealth" },
-      ],
-    },
-    {
-      category: "Resources",
-      items: [
-        { name: "Library", icon: BookOpen, page: "ResourceLibrary" },
-      ],
-    },
-    {
-      category: "My Learning",
-      items: [
-        { name: "Learning Center", icon: GraduationCap, page: "LearningCenter" },
-        { name: "My Courses", icon: BookOpen, page: "MyLearning" },
-        { name: "Skills Checklists", icon: CheckCircle2, page: "ClinicalSkillsChecklist" },
-      ],
-    },
-    {
-      category: "Tools",
-      items: [
-        { name: "Settings", icon: Settings, page: "UserSettings" },
-        { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
-        { name: "Help", icon: HelpCircle, page: "Help" },
-      ],
-    },
-  ], [unreadMessageCount, unreadSmsCount]);
+  // Badge value map — keys match the `badge` field in nav.manifest entries
+  const badgeValues = useMemo(() => ({
+    messages: unreadMessageCount,
+    sms: unreadSmsCount,
+    notifications: unreadNotificationCount,
+  }), [unreadMessageCount, unreadSmsCount, unreadNotificationCount]);
 
-  const adminItems = useMemo(() => [
-    { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },
-    { 
-      category: "Manage", 
-      items: [
-        { name: "Users", icon: Users, page: "UserManagement" },
-        { name: "Training Manager", icon: GraduationCap, page: "AdminTraining" },
-        { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
-      ] 
-    },
-    { 
-      category: "Analytics", 
-      items: [
-        { name: "Reports & Analytics", icon: BarChart3, page: "ReportsAnalytics" },
-        { name: "Compliance Center", icon: Shield, page: "ComplianceCenter" },
-        { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
-      ] 
-    },
-    {
-      category: "Configuration",
-      items: [
-        { name: "Data Management", icon: Users, page: "PatientDataManagement" },
-        { name: "Security", icon: Shield, page: "SecurityCompliance" },
-      ]
-    },
+  // Action map — keys match the `action` field in nav.manifest entries
+  const actionHandlers = useMemo(() => ({
+    openNotifications: () => setNotificationCenterOpen(true),
+  }), []);
 
-  ], [totalNotificationCount, isAdmin]);
+  // Build nav arrays from manifest, then inject runtime badges/actions
+  const navCategories = useMemo(() => {
+    const cats = buildNavCategories(NAV_MANIFEST);
+    return cats.map(cat => ({
+      ...cat,
+      items: cat.items.map(({ _badgeKey, ...item }) => ({
+        ...item,
+        badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
+      })),
+    }));
+  }, [badgeValues]);
+
+  const adminItems = useMemo(() => {
+    const cats = buildAdminItems(NAV_MANIFEST);
+    // Append the special Alerts action item to the Analytics category
+    const withAlerts = cats.map(cat => {
+      if (cat.category !== "Analytics") {
+        return {
+          ...cat,
+          items: cat.items.map(({ _badgeKey, _actionKey, ...item }) => ({
+            ...item,
+            badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
+          })),
+        };
+      }
+      return {
+        ...cat,
+        items: [
+          ...cat.items.map(({ _badgeKey, _actionKey, ...item }) => ({
+            ...item,
+            badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
+          })),
+          {
+            name: "Alerts",
+            icon: Bell,
+            page: null,
+            badge: unreadNotificationCount,
+            action: actionHandlers.openNotifications,
+          },
+        ],
+      };
+    });
+    return withAlerts;
+  }, [badgeValues, actionHandlers, unreadNotificationCount]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -240,12 +213,12 @@ export default function Layout({ children, currentPageName }) {
               <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Clock className="w-10 h-10 text-yellow-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-3">Account Pending Approval</h1>
-              <p className="text-gray-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
+              <h1 className="text-2xl font-bold text-slate-900 mb-3">Account Pending Approval</h1>
+              <p className="text-slate-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-900"><strong>Account Details:</strong><br />{currentUser.full_name}<br />{currentUser.email}</p>
               </div>
-              <p className="text-sm text-gray-500 mb-6">You will receive an email notification once your account is approved.</p>
+              <p className="text-sm text-slate-500 mb-6">You will receive an email notification once your account is approved.</p>
               <Button onClick={handleLogout} variant="outline" className="w-full">
                 <LogOut className="w-4 h-4 mr-2" /> Sign Out
               </Button>
@@ -294,7 +267,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-gray-50/80 to-slate-100 w-0 md:w-auto">
+        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-slate-100 w-0 md:w-auto">
           <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 animate-fade-in">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}

@@ -16,7 +16,7 @@ export default function VitalSignsComparison({ currentVitals, previousVitals }) 
       
       let trend = "stable";
       let icon = Minus;
-      let color = "text-gray-500";
+      let color = "text-slate-500";
       
       if (Math.abs(diff) > 0.1) {
         if (diff > 0) {
@@ -104,12 +104,12 @@ export default function VitalSignsComparison({ currentVitals, previousVitals }) 
             return (
               <div key={index} className="bg-white rounded-lg p-3 border border-blue-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">{comp.label}</span>
+                  <span className="text-sm font-medium text-slate-700">{comp.label}</span>
                   <Icon className={`w-4 h-4 ${comp.color}`} />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-bold text-gray-900">{comp.current}</span>
-                  <span className="text-xs text-gray-500">was {comp.previous}</span>
+                  <span className="text-lg font-bold text-slate-900">{comp.current}</span>
+                  <span className="text-xs text-slate-500">was {comp.previous}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge 
@@ -117,12 +117,12 @@ export default function VitalSignsComparison({ currentVitals, previousVitals }) 
                     className={`text-xs ${
                       comp.trend === "improved" ? "border-green-300 text-green-700" :
                       comp.trend === "worsened" ? "border-red-300 text-red-700" :
-                      "border-gray-300 text-gray-700"
+                      "border-slate-300 text-slate-700"
                     }`}
                   >
                     {comp.diff}
                   </Badge>
-                  <span className="text-xs text-gray-500">{comp.trend}</span>
+                  <span className="text-xs text-slate-500">{comp.trend}</span>
                 </div>
               </div>
             );

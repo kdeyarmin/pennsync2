@@ -84,7 +84,7 @@ export default function DynamicVisitChecklist({
               <Clock className="h-5 w-5 text-blue-600" />
               {checklist.category} Checklist
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-slate-600 mt-1">
               {patient?.primary_diagnosis && `Based on diagnosis: ${patient.primary_diagnosis}`}
             </p>
           </div>
@@ -93,7 +93,7 @@ export default function DynamicVisitChecklist({
               {completedCount}/{totalItems}
             </Badge>
             {isSaving && (
-              <p className="text-xs text-gray-500 mt-1">Saving...</p>
+              <p className="text-xs text-slate-500 mt-1">Saving...</p>
             )}
           </div>
         </div>
@@ -101,10 +101,10 @@ export default function DynamicVisitChecklist({
         {/* Progress Bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-700">Progress</span>
-            <span className="text-xs font-medium text-gray-600">{progressPercent}%</span>
+            <span className="text-xs font-medium text-slate-700">Progress</span>
+            <span className="text-xs font-medium text-slate-600">{progressPercent}%</span>
           </div>
-          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-300 ${
                 isAllRequiredDone ? 'bg-green-500' : 'bg-blue-500'
@@ -161,8 +161,8 @@ export default function DynamicVisitChecklist({
                   htmlFor={item.id}
                   className={`block cursor-pointer text-sm font-medium ${
                     completedItems[item.id]
-                      ? 'text-gray-500 line-through'
-                      : 'text-gray-900'
+                      ? 'text-slate-500 line-through'
+                      : 'text-slate-900'
                   }`}
                 >
                   {item.label}
@@ -179,7 +179,7 @@ export default function DynamicVisitChecklist({
 
         {/* Summary */}
         <div className="mt-6 pt-4 border-t border-blue-200">
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-slate-600">
             {isAllRequiredDone ? (
               <span className="text-green-700 font-medium">✓ All required assessments completed</span>
             ) : (

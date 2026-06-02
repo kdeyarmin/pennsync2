@@ -257,10 +257,10 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
 
   if (!context) {
     return (
-      <Card className="border-gray-200">
+      <Card className="border-slate-200">
         <CardContent className="p-6 text-center">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-gray-400" />
-          <p className="text-sm text-gray-500">Loading comprehensive patient context...</p>
+          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
+          <p className="text-sm text-slate-500">Loading comprehensive patient context...</p>
         </CardContent>
       </Card>
     );
@@ -326,7 +326,7 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
                     <p key={idx}>• {med.name} {med.dosage} {med.frequency}</p>
                   ))}
                   {context.medications.length > 5 && (
-                    <p className="text-gray-500 italic">+ {context.medications.length - 5} more</p>
+                    <p className="text-slate-500 italic">+ {context.medications.length - 5} more</p>
                   )}
                 </div>
               </div>
@@ -343,7 +343,7 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
                   {context.activeCarePlans.map((cp, idx) => (
                     <div key={idx} className="bg-green-50 p-2 rounded">
                       <p className="font-medium">{cp.problem}</p>
-                      <p className="text-gray-600 text-xs">Goal: {cp.goal}</p>
+                      <p className="text-slate-600 text-xs">Goal: {cp.goal}</p>
                     </div>
                   ))}
                 </div>
@@ -365,7 +365,7 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
                     }`}>
                       <Badge className="mb-1 text-xs">{alert.severity}</Badge>
                       <p className="font-medium">{alert.type}</p>
-                      <p className="text-gray-700">{alert.message}</p>
+                      <p className="text-slate-700">{alert.message}</p>
                     </div>
                   ))}
                 </div>
@@ -384,7 +384,7 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
                     <div key={idx} className="bg-purple-50 p-2 rounded">
                       <p className="font-medium">{visit.date} - {visit.type}</p>
                       {visit.findings.length > 0 && (
-                        <p className="text-gray-600 mt-1">{visit.findings[0]}</p>
+                        <p className="text-slate-600 mt-1">{visit.findings[0]}</p>
                       )}
                     </div>
                   ))}

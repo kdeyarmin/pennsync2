@@ -10,8 +10,8 @@ import {
 export default function PatientContextBar({ patient, carePlans = [] }) {
   if (!patient) {
     return (
-      <Card className="bg-gray-50 border-dashed">
-        <CardContent className="p-3 text-center text-gray-500 text-sm">
+      <Card className="bg-slate-50 border-dashed">
+        <CardContent className="p-3 text-center text-slate-500 text-sm">
           Select a patient to see their context
         </CardContent>
       </Card>

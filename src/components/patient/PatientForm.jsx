@@ -323,7 +323,7 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
                 <p className="text-xs text-red-600 mt-1">{getFieldError('phone').message}</p>
               )}
               {formData.phone && !getFieldError('phone') && (
-                <p className="text-xs text-gray-500 mt-1">Formatted: {formatPhoneNumber(formData.phone)}</p>
+                <p className="text-xs text-slate-500 mt-1">Formatted: {formatPhoneNumber(formData.phone)}</p>
               )}
             </div>
             <div>

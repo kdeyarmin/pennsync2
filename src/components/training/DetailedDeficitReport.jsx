@@ -52,7 +52,7 @@ export default function DetailedDeficitReport({
       <Card>
         <CardContent className="p-12 text-center">
           <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-600">Analyzing your documentation patterns...</p>
+          <p className="text-slate-600">Analyzing your documentation patterns...</p>
         </CardContent>
       </Card>
     );
@@ -85,21 +85,21 @@ export default function DetailedDeficitReport({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white p-3 rounded-lg border">
-              <p className="text-xs text-gray-600 mb-1">Total AI Suggestions</p>
-              <p className="text-2xl font-bold text-gray-900">{analysis.totalSuggestions}</p>
+              <p className="text-xs text-slate-600 mb-1">Total AI Suggestions</p>
+              <p className="text-2xl font-bold text-slate-900">{analysis.totalSuggestions}</p>
             </div>
             <div className="bg-white p-3 rounded-lg border">
-              <p className="text-xs text-gray-600 mb-1">Analysis Period</p>
-              <p className="text-2xl font-bold text-gray-900">{daysPeriod}</p>
-              <p className="text-xs text-gray-500">days</p>
+              <p className="text-xs text-slate-600 mb-1">Analysis Period</p>
+              <p className="text-2xl font-bold text-slate-900">{daysPeriod}</p>
+              <p className="text-xs text-slate-500">days</p>
             </div>
             <div className="bg-white p-3 rounded-lg border">
-              <p className="text-xs text-gray-600 mb-1">Deficit Areas</p>
+              <p className="text-xs text-slate-600 mb-1">Deficit Areas</p>
               <p className="text-2xl font-bold text-red-600">{analysis.deficits.length}</p>
             </div>
             <div className="bg-white p-3 rounded-lg border">
-              <p className="text-xs text-gray-600 mb-1">Patients Affected</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs text-slate-600 mb-1">Patients Affected</p>
+              <p className="text-2xl font-bold text-slate-900">
                 {analysis.analytics.patientSpecificCount}
               </p>
             </div>
@@ -146,8 +146,8 @@ export default function DetailedDeficitReport({
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900 mb-1">{pattern.description}</p>
-                    <p className="text-sm text-gray-600 mb-2">{pattern.implication}</p>
+                    <p className="font-semibold text-slate-900 mb-1">{pattern.description}</p>
+                    <p className="text-sm text-slate-600 mb-2">{pattern.implication}</p>
                     <Badge className="bg-orange-100 text-orange-800">
                       {pattern.count} occurrences
                     </Badge>
@@ -186,7 +186,7 @@ export default function DetailedDeficitReport({
                         {deficit.percentage}% of suggestions
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-700 mb-2">
+                    <p className="text-sm text-slate-700 mb-2">
                       AI has provided {deficit.count} suggestion{deficit.count > 1 ? 's' : ''} in this area
                     </p>
                     <Progress 
@@ -198,12 +198,12 @@ export default function DetailedDeficitReport({
 
                 {/* Recent Examples */}
                 <div className="bg-white p-3 rounded-lg border mb-3">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">Recent Examples:</p>
+                  <p className="text-xs font-semibold text-slate-700 mb-2">Recent Examples:</p>
                   <div className="space-y-2">
                     {deficit.examples.map((ex, i) => (
-                      <div key={i} className="text-xs text-gray-600 pl-3 border-l-2 border-gray-300">
+                      <div key={i} className="text-xs text-slate-600 pl-3 border-l-2 border-slate-300">
                         <p className="italic mb-1">"{ex.text.substring(0, 120)}..."</p>
-                        <p className="text-[10px] text-gray-500">
+                        <p className="text-[10px] text-slate-500">
                           {ex.element && `${ex.element} • `}
                           {ex.source} • {format(new Date(ex.date), 'MMM d, h:mm a')}
                         </p>
@@ -267,26 +267,26 @@ export default function DetailedDeficitReport({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
-            <BarChart3 className="w-4 h-4 text-gray-600" />
+            <BarChart3 className="w-4 h-4 text-slate-600" />
             Detailed Analytics
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Category Breakdown */}
           <div>
-            <p className="text-xs font-semibold text-gray-700 mb-2">Suggestions by Category</p>
+            <p className="text-xs font-semibold text-slate-700 mb-2">Suggestions by Category</p>
             <div className="space-y-2">
               {Object.entries(analysis.analytics.categoryBreakdown)
                 .sort((a, b) => b[1] - a[1])
                 .map(([category, count], idx) => (
                   <div key={idx} className="flex items-center justify-between">
-                    <span className="text-sm capitalize text-gray-700">{category}</span>
+                    <span className="text-sm capitalize text-slate-700">{category}</span>
                     <div className="flex items-center gap-2">
                       <Progress 
                         value={(count / analysis.totalSuggestions) * 100} 
                         className="w-24 h-2" 
                       />
-                      <span className="text-sm font-medium text-gray-900 w-8 text-right">{count}</span>
+                      <span className="text-sm font-medium text-slate-900 w-8 text-right">{count}</span>
                     </div>
                   </div>
                 ))}
@@ -295,7 +295,7 @@ export default function DetailedDeficitReport({
 
           {/* Source Breakdown */}
           <div className="pt-3 border-t">
-            <p className="text-xs font-semibold text-gray-700 mb-2">Suggestions by AI Component</p>
+            <p className="text-xs font-semibold text-slate-700 mb-2">Suggestions by AI Component</p>
             <div className="flex flex-wrap gap-2">
               {Object.entries(analysis.analytics.sourceBreakdown)
                 .sort((a, b) => b[1] - a[1])
@@ -309,7 +309,7 @@ export default function DetailedDeficitReport({
 
           {/* Severity Distribution */}
           <div className="pt-3 border-t">
-            <p className="text-xs font-semibold text-gray-700 mb-2">By Severity</p>
+            <p className="text-xs font-semibold text-slate-700 mb-2">By Severity</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div className="bg-red-50 p-2 rounded border border-red-200 text-center">
                 <p className="text-xs text-red-700">Critical</p>

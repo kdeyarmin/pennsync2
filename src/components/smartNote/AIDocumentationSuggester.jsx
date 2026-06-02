@@ -300,13 +300,13 @@ Provide proactive, context-aware suggestions in these categories:
       {isExpanded && (
         <CardContent className="pt-3">
           {!suggestions && !isLoading ? (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-slate-500 text-center py-4">
               Add OASIS data or start documenting to receive AI suggestions
             </p>
           ) : isLoading && !suggestions ? (
             <div className="text-center py-6">
               <Loader2 className="w-6 h-6 animate-spin text-purple-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Analyzing documentation needs...</p>
+              <p className="text-sm text-slate-600">Analyzing documentation needs...</p>
             </div>
           ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -378,13 +378,13 @@ Provide proactive, context-aware suggestions in these categories:
                           📊 Context: {item.historical_context}
                         </p>
                       )}
-                      <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
+                      <p className="text-xs text-slate-700 bg-white p-1.5 rounded border">
                         {item.suggested_documentation}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-gray-500 text-center py-4">No OASIS clarifications needed</p>
+                  <p className="text-xs text-slate-500 text-center py-4">No OASIS clarifications needed</p>
                 )}
               </TabsContent>
 
@@ -418,7 +418,7 @@ Provide proactive, context-aware suggestions in these categories:
                           </Button>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-700 mb-2">{edu.content}</p>
+                      <p className="text-xs text-slate-700 mb-2">{edu.content}</p>
                       {edu.based_on_history && (
                         <p className="text-[10px] text-purple-600 mb-1 italic">
                           📚 Based on: {edu.based_on_history}
@@ -432,7 +432,7 @@ Provide proactive, context-aware suggestions in these categories:
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-gray-500 text-center py-4">No education content generated</p>
+                  <p className="text-xs text-slate-500 text-center py-4">No education content generated</p>
                 )}
               </TabsContent>
 
@@ -466,7 +466,7 @@ Provide proactive, context-aware suggestions in these categories:
                           </Button>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">
+                      <p className="text-xs text-slate-600 mb-1">
                         <strong>Rationale:</strong> {int.rationale}
                       </p>
                       {int.continuity_note && (
@@ -474,13 +474,13 @@ Provide proactive, context-aware suggestions in these categories:
                           🔄 Continuity: {int.continuity_note}
                         </p>
                       )}
-                      <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
+                      <p className="text-xs text-slate-700 bg-white p-1.5 rounded border">
                         {int.documentation_template}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-gray-500 text-center py-4">No skilled interventions suggested</p>
+                  <p className="text-xs text-slate-500 text-center py-4">No skilled interventions suggested</p>
                 )}
               </TabsContent>
 
@@ -514,14 +514,14 @@ Provide proactive, context-aware suggestions in these categories:
                           </Button>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">{item.context}</p>
-                      <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
+                      <p className="text-xs text-slate-600 mb-1">{item.context}</p>
+                      <p className="text-xs text-slate-700 bg-white p-1.5 rounded border">
                        {item.suggested_documentation}
                       </p>
                       </div>
                       ))
                       ) : (
-                      <p className="text-xs text-gray-500 text-center py-4">No historical continuity prompts available</p>
+                      <p className="text-xs text-slate-500 text-center py-4">No historical continuity prompts available</p>
                       )}
                       </TabsContent>
 
@@ -558,13 +558,13 @@ Provide proactive, context-aware suggestions in these categories:
                       <p className="text-xs text-teal-700 mb-1">
                        <strong>Progress:</strong> {cp.progress_note}
                       </p>
-                      <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
+                      <p className="text-xs text-slate-700 bg-white p-1.5 rounded border">
                        {cp.documentation_template}
                       </p>
                       </div>
                       ))
                       ) : (
-                      <p className="text-xs text-gray-500 text-center py-4">No care plan alignment suggestions</p>
+                      <p className="text-xs text-slate-500 text-center py-4">No care plan alignment suggestions</p>
                       )}
                       </TabsContent>
 
@@ -603,16 +603,16 @@ Provide proactive, context-aware suggestions in these categories:
                           </Button>
                         </div>
                       </div>
-                      <p className="text-[10px] text-gray-600 mb-1">
+                      <p className="text-[10px] text-slate-600 mb-1">
                        Source: {risk.alert_source}
                       </p>
-                      <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
+                      <p className="text-xs text-slate-700 bg-white p-1.5 rounded border">
                        {risk.suggested_documentation}
                       </p>
                       </div>
                       ))
                       ) : (
-                      <p className="text-xs text-gray-500 text-center py-4">No risk mitigation notes needed</p>
+                      <p className="text-xs text-slate-500 text-center py-4">No risk mitigation notes needed</p>
                       )}
                       </TabsContent>
             </Tabs>
@@ -621,7 +621,7 @@ Provide proactive, context-aware suggestions in these categories:
           {/* Quick Phrases */}
           {suggestions?.quick_phrases?.length > 0 && (
             <div className="mt-3 pt-3 border-t">
-              <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
+              <p className="text-xs font-medium text-slate-700 mb-2 flex items-center gap-1">
                 <Lightbulb className="w-3 h-3 text-yellow-500" />
                 Quick Phrases
               </p>

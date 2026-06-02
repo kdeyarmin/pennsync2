@@ -889,8 +889,8 @@ PREDICT:
 
   if (!pdgmData) {
     return (
-      <Card className="border-2 border-gray-200">
-        <CardContent className="p-6 text-center text-gray-500">
+      <Card className="border-2 border-slate-200">
+        <CardContent className="p-6 text-center text-slate-500">
           <Navigation className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">Upload and analyze an OASIS document to use the PDGM Navigator</p>
         </CardContent>
@@ -973,8 +973,8 @@ PREDICT:
         {isAnalyzing ? (
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-cyan-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">Analyzing PDGM grouping and calculating payment...</p>
-            <p className="text-xs text-gray-400 mt-1">Evaluating clinical group, functional level, comorbidities, and timing</p>
+            <p className="text-sm text-slate-600">Analyzing PDGM grouping and calculating payment...</p>
+            <p className="text-xs text-slate-400 mt-1">Evaluating clinical group, functional level, comorbidities, and timing</p>
           </div>
         ) : !navigation ? (
           <Button
@@ -1062,25 +1062,25 @@ PREDICT:
                 {/* Visual Payment Flow */}
                 <div className="flex items-center justify-between flex-wrap gap-2 mb-4 text-center">
                   <div className="bg-white p-2 rounded border min-w-[80px]">
-                    <p className="text-xs text-gray-500">Base</p>
+                    <p className="text-xs text-slate-500">Base</p>
                     <p className="font-bold text-indigo-700">{formatCurrency(navigation.case_mix_calculation.base_payment)}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
                   <div className="bg-white p-2 rounded border min-w-[80px]">
-                    <p className="text-xs text-gray-500">Clinical</p>
+                    <p className="text-xs text-slate-500">Clinical</p>
                     <p className="font-bold text-blue-600">×{navigation.case_mix_calculation.clinical_weight?.toFixed(4)}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
                   <div className="bg-white p-2 rounded border min-w-[80px]">
-                    <p className="text-xs text-gray-500">Functional</p>
+                    <p className="text-xs text-slate-500">Functional</p>
                     <p className="font-bold text-purple-600">×{navigation.case_mix_calculation.functional_multiplier?.toFixed(2)}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
                   <div className="bg-white p-2 rounded border min-w-[80px]">
-                    <p className="text-xs text-gray-500">Comorbidity</p>
+                    <p className="text-xs text-slate-500">Comorbidity</p>
                     <p className="font-bold text-green-600">×{navigation.case_mix_calculation.comorbidity_multiplier?.toFixed(3)}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
                   <div className="bg-green-100 p-2 rounded border-2 border-green-400 min-w-[100px]">
                     <p className="text-xs text-green-600">Payment</p>
                     <p className="font-bold text-green-700 text-lg">{formatCurrency(navigation.case_mix_calculation.calculated_payment)}</p>
@@ -1090,12 +1090,12 @@ PREDICT:
                 {/* Case-Mix Weight */}
                 <div className="bg-white p-3 rounded border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Final Case-Mix Weight</span>
+                    <span className="text-sm font-medium text-slate-700">Final Case-Mix Weight</span>
                     <span className="text-lg font-bold text-indigo-700">
                       {navigation.case_mix_calculation.final_case_mix_weight?.toFixed(4)}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     Source/Timing: <span className="font-mono">{navigation.case_mix_calculation.source_timing_key}</span>
                   </p>
                   {agencyCosts.wage_index && agencyCosts.wage_index !== 1.0 && (
@@ -1132,23 +1132,23 @@ PREDICT:
                 <AccordionContent className="px-4 pb-4 pt-2">
                   <div className="space-y-3">
                     <div className="bg-blue-50 p-3 rounded border border-blue-200">
-                      <p className="text-xs text-gray-500 mb-1">Assigned Group</p>
+                      <p className="text-xs text-slate-500 mb-1">Assigned Group</p>
                       <p className="font-semibold text-blue-900">{navigation.clinical_group?.group_name}</p>
-                      <p className="text-xs text-gray-600 mt-1">{navigation.clinical_group?.rationale}</p>
+                      <p className="text-xs text-slate-600 mt-1">{navigation.clinical_group?.rationale}</p>
                     </div>
                     
                     <div className="bg-white p-3 rounded border">
-                      <p className="text-xs font-medium text-gray-700 mb-1">ICD-10 Mapping Basis</p>
-                      <p className="text-sm text-gray-800">{navigation.clinical_group?.icd10_basis}</p>
+                      <p className="text-xs font-medium text-slate-700 mb-1">ICD-10 Mapping Basis</p>
+                      <p className="text-sm text-slate-800">{navigation.clinical_group?.icd10_basis}</p>
                     </div>
 
                     {navigation.clinical_group?.alternative_groups?.length > 0 && (
                       <div>
-                        <p className="text-xs font-medium text-gray-700 mb-2">Alternative Groups (if documentation changes)</p>
+                        <p className="text-xs font-medium text-slate-700 mb-2">Alternative Groups (if documentation changes)</p>
                         {navigation.clinical_group.alternative_groups.map((alt, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs bg-gray-50 p-2 rounded mb-1">
+                          <div key={i} className="flex items-center gap-2 text-xs bg-slate-50 p-2 rounded mb-1">
                             <Badge variant="outline">{alt.group}</Badge>
-                            <span className="text-gray-600">if {alt.if_condition}</span>
+                            <span className="text-slate-600">if {alt.if_condition}</span>
                           </div>
                         ))}
                       </div>
@@ -1198,11 +1198,11 @@ PREDICT:
                         <tbody className="divide-y">
                           {navigation.functional_level?.point_breakdown && 
                             Object.entries(navigation.functional_level.point_breakdown).map(([key, data]) => (
-                              <tr key={key} className="hover:bg-gray-50">
+                              <tr key={key} className="hover:bg-slate-50">
                                 <td className="p-2 font-mono text-purple-700">{key.toUpperCase().replace('_', ' ')}</td>
                                 <td className="p-2 text-center font-bold">{data.score}</td>
-                                <td className="p-2 text-center text-gray-500">{data.max}</td>
-                                <td className="p-2 text-gray-600">{data.contribution}</td>
+                                <td className="p-2 text-center text-slate-500">{data.max}</td>
+                                <td className="p-2 text-slate-600">{data.contribution}</td>
                               </tr>
                             ))
                           }
@@ -1213,16 +1213,16 @@ PREDICT:
                             <td className="p-2 text-center font-bold text-purple-700">
                               {navigation.functional_level?.total_points}
                             </td>
-                            <td className="p-2 text-center text-gray-500">30</td>
+                            <td className="p-2 text-center text-slate-500">30</td>
                             <td className="p-2"></td>
                           </tr>
                         </tfoot>
                       </table>
                     </div>
 
-                    <div className="bg-gray-50 p-3 rounded border text-xs">
-                      <p className="font-medium text-gray-700 mb-1">Threshold Used</p>
-                      <p className="text-gray-600">{navigation.functional_level?.threshold_used}</p>
+                    <div className="bg-slate-50 p-3 rounded border text-xs">
+                      <p className="font-medium text-slate-700 mb-1">Threshold Used</p>
+                      <p className="text-slate-600">{navigation.functional_level?.threshold_used}</p>
                     </div>
 
                     <div className="bg-purple-50 p-3 rounded border border-purple-200 text-xs">
@@ -1260,8 +1260,8 @@ PREDICT:
                 <AccordionContent className="px-4 pb-4 pt-2">
                   <div className="space-y-3">
                     <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="bg-gray-50 p-2 rounded border">
-                        <p className="text-xs text-gray-500">Total</p>
+                      <div className="bg-slate-50 p-2 rounded border">
+                        <p className="text-xs text-slate-500">Total</p>
                         <p className="text-lg font-bold">{navigation.comorbidity_adjustment?.total_comorbidities || 0}</p>
                       </div>
                       <div className="bg-green-50 p-2 rounded border border-green-200">
@@ -1298,7 +1298,7 @@ PREDICT:
                       </div>
                     )}
 
-                    <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                    <p className="text-xs text-slate-600 bg-slate-50 p-2 rounded">
                       {navigation.comorbidity_adjustment?.rationale}
                     </p>
                   </div>
@@ -1326,7 +1326,7 @@ PREDICT:
                         <p className="font-semibold text-orange-900 capitalize">
                           {navigation.admission_timing?.admission_source}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-slate-600 mt-1">
                           {navigation.admission_timing?.admission_source_evidence}
                         </p>
                       </div>
@@ -1341,15 +1341,15 @@ PREDICT:
                         <p className="font-semibold text-blue-900 capitalize">
                           {navigation.admission_timing?.episode_timing}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-slate-600 mt-1">
                           {navigation.admission_timing?.episode_timing_evidence}
                         </p>
                       </div>
                     </div>
 
                     {navigation.admission_timing?.m0110_value && (
-                      <div className="bg-gray-50 p-2 rounded border text-xs">
-                        <span className="text-gray-500">M0110 Value: </span>
+                      <div className="bg-slate-50 p-2 rounded border text-xs">
+                        <span className="text-slate-500">M0110 Value: </span>
                         <span className="font-mono font-medium">{navigation.admission_timing.m0110_value}</span>
                       </div>
                     )}
@@ -1392,8 +1392,8 @@ PREDICT:
                           <Badge className={getSeverityBadge(disc.severity)}>{disc.severity}</Badge>
                           <Badge variant="outline" className="text-xs">{disc.type}</Badge>
                         </div>
-                        <p className="text-sm text-gray-800 mb-1">{disc.finding}</p>
-                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                        <p className="text-sm text-slate-800 mb-1">{disc.finding}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-600 mb-2">
                           <span>Expected: <strong>{disc.expected}</strong></span>
                           <ArrowRight className="w-3 h-3" />
                           <span>Actual: <strong className="text-red-600">{disc.actual}</strong></span>
@@ -1445,8 +1445,8 @@ PREDICT:
                             <div className="flex items-center gap-2">
                               <span className="text-2xl">{financialPredictions[idx].visual_summary?.icon || '💰'}</span>
                               <div>
-                                <h4 className="font-semibold text-gray-900">Financial Impact Prediction</h4>
-                                <p className="text-xs text-gray-600">{financialPredictions[idx].visual_summary?.tagline}</p>
+                                <h4 className="font-semibold text-slate-900">Financial Impact Prediction</h4>
+                                <p className="text-xs text-slate-600">{financialPredictions[idx].visual_summary?.tagline}</p>
                               </div>
                             </div>
                             <Badge className={getPriorityColor(financialPredictions[idx].prioritization?.priority_rank || 'medium')}>
@@ -1456,7 +1456,7 @@ PREDICT:
 
                           {/* Per Episode Impact */}
                           <div className="bg-white p-3 rounded-lg border-2 border-green-300">
-                            <p className="text-xs font-semibold text-gray-700 mb-2">Per Episode Impact</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-2">Per Episode Impact</p>
                             <div className="grid grid-cols-3 gap-2 mb-2">
                               <div className="text-center p-2 bg-red-50 rounded">
                                 <p className="text-xs text-red-600">Current</p>
@@ -1483,14 +1483,14 @@ PREDICT:
                                 (+{financialPredictions[idx].per_episode?.percentage_increase}% increase)
                               </p>
                             </div>
-                            <p className="text-xs text-gray-600 mt-2 italic">
+                            <p className="text-xs text-slate-600 mt-2 italic">
                               {financialPredictions[idx].per_episode?.explanation}
                             </p>
                           </div>
 
                           {/* Annual Projection */}
                           <div className="bg-white p-3 rounded-lg border-2 border-blue-300">
-                            <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                            <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                               <TrendingUp className="w-3 h-3" /> 1-Year Projection
                             </p>
                             <div className="space-y-2">
@@ -1508,29 +1508,29 @@ PREDICT:
 
                           {/* Risk Analysis */}
                           <div className="bg-white p-3 rounded-lg border border-orange-300">
-                            <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                            <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                               <AlertTriangle className="w-3 h-3 text-orange-600" /> Risk if Unaddressed
                             </p>
                             <div className="space-y-2 text-xs">
                               <div className="flex items-center justify-between p-2 bg-orange-50 rounded">
-                                <span className="text-gray-700">Repetition Probability</span>
+                                <span className="text-slate-700">Repetition Probability</span>
                                 <Badge className="bg-orange-600 text-white">
                                   {financialPredictions[idx].risk_analysis?.repetition_probability}%
                                 </Badge>
                               </div>
                               <div className="flex items-center justify-between p-2 bg-red-50 rounded">
-                                <span className="text-gray-700">Audit Risk Level</span>
+                                <span className="text-slate-700">Audit Risk Level</span>
                                 <Badge className={getSeverityBadge(financialPredictions[idx].risk_analysis?.audit_risk_level)}>
                                   {financialPredictions[idx].risk_analysis?.audit_risk_level}
                                 </Badge>
                               </div>
                               <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
                                 <p className="font-medium text-yellow-800 mb-1">Compliance Exposure</p>
-                                <p className="text-gray-700">{financialPredictions[idx].risk_analysis?.compliance_exposure}</p>
+                                <p className="text-slate-700">{financialPredictions[idx].risk_analysis?.compliance_exposure}</p>
                               </div>
                               <div className="bg-red-50 p-2 rounded border border-red-300">
                                 <p className="font-medium text-red-800 mb-1">⚠️ Worst Case Scenario</p>
-                                <p className="text-gray-700">{financialPredictions[idx].risk_analysis?.downside_scenario}</p>
+                                <p className="text-slate-700">{financialPredictions[idx].risk_analysis?.downside_scenario}</p>
                                 <p className="text-red-700 font-bold mt-1">
                                   Potential Loss: {formatCurrency(financialPredictions[idx].risk_analysis?.downside_amount)}
                                 </p>
@@ -1540,7 +1540,7 @@ PREDICT:
 
                           {/* Prioritization */}
                           <div className="bg-white p-3 rounded-lg border-2 border-indigo-300">
-                            <p className="text-xs font-semibold text-gray-700 mb-2">Prioritization Analysis</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-2">Prioritization Analysis</p>
                             <div className="grid grid-cols-3 gap-2 mb-2 text-center text-xs">
                               <div className="bg-indigo-50 p-2 rounded">
                                 <p className="text-indigo-600 mb-1">Financial Urgency</p>
@@ -1551,7 +1551,7 @@ PREDICT:
                                       className={`w-2 h-4 rounded-sm ${
                                         i < financialPredictions[idx].prioritization?.financial_urgency
                                           ? 'bg-indigo-600'
-                                          : 'bg-gray-200'
+                                          : 'bg-slate-200'
                                       }`}
                                     />
                                   ))}
@@ -1569,7 +1569,7 @@ PREDICT:
                                       className={`w-2 h-4 rounded-sm ${
                                         i < financialPredictions[idx].prioritization?.ease_of_correction
                                           ? 'bg-green-600'
-                                          : 'bg-gray-200'
+                                          : 'bg-slate-200'
                                       }`}
                                     />
                                   ))}
@@ -1589,26 +1589,26 @@ PREDICT:
                               <p className="text-xs text-indigo-700 font-medium mb-1">
                                 🎯 Recommended Timeline: <span className="uppercase">{financialPredictions[idx].prioritization?.recommended_timeline}</span>
                               </p>
-                              <p className="text-xs text-gray-700">{financialPredictions[idx].prioritization?.justification}</p>
+                              <p className="text-xs text-slate-700">{financialPredictions[idx].prioritization?.justification}</p>
                             </div>
                           </div>
 
                           {/* Breakeven Analysis */}
-                          <div className="bg-white p-3 rounded-lg border border-gray-300">
-                          <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                          <div className="bg-white p-3 rounded-lg border border-slate-300">
+                          <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                             <Calculator className="w-3 h-3" /> Breakeven Analysis
                             <Badge variant="outline" className="text-xs ml-auto">Agency-Specific</Badge>
                           </p>
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-gray-50 p-2 rounded">
-                              <p className="text-gray-500">Implementation Time</p>
-                              <p className="font-medium text-gray-800">
+                            <div className="bg-slate-50 p-2 rounded">
+                              <p className="text-slate-500">Implementation Time</p>
+                              <p className="font-medium text-slate-800">
                                 {financialPredictions[idx].breakeven?.implementation_time}
                               </p>
                             </div>
-                            <div className="bg-gray-50 p-2 rounded">
-                              <p className="text-gray-500">Implementation Cost</p>
-                              <p className="font-medium text-gray-800">
+                            <div className="bg-slate-50 p-2 rounded">
+                              <p className="text-slate-500">Implementation Cost</p>
+                              <p className="font-medium text-slate-800">
                                 {formatCurrency(financialPredictions[idx].breakeven?.implementation_cost)}
                               </p>
                             </div>
@@ -1656,8 +1656,8 @@ PREDICT:
 
                           {/* Root Cause */}
                           <div className="bg-white p-3 rounded border">
-                            <p className="text-xs font-semibold text-gray-700 mb-1">Root Cause Analysis</p>
-                            <p className="text-sm text-gray-800">{resolutionWorkflows[idx].root_cause}</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Root Cause Analysis</p>
+                            <p className="text-sm text-slate-800">{resolutionWorkflows[idx].root_cause}</p>
                             <p className="text-xs text-orange-700 mt-1 bg-orange-50 p-1.5 rounded">
                               <strong>Impact:</strong> {resolutionWorkflows[idx].severity_explanation}
                             </p>
@@ -1666,7 +1666,7 @@ PREDICT:
                           {/* Correction Steps */}
                           {resolutionWorkflows[idx].correction_steps?.length > 0 && (
                             <div className="bg-white p-3 rounded border">
-                              <p className="text-xs font-semibold text-gray-700 mb-2">Step-by-Step Correction Process</p>
+                              <p className="text-xs font-semibold text-slate-700 mb-2">Step-by-Step Correction Process</p>
                               <div className="space-y-2">
                                 {resolutionWorkflows[idx].correction_steps.map((step, i) => (
                                   <div key={i} className="flex gap-2">
@@ -1674,13 +1674,13 @@ PREDICT:
                                       {step.step_number}
                                     </div>
                                     <div className="flex-1">
-                                      <p className="text-sm font-medium text-gray-800">{step.action}</p>
+                                      <p className="text-sm font-medium text-slate-800">{step.action}</p>
                                       {step.specific_fields?.length > 0 && (
-                                        <p className="text-xs text-gray-600">
-                                          Fields: {step.specific_fields.map(f => <span key={f} className="font-mono bg-gray-100 px-1 rounded">{f}</span>)}
+                                        <p className="text-xs text-slate-600">
+                                          Fields: {step.specific_fields.map(f => <span key={f} className="font-mono bg-slate-100 px-1 rounded">{f}</span>)}
                                         </p>
                                       )}
-                                      <p className="text-xs text-gray-500 italic">{step.rationale}</p>
+                                      <p className="text-xs text-slate-500 italic">{step.rationale}</p>
                                     </div>
                                   </div>
                                 ))}
@@ -1691,10 +1691,10 @@ PREDICT:
                           {/* Documentation Changes */}
                           {resolutionWorkflows[idx].documentation_changes?.length > 0 && (
                             <div className="bg-white p-3 rounded border">
-                              <p className="text-xs font-semibold text-gray-700 mb-2">Clinical Documentation Changes</p>
+                              <p className="text-xs font-semibold text-slate-700 mb-2">Clinical Documentation Changes</p>
                               <div className="space-y-2">
                                 {resolutionWorkflows[idx].documentation_changes.map((change, i) => (
-                                  <div key={i} className="bg-gray-50 p-2 rounded border">
+                                  <div key={i} className="bg-slate-50 p-2 rounded border">
                                     <div className="flex items-center justify-between mb-1">
                                       <span className="text-xs font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
                                         {change.item}
@@ -1703,18 +1703,18 @@ PREDICT:
                                     <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
                                       <div className="bg-red-50 p-1.5 rounded border border-red-200">
                                         <p className="text-red-600 font-medium mb-0.5">Current</p>
-                                        <p className="text-gray-700">{change.current_value || 'Not documented'}</p>
+                                        <p className="text-slate-700">{change.current_value || 'Not documented'}</p>
                                       </div>
                                       <div className="bg-green-50 p-1.5 rounded border border-green-200">
                                         <p className="text-green-600 font-medium mb-0.5">Recommended</p>
-                                        <p className="text-gray-700">{change.recommended_value}</p>
+                                        <p className="text-slate-700">{change.recommended_value}</p>
                                       </div>
                                     </div>
                                     <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-1">
                                       <p className="text-xs text-blue-600 font-medium mb-0.5">📝 Example Narrative:</p>
                                       <p className="text-sm text-blue-900 italic">"{change.example_narrative}"</p>
                                     </div>
-                                    <p className="text-xs text-gray-600">
+                                    <p className="text-xs text-slate-600">
                                       <strong>Clinical Justification:</strong> {change.clinical_justification}
                                     </p>
                                   </div>
@@ -1726,15 +1726,15 @@ PREDICT:
                           {/* CMS References */}
                           {resolutionWorkflows[idx].cms_references?.length > 0 && (
                             <div className="bg-white p-3 rounded border">
-                              <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                              <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                                 <BookOpen className="w-3 h-3" /> CMS Guidelines Reference
                               </p>
                               <div className="space-y-2">
                                 {resolutionWorkflows[idx].cms_references.map((ref, i) => (
-                                  <div key={i} className="bg-gray-50 p-2 rounded border text-xs">
-                                    <p className="font-medium text-gray-800">{ref.guideline}</p>
-                                    <p className="text-gray-600">Section: {ref.section}</p>
-                                    <p className="text-gray-700 italic mt-1 bg-white p-1 rounded">"{ref.quote}"</p>
+                                  <div key={i} className="bg-slate-50 p-2 rounded border text-xs">
+                                    <p className="font-medium text-slate-800">{ref.guideline}</p>
+                                    <p className="text-slate-600">Section: {ref.section}</p>
+                                    <p className="text-slate-700 italic mt-1 bg-white p-1 rounded">"{ref.quote}"</p>
                                     <p className="text-blue-700 mt-1">
                                       <strong>Application:</strong> {ref.application}
                                     </p>
@@ -1747,12 +1747,12 @@ PREDICT:
                           {/* Validation Checklist */}
                           {resolutionWorkflows[idx].validation_checklist?.length > 0 && (
                             <div className="bg-white p-3 rounded border">
-                              <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                              <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                                 <CheckCircle2 className="w-3 h-3" /> Post-Correction Validation
                               </p>
                               <ul className="space-y-1">
                                 {resolutionWorkflows[idx].validation_checklist.map((item, i) => (
-                                  <li key={i} className="text-xs text-gray-700 flex items-start gap-1">
+                                  <li key={i} className="text-xs text-slate-700 flex items-start gap-1">
                                     <span className="text-green-600">✓</span> {item}
                                   </li>
                                 ))}
@@ -1763,8 +1763,8 @@ PREDICT:
                           {/* Summary Info */}
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div className="bg-white p-2 rounded border">
-                              <p className="text-gray-500 mb-0.5">Estimated Time</p>
-                              <p className="font-medium text-gray-800">{resolutionWorkflows[idx].estimated_resolution_time}</p>
+                              <p className="text-slate-500 mb-0.5">Estimated Time</p>
+                              <p className="font-medium text-slate-800">{resolutionWorkflows[idx].estimated_resolution_time}</p>
                             </div>
                             <div className="bg-green-50 p-2 rounded border border-green-200">
                               <p className="text-green-600 mb-0.5">Revenue Impact</p>
@@ -1801,13 +1801,13 @@ PREDICT:
                           <span className="font-medium text-green-900">{opp.area}</span>
                           <Badge className="bg-green-600 text-white">{opp.potential_impact}</Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-1">Current: {opp.current_state}</p>
+                        <p className="text-xs text-slate-600 mb-1">Current: {opp.current_state}</p>
                         <p className="text-sm text-green-800 mb-1">{opp.opportunity}</p>
                         <div className="bg-blue-50 p-2 rounded text-xs mb-2">
                           <strong>Action:</strong> {opp.action_required}
                         </div>
                         {opp.clinical_justification_needed && (
-                          <p className="text-xs text-gray-500 mb-2 italic">
+                          <p className="text-xs text-slate-500 mb-2 italic">
                             Requires: {opp.clinical_justification_needed}
                           </p>
                         )}
@@ -1842,7 +1842,7 @@ PREDICT:
                             </p>
                             
                             <div className="bg-white p-2 rounded text-center">
-                              <p className="text-xs text-gray-500">Annual Opportunity</p>
+                              <p className="text-xs text-slate-500">Annual Opportunity</p>
                               <p className="text-2xl font-bold text-green-700">
                                 {formatCurrency(financialPredictions[oppIndex].annual_projection?.total_opportunity)}
                               </p>
@@ -1917,13 +1917,13 @@ PREDICT:
 
                       <div className="grid grid-cols-2 gap-2 mb-3">
                         <div className="text-center p-2 bg-white rounded border">
-                          <p className="text-xs text-gray-600">30-Day Risk</p>
+                          <p className="text-xs text-slate-600">30-Day Risk</p>
                           <p className="text-2xl font-bold text-red-600">
                             {patientForecasts.readmission_risk?.thirty_day_risk_score}%
                           </p>
                         </div>
                         <div className="text-center p-2 bg-white rounded border">
-                          <p className="text-xs text-gray-600">60-Day Risk</p>
+                          <p className="text-xs text-slate-600">60-Day Risk</p>
                           <p className="text-2xl font-bold text-orange-600">
                             {patientForecasts.readmission_risk?.sixty_day_risk_score}%
                           </p>
@@ -1932,8 +1932,8 @@ PREDICT:
 
                       {patientForecasts.readmission_risk?.top_risk_factors?.length > 0 && (
                         <div className="bg-white p-2 rounded border mb-2">
-                          <p className="text-xs font-semibold text-gray-700 mb-1">Top Risk Factors</p>
-                          <ul className="text-xs text-gray-700 space-y-1">
+                          <p className="text-xs font-semibold text-slate-700 mb-1">Top Risk Factors</p>
+                          <ul className="text-xs text-slate-700 space-y-1">
                             {patientForecasts.readmission_risk.top_risk_factors.map((factor, i) => (
                               <li key={i}>• {factor}</li>
                             ))}
@@ -1965,18 +1965,18 @@ PREDICT:
                       </div>
 
                       <div className="text-center p-3 bg-white rounded border-2 border-blue-300 mb-3">
-                        <p className="text-xs text-gray-600">Predicted LOS</p>
+                        <p className="text-xs text-slate-600">Predicted LOS</p>
                         <p className="text-4xl font-bold text-blue-700">
                           {patientForecasts.length_of_stay?.predicted_days}
                         </p>
                         <p className="text-xs text-blue-600">days</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           {patientForecasts.length_of_stay?.confidence_range}
                         </p>
                       </div>
 
                       <div className="bg-white p-2 rounded border mb-2">
-                        <p className="text-xs text-gray-600">{patientForecasts.length_of_stay?.compared_to_average}</p>
+                        <p className="text-xs text-slate-600">{patientForecasts.length_of_stay?.compared_to_average}</p>
                       </div>
 
                       {patientForecasts.length_of_stay?.influencing_factors?.length > 0 && (
@@ -2003,7 +2003,7 @@ PREDICT:
                       </div>
 
                       <div className="text-center p-3 bg-white rounded border-2 border-purple-300 mb-3">
-                        <p className="text-xs text-gray-600">Expected Improvement</p>
+                        <p className="text-xs text-slate-600">Expected Improvement</p>
                         <p className="text-4xl font-bold text-purple-700">
                           {patientForecasts.functional_outcomes?.expected_improvement_percentage}%
                         </p>
@@ -2013,10 +2013,10 @@ PREDICT:
                       </div>
 
                       <div className="bg-white p-2 rounded border mb-2 text-xs">
-                        <p className="text-gray-600">
+                        <p className="text-slate-600">
                           <strong>Discharge Functional Level:</strong> {patientForecasts.functional_outcomes?.discharge_functional_level}
                         </p>
-                        <p className="text-gray-600 mt-1">
+                        <p className="text-slate-600 mt-1">
                           <strong>Timeline:</strong> {patientForecasts.functional_outcomes?.timeline_to_goals}
                         </p>
                       </div>
@@ -2054,13 +2054,13 @@ PREDICT:
 
                       <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                         <div className="bg-white p-2 rounded border text-center">
-                          <p className="text-gray-600">Weekly Visits</p>
+                          <p className="text-slate-600">Weekly Visits</p>
                           <p className="text-2xl font-bold text-green-700">
                             {patientForecasts.resource_allocation?.predicted_weekly_visits}
                           </p>
                         </div>
                         <div className="bg-white p-2 rounded border text-center">
-                          <p className="text-gray-600">Total Care Hours</p>
+                          <p className="text-slate-600">Total Care Hours</p>
                           <p className="text-2xl font-bold text-green-700">
                             {patientForecasts.resource_allocation?.total_care_hours_estimate}
                           </p>
@@ -2070,15 +2070,15 @@ PREDICT:
                       <div className="bg-white p-2 rounded border text-xs mb-2">
                         <div className="grid grid-cols-3 gap-1 text-center">
                           <div>
-                            <p className="text-gray-500">SN</p>
+                            <p className="text-slate-500">SN</p>
                             <p className="font-bold">{patientForecasts.resource_allocation?.skilled_nursing_visits}</p>
                           </div>
                           <div>
-                            <p className="text-gray-500">PT</p>
+                            <p className="text-slate-500">PT</p>
                             <p className="font-bold">{patientForecasts.resource_allocation?.pt_sessions_recommended}</p>
                           </div>
                           <div>
-                            <p className="text-gray-500">OT</p>
+                            <p className="text-slate-500">OT</p>
                             <p className="font-bold">{patientForecasts.resource_allocation?.ot_sessions_recommended}</p>
                           </div>
                         </div>
@@ -2116,15 +2116,15 @@ PREDICT:
                               <p className="font-semibold text-sm text-indigo-900">{int.intervention}</p>
                               <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
                                 <div>
-                                  <p className="text-gray-500">Timeframe</p>
-                                  <p className="font-medium text-gray-800">{int.timeframe}</p>
+                                  <p className="text-slate-500">Timeframe</p>
+                                  <p className="font-medium text-slate-800">{int.timeframe}</p>
                                 </div>
                                 <div>
-                                  <p className="text-gray-500">Expected Outcome</p>
+                                  <p className="text-slate-500">Expected Outcome</p>
                                   <p className="font-medium text-green-700">{int.expected_outcome}</p>
                                 </div>
                                 <div>
-                                  <p className="text-gray-500">Resources</p>
+                                  <p className="text-slate-500">Resources</p>
                                   <p className="font-medium text-blue-700">{int.resource_needs}</p>
                                 </div>
                               </div>
@@ -2146,8 +2146,8 @@ PREDICT:
                           <CheckCircle2 className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
                           <div className="flex-1 text-xs">
                             <p className="font-semibold text-purple-900">{milestone.milestone}</p>
-                            <p className="text-gray-600">Target: {milestone.target_date}</p>
-                            <p className="text-gray-700">Success Criteria: {milestone.success_criteria}</p>
+                            <p className="text-slate-600">Target: {milestone.target_date}</p>
+                            <p className="text-slate-700">Success Criteria: {milestone.success_criteria}</p>
                           </div>
                         </div>
                       ))}
@@ -2163,21 +2163,21 @@ PREDICT:
                   </h4>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div className="text-center p-2 bg-green-50 rounded border border-green-200">
-                      <p className="text-xs text-gray-600">Ambulation</p>
+                      <p className="text-xs text-slate-600">Ambulation</p>
                       <p className="text-xl font-bold text-green-700">
                         {patientForecasts.quality_measures_forecast?.improvement_in_ambulation_likelihood}%
                       </p>
                       <p className="text-xs text-green-600">likely to improve</p>
                     </div>
                     <div className="text-center p-2 bg-blue-50 rounded border border-blue-200">
-                      <p className="text-xs text-gray-600">Bathing</p>
+                      <p className="text-xs text-slate-600">Bathing</p>
                       <p className="text-xl font-bold text-blue-700">
                         {patientForecasts.quality_measures_forecast?.improvement_in_bathing_likelihood}%
                       </p>
                       <p className="text-xs text-blue-600">likely to improve</p>
                     </div>
                     <div className="text-center p-2 bg-purple-50 rounded border border-purple-200">
-                      <p className="text-xs text-gray-600">Transferring</p>
+                      <p className="text-xs text-slate-600">Transferring</p>
                       <p className="text-xl font-bold text-purple-700">
                         {patientForecasts.quality_measures_forecast?.improvement_in_transferring_likelihood}%
                       </p>

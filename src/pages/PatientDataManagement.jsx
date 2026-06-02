@@ -229,7 +229,7 @@ export default function PatientDataManagement() {
   const getStatusColor = (status) => {
     const colors = {
       active: "bg-green-100 text-green-800 border-green-200",
-      discharged: "bg-gray-100 text-gray-800 border-gray-200",
+      discharged: "bg-slate-100 text-slate-800 border-slate-200",
       hospitalized: "bg-red-100 text-red-800 border-red-200"
     };
     return colors[status] || colors.active;
@@ -264,8 +264,8 @@ export default function PatientDataManagement() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <Card className="max-w-md border-amber-300">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Access restricted</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Access restricted</h2>
+            <p className="text-sm text-slate-600">
               Patient Data Management is available to administrators only.
             </p>
           </CardContent>
@@ -279,7 +279,7 @@ export default function PatientDataManagement() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading patient data...</p>
+          <p className="text-slate-600">Loading patient data...</p>
         </div>
       </div>
     );
@@ -288,7 +288,7 @@ export default function PatientDataManagement() {
   return (
     <div className="min-h-screen">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
             <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
               <TabsList className="inline-flex md:grid md:w-full md:max-w-md md:grid-cols-2 gap-1 min-w-max h-auto md:h-14">
@@ -308,8 +308,8 @@ export default function PatientDataManagement() {
         <TabsContent value="overview" className="m-0">
           <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
             <div className="mb-4 sm:mb-6">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Patient Data Management</h1>
-              <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Comprehensive overview and management of all patients</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">Patient Data Management</h1>
+              <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Comprehensive overview and management of all patients</p>
             </div>
 
             {/* Stats Cards */}
@@ -318,7 +318,7 @@ export default function PatientDataManagement() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Total Patients</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">Total Patients</p>
                 <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
               </div>
               <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 flex-shrink-0" />
@@ -330,7 +330,7 @@ export default function PatientDataManagement() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Active</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">Active</p>
                 <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</p>
               </div>
               <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
@@ -342,7 +342,7 @@ export default function PatientDataManagement() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">With Alerts</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">With Alerts</p>
                 <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.withAlerts}</p>
               </div>
               <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500 flex-shrink-0" />
@@ -354,7 +354,7 @@ export default function PatientDataManagement() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Critical</p>
+                <p className="text-xs sm:text-sm text-slate-600 truncate">Critical</p>
                 <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.critical}</p>
               </div>
               <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-500 flex-shrink-0" />
@@ -374,7 +374,7 @@ export default function PatientDataManagement() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <div className="lg:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder="Search by name or MRN..."
                   value={searchTerm}
@@ -493,7 +493,7 @@ export default function PatientDataManagement() {
                           {patient.first_name} {patient.last_name}
                         </p>
                         {patient.medical_record_number && (
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-xs text-slate-500 truncate">
                             MRN: {patient.medical_record_number}
                           </p>
                         )}
@@ -524,7 +524,7 @@ export default function PatientDataManagement() {
                             )}
                           </>
                         ) : (
-                          <Badge variant="outline" className="text-gray-500">
+                          <Badge variant="outline" className="text-slate-500">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             None
                           </Badge>
@@ -540,7 +540,7 @@ export default function PatientDataManagement() {
                       <span>{patient.totalVisits}</span>
                     </TableCell>
                     <TableCell className="text-xs hidden xl:table-cell">
-                      <div className="flex items-center gap-1 text-gray-600">
+                      <div className="flex items-center gap-1 text-slate-600">
                         <Clock className="w-3 h-3" />
                         <span className="whitespace-nowrap">
                           {patient.lastActivity ? 
@@ -597,7 +597,7 @@ export default function PatientDataManagement() {
           </div>
 
           {filteredAndSortedPatients.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-slate-500">
               <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No patients found matching your filters.</p>
             </div>
@@ -614,7 +614,7 @@ export default function PatientDataManagement() {
               Create an alert or flag for {selectedPatient?.first_name} {selectedPatient?.last_name}
             </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-gray-600 py-4">
+          <p className="text-sm text-slate-600 py-4">
             This feature allows you to create custom alerts and flags for patients requiring special attention.
             Navigate to the Patient Alerts page to manage all alerts.
           </p>
@@ -646,11 +646,11 @@ function ImportPatientsTab() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 mb-2">
           <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
           <span className="truncate">Patient roster import</span>
         </h2>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600">
+        <p className="text-xs sm:text-sm md:text-base text-slate-600">
           Use the current census file to add only new patients, or use the discharged report to safely archive patients who have been discharged.
         </p>
       </div>

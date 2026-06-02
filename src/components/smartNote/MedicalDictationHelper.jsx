@@ -49,7 +49,7 @@ export default function MedicalDictationHelper({ noteText, onApplySuggestion }) 
       <div className="space-y-1.5">
         {uncertainTerms.map((term, idx) => (
           <div key={idx} className="flex items-center gap-2 text-xs bg-white rounded-lg p-2">
-            <span className="text-gray-600">"{term.original}" →</span>
+            <span className="text-slate-600">"{term.original}" →</span>
             {term.suggestions.map((suggestion, sugIdx) => (
               <Button
                 key={sugIdx}

@@ -9,8 +9,8 @@ export default function PersonalizedTrainingRecommender({ skillGaps, onStartTrai
       <Card className="border-green-200">
         <CardContent className="p-8 text-center">
           <Target className="w-12 h-12 mx-auto mb-3 text-green-500" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Skill Gaps Detected</h3>
-          <p className="text-gray-600">
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">No Skill Gaps Detected</h3>
+          <p className="text-slate-600">
             Great work! Our AI analysis hasn't identified any significant skill gaps. Keep up the excellent performance!
           </p>
         </CardContent>
@@ -37,7 +37,7 @@ export default function PersonalizedTrainingRecommender({ skillGaps, onStartTrai
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold text-gray-900">{gap.skill}</h4>
+                    <h4 className="font-semibold text-slate-900">{gap.skill}</h4>
                     <Badge 
                       variant="destructive" 
                       className={
@@ -49,8 +49,8 @@ export default function PersonalizedTrainingRecommender({ skillGaps, onStartTrai
                       {gap.gap_severity} priority
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{gap.recommendation}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <p className="text-sm text-slate-600 mb-3">{gap.recommendation}</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
                     <Sparkles className="w-3 h-3" />
                     <span>AI will generate personalized interactive training</span>
                   </div>

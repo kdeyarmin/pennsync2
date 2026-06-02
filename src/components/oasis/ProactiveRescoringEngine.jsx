@@ -149,7 +149,7 @@ For each opportunity, calculate:
       episode_timing: 'bg-orange-100 text-orange-800 border-orange-300',
       therapy: 'bg-pink-100 text-pink-800 border-pink-300'
     };
-    return colors[category] || 'bg-gray-100 text-gray-800 border-gray-300';
+    return colors[category] || 'bg-slate-100 text-slate-800 border-slate-300';
   };
 
   return (
@@ -244,7 +244,7 @@ For each opportunity, calculate:
                           <Badge className="bg-green-600 text-white text-lg">
                             +${opp.revenue_impact?.toLocaleString()}
                           </Badge>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-slate-500 mt-1">
                             {opp.confidence}% confidence
                           </p>
                         </div>
@@ -278,7 +278,7 @@ For each opportunity, calculate:
                         <p className="text-yellow-900">{opp.narrative_addition}</p>
                       </div>
 
-                      <div className="bg-gray-50 p-2 rounded text-xs text-gray-700 mb-2">
+                      <div className="bg-slate-50 p-2 rounded text-xs text-slate-700 mb-2">
                         <strong>Documentation Required:</strong> {opp.documentation_required}
                       </div>
 
@@ -321,7 +321,7 @@ For each opportunity, calculate:
                         </span>
                         <div className="flex-1">
                           <p className="font-semibold text-sm text-blue-900">{step.step}</p>
-                          <p className="text-xs text-gray-700 mt-1">{step.action}</p>
+                          <p className="text-xs text-slate-700 mt-1">{step.action}</p>
                           <div className="flex items-center gap-4 mt-2 text-xs">
                             <Badge variant="outline">Impact: {step.expected_impact}</Badge>
                             <Badge variant="outline">Time: {step.time_required}</Badge>
@@ -345,7 +345,7 @@ For each opportunity, calculate:
                   {opportunities.risk_mitigation.map((item, idx) => (
                     <div key={idx} className="bg-white p-3 rounded border text-sm">
                       <p className="font-medium text-orange-900">{item.risk}</p>
-                      <p className="text-gray-700 mt-1">
+                      <p className="text-slate-700 mt-1">
                         <strong className="text-green-700">Strategy:</strong> {item.mitigation_strategy}
                       </p>
                     </div>

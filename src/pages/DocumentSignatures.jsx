@@ -90,8 +90,8 @@ export default function DocumentSignatures() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Document Signatures</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Document Signatures</h1>
+          <p className="text-sm sm:text-base text-slate-600 mt-1">
             Track and manage electronic signatures
           </p>
         </div>
@@ -112,8 +112,8 @@ export default function DocumentSignatures() {
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-xs text-gray-600">Total</p>
+              <p className="text-xl sm:text-2xl font-bold text-slate-900">{stats.total}</p>
+              <p className="text-xs text-slate-600">Total</p>
             </div>
           </CardContent>
         </Card>
@@ -121,7 +121,7 @@ export default function DocumentSignatures() {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
-              <p className="text-xs text-gray-600">Pending</p>
+              <p className="text-xs text-slate-600">Pending</p>
             </div>
           </CardContent>
         </Card>
@@ -129,7 +129,7 @@ export default function DocumentSignatures() {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.signed}</p>
-              <p className="text-xs text-gray-600">Signed</p>
+              <p className="text-xs text-slate-600">Signed</p>
             </div>
           </CardContent>
         </Card>
@@ -137,7 +137,7 @@ export default function DocumentSignatures() {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.overdue}</p>
-              <p className="text-xs text-gray-600">Overdue</p>
+              <p className="text-xs text-slate-600">Overdue</p>
             </div>
           </CardContent>
         </Card>
@@ -155,7 +155,7 @@ export default function DocumentSignatures() {
               />
             </div>
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search documents..."
                 value={searchQuery}
@@ -196,8 +196,8 @@ export default function DocumentSignatures() {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <Clock className="w-5 h-5 text-yellow-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.document_name}</h4>
-                        <p className="text-sm text-gray-600">{patientName}</p>
+                        <h4 className="font-medium text-slate-900 break-words">{sig.document_name}</h4>
+                        <p className="text-sm text-slate-600">{patientName}</p>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           {isOverdue(sig) && (
                             <Badge className="bg-red-100 text-red-700">
@@ -206,7 +206,7 @@ export default function DocumentSignatures() {
                             </Badge>
                           )}
                           {sig.due_date && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-slate-500">
                               Due: {new Date(sig.due_date).toLocaleDateString()}
                             </span>
                           )}
@@ -264,10 +264,10 @@ export default function DocumentSignatures() {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.document_name}</h4>
-                        <p className="text-sm text-gray-600">{patientName}</p>
+                        <h4 className="font-medium text-slate-900 break-words">{sig.document_name}</h4>
+                        <p className="text-sm text-slate-600">{patientName}</p>
                         {sig.signed_at && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-slate-500">
                             Signed: {new Date(sig.signed_at).toLocaleDateString()}
                           </span>
                         )}
@@ -295,8 +295,8 @@ export default function DocumentSignatures() {
       {filteredSignatures.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-600">No signatures found</p>
+            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-600">No signatures found</p>
           </CardContent>
         </Card>
       )}

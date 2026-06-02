@@ -50,7 +50,7 @@ export default function ValidationOverrideDialog({
             onChange={(e) => setJustification(e.target.value)}
             className="min-h-[100px]"
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             This justification will be logged for audit purposes.
           </p>
         </div>

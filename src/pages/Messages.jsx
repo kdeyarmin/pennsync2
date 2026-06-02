@@ -33,6 +33,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function Messages() {
   const queryClient = useQueryClient();
@@ -200,25 +201,21 @@ export default function Messages() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Mail className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 flex-shrink-0" />
-            <span className="truncate">Messages</span>
-            {unreadCount > 0 && (
-              <Badge className="bg-red-600 text-xs sm:text-sm flex-shrink-0">{unreadCount} Unread</Badge>
-            )}
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Secure internal messaging for patient care coordination</p>
-        </div>
-        <Button
-          onClick={() => setShowNewMessage(true)}
-          className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
-        >
-          <Send className="w-4 h-4 mr-2" />
-          New Message
-        </Button>
-      </div>
+      <PageHeader
+        icon={Mail}
+        iconColor="bg-blue-600"
+        eyebrow="Communication"
+        title="Messages"
+        description="Secure internal messaging for patient care coordination"
+        badges={unreadCount > 0 ? [{ label: `${unreadCount} Unread`, className: "bg-red-600 text-white hover:bg-red-600" }] : []}
+        favoritePage="Messages"
+        actions={
+          <Button onClick={() => setShowNewMessage(true)} className="bg-blue-600 hover:bg-blue-700 min-h-[44px]">
+            <Send className="w-4 h-4 mr-2" />
+            New Message
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <Card className="mb-4 sm:mb-6">
@@ -257,12 +254,12 @@ export default function Messages() {
         {/* Thread List */}
         <div className="lg:col-span-1 space-y-2 sm:space-y-3 max-h-[600px] overflow-y-auto pr-1">
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500">Loading messages...</div>
+            <div className="text-center py-8 text-slate-500">Loading messages...</div>
           ) : filteredThreads.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
-                <Mail className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">No messages found</p>
+                <Mail className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                <p className="text-slate-600">No messages found</p>
               </CardContent>
             </Card>
           ) : (
@@ -281,7 +278,7 @@ export default function Messages() {
                       {thread.unreadCount > 0 ? (
                         <Mail className="w-5 h-5 text-blue-600" />
                       ) : (
-                        <MailOpen className="w-5 h-5 text-gray-400" />
+                        <MailOpen className="w-5 h-5 text-slate-400" />
                       )}
                       <Badge className={getPriorityColor(thread.priority)}>
                         {thread.priority}
@@ -291,16 +288,16 @@ export default function Messages() {
                       <Badge className="bg-red-600">{thread.unreadCount}</Badge>
                     )}
                   </div>
-                  <h4 className={`font-semibold text-sm mb-1 ${thread.unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'}`}>
+                  <h4 className={`font-semibold text-sm mb-1 ${thread.unreadCount > 0 ? 'text-slate-900' : 'text-slate-700'}`}>
                     {thread.subject}
                   </h4>
-                  <p className="text-xs text-gray-600 mb-2">
+                  <p className="text-xs text-slate-600 mb-2">
                     {thread.isMyMessage ? 'You' : thread.latestMessage.sender_name}
                   </p>
-                  <p className="text-xs text-gray-500 line-clamp-2">
+                  <p className="text-xs text-slate-500 line-clamp-2">
                     {thread.latestMessage.message_text}
                   </p>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-slate-400 mt-2">
                     {format(new Date(thread.latestMessage.created_date), 'MMM d, yyyy h:mm a')}
                   </p>
                 </CardContent>
@@ -335,7 +332,7 @@ export default function Messages() {
               </CardHeader>
               <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
                 {selectedThread.messages.map((msg, _idx) => (
-                  <Card key={msg.id} className={msg.sender_email === currentUser?.email ? 'bg-blue-50' : 'bg-gray-50'}>
+                  <Card key={msg.id} className={msg.sender_email === currentUser?.email ? 'bg-blue-50' : 'bg-slate-50'}>
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -344,7 +341,7 @@ export default function Messages() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-semibold text-sm truncate">{msg.sender_name}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500">
                               {format(new Date(msg.created_date), 'MMM d, yyyy h:mm a')}
                             </p>
                           </div>
@@ -353,7 +350,7 @@ export default function Messages() {
                           <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">{msg.message_text}</p>
+                      <p className="text-sm text-slate-900 whitespace-pre-wrap break-words">{msg.message_text}</p>
                       {msg.patient_id && (
                         <Link
                           to={createPageUrl(`PatientDetails?id=${msg.patient_id}`)}
@@ -385,7 +382,7 @@ export default function Messages() {
               </CardContent>
 
               {/* Inline Reply Box */}
-              <div className="border-t border-gray-200 px-4 pb-4 pt-3 space-y-2">
+              <div className="border-t border-slate-200 px-4 pb-4 pt-3 space-y-2">
                 <Textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
@@ -398,8 +395,8 @@ export default function Messages() {
           ) : (
             <Card>
               <CardContent className="p-12 text-center">
-                <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Select a message to view the conversation</p>
+                <Mail className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-600">Select a message to view the conversation</p>
               </CardContent>
             </Card>
           )}

@@ -174,7 +174,7 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
 
         {files.length > 0 && !isProcessing && results.length === 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">{files.length} file(s) selected:</p>
+            <p className="text-sm font-medium text-slate-700">{files.length} file(s) selected:</p>
             <div className="space-y-1">
               {files.map((file, idx) => (
                 <div key={idx} className="flex items-center gap-2 p-2 bg-white rounded border text-sm">
@@ -199,11 +199,11 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
         {isProcessing && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Processing documents...</span>
-              <span className="text-sm text-gray-600">{progress}%</span>
+              <span className="text-sm font-medium text-slate-700">Processing documents...</span>
+              <span className="text-sm text-slate-600">{progress}%</span>
             </div>
             <Progress value={progress} className="h-2" />
-            <p className="text-xs text-center text-gray-600 mt-2">
+            <p className="text-xs text-center text-slate-600 mt-2">
               Using AI to read and extract patient information
             </p>
           </div>
@@ -219,14 +219,14 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
             </Alert>
 
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700">Extracted Patient Data:</p>
+              <p className="text-sm font-semibold text-slate-700">Extracted Patient Data:</p>
               {results.map((result, idx) => (
                 <Card key={idx} className="border-green-200 bg-green-50">
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-gray-900 truncate">
+                        <span className="text-sm font-medium text-slate-900 truncate">
                           {result.fileName}
                         </span>
                       </div>
@@ -234,31 +234,31 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-2 bg-white rounded">
-                        <span className="font-medium text-gray-600">Name:</span>
-                        <p className="text-gray-900">{result.data.first_name} {result.data.last_name || 'N/A'}</p>
+                        <span className="font-medium text-slate-600">Name:</span>
+                        <p className="text-slate-900">{result.data.first_name} {result.data.last_name || 'N/A'}</p>
                       </div>
                       {result.data.date_of_birth && (
                         <div className="p-2 bg-white rounded">
-                          <span className="font-medium text-gray-600">DOB:</span>
-                          <p className="text-gray-900">{result.data.date_of_birth}</p>
+                          <span className="font-medium text-slate-600">DOB:</span>
+                          <p className="text-slate-900">{result.data.date_of_birth}</p>
                         </div>
                       )}
                       {result.data.medical_record_number && (
                         <div className="p-2 bg-white rounded">
-                          <span className="font-medium text-gray-600">MRN:</span>
-                          <p className="text-gray-900">{result.data.medical_record_number}</p>
+                          <span className="font-medium text-slate-600">MRN:</span>
+                          <p className="text-slate-900">{result.data.medical_record_number}</p>
                         </div>
                       )}
                       {result.data.phone && (
                         <div className="p-2 bg-white rounded">
-                          <span className="font-medium text-gray-600">Phone:</span>
-                          <p className="text-gray-900">{result.data.phone}</p>
+                          <span className="font-medium text-slate-600">Phone:</span>
+                          <p className="text-slate-900">{result.data.phone}</p>
                         </div>
                       )}
                       {result.data.primary_diagnosis && (
                         <div className="p-2 bg-white rounded col-span-2">
-                          <span className="font-medium text-gray-600">Diagnosis:</span>
-                          <p className="text-gray-900">{result.data.primary_diagnosis}</p>
+                          <span className="font-medium text-slate-600">Diagnosis:</span>
+                          <p className="text-slate-900">{result.data.primary_diagnosis}</p>
                         </div>
                       )}
                     </div>

@@ -122,7 +122,7 @@ export default function OfflineNoteEditor({ patientId, onSaveOffline }) {
           <div>
             <Label className="text-sm">Patient</Label>
             <p className="font-medium">{patient.first_name} {patient.last_name}</p>
-            <p className="text-xs text-gray-600">{patient.primary_diagnosis}</p>
+            <p className="text-xs text-slate-600">{patient.primary_diagnosis}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -199,7 +199,7 @@ export default function OfflineNoteEditor({ patientId, onSaveOffline }) {
               onChange={(e) => setNoteData({...noteData, nurse_notes: e.target.value})}
               className="min-h-[200px]"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               {noteData.nurse_notes.length} characters
             </p>
           </div>

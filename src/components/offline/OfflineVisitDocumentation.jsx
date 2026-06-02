@@ -226,7 +226,7 @@ export default function OfflineVisitDocumentation({ patientId, visitId, existing
           </div>
 
           {lastSaved && (
-            <div className="text-xs text-gray-500 flex items-center gap-2">
+            <div className="text-xs text-slate-500 flex items-center gap-2">
               <CheckCircle2 className="w-3 h-3 text-green-600" />
               Last saved: {lastSaved.toLocaleTimeString()}
             </div>

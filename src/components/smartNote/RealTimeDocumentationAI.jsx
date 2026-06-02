@@ -286,7 +286,7 @@ Only suggest improvements that are ACTIONABLE and RELEVANT to this specific visi
       case 'high': return 'border-orange-500 bg-orange-50';
       case 'medium': return 'border-yellow-500 bg-yellow-50';
       case 'low': return 'border-blue-500 bg-blue-50';
-      default: return 'border-gray-300 bg-gray-50';
+      default: return 'border-slate-300 bg-slate-50';
     }
   };
 
@@ -297,7 +297,7 @@ Only suggest improvements that are ACTIONABLE and RELEVANT to this specific visi
       medium: 'bg-yellow-600 text-white',
       low: 'bg-blue-600 text-white'
     };
-    return colors[severity] || 'bg-gray-600 text-white';
+    return colors[severity] || 'bg-slate-600 text-white';
   };
 
   if (minimized) {
@@ -355,7 +355,7 @@ Only suggest improvements that are ACTIONABLE and RELEVANT to this specific visi
         )}
 
         {!isAnalyzing && noteContent.length < 50 && (
-          <div className="text-center py-6 text-sm text-gray-600">
+          <div className="text-center py-6 text-sm text-slate-600">
             Start writing your note to receive real-time suggestions...
           </div>
         )}
@@ -383,7 +383,7 @@ Only suggest improvements that are ACTIONABLE and RELEVANT to this specific visi
                         }`} />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-sm text-gray-900">{suggestion.title}</p>
+                            <p className="font-semibold text-sm text-slate-900">{suggestion.title}</p>
                             <Badge className={getSeverityBadge(suggestion.severity)} size="sm">
                               {suggestion.severity}
                             </Badge>
@@ -405,8 +405,8 @@ Only suggest improvements that are ACTIONABLE and RELEVANT to this specific visi
                       </Button>
                     </div>
 
-                    <div className="bg-white/80 rounded p-2 mb-2 text-sm text-gray-700">
-                      <p className="font-medium text-xs text-gray-600 mb-1">Rationale:</p>
+                    <div className="bg-white/80 rounded p-2 mb-2 text-sm text-slate-700">
+                      <p className="font-medium text-xs text-slate-600 mb-1">Rationale:</p>
                       <p>{suggestion.rationale}</p>
                     </div>
 

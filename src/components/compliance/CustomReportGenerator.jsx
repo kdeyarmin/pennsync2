@@ -306,8 +306,8 @@ export default function CustomReportGenerator({
         </div>
 
         {/* Preview Count */}
-        <div className="bg-gray-50 p-3 rounded-lg text-center">
-          <p className="text-sm text-gray-600">
+        <div className="bg-slate-50 p-3 rounded-lg text-center">
+          <p className="text-sm text-slate-600">
             <span className="font-bold text-lg text-blue-600">{filteredAudits.length}</span> audits match your filters
           </p>
         </div>
@@ -339,31 +339,31 @@ export default function CustomReportGenerator({
                   <Card className="bg-blue-50">
                     <CardContent className="p-3 text-center">
                       <p className="text-xl font-bold text-blue-600">{reportData.stats.totalAudits}</p>
-                      <p className="text-[10px] text-gray-500">Audits</p>
+                      <p className="text-[10px] text-slate-500">Audits</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-green-50">
                     <CardContent className="p-3 text-center">
                       <p className="text-xl font-bold text-green-600">{reportData.stats.avgScore}%</p>
-                      <p className="text-[10px] text-gray-500">Avg Score</p>
+                      <p className="text-[10px] text-slate-500">Avg Score</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-emerald-50">
                     <CardContent className="p-3 text-center">
                       <p className="text-xl font-bold text-emerald-600">{reportData.stats.passRate}%</p>
-                      <p className="text-[10px] text-gray-500">Pass Rate</p>
+                      <p className="text-[10px] text-slate-500">Pass Rate</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-orange-50">
                     <CardContent className="p-3 text-center">
                       <p className="text-xl font-bold text-orange-600">{reportData.stats.totalIssues}</p>
-                      <p className="text-[10px] text-gray-500">Issues</p>
+                      <p className="text-[10px] text-slate-500">Issues</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-red-50">
                     <CardContent className="p-3 text-center">
                       <p className="text-xl font-bold text-red-600">{reportData.stats.criticalIssues}</p>
-                      <p className="text-[10px] text-gray-500">Critical</p>
+                      <p className="text-[10px] text-slate-500">Critical</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -373,7 +373,7 @@ export default function CustomReportGenerator({
                   <h4 className="text-sm font-semibold mb-2">Nurse Performance</h4>
                   <div className="max-h-40 overflow-y-auto border rounded">
                     <table className="w-full text-xs">
-                      <thead className="bg-gray-50 sticky top-0">
+                      <thead className="bg-slate-50 sticky top-0">
                         <tr>
                           <th className="text-left p-2">Nurse</th>
                           <th className="text-center p-2">Audits</th>
@@ -400,10 +400,10 @@ export default function CustomReportGenerator({
                   <h4 className="text-sm font-semibold mb-2">Issue Categories</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {reportData.categoryStats.slice(0, 6).map((c, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                      <div key={idx} className="flex justify-between items-center p-2 bg-slate-50 rounded text-xs">
                         <span>{c.category}</span>
                         <div className="flex gap-1">
-                          <Badge className="text-[9px] bg-gray-200">{c.count}</Badge>
+                          <Badge className="text-[9px] bg-slate-200">{c.count}</Badge>
                           {c.critical > 0 && <Badge className="text-[9px] bg-red-100 text-red-800">{c.critical}</Badge>}
                         </div>
                       </div>

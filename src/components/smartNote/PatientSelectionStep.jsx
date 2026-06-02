@@ -39,9 +39,9 @@ export default function PatientSelectionStep({
   };
 
   return (
-    <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
+    <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-slate-300'}`}>
       <CardHeader 
-        className={`py-4 md:py-5 cursor-pointer ${currentStep === 'patient' ? 'bg-gradient-to-r from-blue-100 to-indigo-100' : 'bg-gray-50'}`}
+        className={`py-4 md:py-5 cursor-pointer ${currentStep === 'patient' ? 'bg-gradient-to-r from-blue-100 to-indigo-100' : 'bg-slate-50'}`}
         onClick={() => isCollapsed && onToggleCollapse()}
       >
         <CardTitle className="text-base md:text-lg flex items-center gap-3">
@@ -50,7 +50,7 @@ export default function PatientSelectionStep({
           </div>
           <span>1. Patient & Visit</span>
           {selectedPatient && (
-            <span className="text-sm text-gray-600 ml-2">{selectedPatient.first_name} {selectedPatient.last_name}</span>
+            <span className="text-sm text-slate-600 ml-2">{selectedPatient.first_name} {selectedPatient.last_name}</span>
           )}
           {selectedPatient && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
         </CardTitle>

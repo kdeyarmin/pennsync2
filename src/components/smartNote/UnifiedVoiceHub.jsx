@@ -139,7 +139,7 @@ export default function UnifiedVoiceHub({
           )}
         </div>
         {lastRecognized && (
-          <p className="text-xs text-gray-600 mt-2 truncate">Last: "{lastRecognized}"</p>
+          <p className="text-xs text-slate-600 mt-2 truncate">Last: "{lastRecognized}"</p>
         )}
       </CardContent>
     </Card>

@@ -111,7 +111,7 @@ Medication list reviewed with patient/caregiver. No changes since last visit. Pa
 
           {!noChanges && (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg">
                 <Input
                   placeholder="Medication name"
                   value={newMed.name}
@@ -145,10 +145,10 @@ Medication list reviewed with patient/caregiver. No changes since last visit. Pa
                   {medications.map((med) => (
                     <div key={med.id} className="flex items-center gap-3 p-3 bg-white border rounded-lg">
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-slate-900">
                           {med.name} {med.dose}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600">
                           {med.route || 'PO'} {med.frequency}
                         </p>
                       </div>

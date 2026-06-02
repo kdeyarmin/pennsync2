@@ -74,7 +74,7 @@ export default function ScheduleSendDialog({ toNumber, patientId, body, template
             <DialogTitle>Schedule this text</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               It will send automatically from your work number at the time you choose. Consent is re-checked
               when it sends. You can cancel it any time before then from the Scheduled tab.
             </p>
@@ -89,9 +89,9 @@ export default function ScheduleSendDialog({ toNumber, patientId, body, template
               />
             </div>
             {body && (
-              <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                <p className="text-[11px] text-gray-500 mb-0.5">Preview</p>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap line-clamp-4">{body}</p>
+              <div className="p-2 rounded bg-slate-50 border border-slate-200">
+                <p className="text-[11px] text-slate-500 mb-0.5">Preview</p>
+                <p className="text-sm text-slate-800 whitespace-pre-wrap line-clamp-4">{body}</p>
               </div>
             )}
           </div>

@@ -56,7 +56,7 @@ export default function SmartNotesStatsCard() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-gray-500">
+        <CardContent className="p-6 text-center text-slate-500">
           Loading smart notes statistics...
         </CardContent>
       </Card>
@@ -76,17 +76,17 @@ export default function SmartNotesStatsCard() {
           <div className="text-center p-3 bg-purple-50 rounded-lg">
             <Sparkles className="w-5 h-5 text-purple-600 mx-auto mb-1" />
             <p className="text-2xl font-bold text-purple-600">{totalEnhanced}</p>
-            <p className="text-xs text-gray-600">Total Enhanced</p>
+            <p className="text-xs text-slate-600">Total Enhanced</p>
           </div>
           <div className="text-center p-3 bg-blue-50 rounded-lg">
             <TrendingUp className="w-5 h-5 text-blue-600 mx-auto mb-1" />
             <p className="text-2xl font-bold text-blue-600">{avgQualityAll}</p>
-            <p className="text-xs text-gray-600">Avg Quality Score</p>
+            <p className="text-xs text-slate-600">Avg Quality Score</p>
           </div>
           <div className="text-center p-3 bg-green-50 rounded-lg">
             <Award className="w-5 h-5 text-green-600 mx-auto mb-1" />
             <p className="text-2xl font-bold text-green-600">{userStats.length}</p>
-            <p className="text-xs text-gray-600">Active Users</p>
+            <p className="text-xs text-slate-600">Active Users</p>
           </div>
         </div>
 
@@ -95,7 +95,7 @@ export default function SmartNotesStatsCard() {
             {userStats.map((stat, idx) => (
               <div
                 key={stat.email}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
@@ -103,7 +103,7 @@ export default function SmartNotesStatsCard() {
                   </div>
                   <div>
                     <p className="font-medium text-sm">{stat.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {stat.recentEnhanced} enhanced this week
                     </p>
                   </div>
@@ -119,7 +119,7 @@ export default function SmartNotesStatsCard() {
               </div>
             ))}
             {userStats.length === 0 && (
-              <p className="text-center text-gray-500 py-8">
+              <p className="text-center text-slate-500 py-8">
                 No enhanced notes yet
               </p>
             )}

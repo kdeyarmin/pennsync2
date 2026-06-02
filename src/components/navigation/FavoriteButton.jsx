@@ -59,7 +59,7 @@ export default function FavoriteButton({ type, id, name }) {
       className="gap-2"
       title={isFavorited ? "Remove from favorites" : "Add to favorites"}
     >
-      <Star className={`w-4 h-4 ${isFavorited ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />
+      <Star className={`w-4 h-4 ${isFavorited ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'}`} />
       <span className="hidden md:inline">{isFavorited ? 'Favorited' : 'Favorite'}</span>
     </Button>
   );

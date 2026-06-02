@@ -312,20 +312,20 @@ Return only the structured clinical note, no preamble.`;
           </div>
 
           {/* Transcript Display */}
-          <div className="min-h-[140px] bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm leading-relaxed">
+          <div className="min-h-[140px] bg-slate-50 border border-slate-200 rounded-lg p-4 font-mono text-sm leading-relaxed">
             {!transcript && !interimTranscript && !isListening && (
-              <p className="text-gray-400 italic">Transcript will appear here as you speak...</p>
+              <p className="text-slate-400 italic">Transcript will appear here as you speak...</p>
             )}
             {!transcript && !interimTranscript && isListening && (
-              <p className="text-gray-400 italic animate-pulse">Listening... speak your observations now</p>
+              <p className="text-slate-400 italic animate-pulse">Listening... speak your observations now</p>
             )}
-            <span className="text-gray-800">{transcript}</span>
-            <span className="text-gray-400 italic">{interimTranscript}</span>
+            <span className="text-slate-800">{transcript}</span>
+            <span className="text-slate-400 italic">{interimTranscript}</span>
           </div>
 
           {/* Word count */}
           {transcript && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               {transcript.trim().split(/\s+/).filter(Boolean).length} words transcribed
             </p>
           )}
@@ -378,7 +378,7 @@ Return only the structured clinical note, no preamble.`;
             </div>
           </CardHeader>
           <CardContent>
-            <div className="bg-white border border-gray-200 rounded-lg p-5 whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-mono max-h-[500px] overflow-y-auto">
+            <div className="bg-white border border-slate-200 rounded-lg p-5 whitespace-pre-wrap text-sm text-slate-800 leading-relaxed font-mono max-h-[500px] overflow-y-auto">
               {structuredNote}
             </div>
           </CardContent>

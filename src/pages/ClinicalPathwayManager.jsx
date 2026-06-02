@@ -359,8 +359,8 @@ export default function ClinicalPathwayManager() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-12 text-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-            <p className="text-gray-600">Only administrators can manage clinical pathways.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Restricted</h2>
+            <p className="text-slate-600">Only administrators can manage clinical pathways.</p>
           </CardContent>
         </Card>
       </div>
@@ -368,15 +368,15 @@ export default function ClinicalPathwayManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-slate-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
               <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 flex-shrink-0" />
               <span className="truncate">Clinical & OASIS Management</span>
             </h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 hidden sm:block">
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-1 sm:mt-2 hidden sm:block">
               AI-powered clinical documentation, OASIS assessments, and care planning
             </p>
           </div>
@@ -456,9 +456,9 @@ export default function ClinicalPathwayManager() {
             {pathways.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
-              <Route className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Clinical Pathways Yet</h3>
-              <p className="text-gray-600 mb-4">
+              <Route className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">No Clinical Pathways Yet</h3>
+              <p className="text-slate-600 mb-4">
                 Create pathways to automatically guide documentation and task creation for specific diagnoses
               </p>
               <Button onClick={createSamplePathways} disabled={createMutation.isPending}>
@@ -477,7 +477,7 @@ export default function ClinicalPathwayManager() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-2 h-12 rounded ${pathway.is_active ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <div className={`w-2 h-12 rounded ${pathway.is_active ? 'bg-green-500' : 'bg-slate-300'}`} />
                       <div>
                         <CardTitle className="text-lg">{pathway.pathway_name}</CardTitle>
                         <CardDescription>{pathway.description}</CardDescription>
@@ -592,11 +592,11 @@ export default function ClinicalPathwayManager() {
               )}
 
               {!selectedPathwayForUpdate && (
-                <Card className="border-gray-200">
+                <Card className="border-slate-200">
                   <CardContent className="p-8 text-center">
-                    <Brain className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-600 mb-2">Select a pathway from the list to get AI update recommendations</p>
-                    <p className="text-sm text-gray-500">Or generate a new pathway using the generator on the left</p>
+                    <Brain className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-600 mb-2">Select a pathway from the list to get AI update recommendations</p>
+                    <p className="text-sm text-slate-500">Or generate a new pathway using the generator on the left</p>
                   </CardContent>
                 </Card>
               )}
@@ -763,7 +763,7 @@ function PathwayForm({ pathway, onSave, onCancel, isSaving }) {
         </div>
         <div className="space-y-2 max-h-40 overflow-y-auto">
           {formData.trigger_conditions?.map((trigger, idx) => (
-            <div key={idx} className="flex gap-2 items-end bg-gray-50 p-2 rounded">
+            <div key={idx} className="flex gap-2 items-end bg-slate-50 p-2 rounded">
               <div className="flex-1 grid grid-cols-3 gap-2">
                 <Select value={trigger.type} onValueChange={(v) => updateTrigger(idx, 'type', v)}>
                   <SelectTrigger className="h-8 text-xs">
@@ -833,6 +833,6 @@ const getPriorityColor = (priority) => {
     case 'high': return 'bg-orange-500 text-white';
     case 'medium': return 'bg-yellow-500 text-white';
     case 'low': return 'bg-blue-500 text-white';
-    default: return 'bg-gray-500 text-white';
+    default: return 'bg-slate-500 text-white';
   }
 };

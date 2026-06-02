@@ -141,7 +141,7 @@ Return ONLY valid JSON.`;
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -193,15 +193,15 @@ Return ONLY valid JSON.`;
 
             {recommendations.overall_assessment && (
               <div className="p-3 bg-white rounded-lg border">
-                <p className="text-sm font-medium text-gray-900 mb-1">Overall Assessment</p>
-                <p className="text-sm text-gray-700">{recommendations.overall_assessment}</p>
+                <p className="text-sm font-medium text-slate-900 mb-1">Overall Assessment</p>
+                <p className="text-sm text-slate-700">{recommendations.overall_assessment}</p>
               </div>
             )}
 
             {/* Guideline Updates */}
             {recommendations.guideline_updates?.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-purple-600" />
                   Recent Guideline Updates
                 </h4>
@@ -224,7 +224,7 @@ Return ONLY valid JSON.`;
             {/* Recommendations */}
             {recommendations.recommendations?.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
                   Recommendations ({recommendations.recommendations.length})
                 </h4>
@@ -238,18 +238,18 @@ Return ONLY valid JSON.`;
                               <Badge className={getPriorityColor(rec.priority)} size="sm">
                                 {rec.priority}
                               </Badge>
-                              <p className="text-xs text-gray-500 mt-1">{rec.category}</p>
+                              <p className="text-xs text-slate-500 mt-1">{rec.category}</p>
                             </div>
                           </div>
 
-                          <p className="text-sm font-medium text-gray-900">{rec.recommendation}</p>
+                          <p className="text-sm font-medium text-slate-900">{rec.recommendation}</p>
 
                           <div className="space-y-1 text-xs">
-                            <p className="text-gray-700">
+                            <p className="text-slate-700">
                               <span className="font-semibold">Rationale:</span> {rec.rationale}
                             </p>
                             {rec.impact && (
-                              <p className="text-gray-700">
+                              <p className="text-slate-700">
                                 <span className="font-semibold">Impact:</span> {rec.impact}
                               </p>
                             )}
@@ -275,7 +275,7 @@ Return ONLY valid JSON.`;
             {/* Performance Insights */}
             {recommendations.performance_insights?.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-cyan-600" />
                   Performance Insights
                 </h4>

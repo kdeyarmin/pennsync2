@@ -87,15 +87,15 @@ export default function AgencySettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-slate-50 p-3 sm:p-4 md:p-6">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
             <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
             <span className="truncate">Agency Settings</span>
           </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2 hidden sm:block">Configure agency-wide settings, validation rules, and cost analysis</p>
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-2 hidden sm:block">Configure agency-wide settings, validation rules, and cost analysis</p>
         </div>
 
         {successMessage && (
@@ -176,14 +176,14 @@ export default function AgencySettings() {
                   value={formData.office_zip_code}
                   onChange={(e) => handleChange('office_zip_code', e.target.value)}
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500">
                   Used to determine the wage index for your geographic area
                 </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="wage_index">
                   CMS Wage Index
-                  <span className="text-xs text-gray-500 ml-2">(Default: 1.0 = National Average)</span>
+                  <span className="text-xs text-slate-500 ml-2">(Default: 1.0 = National Average)</span>
                 </Label>
                 <Input
                   id="wage_index"
@@ -193,7 +193,7 @@ export default function AgencySettings() {
                   value={formData.wage_index}
                   onChange={(e) => handleChange('wage_index', parseFloat(e.target.value) || 1.0)}
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500">
                   Find your wage index at{' '}
                   <a 
                     href="https://www.cms.gov/medicare/payment/prospective-payment-systems/home-health/home-health-pps-wage-index" 

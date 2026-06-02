@@ -17,7 +17,7 @@ export default function TemplateVersionHistory({ parentTemplateId }) {
   if (!versions.length) {
     return (
       <Card>
-        <CardContent className="pt-6 text-center text-gray-500">
+        <CardContent className="pt-6 text-center text-slate-500">
           <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p>No version history yet</p>
         </CardContent>
@@ -35,19 +35,19 @@ export default function TemplateVersionHistory({ parentTemplateId }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {versions.map((version) => (
-          <div key={version.id} className="p-3 border rounded-lg hover:bg-gray-50">
+          <div key={version.id} className="p-3 border rounded-lg hover:bg-slate-50">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <Badge>v{version.version}</Badge>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-slate-500">
                     {format(new Date(version.created_date), 'MMM dd, yyyy')}
                   </span>
                 </div>
                 {version.change_notes && (
-                  <p className="text-sm text-gray-600 mt-2">{version.change_notes}</p>
+                  <p className="text-sm text-slate-600 mt-2">{version.change_notes}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-slate-500 mt-2">
                   Used {version.usage_count || 0} times
                 </p>
               </div>

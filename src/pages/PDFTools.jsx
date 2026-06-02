@@ -33,8 +33,8 @@ export default function PDFTools() {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">PDF Tools</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">PDF Tools</h1>
+        <p className="text-slate-600">
           Edit, merge, and manage PDF documents with powerful tools
         </p>
       </div>

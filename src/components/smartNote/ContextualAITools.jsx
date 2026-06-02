@@ -115,8 +115,8 @@ export default function ContextualAITools({
                 <span>{item.label}</span>
               </div>
             ) : (
-              <p className="text-xs text-gray-600 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+              <p className="text-xs text-slate-600 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
                 {item.label}
               </p>
             )}

@@ -228,19 +228,19 @@ export default function FaxAddressBook({ onSelectContact }) {
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="font-semibold text-gray-900">{contact.name}</div>
+                  <div className="font-semibold text-slate-900">{contact.name}</div>
                   {contact.organization && (
-                    <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                    <div className="flex items-center gap-1 text-sm text-slate-600 mt-1">
                       <Building2 className="w-3 h-3" />
                       {contact.organization}
                     </div>
                   )}
-                  <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                  <div className="flex items-center gap-1 text-sm text-slate-600 mt-1">
                     <Phone className="w-3 h-3" />
                     {contact.fax_number}
                   </div>
                   {contact.notes && (
-                    <div className="flex items-start gap-1 text-sm text-gray-500 mt-2">
+                    <div className="flex items-start gap-1 text-sm text-slate-500 mt-2">
                       <FileText className="w-3 h-3 mt-0.5" />
                       <span className="text-xs">{contact.notes}</span>
                     </div>

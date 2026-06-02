@@ -163,7 +163,7 @@ export default function CustomReportBuilder({ patients, visits, incidents, users
             <div className="space-y-4">
               {Object.entries(groupedMetrics).map(([category, metrics]) => (
                 <div key={category}>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2 capitalize">{category}</h4>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2 capitalize">{category}</h4>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {metrics.map(metric => (
                       <div key={metric.id} className="flex items-center space-x-2">
@@ -283,7 +283,7 @@ export default function CustomReportBuilder({ patients, visits, incidents, users
                 {generatedReport.data.map((item, idx) => (
                   <Card key={idx}>
                     <CardContent className="p-4">
-                      <p className="text-sm text-gray-600">{item.name}</p>
+                      <p className="text-sm text-slate-600">{item.name}</p>
                       <p className="text-2xl font-bold mt-1">{item.value}</p>
                     </CardContent>
                   </Card>

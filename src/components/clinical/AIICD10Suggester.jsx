@@ -85,7 +85,7 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
     if (lower.includes('primary')) return 'bg-blue-100 text-blue-800';
     if (lower.includes('secondary') || lower.includes('comorbidity')) return 'bg-purple-100 text-purple-800';
     if (lower.includes('complication')) return 'bg-orange-100 text-orange-800';
-    return 'bg-gray-100 text-gray-800';
+    return 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -149,7 +149,7 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
 
           {suggestedCodes.length > 0 && (
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              <p className="text-sm font-semibold text-gray-700">
+              <p className="text-sm font-semibold text-slate-700">
                 AI Suggested ICD-10 Codes:
               </p>
               {suggestedCodes.map((codeItem, idx) => {
@@ -160,7 +160,7 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
                     className={`p-3 rounded-lg border cursor-pointer transition-all ${
                       isSelected
                         ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50'
+                        : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50'
                     }`}
                     onClick={() => toggleCodeSelection(codeItem)}
                   >
@@ -182,10 +182,10 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
                         <CheckCircle2 className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                       )}
                     </div>
-                    <p className="text-sm font-medium text-gray-900 mb-1">
+                    <p className="text-sm font-medium text-slate-900 mb-1">
                       {codeItem.description}
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-slate-600">
                       {codeItem.justification}
                     </p>
                   </div>
@@ -195,7 +195,7 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
           )}
 
           {!isSearching && suggestedCodes.length === 0 && searchQuery && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-slate-500 text-center py-4">
               No results. Try a different clinical description.
             </p>
           )}

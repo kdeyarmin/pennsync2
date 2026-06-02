@@ -215,7 +215,7 @@ export default function UserManagement({ users, currentUser }) {
         <CardContent>
           <div className="flex justify-between items-center mb-4">
             <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search users..."
                 value={searchTerm}
@@ -305,10 +305,10 @@ export default function UserManagement({ users, currentUser }) {
                           {user.credential_type}
                         </Badge>
                       ) : (
-                        <span className="text-gray-400">Not set</span>
+                        <span className="text-slate-400">Not set</span>
                       )}
                       {user.license_number && (
-                        <div className="text-xs text-gray-500 mt-1">Lic: {user.license_number}</div>
+                        <div className="text-xs text-slate-500 mt-1">Lic: {user.license_number}</div>
                       )}
                     </TableCell>
                     <TableCell>
@@ -356,7 +356,7 @@ export default function UserManagement({ users, currentUser }) {
                         <XCircle className="w-5 h-5 text-yellow-600" title="Incomplete profile" />
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell className="text-sm text-slate-500">
                       {user.created_date ? format(new Date(user.created_date), 'MMM d, yyyy') : 'N/A'}
                     </TableCell>
                     <TableCell>
@@ -598,10 +598,10 @@ export default function UserManagement({ users, currentUser }) {
               </div>
 
               {editingUser.role !== 'admin' && (
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                   <div>
                     <Label className="text-base font-medium">Account Approval</Label>
-                    <p className="text-sm text-gray-600">Allow this user to access the system</p>
+                    <p className="text-sm text-slate-600">Allow this user to access the system</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={editingUser.is_approved ? 'bg-green-500' : 'bg-yellow-500'}>

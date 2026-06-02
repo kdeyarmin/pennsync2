@@ -269,25 +269,25 @@ Return JSON:
             {/* Score Breakdown */}
             <div className="grid grid-cols-2 gap-2">
               <div className="text-center p-2 bg-blue-50 rounded border">
-                <p className="text-xs text-gray-600">Clarity</p>
+                <p className="text-xs text-slate-600">Clarity</p>
                 <p className={`text-lg font-bold ${getScoreColor(feedback.clarity?.score)}`}>
                   {feedback.clarity?.score}%
                 </p>
               </div>
               <div className="text-center p-2 bg-purple-50 rounded border">
-                <p className="text-xs text-gray-600">Conciseness</p>
+                <p className="text-xs text-slate-600">Conciseness</p>
                 <p className={`text-lg font-bold ${getScoreColor(feedback.conciseness?.score)}`}>
                   {feedback.conciseness?.score}%
                 </p>
               </div>
               <div className="text-center p-2 bg-green-50 rounded border">
-                <p className="text-xs text-gray-600">Clinical Detail</p>
+                <p className="text-xs text-slate-600">Clinical Detail</p>
                 <p className={`text-lg font-bold ${getScoreColor(feedback.clinical_specificity?.score)}`}>
                   {feedback.clinical_specificity?.score}%
                 </p>
               </div>
               <div className="text-center p-2 bg-orange-50 rounded border">
-                <p className="text-xs text-gray-600">Medicare</p>
+                <p className="text-xs text-slate-600">Medicare</p>
                 <p className={`text-lg font-bold ${getScoreColor(feedback.medicare_compliance?.score)}`}>
                   {feedback.medicare_compliance?.score}%
                 </p>
@@ -318,12 +318,12 @@ Return JSON:
                   {feedback.medicare_compliance.quick_fixes.map((fix, i) => (
                     <div key={i} className="bg-white p-2 rounded border border-green-200">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-gray-800">{fix.element}</span>
+                        <span className="text-xs font-medium text-slate-800">{fix.element}</span>
                         <Badge className="bg-green-600 text-white text-xs">
                           {fix.impact_on_score}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-600 mb-1 italic">Add at: {fix.where}</p>
+                      <p className="text-xs text-slate-600 mb-1 italic">Add at: {fix.where}</p>
                       <div className="bg-blue-50 p-1.5 rounded border border-blue-200 mb-1">
                         <p className="text-xs text-blue-900 font-mono">{fix.add_this_text}</p>
                       </div>
@@ -361,7 +361,7 @@ Return JSON:
                       <div className="space-y-2">
                         <div className="bg-red-50 p-2 rounded border border-red-200">
                           <p className="text-xs font-medium text-red-800 mb-1">Current:</p>
-                          <p className="text-xs text-gray-700 italic">"{improvement.current_text}"</p>
+                          <p className="text-xs text-slate-700 italic">"{improvement.current_text}"</p>
                         </div>
                         <div className="bg-green-50 p-2 rounded border border-green-200">
                           <p className="text-xs font-medium text-green-800 mb-1 flex items-center justify-between">
@@ -379,7 +379,7 @@ Return JSON:
                               )}
                             </Button>
                           </p>
-                          <p className="text-xs text-gray-700 italic">"{improvement.improved_text}"</p>
+                          <p className="text-xs text-slate-700 italic">"{improvement.improved_text}"</p>
                         </div>
                         <div className="bg-blue-50 p-2 rounded">
                           <p className="text-xs text-blue-800"><strong>Impact:</strong> {improvement.impact}</p>
@@ -417,10 +417,10 @@ Return JSON:
 
                 return (
                   <AccordionItem key={category} value={category} className="border rounded-lg">
-                    <AccordionTrigger className="px-3 py-2 hover:no-underline bg-gray-50">
+                    <AccordionTrigger className="px-3 py-2 hover:no-underline bg-slate-50">
                       <div className="flex items-center justify-between w-full pr-2">
                         <div className="flex items-center gap-2">
-                          <Icon className="w-4 h-4 text-gray-600" />
+                          <Icon className="w-4 h-4 text-slate-600" />
                           <span className="text-sm capitalize">{category.replace('_', ' ')}</span>
                         </div>
                         <span className={`text-lg font-bold ${getScoreColor(data.score)}`}>
@@ -439,12 +439,12 @@ Return JSON:
                       )}
                       {data.issues?.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold text-gray-700">Issues & Suggestions:</p>
+                          <p className="text-xs font-semibold text-slate-700">Issues & Suggestions:</p>
                           {data.issues.map((issue, i) => (
                             <div key={i} className="bg-white p-2 rounded border">
-                              <p className="text-xs font-medium text-gray-800 mb-1">{issue.finding}</p>
-                              <div className="bg-gray-50 p-1.5 rounded mb-1">
-                                <p className="text-xs text-gray-600 italic">"{issue.example}"</p>
+                              <p className="text-xs font-medium text-slate-800 mb-1">{issue.finding}</p>
+                              <div className="bg-slate-50 p-1.5 rounded mb-1">
+                                <p className="text-xs text-slate-600 italic">"{issue.example}"</p>
                               </div>
                               <p className="text-xs text-orange-700 mb-1">{issue.problem}</p>
                               <div className="bg-green-50 p-1.5 rounded border border-green-200">

@@ -274,7 +274,7 @@ export default function OASISActionWorkflow({
       implemented: 'bg-blue-100 text-blue-800',
       task_created: 'bg-purple-100 text-purple-800'
     };
-    return styles[status] || 'bg-gray-100 text-gray-800';
+    return styles[status] || 'bg-slate-100 text-slate-800';
   };
 
   const getSeverityBadge = (severity) => {
@@ -284,7 +284,7 @@ export default function OASISActionWorkflow({
       medium: 'bg-yellow-100 text-yellow-800',
       low: 'bg-blue-100 text-blue-800'
     };
-    return styles[severity] || 'bg-gray-100 text-gray-800';
+    return styles[severity] || 'bg-slate-100 text-slate-800';
   };
 
   const filteredActions = actionItems.filter(a => {
@@ -381,7 +381,7 @@ export default function OASISActionWorkflow({
                 <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-600" />
               </div>
             ) : filteredActions.length === 0 ? (
-              <Alert className="bg-gray-50">
+              <Alert className="bg-slate-50">
                 <AlertDescription>
                   No actions in this category. {activeTab === 'pending' && 'Click "Generate Actions" to analyze findings.'}
                 </AlertDescription>
@@ -417,17 +417,17 @@ export default function OASISActionWorkflow({
                       )}
                     </div>
 
-                    <p className="text-sm text-gray-800 mb-2">{action.rationale}</p>
+                    <p className="text-sm text-slate-800 mb-2">{action.rationale}</p>
 
                     {(action.current_value || action.proposed_value) && (
-                      <div className="flex items-center gap-2 text-xs mb-3 p-2 bg-gray-50 rounded">
+                      <div className="flex items-center gap-2 text-xs mb-3 p-2 bg-slate-50 rounded">
                         <div className="flex-1">
-                          <span className="text-gray-500">Current: </span>
+                          <span className="text-slate-500">Current: </span>
                           <span className="text-red-700">{action.current_value || 'N/A'}</span>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-gray-400" />
+                        <ArrowRight className="w-4 h-4 text-slate-400" />
                         <div className="flex-1">
-                          <span className="text-gray-500">Proposed: </span>
+                          <span className="text-slate-500">Proposed: </span>
                           <span className="text-green-700">{action.proposed_value || 'N/A'}</span>
                         </div>
                       </div>
@@ -528,9 +528,9 @@ export default function OASISActionWorkflow({
                   )}
                 </div>
 
-                <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="bg-slate-50 p-3 rounded-lg">
                   <p className="text-sm font-medium mb-2">Rationale</p>
-                  <p className="text-sm text-gray-700">{selectedAction.rationale}</p>
+                  <p className="text-sm text-slate-700">{selectedAction.rationale}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

@@ -108,9 +108,9 @@ export default function AgencyAnalytics() {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
+            <p className="text-sm font-medium text-slate-600">{title}</p>
             <p className={`text-3xl font-bold mt-2 text-${color}-600`}>{value}</p>
-            {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+            {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
           </div>
           <div className={`h-12 w-12 rounded-lg bg-${color}-100 flex items-center justify-center`}>
             <Icon className={`w-6 h-6 text-${color}-600`} />
@@ -127,14 +127,14 @@ export default function AgencyAnalytics() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Agency Analytics & Performance</h1>
-              <p className="text-gray-600 mt-1">Comprehensive overview of agency operations and metrics</p>
+              <h1 className="text-3xl font-bold text-slate-900">Agency Analytics & Performance</h1>
+              <p className="text-slate-600 mt-1">Comprehensive overview of agency operations and metrics</p>
             </div>
             <Button variant="outline" className="gap-2">
               <Download className="w-4 h-4" />
@@ -170,21 +170,21 @@ export default function AgencyAnalytics() {
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between mb-2">
-                        <span className="text-sm text-gray-600">AI Enhancement Rate</span>
+                        <span className="text-sm text-slate-600">AI Enhancement Rate</span>
                         <span className="text-sm font-semibold">{overallStats.visits.total > 0 ? Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100) : 0}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-slate-200 rounded-full h-2">
                         <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${overallStats.visits.total > 0 ? Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100) : 0}%` }}></div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">{overallStats.compliance.avgScore}</p>
-                        <p className="text-sm text-gray-600">Avg Quality Score</p>
+                        <p className="text-2xl font-bold text-slate-900">{overallStats.compliance.avgScore}</p>
+                        <p className="text-sm text-slate-600">Avg Quality Score</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">{overallStats.noteEnhancements.total}</p>
-                        <p className="text-sm text-gray-600">Notes Enhanced</p>
+                        <p className="text-2xl font-bold text-slate-900">{overallStats.noteEnhancements.total}</p>
+                        <p className="text-sm text-slate-600">Notes Enhanced</p>
                       </div>
                     </div>
                   </div>
@@ -202,16 +202,16 @@ export default function AgencyAnalytics() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Active</span>
+                      <span className="text-sm text-slate-600">Active</span>
                       <span className="text-sm font-semibold text-green-600">{overallStats.patients.active}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Discharged</span>
-                      <span className="text-sm font-semibold text-gray-600">{overallStats.patients.discharged}</span>
+                      <span className="text-sm text-slate-600">Discharged</span>
+                      <span className="text-sm font-semibold text-slate-600">{overallStats.patients.discharged}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Total</span>
-                      <span className="text-sm font-semibold text-gray-600">{overallStats.patients.total}</span>
+                      <span className="text-sm text-slate-600">Total</span>
+                      <span className="text-sm font-semibold text-slate-600">{overallStats.patients.total}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -230,17 +230,17 @@ export default function AgencyAnalytics() {
               <CardContent>
                 <div className="space-y-3">
                   {topPerformers.map((nurse, idx) => (
-                    <div key={nurse.email} className="flex items-center gap-4 p-3 rounded-lg bg-gray-50">
+                    <div key={nurse.email} className="flex items-center gap-4 p-3 rounded-lg bg-slate-50">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold">
                         {idx + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{nurse.full_name}</p>
-                        <p className="text-sm text-gray-500">{nurse.stats.totalVisits} visits</p>
+                        <p className="font-medium text-slate-900">{nurse.full_name}</p>
+                        <p className="text-sm text-slate-500">{nurse.stats.totalVisits} visits</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-indigo-600">{nurse.stats.completionRate}%</p>
-                        <p className="text-xs text-gray-500">completion</p>
+                        <p className="text-xs text-slate-500">completion</p>
                       </div>
                     </div>
                   ))}
@@ -285,7 +285,7 @@ export default function AgencyAnalytics() {
                       <span className="text-sm font-medium text-green-700">Passed</span>
                       <span className="text-sm font-semibold">{overallStats.compliance.passedAudits}</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-slate-200 rounded-full h-2">
                       <div className="bg-green-600 h-2 rounded-full" style={{ width: `${overallStats.compliance.qualityScore}%` }}></div>
                     </div>
                   </div>
@@ -294,17 +294,17 @@ export default function AgencyAnalytics() {
                       <span className="text-sm font-medium text-indigo-700">Total Audits</span>
                       <span className="text-sm font-semibold">{overallStats.compliance.auditsInRange}</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-slate-200 rounded-full h-2">
                       <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `100%` }}></div>
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Avg Score</span>
+                      <span className="text-sm font-medium text-slate-700">Avg Score</span>
                       <span className="text-sm font-semibold">{overallStats.compliance.avgScore}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${overallStats.compliance.avgScore}%` }}></div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div className="bg-slate-600 h-2 rounded-full" style={{ width: `${overallStats.compliance.avgScore}%` }}></div>
                     </div>
                   </div>
                 </div>
@@ -322,21 +322,21 @@ export default function AgencyAnalytics() {
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nurse</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Visits</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Completed</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rate</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Time Saved</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Nurse</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Visits</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Completed</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Rate</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Time Saved</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-slate-100">
                       {nurseStats.map((nurse) => (
-                        <tr key={nurse.email} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{nurse.full_name}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{nurse.stats.totalVisits}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{nurse.stats.completedVisits}</td>
+                        <tr key={nurse.email} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 text-sm font-medium text-slate-900">{nurse.full_name}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{nurse.stats.totalVisits}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{nurse.stats.completedVisits}</td>
                           <td className="px-4 py-3 text-sm">
                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                               nurse.stats.completionRate >= 80 ? 'bg-green-100 text-green-700' :
@@ -346,7 +346,7 @@ export default function AgencyAnalytics() {
                               {nurse.stats.completionRate}%
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{nurse.stats.timeSavedHours}h</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{nurse.stats.timeSavedHours}h</td>
                         </tr>
                       ))}
                     </tbody>
@@ -387,10 +387,10 @@ export default function AgencyAnalytics() {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between mb-2">
-                    <span className="text-sm text-gray-600">Overall Completion Rate</span>
+                    <span className="text-sm text-slate-600">Overall Completion Rate</span>
                     <span className="text-sm font-semibold">{trainingStats.rate}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="w-full bg-slate-200 rounded-full h-3">
                     <div className="bg-indigo-600 h-3 rounded-full transition-all" style={{ width: `${trainingStats.rate}%` }}></div>
                   </div>
                 </div>
@@ -445,7 +445,7 @@ export default function AgencyAnalytics() {
                     </div>
                     <TrendingUp className="w-8 h-8 text-indigo-600" />
                   </div>
-                  <p className="text-sm text-gray-500 mt-4">
+                  <p className="text-sm text-slate-500 mt-4">
                     * Estimates based on industry average hourly rates and documented time savings through AI documentation assistance
                   </p>
                 </div>

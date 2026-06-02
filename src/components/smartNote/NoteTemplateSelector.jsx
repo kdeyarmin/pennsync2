@@ -140,7 +140,7 @@ export default function NoteTemplateSelector({ onSelect, currentVisitType }) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 sm:py-2.5 bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100 transition-colors min-h-[48px] sm:min-h-0"
@@ -154,24 +154,24 @@ export default function NoteTemplateSelector({ onSelect, currentVisitType }) {
       </button>
 
       {open && (
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-slate-100">
           {filtered.length === 0 && (
-            <p className="px-4 py-3 text-xs text-gray-400 italic">No templates for this visit type. Try "All Visit Types".</p>
+            <p className="px-4 py-3 text-xs text-slate-400 italic">No templates for this visit type. Try "All Visit Types".</p>
           )}
           {filtered.map(template => (
             <div key={template.id} className={`border-l-4 ${template.color} p-3 flex items-center justify-between gap-3`}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <FileText className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                  <span className="text-sm font-semibold text-gray-800">{template.label}</span>
+                  <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-800">{template.label}</span>
                   <Badge className={`text-xs ${template.badgeColor}`}>{template.visitType.replace(/_/g, " ")}</Badge>
                 </div>
-                <p className="text-xs text-gray-500 font-mono line-clamp-1 hidden sm:block">{template.content.split("\n")[0].replace("• ", "")}</p>
+                <p className="text-xs text-slate-500 font-mono line-clamp-1 hidden sm:block">{template.content.split("\n")[0].replace("• ", "")}</p>
               </div>
               <Button
                 size="sm"
                 variant="outline"
-                className="shrink-0 h-10 sm:h-8 px-4 sm:px-3 text-sm sm:text-xs border-gray-300 hover:border-indigo-400 hover:text-indigo-600 min-w-[60px] active:scale-95"
+                className="shrink-0 h-10 sm:h-8 px-4 sm:px-3 text-sm sm:text-xs border-slate-300 hover:border-indigo-400 hover:text-indigo-600 min-w-[60px] active:scale-95"
                 onClick={() => handleSelect(template)}
               >
                 Use

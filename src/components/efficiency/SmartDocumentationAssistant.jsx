@@ -272,7 +272,7 @@ Format as JSON with clear sections`;
         {generatedData?.sections && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-slate-700">
                 {generatedData.sections.length} sections generated - Review & Apply:
               </p>
               <Button
@@ -300,7 +300,7 @@ Format as JSON with clear sections`;
                     // Edit Mode
                     <div className="space-y-3">
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Section Name</label>
+                        <label className="text-xs font-medium text-slate-600">Section Name</label>
                         <input
                           type="text"
                           value={editingSection.section_name}
@@ -309,7 +309,7 @@ Format as JSON with clear sections`;
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Content</label>
+                        <label className="text-xs font-medium text-slate-600">Content</label>
                         <textarea
                           value={JSON.stringify(editingSection.content, null, 2)}
                           onChange={(e) => {
@@ -357,33 +357,33 @@ Format as JSON with clear sections`;
                           )}
                         </div>
                         
-                        <p className="text-xs text-gray-600 italic">
+                        <p className="text-xs text-slate-600 italic">
                           💡 {section.ai_reasoning}
                         </p>
                         
-                        <div className="bg-white rounded-lg p-3 border border-gray-200 text-sm space-y-2">
+                        <div className="bg-white rounded-lg p-3 border border-slate-200 text-sm space-y-2">
                           {typeof section.content === 'object' && !Array.isArray(section.content) ? (
                             Object.entries(section.content).map(([key, value]) => (
                               <div key={key}>
-                                <span className="font-medium text-gray-700 capitalize">
+                                <span className="font-medium text-slate-700 capitalize">
                                   {key.replace(/_/g, ' ')}:
                                 </span>
                                 {Array.isArray(value) ? (
                                   <ul className="ml-4 mt-1 space-y-1">
                                     {value.map((item, idx) => (
-                                      <li key={idx} className="text-gray-600 flex items-start gap-2">
+                                      <li key={idx} className="text-slate-600 flex items-start gap-2">
                                         <span className="text-purple-500 mt-1">•</span>
                                         <span>{item}</span>
                                       </li>
                                     ))}
                                   </ul>
                                 ) : (
-                                  <p className="text-gray-600 ml-2">{value}</p>
+                                  <p className="text-slate-600 ml-2">{value}</p>
                                 )}
                               </div>
                             ))
                           ) : (
-                            <pre className="text-xs font-mono whitespace-pre-wrap text-gray-600">
+                            <pre className="text-xs font-mono whitespace-pre-wrap text-slate-600">
                               {JSON.stringify(section.content, null, 2)}
                             </pre>
                           )}

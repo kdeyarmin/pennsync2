@@ -297,8 +297,8 @@ Return detailed JSON analysis.`,
       <Card className="border-2 border-purple-200">
         <CardContent className="p-8 text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
-          <p className="text-lg font-medium text-gray-900 mb-2">AI Comprehensive Review in Progress</p>
-          <p className="text-sm text-gray-600">
+          <p className="text-lg font-medium text-slate-900 mb-2">AI Comprehensive Review in Progress</p>
+          <p className="text-sm text-slate-600">
             Analyzing note against 42 CFR 484, Pennsylvania regulations, and quality standards...
           </p>
         </CardContent>
@@ -316,7 +316,7 @@ Return detailed JSON analysis.`,
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Comprehensive AI review of clinical documentation for Medicare compliance, accuracy, and quality.
           </p>
           <Button onClick={performReview} className="w-full bg-purple-600 hover:bg-purple-700">
@@ -362,8 +362,8 @@ Return detailed JSON analysis.`,
         <CardContent className="space-y-4">
           {/* Executive Summary */}
           <div className="bg-white p-4 rounded-lg border">
-            <h3 className="font-bold text-gray-900 mb-2">Executive Summary</h3>
-            <p className="text-sm text-gray-700">{reviewResults.executive_summary}</p>
+            <h3 className="font-bold text-slate-900 mb-2">Executive Summary</h3>
+            <p className="text-sm text-slate-700">{reviewResults.executive_summary}</p>
           </div>
 
           {/* Score Breakdown */}
@@ -379,7 +379,7 @@ Return detailed JSON analysis.`,
                 <p className={`text-2xl font-bold ${getScoreColor(metric.score)}`}>
                   {metric.score}
                 </p>
-                <p className="text-xs text-gray-600">{metric.label}</p>
+                <p className="text-xs text-slate-600">{metric.label}</p>
                 <Progress value={metric.score} className="h-1 mt-2" />
               </div>
             ))}
@@ -426,7 +426,7 @@ Return detailed JSON analysis.`,
                     <p className="font-semibold text-red-900">{issue.issue}</p>
                     <Badge className="bg-red-600">{issue.severity}</Badge>
                   </div>
-                  <p className="text-xs text-gray-600 mb-1">
+                  <p className="text-xs text-slate-600 mb-1">
                     <strong>CoP:</strong> {issue.cop_reference}
                   </p>
                   <p className="text-sm text-red-800">{issue.impact}</p>
@@ -449,7 +449,7 @@ Return detailed JSON analysis.`,
               {reviewResults.missing_elements.map((element, idx) => (
                 <div key={idx} className="bg-white p-3 rounded border">
                   <p className="font-semibold text-orange-900 mb-1">{element.element}</p>
-                  <p className="text-xs text-gray-600 mb-2">
+                  <p className="text-xs text-slate-600 mb-2">
                     <strong>Required by:</strong> {element.cop_requirement}
                   </p>
                   <p className="text-sm text-orange-800">{element.why_required}</p>
@@ -472,14 +472,14 @@ Return detailed JSON analysis.`,
               {reviewResults.vague_language.map((item, idx) => (
                 <div key={idx} className="bg-white p-3 rounded border">
                   <div className="mb-2">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Vague:</p>
+                    <p className="text-xs font-semibold text-slate-600 mb-1">Vague:</p>
                     <p className="text-sm text-red-700 italic">"{item.vague_text}"</p>
                   </div>
                   <div className="mb-2">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Better:</p>
+                    <p className="text-xs font-semibold text-slate-600 mb-1">Better:</p>
                     <p className="text-sm text-green-700 font-medium">"{item.specific_replacement}"</p>
                   </div>
-                  <p className="text-xs text-gray-600">{item.rationale}</p>
+                  <p className="text-xs text-slate-600">{item.rationale}</p>
                   {onApplySuggestion && (
                     <Button
                       size="sm"
@@ -516,10 +516,10 @@ Return detailed JSON analysis.`,
                       {suggestion.priority}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{suggestion.suggestion}</p>
+                  <p className="text-sm text-slate-700 mb-2">{suggestion.suggestion}</p>
                   {suggestion.compliant_text && (
                     <>
-                      <p className="text-xs font-semibold text-gray-600 mb-1">Suggested Text:</p>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">Suggested Text:</p>
                       <p className="text-sm text-blue-800 bg-blue-50 p-2 rounded border border-blue-200">
                         {suggestion.compliant_text}
                       </p>
@@ -556,7 +556,7 @@ Return detailed JSON analysis.`,
                   <div className="bg-green-50 p-2 rounded border border-green-200 mb-2">
                     <p className="text-sm text-green-900 italic">"{section.excerpt}"</p>
                   </div>
-                  <p className="text-xs text-gray-700">{section.why_exemplary}</p>
+                  <p className="text-xs text-slate-700">{section.why_exemplary}</p>
                 </div>
               ))}
               {reviewResults.training_value && (

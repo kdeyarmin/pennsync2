@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Home, Users, FileText, ClipboardList, Shield, GraduationCap,
-  BarChart3, Settings, Brain, Target, Mail, BookUser,
-  Video, HelpCircle, AlertTriangle, BookOpen, WifiOff,
-  Send, Heart, Activity
-} from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Command,
@@ -16,60 +10,7 @@ import {
   CommandItem,
   CommandSeparator,
 } from "@/components/ui/command";
-
-const PAGE_REGISTRY = [
-  // Overview
-  { name: "Dashboard", icon: Home, category: "Overview", keywords: ["home", "main", "overview"] },
-
-  // Patient Care
-  { name: "Patients", icon: Users, category: "Patient Care", keywords: ["roster", "directory", "list"] },
-  { name: "PatientDetails", icon: Users, category: "Patient Care", keywords: ["record", "chart"] },
-  { name: "CarePlanManagement", icon: Target, category: "Patient Care", keywords: ["care plan", "goals"] },
-  { name: "SmartOASISAssessment", icon: Brain, category: "Patient Care", keywords: ["oasis", "assessment"] },
-  { name: "Incidents", icon: AlertTriangle, category: "Patient Care", keywords: ["incident", "report", "safety"] },
-  { name: "ClinicalChart", icon: Activity, category: "Patient Care", keywords: ["chart", "clinical", "patient chart"] },
-
-  // Documentation
-  { name: "SmartNoteAssistant", icon: Brain, category: "Documentation", keywords: ["smart note", "clinical note", "documentation", "ai"] },
-  { name: "ClinicalDocumentation", icon: FileText, category: "Documentation", keywords: ["clinical", "documentation", "notes"] },
-  { name: "DocumentHub", icon: FileText, category: "Documentation", keywords: ["documents", "files"] },
-  { name: "ReferralIntake", icon: FileText, category: "Documentation", keywords: ["referral", "intake", "admission"] },
-  { name: "VisitScribe", icon: FileText, category: "Documentation", keywords: ["scribe", "dictation", "voice"] },
-  { name: "EventReport", icon: FileText, category: "Documentation", keywords: ["event", "report", "incident report"] },
-
-  // Communication
-  { name: "Messages", icon: Mail, category: "Communication", keywords: ["messages", "inbox", "chat"] },
-  { name: "SendFax", icon: Send, category: "Communication", keywords: ["fax", "send fax"] },
-  { name: "PhysicianDirectory", icon: BookUser, category: "Communication", keywords: ["physician", "provider", "doctor", "directory"] },
-  { name: "Telehealth", icon: Video, category: "Communication", keywords: ["telehealth", "video", "call"] },
-
-  // Compliance & Quality
-  { name: "ComplianceCenter", icon: Shield, category: "Compliance", keywords: ["compliance", "audit", "quality", "metrics"] },
-  { name: "SecurityCompliance", icon: Shield, category: "Compliance", keywords: ["security", "hipaa"] },
-  { name: "RegulatoryCompliance", icon: ClipboardList, category: "Compliance", keywords: ["regulatory", "cms", "state requirements"] },
-
-  // Analytics & Reports
-  { name: "ReportsAnalytics", icon: BarChart3, category: "Analytics", keywords: ["reports", "analytics", "metrics", "export", "data"] },
-
-  // Training & Learning
-  { name: "LearningCenter", icon: GraduationCap, category: "Learning", keywords: ["learning", "courses", "catalog", "browse"] },
-  { name: "MyLearning", icon: GraduationCap, category: "Learning", keywords: ["training", "my courses", "progress", "education"] },
-  { name: "ClinicalSkillsChecklist", icon: GraduationCap, category: "Learning", keywords: ["skills", "checklist", "competency"] },
-  { name: "PatientEducationHub", icon: Heart, category: "Learning", keywords: ["patient education", "handout"] },
-
-  // Admin
-  { name: "AdminOperations", icon: Settings, category: "Admin", keywords: ["admin", "operations", "manage"] },
-  { name: "UserManagement", icon: Users, category: "Admin", keywords: ["users", "accounts", "roles"] },
-  { name: "AdminTraining", icon: GraduationCap, category: "Admin", keywords: ["training manager", "assign training"] },
-  { name: "ClinicalPathwayManager", icon: ClipboardList, category: "Admin", keywords: ["pathways", "clinical pathways"] },
-  { name: "PatientDataManagement", icon: Users, category: "Admin", keywords: ["data", "management", "import"] },
-  { name: "UserSettings", icon: Settings, category: "Settings", keywords: ["settings", "preferences", "profile"] },
-
-  // Tools & Resources
-  { name: "ResourceLibrary", icon: BookOpen, category: "Tools", keywords: ["library", "resources", "guidelines"] },
-  { name: "OfflineMode", icon: WifiOff, category: "Tools", keywords: ["offline", "sync"] },
-  { name: "Help", icon: HelpCircle, category: "Tools", keywords: ["help", "support", "guide"] },
-];
+import { buildPaletteEntries, NAV_MANIFEST } from "@/lib/nav.manifest";
 
 // Convert PascalCase page names to human-readable labels
 function formatPageName(name) {
@@ -104,12 +45,8 @@ export default function CommandPalette({ isAdmin }) {
     navigate(`/${pageName}`);
   }, [navigate]);
 
-  const pages = PAGE_REGISTRY.filter(p => {
-    if (p.category === "Admin" && p.name !== "UserSettings") return isAdmin;
-    return true;
-  });
-
-  const categories = [...new Set(pages.map(p => p.category))];
+  const pages = buildPaletteEntries(NAV_MANIFEST, isAdmin);
+  const categories = [...new Set(pages.map(p => p.category).filter(Boolean))];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -127,15 +64,16 @@ export default function CommandPalette({ isAdmin }) {
                     .filter(p => p.category === category)
                     .map((page) => {
                       const Icon = page.icon;
+                      const displayName = page.label || formatPageName(page.page);
                       return (
                         <CommandItem
-                          key={page.name}
-                          value={`${formatPageName(page.name)} ${page.keywords.join(" ")}`}
-                          onSelect={() => handleSelect(page.name)}
+                          key={page.page}
+                          value={`${displayName} ${(page.keywords ?? []).join(" ")}`}
+                          onSelect={() => handleSelect(page.page)}
                           className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
                         >
                           <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span>{formatPageName(page.name)}</span>
+                          <span>{displayName}</span>
                         </CommandItem>
                       );
                     })}
@@ -159,3 +97,4 @@ export default function CommandPalette({ isAdmin }) {
     </Dialog>
   );
 }
+

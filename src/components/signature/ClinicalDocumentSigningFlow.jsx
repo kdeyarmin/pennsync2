@@ -115,7 +115,7 @@ export default function ClinicalDocumentSigningFlow({
                 <FileText className="w-5 h-5 text-blue-600" />
                 {documentState?.title || "Clinical Document"}
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 {documentState?.description || documentType}
               </p>
             </div>
@@ -132,7 +132,7 @@ export default function ClinicalDocumentSigningFlow({
                 </Badge>
               )}
               {isLocked && (
-                <Badge className="bg-gray-600 flex items-center gap-1">
+                <Badge className="bg-slate-600 flex items-center gap-1">
                   <Shield className="w-4 h-4" />
                   Locked
                 </Badge>
@@ -155,13 +155,13 @@ export default function ClinicalDocumentSigningFlow({
                 <Users className="w-4 h-4 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900">Clinician Signature</p>
+                <p className="font-semibold text-slate-900">Clinician Signature</p>
                 {documentState?.clinician_signed ? (
                   <p className="text-sm text-green-700 mt-1">
                     ✓ Signed by {documentState.clinician_name || 'Clinician'} on {format(new Date(documentState.clinician_signed_date), "MMM d, yyyy")}
                   </p>
                 ) : (
-                  <p className="text-sm text-gray-600 mt-1">Awaiting clinician signature</p>
+                  <p className="text-sm text-slate-600 mt-1">Awaiting clinician signature</p>
                 )}
               </div>
             </div>
@@ -172,28 +172,28 @@ export default function ClinicalDocumentSigningFlow({
                 <Users className="w-4 h-4 text-purple-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900">Patient/Guardian Signature</p>
+                <p className="font-semibold text-slate-900">Patient/Guardian Signature</p>
                 {documentState?.patient_signed ? (
                   <p className="text-sm text-green-700 mt-1">
                     ✓ Signed by {documentState.patient_name || 'Patient'} on {format(new Date(documentState.patient_signed_date), "MMM d, yyyy")}
                   </p>
                 ) : (
-                  <p className="text-sm text-gray-600 mt-1">Awaiting patient/guardian signature</p>
+                  <p className="text-sm text-slate-600 mt-1">Awaiting patient/guardian signature</p>
                 )}
               </div>
             </div>
 
             {/* Document Lock Status */}
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                <Shield className="w-4 h-4 text-gray-600" />
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <Shield className="w-4 h-4 text-slate-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900">Document Lock</p>
+                <p className="font-semibold text-slate-900">Document Lock</p>
                 {isLocked ? (
                   <p className="text-sm text-green-700 mt-1">✓ Locked for signature verification</p>
                 ) : (
-                  <p className="text-sm text-gray-600 mt-1">Not yet locked</p>
+                  <p className="text-sm text-slate-600 mt-1">Not yet locked</p>
                 )}
               </div>
             </div>
@@ -264,11 +264,11 @@ export default function ClinicalDocumentSigningFlow({
         </CardHeader>
         <CardContent>
           {documentState?.content ? (
-            <div className="bg-white border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto whitespace-pre-wrap text-sm text-gray-700">
+            <div className="bg-white border border-slate-200 rounded-lg p-4 max-h-96 overflow-y-auto whitespace-pre-wrap text-sm text-slate-700">
               {documentState.content}
             </div>
           ) : (
-            <p className="text-gray-600 text-sm">No document content available</p>
+            <p className="text-slate-600 text-sm">No document content available</p>
           )}
         </CardContent>
       </Card>

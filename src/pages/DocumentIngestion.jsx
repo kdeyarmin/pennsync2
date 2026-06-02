@@ -23,16 +23,16 @@ export default function DocumentIngestion() {
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <Upload className="w-6 h-6 text-indigo-600" /> Document Ingestion
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Upload clinical documents (faxes, PDFs, scans) and use AI to extract patient data, vitals, and diagnoses
         </p>
       </div>
 
       <Tabs defaultValue="extract" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200 rounded-lg p-1">
+        <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200 rounded-lg p-1">
           <TabsTrigger value="extract" className="gap-1.5">
             <Zap className="w-4 h-4" />
             Extract Data

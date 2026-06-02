@@ -177,7 +177,7 @@ Focus on tasks that require specialized expertise or coordination.`,
         {isGenerating && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Generating task assignments...</p>
+            <p className="text-sm text-slate-600">Generating task assignments...</p>
           </div>
         )}
 
@@ -210,7 +210,7 @@ Focus on tasks that require specialized expertise or coordination.`,
                         {task.priority}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-600 mb-1">{task.description}</p>
+                    <p className="text-xs text-slate-600 mb-1">{task.description}</p>
                     <div className="flex items-center gap-2 text-xs">
                       <Badge variant="outline">{task.assignee_role}</Badge>
                       <Badge variant="outline">{task.timeframe}</Badge>

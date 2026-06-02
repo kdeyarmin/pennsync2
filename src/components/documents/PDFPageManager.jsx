@@ -109,7 +109,7 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
       <Card>
         <CardContent className="p-8 text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading PDF pages...</p>
+          <p className="text-slate-600">Loading PDF pages...</p>
         </CardContent>
       </Card>
     );
@@ -122,13 +122,13 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Manage PDF Pages</span>
-          <span className="text-sm font-normal text-gray-600">
+          <span className="text-sm font-normal text-slate-600">
             {activePages} of {totalPages} pages
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           Reorder or delete pages from your PDF document
         </p>
 
@@ -152,15 +152,15 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
                             ? 'bg-red-50 border-red-300 opacity-50' 
                             : snapshot.isDragging
                             ? 'bg-blue-50 border-blue-400 shadow-lg'
-                            : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <FileText className={`w-5 h-5 shrink-0 ${page.deleted ? 'text-red-400' : 'text-blue-600'}`} />
                         <div className="flex-1">
-                          <p className={`text-sm font-medium ${page.deleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                          <p className={`text-sm font-medium ${page.deleted ? 'line-through text-slate-500' : 'text-slate-900'}`}>
                             Page {page.number}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {page.deleted ? 'Marked for deletion' : 'Active'}
                           </p>
                         </div>

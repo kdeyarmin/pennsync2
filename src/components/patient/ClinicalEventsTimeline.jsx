@@ -75,7 +75,7 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
+        <CardContent className="p-8 text-center text-slate-500">
           Loading clinical events...
         </CardContent>
       </Card>
@@ -86,9 +86,9 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600">No clinical events recorded yet</p>
-          <p className="text-sm text-gray-500 mt-2">Events will appear here as they're documented in visit notes</p>
+          <Activity className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-600">No clinical events recorded yet</p>
+          <p className="text-sm text-slate-500 mt-2">Events will appear here as they're documented in visit notes</p>
         </CardContent>
       </Card>
     );
@@ -153,7 +153,7 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
         <CardContent className="space-y-3">
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
+            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-200" />
             
             {filteredEvents.map((event, idx) => {
               const Icon = EVENT_ICONS[event.event_type] || Activity;
@@ -166,7 +166,7 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
                     event.severity === 'critical' ? 'bg-red-600' :
                     event.severity === 'high' ? 'bg-orange-500' :
                     event.severity === 'medium' ? 'bg-blue-500' :
-                    'bg-gray-400'
+                    'bg-slate-400'
                   }`} />
                   
                   <div className="bg-white border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
@@ -185,7 +185,7 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {format(new Date(event.event_date), 'MMM d, yyyy')}
                           </p>
                           <Badge className="text-xs">
@@ -203,21 +203,21 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
                           )}
                         </div>
                         
-                        <p className="font-semibold text-sm text-gray-900 mb-1">
+                        <p className="font-semibold text-sm text-slate-900 mb-1">
                           {event.event_title}
                         </p>
                         
-                        <p className="text-sm text-gray-700 mb-2">
+                        <p className="text-sm text-slate-700 mb-2">
                           {event.event_description}
                         </p>
                         
                         {event.structured_data && Object.keys(event.structured_data).length > 0 && (
-                          <div className="bg-gray-50 rounded p-2 mb-2">
+                          <div className="bg-slate-50 rounded p-2 mb-2">
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               {Object.entries(event.structured_data).slice(0, 4).map(([key, value]) => (
                                 <div key={key}>
-                                  <span className="font-medium text-gray-700">{key}: </span>
-                                  <span className="text-gray-600">{String(value)}</span>
+                                  <span className="font-medium text-slate-700">{key}: </span>
+                                  <span className="text-slate-600">{String(value)}</span>
                                 </div>
                               ))}
                             </div>
@@ -230,10 +230,10 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
                         
                         {event.source_text && (
                           <details className="mt-2">
-                            <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                            <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700">
                               View source text
                             </summary>
-                            <p className="text-xs text-gray-600 italic mt-1 bg-gray-50 p-2 rounded">
+                            <p className="text-xs text-slate-600 italic mt-1 bg-slate-50 p-2 rounded">
                               "{event.source_text}"
                             </p>
                           </details>

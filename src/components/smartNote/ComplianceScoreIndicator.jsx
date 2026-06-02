@@ -791,7 +791,7 @@ Return JSON:
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -800,7 +800,7 @@ Return JSON:
       case 'missing': return <XCircle className="w-4 h-4 text-red-500" />;
       case 'weak': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
       case 'non_compliant': return <AlertCircle className="w-4 h-4 text-orange-500" />;
-      default: return <AlertCircle className="w-4 h-4 text-gray-500" />;
+      default: return <AlertCircle className="w-4 h-4 text-slate-500" />;
     }
   };
 
@@ -873,10 +873,10 @@ Return JSON:
           >
             <div className="flex items-center gap-3">
               <div className="text-center">
-                <span className={`text-2xl font-bold ${complianceData ? getScoreColor(complianceData.score) : 'text-gray-400'}`}>
+                <span className={`text-2xl font-bold ${complianceData ? getScoreColor(complianceData.score) : 'text-slate-400'}`}>
                   {isAnalyzing ? '...' : complianceData?.score || '--'}
                 </span>
-                <p className="text-xs text-gray-500">Compliance</p>
+                <p className="text-xs text-slate-500">Compliance</p>
               </div>
               {complianceData && (
                 <div className="flex-1 max-w-32">
@@ -923,9 +923,9 @@ Return JSON:
                         setSelectedSuggestions(new Set(missingIndices));
                       }
                     }}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-xs text-gray-600">Select All</span>
+                  <span className="text-xs text-slate-600">Select All</span>
                 </div>
                 <Button
                   size="sm"
@@ -960,7 +960,7 @@ Return JSON:
                 <div 
                   key={idx} 
                   className={`rounded border transition-all duration-300 ${
-                    hasBeenAdded ? 'bg-gray-100 border-gray-300 opacity-50' :
+                    hasBeenAdded ? 'bg-slate-100 border-slate-300 opacity-50' :
                     element.status === 'present' ? 'bg-green-50 border-green-200' : 
                     element.status === 'partial' ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
                   }`}
@@ -982,11 +982,11 @@ Return JSON:
                             return next;
                           });
                         }}
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
                     )}
                     {hasBeenAdded ? (
-                      <CheckCircle2 className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
                     ) : (
                       getStatusIcon(element.status)
                     )}
@@ -994,11 +994,11 @@ Return JSON:
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-semibold">{element.name}</p>
                         {hasBeenAdded && (
-                          <Badge className="bg-gray-500 text-white text-[10px]">Added</Badge>
+                          <Badge className="bg-slate-500 text-white text-[10px]">Added</Badge>
                         )}
                       </div>
                       {element.found_text && (
-                        <p className="text-xs text-gray-600 italic truncate">"{element.found_text}"</p>
+                        <p className="text-xs text-slate-600 italic truncate">"{element.found_text}"</p>
                       )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
@@ -1019,7 +1019,7 @@ Return JSON:
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDismissedElements(prev => {
@@ -1153,9 +1153,9 @@ Return JSON:
                         </div>
                       )}
                       
-                      <div className="bg-white/70 p-2 rounded text-xs text-gray-700 border border-gray-200">
+                      <div className="bg-white/70 p-2 rounded text-xs text-slate-700 border border-slate-200">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-gray-500 flex items-center gap-1">
+                          <p className="font-medium text-slate-500 flex items-center gap-1">
                             <Lightbulb className="w-3 h-3 text-amber-500" />
                             Suggested compliant text:
                           </p>
@@ -1163,7 +1163,7 @@ Return JSON:
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-5 w-5 p-0 text-gray-400 hover:text-blue-600"
+                              className="h-5 w-5 p-0 text-slate-400 hover:text-blue-600"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleCopySuggestion(suggestion, idx);
@@ -1175,7 +1175,7 @@ Return JSON:
                             <Button
                               size="sm"
                               variant="ghost"
-                              className={`h-5 w-5 p-0 ${isEditing ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'}`}
+                              className={`h-5 w-5 p-0 ${isEditing ? 'text-blue-600' : 'text-slate-400 hover:text-blue-600'}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditingSuggestion(isEditing ? null : idx);
@@ -1267,7 +1267,7 @@ Return JSON:
 
             {/* Show dismissed count with restore option */}
             {dismissedElements.size > 0 && (
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 text-xs text-gray-500">
+              <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-500">
                 <span>{dismissedElements.size} suggestion{dismissedElements.size > 1 ? 's' : ''} marked as not applicable</span>
                 <Button
                   size="sm"
@@ -1355,9 +1355,9 @@ Return JSON:
                             setSelectedEnhancedIssues(new Set(allIndices));
                           }
                         }}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-xs text-gray-600">Select All</span>
+                      <span className="text-xs text-slate-600">Select All</span>
                     </div>
                     <Button
                       size="sm"
@@ -1428,7 +1428,7 @@ Return JSON:
                                 return next;
                               });
                             }}
-                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
                         )}
                         {isInserted ? (
@@ -1457,11 +1457,11 @@ Return JSON:
                           
                           {/* Granular explanation with educational link */}
                           {!isInserted && (
-                            <div className="mt-1.5 bg-white/50 p-2 rounded border border-gray-200">
+                            <div className="mt-1.5 bg-white/50 p-2 rounded border border-slate-200">
                               <div className="flex items-start gap-1.5">
-                                <FileText className="w-3 h-3 mt-0.5 text-gray-500 flex-shrink-0" />
+                                <FileText className="w-3 h-3 mt-0.5 text-slate-500 flex-shrink-0" />
                                 <div className="flex-1">
-                                  <p className="text-xs text-gray-700 leading-relaxed mb-1.5">{getGranularExplanation()}</p>
+                                  <p className="text-xs text-slate-700 leading-relaxed mb-1.5">{getGranularExplanation()}</p>
                                   {(() => {
                                     const resource = getEducationalResource(issue.element);
                                     if (resource && resource.links.length > 0) {
@@ -1486,7 +1486,7 @@ Return JSON:
                           
                           {/* Location hint */}
                           {!isInserted && issue.location_hint && (
-                            <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
+                            <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
                               <Info className="w-2.5 h-2.5" />
                               Location: {issue.location_hint}
                             </p>
@@ -1533,8 +1533,8 @@ Return JSON:
                                 </PopoverTrigger>
                                 <PopoverContent className="w-96 max-h-96 overflow-y-auto" align="start">
                                   <div className="space-y-2">
-                                    <p className="text-xs font-semibold text-gray-700">Full Compliant Text:</p>
-                                    <p className="text-xs text-gray-800 whitespace-pre-wrap">{suggestionText}</p>
+                                    <p className="text-xs font-semibold text-slate-700">Full Compliant Text:</p>
+                                    <p className="text-xs text-slate-800 whitespace-pre-wrap">{suggestionText}</p>
                                     <Button
                                       size="sm"
                                       className="w-full"
@@ -1592,14 +1592,14 @@ Return JSON:
                       <PopoverContent className="w-80" align="end">
                         <div className="space-y-3">
                           <div>
-                            <p className="text-xs font-semibold text-gray-500 mb-1">Current Text</p>
+                            <p className="text-xs font-semibold text-slate-500 mb-1">Current Text</p>
                             <p className="text-sm bg-red-50 p-2 rounded text-red-800 line-through">{fix.original_text}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-gray-500 mb-1">Improved Text</p>
+                            <p className="text-xs font-semibold text-slate-500 mb-1">Improved Text</p>
                             <p className="text-sm bg-green-50 p-2 rounded text-green-800">{fix.improved_text}</p>
                           </div>
-                          <p className="text-xs text-gray-600">{fix.reason}</p>
+                          <p className="text-xs text-slate-600">{fix.reason}</p>
                           <Button
                             size="sm"
                             variant="outline"
@@ -1645,7 +1645,7 @@ Return JSON:
                     {enhancedNoteHistory.slice().reverse().map((version, idx) => (
                       <div key={idx} className="border rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-slate-500">
                             {idx === 0 ? 'Current' : `Version ${enhancedNoteHistory.length - idx}`} - {version.timestamp.toLocaleTimeString()}
                           </span>
                           {idx !== 0 && (
@@ -1660,7 +1660,7 @@ Return JSON:
                             </Button>
                           )}
                         </div>
-                        <p className="text-xs text-gray-700 whitespace-pre-wrap line-clamp-4">
+                        <p className="text-xs text-slate-700 whitespace-pre-wrap line-clamp-4">
                           {version.content.substring(0, 300)}...
                         </p>
                       </div>

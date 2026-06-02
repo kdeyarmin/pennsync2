@@ -225,7 +225,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
           </h4>
           <ul className="space-y-1">
             {summary.key_highlights?.map((highlight, idx) => (
-              <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+              <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                 <span className="text-purple-600 font-bold">•</span>
                 {highlight}
               </li>
@@ -248,7 +248,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
             </h4>
             <ul className="space-y-1">
               {summary.clinical_trends.indicators?.map((indicator, idx) => (
-                <li key={idx} className="text-xs text-gray-600">• {indicator}</li>
+                <li key={idx} className="text-xs text-slate-600">• {indicator}</li>
               ))}
             </ul>
           </div>
@@ -261,7 +261,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
             {summary.priority_concerns.map((concern, idx) => (
               <div key={idx} className="bg-white p-3 rounded-lg border border-orange-200">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-gray-900">{concern.concern}</p>
+                  <p className="text-sm font-medium text-slate-900">{concern.concern}</p>
                   <Badge className={
                     concern.severity === 'high' ? 'bg-red-600' :
                     concern.severity === 'medium' ? 'bg-orange-500' : 'bg-yellow-500'
@@ -269,7 +269,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
                     {concern.severity}
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-700">Action: {concern.action_needed}</p>
+                <p className="text-xs text-slate-700">Action: {concern.action_needed}</p>
               </div>
             ))}
           </div>
@@ -278,17 +278,17 @@ Provide a comprehensive yet concise dashboard summary in JSON:
         {/* Recent Activity */}
         <div className="bg-white p-3 rounded-lg border">
           <h4 className="font-semibold text-sm mb-2 flex items-center gap-1">
-            <FileText className="w-4 h-4 text-gray-600" />
+            <FileText className="w-4 h-4 text-slate-600" />
             Recent Activity
           </h4>
-          <p className="text-sm text-gray-700">{summary.recent_activity_summary}</p>
+          <p className="text-sm text-slate-700">{summary.recent_activity_summary}</p>
         </div>
 
         {/* Care Plan Progress */}
         {summary.care_plan_progress && (
           <div className="bg-white p-3 rounded-lg border border-green-200">
             <h4 className="font-semibold text-sm mb-2">Care Plan Progress</h4>
-            <p className="text-sm text-gray-700">{summary.care_plan_progress}</p>
+            <p className="text-sm text-slate-700">{summary.care_plan_progress}</p>
           </div>
         )}
 

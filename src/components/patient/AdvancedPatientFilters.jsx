@@ -96,7 +96,7 @@ export default function AdvancedPatientFilters({ onFilterChange, activeFilters =
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
             <Input
               ref={searchRef}
               placeholder="Search name, MRN, phone, diagnosis…"
@@ -110,7 +110,7 @@ export default function AdvancedPatientFilters({ onFilterChange, activeFilters =
             {filters.search && (
               <button
                 onClick={() => handleFilterChange("search", "")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-4 h-4" />
               </button>

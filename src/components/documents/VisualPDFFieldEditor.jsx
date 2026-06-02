@@ -99,7 +99,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
   };
 
   const getFieldTypeColor = (type) => {
-    return FIELD_TYPES.find(ft => ft.value === type)?.color || "bg-gray-100";
+    return FIELD_TYPES.find(ft => ft.value === type)?.color || "bg-slate-100";
   };
 
   const handleSave = () => {
@@ -114,8 +114,8 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Visual Field Editor</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Visual Field Editor</h3>
+        <p className="text-sm text-slate-600">
           Click on the PDF to place fields. Drag fields to reposition them.
         </p>
       </div>
@@ -125,7 +125,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
         <Card className="p-4 lg:col-span-1 h-fit">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Field Type
               </label>
               <Select value={selectedFieldType} onValueChange={setSelectedFieldType}>
@@ -143,7 +143,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Field Label
               </label>
               <Input
@@ -162,7 +162,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
             {selectedFieldType === "rich_text" && (
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     Font Size
                   </label>
                   <Select value={fontStyle.size} onValueChange={(size) => setFontStyle({...fontStyle, size})}>
@@ -176,7 +176,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     Text Color
                   </label>
                   <div className="flex gap-1">
@@ -195,7 +195,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     Styling
                   </label>
                   <div className="flex gap-1">
@@ -204,7 +204,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                         key={opt.value}
                         onClick={() => setFontStyle({...fontStyle, [opt.value]: !fontStyle[opt.value]})}
                         className={`flex-1 px-2 py-1 text-xs rounded border transition-colors ${
-                          fontStyle[opt.value] ? "bg-gray-800 text-white border-gray-800" : "bg-gray-100 border-gray-300"
+                          fontStyle[opt.value] ? "bg-slate-800 text-white border-slate-800" : "bg-slate-100 border-slate-300"
                         }`}
                       >
                         {opt.label}
@@ -218,7 +218,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
             {selectedFieldType === "table" && (
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     Rows
                   </label>
                   <Input
@@ -231,7 +231,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     Columns
                   </label>
                   <Input
@@ -263,7 +263,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
 
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-slate-900">
                   Fields: {fields.length}
                 </p>
               </div>
@@ -274,15 +274,15 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                     key={field.id}
                     onClick={() => setSelectedField(field.id)}
                     className={`p-2 rounded-lg border cursor-pointer transition-all ${getFieldTypeColor(field.type)} ${
-                      selectedField === field.id ? "ring-2 ring-blue-500 border-blue-500" : "hover:border-gray-400"
+                      selectedField === field.id ? "ring-2 ring-blue-500 border-blue-500" : "hover:border-slate-400"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-1">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-900 truncate">
+                        <p className="text-xs font-medium text-slate-900 truncate">
                           {field.label}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-slate-600">
                           {field.type} @ {field.x}, {field.y}
                         </p>
                         {field.conditional && (
@@ -306,7 +306,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
 
             {selectedField && (
               <div className="border-t pt-2">
-                <p className="text-xs font-medium text-gray-700 mb-2">Field Options</p>
+                <p className="text-xs font-medium text-slate-700 mb-2">Field Options</p>
                 <Button
                   onClick={() => {
                     const field = fields.find(f => f.id === selectedField);
@@ -339,7 +339,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
         {/* PDF Canvas */}
         <div className="lg:col-span-3">
           {pdfUrl ? (
-            <Card className="p-4 bg-gray-100 min-h-[600px] sm:min-h-[400px] flex items-center justify-center relative overflow-auto">
+            <Card className="p-4 bg-slate-100 min-h-[600px] sm:min-h-[400px] flex items-center justify-center relative overflow-auto">
               <div
                 ref={canvasRef}
                 onClick={handleCanvasClick}
@@ -377,8 +377,8 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                       className={`absolute border-2 cursor-move transition-all ${
                         draggingField === field.id
                           ? "opacity-100 border-blue-500 bg-blue-50"
-                          : selectedField === field.id ? "border-blue-600" : "border-dashed border-gray-400 hover:opacity-100"
-                      } ${fieldType?.color || "bg-gray-100"} ${selectedField === field.id ? "ring-2 ring-blue-400" : ""}`}
+                          : selectedField === field.id ? "border-blue-600" : "border-dashed border-slate-400 hover:opacity-100"
+                      } ${fieldType?.color || "bg-slate-100"} ${selectedField === field.id ? "ring-2 ring-blue-400" : ""}`}
                       style={{
                         left: `${field.x}px`,
                         top: `${field.y}px`,
@@ -393,7 +393,7 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                               {Array(field.tableConfig?.rows || 3).fill(null).map((_, row) => (
                                 <tr key={row}>
                                   {Array(field.tableConfig?.columns || 3).fill(null).map((_, col) => (
-                                    <td key={col} className="border border-gray-400 p-0.5" />
+                                    <td key={col} className="border border-slate-400 p-0.5" />
                                   ))}
                                 </tr>
                               ))}
@@ -402,12 +402,12 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full p-1" style={field.type === "rich_text" ? textStyle : {}}>
-                          <span className="text-xs text-gray-700 text-center truncate">
+                          <span className="text-xs text-slate-700 text-center truncate">
                             {field.label}
                           </span>
                         </div>
                       )}
-                      <div className="absolute -top-6 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                      <div className="absolute -top-6 left-0 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none">
                         {field.type} {field.conditional && "⚡"}
                       </div>
                     </div>
@@ -417,8 +417,8 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                 {fields.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <Move className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Click to add fields</p>
+                      <Move className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-500">Click to add fields</p>
                     </div>
                   </div>
                 )}
@@ -427,8 +427,8 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
           ) : (
             <Card className="p-8 text-center min-h-96 flex items-center justify-center">
               <div>
-                <p className="text-gray-600">No PDF selected</p>
-                <p className="text-sm text-gray-500 mt-1">Upload a PDF template first</p>
+                <p className="text-slate-600">No PDF selected</p>
+                <p className="text-sm text-slate-500 mt-1">Upload a PDF template first</p>
               </div>
             </Card>
           )}
@@ -437,31 +437,31 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
 
       {/* Features Info */}
       <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
-        <p className="text-sm font-medium text-gray-900 mb-3">Advanced Features</p>
+        <p className="text-sm font-medium text-slate-900 mb-3">Advanced Features</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div>
-            <p className="font-medium text-gray-900">Rich Text Formatting</p>
-            <p className="text-gray-600 mt-1">Bold, italic, underline, custom colors & sizes</p>
+            <p className="font-medium text-slate-900">Rich Text Formatting</p>
+            <p className="text-slate-600 mt-1">Bold, italic, underline, custom colors & sizes</p>
           </div>
           <div>
-            <p className="font-medium text-gray-900">Dynamic Tables</p>
-            <p className="text-gray-600 mt-1">Create configurable rows and columns</p>
+            <p className="font-medium text-slate-900">Dynamic Tables</p>
+            <p className="text-slate-600 mt-1">Create configurable rows and columns</p>
           </div>
           <div>
-            <p className="font-medium text-gray-900">Conditional Logic</p>
-            <p className="text-gray-600 mt-1">Show/hide fields based on other answers (⚡)</p>
+            <p className="font-medium text-slate-900">Conditional Logic</p>
+            <p className="text-slate-600 mt-1">Show/hide fields based on other answers (⚡)</p>
           </div>
         </div>
       </Card>
 
       {/* Field Legend */}
-      <Card className="p-4 bg-gray-50">
-        <p className="text-sm font-medium text-gray-900 mb-2">Field Types</p>
+      <Card className="p-4 bg-slate-50">
+        <p className="text-sm font-medium text-slate-900 mb-2">Field Types</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {FIELD_TYPES.map(ft => (
             <div key={ft.value} className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded ${ft.color}`} />
-              <span className="text-xs text-gray-700">{ft.label}</span>
+              <span className="text-xs text-slate-700">{ft.label}</span>
             </div>
           ))}
         </div>

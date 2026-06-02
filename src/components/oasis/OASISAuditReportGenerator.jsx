@@ -227,8 +227,8 @@ ${data.corrections?.map(c => `
         {reportGenerated ? (
           <div className="py-8 text-center">
             <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <p className="text-lg font-medium text-gray-800">Report Generated Successfully</p>
-            <p className="text-sm text-gray-500 mt-2">The report has been downloaded to your device.</p>
+            <p className="text-lg font-medium text-slate-800">Report Generated Successfully</p>
+            <p className="text-sm text-slate-500 mt-2">The report has been downloaded to your device.</p>
             <Button onClick={onClose} className="mt-4">Close</Button>
           </div>
         ) : (
@@ -304,11 +304,11 @@ ${data.corrections?.map(c => `
                 </Button>
               </div>
               {corrections.length === 0 ? (
-                <p className="text-sm text-gray-500">No corrections documented yet.</p>
+                <p className="text-sm text-slate-500">No corrections documented yet.</p>
               ) : (
                 <div className="space-y-3">
                   {corrections.map((corr, idx) => (
-                    <div key={idx} className="p-3 bg-gray-50 rounded-lg border space-y-2">
+                    <div key={idx} className="p-3 bg-slate-50 rounded-lg border space-y-2">
                       <div className="flex items-center justify-between">
                         <Badge variant="outline">Correction {idx + 1}</Badge>
                         <Button size="sm" variant="ghost" onClick={() => removeCorrection(idx)}>

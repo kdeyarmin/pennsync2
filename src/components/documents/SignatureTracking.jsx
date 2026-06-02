@@ -110,8 +110,8 @@ export default function SignatureTracking({ stats = {} }) {
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{normalizedSignatures.length}</p>
-              <p className="text-xs text-gray-600">Total</p>
+              <p className="text-xl sm:text-2xl font-bold text-slate-900">{normalizedSignatures.length}</p>
+              <p className="text-xs text-slate-600">Total</p>
             </div>
           </CardContent>
         </Card>
@@ -119,7 +119,7 @@ export default function SignatureTracking({ stats = {} }) {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending || 0}</p>
-              <p className="text-xs text-gray-600">Pending</p>
+              <p className="text-xs text-slate-600">Pending</p>
             </div>
           </CardContent>
         </Card>
@@ -127,7 +127,7 @@ export default function SignatureTracking({ stats = {} }) {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.signed || 0}</p>
-              <p className="text-xs text-gray-600">Signed</p>
+              <p className="text-xs text-slate-600">Signed</p>
             </div>
           </CardContent>
         </Card>
@@ -135,7 +135,7 @@ export default function SignatureTracking({ stats = {} }) {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.overdue || 0}</p>
-              <p className="text-xs text-gray-600">Overdue</p>
+              <p className="text-xs text-slate-600">Overdue</p>
             </div>
           </CardContent>
         </Card>
@@ -153,7 +153,7 @@ export default function SignatureTracking({ stats = {} }) {
               />
             </div>
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search documents..."
                 value={searchQuery}
@@ -194,8 +194,8 @@ export default function SignatureTracking({ stats = {} }) {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <Clock className="w-5 h-5 text-yellow-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.normalizedName}</h4>
-                        <p className="text-sm text-gray-600">{patientName}</p>
+                        <h4 className="font-medium text-slate-900 break-words">{sig.normalizedName}</h4>
+                        <p className="text-sm text-slate-600">{patientName}</p>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           {sig.isOverdue && (
                             <Badge className="bg-red-100 text-red-700">
@@ -204,7 +204,7 @@ export default function SignatureTracking({ stats = {} }) {
                             </Badge>
                           )}
                           {sig.normalizedDueDate && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-slate-500">
                               Due: {new Date(sig.normalizedDueDate).toLocaleDateString()}
                             </span>
                           )}
@@ -262,10 +262,10 @@ export default function SignatureTracking({ stats = {} }) {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.normalizedName}</h4>
-                        <p className="text-sm text-gray-600">{patientName}</p>
+                        <h4 className="font-medium text-slate-900 break-words">{sig.normalizedName}</h4>
+                        <p className="text-sm text-slate-600">{patientName}</p>
                         {sig.normalizedSignedAt && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-slate-500">
                             Signed: {new Date(sig.normalizedSignedAt).toLocaleDateString()}
                           </span>
                         )}
@@ -293,8 +293,8 @@ export default function SignatureTracking({ stats = {} }) {
       {filteredSignatures.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-600">No signatures found</p>
+            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-600">No signatures found</p>
           </CardContent>
         </Card>
       )}

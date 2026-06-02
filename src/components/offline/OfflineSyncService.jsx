@@ -379,10 +379,10 @@ export default function OfflineSyncService() {
               <WifiOff className="w-5 h-5 text-red-600" />
             )}
             <div>
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-slate-900">
                 {isOnline ? 'Online' : 'Offline Mode'}
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500">
                 {pendingCount > 0 ? `${pendingCount} item${pendingCount > 1 ? 's' : ''} pending sync` : 'All synced'}
               </p>
             </div>
@@ -404,12 +404,12 @@ export default function OfflineSyncService() {
         {isSyncing && syncProgress && (
           <div className="mb-3">
             <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-gray-600">Syncing...</span>
-              <span className="text-gray-900 font-medium">
+              <span className="text-slate-600">Syncing...</span>
+              <span className="text-slate-900 font-medium">
                 {syncProgress.current} / {syncProgress.total}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-slate-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
@@ -438,19 +438,19 @@ export default function OfflineSyncService() {
         {showDetails && (
           <div className="mt-4 space-y-3 max-h-64 overflow-auto">
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Sync Queue</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">Sync Queue</h4>
               {queue.length === 0 ? (
-                <p className="text-sm text-gray-500">No pending items</p>
+                <p className="text-sm text-slate-500">No pending items</p>
               ) : (
                 <div className="space-y-2">
                   {queue.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                    <div key={item.id} className="flex items-center justify-between p-2 bg-slate-50 rounded text-xs">
                       <div className="flex items-center gap-2">
                         {item.status === 'pending' && <Clock className="w-3 h-3 text-orange-600" />}
                         {item.status === 'conflict' && <AlertCircle className="w-3 h-3 text-red-600" />}
                         {item.status === 'failed' && <AlertCircle className="w-3 h-3 text-red-600" />}
                         <span className="font-medium capitalize">{item.type}</span>
-                        <span className="text-gray-500">
+                        <span className="text-slate-500">
                           {new Date(item.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
@@ -472,7 +472,7 @@ export default function OfflineSyncService() {
 
             {conflicts.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Conflicts</h4>
+                <h4 className="text-sm font-semibold text-slate-700 mb-2">Conflicts</h4>
                 <div className="space-y-2">
                   {conflicts.map((conflict, idx) => (
                     <div key={idx} className="p-2 bg-red-50 border border-red-200 rounded text-xs">

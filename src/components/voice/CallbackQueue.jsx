@@ -88,28 +88,28 @@ export default function CallbackQueue() {
       </CardHeader>
       <CardContent className="space-y-2">
         {isLoading ? (
-          <p className="text-sm text-gray-500 text-center py-4">Loading…</p>
+          <p className="text-sm text-slate-500 text-center py-4">Loading…</p>
         ) : queue.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-6">
+          <p className="text-sm text-slate-500 text-center py-6">
             <CheckCircle2 className="w-8 h-8 text-green-300 mx-auto mb-2" />
             You're all caught up — no calls need a callback.
           </p>
         ) : (
           queue.map((call) => (
-            <div key={call.id} className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+            <div key={call.id} className="p-3 rounded-lg bg-slate-50 border border-slate-200">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-3 min-w-0">
                   <ReasonIcon reason={call.reason} />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{labelFor(call)}</p>
+                    <p className="text-sm font-medium text-slate-900 truncate">{labelFor(call)}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <Badge className={`text-[11px] ${REASON_STYLES[call.reason] || "bg-gray-100 text-gray-700"}`}>{call.reason}</Badge>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <Badge className={`text-[11px] ${REASON_STYLES[call.reason] || "bg-slate-100 text-slate-700"}`}>{call.reason}</Badge>
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {format(new Date(call.created_date), "MMM d, h:mm a")}
                       </span>
                     </div>
-                    {call.note && <p className="text-xs text-gray-600 mt-1">{call.note}</p>}
+                    {call.note && <p className="text-xs text-slate-600 mt-1">{call.note}</p>}
                     {call.has_voicemail && call.voicemail_url && (
                       <audio controls preload="none" src={call.voicemail_url} className="w-full h-8 mt-2" />
                     )}
@@ -127,7 +127,7 @@ export default function CallbackQueue() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 px-2 text-xs text-gray-600"
+                    className="h-7 px-2 text-xs text-slate-600"
                     disabled={resolve.isPending}
                     onClick={() => resolve.mutate(call.id)}
                   >

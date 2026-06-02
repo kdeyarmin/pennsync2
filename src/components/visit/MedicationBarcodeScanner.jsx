@@ -295,13 +295,13 @@ If you cannot identify the medication, return:
 
           {scannedMedications.length > 0 && (
             <div className="mb-4 space-y-2">
-              <p className="text-sm font-medium text-gray-700">Scanned Medications ({scannedMedications.length}):</p>
+              <p className="text-sm font-medium text-slate-700">Scanned Medications ({scannedMedications.length}):</p>
               {scannedMedications.map((med) => (
                 <div key={med.id} className="flex items-center gap-2 p-3 bg-white rounded-lg border border-green-200">
                   <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-gray-900">{med.name}</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="font-medium text-sm text-slate-900">{med.name}</p>
+                    <p className="text-xs text-slate-600">
                       {med.dose} • {med.form} • {med.route}
                       {med.ndc && <span className="ml-2 text-green-600">✓ NDC: {med.ndc}</span>}
                     </p>
@@ -419,7 +419,7 @@ If you cannot identify the medication, return:
             )}
 
             <div className="border-t pt-4">
-              <p className="text-sm font-medium text-gray-700 mb-3">Can't scan? Enter code manually:</p>
+              <p className="text-sm font-medium text-slate-700 mb-3">Can't scan? Enter code manually:</p>
               <div className="flex gap-2">
                 <div className="flex-1">
                   <Input
@@ -436,7 +436,7 @@ If you cannot identify the medication, return:
                   {isProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Lookup'}
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-slate-500 mt-2">
                 Example: 0069-1530-01 or just the numbers from the barcode
               </p>
             </div>

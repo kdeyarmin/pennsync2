@@ -184,7 +184,7 @@ Return comprehensive analysis including:
         {isAnalyzing && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Comparing against clinical guidelines...</p>
+            <p className="text-sm text-slate-600">Comparing against clinical guidelines...</p>
           </div>
         )}
 
@@ -217,7 +217,7 @@ Return comprehensive analysis including:
                       <p className="text-sm font-medium">{elem.element}</p>
                       <p className="text-xs mt-1">{elem.rationale}</p>
                       {elem.guideline_reference && (
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-slate-600 mt-1">
                           <BookOpen className="w-3 h-3 inline mr-1" />
                           {elem.guideline_reference}
                         </p>
@@ -243,7 +243,7 @@ Return comprehensive analysis including:
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="outline" className="text-xs">{dev.evidence_level}</Badge>
-                        <span className="text-xs text-gray-600">{dev.source}</span>
+                        <span className="text-xs text-slate-600">{dev.source}</span>
                       </div>
                     </div>
                   ))}
