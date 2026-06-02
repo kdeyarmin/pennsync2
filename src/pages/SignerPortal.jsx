@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { validateSignerToken } from '@/functions/validateSignerToken';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle2, Clock, Lock } from 'lucide-react';
+import { AlertCircle, Lock } from 'lucide-react';
 import SignerPackageViewer from '@/components/signer/SignerPackageViewer';
-import { toast } from 'sonner';
 
 export default function SignerPortal() {
   const [searchParams] = useSearchParams();

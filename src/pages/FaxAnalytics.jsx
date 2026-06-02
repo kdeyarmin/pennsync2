@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
-    PieChart, Pie, Cell, LineChart, Line, Legend
+    PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, differenceInMinutes } from 'date-fns';
 import { FileText, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';

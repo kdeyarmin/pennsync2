@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Download, FileText, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 import DocumentVersionHistory from './DocumentVersionHistory';
 import DocumentReplacementDialog from './DocumentReplacementDialog';
 

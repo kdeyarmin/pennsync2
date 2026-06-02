@@ -57,6 +57,29 @@ const DocumentAuditLogs = lazy(() => import('@/pages/DocumentAuditLogs'));
 const BulkSignatureRequests = lazy(() => import('@/pages/BulkSignatureRequests'));
 const FaxAnalytics = lazy(() => import('@/pages/FaxAnalytics'));
 const CreateSignatureRequest = lazy(() => import('@/pages/CreateSignatureRequest'));
+// Pages that are linked via createPageUrl()/navigation but were previously
+// unrouted (dead links). Routed here so every linked feature is reachable.
+const AIComplianceInServices = lazy(() => import('@/pages/AIComplianceInServices'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
+const AnnualEducationTranscript = lazy(() => import('@/pages/AnnualEducationTranscript'));
+const AnnualMandatoryEducation = lazy(() => import('@/pages/AnnualMandatoryEducation'));
+const ComplianceDashboard = lazy(() => import('@/pages/ComplianceDashboard'));
+const DocumentSignatures = lazy(() => import('@/pages/DocumentSignatures'));
+const DocumentVisit = lazy(() => import('@/pages/DocumentVisit'));
+const EmployeeTranscript = lazy(() => import('@/pages/EmployeeTranscript'));
+const ManagerSkillGapDashboard = lazy(() => import('@/pages/ManagerSkillGapDashboard'));
+const MyAnnualEducation = lazy(() => import('@/pages/MyAnnualEducation'));
+const MyTraining = lazy(() => import('@/pages/MyTraining'));
+const NursePerformanceDashboard = lazy(() => import('@/pages/NursePerformanceDashboard'));
+const NurseTraining = lazy(() => import('@/pages/NurseTraining'));
+const OASISAnalyzer = lazy(() => import('@/pages/OASISAnalyzer'));
+const OASISComplianceReview = lazy(() => import('@/pages/OASISComplianceReview'));
+const OASISDocumentationReview = lazy(() => import('@/pages/OASISDocumentationReview'));
+const OASISRevenueAnalysis = lazy(() => import('@/pages/OASISRevenueAnalysis'));
+const PatientAlerts = lazy(() => import('@/pages/PatientAlerts'));
+const QualityDashboard = lazy(() => import('@/pages/QualityDashboard'));
+const Reports = lazy(() => import('@/pages/Reports'));
+const Support = lazy(() => import('@/pages/Support'));
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -153,6 +176,27 @@ const AuthenticatedApp = () => {
         <Route path="/BulkSignatureRequests" element={<LayoutWrapper currentPageName="BulkSignatureRequests"><BulkSignatureRequests /></LayoutWrapper>} />
         <Route path="/FaxAnalytics" element={<LayoutWrapper currentPageName="FaxAnalytics"><FaxAnalytics /></LayoutWrapper>} />
         <Route path="/CreateSignatureRequest" element={<LayoutWrapper currentPageName="CreateSignatureRequest"><CreateSignatureRequest /></LayoutWrapper>} />
+        <Route path="/AIComplianceInServices" element={<LayoutWrapper currentPageName="AIComplianceInServices"><AIComplianceInServices /></LayoutWrapper>} />
+        <Route path="/AdminDashboard" element={<LayoutWrapper currentPageName="AdminDashboard"><AdminDashboard /></LayoutWrapper>} />
+        <Route path="/AnnualEducationTranscript" element={<LayoutWrapper currentPageName="AnnualEducationTranscript"><AnnualEducationTranscript /></LayoutWrapper>} />
+        <Route path="/AnnualMandatoryEducation" element={<LayoutWrapper currentPageName="AnnualMandatoryEducation"><AnnualMandatoryEducation /></LayoutWrapper>} />
+        <Route path="/ComplianceDashboard" element={<LayoutWrapper currentPageName="ComplianceDashboard"><ComplianceDashboard /></LayoutWrapper>} />
+        <Route path="/DocumentSignatures" element={<LayoutWrapper currentPageName="DocumentSignatures"><DocumentSignatures /></LayoutWrapper>} />
+        <Route path="/DocumentVisit" element={<LayoutWrapper currentPageName="DocumentVisit"><DocumentVisit /></LayoutWrapper>} />
+        <Route path="/EmployeeTranscript" element={<LayoutWrapper currentPageName="EmployeeTranscript"><EmployeeTranscript /></LayoutWrapper>} />
+        <Route path="/ManagerSkillGapDashboard" element={<LayoutWrapper currentPageName="ManagerSkillGapDashboard"><ManagerSkillGapDashboard /></LayoutWrapper>} />
+        <Route path="/MyAnnualEducation" element={<LayoutWrapper currentPageName="MyAnnualEducation"><MyAnnualEducation /></LayoutWrapper>} />
+        <Route path="/MyTraining" element={<LayoutWrapper currentPageName="MyTraining"><MyTraining /></LayoutWrapper>} />
+        <Route path="/NursePerformanceDashboard" element={<LayoutWrapper currentPageName="NursePerformanceDashboard"><NursePerformanceDashboard /></LayoutWrapper>} />
+        <Route path="/NurseTraining" element={<LayoutWrapper currentPageName="NurseTraining"><NurseTraining /></LayoutWrapper>} />
+        <Route path="/OASISAnalyzer" element={<LayoutWrapper currentPageName="OASISAnalyzer"><OASISAnalyzer /></LayoutWrapper>} />
+        <Route path="/OASISComplianceReview" element={<LayoutWrapper currentPageName="OASISComplianceReview"><OASISComplianceReview /></LayoutWrapper>} />
+        <Route path="/OASISDocumentationReview" element={<LayoutWrapper currentPageName="OASISDocumentationReview"><OASISDocumentationReview /></LayoutWrapper>} />
+        <Route path="/OASISRevenueAnalysis" element={<LayoutWrapper currentPageName="OASISRevenueAnalysis"><OASISRevenueAnalysis /></LayoutWrapper>} />
+        <Route path="/PatientAlerts" element={<LayoutWrapper currentPageName="PatientAlerts"><PatientAlerts /></LayoutWrapper>} />
+        <Route path="/QualityDashboard" element={<LayoutWrapper currentPageName="QualityDashboard"><QualityDashboard /></LayoutWrapper>} />
+        <Route path="/Reports" element={<LayoutWrapper currentPageName="Reports"><Reports /></LayoutWrapper>} />
+        <Route path="/Support" element={<LayoutWrapper currentPageName="Support"><Support /></LayoutWrapper>} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </Suspense>

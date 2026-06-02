@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles, Pill, ClipboardList, FileText, TrendingUp } from "lucide-react";
 
 export const SMART_NOTE_TABS = [

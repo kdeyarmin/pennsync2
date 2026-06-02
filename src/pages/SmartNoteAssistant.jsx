@@ -3,11 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Sparkles, CheckCircle2, Loader2,
-  Shield, ArrowRight, Pill,
-  TrendingUp, ClipboardList, User, FileText,
+  Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
   Mic, Square
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";

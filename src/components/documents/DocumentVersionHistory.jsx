@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ChevronDown, ChevronUp, FileText, Download, Eye } from 'lucide-react';
+import { ChevronDown, ChevronUp, Download, Eye } from 'lucide-react';
 
 export default function DocumentVersionHistory({ documentSignatureId, packageId }) {
   const [expandedVersion, setExpandedVersion] = useState(null);

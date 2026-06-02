@@ -26,8 +26,6 @@ import { createPageUrl } from "@/utils";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import DocumentVersionHistory from "./DocumentVersionHistory";
-import DocumentReplacementDialog from "./DocumentReplacementDialog";
 
 export default function DocumentPackageCreator({ open, onClose }) {
   const queryClient = useQueryClient();
