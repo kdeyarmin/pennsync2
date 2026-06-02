@@ -612,10 +612,10 @@ export default function UserManagement({ users }) {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base font-medium">Time-off approver</Label>
-                    <p className="text-sm text-gray-600">Let this user approve their team's time-off requests</p>
+                    <p className="text-sm text-slate-600">Let this user approve their team's time-off requests</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={editingUser.is_manager ? 'bg-emerald-500' : 'bg-gray-400'}>
+                    <Badge className={editingUser.is_manager ? 'bg-emerald-500' : 'bg-slate-400'}>
                       {editingUser.is_manager ? 'Approver' : 'Not an approver'}
                     </Badge>
                     <Button
@@ -654,7 +654,7 @@ export default function UserManagement({ users }) {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
                     {BALANCE_TRACKABLE_TYPES.map((type) => (
                       <div key={type}>
-                        <Label className="text-xs text-gray-500">{typeLabel(type)}</Label>
+                        <Label className="text-xs text-slate-500">{typeLabel(type)}</Label>
                         <Input
                           type="number"
                           min={0}
@@ -670,7 +670,7 @@ export default function UserManagement({ users }) {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">Blank uses the agency default for that type.</p>
+                  <p className="text-xs text-slate-400 mt-1">Blank uses the agency default for that type.</p>
                 </div>
               </div>
 
