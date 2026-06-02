@@ -14,6 +14,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
+import PageHeader from "@/components/ui/PageHeader";
 import ComplianceReportGenerator from "@/components/compliance/ComplianceReportGenerator";
 import AIComplianceAssistant from "@/components/compliance/AIComplianceAssistant";
 import RegulatoryCompliance from "@/pages/RegulatoryCompliance";
@@ -314,15 +315,11 @@ export default function ComplianceCenter() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Shield className="w-8 h-8 text-indigo-600" />
-          Compliance Center
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          Medicare compliance monitoring, real-time alerts, and regulatory tracking
-        </p>
-      </div>
+      <PageHeader
+        icon={Shield}
+        title="Compliance Center"
+        description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
+      />
 
       <Tabs defaultValue="medicare" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">

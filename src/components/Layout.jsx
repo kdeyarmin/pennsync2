@@ -30,13 +30,16 @@ export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
 
+  // PennSync ships a single, fully-designed light theme: every page and
+  // component uses explicit light styles and none provide `dark:` variants.
+  // Previously this effect mirrored the OS `prefers-color-scheme`, toggling the
+  // `dark` class on <html>. That flipped only the CSS-variable tokens (popovers,
+  // dropdown menus, charts, `muted` text) to dark while the hardcoded
+  // `bg-white` / `text-gray-900` surfaces stayed light — producing an
+  // inconsistent, partially-unreadable UI for anyone on a dark-mode device.
+  // Keep the app in its intended light theme so every screen renders the same.
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const update = (isDark) => document.documentElement.classList.toggle('dark', isDark);
-    const handler = (e) => update(e.matches);
-    update(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    document.documentElement.classList.remove('dark');
   }, []);
 
   const { data: currentUser } = useQuery({
@@ -258,7 +261,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <>
-      <Toaster position="top-right" richColors closeButton />
+      <Toaster position="top-right" richColors closeButton theme="light" />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>
