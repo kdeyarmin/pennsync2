@@ -58,6 +58,18 @@ export default function Patients() {
   const [selectedPatients, setSelectedPatients] = useState([]);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
+  const [sortBy, setSortBy] = useState('newest');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debounceTimer = useRef(null);
+
+  // Debounce search input by 300ms to avoid filtering on every keystroke
+  useEffect(() => {
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(filters.search || '');
+    }, 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [filters.search]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -182,7 +194,7 @@ export default function Patients() {
     },
     onError: async (error) => {
       setIsDeleting(false);
-      await handleSecureError(error, 'patient_delete', (msg) => alert(msg));
+      await handleSecureError(error, 'patient_delete', (msg) => toast.error(msg));
     }
   });
 
