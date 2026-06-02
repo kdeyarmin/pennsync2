@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import SignatureCanvas from "../components/documents/SignatureCanvas";
+import { sanitizeHtml } from "@/components/utils/security";
 
 export default function SignDocument() {
   const navigate = useNavigate();
@@ -120,7 +121,10 @@ export default function SignDocument() {
     }
   };
 
-  if (!signatureRecord || !patient) {
+  // Guard on `signers` too: the render and submit handlers call
+  // signatureRecord.signers.map/.filter/.every, which throw if the entity has no
+  // signers array. Treat a record without signers as not-yet-ready.
+  if (!signatureRecord || !patient || !Array.isArray(signatureRecord.signers)) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <Card>
@@ -168,7 +172,7 @@ export default function SignDocument() {
             </div>
           ) : signatureRecord.document_content ? (
             <div className="p-4 border rounded-lg bg-slate-50 max-h-96 overflow-auto">
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: signatureRecord.document_content }} />
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(signatureRecord.document_content) }} />
             </div>
           ) : (
             <Alert>

@@ -71,12 +71,19 @@ export default function SmartMedicationReconciliation({ patient }) {
     return age;
   };
 
+  // The interaction engine emits critical | major | moderate; AI output may also
+  // use high | low. "major" and "high" are serious (intervention-required) and
+  // must NOT fall through to the benign gray/Shield default, which would visually
+  // downgrade dangerous interactions (e.g. warfarin+NSAID, opioid+benzo).
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'critical': return 'bg-red-500';
+      case 'major':
       case 'high': return 'bg-orange-500';
-      case 'moderate': return 'bg-yellow-500';
-      case 'low': return 'bg-blue-500';
+      case 'moderate':
+      case 'medium': return 'bg-yellow-500';
+      case 'low':
+      case 'minor': return 'bg-blue-500';
       default: return 'bg-slate-500';
     }
   };
@@ -84,11 +91,16 @@ export default function SmartMedicationReconciliation({ patient }) {
   const getRiskIcon = (severity) => {
     switch (severity) {
       case 'critical': return <XCircle className="w-5 h-5" />;
-      case 'high': return <AlertTriangle className="w-5 h-5" />;
-      case 'moderate': return <AlertTriangle className="w-5 h-5" />;
+      case 'major':
+      case 'high':
+      case 'moderate':
+      case 'medium': return <AlertTriangle className="w-5 h-5" />;
       default: return <Shield className="w-5 h-5" />;
     }
   };
+
+  // Interactions serious enough to require clinical intervention.
+  const SERIOUS_SEVERITIES = ['critical', 'major', 'high'];
 
   if (!patient) {
     return (
@@ -153,9 +165,9 @@ export default function SmartMedicationReconciliation({ patient }) {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-red-600 font-medium">Critical Issues</p>
+                      <p className="text-sm text-red-600 font-medium">Serious Interactions</p>
                       <p className="text-2xl font-bold text-red-900">
-                        {analysisResults.interactions?.filter(i => i.severity === 'critical').length || 0}
+                        {analysisResults.interactions?.filter(i => SERIOUS_SEVERITIES.includes(i.severity)).length || 0}
                       </p>
                     </div>
                     <AlertTriangle className="w-8 h-8 text-red-400" />
@@ -220,11 +232,14 @@ export default function SmartMedicationReconciliation({ patient }) {
                     <p className="text-green-700 font-medium">No drug interactions detected</p>
                   </div>
                 ) : (
-                  analysisResults.interactions?.map((interaction, idx) => (
-                    <Card key={idx} className={`border-l-4 ${interaction.severity === 'critical' ? 'border-l-red-500' : interaction.severity === 'high' ? 'border-l-orange-500' : 'border-l-yellow-500'}`}>
+                  analysisResults.interactions?.map((interaction, idx) => {
+                    const isCritical = interaction.severity === 'critical';
+                    const isSerious = SERIOUS_SEVERITIES.includes(interaction.severity);
+                    return (
+                    <Card key={idx} className={`border-l-4 ${isCritical ? 'border-l-red-500' : isSerious ? 'border-l-orange-500' : 'border-l-yellow-500'}`}>
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-lg ${interaction.severity === 'critical' ? 'bg-red-100' : interaction.severity === 'high' ? 'bg-orange-100' : 'bg-yellow-100'}`}>
+                          <div className={`p-2 rounded-lg ${isCritical ? 'bg-red-100' : isSerious ? 'bg-orange-100' : 'bg-yellow-100'}`}>
                             {getRiskIcon(interaction.severity)}
                           </div>
                           <div className="flex-1">
@@ -233,7 +248,7 @@ export default function SmartMedicationReconciliation({ patient }) {
                                 {interaction.drug1} + {interaction.drug2}
                               </h4>
                               <Badge className={getSeverityColor(interaction.severity)}>
-                                {interaction.severity.toUpperCase()}
+                                {(interaction.severity || 'unknown').toUpperCase()}
                               </Badge>
                             </div>
                             <p className="text-sm text-slate-700 mb-2">{interaction.description}</p>
@@ -245,7 +260,8 @@ export default function SmartMedicationReconciliation({ patient }) {
                         </div>
                       </CardContent>
                     </Card>
-                  ))
+                    );
+                  })
                 )}
               </TabsContent>
 

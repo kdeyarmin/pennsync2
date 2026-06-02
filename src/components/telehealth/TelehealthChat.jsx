@@ -5,33 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Send, MessageSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function TelehealthChat({ sessionId, userName }) {
-  const [messages, setMessages] = useState([]);
+// Presentational chat panel. Messages and sending are owned by the parent
+// (VideoRoom), which transmits them over the Twilio data track so both sides
+// actually receive them.
+export default function TelehealthChat({ messages = [], onSend, userName }) {
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    // Auto-scroll to bottom when new messages arrive
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
   const handleSend = () => {
-    if (!newMessage.trim()) return;
-
-    const message = {
-      id: Date.now(),
-      sender: userName,
-      text: newMessage,
-      timestamp: new Date().toISOString(),
-      isSelf: true
-    };
-
-    setMessages(prev => [...prev, message]);
+    const text = newMessage.trim();
+    if (!text) return;
+    onSend?.(text);
     setNewMessage('');
-
-    // Here you would broadcast the message via WebSocket or data channel
   };
 
   const handleKeyPress = (e) => {
@@ -42,19 +33,19 @@ export default function TelehealthChat({ sessionId, userName }) {
   };
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="flex flex-col h-80">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <MessageSquare className="w-4 h-4" />
-          Session Chat
+          Chat
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-4 gap-3">
+      <CardContent className="flex-1 flex flex-col p-4 gap-3 min-h-0">
         <ScrollArea ref={scrollRef} className="flex-1 pr-4">
           <div className="space-y-3">
             {messages.length === 0 ? (
               <div className="text-center py-8 text-slate-400 text-sm">
-                No messages yet. Start the conversation!
+                No messages yet. Say hello!
               </div>
             ) : (
               messages.map((msg) => (
@@ -69,12 +60,12 @@ export default function TelehealthChat({ sessionId, userName }) {
                         : 'bg-slate-100 text-slate-900'
                     }`}
                   >
-                    {!msg.isSelf && (
+                    {!msg.isSelf && msg.sender && (
                       <p className="text-xs font-semibold mb-1 opacity-70">
                         {msg.sender}
                       </p>
                     )}
-                    <p className="text-sm">{msg.text}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{msg.text}</p>
                     <p className="text-xs mt-1 opacity-70">
                       {new Date(msg.timestamp).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -94,8 +85,9 @@ export default function TelehealthChat({ sessionId, userName }) {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
+            aria-label={`Message as ${userName || 'you'}`}
           />
-          <Button onClick={handleSend} size="icon">
+          <Button onClick={handleSend} size="icon" disabled={!newMessage.trim()}>
             <Send className="w-4 h-4" />
           </Button>
         </div>

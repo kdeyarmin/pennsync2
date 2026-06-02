@@ -18,6 +18,8 @@ export default function OASISToPatientChartPusher({
   const [selectedRecs, setSelectedRecs] = useState([]);
   const [isPushing, setIsPushing] = useState(false);
   const [pushSuccess, setPushSuccess] = useState(false);
+  const [pushedCount, setPushedCount] = useState(0);
+  const [pushError, setPushError] = useState(null);
   const queryClient = useQueryClient();
 
   const createRecommendationMutation = useMutation({
@@ -122,11 +124,15 @@ export default function OASISToPatientChartPusher({
     if (!patientId || selectedRecs.length === 0) return;
 
     setIsPushing(true);
-    try {
-      const recsToCreate = recommendations.filter(rec => selectedRecs.includes(rec.id));
+    setPushError(null);
 
-      // Create recommendations in bulk
-      for (const rec of recsToCreate) {
+    const recsToCreate = recommendations.filter(rec => selectedRecs.includes(rec.id));
+    const failedTitles = [];
+
+    // Create each recommendation independently so one failure doesn't abort the
+    // rest, and so a partial push is reported instead of silently swallowed.
+    for (const rec of recsToCreate) {
+      try {
         await createRecommendationMutation.mutateAsync({
           patient_id: patientId,
           source_type: 'oasis_analysis',
@@ -141,13 +147,27 @@ export default function OASISToPatientChartPusher({
           suggested_by_user: 'AI Assistant',
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
         });
+      } catch (error) {
+        console.error("Error pushing recommendation:", error);
+        failedTitles.push(rec.title);
       }
+    }
 
-      setPushSuccess(true);
+    const succeeded = recsToCreate.length - failedTitles.length;
+    setPushedCount(succeeded);
+
+    if (failedTitles.length > 0) {
+      setPushError(`${succeeded} of ${recsToCreate.length} added. ${failedTitles.length} failed — please retry the remaining items.`);
+      // Keep only the failed items selected so the user can retry just those.
+      const failedIds = recommendations.filter(r => failedTitles.includes(r.title)).map(r => r.id);
+      setSelectedRecs(failedIds);
+    } else {
       setSelectedRecs([]);
+    }
+
+    if (succeeded > 0) {
+      setPushSuccess(true);
       setTimeout(() => setPushSuccess(false), 3000);
-    } catch (error) {
-      console.error("Error pushing recommendations:", error);
     }
     setIsPushing(false);
   };
@@ -236,8 +256,14 @@ export default function OASISToPatientChartPusher({
           <Alert className="bg-green-50 border-green-200 mt-3">
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              Successfully pushed {selectedRecs.length} recommendations to patient chart
+              Successfully pushed {pushedCount} recommendation{pushedCount === 1 ? '' : 's'} to patient chart
             </AlertDescription>
+          </Alert>
+        )}
+
+        {pushError && (
+          <Alert variant="destructive" className="mt-3">
+            <AlertDescription>{pushError}</AlertDescription>
           </Alert>
         )}
       </CardContent>

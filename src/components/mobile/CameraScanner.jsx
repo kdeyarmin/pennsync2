@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload, X, Check, Loader2 } from "lucide-react";
@@ -11,6 +11,27 @@ export default function CameraScanner({ onScanComplete, documentType = "general"
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+
+  // Stop the camera on unmount — otherwise the MediaStream keeps the device
+  // camera active (privacy + battery drain on mobile clinical devices) if the
+  // component is closed mid-scan.
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
+  // Release the captured-image object URL when it changes or on unmount.
+  useEffect(() => {
+    return () => {
+      if (capturedImage?.url) {
+        URL.revokeObjectURL(capturedImage.url);
+      }
+    };
+  }, [capturedImage?.url]);
 
   const startCamera = async () => {
     try {

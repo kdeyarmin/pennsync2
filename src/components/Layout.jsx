@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
+import { clearCachedPHI } from "@/lib/phiStorage";
 import { Bell, LogOut, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,8 +111,8 @@ export default function Layout({ children, currentPageName }) {
       const chartedPatientIds = new Set(chartedVisits.map(v => v.patient_id));
       return alerts.filter(a => chartedPatientIds.has(a.patient_id));
     },
-    initialData: [],
-    refetchInterval: 60000,
+    initialData: [], 
+    refetchInterval: 60000, 
     enabled: !!currentUser?.email && currentUser?.role !== 'admin' && chartedVisits.length > 0,
   });
 
@@ -184,6 +185,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Tools",
       items: [
+        navItem("UserSettings"),
         navItem("OfflineMode"),
         navItem("Help"),
       ],
@@ -200,20 +202,19 @@ export default function Layout({ children, currentPageName }) {
         navItem("ClinicalPathwayManager"),
       ]
     },
-    {
-      category: "Analytics",
+    { 
+      category: "Analytics", 
       items: [
         navItem("ReportsAnalytics"),
         navItem("ComplianceCenter"),
         { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
-      ]
+      ] 
     },
     {
       category: "Configuration",
       items: [
         navItem("PatientDataManagement"),
         navItem("SecurityCompliance"),
-        navItem("UserSettings"),
       ]
     },
 
@@ -228,8 +229,10 @@ export default function Layout({ children, currentPageName }) {
         user_agent: navigator.userAgent,
       });
     } catch {}
-    // HIPAA: purge cached PHI before logging out (shared-device safety).
+    // HIPAA: purge cached PHI before logging out (shared-device safety). Await
+    // the storage purge so the IndexedDB clear isn't abandoned by the redirect.
     try { queryClientInstance.clear(); } catch { /* no-op */ }
+    try { await clearCachedPHI(); } catch { /* no-op */ }
     base44.auth.logout();
 
   }, [currentUser?.email]);

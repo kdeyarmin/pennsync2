@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { openExternalUrl } from "@/components/utils/security";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -127,7 +128,7 @@ export default function FaxHistory({ patientId }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(log.document_url, '_blank')}
+                        onClick={() => openExternalUrl(log.document_url)}
                       >
                         <Download className="w-4 h-4" />
                       </Button>

@@ -352,10 +352,7 @@ export default function ClinicalPathwayManager() {
     );
   }
 
-  // Managing clinical pathways (create/update/delete) is an admin-only workflow:
-  // it's surfaced to admins only in the sidebar and command palette. Guard the
-  // page itself so the destructive controls aren't reachable by a non-admin who
-  // navigates to the route directly. Mirrors the AdminOperations access check.
+  // Admin-only surface: block non-admins (server-side authz remains the real gate).
   if (currentUser?.role !== 'admin') {
     return (
       <div className="p-8 max-w-2xl mx-auto">

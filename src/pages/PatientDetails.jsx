@@ -10,10 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Shield, Heart, Stethoscope, Activity, Pill, ClipboardList, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Heart, Stethoscope, Activity, Pill, ClipboardList, ExternalLink } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -317,15 +316,7 @@ export default function PatientDetails() {
                       {highAlertCount} High Alert{highAlertCount !== 1 ? 's' : ''}
                     </Badge>
                   )}
-                  {currentUser?.role === 'admin' && (
-                    <Link to={createPageUrl(`AuditTrail?entity=Patient&entityId=${patient.id}`)}>
-                      <Button variant="outline" size="sm">
-                        <Shield className="w-3 h-3 mr-1" />
-                        Audit Trail
-                      </Button>
-                    </Link>
-                  )}
-                  <PatientChartExporter 
+                  <PatientChartExporter
                     patientId={patientId} 
                     patientName={`${patient.first_name} ${patient.last_name}`}
                   />

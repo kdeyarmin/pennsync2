@@ -914,6 +914,10 @@ Generate the complete clinical narrative based on the audio and context:`;
   };
 
   const handleSave = async () => {
+    // Prevent double-submit: a second click would complete the visit twice and
+    // double-count visit-completion telemetry.
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
       
@@ -976,6 +980,8 @@ Generate the complete clinical narrative based on the audio and context:`;
       navigate(createPageUrl("Dashboard"));
     } catch (error) {
       await handleSecureError(error, 'visit_save', (msg) => alert(msg));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1392,7 +1398,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                   <Button
                     onClick={handleSave}
                     className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial text-sm"
-                    disabled={!narrativeText || isProcessing}
+                    disabled={!narrativeText || isProcessing || isSaving}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Complete
@@ -1610,7 +1616,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                 <Button
                   onClick={handleSave}
                   className="bg-green-600 hover:bg-green-700 w-full sm:w-auto text-sm"
-                  disabled={!narrativeText || isProcessing}
+                  disabled={!narrativeText || isProcessing || isSaving}
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Complete Visit

@@ -33,6 +33,9 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `default_off_duty_template` | text | Default off-duty message when a nurse hasn't set one. |
 | `sms_messaging_enabled` | boolean | Agency-wide kill switch (default true). |
 | `sms_quick_replies` | array (string) | Optional one-tap PHI-safe text snippets for the compose box. Falls back to built-in defaults when empty. |
+| `sms_templates` | array (object) | Optional reusable templates `{ label, body }` with merge fields (`{first_name}`, `{last_name}`, `{nurse_name}`, `{office}`). Falls back to built-in defaults when empty. |
+| `voicemail_enabled` | boolean | Optional (default false). When true, an unanswered on-duty masked call captures a voicemail (requires the recording action in the 8x8 callflow + the voicemail webhook). |
+| `voicemail_greeting` | text | Optional voicemail prompt; `{office}` inserts the main office number. |
 
 ## New `SmsMessage`
 
@@ -69,6 +72,11 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `duration_seconds` | number | Nullable |
 | `failure_reason` | string | Nullable |
 | `sent_by` | string | Initiating nurse (outbound) |
+| `note` | text | Nullable. Nurse's free-text call note (keep PHI-free). |
+| `disposition` | string enum | Nullable. `resolved` \| `follow_up_needed` \| `callback_requested` \| `left_voicemail` \| `no_action` |
+| `has_voicemail` | boolean | Set by the voicemail webhook when a recording is attached. |
+| `voicemail_url` | string | Nullable. Recording URL from 8x8. |
+| `voicemail_duration_seconds` | number | Nullable. |
 
 ## New `SmsConsent` (append-only TCPA ledger)
 
@@ -81,6 +89,34 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `captured_by` | string | Nurse/admin email; null for patient keyword events |
 | `captured_at` | string (ISO) | |
 | `notes` | text | |
+
+## New `ScheduledSms` (queued future sends)
+
+| Field | Type | Notes |
+|---|---|---|
+| `to_number` | string | E.164 destination |
+| `from_number` | string | Nurse's work number |
+| `body` | text | Message content |
+| `patient_id` | string | Nullable |
+| `nurse_email` | string | Owner |
+| `thread_id` | string | Deterministic `min\|max` of the two numbers |
+| `send_at` | string (ISO) | When to send |
+| `status` | string enum | `pending` \| `sending` \| `sent` \| `failed` \| `canceled` |
+| `template_label` | string | Nullable; the template the message came from |
+| `provider_message_id` | string | Nullable; 8x8 `umid` once sent |
+| `sms_message_id` | string | Nullable; the `SmsMessage` row created on send |
+| `failure_reason` | string | Nullable |
+| `attempts` | number | Send attempts |
+| `sent_at` | string (ISO) | Nullable |
+| `created_by` | string | Nurse email |
+| `canceled_by` | string | Nullable |
+| `canceled_at` | string (ISO) | Nullable |
+
+> `dispatchScheduledSms` is a **cron** function — configure a schedule (e.g.
+> every 5 minutes) for it in the Base44 dashboard. It claims due `pending` rows
+> (`pending → sending`) before sending so overlapping runs don't double-send,
+> and re-checks the kill switch + opt-out at send time. Restrict `ScheduledSms`
+> read access to the owning `nurse_email` + admins (the body may contain PHI).
 
 The existing `UserActivity`, `Notification`, and `SecurityLog` entities are
 reused as-is (no changes required).

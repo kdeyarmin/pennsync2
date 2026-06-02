@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { openExternalUrl } from "@/components/utils/security";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -432,7 +433,7 @@ Provide actionable insights in a structured format with clear sections.`,
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => window.open(log.document_url, '_blank')}
+                          onClick={() => openExternalUrl(log.document_url)}
                         >
                           <Download className="w-4 h-4 mr-1" />
                           View

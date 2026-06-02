@@ -38,9 +38,23 @@ No environment variables — an admin sets these in the app:
 | `default_off_duty_template` | Default off-duty message |
 | `sms_messaging_enabled` | Agency-wide SMS kill switch |
 
+### Verify the setup (no test message needed)
+
+Admin → Settings → **8x8 Phone** now shows a **Setup & Health** card:
+
+- A live **configuration checklist** (sub-accounts, region, main office, kill
+  switch, etc.) that updates as you edit the form — fix anything red before going
+  live; amber items are degraded-but-usable.
+- A **Test live connection** button (backed by the `testEightXEightConnection`
+  function) that confirms the backend secrets are present, makes a **read-only**
+  probe of the 8x8 SMS API (so you know the API key + region + sub-account
+  actually authenticate and are reachable), and reports nurse-provisioning
+  coverage. It never sends a text or places a call, and never echoes a secret.
+
 ## 3. Webhook registration
 
-Point these 8x8 callbacks at the deployed Base44 function URLs:
+The same admin panel lists each webhook function with a copy button and a
+suggested URL. Point these 8x8 callbacks at the deployed Base44 function URLs:
 
 | 8x8 event | Function | Configured on |
 |---|---|---|
@@ -48,6 +62,7 @@ Point these 8x8 callbacks at the deployed Base44 function URLs:
 | SMS delivery receipt (DLR) | `handleEightXEightSmsStatus` | SMS sub-account |
 | Voice Call Action (VCA) | `handleEightXEightVoiceCall` | Voice sub-account / virtual numbers |
 | Call status / CDR | `handleEightXEightCallStatus` | Voice sub-account |
+| Voicemail recording (optional) | `handleEightXEightVoicemail` | Voice sub-account (only if voicemail capture is enabled) |
 
 > Record the exact deployed URLs here once known: `__________`.
 
@@ -79,6 +94,11 @@ shapes in `handleEightXEightVoiceCall.ts` (`buildSay` / `buildMakeCall`) and
 ## 4. How each flow works
 
 - **Outbound text** (`sendSms`): nurse → patient from the nurse's work number.
+- **Scheduled text** (`scheduleSms` / `dispatchScheduledSms` / `cancelScheduledSms`):
+  a nurse queues a text for a future time (e.g. an appointment reminder). The
+  `dispatchScheduledSms` **cron** (schedule it in the Base44 dashboard, e.g.
+  every 5 min) sends due messages, re-checking consent + the kill switch at send
+  time; pending sends can be canceled until they fire.
 - **Outbound call** (`startMaskedCall`): rings the nurse's cell, then bridges to
   the patient presenting the work number as caller ID.
 - **Inbound text** (`handleEightXEightInboundSms`): stored to the nurse's inbox;
