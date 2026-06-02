@@ -68,6 +68,16 @@ Documentation, Documents, Communication, Compliance, Analytics, Learning, Admin,
 Tools, Settings), each with search keywords. Admin pages remain gated to admins.
 Every entry maps to a real route, so there are no dead links.
 
+**Plus** two follow-on enhancements:
+- **The palette is now discoverable.** Previously it was a hidden `Ctrl/Cmd+K`
+  shortcut (only hinted on the Dashboard). Added a visible **"Search… ⌘K"**
+  trigger at the top of the desktop sidebar (works collapsed and expanded) and a
+  search button in the mobile header. Both open the palette via a decoupled
+  `open-command-palette` window event, so it stays self-contained.
+- **Recent pages.** The palette now shows a **"Recent"** section (last 5 visited
+  pages, persisted to `localStorage`) when the query is empty, so users can jump
+  back to recent work in one keystroke.
+
 ### 3. No shared page-header primitive; header styling had drifted — FIXED (partial) ✅
 
 There was no reusable header. Pages hand-rolled `<h1>` blocks with at least three
@@ -75,12 +85,13 @@ different size families (`text-xl sm:text-2xl md:text-3xl`, `text-2xl sm:text-3x
 `text-3xl`) and mixed color tokens — **101 pages use `text-gray-900`** vs **13
 using the design-system `text-slate-900`**.
 
-**Fix (foundation):** added `src/components/ui/PageHeader.jsx`, a single component
-that standardizes heading scale, the `slate` color token, icon treatment, an
-optional description, and an actions slot. Adopted as the reference pattern on
-`DocumentHub` and `ComplianceCenter`. **Rollout to the remaining pages is a
-mechanical follow-up** (see Roadmap) — intentionally not done in one sweep to keep
-this change set safe and reviewable.
+**Fix (foundation + rollout):** added `src/components/ui/PageHeader.jsx`, a single
+component that standardizes heading scale, the `slate` color token, icon
+treatment, an optional description, and an actions slot. Adopted on **7 pages so
+far**: `DocumentHub`, `ComplianceCenter`, `PhysicianDirectory`, `ResourceLibrary`,
+`Telehealth`, `MyLearning`, and `ReferralIntake`. **Rollout to the remaining
+pages continues as a mechanical follow-up** (see Roadmap) — done in safe,
+reviewable batches rather than one giant sweep.
 
 ```jsx
 import PageHeader from "@/components/ui/PageHeader";
@@ -161,8 +172,10 @@ tidy it and is safe to script.
 | File | Change |
 | --- | --- |
 | `src/components/Layout.jsx` | Stop forcing OS dark mode; pin toaster to light theme |
-| `src/components/navigation/CommandPalette.jsx` | Expand registry to all 64 routed pages, grouped + keyworded |
+| `src/components/navigation/CommandPalette.jsx` | Registry covers all 64 routed pages; add Recent section + `open-command-palette` event |
+| `src/components/layout/DesktopSidebar.jsx` | Visible "Search… ⌘K" trigger at top of nav |
+| `src/components/layout/MobileHeader.jsx` | Search button that opens the palette on mobile |
 | `src/components/ui/PageHeader.jsx` | New reusable, standardized page-header component |
-| `src/pages/DocumentHub.jsx` | Adopt `PageHeader` (reference) |
-| `src/pages/ComplianceCenter.jsx` | Adopt `PageHeader` (reference) |
+| `src/pages/{DocumentHub,ComplianceCenter,PhysicianDirectory,ResourceLibrary,Telehealth,MyLearning,ReferralIntake}.jsx` | Adopt `PageHeader` (7 pages) |
+| `src/pages/ClinicalPathwayManager.jsx` | Add admin-only page guard (review follow-up) |
 | `docs/UI_UX_REVIEW.md` | This review |
