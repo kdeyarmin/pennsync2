@@ -134,7 +134,7 @@ export default function NotificationPreferences({ currentUser }) {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
+        <CardContent className="p-8 text-center text-slate-500">
           Loading preferences...
         </CardContent>
       </Card>
@@ -181,7 +181,7 @@ export default function NotificationPreferences({ currentUser }) {
                 <Label htmlFor="in-app-toggle" className="text-base font-medium">
                   In-App Notifications
                 </Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   Show notifications in the app
                 </p>
               </div>
@@ -203,7 +203,7 @@ export default function NotificationPreferences({ currentUser }) {
                 <Label htmlFor="email-toggle" className="text-base font-medium">
                   Email Notifications
                 </Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   Receive notifications via email
                 </p>
               </div>
@@ -222,7 +222,7 @@ export default function NotificationPreferences({ currentUser }) {
                 <Label htmlFor="push-toggle" className="text-base font-medium">
                   Push Notifications
                 </Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   Browser push notifications (requires permission)
                 </p>
               </div>
@@ -244,7 +244,7 @@ export default function NotificationPreferences({ currentUser }) {
                 <Label htmlFor="sound-toggle" className="text-base font-medium">
                   Notification Sounds
                 </Label>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   Play sound for in-app notifications
                 </p>
               </div>
@@ -302,7 +302,7 @@ export default function NotificationPreferences({ currentUser }) {
                 {notificationTypes.map((type) => {
                   const pref = preferences?.preferences?.[type.key] || { email: true, in_app: true, push: false };
                   return (
-                    <tr key={type.key} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr key={type.key} className="border-b last:border-0 hover:bg-slate-50">
                       <td className="py-3 pr-4">
                         <div>
                           <div className="flex items-center gap-2">
@@ -314,7 +314,7 @@ export default function NotificationPreferences({ currentUser }) {
                               <Badge className="bg-orange-500 text-[10px] px-1 py-0">High</Badge>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">{type.description}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{type.description}</p>
                         </div>
                       </td>
                       <td className="text-center px-2">

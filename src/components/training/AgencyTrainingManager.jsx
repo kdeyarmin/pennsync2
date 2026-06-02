@@ -200,7 +200,7 @@ export default function AgencyTrainingManager() {
 
             <TabsContent value="required" className="space-y-3 mt-4">
               {requiredModules.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No required training modules</p>
+                <p className="text-slate-500 text-center py-4">No required training modules</p>
               ) : (
                 requiredModules.map(module => {
                   const stats = getModuleStats(module.id);
@@ -219,10 +219,10 @@ export default function AgencyTrainingManager() {
                           <Send className="w-4 h-4 mr-1" /> Assign
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{module.description}</p>
+                      <p className="text-sm text-slate-600 mb-2">{module.description}</p>
                       <div className="flex items-center gap-3">
                         <Progress value={stats.percentage} className="flex-1" />
-                        <span className="text-sm text-gray-600">{stats.completed}/{stats.assigned} complete</span>
+                        <span className="text-sm text-slate-600">{stats.completed}/{stats.assigned} complete</span>
                       </div>
                     </div>
                   );
@@ -232,7 +232,7 @@ export default function AgencyTrainingManager() {
 
             <TabsContent value="optional" className="space-y-3 mt-4">
               {optionalModules.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No optional training modules</p>
+                <p className="text-slate-500 text-center py-4">No optional training modules</p>
               ) : (
                 optionalModules.map(module => {
                   const stats = getModuleStats(module.id);
@@ -250,10 +250,10 @@ export default function AgencyTrainingManager() {
                           <Send className="w-4 h-4 mr-1" /> Assign
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{module.description}</p>
+                      <p className="text-sm text-slate-600 mb-2">{module.description}</p>
                       <div className="flex items-center gap-3">
                         <Progress value={stats.percentage} className="flex-1" />
-                        <span className="text-sm text-gray-600">{stats.completed}/{stats.assigned} complete</span>
+                        <span className="text-sm text-slate-600">{stats.completed}/{stats.assigned} complete</span>
                       </div>
                     </div>
                   );
@@ -389,7 +389,7 @@ function AssignTrainingForm({ users, onAssign, onCancel }) {
         </div>
         <div className="max-h-48 overflow-y-auto border rounded p-2 space-y-1">
           {users.map(user => (
-            <label key={user.email} className="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer">
+            <label key={user.email} className="flex items-center gap-2 p-1 hover:bg-slate-50 rounded cursor-pointer">
               <input
                 type="checkbox"
                 checked={selectedUsers.includes(user.email)}

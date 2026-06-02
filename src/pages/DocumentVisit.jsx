@@ -983,7 +983,7 @@ Generate the complete clinical narrative based on the audio and context:`;
     return (
       <div className="p-8 max-w-5xl mx-auto">
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-12 text-center text-slate-500">
             Verifying access permissions...
           </CardContent>
         </Card>
@@ -1015,7 +1015,7 @@ Generate the complete clinical narrative based on the audio and context:`;
     return (
       <div className="p-8 max-w-5xl mx-auto">
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-12 text-center text-slate-500">
             Loading visit information...
           </CardContent>
         </Card>
@@ -1028,7 +1028,7 @@ Generate the complete clinical narrative based on the audio and context:`;
       <div className="p-8 max-w-5xl mx-auto">
         <Card>
           <CardContent className="p-12 text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Visit not found or patient data missing</h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">Visit not found or patient data missing</h2>
             <Button onClick={() => navigate(createPageUrl("Dashboard"))}>
               Return to Dashboard
             </Button>
@@ -1063,10 +1063,10 @@ Generate the complete clinical narrative based on the audio and context:`;
                 <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 truncate">
                   {patient?.first_name} {patient?.last_name}
                 </h1>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 mt-1">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600 mt-1">
                   <span className="truncate">MRN: {patient?.medical_record_number || 'N/A'}</span>
                   <span className="hidden sm:inline">•</span>
                   <span className="truncate">{patient?.primary_diagnosis}</span>
@@ -1316,7 +1316,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                         <strong>Recent Commands:</strong>
                         <div className="mt-2 space-y-1">
                           {commandHistory.map((cmd, idx) => (
-                            <div key={idx} className="text-xs text-gray-600">
+                            <div key={idx} className="text-xs text-slate-600">
                               • {cmd.command} at {cmd.time}
                             </div>
                           ))}
@@ -1591,8 +1591,8 @@ Generate the complete clinical narrative based on the audio and context:`;
                     <div className="flex items-center justify-center py-8 gap-3">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
                       <div className="text-center">
-                        <p className="text-gray-900 font-semibold">Processing audio with AI...</p>
-                        <p className="text-sm text-gray-600">Transcribing and intelligently merging into narrative</p>
+                        <p className="text-slate-900 font-semibold">Processing audio with AI...</p>
+                        <p className="text-sm text-slate-600">Transcribing and intelligently merging into narrative</p>
                       </div>
                     </div>
                   )}

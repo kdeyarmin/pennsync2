@@ -199,11 +199,11 @@ export default function ScenarioBuilder({ courseId, onSave }) {
               className={`p-3 rounded-lg border-2 cursor-pointer transition ${
                 selectedNodeId === nodeId
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
             >
               <p className="font-medium text-sm">{node.text.substring(0, 40)}...</p>
-              <p className="text-xs text-gray-600 mt-1">{node.choices?.length || 0} options</p>
+              <p className="text-xs text-slate-600 mt-1">{node.choices?.length || 0} options</p>
               {nodeId !== 'node-start' && nodeId !== 'node-end' && (
                 <button
                   onClick={(e) => {
@@ -271,7 +271,7 @@ export default function ScenarioBuilder({ courseId, onSave }) {
 
               <div className="space-y-3">
                 {currentNode.choices?.map((choice, idx) => (
-                  <div key={idx} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                  <div key={idx} className="p-3 bg-slate-50 rounded-lg space-y-2">
                     <div className="flex items-center gap-2">
                       <Input
                         value={choice.text}

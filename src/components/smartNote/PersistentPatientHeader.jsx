@@ -10,17 +10,17 @@ export default function PersistentPatientHeader({ patient, vitalSigns, carePlans
   );
 
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm -mx-4 md:-mx-8 px-4 md:px-8 py-2 mb-4">
+    <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm -mx-4 md:-mx-8 px-4 md:px-8 py-2 mb-4">
       <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
             <User className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="font-bold text-gray-900">
+            <h2 className="font-bold text-slate-900">
               {patient.first_name} {patient.last_name}
             </h2>
-            <p className="text-xs text-gray-600">{patient.primary_diagnosis || 'No diagnosis'}</p>
+            <p className="text-xs text-slate-600">{patient.primary_diagnosis || 'No diagnosis'}</p>
           </div>
         </div>
 

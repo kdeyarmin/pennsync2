@@ -72,18 +72,18 @@ export default function StateSurveyVideos() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900">State Survey Preparation</h2>
-              <p className="text-sm text-gray-600">Essential training videos to prepare for your state survey</p>
+              <h2 className="text-xl font-bold text-slate-900">State Survey Preparation</h2>
+              <p className="text-sm text-slate-600">Essential training videos to prepare for your state survey</p>
             </div>
           </div>
           
           {/* Progress Bar */}
           <div className="bg-white rounded-lg p-4 border border-blue-200">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Your Progress</span>
+              <span className="text-sm font-medium text-slate-700">Your Progress</span>
               <span className="text-sm font-bold text-blue-600">{completedVideos.length} / {totalVideos} videos</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-slate-200 rounded-full h-3">
               <div 
                 className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
@@ -102,7 +102,7 @@ export default function StateSurveyVideos() {
                 <Clipboard className="w-5 h-5 text-purple-600" />
                 Bag Technique Checklist - Survey Ready
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 Essential infection control procedure - demonstrate proper technique during state surveys
               </p>
             </div>
@@ -134,7 +134,7 @@ export default function StateSurveyVideos() {
         <CardContent className="space-y-4">
           {/* Before You Begin */}
           <div className="bg-white rounded-lg p-4 border border-purple-200">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-purple-600">Before You Begin</Badge>
             </h3>
             <div className="space-y-2">
@@ -151,7 +151,7 @@ export default function StateSurveyVideos() {
                     onCheckedChange={() => toggleChecklistItem('before', idx)}
                     className="mt-0.5"
                   />
-                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('before', idx)}>
+                  <label className="text-sm text-slate-700 cursor-pointer" onClick={() => toggleChecklistItem('before', idx)}>
                     {item}
                   </label>
                 </div>
@@ -161,7 +161,7 @@ export default function StateSurveyVideos() {
 
           {/* Step 1: Prepare the Bag */}
           <div className="bg-white rounded-lg p-4 border border-purple-200">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-blue-600">Step 1: Prepare the Bag</Badge>
             </h3>
             <div className="space-y-2">
@@ -182,20 +182,20 @@ export default function StateSurveyVideos() {
                     onCheckedChange={() => toggleChecklistItem('step1', idx)}
                     className="mt-0.5"
                   />
-                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step1', idx)}>
+                  <label className="text-sm text-slate-700 cursor-pointer" onClick={() => toggleChecklistItem('step1', idx)}>
                     {item}
                   </label>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mt-2 italic">
+            <p className="text-xs text-slate-500 mt-2 italic">
               *Note: Shoulder bags on barrier; rolling bags stay on floor
             </p>
           </div>
 
           {/* Step 2: Perform Patient Care */}
           <div className="bg-white rounded-lg p-4 border border-purple-200">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-green-600">Step 2: Perform Patient Care</Badge>
             </h3>
             <div className="space-y-2">
@@ -213,7 +213,7 @@ export default function StateSurveyVideos() {
                     onCheckedChange={() => toggleChecklistItem('step2', idx)}
                     className="mt-0.5"
                   />
-                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step2', idx)}>
+                  <label className="text-sm text-slate-700 cursor-pointer" onClick={() => toggleChecklistItem('step2', idx)}>
                     {item}
                   </label>
                 </div>
@@ -223,7 +223,7 @@ export default function StateSurveyVideos() {
 
           {/* Step 3: Clean Reusable Equipment */}
           <div className="bg-white rounded-lg p-4 border border-purple-200">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-orange-600">Step 3: Clean Reusable Equipment</Badge>
             </h3>
             <div className="space-y-2">
@@ -240,7 +240,7 @@ export default function StateSurveyVideos() {
                     onCheckedChange={() => toggleChecklistItem('step3', idx)}
                     className="mt-0.5"
                   />
-                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step3', idx)}>
+                  <label className="text-sm text-slate-700 cursor-pointer" onClick={() => toggleChecklistItem('step3', idx)}>
                     {item}
                   </label>
                 </div>
@@ -250,7 +250,7 @@ export default function StateSurveyVideos() {
 
           {/* Step 4: Return Equipment to Bag */}
           <div className="bg-white rounded-lg p-4 border border-purple-200">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-indigo-600">Step 4: Return Equipment to Bag</Badge>
             </h3>
             <div className="space-y-2">
@@ -269,7 +269,7 @@ export default function StateSurveyVideos() {
                     onCheckedChange={() => toggleChecklistItem('step4', idx)}
                     className="mt-0.5"
                   />
-                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step4', idx)}>
+                  <label className="text-sm text-slate-700 cursor-pointer" onClick={() => toggleChecklistItem('step4', idx)}>
                     {item}
                   </label>
                 </div>
@@ -279,7 +279,7 @@ export default function StateSurveyVideos() {
 
           {/* Step 5: Complete Procedure and Clean Up */}
           <div className="bg-white rounded-lg p-4 border border-purple-200">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-teal-600">Step 5: Complete Procedure</Badge>
             </h3>
             <div className="space-y-2">
@@ -295,7 +295,7 @@ export default function StateSurveyVideos() {
                     onCheckedChange={() => toggleChecklistItem('step5', idx)}
                     className="mt-0.5"
                   />
-                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step5', idx)}>
+                  <label className="text-sm text-slate-700 cursor-pointer" onClick={() => toggleChecklistItem('step5', idx)}>
                     {item}
                   </label>
                 </div>
@@ -334,15 +334,15 @@ export default function StateSurveyVideos() {
                     )}
                     <span>{video.title}</span>
                   </CardTitle>
-                  <p className="text-sm text-gray-600 mb-2">{video.description}</p>
+                  <p className="text-sm text-slate-600 mb-2">{video.description}</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className={categoryColors[video.category] || "bg-gray-100 text-gray-800"}>
+                    <Badge className={categoryColors[video.category] || "bg-slate-100 text-slate-800"}>
                       {video.category}
                     </Badge>
                     {video.priority === 'high' && (
                       <Badge className="bg-red-100 text-red-800">Priority</Badge>
                     )}
-                    <span className="flex items-center gap-1 text-xs text-gray-500">
+                    <span className="flex items-center gap-1 text-xs text-slate-500">
                       <Clock className="w-3 h-3" />
                       {video.duration}
                     </span>
@@ -385,8 +385,8 @@ export default function StateSurveyVideos() {
             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Congratulations!</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Congratulations!</h3>
+            <p className="text-slate-600">
               You've completed all State Survey preparation videos. You're ready for your survey!
             </p>
           </CardContent>

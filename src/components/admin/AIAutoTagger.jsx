@@ -157,7 +157,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
         {isTagging && (
           <div className="space-y-2">
             <Progress value={progress} className="h-2" />
-            <p className="text-sm text-gray-600 text-center">
+            <p className="text-sm text-slate-600 text-center">
               Processing... {Math.round(progress)}%
             </p>
           </div>

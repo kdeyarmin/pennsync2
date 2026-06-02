@@ -65,11 +65,11 @@ export default function OASISSuggestionPanel({ suggestions, onAddToCarePlan, add
   if (suggestions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6 py-10 text-center">
-        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-          <Sparkles className="w-6 h-6 text-gray-300" />
+        <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+          <Sparkles className="w-6 h-6 text-slate-300" />
         </div>
-        <p className="text-sm font-semibold text-gray-400">No suggestions yet</p>
-        <p className="text-xs text-gray-300 mt-1 max-w-[180px]">Complete the assessment to see dynamic care recommendations</p>
+        <p className="text-sm font-semibold text-slate-400">No suggestions yet</p>
+        <p className="text-xs text-slate-300 mt-1 max-w-[180px]">Complete the assessment to see dynamic care recommendations</p>
       </div>
     );
   }
@@ -79,10 +79,10 @@ export default function OASISSuggestionPanel({ suggestions, onAddToCarePlan, add
       <div className="px-4 pt-4 pb-2 flex-shrink-0">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-purple-500" />
-          <span className="text-sm font-bold text-gray-800">Smart Recommendations</span>
+          <span className="text-sm font-bold text-slate-800">Smart Recommendations</span>
           <span className="ml-auto text-xs bg-purple-100 text-purple-700 font-semibold rounded-full px-2 py-0.5">{suggestions.length} domains</span>
         </div>
-        <p className="text-xs text-gray-400">Based on your assessment scores. Select interventions to add.</p>
+        <p className="text-xs text-slate-400">Based on your assessment scores. Select interventions to add.</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
@@ -100,12 +100,12 @@ export default function OASISSuggestionPanel({ suggestions, onAddToCarePlan, add
                 {config.icon}
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-800">{suggestion.domain}</span>
+                    <span className="text-sm font-bold text-slate-800">{suggestion.domain}</span>
                     <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${config.badge}`}>{config.label}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-tight">{suggestion.reason}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-tight">{suggestion.reason}</p>
                 </div>
-                {isCollapsed ? <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />}
+                {isCollapsed ? <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" /> : <ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0" />}
               </button>
 
               {!isCollapsed && (
@@ -123,19 +123,19 @@ export default function OASISSuggestionPanel({ suggestions, onAddToCarePlan, add
                             ? "bg-green-50 border-green-200 opacity-70 cursor-default"
                             : isChecked
                             ? "bg-white border-indigo-400 ring-1 ring-indigo-200 shadow-sm"
-                            : "bg-white/60 border-transparent hover:bg-white hover:border-gray-200"
+                            : "bg-white/60 border-transparent hover:bg-white hover:border-slate-200"
                         }`}
                       >
                         <div className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border ${
-                          alreadyAdded ? "bg-green-500 border-green-500" : isChecked ? "bg-indigo-600 border-indigo-600" : "border-gray-300 bg-white"
+                          alreadyAdded ? "bg-green-500 border-green-500" : isChecked ? "bg-indigo-600 border-indigo-600" : "border-slate-300 bg-white"
                         }`}>
                           {(isChecked || alreadyAdded) && <Check className="w-2.5 h-2.5 text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-gray-800 leading-tight">{item.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5 leading-tight line-clamp-2">{item.description}</p>
+                          <p className="text-xs font-semibold text-slate-800 leading-tight">{item.name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 leading-tight line-clamp-2">{item.description}</p>
                           <div className="flex gap-1 mt-1 flex-wrap">
-                            <span className="text-[10px] bg-gray-100 text-gray-500 rounded px-1.5 py-0.5">{item.frequency}</span>
+                            <span className="text-[10px] bg-slate-100 text-slate-500 rounded px-1.5 py-0.5">{item.frequency}</span>
                             {item.complianceTag && (
                               <span className="text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100 rounded px-1.5 py-0.5">{item.complianceTag}</span>
                             )}
@@ -156,7 +156,7 @@ export default function OASISSuggestionPanel({ suggestions, onAddToCarePlan, add
 
       {/* Add to Plan CTA */}
       <div className="flex-shrink-0 p-4 border-t bg-white">
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+        <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
           <span>{newIds.length} intervention{newIds.length !== 1 ? "s" : ""} selected</span>
           {newIds.length > 0 && (
             <button onClick={() => setSelected({})} className="text-red-400 hover:text-red-600">Clear</button>

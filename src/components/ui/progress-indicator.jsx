@@ -16,8 +16,8 @@ export function ProgressBar({ value = 0, max = 100, label, variant = "default", 
     <div className={cn("space-y-2", className)}>
       {label && (
         <div className="flex items-center justify-between text-sm">
-          <span className="font-medium text-gray-700">{label}</span>
-          <span className="text-gray-500">{Math.round(percentage)}%</span>
+          <span className="font-medium text-slate-700">{label}</span>
+          <span className="text-slate-500">{Math.round(percentage)}%</span>
         </div>
       )}
       <div className="progress-bar">
@@ -40,7 +40,7 @@ export function LoadingSpinner({ size = "default", text, className }) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <Loader2 className={cn("animate-spin text-blue-600", sizes[size])} />
-      {text && <span className="text-sm text-gray-600">{text}</span>}
+      {text && <span className="text-sm text-slate-600">{text}</span>}
     </div>
   );
 }
@@ -86,7 +86,7 @@ export function CircularProgress({ value = 0, size = 80, strokeWidth = 8, varian
           stroke="currentColor"
           strokeWidth={strokeWidth}
           fill="none"
-          className="text-gray-200"
+          className="text-slate-200"
         />
         <circle
           cx={size / 2}
@@ -100,7 +100,7 @@ export function CircularProgress({ value = 0, size = 80, strokeWidth = 8, varian
           className={cn("transition-all duration-500", variants[variant])}
         />
       </svg>
-      <span className="absolute text-sm font-semibold text-gray-700">
+      <span className="absolute text-sm font-semibold text-slate-700">
         {Math.round(percentage)}%
       </span>
     </div>

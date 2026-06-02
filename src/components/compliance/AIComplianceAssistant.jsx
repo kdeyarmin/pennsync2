@@ -140,7 +140,7 @@ Format your response in clear sections. Be specific and actionable.`,
             </Alert>
 
             <div>
-              <p className="text-xs font-semibold text-gray-700 mb-2">Quick Questions:</p>
+              <p className="text-xs font-semibold text-slate-700 mb-2">Quick Questions:</p>
               <div className="grid gap-2">
                 {quickQuestions.map((q, idx) => (
                   <Button
@@ -172,7 +172,7 @@ Format your response in clear sections. Be specific and actionable.`,
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
                     {/* Main Answer */}
                     <div className="prose prose-sm max-w-none">
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap">{msg.content.answer}</p>
+                      <p className="text-sm text-slate-900 whitespace-pre-wrap">{msg.content.answer}</p>
                     </div>
 
                     {/* Relevant Regulations */}
@@ -186,7 +186,7 @@ Format your response in clear sections. Be specific and actionable.`,
                           {msg.content.relevant_regulations.map((reg, i) => (
                             <div key={i} className="bg-purple-50 p-2 rounded">
                               <p className="text-xs font-bold text-purple-900">{reg.reference} - {reg.title}</p>
-                              <p className="text-xs text-gray-700 mt-1">{reg.summary}</p>
+                              <p className="text-xs text-slate-700 mt-1">{reg.summary}</p>
                             </div>
                           ))}
                         </div>
@@ -202,7 +202,7 @@ Format your response in clear sections. Be specific and actionable.`,
                         </p>
                         <ul className="space-y-1">
                           {msg.content.best_practices.map((practice, i) => (
-                            <li key={i} className="text-xs text-gray-900 flex items-start gap-1">
+                            <li key={i} className="text-xs text-slate-900 flex items-start gap-1">
                               <Lightbulb className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
                               {practice}
                             </li>
@@ -220,7 +220,7 @@ Format your response in clear sections. Be specific and actionable.`,
                         </p>
                         <ul className="space-y-1">
                           {msg.content.common_mistakes.map((mistake, i) => (
-                            <li key={i} className="text-xs text-gray-900 flex items-start gap-1">
+                            <li key={i} className="text-xs text-slate-900 flex items-start gap-1">
                               <span className="text-red-600 flex-shrink-0">✗</span>
                               {mistake}
                             </li>
@@ -233,7 +233,7 @@ Format your response in clear sections. Be specific and actionable.`,
                     {msg.content.pennsylvania_specific && msg.content.pennsylvania_specific !== "None" && (
                       <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
                         <p className="text-xs font-semibold text-yellow-900 mb-1">Pennsylvania-Specific Requirements:</p>
-                        <p className="text-xs text-gray-900">{msg.content.pennsylvania_specific}</p>
+                        <p className="text-xs text-slate-900">{msg.content.pennsylvania_specific}</p>
                       </div>
                     )}
 
@@ -243,7 +243,7 @@ Format your response in clear sections. Be specific and actionable.`,
                         <p className="text-xs font-semibold text-blue-900 mb-2">Documentation Examples:</p>
                         <ul className="space-y-1">
                           {msg.content.documentation_examples.map((example, i) => (
-                            <li key={i} className="text-xs text-gray-900 italic">"{example}"</li>
+                            <li key={i} className="text-xs text-slate-900 italic">"{example}"</li>
                           ))}
                         </ul>
                       </div>

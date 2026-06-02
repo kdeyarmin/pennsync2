@@ -240,7 +240,7 @@ Return JSON:
       case 'urgent': return 'bg-red-100 text-red-800 border-red-300';
       case 'concerning': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'monitor': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -308,7 +308,7 @@ Return JSON:
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-lg">{summary.patient_name}'s Next Steps</h3>
-                <p className="text-sm text-gray-600">{summary.condition_focus} | {summary.summary_date}</p>
+                <p className="text-sm text-slate-600">{summary.condition_focus} | {summary.summary_date}</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleCopy}>
@@ -334,7 +334,7 @@ Return JSON:
                     />
                     <div className="flex-1">
                       <p className="font-medium text-sm">{step.action}</p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-slate-600">
                         <Clock className="w-3 h-3 inline mr-1" />{step.when} — {step.how}
                       </p>
                     </div>
@@ -358,7 +358,7 @@ Return JSON:
                     <div className="flex-1">
                       <p className="font-medium text-sm">{item.item}</p>
                       <Badge variant="outline" className="text-xs">{item.time_of_day}</Badge>
-                      <p className="text-xs text-gray-600 mt-1">{item.details}</p>
+                      <p className="text-xs text-slate-600 mt-1">{item.details}</p>
                     </div>
                   </div>
                 ))}
@@ -379,7 +379,7 @@ Return JSON:
                         <span className="font-medium text-sm">{sign.sign}</span>
                         <Badge className={getSeverityColor(sign.severity)}>{sign.severity}</Badge>
                       </div>
-                      <p className="text-xs text-gray-600">→ {sign.what_to_do}</p>
+                      <p className="text-xs text-slate-600">→ {sign.what_to_do}</p>
                     </div>
                   </div>
                 ))}
@@ -419,7 +419,7 @@ Return JSON:
                 {summary.medication_reminders?.map((med, idx) => (
                   <div key={idx} className="bg-white p-2 rounded border">
                     <p className="font-medium text-sm">{med.medication}</p>
-                    <p className="text-xs text-gray-700">{med.reminder}</p>
+                    <p className="text-xs text-slate-700">{med.reminder}</p>
                     <p className="text-xs text-purple-600 mt-1">💡 {med.tip}</p>
                   </div>
                 ))}

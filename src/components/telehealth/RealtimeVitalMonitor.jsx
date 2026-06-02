@@ -102,7 +102,7 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
   };
 
   const getStatusColor = (field, value) => {
-    if (value === null) return 'bg-gray-100 text-gray-700';
+    if (value === null) return 'bg-slate-100 text-slate-700';
     return isOutOfRange(field, value) ? 'bg-red-100 text-red-800 border-red-300' : 'bg-green-100 text-green-800 border-green-300';
   };
 
@@ -154,7 +154,7 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
             {criticalAlerts.map(({ field, value }) => (
               <div key={field} className="bg-white border border-red-200 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-gray-900 capitalize">
+                  <p className="font-medium text-slate-900 capitalize">
                     {field.replace(/_/g, ' ')}: {value} {VITAL_THRESHOLDS[field].unit}
                   </p>
                   <Badge className="bg-red-100 text-red-800">Out of Range</Badge>
@@ -182,7 +182,7 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
           <div className="flex items-center justify-between">
             <CardTitle>Patient Vitals</CardTitle>
             {lastUpdate && (
-              <span className="text-xs text-gray-600 flex items-center gap-1">
+              <span className="text-xs text-slate-600 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 Last update: {lastUpdate.toLocaleTimeString()}
               </span>
@@ -198,8 +198,8 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
               return (
                 <div key={field} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5 capitalize">
-                      <Icon className="w-4 h-4 text-gray-600" />
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-1.5 capitalize">
+                      <Icon className="w-4 h-4 text-slate-600" />
                       {field.replace(/_/g, ' ')}
                     </label>
                     {value !== null && (
@@ -233,7 +233,7 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
                   </div>
 
                   {value !== null && (
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-slate-600">
                       Normal: {threshold.min}-{threshold.max} {threshold.unit}
                     </div>
                   )}

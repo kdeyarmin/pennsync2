@@ -297,10 +297,10 @@ Return structured JSON.`,
                 id="oasis-assistant-upload"
               />
               <FileText className="w-10 h-10 text-purple-400 mx-auto mb-3" />
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-slate-600 mb-2">
                 {file ? file.name : "No file selected"}
               </p>
-              <p className="text-xs text-gray-400 mb-4">PDF or DOCX format</p>
+              <p className="text-xs text-slate-400 mb-4">PDF or DOCX format</p>
               <Button 
                 variant="outline"
                 onClick={() => document.getElementById('oasis-assistant-upload').click()}
@@ -391,7 +391,7 @@ Return structured JSON.`,
                             </Badge>
                             <span className="text-xs font-semibold">{issue.field}</span>
                           </div>
-                          <p className="text-xs text-gray-700">{issue.issue}</p>
+                          <p className="text-xs text-slate-700">{issue.issue}</p>
                           <p className="text-xs text-green-700 mt-1">💡 {issue.recommendation}</p>
                         </div>
                       ))}
@@ -421,7 +421,7 @@ Return structured JSON.`,
                             </Badge>
                             <span className="text-xs font-semibold">{concern.concern_type}</span>
                           </div>
-                          <p className="text-xs text-gray-700 mb-1">{concern.description}</p>
+                          <p className="text-xs text-slate-700 mb-1">{concern.description}</p>
                           {concern.recommended_actions?.length > 0 && (
                             <ul className="text-xs text-green-700 space-y-0.5">
                               {concern.recommended_actions.map((action, aidx) => (
@@ -452,13 +452,13 @@ Return structured JSON.`,
                               pathway.priority === 'critical' ? 'bg-red-600' :
                               pathway.priority === 'high' ? 'bg-orange-500' :
                               pathway.priority === 'medium' ? 'bg-blue-500' :
-                              'bg-gray-500'
+                              'bg-slate-500'
                             }>
                               {pathway.priority}
                             </Badge>
                             <span className="text-sm font-semibold text-green-900">{pathway.pathway_name}</span>
                           </div>
-                          <p className="text-xs text-gray-700 mb-2">{pathway.reason}</p>
+                          <p className="text-xs text-slate-700 mb-2">{pathway.reason}</p>
                           {pathway.key_interventions?.length > 0 && (
                             <div className="bg-green-50 p-2 rounded border border-green-200">
                               <p className="text-xs font-semibold text-green-800 mb-1">Key Interventions:</p>
@@ -582,15 +582,15 @@ Return structured JSON.`,
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="bg-white p-2 rounded text-center">
                   <p className="text-red-600 font-bold">{aiInsights?.compliance_issues?.length || 0}</p>
-                  <p className="text-gray-600">Compliance Issues</p>
+                  <p className="text-slate-600">Compliance Issues</p>
                 </div>
                 <div className="bg-white p-2 rounded text-center">
                   <p className="text-orange-600 font-bold">{aiInsights?.clinical_concerns?.length || 0}</p>
-                  <p className="text-gray-600">Clinical Concerns</p>
+                  <p className="text-slate-600">Clinical Concerns</p>
                 </div>
                 <div className="bg-white p-2 rounded text-center">
                   <p className="text-green-600 font-bold">{carePathways.length}</p>
-                  <p className="text-gray-600">Care Pathways</p>
+                  <p className="text-slate-600">Care Pathways</p>
                 </div>
               </div>
               <p className="text-xs text-purple-700 mt-2">

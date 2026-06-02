@@ -132,7 +132,7 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
                 rows={2}
               />
               {!topic && patient.primary_diagnosis && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-slate-500 mt-1">
                   Default: {patient.primary_diagnosis}
                 </p>
               )}
@@ -141,7 +141,7 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
             <div>
               <Label>Reading Level</Label>
               <select 
-                className="w-full h-10 px-3 border border-gray-300 rounded-md"
+                className="w-full h-10 px-3 border border-slate-300 rounded-md"
                 value={readingLevel}
                 onChange={(e) => setReadingLevel(e.target.value)}
               >
@@ -156,7 +156,7 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
               <div>
                 <Label>Context from Smart Notes</Label>
                 <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-sm">
-                  <p className="text-gray-700 whitespace-pre-wrap">{additionalContext}</p>
+                  <p className="text-slate-700 whitespace-pre-wrap">{additionalContext}</p>
                   <Button
                     size="sm"
                     variant="ghost"

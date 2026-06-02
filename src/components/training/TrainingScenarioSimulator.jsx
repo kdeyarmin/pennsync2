@@ -247,7 +247,7 @@ Evaluate the response and provide feedback:
       case 'beginner': return 'bg-green-100 text-green-800';
       case 'intermediate': return 'bg-yellow-100 text-yellow-800';
       case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -297,7 +297,7 @@ Evaluate the response and provide feedback:
         <CardContent className="p-12 text-center">
           <RefreshCw className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
           <h3 className="text-xl font-semibold mb-2">Generating Training Scenario</h3>
-          <p className="text-gray-500">Creating a realistic clinical situation...</p>
+          <p className="text-slate-500">Creating a realistic clinical situation...</p>
         </CardContent>
       </Card>
     );
@@ -319,7 +319,7 @@ Evaluate the response and provide feedback:
           }}>
             {finalScore.score}%
           </p>
-          <p className="text-gray-600 mb-6">
+          <p className="text-slate-600 mb-6">
             {finalScore.score >= 80 ? 'Excellent work! You demonstrated strong clinical skills.' :
              finalScore.score >= 60 ? 'Good effort! Review the feedback to strengthen weak areas.' :
              'Keep practicing! Focus on the areas highlighted for improvement.'}
@@ -374,7 +374,7 @@ Evaluate the response and provide feedback:
           <CardTitle className="text-lg">Current Situation</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700 mb-4">{step.situation}</p>
+          <p className="text-slate-700 mb-4">{step.situation}</p>
           
           <Alert className="bg-purple-50 border-purple-200 mb-4">
             <Lightbulb className="w-4 h-4 text-purple-600" />
@@ -463,7 +463,7 @@ Evaluate the response and provide feedback:
               </AlertDescription>
             </Alert>
 
-            <p className="text-center text-gray-600 italic">{feedback.encouragement}</p>
+            <p className="text-center text-slate-600 italic">{feedback.encouragement}</p>
 
             <Button onClick={nextStep} className="w-full">
               {currentStep < scenario.steps.length - 1 ? (

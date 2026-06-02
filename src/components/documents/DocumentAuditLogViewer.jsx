@@ -143,7 +143,7 @@ export default function DocumentAuditLogViewer() {
       reminder: 'bg-orange-100 text-orange-800',
       due_date: 'bg-yellow-100 text-yellow-800',
     };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+    return colors[type] || 'bg-slate-100 text-slate-800';
   };
 
   return (

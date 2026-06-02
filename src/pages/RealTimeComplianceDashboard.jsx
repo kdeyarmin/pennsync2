@@ -505,7 +505,7 @@ export default function RealTimeComplianceDashboard() {
       medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
       low: 'bg-blue-100 text-blue-800 border-blue-300'
     };
-    return colors[severity] || 'bg-gray-100 text-gray-800';
+    return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
   const COLORS_PIE = ['#EF4444', '#F97316', '#EAB308', '#3B82F6', '#10B981'];
@@ -553,7 +553,7 @@ export default function RealTimeComplianceDashboard() {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-12 text-center text-slate-500">
             Loading...
           </CardContent>
         </Card>
@@ -567,11 +567,11 @@ export default function RealTimeComplianceDashboard() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-12 text-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Restricted</h2>
+            <p className="text-slate-600 mb-4">
               Only administrators can access the Real-Time Compliance Dashboard.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               Please contact your administrator if you need access to this feature.
             </p>
           </CardContent>
@@ -590,8 +590,8 @@ export default function RealTimeComplianceDashboard() {
               <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Real-Time Compliance</h1>
-              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Aggregated insights across all features</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Real-Time Compliance</h1>
+              <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Aggregated insights across all features</p>
             </div>
           </div>
           <Button onClick={exportComplianceData} variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
@@ -680,7 +680,7 @@ export default function RealTimeComplianceDashboard() {
       {/* Actionable Insights */}
       {actionableInsights.length > 0 && (
         <div className="mb-4 sm:mb-6 space-y-2 sm:space-y-3">
-          <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 flex items-center gap-2">
             <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 flex-shrink-0" />
             <span className="truncate">Actionable Insights</span>
           </h2>
@@ -701,9 +701,9 @@ export default function RealTimeComplianceDashboard() {
               <AlertDescription>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-semibold text-gray-900 mb-1">{insight.title}</p>
-                    <p className="text-sm text-gray-700 mb-2">{insight.message}</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="font-semibold text-slate-900 mb-1">{insight.title}</p>
+                    <p className="text-sm text-slate-700 mb-2">{insight.message}</p>
+                    <p className="text-xs text-slate-600">
                       <strong>Recommended Action:</strong> {insight.action}
                     </p>
                   </div>
@@ -746,7 +746,7 @@ export default function RealTimeComplianceDashboard() {
 
       {/* Feature-Specific Compliance */}
       <div className="mb-6">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
           <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
           Feature-Specific Compliance
         </h2>
@@ -763,36 +763,36 @@ export default function RealTimeComplianceDashboard() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Total Items:</span>
+                  <span className="text-slate-600">Total Items:</span>
                   <span className="font-semibold">{feature.total}</span>
                 </div>
                 {feature.enhancements > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Enhancements:</span>
+                    <span className="text-slate-600">Enhancements:</span>
                     <span className="font-semibold">{feature.enhancements}</span>
                   </div>
                 )}
                 {feature.uploads > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Uploads:</span>
+                    <span className="text-slate-600">Uploads:</span>
                     <span className="font-semibold">{feature.uploads}</span>
                   </div>
                 )}
                 {feature.avgAccuracy > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Avg Accuracy:</span>
+                    <span className="text-slate-600">Avg Accuracy:</span>
                     <span className="font-semibold">{feature.avgAccuracy}%</span>
                   </div>
                 )}
                 {feature.passed !== undefined && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Passed:</span>
+                    <span className="text-slate-600">Passed:</span>
                     <span className="font-semibold text-green-600">{feature.passed}</span>
                   </div>
                 )}
                 {feature.flagged !== undefined && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Flagged:</span>
+                    <span className="text-slate-600">Flagged:</span>
                     <span className="font-semibold text-red-600">{feature.flagged}</span>
                   </div>
                 )}
@@ -827,21 +827,21 @@ export default function RealTimeComplianceDashboard() {
           {displayedIssues.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-2" />
-              <p className="text-gray-600">No compliance issues detected</p>
+              <p className="text-slate-600">No compliance issues detected</p>
             </div>
           ) : (
             <div className="space-y-3">
               {displayedIssues.slice(0, 10).map((issue, idx) => (
-                <div key={idx} className="p-4 border rounded-lg hover:bg-gray-50">
+                <div key={idx} className="p-4 border rounded-lg hover:bg-slate-50">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h4 className="font-semibold text-gray-900">{issue.name}</h4>
+                      <h4 className="font-semibold text-slate-900">{issue.name}</h4>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge className={getSeverityColor(issue.severity)}>
                           {issue.severity}
                         </Badge>
                         <Badge variant="outline" className="text-xs">{issue.source}</Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-slate-500">
                           {issue.affectedNurses} nurse{issue.affectedNurses !== 1 ? 's' : ''} affected
                         </span>
                       </div>
@@ -852,9 +852,9 @@ export default function RealTimeComplianceDashboard() {
                   </div>
                   
                   {issue.examples.length > 0 && (
-                    <div className="bg-gray-50 p-2 rounded mt-2">
-                      <p className="text-xs font-medium text-gray-700 mb-1">Example Issues:</p>
-                      <ul className="text-xs text-gray-600 space-y-0.5">
+                    <div className="bg-slate-50 p-2 rounded mt-2">
+                      <p className="text-xs font-medium text-slate-700 mb-1">Example Issues:</p>
+                      <ul className="text-xs text-slate-600 space-y-0.5">
                         {issue.examples.map((ex, eIdx) => (
                           <li key={eIdx}>• {ex}</li>
                         ))}
@@ -895,15 +895,15 @@ export default function RealTimeComplianceDashboard() {
         </CardHeader>
         <CardContent className="p-3 sm:p-6">
           {displayedNurses.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No performance data available</p>
+            <p className="text-center text-slate-500 py-8">No performance data available</p>
           ) : (
             <div className="space-y-3">
               {displayedNurses.map((nurse, idx) => (
                 <div key={idx} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="font-semibold text-gray-900">{nurse.name}</p>
-                      <p className="text-sm text-gray-500">{nurse.email}</p>
+                      <p className="font-semibold text-slate-900">{nurse.name}</p>
+                      <p className="text-sm text-slate-500">{nurse.email}</p>
                     </div>
                     <Badge className={`text-lg ${
                       nurse.totalScore >= 85 ? 'bg-green-600' :
@@ -920,21 +920,21 @@ export default function RealTimeComplianceDashboard() {
                       <p className={`text-lg sm:text-xl font-bold ${getScoreColor(nurse.noteAvgScore)}`}>
                         {nurse.noteAvgScore || '--'}
                       </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">{nurse.noteCount} checks</p>
+                      <p className="text-[10px] sm:text-xs text-slate-500">{nurse.noteCount} checks</p>
                     </div>
                     <div className="bg-blue-50 p-2 rounded text-center">
                       <p className="text-[10px] sm:text-xs text-blue-600 mb-1">OASIS</p>
                       <p className={`text-lg sm:text-xl font-bold ${getScoreColor(nurse.oasisAvgScore)}`}>
                         {nurse.oasisAvgScore || '--'}
                       </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">{nurse.oasisCount} uploads</p>
+                      <p className="text-[10px] sm:text-xs text-slate-500">{nurse.oasisCount} uploads</p>
                     </div>
                     <div className="bg-green-50 p-2 rounded text-center">
                       <p className="text-[10px] sm:text-xs text-green-600 mb-1">Audits</p>
                       <p className={`text-lg sm:text-xl font-bold ${getScoreColor(nurse.auditAvgScore)}`}>
                         {nurse.auditAvgScore || '--'}
                       </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">{nurse.auditCount} audits</p>
+                      <p className="text-[10px] sm:text-xs text-slate-500">{nurse.auditCount} audits</p>
                     </div>
                   </div>
 
@@ -1047,7 +1047,7 @@ export default function RealTimeComplianceDashboard() {
                   <Brain className="w-4 h-4 text-purple-600" />
                   <span className="font-medium text-sm">Smart Note Documentation Training</span>
                 </div>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-slate-600">
                   Learn Medicare compliance requirements and best practices
                 </p>
               </div>
@@ -1059,7 +1059,7 @@ export default function RealTimeComplianceDashboard() {
                   <ClipboardList className="w-4 h-4 text-blue-600" />
                   <span className="font-medium text-sm">OASIS Accuracy Training</span>
                 </div>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-slate-600">
                   Master M-item scoring and PDGM optimization
                 </p>
               </div>
@@ -1071,7 +1071,7 @@ export default function RealTimeComplianceDashboard() {
                   <Shield className="w-4 h-4 text-green-600" />
                   <span className="font-medium text-sm">Compliance Fundamentals</span>
                 </div>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-slate-600">
                   CMS regulations, CoPs, and documentation standards
                 </p>
               </div>
@@ -1083,7 +1083,7 @@ export default function RealTimeComplianceDashboard() {
                   <Target className="w-4 h-4 text-indigo-600" />
                   <span className="font-medium text-sm">Clinical Pathway Training</span>
                 </div>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-slate-600">
                   Optimize care plans and documentation for better outcomes
                 </p>
               </div>

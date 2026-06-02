@@ -79,7 +79,7 @@ export default function TeamNotes({ visitId, patientId }) {
                       <Badge variant="outline" className="text-xs">
                         {note.created_by}
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-slate-500">
                         {format(new Date(note.created_date), 'MMM d, h:mm a')}
                       </span>
                     </div>
@@ -87,11 +87,11 @@ export default function TeamNotes({ visitId, patientId }) {
                       <Flag className="w-4 h-4 text-red-600" />
                     )}
                   </div>
-                  <p className="text-sm text-gray-700">{note.note}</p>
+                  <p className="text-sm text-slate-700">{note.note}</p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-slate-500 text-center py-4">
                 No team notes yet. Add one to communicate with other nurses.
               </p>
             )}
@@ -114,7 +114,7 @@ export default function TeamNotes({ visitId, patientId }) {
             </Button>
           </div>
 
-          <p className="text-xs text-gray-600 italic">
+          <p className="text-xs text-slate-600 italic">
             💡 Team notes are visible to all nurses caring for this patient. Use for continuity tips, safety alerts, or patient preferences.
           </p>
         </CardContent>

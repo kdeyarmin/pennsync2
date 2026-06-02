@@ -214,7 +214,7 @@ For each failure, provide:
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -247,7 +247,7 @@ For each failure, provide:
         {!isRunning && !qaResults && (
           <div className="text-center py-8">
             <Shield className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
-            <p className="text-gray-600">Click "Run QA Checks" to validate documentation quality</p>
+            <p className="text-slate-600">Click "Run QA Checks" to validate documentation quality</p>
           </div>
         )}
 
@@ -258,25 +258,25 @@ For each failure, provide:
               <AlertDescription>
                 <div className="grid grid-cols-4 gap-3 text-center">
                   <div>
-                    <p className="text-xs text-gray-600">QA Score</p>
+                    <p className="text-xs text-slate-600">QA Score</p>
                     <p className={`text-3xl font-bold ${qaResults.overall_qa_score >= 85 ? 'text-green-700' : qaResults.overall_qa_score >= 70 ? 'text-yellow-700' : 'text-red-700'}`}>
                       {qaResults.overall_qa_score}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Total Checks</p>
-                    <p className="text-2xl font-bold text-gray-900">{qaResults.total_checks_performed}</p>
+                    <p className="text-xs text-slate-600">Total Checks</p>
+                    <p className="text-2xl font-bold text-slate-900">{qaResults.total_checks_performed}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Passed</p>
+                    <p className="text-xs text-slate-600">Passed</p>
                     <p className="text-2xl font-bold text-green-700">{qaResults.checks_passed}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Failed</p>
+                    <p className="text-xs text-slate-600">Failed</p>
                     <p className="text-2xl font-bold text-red-700">{qaResults.checks_failed}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-700 mt-3 text-center">{qaResults.qa_summary}</p>
+                <p className="text-sm text-slate-700 mt-3 text-center">{qaResults.qa_summary}</p>
               </AlertDescription>
             </Alert>
 
@@ -362,14 +362,14 @@ For each failure, provide:
                                   </Badge>
                                 </div>
                                 {error.affected_items?.length > 0 && (
-                                  <p className="text-xs text-gray-600">
+                                  <p className="text-xs text-slate-600">
                                     Affects: {error.affected_items.join(', ')}
                                   </p>
                                 )}
                               </div>
                             </div>
 
-                            <p className="text-sm text-gray-800 mb-3">{error.description}</p>
+                            <p className="text-sm text-slate-800 mb-3">{error.description}</p>
 
                             <div className="bg-yellow-50 p-3 rounded mb-3 border border-yellow-200">
                               <p className="font-semibold text-xs text-yellow-900 mb-1">⚠️ Why It Matters</p>
@@ -477,7 +477,7 @@ For each failure, provide:
                             <Badge className="bg-purple-600 text-white">STAR Impact</Badge>
                           </div>
 
-                          <p className="text-sm text-gray-800 mb-3">{gap.what_is_missing}</p>
+                          <p className="text-sm text-slate-800 mb-3">{gap.what_is_missing}</p>
 
                           <div className="bg-orange-50 p-2 rounded mb-3 text-xs border border-orange-200">
                             <p className="font-semibold text-orange-900 mb-1">📊 STAR Rating Impact:</p>
@@ -572,7 +572,7 @@ For each failure, provide:
                               </Badge>
                             </div>
 
-                            <p className="text-sm text-gray-800 mb-3">{issue.issue_description}</p>
+                            <p className="text-sm text-slate-800 mb-3">{issue.issue_description}</p>
 
                             <div className="bg-red-50 p-2 rounded mb-3 text-xs border border-red-200">
                               <p className="font-semibold text-red-900 mb-1">📜 Regulatory Requirement:</p>
@@ -646,8 +646,8 @@ For each failure, provide:
                             </div>
 
                             <div className="bg-white p-2 rounded border">
-                              <p className="font-semibold text-xs text-gray-700 mb-1">Remediation Steps:</p>
-                              <ol className="text-xs text-gray-700 space-y-1">
+                              <p className="font-semibold text-xs text-slate-700 mb-1">Remediation Steps:</p>
+                              <ol className="text-xs text-slate-700 space-y-1">
                                 {issue.remediation_steps?.map((step, sidx) => (
                                   <li key={sidx}>{sidx + 1}. {step}</li>
                                 ))}
@@ -675,7 +675,7 @@ For each failure, provide:
                       {qaResults.quality_rating_risks.map((risk, idx) => (
                         <div key={idx} className="bg-white rounded-lg border p-3">
                           <h4 className="font-semibold text-yellow-900 mb-2">{risk.risk_area}</h4>
-                          <p className="text-sm text-gray-800 mb-2">{risk.description}</p>
+                          <p className="text-sm text-slate-800 mb-2">{risk.description}</p>
                           <div className="bg-orange-50 p-2 rounded mb-2 text-xs border border-orange-200">
                             <p className="font-semibold text-orange-900 mb-1">⭐ STAR Rating Impact:</p>
                             <p className="text-orange-800">{risk.star_rating_impact}</p>

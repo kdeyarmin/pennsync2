@@ -220,7 +220,7 @@ For each issue found, provide:
       case 'high': return 'border-orange-500 bg-orange-50';
       case 'medium': return 'border-yellow-500 bg-yellow-50';
       case 'low': return 'border-blue-500 bg-blue-50';
-      default: return 'border-gray-300 bg-gray-50';
+      default: return 'border-slate-300 bg-slate-50';
     }
   };
 
@@ -231,7 +231,7 @@ For each issue found, provide:
       medium: 'bg-yellow-600 text-white',
       low: 'bg-blue-600 text-white'
     };
-    return colors[risk] || 'bg-gray-600 text-white';
+    return colors[risk] || 'bg-slate-600 text-white';
   };
 
   return (
@@ -263,7 +263,7 @@ For each issue found, provide:
         {!isValidating && !validationResults && (
           <div className="text-center py-8">
             <Shield className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-            <p className="text-sm text-gray-600">Click "Validate Data" to check for inconsistencies and optimization opportunities</p>
+            <p className="text-sm text-slate-600">Click "Validate Data" to check for inconsistencies and optimization opportunities</p>
           </div>
         )}
 
@@ -319,11 +319,11 @@ For each issue found, provide:
 
                         <div className="space-y-2 mb-3">
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-600">Current:</span>
+                            <span className="text-slate-600">Current:</span>
                             <span className="font-medium line-through text-red-600">{issue.current_value}</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-600">Suggested:</span>
+                            <span className="text-slate-600">Suggested:</span>
                             <span className="font-medium text-green-600">{issue.suggested_value}</span>
                             <Badge variant="outline" className="text-xs">
                               {issue.confidence}% confidence
@@ -332,8 +332,8 @@ For each issue found, provide:
                         </div>
 
                         <div className="bg-white/80 rounded p-2 mb-3 text-sm">
-                          <p className="font-medium text-xs text-gray-600 mb-1">Clinical Evidence:</p>
-                          <p className="text-gray-700">{issue.clinical_evidence}</p>
+                          <p className="font-medium text-xs text-slate-600 mb-1">Clinical Evidence:</p>
+                          <p className="text-slate-700">{issue.clinical_evidence}</p>
                         </div>
 
                         {issue.cms_regulation && (
@@ -455,16 +455,16 @@ For each issue found, provide:
 
                       <div className="space-y-2 mb-3">
                         <div className="text-sm">
-                          <span className="text-gray-600">Current: </span>
+                          <span className="text-slate-600">Current: </span>
                           <span className="font-medium">{opt.current_value}</span>
-                          <ArrowRight className="w-4 h-4 inline mx-2 text-gray-400" />
+                          <ArrowRight className="w-4 h-4 inline mx-2 text-slate-400" />
                           <span className="font-medium text-green-600">{opt.suggested_value}</span>
                         </div>
                       </div>
 
                       <div className="bg-white rounded p-2 mb-2 text-sm">
-                        <p className="font-medium text-xs text-gray-600 mb-1">Justification:</p>
-                        <p className="text-gray-700">{opt.justification}</p>
+                        <p className="font-medium text-xs text-slate-600 mb-1">Justification:</p>
+                        <p className="text-slate-700">{opt.justification}</p>
                       </div>
 
                       <div className="bg-blue-50 rounded p-2 mb-2 text-sm">

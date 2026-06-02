@@ -234,7 +234,7 @@ Please review this report in the Incident Reporting system.
           >
             Cancel
           </Button>
-          <p className="text-sm text-gray-600 mt-4">
+          <p className="text-sm text-slate-600 mt-4">
             Fields preceded with "*" are required.
           </p>
         </CardHeader>
@@ -336,7 +336,7 @@ Please review this report in the Incident Reporting system.
             <div className="space-y-2">
               <Label>
                 Name and Frequency of Medication(s):<br />
-                <span className="text-xs text-gray-600">(maximum 500 characters)</span>
+                <span className="text-xs text-slate-600">(maximum 500 characters)</span>
               </Label>
               <Textarea
                 value={formData.medications}
@@ -345,14 +345,14 @@ Please review this report in the Incident Reporting system.
                 rows={4}
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 text-right">{formData.medications.length}/500</p>
+              <p className="text-xs text-slate-500 text-right">{formData.medications.length}/500</p>
             </div>
 
             {/* Diagnosis */}
             <div className="space-y-2">
               <Label>
                 Diagnosis of Resident/Patient:<br />
-                <span className="text-xs text-gray-600">(maximum 250 characters)</span>
+                <span className="text-xs text-slate-600">(maximum 250 characters)</span>
               </Label>
               <Textarea
                 value={formData.diagnosis}
@@ -361,14 +361,14 @@ Please review this report in the Incident Reporting system.
                 rows={4}
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 text-right">{formData.diagnosis.length}/250</p>
+              <p className="text-xs text-slate-500 text-right">{formData.diagnosis.length}/250</p>
             </div>
 
             {/* Factual Description */}
             <div className="space-y-2">
               <Label className="text-red-600">
                 *Factual Description:<br />
-                <span className="text-xs text-gray-600">(maximum 3500 characters)</span>
+                <span className="text-xs text-slate-600">(maximum 3500 characters)</span>
               </Label>
               <Textarea
                 value={formData.factual_description}
@@ -378,14 +378,14 @@ Please review this report in the Incident Reporting system.
                 required
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 text-right">{formData.factual_description.length}/3500</p>
+              <p className="text-xs text-slate-500 text-right">{formData.factual_description.length}/3500</p>
             </div>
 
             {/* Follow-up Action */}
             <div className="space-y-2">
               <Label className="text-red-600">
                 *Description of Follow-up Action:<br />
-                <span className="text-xs text-gray-600">(maximum 3500 characters)</span>
+                <span className="text-xs text-slate-600">(maximum 3500 characters)</span>
               </Label>
               <Textarea
                 value={formData.follow_up_action}
@@ -395,7 +395,7 @@ Please review this report in the Incident Reporting system.
                 required
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 text-right">{formData.follow_up_action.length}/3500</p>
+              <p className="text-xs text-slate-500 text-right">{formData.follow_up_action.length}/3500</p>
             </div>
 
             {/* Submitted By */}
@@ -420,7 +420,7 @@ Please review this report in the Incident Reporting system.
 
             {/* Note */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-slate-900">
                 Note: An event will not be considered submitted until you receive a confirmation that includes an event number.
               </p>
             </div>

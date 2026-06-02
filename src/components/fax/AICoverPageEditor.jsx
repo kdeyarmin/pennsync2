@@ -119,9 +119,9 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
         {formData.patient_info?.name && (
           <div className="p-2 bg-white rounded border border-purple-200">
             <p className="text-xs font-semibold text-purple-900 mb-1">Patient Info</p>
-            <p className="text-xs text-gray-700">{formData.patient_info.name}</p>
-            {formData.patient_info.dob && <p className="text-xs text-gray-600">DOB: {formData.patient_info.dob}</p>}
-            {formData.patient_info.mrn && <p className="text-xs text-gray-600">MRN: {formData.patient_info.mrn}</p>}
+            <p className="text-xs text-slate-700">{formData.patient_info.name}</p>
+            {formData.patient_info.dob && <p className="text-xs text-slate-600">DOB: {formData.patient_info.dob}</p>}
+            {formData.patient_info.mrn && <p className="text-xs text-slate-600">MRN: {formData.patient_info.mrn}</p>}
           </div>
         )}
       </CardContent>

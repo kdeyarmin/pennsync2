@@ -230,12 +230,12 @@ export default function OfflineSyncManager() {
 
         {/* Pending Drafts */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-600" />
+              <FileText className="w-4 h-4 text-slate-600" />
               <div>
                 <p className="text-sm font-semibold">Pending Drafts</p>
-                <p className="text-xs text-gray-600">Waiting to sync</p>
+                <p className="text-xs text-slate-600">Waiting to sync</p>
               </div>
             </div>
             <Badge variant="outline" className={pendingDrafts.length > 0 ? 'bg-yellow-100 border-yellow-300' : ''}>
@@ -249,8 +249,8 @@ export default function OfflineSyncManager() {
               {pendingDrafts.map((draft, idx) => (
                 <div key={idx} className="p-2 bg-white border rounded text-xs">
                   <p className="font-medium">{draft.patient_name}</p>
-                  <p className="text-gray-600">{draft.visit_date} - {draft.visit_type}</p>
-                  <p className="text-gray-500">{draft.nurse_notes?.substring(0, 60)}...</p>
+                  <p className="text-slate-600">{draft.visit_date} - {draft.visit_type}</p>
+                  <p className="text-slate-500">{draft.nurse_notes?.substring(0, 60)}...</p>
                 </div>
               ))}
             </div>
@@ -263,7 +263,7 @@ export default function OfflineSyncManager() {
             {isSyncing && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">Syncing...</span>
+                  <span className="text-slate-600">Syncing...</span>
                   <span className="font-semibold">{Math.round(syncProgress)}%</span>
                 </div>
                 <Progress value={syncProgress} className="h-2" />
@@ -340,7 +340,7 @@ export default function OfflineSyncManager() {
                             {error.type === 'visit' ? 'Visit' : 'Update'} #{error.itemId.substring(0, 12)}...
                           </p>
                           <p className="text-xs text-red-700 mt-1">{error.error}</p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-slate-500 mt-1">
                             {new Date(error.timestamp).toLocaleString()}
                           </p>
                         </div>
@@ -393,7 +393,7 @@ export default function OfflineSyncManager() {
                   {conflicts.map((conflict) => (
                     <div key={conflict.id} className="p-3 bg-white border border-yellow-200 rounded-lg">
                       <p className="text-xs font-semibold text-yellow-900">Conflict Detected</p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-slate-600 mt-1">
                         {new Date(conflict.timestamp).toLocaleString()}
                       </p>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
@@ -415,12 +415,12 @@ export default function OfflineSyncManager() {
         </Tabs>
 
         {/* Background Sync Toggle */}
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg border flex items-center justify-between">
+        <div className="mt-4 p-3 bg-slate-50 rounded-lg border flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold">Background Sync</p>
-            <p className="text-xs text-gray-600">Auto-sync every 30 seconds when online</p>
+            <p className="text-xs text-slate-600">Auto-sync every 30 seconds when online</p>
           </div>
-          <Badge className={backgroundSyncEnabled ? 'bg-green-600' : 'bg-gray-400'}>
+          <Badge className={backgroundSyncEnabled ? 'bg-green-600' : 'bg-slate-400'}>
             {backgroundSyncEnabled ? 'Enabled' : 'Disabled'}
           </Badge>
         </div>

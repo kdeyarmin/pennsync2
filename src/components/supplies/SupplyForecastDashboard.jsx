@@ -76,7 +76,7 @@ export default function SupplyForecastDashboard() {
             />
             <div className="max-h-96 overflow-y-auto space-y-2">
               {filteredPatients.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No patients found</p>
+                <p className="text-sm text-slate-500 text-center py-4">No patients found</p>
               ) : (
                 filteredPatients.map((p) => (
                   <button
@@ -85,17 +85,17 @@ export default function SupplyForecastDashboard() {
                     className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                       selectedPatientId === p.id
                         ? "border-blue-600 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-300 bg-white"
+                        : "border-slate-200 hover:border-blue-300 bg-white"
                     }`}
                   >
-                    <p className="font-semibold text-sm text-gray-900">
+                    <p className="font-semibold text-sm text-slate-900">
                       {p.first_name} {p.last_name}
                     </p>
-                    <p className="text-xs text-gray-600 mt-0.5">
+                    <p className="text-xs text-slate-600 mt-0.5">
                       {p.medical_record_number && `MRN: ${p.medical_record_number}`}
                     </p>
                     {p.primary_diagnosis && (
-                      <p className="text-xs text-gray-500 mt-1">{p.primary_diagnosis}</p>
+                      <p className="text-xs text-slate-500 mt-1">{p.primary_diagnosis}</p>
                     )}
                   </button>
                 ))
@@ -109,11 +109,11 @@ export default function SupplyForecastDashboard() {
           <>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm font-medium text-gray-600">Patient</p>
-                <p className="text-lg font-bold text-gray-900 mt-1">
+                <p className="text-sm font-medium text-slate-600">Patient</p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
                   {selectedPatient.first_name} {selectedPatient.last_name}
                 </p>
-                <p className="text-xs text-gray-500 mt-2">{selectedPatient.primary_diagnosis}</p>
+                <p className="text-xs text-slate-500 mt-2">{selectedPatient.primary_diagnosis}</p>
               </CardContent>
             </Card>
 
@@ -121,8 +121,8 @@ export default function SupplyForecastDashboard() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Urgent Reorders</p>
-                    <p className={`text-2xl font-bold mt-1 ${urgentPredictions.length > 0 ? "text-red-600" : "text-gray-900"}`}>
+                    <p className="text-sm font-medium text-slate-600">Urgent Reorders</p>
+                    <p className={`text-2xl font-bold mt-1 ${urgentPredictions.length > 0 ? "text-red-600" : "text-slate-900"}`}>
                       {urgentPredictions.length}
                     </p>
                   </div>
@@ -168,8 +168,8 @@ export default function SupplyForecastDashboard() {
             <TabsContent value="urgent" className="space-y-3">
               {urgentPredictions.length === 0 ? (
                 <Card>
-                  <CardContent className="p-8 text-center text-gray-500">
-                    <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <CardContent className="p-8 text-center text-slate-500">
+                    <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p>No urgent reorders at this time</p>
                   </CardContent>
                 </Card>
@@ -183,8 +183,8 @@ export default function SupplyForecastDashboard() {
             <TabsContent value="upcoming" className="space-y-3">
               {upcomingPredictions.length === 0 ? (
                 <Card>
-                  <CardContent className="p-8 text-center text-gray-500">
-                    <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <CardContent className="p-8 text-center text-slate-500">
+                    <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p>No upcoming reorders scheduled</p>
                   </CardContent>
                 </Card>
@@ -198,8 +198,8 @@ export default function SupplyForecastDashboard() {
             <TabsContent value="all" className="space-y-3">
               {predictions.length === 0 ? (
                 <Card>
-                  <CardContent className="p-8 text-center text-gray-500">
-                    <Loader2 className="w-12 h-12 text-gray-300 mx-auto mb-3 animate-spin" />
+                  <CardContent className="p-8 text-center text-slate-500">
+                    <Loader2 className="w-12 h-12 text-slate-300 mx-auto mb-3 animate-spin" />
                     <p>Generate predictions to see forecasts</p>
                   </CardContent>
                 </Card>
@@ -234,16 +234,16 @@ function PredictionCard({ prediction, urgent }) {
     ) : prediction.usage_trend === "decreasing" ? (
       <TrendingDown className="w-4 h-4 text-green-600" />
     ) : (
-      <TrendingUp className="w-4 h-4 text-gray-400" />
+      <TrendingUp className="w-4 h-4 text-slate-400" />
     );
 
   return (
-    <Card className={urgent ? "border-red-300 bg-red-50" : "border-gray-200"}>
+    <Card className={urgent ? "border-red-300 bg-red-50" : "border-slate-200"}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900">{prediction.supply_name}</h4>
-            <p className="text-sm text-gray-600 mt-1">
+            <h4 className="font-semibold text-slate-900">{prediction.supply_name}</h4>
+            <p className="text-sm text-slate-600 mt-1">
               Monthly Usage: {prediction.predicted_monthly_usage} units (trend: {prediction.usage_trend})
             </p>
           </div>
@@ -257,22 +257,22 @@ function PredictionCard({ prediction, urgent }) {
 
         <div className="grid md:grid-cols-4 gap-3 mb-3 p-3 bg-white rounded-lg">
           <div>
-            <p className="text-xs text-gray-500">Current Stock</p>
-            <p className="text-lg font-bold text-gray-900">{prediction.current_inventory}</p>
+            <p className="text-xs text-slate-500">Current Stock</p>
+            <p className="text-lg font-bold text-slate-900">{prediction.current_inventory}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Recommended Order</p>
+            <p className="text-xs text-slate-500">Recommended Order</p>
             <p className="text-lg font-bold text-blue-600">{prediction.recommended_quantity}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Days Until Reorder</p>
+            <p className="text-xs text-slate-500">Days Until Reorder</p>
             <p className={`text-lg font-bold ${daysColor}`}>
               {prediction.estimated_days_until_reorder_needed} days
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Reorder Date</p>
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-xs text-slate-500">Reorder Date</p>
+            <p className="text-lg font-bold text-slate-900">
               {new Date(prediction.predicted_next_order_date).toLocaleDateString()}
             </p>
           </div>

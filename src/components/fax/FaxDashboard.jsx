@@ -114,8 +114,8 @@ export default function FaxDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Outbound Fax Dashboard</h1>
-        <p className="text-gray-600">Track and monitor all faxes sent from PennSync</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Outbound Fax Dashboard</h1>
+        <p className="text-slate-600">Track and monitor all faxes sent from PennSync</p>
       </div>
 
       {/* Stats Cards */}
@@ -123,15 +123,15 @@ export default function FaxDashboard() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Total Sent</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+              <p className="text-slate-500 text-sm mb-1">Total Sent</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Delivered</p>
+              <p className="text-slate-500 text-sm mb-1">Delivered</p>
               <p className="text-3xl font-bold text-green-600">{stats.delivered}</p>
             </div>
           </CardContent>
@@ -139,7 +139,7 @@ export default function FaxDashboard() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Pending</p>
+              <p className="text-slate-500 text-sm mb-1">Pending</p>
               <p className="text-3xl font-bold text-blue-600">{stats.pending}</p>
             </div>
           </CardContent>
@@ -147,7 +147,7 @@ export default function FaxDashboard() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-gray-500 text-sm mb-1">Failed</p>
+              <p className="text-slate-500 text-sm mb-1">Failed</p>
               <p className="text-3xl font-bold text-red-600">{stats.failed}</p>
             </div>
           </CardContent>
@@ -163,7 +163,7 @@ export default function FaxDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search by number, name, or document..."
                 value={searchTerm}
@@ -214,7 +214,7 @@ export default function FaxDashboard() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <p className="text-gray-500">Loading faxes...</p>
+              <p className="text-slate-500">Loading faxes...</p>
             </div>
           ) : error ? (
             <div className="flex justify-center py-8">
@@ -222,7 +222,7 @@ export default function FaxDashboard() {
             </div>
           ) : filteredFaxes.length === 0 ? (
             <div className="flex justify-center py-8">
-              <p className="text-gray-500">No faxes found</p>
+              <p className="text-slate-500">No faxes found</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -232,17 +232,17 @@ export default function FaxDashboard() {
                 const isExpanded = expandedFaxId === fax.id;
 
                 return (
-                  <div key={fax.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <div key={fax.id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                     {/* Main Row */}
                     <button
                       onClick={() => setExpandedFaxId(isExpanded ? null : fax.id)}
-                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors"
                     >
                       <StatusIcon className={`h-5 w-5 flex-shrink-0 ${statusConfig.color.split(' ')[1]}`} />
 
                       <div className="flex-1 text-left min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-gray-900 truncate">
+                          <p className="font-medium text-slate-900 truncate">
                             {fax.to_name || 'Unknown Recipient'}
                           </p>
                           <Badge className={statusConfig.color}>
@@ -254,17 +254,17 @@ export default function FaxDashboard() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">{fax.to_number}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-sm text-slate-500">{fax.to_number}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
                           {fax.document_name} • {fax.pages || '?'} pages
                         </p>
                       </div>
 
                       <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {new Date(fax.created_date).toLocaleDateString()}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-slate-400">
                           {new Date(fax.created_date).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit'
@@ -272,33 +272,33 @@ export default function FaxDashboard() {
                         </p>
                       </div>
 
-                      <Eye className="h-4 w-4 text-gray-400 ml-2" />
+                      <Eye className="h-4 w-4 text-slate-400 ml-2" />
                     </button>
 
                     {/* Expanded Details */}
                     {isExpanded && (
-                      <div className="border-t border-gray-200 bg-gray-50 px-4 py-4 space-y-4">
+                      <div className="border-t border-slate-200 bg-slate-50 px-4 py-4 space-y-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <p className="text-gray-500 text-xs uppercase mb-1">From</p>
-                            <p className="font-medium text-gray-900">{fax.from_number}</p>
+                            <p className="text-slate-500 text-xs uppercase mb-1">From</p>
+                            <p className="font-medium text-slate-900">{fax.from_number}</p>
                           </div>
                           <div>
-                            <p className="text-gray-500 text-xs uppercase mb-1">To</p>
-                            <p className="font-medium text-gray-900">{fax.to_number}</p>
+                            <p className="text-slate-500 text-xs uppercase mb-1">To</p>
+                            <p className="font-medium text-slate-900">{fax.to_number}</p>
                           </div>
                           <div>
-                            <p className="text-gray-500 text-xs uppercase mb-1">Pages</p>
-                            <p className="font-medium text-gray-900">{fax.pages || 'Pending'}</p>
+                            <p className="text-slate-500 text-xs uppercase mb-1">Pages</p>
+                            <p className="font-medium text-slate-900">{fax.pages || 'Pending'}</p>
                           </div>
                           <div>
-                            <p className="text-gray-500 text-xs uppercase mb-1">Priority</p>
+                            <p className="text-slate-500 text-xs uppercase mb-1">Priority</p>
                             <Badge className={
                               fax.priority === 'urgent'
                                 ? 'bg-red-100 text-red-800'
                                 : fax.priority === 'high'
                                 ? 'bg-orange-100 text-orange-800'
-                                : 'bg-gray-100 text-gray-800'
+                                : 'bg-slate-100 text-slate-800'
                             }>
                               {fax.priority || 'normal'}
                             </Badge>

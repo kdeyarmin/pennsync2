@@ -77,7 +77,7 @@ export default function SmartMedicationReconciliation({ patient }) {
       case 'high': return 'bg-orange-500';
       case 'moderate': return 'bg-yellow-500';
       case 'low': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -93,8 +93,8 @@ export default function SmartMedicationReconciliation({ patient }) {
   if (!patient) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          <Pill className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+        <CardContent className="p-8 text-center text-slate-500">
+          <Pill className="w-12 h-12 mx-auto mb-3 text-slate-300" />
           <p>Select a patient to view medication reconciliation</p>
         </CardContent>
       </Card>
@@ -112,7 +112,7 @@ export default function SmartMedicationReconciliation({ patient }) {
               </div>
               <div>
                 <CardTitle className="text-lg">Smart Medication Reconciliation</CardTitle>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   AI-powered analysis with drug interactions & guidelines
                 </p>
               </div>
@@ -178,12 +178,12 @@ export default function SmartMedicationReconciliation({ patient }) {
           </div>
 
           {!analysisResults && !analyzing && (
-            <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-              <Pill className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+              <Pill className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+              <h3 className="text-lg font-semibold text-slate-700 mb-2">
                 Ready to Analyze
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-slate-500 mb-4">
                 Click "Analyze Medications" to check for drug interactions and guideline compliance
               </p>
             </div>
@@ -229,14 +229,14 @@ export default function SmartMedicationReconciliation({ patient }) {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold text-gray-900">
+                              <h4 className="font-semibold text-slate-900">
                                 {interaction.drug1} + {interaction.drug2}
                               </h4>
                               <Badge className={getSeverityColor(interaction.severity)}>
                                 {interaction.severity.toUpperCase()}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-700 mb-2">{interaction.description}</p>
+                            <p className="text-sm text-slate-700 mb-2">{interaction.description}</p>
                             <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mt-2">
                               <p className="text-xs font-semibold text-amber-900 mb-1">Clinical Action:</p>
                               <p className="text-sm text-amber-800">{interaction.recommendation}</p>
@@ -264,8 +264,8 @@ export default function SmartMedicationReconciliation({ patient }) {
                             <FileText className="w-5 h-5 text-blue-600" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900 mb-1">{issue.medication}</h4>
-                            <p className="text-sm text-gray-700 mb-2">{issue.issue}</p>
+                            <h4 className="font-semibold text-slate-900 mb-1">{issue.medication}</h4>
+                            <p className="text-sm text-slate-700 mb-2">{issue.issue}</p>
                             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
                               <p className="text-xs font-semibold text-blue-900 mb-1">Guideline:</p>
                               <p className="text-sm text-blue-800">{issue.guideline}</p>
@@ -294,12 +294,12 @@ export default function SmartMedicationReconciliation({ patient }) {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold text-gray-900">{risk.medication}</h4>
+                              <h4 className="font-semibold text-slate-900">{risk.medication}</h4>
                               <Badge className={getSeverityColor(risk.severity)}>
                                 {risk.risk_type}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-700 mb-2">{risk.description}</p>
+                            <p className="text-sm text-slate-700 mb-2">{risk.description}</p>
                             <div className="bg-purple-50 border border-purple-200 rounded-md p-3">
                               <p className="text-xs font-semibold text-purple-900 mb-1">Recommendation:</p>
                               <p className="text-sm text-purple-800">{risk.recommendation}</p>
@@ -315,7 +315,7 @@ export default function SmartMedicationReconciliation({ patient }) {
               <TabsContent value="recommendations" className="space-y-3 mt-4">
                 <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
                   <CardContent className="p-6">
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-indigo-600" />
                       Clinical Actions Required
                     </h3>
@@ -326,8 +326,8 @@ export default function SmartMedicationReconciliation({ patient }) {
                             {idx + 1}
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 mb-1">{action.title}</p>
-                            <p className="text-sm text-gray-600">{action.description}</p>
+                            <p className="text-sm font-medium text-slate-900 mb-1">{action.title}</p>
+                            <p className="text-sm text-slate-600">{action.description}</p>
                             {action.priority === 'urgent' && (
                               <Badge className="bg-red-500 mt-2">URGENT - Contact Physician</Badge>
                             )}
@@ -340,9 +340,9 @@ export default function SmartMedicationReconciliation({ patient }) {
 
                 <Card>
                   <CardContent className="p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">Documentation Notes</h4>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <p className="text-sm text-gray-700 whitespace-pre-line">
+                    <h4 className="font-semibold text-slate-900 mb-3">Documentation Notes</h4>
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <p className="text-sm text-slate-700 whitespace-pre-line">
                         {analysisResults.documentation_summary}
                       </p>
                     </div>

@@ -4,8 +4,8 @@ export default function ClinicalLibrary() {
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-4">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Clinical Phrase Library</h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Clinical Phrase Library</h1>
+        <p className="text-sm sm:text-base text-slate-600 mt-2">
           Create and manage quick phrases that expand into full Medicare-compliant documentation.
           Perfect for common assessments, education, and interventions.
         </p>
@@ -22,13 +22,13 @@ export default function ClinicalLibrary() {
           <div className="space-y-2 text-xs sm:text-sm">
             <div className="bg-white rounded p-2 sm:p-3">
               <code className="text-blue-600 font-mono text-xs sm:text-sm">diabetic education</code>
-              <p className="text-gray-600 mt-1 text-[10px] sm:text-xs">
+              <p className="text-slate-600 mt-1 text-[10px] sm:text-xs">
                 Expands to full diabetic education documentation
               </p>
             </div>
             <div className="bg-white rounded p-2 sm:p-3">
               <code className="text-blue-600 font-mono text-xs sm:text-sm">fall risk assessment</code>
-              <p className="text-gray-600 mt-1 text-[10px] sm:text-xs">
+              <p className="text-slate-600 mt-1 text-[10px] sm:text-xs">
                 Generates complete fall risk evaluation
               </p>
             </div>
@@ -43,13 +43,13 @@ export default function ClinicalLibrary() {
           <div className="space-y-2 text-xs sm:text-sm">
             <div className="bg-white rounded p-2 sm:p-3">
               <code className="text-purple-600 font-mono text-xs sm:text-sm">wound care provided</code>
-              <p className="text-gray-600 mt-1 text-[10px] sm:text-xs">
+              <p className="text-slate-600 mt-1 text-[10px] sm:text-xs">
                 Uses patient's wound data to generate specific care notes
               </p>
             </div>
             <div className="bg-white rounded p-2 sm:p-3">
               <code className="text-purple-600 font-mono text-xs sm:text-sm">medication review</code>
-              <p className="text-gray-600 mt-1 text-[10px] sm:text-xs">
+              <p className="text-slate-600 mt-1 text-[10px] sm:text-xs">
                 Includes patient's current medications in documentation
               </p>
             </div>

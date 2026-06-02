@@ -353,13 +353,13 @@ Return JSON:
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500">Projected Revenue</p>
-                  <p className="text-xl font-bold text-gray-900">
+                  <p className="text-xs text-slate-500">Projected Revenue</p>
+                  <p className="text-xl font-bold text-slate-900">
                     {formatCurrency(predictions.revenue_forecast?.total_projected || 0)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">Optimization Potential</p>
+                  <p className="text-xs text-slate-500">Optimization Potential</p>
                   <p className="text-lg font-bold text-green-600 flex items-center gap-1">
                     <TrendingUp className="w-4 h-4" />
                     +{formatCurrency(predictions.revenue_forecast?.improvement_potential || 0)}
@@ -422,7 +422,7 @@ Return JSON:
         {isAnalyzing ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-4" />
-            <p className="text-sm text-gray-600">Analyzing patient data and generating predictions...</p>
+            <p className="text-sm text-slate-600">Analyzing patient data and generating predictions...</p>
           </div>
         ) : error ? (
           <Alert className="bg-red-50 border-red-200">
@@ -500,9 +500,9 @@ Return JSON:
                 <h4 className="text-sm font-semibold mb-3">Quarterly Projections</h4>
                 <div className="grid grid-cols-4 gap-3">
                   {predictions.quarterly_projections?.map((q, idx) => (
-                    <div key={idx} className="bg-gray-50 p-3 rounded-lg border text-center">
-                      <p className="text-xs text-gray-500 mb-1">{q.quarter}</p>
-                      <p className="text-lg font-bold text-gray-900">{formatCurrency(q.revenue)}</p>
+                    <div key={idx} className="bg-slate-50 p-3 rounded-lg border text-center">
+                      <p className="text-xs text-slate-500 mb-1">{q.quarter}</p>
+                      <p className="text-lg font-bold text-slate-900">{formatCurrency(q.revenue)}</p>
                       <div className="flex items-center justify-center gap-2 mt-1">
                         <Badge variant="outline" className="text-xs">{q.episodes} episodes</Badge>
                         <Badge className="bg-indigo-100 text-indigo-700 text-xs">CMW: {q.case_mix}</Badge>
@@ -596,17 +596,17 @@ Return JSON:
                   </div>
                   <div className="space-y-2">
                     {predictions.clinical_group_distribution?.map((group, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
                           <span className="text-sm font-medium">{group.group}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">{formatCurrency(group.avg_payment)}</span>
+                          <span className="text-sm text-slate-600">{formatCurrency(group.avg_payment)}</span>
                           <Badge className={`text-xs ${
                             group.trend === 'increasing' ? 'bg-green-100 text-green-700' :
                             group.trend === 'decreasing' ? 'bg-red-100 text-red-700' :
-                            'bg-gray-100 text-gray-700'
+                            'bg-slate-100 text-slate-700'
                           }`}>
                             {group.trend}
                           </Badge>
@@ -637,7 +637,7 @@ Return JSON:
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                          <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                             {risk.risk_type}
                             <Badge className={`${
                               risk.priority === 'high' ? 'bg-red-600' :
@@ -646,22 +646,22 @@ Return JSON:
                               {risk.priority}
                             </Badge>
                           </h4>
-                          <p className="text-sm text-gray-600 mt-1">{risk.description}</p>
+                          <p className="text-sm text-slate-600 mt-1">{risk.description}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">Revenue at Risk</p>
+                          <p className="text-xs text-slate-500">Revenue at Risk</p>
                           <p className="text-xl font-bold text-red-600">{formatCurrency(risk.revenue_at_risk)}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 mb-3">
                         <div className="flex items-center gap-1 text-sm">
-                          <Users className="w-4 h-4 text-gray-500" />
+                          <Users className="w-4 h-4 text-slate-500" />
                           <span>{risk.patient_count} patients affected</span>
                         </div>
                       </div>
-                      <Alert className="bg-white border-gray-200">
+                      <Alert className="bg-white border-slate-200">
                         <Target className="w-4 h-4 text-blue-600" />
-                        <AlertDescription className="text-gray-800 text-sm">
+                        <AlertDescription className="text-slate-800 text-sm">
                           <strong>Intervention:</strong> {risk.intervention}
                         </AlertDescription>
                       </Alert>
@@ -684,7 +684,7 @@ Return JSON:
                   <Card key={idx} className="border-green-200">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
-                        <h4 className="font-semibold text-gray-900">{sim.scenario}</h4>
+                        <h4 className="font-semibold text-slate-900">{sim.scenario}</h4>
                         <div className="text-right">
                           <p className="text-xs text-green-600">Potential Impact</p>
                           <p className="text-xl font-bold text-green-700">+{formatCurrency(sim.revenue_impact)}</p>
@@ -755,25 +755,25 @@ Return JSON:
 
               {/* Recommended Actions */}
               <div className="space-y-2">
-                <h4 className="font-semibold text-gray-900">Recommended Actions</h4>
+                <h4 className="font-semibold text-slate-900">Recommended Actions</h4>
                 {predictions.recommended_actions?.map((action, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg border hover:border-indigo-300 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         action.impact === 'high' ? 'bg-green-100 text-green-700' :
                         action.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-gray-100 text-gray-700'
+                        'bg-slate-100 text-slate-700'
                       }`}>
                         {idx + 1}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{action.action}</p>
-                        <p className="text-xs text-gray-500">Timeline: {action.timeline}</p>
+                        <p className="text-sm font-medium text-slate-900">{action.action}</p>
+                        <p className="text-xs text-slate-500">Timeline: {action.timeline}</p>
                       </div>
                     </div>
                     <Badge className={`${
                       action.impact === 'high' ? 'bg-green-600' :
-                      action.impact === 'medium' ? 'bg-yellow-500' : 'bg-gray-500'
+                      action.impact === 'medium' ? 'bg-yellow-500' : 'bg-slate-500'
                     }`}>
                       {action.impact} impact
                     </Badge>
@@ -784,8 +784,8 @@ Return JSON:
           </Tabs>
         ) : (
           <div className="text-center py-8">
-            <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">Generate predictive analytics based on your patient data</p>
+            <BarChart3 className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-600 mb-4">Generate predictive analytics based on your patient data</p>
             <Button onClick={generatePredictions} className="bg-indigo-600 hover:bg-indigo-700">
               <BarChart3 className="w-4 h-4 mr-2" />
               Generate Predictions

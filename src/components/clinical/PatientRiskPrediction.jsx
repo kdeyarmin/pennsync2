@@ -253,7 +253,7 @@ Return JSON:
       case 'high': return 'bg-orange-500';
       case 'moderate': return 'bg-yellow-500';
       case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -263,7 +263,7 @@ Return JSON:
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-green-100 text-green-800 border-green-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -271,7 +271,7 @@ Return JSON:
     switch (trend) {
       case 'increasing': return <TrendingUp className="w-4 h-4 text-red-500" />;
       case 'decreasing': return <TrendingDown className="w-4 h-4 text-green-500" />;
-      default: return <Activity className="w-4 h-4 text-gray-500" />;
+      default: return <Activity className="w-4 h-4 text-slate-500" />;
     }
   };
 
@@ -327,7 +327,7 @@ Return JSON:
           {isAnalyzing ? (
             <div className="flex items-center justify-center py-8 gap-2">
               <RefreshCw className="w-5 h-5 animate-spin text-purple-600" />
-              <span className="text-sm text-gray-600">Analyzing patient risk factors...</span>
+              <span className="text-sm text-slate-600">Analyzing patient risk factors...</span>
             </div>
           ) : riskAnalysis ? (
             <>
@@ -341,7 +341,7 @@ Return JSON:
               </Alert>
 
               {/* Risk Score Gauge */}
-              <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="p-3 bg-slate-50 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Overall Risk Score</span>
                   <span className={`text-lg font-bold ${
@@ -357,7 +357,7 @@ Return JSON:
                   value={riskAnalysis.overall_risk_score} 
                   className="h-3"
                 />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
                   <span>Low</span>
                   <span>Moderate</span>
                   <span>High</span>
@@ -367,7 +367,7 @@ Return JSON:
 
               {/* Individual Risks */}
               <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-gray-700">Risk Categories</h4>
+                <h4 className="text-xs font-semibold text-slate-700">Risk Categories</h4>
                 {riskAnalysis.risks?.map((risk, idx) => (
                   <div 
                     key={idx}
@@ -428,7 +428,7 @@ Return JSON:
                                     </Badge>
                                   </div>
                                   <p className="text-xs font-medium">{intervention.action}</p>
-                                  <p className="text-xs text-gray-500">{intervention.rationale}</p>
+                                  <p className="text-xs text-slate-500">{intervention.rationale}</p>
                                 </div>
                                 <Button
                                   size="sm"
@@ -458,7 +458,7 @@ Return JSON:
                           </div>
                         )}
 
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
                           <Clock className="w-3 h-3" />
                           Monitor: {risk.monitoring_frequency?.replace('_', ' ')}
                         </div>
@@ -533,7 +533,7 @@ Return JSON:
           ) : (
             <div className="text-center py-6">
               <Brain className="w-12 h-12 text-purple-300 mx-auto mb-3" />
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Analyze patient data to predict risks and get proactive recommendations
               </p>
               <Button

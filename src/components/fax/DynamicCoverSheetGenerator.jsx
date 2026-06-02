@@ -176,19 +176,19 @@ export default function DynamicCoverSheetGenerator({ onGenerate, patientName, pa
                       )}
                     </div>
                     {selectedPhysician.practice_name && (
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-slate-600">
                         <Building className="w-4 h-4" />
                         {selectedPhysician.practice_name}
                       </div>
                     )}
                     {selectedPhysician.fax_number && (
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-slate-600">
                         <Phone className="w-4 h-4" />
                         Fax: {selectedPhysician.fax_number}
                       </div>
                     )}
                     {selectedPhysician.specialty && (
-                      <div className="text-gray-600">
+                      <div className="text-slate-600">
                         Specialty: {selectedPhysician.specialty.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </div>
                     )}
@@ -254,7 +254,7 @@ export default function DynamicCoverSheetGenerator({ onGenerate, patientName, pa
                 </SelectContent>
               </Select>
               {documentType && (
-                <p className="mt-2 text-xs text-gray-600 flex items-center gap-1">
+                <p className="mt-2 text-xs text-slate-600 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   Cover sheet will include: "{DOCUMENT_TYPES.find(t => t.value === documentType)?.disclaimer}"
                 </p>
@@ -289,10 +289,10 @@ export default function DynamicCoverSheetGenerator({ onGenerate, patientName, pa
 
           {/* Patient Information */}
           {patientName && (
-            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
               <Label className="text-sm font-semibold">Patient</Label>
-              <p className="text-sm text-gray-700 mt-1">{patientName}</p>
-              {patientId && <p className="text-xs text-gray-500">ID: {patientId}</p>}
+              <p className="text-sm text-slate-700 mt-1">{patientName}</p>
+              {patientId && <p className="text-xs text-slate-500">ID: {patientId}</p>}
             </div>
           )}
 

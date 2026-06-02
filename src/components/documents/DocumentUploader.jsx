@@ -164,13 +164,13 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
                     <FileText className="w-8 h-8 text-indigo-600" />
                     <div>
                       <p className="font-medium">{file.name}</p>
-                      <p className="text-sm text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <p className="text-sm text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">Click to select file or drag and drop</p>
+                    <Upload className="w-12 h-12 mx-auto text-slate-400 mb-2" />
+                    <p className="text-sm text-slate-600">Click to select file or drag and drop</p>
                   </div>
                 )}
               </label>

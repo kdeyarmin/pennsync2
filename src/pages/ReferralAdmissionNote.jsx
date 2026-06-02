@@ -122,7 +122,7 @@ ${data.orders_treatments?.physician_orders?.join('\n') || 'To be clarified with 
     return (
       <div className="p-8 text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-        <p className="text-gray-600">Loading referral data...</p>
+        <p className="text-slate-600">Loading referral data...</p>
       </div>
     );
   }
@@ -172,10 +172,10 @@ ${data.orders_treatments?.physician_orders?.join('\n') || 'To be clarified with 
           </Alert>
           
           <div className="space-y-3">
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-slate-700">
               <strong>Patient:</strong> {referral.patient_name || 'Unknown'}
             </p>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-slate-700">
               <strong>Referral Source:</strong> {referral.referral_source || 'N/A'}
             </p>
             {referral.extracted_data && (

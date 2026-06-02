@@ -108,7 +108,7 @@ export default function SignerDocumentSigner({
             <div className="space-y-4">
               <iframe
                 src={documentUrl}
-                className="w-full h-96 border border-gray-300 rounded"
+                className="w-full h-96 border border-slate-300 rounded"
                 title={document.name}
               />
               <Button
@@ -154,7 +154,7 @@ export default function SignerDocumentSigner({
             </div>
 
             {/* Agreement Checkbox */}
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-gray-700">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-slate-700">
               By signing, I confirm that I have reviewed this document and agree to its contents. This signature is legally binding.
             </div>
 

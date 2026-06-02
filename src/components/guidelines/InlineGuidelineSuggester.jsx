@@ -66,21 +66,21 @@ export default function InlineGuidelineSuggester({
       </PopoverTrigger>
       <PopoverContent className="w-80 p-2">
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-gray-700 mb-2">
+          <p className="text-xs font-semibold text-slate-700 mb-2">
             Relevant Guidelines:
           </p>
           {relevantGuidelines.map((guideline, idx) => (
             <Card key={idx} className="border-blue-200">
               <CardContent className="p-2">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <p className="text-xs font-medium text-gray-900 flex-1">
+                  <p className="text-xs font-medium text-slate-900 flex-1">
                     {guideline.title}
                   </p>
                   <Badge variant="outline" className="text-xs flex-shrink-0">
                     {guideline.regulatory_citation}
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                <p className="text-xs text-slate-600 mb-2 line-clamp-2">
                   {guideline.summary}
                 </p>
                 <div className="flex gap-1">
@@ -109,7 +109,7 @@ export default function InlineGuidelineSuggester({
             </Card>
           ))}
           {relevantGuidelines.length === 0 && !isLoading && (
-            <p className="text-xs text-gray-500 text-center py-2">
+            <p className="text-xs text-slate-500 text-center py-2">
               No specific guidelines found for selected text
             </p>
           )}

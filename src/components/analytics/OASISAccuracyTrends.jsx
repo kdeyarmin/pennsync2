@@ -101,7 +101,7 @@ export default function OASISAccuracyTrends({ data = [], compact = false }) {
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No OASIS data available for this period</p>
+          <p className="text-center text-slate-500 py-8">No OASIS data available for this period</p>
         ) : (
           <div className={compact ? "" : "grid grid-cols-1 lg:grid-cols-3 gap-6"}>
             {/* Main trend chart */}
@@ -138,7 +138,7 @@ export default function OASISAccuracyTrends({ data = [], compact = false }) {
             {/* Score distribution */}
             {!compact && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">Score Distribution</p>
+                <p className="text-sm font-medium text-slate-700 mb-3">Score Distribution</p>
                 <div className="space-y-2">
                   {scoreDistribution.map(({ range, count }) => {
                     const percentage = data.length > 0 ? (count / data.length * 100).toFixed(0) : 0;
@@ -148,14 +148,14 @@ export default function OASISAccuracyTrends({ data = [], compact = false }) {
                                   range === '60-69' ? 'bg-orange-500' : 'bg-red-500';
                     return (
                       <div key={range} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600 w-16">{range}%</span>
-                        <div className="flex-1 bg-gray-100 rounded-full h-4">
+                        <span className="text-xs text-slate-600 w-16">{range}%</span>
+                        <div className="flex-1 bg-slate-100 rounded-full h-4">
                           <div 
                             className={`${color} h-4 rounded-full transition-all`}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-700 w-8">{count}</span>
+                        <span className="text-xs text-slate-700 w-8">{count}</span>
                       </div>
                     );
                   })}

@@ -19,7 +19,7 @@ export default function EnhancedVideoControls({
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 p-4 bg-gray-900 rounded-xl">
+    <div className="flex flex-wrap items-center justify-center gap-2 p-4 bg-slate-900 rounded-xl">
       <Button
         variant="ghost"
         size="icon"
@@ -27,7 +27,7 @@ export default function EnhancedVideoControls({
         className={`rounded-full h-12 w-12 transition ${
           audioMuted
             ? 'bg-red-600 hover:bg-red-700 text-white'
-            : 'bg-gray-700 hover:bg-gray-600 text-white'
+            : 'bg-slate-700 hover:bg-slate-600 text-white'
         }`}
         title={audioMuted ? 'Unmute' : 'Mute'}
       >
@@ -41,7 +41,7 @@ export default function EnhancedVideoControls({
         className={`rounded-full h-12 w-12 transition ${
           videoMuted
             ? 'bg-red-600 hover:bg-red-700 text-white'
-            : 'bg-gray-700 hover:bg-gray-600 text-white'
+            : 'bg-slate-700 hover:bg-slate-600 text-white'
         }`}
         title={videoMuted ? 'Turn on camera' : 'Turn off camera'}
       >
@@ -55,7 +55,7 @@ export default function EnhancedVideoControls({
         className={`rounded-full h-12 w-12 transition ${
           screenSharing
             ? 'bg-blue-600 hover:bg-blue-700 text-white'
-            : 'bg-gray-700 hover:bg-gray-600 text-white'
+            : 'bg-slate-700 hover:bg-slate-600 text-white'
         }`}
         title="Share screen"
       >
@@ -66,13 +66,13 @@ export default function EnhancedVideoControls({
         variant="ghost"
         size="icon"
         onClick={onToggleChat}
-        className="rounded-full h-12 w-12 bg-gray-700 hover:bg-gray-600 text-white transition"
+        className="rounded-full h-12 w-12 bg-slate-700 hover:bg-slate-600 text-white transition"
         title="Show chat"
       >
         <MessageSquare className="w-5 h-5" />
       </Button>
 
-      <div className="mx-2 w-px h-8 bg-gray-700" />
+      <div className="mx-2 w-px h-8 bg-slate-700" />
 
       <Button
         variant="ghost"

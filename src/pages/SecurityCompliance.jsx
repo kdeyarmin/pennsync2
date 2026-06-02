@@ -160,7 +160,7 @@ export default function SecurityCompliance() {
     if (action?.includes('delete') || action?.includes('reject')) return 'text-red-600';
     if (action?.includes('approved') || action?.includes('completed')) return 'text-green-600';
     if (action?.includes('updated') || action?.includes('edited')) return 'text-blue-600';
-    return 'text-gray-600';
+    return 'text-slate-600';
   };
 
   // Security metrics
@@ -244,8 +244,8 @@ export default function SecurityCompliance() {
         <Card className="border-2 border-red-200">
           <CardContent className="p-12 text-center">
             <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-600">Only administrators can view security and compliance information.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h2>
+            <p className="text-slate-600">Only administrators can view security and compliance information.</p>
           </CardContent>
         </Card>
       </div>
@@ -360,11 +360,11 @@ export default function SecurityCompliance() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Icon className="w-4 h-4 text-green-600" />
-                          <p className="font-semibold text-gray-900 text-sm">{check.name}</p>
+                          <p className="font-semibold text-slate-900 text-sm">{check.name}</p>
                           <Badge className="bg-green-600 text-xs">✓ Active</Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-1">{check.description}</p>
-                        <p className="text-xs text-gray-500 italic">{check.details}</p>
+                        <p className="text-xs text-slate-600 mb-1">{check.description}</p>
+                        <p className="text-xs text-slate-500 italic">{check.details}</p>
                       </div>
                     </div>
                   );
@@ -455,48 +455,48 @@ export default function SecurityCompliance() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg border">
-                  <p className="font-semibold text-gray-900 mb-2">Data at Rest</p>
-                  <p className="text-sm text-gray-600 mb-2">
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <p className="font-semibold text-slate-900 mb-2">Data at Rest</p>
+                  <p className="text-sm text-slate-600 mb-2">
                     All patient data stored in the database is encrypted using AES-256 encryption.
                   </p>
-                  <ul className="text-xs text-gray-500 space-y-1">
+                  <ul className="text-xs text-slate-500 space-y-1">
                     <li>• Algorithm: AES-256-GCM</li>
                     <li>• Key Management: Automated key rotation</li>
                     <li>• Storage: Encrypted database volumes</li>
                   </ul>
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-lg border">
-                  <p className="font-semibold text-gray-900 mb-2">Data in Transit</p>
-                  <p className="text-sm text-gray-600 mb-2">
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <p className="font-semibold text-slate-900 mb-2">Data in Transit</p>
+                  <p className="text-sm text-slate-600 mb-2">
                     All network communication uses TLS 1.2 or higher encryption.
                   </p>
-                  <ul className="text-xs text-gray-500 space-y-1">
+                  <ul className="text-xs text-slate-500 space-y-1">
                     <li>• Protocol: TLS 1.2+</li>
                     <li>• Cipher Suite: Strong encryption only</li>
                     <li>• Certificate: Valid SSL/TLS certificate</li>
                   </ul>
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-lg border">
-                  <p className="font-semibold text-gray-900 mb-2">Authentication</p>
-                  <p className="text-sm text-gray-600 mb-2">
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <p className="font-semibold text-slate-900 mb-2">Authentication</p>
+                  <p className="text-sm text-slate-600 mb-2">
                     Secure token-based authentication with JWT tokens.
                   </p>
-                  <ul className="text-xs text-gray-500 space-y-1">
+                  <ul className="text-xs text-slate-500 space-y-1">
                     <li>• Token Type: JWT (JSON Web Tokens)</li>
                     <li>• Storage: Secure HTTP-only cookies</li>
                     <li>• Expiration: Session-based with 15-min timeout</li>
                   </ul>
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-lg border">
-                  <p className="font-semibold text-gray-900 mb-2">Access Control</p>
-                  <p className="text-sm text-gray-600 mb-2">
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <p className="font-semibold text-slate-900 mb-2">Access Control</p>
+                  <p className="text-sm text-slate-600 mb-2">
                     Role-based access control with audit logging.
                   </p>
-                  <ul className="text-xs text-gray-500 space-y-1">
+                  <ul className="text-xs text-slate-500 space-y-1">
                     <li>• RBAC: Admin and User roles</li>
                     <li>• Audit: All access logged</li>
                     <li>• Session: Automatic timeout on inactivity</li>
@@ -512,19 +512,19 @@ export default function SecurityCompliance() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">Security Events</p>
+                <p className="text-sm text-slate-600">Security Events</p>
                 <p className="text-2xl font-bold">{securityLogs.length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">User Actions</p>
+                <p className="text-sm text-slate-600">User Actions</p>
                 <p className="text-2xl font-bold">{userActivity.length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">Critical</p>
+                <p className="text-sm text-slate-600">Critical</p>
                 <p className="text-2xl font-bold text-red-600">
                   {userActivity.filter(l => l.severity === 'critical').length}
                 </p>
@@ -532,7 +532,7 @@ export default function SecurityCompliance() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">Active Users</p>
+                <p className="text-sm text-slate-600">Active Users</p>
                 <p className="text-2xl font-bold">{uniqueUsers.length}</p>
               </CardContent>
             </Card>
@@ -575,7 +575,7 @@ export default function SecurityCompliance() {
             <CardContent>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {securityLogs.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No security events logged yet</p>
+                  <p className="text-slate-500 text-center py-8">No security events logged yet</p>
                 ) : (
                   securityLogs.slice(0, 20).map((log, idx) => (
                     <div
@@ -585,26 +585,26 @@ export default function SecurityCompliance() {
                           ? 'bg-red-50 border-red-200'
                           : log.action?.includes('PHI') || log.action?.includes('PATIENT')
                           ? 'bg-yellow-50 border-yellow-200'
-                          : 'bg-gray-50 border-gray-200'
+                          : 'bg-slate-50 border-slate-200'
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-semibold text-sm text-gray-900">{log.action}</p>
-                          <p className="text-xs text-gray-600">
+                          <p className="font-semibold text-sm text-slate-900">{log.action}</p>
+                          <p className="text-xs text-slate-600">
                             {log.user_email} • {log.user_role}
                           </p>
                           {log.details && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-slate-500 mt-1">
                               {JSON.stringify(log.details).substring(0, 100)}...
                             </p>
                           )}
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {new Date(log.timestamp || log.created_date).toLocaleDateString()}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {new Date(log.timestamp || log.created_date).toLocaleTimeString()}
                           </p>
                         </div>
@@ -622,19 +622,19 @@ export default function SecurityCompliance() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">Total Events</p>
+                <p className="text-sm text-slate-600">Total Events</p>
                 <p className="text-2xl font-bold">{userActivity.length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">Filtered</p>
+                <p className="text-sm text-slate-600">Filtered</p>
                 <p className="text-2xl font-bold">{filteredLogs.length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">Critical Events</p>
+                <p className="text-sm text-slate-600">Critical Events</p>
                 <p className="text-2xl font-bold text-red-600">
                   {userActivity.filter(l => l.severity === 'critical').length}
                 </p>
@@ -642,7 +642,7 @@ export default function SecurityCompliance() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-600">Active Users</p>
+                <p className="text-sm text-slate-600">Active Users</p>
                 <p className="text-2xl font-bold">{uniqueUsers.length}</p>
               </CardContent>
             </Card>
@@ -665,7 +665,7 @@ export default function SecurityCompliance() {
             <CardContent className="p-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     placeholder="Search users, actions..."
                     value={searchTerm}
@@ -752,26 +752,26 @@ export default function SecurityCompliance() {
                     <TableBody>
                       {filteredLogs.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                             No audit logs found matching filters
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredLogs.map((log, idx) => (
-                          <TableRow key={idx} className="hover:bg-gray-50">
+                          <TableRow key={idx} className="hover:bg-slate-50">
                             <TableCell className="text-xs whitespace-nowrap">
                               <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-gray-400 hidden sm:inline" />
+                                <Calendar className="w-3 h-3 text-slate-400 hidden sm:inline" />
                                 <span className="hidden sm:inline">{formatEastern(new Date(log.created_date), 'MMM d, yyyy HH:mm:ss')}</span>
                                 <span className="sm:hidden">{formatEastern(new Date(log.created_date), 'MMM d, HH:mm')}</span>
                               </div>
                             </TableCell>
                             <TableCell className="text-xs">
                               <div className="flex items-center gap-1">
-                                <User className="w-3 h-3 text-gray-400 hidden sm:inline flex-shrink-0" />
+                                <User className="w-3 h-3 text-slate-400 hidden sm:inline flex-shrink-0" />
                                 <div className="min-w-0">
                                   <p className="text-xs font-medium truncate">{log.user_name}</p>
-                                  <p className="text-xs text-gray-500 truncate hidden sm:block">{log.user_email}</p>
+                                  <p className="text-xs text-slate-500 truncate hidden sm:block">{log.user_email}</p>
                                 </div>
                               </div>
                             </TableCell>
@@ -787,7 +787,7 @@ export default function SecurityCompliance() {
                                     {log.entity_type}
                                   </Badge>
                                   {log.entity_id && (
-                                    <p className="text-gray-500 mt-1 truncate">ID: {log.entity_id.substring(0, 8)}...</p>
+                                    <p className="text-slate-500 mt-1 truncate">ID: {log.entity_id.substring(0, 8)}...</p>
                                   )}
                                 </div>
                               )}
@@ -801,7 +801,7 @@ export default function SecurityCompliance() {
                                   <summary className="text-blue-600 hover:text-blue-700">
                                     View details
                                   </summary>
-                                  <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-32">
+                                  <pre className="mt-2 p-2 bg-slate-100 rounded text-xs overflow-auto max-h-32">
                                     {JSON.stringify(log.details, null, 2)}
                                   </pre>
                                 </details>

@@ -75,14 +75,14 @@ export default function QuickCarePlanUpdater({
           {activeCarePlans.map((cp) => (
             <div 
               key={cp.id} 
-              className="bg-white p-2 rounded border border-gray-200"
+              className="bg-white p-2 rounded border border-slate-200"
             >
               <div className="flex items-start justify-between mb-1">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-900 truncate">
+                  <p className="text-xs font-semibold text-slate-900 truncate">
                     {cp.problem}
                   </p>
-                  <p className="text-xs text-gray-600 truncate">
+                  <p className="text-xs text-slate-600 truncate">
                     Goal: {cp.goal}
                   </p>
                 </div>

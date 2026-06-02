@@ -160,7 +160,7 @@ export default function CarePlanBuilder() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
       {/* Top Bar */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex flex-wrap items-center gap-3">
+      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <FileText className="w-5 h-5 text-indigo-600 flex-shrink-0" />
           <Input
@@ -174,41 +174,41 @@ export default function CarePlanBuilder() {
         <div className="relative">
           <button
             onClick={() => setShowPatientDropdown(!showPatientDropdown)}
-            className="flex items-center gap-2 text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 text-sm border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors"
           >
-            <Users className="w-4 h-4 text-gray-500" />
-            <span className={selectedPatient ? "text-gray-800 font-medium" : "text-gray-400"}>
+            <Users className="w-4 h-4 text-slate-500" />
+            <span className={selectedPatient ? "text-slate-800 font-medium" : "text-slate-400"}>
               {selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : "Select Patient"}
             </span>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </button>
 
           {showPatientDropdown && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+            <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50">
               <div className="p-2 border-b">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                   <input
                     value={patientSearch}
                     onChange={e => setPatientSearch(e.target.value)}
                     placeholder="Search patients..."
-                    className="w-full text-sm pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="w-full text-sm pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-400"
                     autoFocus
                   />
                 </div>
               </div>
               <div className="max-h-48 overflow-y-auto py-1">
                 {filteredPatients.length === 0 ? (
-                  <div className="px-3 py-4 text-center text-xs text-gray-400">No patients found</div>
+                  <div className="px-3 py-4 text-center text-xs text-slate-400">No patients found</div>
                 ) : (
                   filteredPatients.map(p => (
                     <button
                       key={p.id}
                       onClick={() => { setSelectedPatientId(p.id); setShowPatientDropdown(false); setPatientSearch(""); }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition-colors ${selectedPatientId === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-gray-700"}`}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition-colors ${selectedPatientId === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700"}`}
                     >
                       <div className="font-medium">{p.first_name} {p.last_name}</div>
-                      {p.primary_diagnosis && <div className="text-xs text-gray-400 truncate">{p.primary_diagnosis}</div>}
+                      {p.primary_diagnosis && <div className="text-xs text-slate-400 truncate">{p.primary_diagnosis}</div>}
                     </button>
                   ))
                 )}
@@ -218,18 +218,18 @@ export default function CarePlanBuilder() {
         </div>
 
         {/* Stats */}
-        <div className="hidden sm:flex items-center gap-3 text-xs text-gray-500 border-x border-gray-200 px-3">
+        <div className="hidden sm:flex items-center gap-3 text-xs text-slate-500 border-x border-slate-200 px-3">
           <span className="flex items-center gap-1">
             <CheckSquare className="w-3.5 h-3.5 text-indigo-500" />
-            <span><strong className="text-gray-700">{planItems.length}</strong> interventions</span>
+            <span><strong className="text-slate-700">{planItems.length}</strong> interventions</span>
           </span>
           <span className="flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span><strong className="text-gray-700">{complianceCount}</strong> compliant</span>
+            <span><strong className="text-slate-700">{complianceCount}</strong> compliant</span>
           </span>
           <span className="flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-            <span><strong className="text-gray-700">{linkedCount}</strong> linked</span>
+            <span><strong className="text-slate-700">{linkedCount}</strong> linked</span>
           </span>
         </div>
 
@@ -238,7 +238,7 @@ export default function CarePlanBuilder() {
           <select
             value={careType}
             onChange={(e) => setCareType(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors bg-white"
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors bg-white"
           >
             <option value="home_health">Home Health</option>
             <option value="hospice">Hospice</option>
@@ -269,7 +269,7 @@ export default function CarePlanBuilder() {
 
       {/* AI Analyzer Panel */}
       {showAIAnalyzer && (
-        <div className="flex-shrink-0 w-96 border-l border-gray-200 bg-white overflow-y-auto p-4">
+        <div className="flex-shrink-0 w-96 border-l border-slate-200 bg-white overflow-y-auto p-4">
           <AICarePlanAnalyzer
             patientId={selectedPatientId}
             patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ""}

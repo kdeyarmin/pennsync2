@@ -109,10 +109,10 @@ export default function GuidedDocumentationWorkflow({ visitType, diagnosis, care
       <CardContent className="space-y-4">
         {/* Required Documentation Steps */}
         <div>
-          <p className="text-xs font-semibold text-gray-500 mb-2 uppercase">Required Elements</p>
+          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase">Required Elements</p>
           <div className="space-y-2">
             {steps.filter(s => s.required).map((step) => (
-              <div key={step.id} className={`flex items-center gap-2 p-2 rounded ${step.critical ? 'bg-red-50 border border-red-200' : 'bg-white border border-gray-200'}`}>
+              <div key={step.id} className={`flex items-center gap-2 p-2 rounded ${step.critical ? 'bg-red-50 border border-red-200' : 'bg-white border border-slate-200'}`}>
                 <CheckCircle2 className={`w-4 h-4 ${step.critical ? 'text-red-600' : 'text-blue-600'}`} />
                 <span className="text-sm flex-1">{step.label}</span>
                 {step.critical && (
@@ -126,7 +126,7 @@ export default function GuidedDocumentationWorkflow({ visitType, diagnosis, care
         {/* Diagnosis-Specific Guidance */}
         {diagnosis && (
           <div>
-            <p className="text-xs font-semibold text-gray-500 mb-2 uppercase">
+            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase">
               {diagnosis.split(' ')[0]} - Critical Elements
             </p>
             <Alert className="bg-orange-50 border-orange-200">
@@ -146,9 +146,9 @@ export default function GuidedDocumentationWorkflow({ visitType, diagnosis, care
         {/* Suggested Elements */}
         {diagnosis && guidance.suggested.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-500 mb-2 uppercase">Recommended</p>
-            <div className="bg-white rounded-lg border border-gray-200 p-3">
-              <ul className="space-y-1 text-xs text-gray-700">
+            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase">Recommended</p>
+            <div className="bg-white rounded-lg border border-slate-200 p-3">
+              <ul className="space-y-1 text-xs text-slate-700">
                 {guidance.suggested.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-blue-600">✓</span>

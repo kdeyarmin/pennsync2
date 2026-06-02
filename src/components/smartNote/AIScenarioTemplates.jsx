@@ -85,15 +85,15 @@ Return JSON with array of 3 templates.`,
         {generating ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
-            <span className="ml-2 text-sm text-gray-600">Generating templates...</span>
+            <span className="ml-2 text-sm text-slate-600">Generating templates...</span>
           </div>
         ) : (
           templates.map((template, idx) => (
             <div key={idx} className="bg-white rounded-lg border border-purple-200 p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{template.name}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{template.scenario}</p>
+                  <h4 className="font-semibold text-slate-900">{template.name}</h4>
+                  <p className="text-xs text-slate-600 mt-1">{template.scenario}</p>
                 </div>
                 <Button
                   size="sm"

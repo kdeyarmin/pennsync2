@@ -90,7 +90,7 @@ Return a JSON array with this structure:
       <CardContent className="space-y-4">
         {!suggestions ? (
           <div className="text-center py-6">
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               Get AI-powered suggestions to fix validation errors automatically
             </p>
             <Button
@@ -114,7 +114,7 @@ Return a JSON array with this structure:
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-700">
+              <p className="text-sm font-semibold text-slate-700">
                 AI Analysis Complete • {suggestions.length} Suggestion{suggestions.length !== 1 ? 's' : ''}
               </p>
               <Button
@@ -146,7 +146,7 @@ Return a JSON array with this structure:
                         </div>
 
                         <div className="pl-4 border-l-2 border-purple-200 space-y-1">
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-slate-600">
                             <strong>Issue:</strong> {suggestion.explanation}
                           </p>
                           <p className="text-xs text-green-700 bg-green-50 p-2 rounded">

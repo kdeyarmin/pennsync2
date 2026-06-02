@@ -67,14 +67,14 @@ export default function CollapsibleAIPanel({
           
           <div className="flex items-center gap-2">
             {!isExpanded && summary && (
-              <span className="text-xs text-gray-500 max-w-[150px] truncate hidden sm:block">
+              <span className="text-xs text-slate-500 max-w-[150px] truncate hidden sm:block">
                 {summary}
               </span>
             )}
             {isExpanded ? (
-              <ChevronUp className="w-4 h-4 text-gray-500" />
+              <ChevronUp className="w-4 h-4 text-slate-500" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-gray-500" />
+              <ChevronDown className="w-4 h-4 text-slate-500" />
             )}
           </div>
         </div>

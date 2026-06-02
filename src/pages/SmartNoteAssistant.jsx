@@ -526,7 +526,7 @@ Return ONLY the final note text.`
   const complianceFindings = analysis?.findings?.filter(f => f.category === "compliance") || [];
   const qualityFindings = analysis?.findings?.filter(f => f.category === "quality") || [];
   const totalRevenueImpact = calculateTotalRevenueImpact();
-  const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
+  const scoreColor = !analysis ? "text-slate-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
   const ready = note.trim().length >= 20;
 
   return (
@@ -538,7 +538,7 @@ Return ONLY the final note text.`
 
       {/* ── TAB: MEDICATIONS ── */}
       {activeTab === "medications" && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
           <MedicationManagementTab
             patient={patient}
             patientId={patientId}
@@ -564,14 +564,14 @@ Return ONLY the final note text.`
 
       {/* ── TAB: VISIT SUMMARY ── */}
       {activeTab === "summary" && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
           <VisitSummaryGenerator patientId={patientId} />
         </div>
       )}
 
       {/* ── TAB: VITAL TRENDS ── */}
       {activeTab === "trends" && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
           <VitalsTrendAnalysis patientId={patientId} />
         </div>
       )}
@@ -603,30 +603,30 @@ Return ONLY the final note text.`
           {/* STEP 1: WRITE */}
           {step === 1 && (
             <div className="space-y-3">
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <User className="w-3.5 h-3.5 text-indigo-500" />
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Patient</label>
-                    <span className="text-xs text-gray-400 font-normal normal-case ml-1">optional</span>
+                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Patient</label>
+                    <span className="text-xs text-slate-400 font-normal normal-case ml-1">optional</span>
                   </div>
                   <SearchablePatientSelect 
                     patients={patients} 
                     value={patientId} 
                     onValueChange={setPatientId} 
-                    className="bg-gray-50 border-gray-200 h-12 sm:h-11 text-sm rounded-xl"
+                    className="bg-slate-50 border-slate-200 h-12 sm:h-11 text-sm rounded-xl"
                   />
                 </div>
-                <div className="border-t border-gray-100" />
+                <div className="border-t border-slate-100" />
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Visit Type</label>
+                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Visit Type</label>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {VISIT_TYPES.map(v => (
                       <button key={v.value} onClick={() => setVisitType(v.value)}
-                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${visitType === v.value ? "bg-indigo-600 border-indigo-600 text-white shadow-md" : "bg-gray-50 border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50"}`}>
+                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${visitType === v.value ? "bg-indigo-600 border-indigo-600 text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50"}`}>
                         {v.label}
                       </button>
                     ))}
@@ -691,8 +691,8 @@ Return ONLY the final note text.`
                   placeholder={"Enter bullet points or rough draft — AI will NOT invent information.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• homebound: unable to leave without considerable effort\n• skilled need: wound assessment and dressing change\n• wound R heel 2×3 cm granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter noted, discussed w/ family"}
                   className="w-full min-h-[240px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed" spellCheck={false}
                 />
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50 gap-3">
-                  <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-gray-400"}`}>
+                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50 gap-3">
+                  <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-slate-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
                   <Button onClick={analyze} disabled={!ready || analyzing} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
@@ -718,34 +718,34 @@ Return ONLY the final note text.`
           {step === 2 && (
             <div className="space-y-4">
               {analyzing ? (
-                <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
+                <div className="bg-white border border-slate-200 rounded-xl p-10 text-center shadow-sm">
                   <Loader2 className="w-10 h-10 text-indigo-500 mx-auto animate-spin mb-3" />
-                  <p className="font-semibold text-gray-800">Performing compliance check…</p>
-                  <p className="text-sm text-gray-400 mt-1">Checking Medicare, clinical, and state standards</p>
+                  <p className="font-semibold text-slate-800">Performing compliance check…</p>
+                  <p className="text-sm text-slate-400 mt-1">Checking Medicare, clinical, and state standards</p>
                 </div>
               ) : building ? (
-                <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
+                <div className="bg-white border border-slate-200 rounded-xl p-10 text-center shadow-sm">
                   <Loader2 className="w-10 h-10 text-indigo-500 mx-auto animate-spin mb-3" />
-                  <p className="font-semibold text-gray-800">Building your final note…</p>
-                  <p className="text-sm text-gray-400 mt-1">Incorporating approved suggestions</p>
+                  <p className="font-semibold text-slate-800">Building your final note…</p>
+                  <p className="text-sm text-slate-400 mt-1">Incorporating approved suggestions</p>
                 </div>
               ) : analysis && (
                 <>
                   <div className={`rounded-xl border-2 p-4 ${analysis.overall_score >= 80 ? "border-green-300 bg-green-50" : analysis.overall_score >= 60 ? "border-orange-300 bg-orange-50" : "border-red-300 bg-red-50"}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="text-sm font-semibold text-gray-700">Initial Compliance Score</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{analysis.summary}</p>
+                        <p className="text-sm font-semibold text-slate-700">Initial Compliance Score</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{analysis.summary}</p>
                       </div>
                       <span className={`text-4xl font-bold ${scoreColor}`}>{analysis.overall_score}%</span>
                     </div>
                     <div className="flex gap-3">
                       <div className="flex-1 bg-white rounded-lg p-2 text-center">
-                        <p className="text-xs text-gray-400">Medicare</p>
+                        <p className="text-xs text-slate-400">Medicare</p>
                         <p className="text-lg font-bold text-orange-600">{analysis.compliance_score}%</p>
                       </div>
                       <div className="flex-1 bg-white rounded-lg p-2 text-center">
-                        <p className="text-xs text-gray-400">Clinical Quality</p>
+                        <p className="text-xs text-slate-400">Clinical Quality</p>
                         <p className="text-lg font-bold text-blue-600">{analysis.quality_score}%</p>
                       </div>
                     </div>
@@ -760,11 +760,11 @@ Return ONLY the final note text.`
 
                   {/* Medicare Compliance Suggestions */}
                   {analysis?.findings?.filter(f => f.category === 'compliance' && f.suggestion).length > 0 && (
-                    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h3 className="font-semibold text-gray-900">Medicare Compliance Additions</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">Check items to add to your final note</p>
+                          <h3 className="font-semibold text-slate-900">Medicare Compliance Additions</h3>
+                          <p className="text-xs text-slate-500 mt-0.5">Check items to add to your final note</p>
                         </div>
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set(analysis.findings.filter(f => f.category === 'compliance' && f.suggestion).map(f => f.id)))}>Select All</Button>
@@ -773,7 +773,7 @@ Return ONLY the final note text.`
                       </div>
                       <div className="space-y-2 max-h-96 overflow-y-auto">
                         {analysis.findings.filter(f => f.category === 'compliance' && f.suggestion).map(f => (
-                          <div key={f.id} className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => toggle(f.id)}>
+                          <div key={f.id} className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => toggle(f.id)}>
                             <input 
                               type="checkbox" 
                               checked={selected.has(f.id)} 
@@ -781,8 +781,8 @@ Return ONLY the final note text.`
                               className="w-5 h-5 mt-0.5 text-indigo-600 rounded cursor-pointer"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">{f.issue}</p>
-                              <div className="mt-2 p-2 bg-white border border-indigo-200 rounded text-sm text-gray-700 font-mono whitespace-pre-wrap">{f.suggestion}</div>
+                              <p className="text-sm font-medium text-slate-900">{f.issue}</p>
+                              <div className="mt-2 p-2 bg-white border border-indigo-200 rounded text-sm text-slate-700 font-mono whitespace-pre-wrap">{f.suggestion}</div>
                               {f.revenue_impact && <p className="text-xs text-green-600 mt-1.5 font-semibold">{f.revenue_impact}</p>}
                             </div>
                             <Badge className={`shrink-0 text-xs ${f.severity === 'critical' ? 'bg-red-100 text-red-800' : f.severity === 'high' ? 'bg-orange-100 text-orange-800' : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>

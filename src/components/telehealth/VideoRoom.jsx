@@ -129,7 +129,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
   if (status === "connecting") {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-gray-900 rounded-xl">
+      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-slate-900 rounded-xl">
         <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
         <p className="text-white text-lg">Connecting to session...</p>
       </div>
@@ -138,7 +138,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
   if (status === "error") {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-gray-900 rounded-xl">
+      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-slate-900 rounded-xl">
         <p className="text-red-400 text-lg">Failed to connect: {error}</p>
         <Button onClick={connectToRoom} variant="outline">Retry</Button>
       </div>
@@ -163,18 +163,18 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         </div>
         <div className="flex items-center gap-3">
           <NetworkMonitor roomRef={roomRef} />
-          <span className="text-sm text-gray-500 font-mono">{sessionDuration} min</span>
+          <span className="text-sm text-slate-500 font-mono">{sessionDuration} min</span>
         </div>
       </div>
 
       {/* Video grid - responsive */}
       <div className={`grid gap-2 sm:gap-3 ${participants.length > 0 ? "sm:grid-cols-2 grid-cols-1" : "grid-cols-1"}`}>
         {/* Local video */}
-        <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
+        <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video">
           <div ref={localVideoRef} className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover" />
           {videoMuted && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-              <VideoOff className="w-12 h-12 text-gray-500" />
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+              <VideoOff className="w-12 h-12 text-slate-500" />
             </div>
           )}
           <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
@@ -189,9 +189,9 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
         {/* Waiting placeholder */}
         {participants.length === 0 && (
-          <div className="bg-gray-800 rounded-xl aspect-video flex flex-col items-center justify-center gap-2">
-            <Users className="w-10 h-10 text-gray-500" />
-            <p className="text-gray-400 text-sm">Waiting for patient to join...</p>
+          <div className="bg-slate-800 rounded-xl aspect-video flex flex-col items-center justify-center gap-2">
+            <Users className="w-10 h-10 text-slate-500" />
+            <p className="text-slate-400 text-sm">Waiting for patient to join...</p>
           </div>
         )}
       </div>
@@ -231,7 +231,7 @@ function RemoteParticipant({ participant }) {
   }, [participant]);
 
   return (
-    <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
+    <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video">
       <div ref={videoRef} className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover" />
       <div ref={audioRef} className="hidden" />
       <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">

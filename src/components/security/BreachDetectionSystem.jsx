@@ -265,25 +265,25 @@ export default function BreachDetectionSystem() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Card>
                 <CardContent className="p-3">
-                  <p className="text-xs text-gray-600 mb-1">Total Indicators</p>
+                  <p className="text-xs text-slate-600 mb-1">Total Indicators</p>
                   <p className="text-2xl font-bold">{breachIndicators.indicators_found}</p>
                 </CardContent>
               </Card>
               <Card className="border-red-200">
                 <CardContent className="p-3">
-                  <p className="text-xs text-gray-600 mb-1">Critical</p>
+                  <p className="text-xs text-slate-600 mb-1">Critical</p>
                   <p className="text-2xl font-bold text-red-600">{breachIndicators.critical_count}</p>
                 </CardContent>
               </Card>
               <Card className="border-yellow-200">
                 <CardContent className="p-3">
-                  <p className="text-xs text-gray-600 mb-1">Need Review</p>
+                  <p className="text-xs text-slate-600 mb-1">Need Review</p>
                   <p className="text-2xl font-bold text-yellow-600">{breachIndicators.notification_required}</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-3">
-                  <p className="text-xs text-gray-600 mb-1">Scan Time</p>
+                  <p className="text-xs text-slate-600 mb-1">Scan Time</p>
                   <p className="text-sm font-medium truncate">
                     {formatEastern(new Date(breachIndicators.scan_timestamp), 'HH:mm:ss')}
                   </p>
@@ -334,11 +334,11 @@ export default function BreachDetectionSystem() {
                               </Badge>
                             )}
                           </div>
-                          <p className="font-semibold text-gray-900 mb-1">{indicator.description}</p>
-                          <p className="text-sm text-gray-700 mb-2">
+                          <p className="font-semibold text-slate-900 mb-1">{indicator.description}</p>
+                          <p className="text-sm text-slate-700 mb-2">
                             <strong>Action Required:</strong> {indicator.recommendation}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             <Clock className="w-3 h-3 inline mr-1" />
                             {formatEastern(new Date(indicator.timestamp), 'MMM d, yyyy HH:mm:ss')}
                           </p>

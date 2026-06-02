@@ -222,9 +222,9 @@ Return JSON:
   };
 
   const StaffingControl = ({ label, value, onChange, icon: Icon }) => (
-    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+    <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
       <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 text-gray-500" />
+        <Icon className="w-4 h-4 text-slate-500" />
         <span className="text-sm font-medium">{label}</span>
       </div>
       <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ Return JSON:
           <Minus className="w-3 h-3" />
         </Button>
         <span className={`w-8 text-center font-bold ${
-          value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-gray-600'
+          value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-slate-600'
         }`}>
           {value > 0 ? '+' : ''}{value}
         </span>
@@ -407,12 +407,12 @@ Return JSON:
                     className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       newServiceLine === service.id 
                         ? 'border-indigo-500 bg-indigo-50' 
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <service.icon className="w-5 h-5 mb-1" style={{ color: service.color }} />
                     <p className="text-xs font-semibold">{service.name}</p>
-                    <p className="text-xs text-gray-500">{formatCurrency(service.avgRevenue)}/ep</p>
+                    <p className="text-xs text-slate-500">{formatCurrency(service.avgRevenue)}/ep</p>
                   </div>
                 ))}
               </div>
@@ -541,9 +541,9 @@ Return JSON:
                     <div className="grid grid-cols-3 gap-2">
                       {simulationResults.data.success_metrics.map((metric, idx) => (
                         <div key={idx} className="bg-white p-2 rounded border text-center">
-                          <p className="text-xs text-gray-600">{metric.metric}</p>
+                          <p className="text-xs text-slate-600">{metric.metric}</p>
                           <p className="text-sm font-bold text-green-700">{metric.target}</p>
-                          <p className="text-xs text-gray-500">{metric.timeline}</p>
+                          <p className="text-xs text-slate-500">{metric.timeline}</p>
                         </div>
                       ))}
                     </div>

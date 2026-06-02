@@ -78,14 +78,14 @@ export default function EnhancedStepIndicator({
     const status = getStepStatus(step);
     if (status === 'completed') return 'bg-green-500 border-green-500';
     if (status === 'active') return stepBgColors[step.color] || 'bg-blue-500 border-blue-500';
-    return 'bg-gray-300 border-gray-300';
+    return 'bg-slate-300 border-slate-300';
   };
 
   const getTextColor = (step) => {
     const status = getStepStatus(step);
     if (status === 'completed') return 'text-green-700';
     if (status === 'active') return stepTextColors[step.color] || 'text-blue-700';
-    return 'text-gray-500';
+    return 'text-slate-500';
   };
 
   return (
@@ -127,7 +127,7 @@ export default function EnhancedStepIndicator({
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 truncate">
+                      <p className="text-xs text-slate-600 truncate">
                         {step.description}
                       </p>
                     </div>
@@ -137,7 +137,7 @@ export default function EnhancedStepIndicator({
                   <ChevronRight className={`w-5 h-5 mx-2 ${
                     completedSteps.includes(steps[idx + 1].id) ? 'text-green-500' :
                     currentStep === steps[idx + 1].id ? 'text-indigo-500' :
-                    'text-gray-300'
+                    'text-slate-300'
                   }`} />
                 )}
               </React.Fragment>
@@ -148,13 +148,13 @@ export default function EnhancedStepIndicator({
         {/* Mobile View */}
         <div className="md:hidden space-y-3">
           <div className="flex items-center gap-2 mb-3">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div className="flex-1 bg-slate-200 rounded-full h-2">
               <div 
                 className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${((stepIndex + 1) / steps.length) * 100}%` }}
               />
             </div>
-            <span className="text-xs font-semibold text-gray-600">
+            <span className="text-xs font-semibold text-slate-600">
               {stepIndex + 1}/{steps.length}
             </span>
           </div>
@@ -192,7 +192,7 @@ export default function EnhancedStepIndicator({
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-gray-600">{step.description}</p>
+                  <p className="text-xs text-slate-600">{step.description}</p>
                 </div>
               </div>
             );

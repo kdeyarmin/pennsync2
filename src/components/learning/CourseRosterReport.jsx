@@ -159,7 +159,7 @@ export default function CourseRosterReport() {
                         <TableCell>{formatDate(assignment.assigned_date || assignment.created_date)}</TableCell>
                         <TableCell>{formatDate(assignment.due_date)}</TableCell>
                         <TableCell>
-                          <Badge className={statusColors[assignment.status] || 'bg-gray-100 text-gray-800'}>
+                          <Badge className={statusColors[assignment.status] || 'bg-slate-100 text-slate-800'}>
                             {assignment.status?.replace(/_/g, ' ') || 'unknown'}
                           </Badge>
                         </TableCell>

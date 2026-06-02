@@ -20,7 +20,7 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800 border-green-300';
-      case 'discharged': return 'bg-gray-100 text-gray-800 border-gray-300';
+      case 'discharged': return 'bg-slate-100 text-slate-800 border-slate-300';
       case 'hospitalized': return 'bg-orange-100 text-orange-800 border-orange-300';
       default: return 'bg-blue-100 text-blue-800 border-blue-300';
     }
@@ -43,7 +43,7 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
               
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-slate-900">
                     {patient.first_name} {patient.last_name}
                   </h3>
                   <Badge className={getStatusColor(patient.status)}>
@@ -55,7 +55,7 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
                     </Badge>
                   )}
                 </div>
-                <div className="flex gap-4 text-xs text-gray-600">
+                <div className="flex gap-4 text-xs text-slate-600">
                   <span>MRN: {patient.medical_record_number || 'N/A'}</span>
                   <span>•</span>
                   <span>{patient.primary_diagnosis || 'No diagnosis'}</span>
@@ -91,10 +91,10 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
               {patient.first_name?.[0]}{patient.last_name?.[0]}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 text-lg">
+              <h3 className="font-semibold text-slate-900 text-lg">
                 {patient.first_name} {patient.last_name}
               </h3>
-              <p className="text-xs text-gray-500">MRN: {patient.medical_record_number || 'Not assigned'}</p>
+              <p className="text-xs text-slate-500">MRN: {patient.medical_record_number || 'Not assigned'}</p>
             </div>
           </div>
           <Badge className={getStatusColor(patient.status)}>
@@ -104,21 +104,21 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
 
         {/* Key Info */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-slate-700">
             <Heart className="w-4 h-4 text-red-500" />
             <span className="font-medium">Diagnosis:</span>
             <span>{patient.primary_diagnosis || 'Not specified'}</span>
           </div>
           
           {patient.phone && (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-slate-700">
               <Phone className="w-4 h-4 text-blue-500" />
               <span>{patient.phone}</span>
             </div>
           )}
 
           {patient.admission_date && (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-slate-700">
               <Calendar className="w-4 h-4 text-green-500" />
               <span>Admitted: {new Date(patient.admission_date).toLocaleDateString()}</span>
             </div>
@@ -126,18 +126,18 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-slate-50 rounded-lg">
           <div className="text-center">
-            <p className="text-xs text-gray-600">Visits</p>
+            <p className="text-xs text-slate-600">Visits</p>
             <p className="text-lg font-bold text-blue-600">{visits.length}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-600">Care Plans</p>
+            <p className="text-xs text-slate-600">Care Plans</p>
             <p className="text-lg font-bold text-green-600">{activeCarePlans.length}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-600">Alerts</p>
-            <p className={`text-lg font-bold ${criticalAlerts.length > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+            <p className="text-xs text-slate-600">Alerts</p>
+            <p className={`text-lg font-bold ${criticalAlerts.length > 0 ? 'text-red-600' : 'text-slate-400'}`}>
               {criticalAlerts.length}
             </p>
           </div>
@@ -147,7 +147,7 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
         {recentVisit && (
           <div className="p-2 bg-blue-50 rounded border border-blue-200 mb-3">
             <p className="text-xs text-blue-600 font-medium mb-1">Last Visit</p>
-            <p className="text-xs text-gray-700">
+            <p className="text-xs text-slate-700">
               {new Date(recentVisit.visit_date).toLocaleDateString()} - {recentVisit.visit_type?.replace('_', ' ')}
             </p>
           </div>

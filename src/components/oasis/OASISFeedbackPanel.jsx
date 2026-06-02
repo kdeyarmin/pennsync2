@@ -87,13 +87,13 @@ export default function OASISFeedbackPanel({
 
   const StarRating = ({ value, onChange, label }) => (
     <div className="space-y-1">
-      <p className="text-xs text-gray-600">{label}</p>
+      <p className="text-xs text-slate-600">{label}</p>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             onClick={() => onChange(star)}
-            className={`p-0.5 ${star <= value ? 'text-yellow-500' : 'text-gray-300'}`}
+            className={`p-0.5 ${star <= value ? 'text-yellow-500' : 'text-slate-300'}`}
           >
             <Star className="w-5 h-5 fill-current" />
           </button>
@@ -104,7 +104,7 @@ export default function OASISFeedbackPanel({
 
   return (
     <>
-      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200">
+      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
         <Button
           size="sm"
           variant="outline"

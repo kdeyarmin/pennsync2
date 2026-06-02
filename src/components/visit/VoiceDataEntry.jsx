@@ -348,7 +348,7 @@ Now parse the user's input above with maximum medical accuracy:`;
       case 'high': return 'bg-green-100 text-green-800 border-green-200';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'low': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
@@ -409,15 +409,15 @@ Now parse the user's input above with maximum medical accuracy:`;
                     <div className="absolute inset-0 w-16 h-16 bg-red-500 rounded-full animate-ping opacity-75"></div>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-gray-900">Listening...</p>
-                    <p className="text-sm text-gray-600">Speak your vitals and observations</p>
+                    <p className="text-xl font-bold text-slate-900">Listening...</p>
+                    <p className="text-sm text-slate-600">Speak your vitals and observations</p>
                   </div>
                 </div>
 
                 {transcript && (
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Live Transcript:</p>
-                    <p className="text-gray-900 italic">"{transcript}"</p>
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                    <p className="text-sm font-medium text-slate-700 mb-2">Live Transcript:</p>
+                    <p className="text-slate-900 italic">"{transcript}"</p>
                   </div>
                 )}
 
@@ -437,8 +437,8 @@ Now parse the user's input above with maximum medical accuracy:`;
               <div className="flex flex-col items-center gap-3 py-8">
                 <Loader2 className="w-12 h-12 text-purple-600 animate-spin" />
                 <div className="text-center">
-                  <p className="font-semibold text-gray-900">Processing your input...</p>
-                  <p className="text-sm text-gray-600">AI is extracting vitals and formatting narrative</p>
+                  <p className="font-semibold text-slate-900">Processing your input...</p>
+                  <p className="text-sm text-slate-600">AI is extracting vitals and formatting narrative</p>
                 </div>
               </div>
             )}
@@ -466,16 +466,16 @@ Now parse the user's input above with maximum medical accuracy:`;
                 <Badge className={getConfidenceColor(capturedData.confidence)}>
                   {capturedData.confidence.toUpperCase()} CONFIDENCE
                 </Badge>
-                <span className="text-sm text-gray-600">{capturedData.parsing_notes}</span>
+                <span className="text-sm text-slate-600">{capturedData.parsing_notes}</span>
               </div>
 
               {/* Original Text */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <p className="text-sm font-medium text-slate-700 mb-2">
                   <Volume2 className="w-4 h-4 inline mr-1" />
                   What you said:
                 </p>
-                <p className="text-gray-900 italic">"{capturedData.original_text}"</p>
+                <p className="text-slate-900 italic">"{capturedData.original_text}"</p>
               </div>
 
               {/* Extracted Vitals */}
@@ -488,46 +488,46 @@ Now parse the user's input above with maximum medical accuracy:`;
                   <div className="grid grid-cols-2 gap-3">
                     {capturedData.vitals.temperature && (
                       <div className="bg-white rounded p-2 border border-blue-100">
-                        <p className="text-xs text-gray-600">Temperature</p>
-                        <p className="text-lg font-bold text-gray-900">{capturedData.vitals.temperature}°F</p>
+                        <p className="text-xs text-slate-600">Temperature</p>
+                        <p className="text-lg font-bold text-slate-900">{capturedData.vitals.temperature}°F</p>
                       </div>
                     )}
                     {capturedData.vitals.blood_pressure_systolic && (
                       <div className="bg-white rounded p-2 border border-blue-100">
-                        <p className="text-xs text-gray-600">Blood Pressure</p>
-                        <p className="text-lg font-bold text-gray-900">
+                        <p className="text-xs text-slate-600">Blood Pressure</p>
+                        <p className="text-lg font-bold text-slate-900">
                           {capturedData.vitals.blood_pressure_systolic}/{capturedData.vitals.blood_pressure_diastolic}
                         </p>
                       </div>
                     )}
                     {capturedData.vitals.heart_rate && (
                       <div className="bg-white rounded p-2 border border-blue-100">
-                        <p className="text-xs text-gray-600">Heart Rate</p>
-                        <p className="text-lg font-bold text-gray-900">{capturedData.vitals.heart_rate} bpm</p>
+                        <p className="text-xs text-slate-600">Heart Rate</p>
+                        <p className="text-lg font-bold text-slate-900">{capturedData.vitals.heart_rate} bpm</p>
                       </div>
                     )}
                     {capturedData.vitals.respiratory_rate && (
                       <div className="bg-white rounded p-2 border border-blue-100">
-                        <p className="text-xs text-gray-600">Respiratory Rate</p>
-                        <p className="text-lg font-bold text-gray-900">{capturedData.vitals.respiratory_rate} /min</p>
+                        <p className="text-xs text-slate-600">Respiratory Rate</p>
+                        <p className="text-lg font-bold text-slate-900">{capturedData.vitals.respiratory_rate} /min</p>
                       </div>
                     )}
                     {capturedData.vitals.oxygen_saturation && (
                       <div className="bg-white rounded p-2 border border-blue-100">
-                        <p className="text-xs text-gray-600">O2 Saturation</p>
-                        <p className="text-lg font-bold text-gray-900">{capturedData.vitals.oxygen_saturation}%</p>
+                        <p className="text-xs text-slate-600">O2 Saturation</p>
+                        <p className="text-lg font-bold text-slate-900">{capturedData.vitals.oxygen_saturation}%</p>
                       </div>
                     )}
                     {capturedData.vitals.pain_level !== undefined && (
                       <div className="bg-white rounded p-2 border border-blue-100">
-                        <p className="text-xs text-gray-600">Pain Level</p>
-                        <p className="text-lg font-bold text-gray-900">{capturedData.vitals.pain_level}/10</p>
+                        <p className="text-xs text-slate-600">Pain Level</p>
+                        <p className="text-lg font-bold text-slate-900">{capturedData.vitals.pain_level}/10</p>
                       </div>
                     )}
                     {capturedData.vitals.weight && (
                       <div className="bg-white rounded p-2 border border-blue-100">
-                        <p className="text-xs text-gray-600">Weight</p>
-                        <p className="text-lg font-bold text-gray-900">{capturedData.vitals.weight} lbs</p>
+                        <p className="text-xs text-slate-600">Weight</p>
+                        <p className="text-lg font-bold text-slate-900">{capturedData.vitals.weight} lbs</p>
                       </div>
                     )}
                   </div>
@@ -541,7 +541,7 @@ Now parse the user's input above with maximum medical accuracy:`;
                     <FileText className="w-4 h-4" />
                     Clinical Narrative:
                   </p>
-                  <p className="text-gray-900 whitespace-pre-wrap">{capturedData.narrative}</p>
+                  <p className="text-slate-900 whitespace-pre-wrap">{capturedData.narrative}</p>
                 </div>
               )}
 

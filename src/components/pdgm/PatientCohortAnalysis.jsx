@@ -44,13 +44,13 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
   const getVarianceColor = (variance) => {
     if (variance > 5) return 'text-green-600';
     if (variance < -5) return 'text-red-600';
-    return 'text-gray-600';
+    return 'text-slate-600';
   };
 
   const getVarianceBg = (variance) => {
     if (variance > 5) return 'bg-green-50 border-green-200';
     if (variance < -5) return 'bg-red-50 border-red-200';
-    return 'bg-gray-50 border-gray-200';
+    return 'bg-slate-50 border-slate-200';
   };
 
   return (
@@ -58,7 +58,7 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
       {/* Segmentation Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
+          <Filter className="w-4 h-4 text-slate-500" />
           <span className="text-sm font-medium">Segment by:</span>
           <Select value={segmentBy} onValueChange={setSegmentBy}>
             <SelectTrigger className="w-40 h-8 text-xs">
@@ -97,14 +97,14 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
                   {cohort.patient_count} pts
                 </Badge>
               </div>
-              <p className="font-semibold text-sm text-gray-900 mb-1">{cohort.name}</p>
+              <p className="font-semibold text-sm text-slate-900 mb-1">{cohort.name}</p>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Avg Revenue</span>
+                  <span className="text-slate-500">Avg Revenue</span>
                   <span className="font-medium">{formatCurrency(cohort.avg_revenue)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Case-Mix</span>
+                  <span className="text-slate-500">Case-Mix</span>
                   <span className="font-medium">{cohort.avg_case_mix?.toFixed(3)}</span>
                 </div>
                 <div className={`flex justify-between text-xs ${getVarianceColor(cohort.variance_pct)}`}>
@@ -159,8 +159,8 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
               <div key={idx} className={`p-3 rounded-lg border ${getVarianceBg(driver.impact_pct)}`}>
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="font-semibold text-sm text-gray-900">{driver.driver}</p>
-                    <p className="text-xs text-gray-600">{driver.description}</p>
+                    <p className="font-semibold text-sm text-slate-900">{driver.driver}</p>
+                    <p className="text-xs text-slate-600">{driver.description}</p>
                   </div>
                   <div className="text-right">
                     <p className={`text-lg font-bold ${getVarianceColor(driver.impact_pct)}`}>
@@ -185,7 +185,7 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
                   )}
                 </div>
                 {driver.recommendation && (
-                  <p className="text-xs text-gray-700 mt-2 bg-white p-2 rounded border">
+                  <p className="text-xs text-slate-700 mt-2 bg-white p-2 rounded border">
                     <strong>Action:</strong> {driver.recommendation}
                   </p>
                 )}
@@ -227,7 +227,7 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
             {cohorts[selectedCohort].risk_breakdown && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Risk Distribution</p>
+                  <p className="text-xs font-semibold text-slate-600 mb-2">Risk Distribution</p>
                   <div className="h-32">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -254,7 +254,7 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Key Characteristics</p>
+                  <p className="text-xs font-semibold text-slate-600 mb-2">Key Characteristics</p>
                   <ul className="space-y-1 text-xs">
                     {cohorts[selectedCohort].characteristics?.map((char, i) => (
                       <li key={i} className="flex items-center gap-2">

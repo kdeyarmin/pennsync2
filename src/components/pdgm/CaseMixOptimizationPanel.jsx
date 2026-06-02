@@ -146,15 +146,15 @@ Return JSON:
         {isLoading ? (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-2" />
-            <p className="text-xs text-gray-600">Calculating optimization opportunities...</p>
+            <p className="text-xs text-slate-600">Calculating optimization opportunities...</p>
           </div>
         ) : optimization ? (
           <>
             {/* Payment Estimate Comparison */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white p-3 rounded border">
-                <p className="text-[10px] text-gray-600 mb-1">Current Estimate</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-[10px] text-slate-600 mb-1">Current Estimate</p>
+                <p className="text-lg font-bold text-slate-900">
                   {optimization.current_case_mix_estimate?.payment_estimate}
                 </p>
                 <Badge variant="outline" className="text-[10px] mt-1">
@@ -243,8 +243,8 @@ Return JSON:
             )}
           </>
         ) : (
-          <div className="text-center py-6 text-gray-500 text-sm">
-            <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+          <div className="text-center py-6 text-slate-500 text-sm">
+            <DollarSign className="w-12 h-12 text-slate-300 mx-auto mb-2" />
             <p>Click "Analyze" to identify payment optimization opportunities</p>
           </div>
         )}
@@ -265,7 +265,7 @@ function RecommendationCard({ rec, onApply }) {
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-sm font-medium text-gray-900">{rec.title}</p>
+            <p className="text-sm font-medium text-slate-900">{rec.title}</p>
             <Badge className="text-[10px] bg-green-600 text-white">
               {rec.payment_impact}
             </Badge>
@@ -281,20 +281,20 @@ function RecommendationCard({ rec, onApply }) {
 
       <div className="space-y-2">
         <div className="bg-white/70 p-2 rounded text-xs">
-          <strong className="text-gray-700">Opportunity:</strong>
-          <p className="text-gray-600 mt-0.5">{rec.opportunity}</p>
+          <strong className="text-slate-700">Opportunity:</strong>
+          <p className="text-slate-600 mt-0.5">{rec.opportunity}</p>
         </div>
 
         {expanded && (
           <>
             <div className="bg-white p-2 rounded border text-xs">
-              <strong className="text-gray-700">Add to documentation:</strong>
-              <p className="text-gray-900 mt-1 italic">"{rec.documentation_text}"</p>
+              <strong className="text-slate-700">Add to documentation:</strong>
+              <p className="text-slate-900 mt-1 italic">"{rec.documentation_text}"</p>
             </div>
             
             {rec.oasis_items?.length > 0 && (
               <div className="flex gap-1">
-                <span className="text-[10px] text-gray-600">OASIS Items:</span>
+                <span className="text-[10px] text-slate-600">OASIS Items:</span>
                 {rec.oasis_items.map((item, i) => (
                   <Badge key={i} variant="outline" className="text-[10px]">{item}</Badge>
                 ))}

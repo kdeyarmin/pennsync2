@@ -139,8 +139,8 @@ export default function AdminTrainingAnalytics() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Training Analytics Dashboard</h1>
-        <p className="text-gray-600">Monitor training progress and effectiveness across your agency</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Training Analytics Dashboard</h1>
+        <p className="text-slate-600">Monitor training progress and effectiveness across your agency</p>
       </div>
 
       {/* Key Metrics */}

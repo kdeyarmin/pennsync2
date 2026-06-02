@@ -396,7 +396,7 @@ export default function SignatureRequestCreator({ onCancel }) {
                     type="checkbox" 
                     checked={remindersEnabled}
                     onChange={(e) => setRemindersEnabled(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                   />
                 </div>
                 {remindersEnabled && (

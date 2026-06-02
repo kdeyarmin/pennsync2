@@ -124,7 +124,7 @@ ${summary.follow_up_items?.map(f => `• ${f}`).join('\n') || 'None'}`;
       case 'declining': return <TrendingDown className="w-4 h-4 text-red-600" />;
       case 'stable': 
       case 'unchanged': return <Minus className="w-4 h-4 text-blue-600" />;
-      default: return <Minus className="w-4 h-4 text-gray-600" />;
+      default: return <Minus className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -133,7 +133,7 @@ ${summary.follow_up_items?.map(f => `• ${f}`).join('\n') || 'None'}`;
       case 'improving': return 'bg-green-100 text-green-800 border-green-300';
       case 'declining': return 'bg-red-100 text-red-800 border-red-300';
       case 'stable': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -142,7 +142,7 @@ ${summary.follow_up_items?.map(f => `• ${f}`).join('\n') || 'None'}`;
       case 'critical': return 'bg-red-600 text-white';
       case 'concerning': return 'bg-orange-100 text-orange-800';
       case 'improved': return 'bg-green-100 text-green-800';
-      case 'normal': return 'bg-gray-100 text-gray-800';
+      case 'normal': return 'bg-slate-100 text-slate-800';
       default: return 'bg-blue-100 text-blue-800';
     }
   };
@@ -198,7 +198,7 @@ ${summary.follow_up_items?.map(f => `• ${f}`).join('\n') || 'None'}`;
                 <Badge className={getStatusColor(summary.patient_status?.overall)}>
                   {summary.patient_status?.overall?.toUpperCase()}
                 </Badge>
-                <span className="text-xs text-gray-600">{summary.patient_status?.summary}</span>
+                <span className="text-xs text-slate-600">{summary.patient_status?.summary}</span>
               </div>
 
               {/* Alerts */}
@@ -216,7 +216,7 @@ ${summary.follow_up_items?.map(f => `• ${f}`).join('\n') || 'None'}`;
               {/* Key Findings */}
               {summary.key_findings?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Key Findings</p>
+                  <p className="text-xs font-semibold text-slate-600 mb-1">Key Findings</p>
                   <div className="flex flex-wrap gap-1">
                     {summary.key_findings.map((f, idx) => (
                       <Badge key={idx} variant="outline" className={`text-xs ${getSignificanceColor(f.significance)}`}>
@@ -230,8 +230,8 @@ ${summary.follow_up_items?.map(f => `• ${f}`).join('\n') || 'None'}`;
               {/* Interventions */}
               {summary.interventions?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Interventions</p>
-                  <ul className="text-xs text-gray-700 space-y-0.5">
+                  <p className="text-xs font-semibold text-slate-600 mb-1">Interventions</p>
+                  <ul className="text-xs text-slate-700 space-y-0.5">
                     {summary.interventions.map((i, idx) => (
                       <li key={idx}>• {i}</li>
                     ))}
@@ -242,8 +242,8 @@ ${summary.follow_up_items?.map(f => `• ${f}`).join('\n') || 'None'}`;
               {/* Follow-up */}
               {summary.follow_up_items?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Follow-up Items</p>
-                  <ul className="text-xs text-gray-700 space-y-0.5">
+                  <p className="text-xs font-semibold text-slate-600 mb-1">Follow-up Items</p>
+                  <ul className="text-xs text-slate-700 space-y-0.5">
                     {summary.follow_up_items.map((f, idx) => (
                       <li key={idx}>→ {f}</li>
                     ))}

@@ -216,7 +216,7 @@ export default function ComplianceEducationPanel({
                     {isRelevant ? (
                       <AlertCircle className="w-4 h-4 text-orange-500" />
                     ) : (
-                      <FileText className="w-4 h-4 text-gray-400" />
+                      <FileText className="w-4 h-4 text-slate-400" />
                     )}
                     <span className={isRelevant ? 'font-medium' : ''}>{key}</span>
                     {isRelevant && (
@@ -233,11 +233,11 @@ export default function ComplianceEducationPanel({
                       <Badge variant="outline" className="text-xs font-mono">
                         {guideline.code}
                       </Badge>
-                      <span className="text-xs text-gray-600">{guideline.title}</span>
+                      <span className="text-xs text-slate-600">{guideline.title}</span>
                     </div>
 
                     {/* Summary */}
-                    <p className="text-sm text-gray-700">{guideline.summary}</p>
+                    <p className="text-sm text-slate-700">{guideline.summary}</p>
 
                     {/* Key Points */}
                     <div className="bg-blue-50 p-2 rounded">

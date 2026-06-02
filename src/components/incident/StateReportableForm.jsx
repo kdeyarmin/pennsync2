@@ -178,8 +178,8 @@ Submitted On: ${new Date().toLocaleString()}
           <CheckCircle2 className="w-10 h-10 text-green-600" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Report Submitted</h2>
-          <p className="text-gray-600 mt-2 max-w-md">
+          <h2 className="text-2xl font-bold text-slate-900">Report Submitted</h2>
+          <p className="text-slate-600 mt-2 max-w-md">
             Your state reportable event report has been successfully submitted. Agency administrators have been notified immediately.
           </p>
         </div>
@@ -200,8 +200,8 @@ Submitted On: ${new Date().toLocaleString()}
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">State Reportable Event Report</h2>
-        <p className="text-sm text-gray-600 mt-1">
+        <h2 className="text-2xl font-bold text-slate-900">State Reportable Event Report</h2>
+        <p className="text-sm text-slate-600 mt-1">
           Fields preceded with <span className="text-red-600 font-bold">*</span> are required.
         </p>
       </div>
@@ -215,12 +215,12 @@ Submitted On: ${new Date().toLocaleString()}
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="divide-y divide-gray-100">
+      <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="divide-y divide-slate-100">
 
           {/* Patient */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               <span className="text-red-600">*</span>Patient:
             </Label>
             <div>
@@ -242,7 +242,7 @@ Submitted On: ${new Date().toLocaleString()}
 
           {/* Date of Event */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               <span className="text-red-600">*</span>Date of Event (mm/dd/yyyy):
             </Label>
             <div>
@@ -258,7 +258,7 @@ Submitted On: ${new Date().toLocaleString()}
 
           {/* Time of Event */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               <span className="text-red-600">*</span>Time of Event (military hhmm):
             </Label>
             <div>
@@ -286,7 +286,7 @@ Submitted On: ${new Date().toLocaleString()}
 
           {/* Event Type */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               <span className="text-red-600">*</span>Event Type:
             </Label>
             <div>
@@ -306,7 +306,7 @@ Submitted On: ${new Date().toLocaleString()}
 
           {/* Location */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               <span className="text-red-600">*</span>Location of Event:
             </Label>
             <div>
@@ -322,9 +322,9 @@ Submitted On: ${new Date().toLocaleString()}
 
           {/* Medications */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               Name and Frequency of Medication(s):<br />
-              <span className="text-gray-400 font-normal text-xs">(maximum 600 characters)</span>
+              <span className="text-slate-400 font-normal text-xs">(maximum 600 characters)</span>
             </Label>
             <Textarea
               value={form.medications}
@@ -338,9 +338,9 @@ Submitted On: ${new Date().toLocaleString()}
 
           {/* Diagnosis */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               Diagnosis of Patient:<br />
-              <span className="text-gray-400 font-normal text-xs">(maximum 250 characters)</span>
+              <span className="text-slate-400 font-normal text-xs">(maximum 250 characters)</span>
             </Label>
             <Textarea
               value={form.diagnosis}
@@ -354,9 +354,9 @@ Submitted On: ${new Date().toLocaleString()}
 
           {/* Factual Description */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               <span className="text-red-600">*</span>Factual Description:<br />
-              <span className="text-gray-400 font-normal text-xs">(maximum 3500 characters)</span>
+              <span className="text-slate-400 font-normal text-xs">(maximum 3500 characters)</span>
             </Label>
             <div>
               <Textarea
@@ -369,16 +369,16 @@ Submitted On: ${new Date().toLocaleString()}
               />
               <div className="flex items-center justify-between mt-1">
                 <FieldError show={showError("factual_description")} message="Factual description is required." />
-                <span className="text-xs text-gray-400 ml-auto">{form.factual_description.length}/3500</span>
+                <span className="text-xs text-slate-400 ml-auto">{form.factual_description.length}/3500</span>
               </div>
             </div>
           </div>
 
           {/* Follow-up Action */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
-            <Label className="pt-2 font-medium text-sm text-gray-700">
+            <Label className="pt-2 font-medium text-sm text-slate-700">
               <span className="text-red-600">*</span>Description of Follow-up Action:<br />
-              <span className="text-gray-400 font-normal text-xs">(maximum 3500 characters)</span>
+              <span className="text-slate-400 font-normal text-xs">(maximum 3500 characters)</span>
             </Label>
             <div>
               <Textarea
@@ -391,7 +391,7 @@ Submitted On: ${new Date().toLocaleString()}
               />
               <div className="flex items-center justify-between mt-1">
                 <FieldError show={showError("followup_action")} message="Follow-up action description is required." />
-                <span className="text-xs text-gray-400 ml-auto">{form.followup_action.length}/3500</span>
+                <span className="text-xs text-slate-400 ml-auto">{form.followup_action.length}/3500</span>
               </div>
             </div>
           </div>
@@ -401,8 +401,8 @@ Submitted On: ${new Date().toLocaleString()}
         </div>
 
         {/* Footer note */}
-        <div className="px-5 py-4 bg-gray-50 border-t border-gray-200 text-center space-y-4">
-          <p className="text-sm text-gray-600">
+        <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 text-center space-y-4">
+          <p className="text-sm text-slate-600">
             <strong>Note:</strong> An event will not be considered submitted until you receive a confirmation. Once submitted, agency administrators will be notified immediately.
           </p>
 

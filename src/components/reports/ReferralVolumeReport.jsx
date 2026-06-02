@@ -72,8 +72,8 @@ export default function ReferralVolumeReport({ dateRange }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">Referral Volume Analysis</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-xl font-semibold text-slate-900">Referral Volume Analysis</h3>
+          <p className="text-sm text-slate-600">
             {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end), 'MMM d, yyyy')}
           </p>
         </div>
@@ -87,25 +87,25 @@ export default function ReferralVolumeReport({ dateRange }) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Total Referrals</p>
-            <p className="text-3xl font-bold text-gray-900">{filteredReferrals.length}</p>
+            <p className="text-sm text-slate-600 mb-1">Total Referrals</p>
+            <p className="text-3xl font-bold text-slate-900">{filteredReferrals.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Urgent Priority</p>
+            <p className="text-sm text-slate-600 mb-1">Urgent Priority</p>
             <p className="text-3xl font-bold text-red-600">{priorityData[0].count}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Ready for Admission</p>
+            <p className="text-sm text-slate-600 mb-1">Ready for Admission</p>
             <p className="text-3xl font-bold text-green-600">{filteredReferrals.filter(r => r.status === 'ready_for_admission').length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Avg Processing Time</p>
+            <p className="text-sm text-slate-600 mb-1">Avg Processing Time</p>
             <p className="text-3xl font-bold text-blue-600">2.3d</p>
           </CardContent>
         </Card>
@@ -166,20 +166,20 @@ export default function ReferralVolumeReport({ dateRange }) {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Source</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Count</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Percentage</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Avg Priority</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Source</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Count</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Percentage</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Avg Priority</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-slate-200">
                 {sourceChartData.sort((a, b) => b.count - a.count).slice(0, 10).map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{item.source}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{item.count}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
+                  <tr key={index} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-900">{item.source}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">{item.count}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">
                       {((item.count / filteredReferrals.length) * 100).toFixed(1)}%
                     </td>
                     <td className="px-4 py-3 text-sm">

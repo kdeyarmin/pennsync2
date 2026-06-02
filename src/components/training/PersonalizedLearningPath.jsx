@@ -55,7 +55,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
       case 'high': return 'bg-orange-500';
       case 'medium': return 'bg-yellow-500';
       case 'low': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -64,7 +64,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
       <Card>
         <CardContent className="p-12 text-center">
           <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Generating your personalized learning path...</p>
+          <p className="text-slate-600">Generating your personalized learning path...</p>
         </CardContent>
       </Card>
     );
@@ -73,8 +73,8 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
   if (!learningPath) {
     return (
       <Card>
-        <CardContent className="p-12 text-center text-gray-500">
-          <Target className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+        <CardContent className="p-12 text-center text-slate-500">
+          <Target className="w-12 h-12 mx-auto mb-3 text-slate-400" />
           <p>Unable to generate learning path. Please try again.</p>
         </CardContent>
       </Card>
@@ -96,10 +96,10 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-6 h-6 text-purple-600" />
-                <h3 className="text-2xl font-bold text-gray-900">Your AI-Personalized Learning Path</h3>
+                <h3 className="text-2xl font-bold text-slate-900">Your AI-Personalized Learning Path</h3>
               </div>
-              <p className="text-gray-700 mb-3">{learningPath.motivation_message}</p>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <p className="text-slate-700 mb-3">{learningPath.motivation_message}</p>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
                 <Target className="w-4 h-4" />
                 <span className="font-medium">Goal:</span>
                 <span>{learningPath.overall_goal}</span>
@@ -119,21 +119,21 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
           {/* Progress Overview */}
           <div className="grid md:grid-cols-3 gap-4 mt-4">
             <div className="bg-white rounded-lg p-4 border">
-              <p className="text-sm text-gray-600 mb-1">Progress</p>
+              <p className="text-sm text-slate-600 mb-1">Progress</p>
               <div className="flex items-center gap-3">
                 <Progress value={progressPercent} className="flex-1" />
                 <span className="text-lg font-bold text-purple-600">{completedCount}/{totalCount}</span>
               </div>
             </div>
             <div className="bg-white rounded-lg p-4 border">
-              <p className="text-sm text-gray-600 mb-1">Est. Completion</p>
+              <p className="text-sm text-slate-600 mb-1">Est. Completion</p>
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-blue-600" />
                 <span className="text-lg font-bold">{learningPath.estimated_completion_weeks} weeks</span>
               </div>
             </div>
             <div className="bg-white rounded-lg p-4 border">
-              <p className="text-sm text-gray-600 mb-1">Current Score</p>
+              <p className="text-sm text-slate-600 mb-1">Current Score</p>
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-600" />
                 <span className="text-lg font-bold">{learningPath.performance_summary?.compliance_score?.toFixed(0)}%</span>
@@ -159,7 +159,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
               className={`border-2 ${
                 completed ? 'border-green-300 bg-green-50' :
                 isNext ? 'border-purple-300 bg-purple-50' :
-                'border-gray-200'
+                'border-slate-200'
               }`}
             >
               <CardContent className="p-6">
@@ -168,7 +168,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                     completed ? 'bg-green-500 text-white' :
                     isNext ? 'bg-purple-500 text-white' :
-                    'bg-gray-300 text-gray-600'
+                    'bg-slate-300 text-slate-600'
                   }`}>
                     {completed ? <CheckCircle2 className="w-6 h-6" /> : <span className="text-lg font-bold">{idx + 1}</span>}
                   </div>
@@ -178,17 +178,17 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <h4 className="text-lg font-bold text-gray-900">{item.module.title}</h4>
+                          <h4 className="text-lg font-bold text-slate-900">{item.module.title}</h4>
                           <Badge className={getPriorityColor(item.priority)}>
                             {item.priority} priority
                           </Badge>
                           {isNext && <Badge className="bg-purple-500">Next Up</Badge>}
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">{item.module.description}</p>
+                        <p className="text-sm text-slate-600 mb-2">{item.module.description}</p>
                       </div>
                       <div className="text-right flex-shrink-0 ml-4">
-                        <p className="text-sm text-gray-600">Est. Time</p>
-                        <p className="text-lg font-bold text-gray-900">{item.estimated_days}d</p>
+                        <p className="text-sm text-slate-600">Est. Time</p>
+                        <p className="text-lg font-bold text-slate-900">{item.estimated_days}d</p>
                       </div>
                     </div>
 
@@ -202,10 +202,10 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
 
                     {/* Learning Objectives */}
                     <div className="mb-3">
-                      <p className="text-sm font-semibold text-gray-700 mb-2">Learning Objectives:</p>
+                      <p className="text-sm font-semibold text-slate-700 mb-2">Learning Objectives:</p>
                       <ul className="space-y-1">
                         {item.learning_objectives?.map((obj, objIdx) => (
-                          <li key={objIdx} className="text-sm text-gray-600 flex items-start gap-2">
+                          <li key={objIdx} className="text-sm text-slate-600 flex items-start gap-2">
                             <span className="text-purple-600 mt-1">•</span>
                             <span>{obj}</span>
                           </li>
@@ -246,8 +246,8 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
           );
         }) : (
           <Card>
-            <CardContent className="p-8 text-center text-gray-500">
-              <Target className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <CardContent className="p-8 text-center text-slate-500">
+              <Target className="w-12 h-12 mx-auto mb-3 text-slate-400" />
               <p>No learning modules available in your path yet.</p>
             </CardContent>
           </Card>

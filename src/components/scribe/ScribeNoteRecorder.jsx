@@ -136,7 +136,7 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
                   <>
                     <Button
                       onClick={stopRecording}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700"
+                      className="flex-1 bg-slate-600 hover:bg-slate-700"
                       size="lg"
                     >
                       <Square className="w-5 h-5 mr-2" />
@@ -161,10 +161,10 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
                 />
                 <label htmlFor="audio-upload" className="cursor-pointer">
                   <Upload className="w-10 h-10 mx-auto mb-2 text-blue-400" />
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-slate-700">
                     Or click to upload pre-recorded file
                   </p>
-                  <p className="text-xs text-gray-500">MP3, WAV, M4A, MP4, OGG, WebM (up to 500MB)</p>
+                  <p className="text-xs text-slate-500">MP3, WAV, M4A, MP4, OGG, WebM (up to 500MB)</p>
                 </label>
               </div>
             </div>

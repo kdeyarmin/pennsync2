@@ -253,17 +253,17 @@ For each patient, provide:
                         </div>
                         <div className="grid md:grid-cols-2 gap-3 text-sm">
                           <div>
-                            <p className="font-medium text-gray-700">Primary Factor:</p>
-                            <p className="text-gray-600">{pred.primary_factor}</p>
+                            <p className="font-medium text-slate-700">Primary Factor:</p>
+                            <p className="text-slate-600">{pred.primary_factor}</p>
                           </div>
                           <div>
-                            <p className="font-medium text-gray-700">Follow-up Schedule:</p>
-                            <p className="text-gray-600">{pred.follow_up}</p>
+                            <p className="font-medium text-slate-700">Follow-up Schedule:</p>
+                            <p className="text-slate-600">{pred.follow_up}</p>
                           </div>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-700">Recommended Intervention:</p>
-                          <p className="text-gray-600">{pred.intervention}</p>
+                          <p className="font-medium text-slate-700">Recommended Intervention:</p>
+                          <p className="text-slate-600">{pred.intervention}</p>
                         </div>
                       </div>
                     </AlertDescription>

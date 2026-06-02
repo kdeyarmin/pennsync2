@@ -290,8 +290,8 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
       <Card>
         <CardContent className="p-8 text-center">
           <Sparkles className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-pulse" />
-          <p className="text-lg font-medium text-gray-700">Analyzing Your Performance...</p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-lg font-medium text-slate-700">Analyzing Your Performance...</p>
+          <p className="text-sm text-slate-500 mt-2">
             Reviewing documentation patterns, compliance scores, and clinical gaps
           </p>
         </CardContent>
@@ -309,7 +309,7 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             No recommendations available yet. Complete more documentation to receive personalized training suggestions.
           </p>
         </CardContent>
@@ -356,7 +356,7 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-700 mb-4">{recommendations.overall_assessment}</p>
+          <p className="text-sm text-slate-700 mb-4">{recommendations.overall_assessment}</p>
           <Progress value={recommendations.development_score} className="h-3" />
         </CardContent>
       </Card>
@@ -377,8 +377,8 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-gray-900">{strength.strength_area}</p>
-                      <p className="text-sm text-gray-600 mt-1">{strength.evidence}</p>
+                      <p className="font-semibold text-slate-900">{strength.strength_area}</p>
+                      <p className="text-sm text-slate-600 mt-1">{strength.evidence}</p>
                       <p className="text-xs text-green-700 mt-1 italic">
                         💡 {strength.leverage_opportunity}
                       </p>
@@ -407,15 +407,15 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">{area.skill_area}</h4>
+                        <h4 className="font-semibold text-slate-900">{area.skill_area}</h4>
                         <Badge className="bg-orange-600 text-white">
                           Priority {area.priority_score}/10
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600">{area.current_performance}</p>
+                      <p className="text-sm text-slate-600">{area.current_performance}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{area.gap_description}</p>
+                  <p className="text-sm text-slate-700 mb-2">{area.gap_description}</p>
                   <div className="bg-white p-2 rounded border border-orange-200">
                     <p className="text-xs text-orange-900">
                       <AlertTriangle className="w-3 h-3 inline mr-1" />
@@ -455,11 +455,11 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
                   <AccordionContent className="px-3 pb-3">
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Why This Module:</p>
-                        <p className="text-sm text-gray-600">{module.relevance_explanation}</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Why This Module:</p>
+                        <p className="text-sm text-slate-600">{module.relevance_explanation}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Expected Improvement:</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Expected Improvement:</p>
                         <p className="text-sm text-green-700">{module.expected_improvement}</p>
                       </div>
                       <Button 
@@ -502,9 +502,9 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
                   </div>
                   <div className="flex-1 pb-4">
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-gray-900 mb-1">{step.focus_area}</h4>
-                      <p className="text-sm text-gray-700 mb-2">{step.action}</p>
-                      <div className="flex items-center gap-4 text-xs text-gray-600">
+                      <h4 className="font-semibold text-slate-900 mb-1">{step.focus_area}</h4>
+                      <p className="text-sm text-slate-700 mb-2">{step.action}</p>
+                      <div className="flex items-center gap-4 text-xs text-slate-600">
                         <span>
                           <Clock className="w-3 h-3 inline mr-1" />
                           {step.timeline}
@@ -533,18 +533,18 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
             <div className="space-y-4">
               {recommendations.performance_goals.map((goal, index) => (
                 <div key={index} className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                  <h4 className="font-semibold text-gray-900 mb-2">{goal.goal}</h4>
+                  <h4 className="font-semibold text-slate-900 mb-2">{goal.goal}</h4>
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                      <p className="text-xs text-gray-600">Current</p>
-                      <p className="text-sm font-medium text-gray-900">{goal.current_baseline}</p>
+                      <p className="text-xs text-slate-600">Current</p>
+                      <p className="text-sm font-medium text-slate-900">{goal.current_baseline}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-600">Target</p>
+                      <p className="text-xs text-slate-600">Target</p>
                       <p className="text-sm font-medium text-green-700">{goal.target}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-600">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
                     <span>⏰ {goal.timeframe}</span>
                     <span>📈 {goal.tracking_method}</span>
                   </div>
@@ -573,8 +573,8 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-900">{tip.topic}</p>
-                      <p className="text-xs text-gray-600 mt-1">💡 {tip.quick_tip}</p>
+                      <p className="text-sm font-semibold text-slate-900">{tip.topic}</p>
+                      <p className="text-xs text-slate-600 mt-1">💡 {tip.quick_tip}</p>
                       <p className="text-xs text-yellow-700 mt-1">
                         <strong>When:</strong> {tip.trigger}
                       </p>

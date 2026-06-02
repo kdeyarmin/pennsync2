@@ -241,7 +241,7 @@ Provide comprehensive final feedback with specific recommendations for continued
         <CardContent className="p-6 text-center">
           <Stethoscope className="w-12 h-12 text-teal-600 mx-auto mb-3" />
           <h3 className="font-semibold text-lg mb-2">AI Patient Simulation</h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Practice with: <strong>{scenarios[scenario] || scenario}</strong>
           </p>
           <Badge variant="outline" className="mb-4">{difficulty}</Badge>
@@ -259,7 +259,7 @@ Provide comprehensive final feedback with specific recommendations for continued
       <Card className="border-2 border-teal-200">
         <CardContent className="p-8 text-center">
           <Loader2 className="w-10 h-10 animate-spin text-teal-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Creating your patient simulation...</p>
+          <p className="text-sm text-slate-600">Creating your patient simulation...</p>
         </CardContent>
       </Card>
     );
@@ -283,7 +283,7 @@ Provide comprehensive final feedback with specific recommendations for continued
             }`}>
               {overallFeedback.overall_score}%
             </div>
-            <p className="text-gray-600">{overallFeedback.performance_summary}</p>
+            <p className="text-slate-600">{overallFeedback.performance_summary}</p>
           </div>
 
           {/* Strengths */}
@@ -371,15 +371,15 @@ Provide comprehensive final feedback with specific recommendations for continued
 
       <CardContent className="p-4 space-y-4">
         {/* Patient Info */}
-        <div className="bg-gray-50 p-3 rounded-lg">
+        <div className="bg-slate-50 p-3 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <User className="w-4 h-4 text-gray-600" />
+            <User className="w-4 h-4 text-slate-600" />
             <span className="font-medium text-sm">{simulation.patient.name}</span>
             <Badge variant="outline" className="text-xs">
               {simulation.patient.age}yo {simulation.patient.gender}
             </Badge>
           </div>
-          <p className="text-xs text-gray-600">Dx: {simulation.patient.diagnosis}</p>
+          <p className="text-xs text-slate-600">Dx: {simulation.patient.diagnosis}</p>
           <div className="flex gap-2 mt-2 text-xs">
             <span>BP: {simulation.vital_signs.bp}</span>
             <span>HR: {simulation.vital_signs.hr}</span>
@@ -428,7 +428,7 @@ Provide comprehensive final feedback with specific recommendations for continued
             className="min-h-[120px]"
             disabled={!!feedback}
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             {currentResponse.length} characters
           </p>
         </div>

@@ -198,7 +198,7 @@ Return JSON:
       moderate: 'bg-yellow-500 text-white',
       low: 'bg-green-500 text-white'
     };
-    return colors[level] || 'bg-gray-500 text-white';
+    return colors[level] || 'bg-slate-500 text-white';
   };
 
   const getRiskBorderColor = (level) => {
@@ -208,7 +208,7 @@ Return JSON:
       moderate: 'border-yellow-400',
       low: 'border-green-400'
     };
-    return colors[level] || 'border-gray-400';
+    return colors[level] || 'border-slate-400';
   };
 
   const getRiskBgColor = (level) => {
@@ -218,7 +218,7 @@ Return JSON:
       moderate: 'bg-yellow-50',
       low: 'bg-green-50'
     };
-    return colors[level] || 'bg-gray-50';
+    return colors[level] || 'bg-slate-50';
   };
 
   const getProgressColor = (level) => {
@@ -228,14 +228,14 @@ Return JSON:
       moderate: 'bg-yellow-500',
       low: 'bg-green-500'
     };
-    return colors[level] || 'bg-gray-500';
+    return colors[level] || 'bg-slate-500';
   };
 
   const getTrendIcon = (trend) => {
     switch (trend) {
       case 'increasing': return <TrendingUp className="w-3 h-3 text-red-600" />;
       case 'decreasing': return <TrendingDown className="w-3 h-3 text-green-600" />;
-      default: return <Minus className="w-3 h-3 text-gray-500" />;
+      default: return <Minus className="w-3 h-3 text-slate-500" />;
     }
   };
 
@@ -270,7 +270,7 @@ Return JSON:
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Info className="w-4 h-4 text-gray-400" />
+                  <Info className="w-4 h-4 text-slate-400" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">{riskData.overall_risk?.summary}</p>
@@ -299,9 +299,9 @@ Return JSON:
   }
 
   return (
-    <Card className={`border-2 ${riskData ? getRiskBorderColor(riskData.overall_risk?.level) : 'border-gray-200'}`}>
+    <Card className={`border-2 ${riskData ? getRiskBorderColor(riskData.overall_risk?.level) : 'border-slate-200'}`}>
       <CardHeader 
-        className={`py-3 cursor-pointer ${riskData ? getRiskBgColor(riskData.overall_risk?.level) : 'bg-gray-50'}`}
+        className={`py-3 cursor-pointer ${riskData ? getRiskBgColor(riskData.overall_risk?.level) : 'bg-slate-50'}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
@@ -334,8 +334,8 @@ Return JSON:
         <CardContent className="p-4">
           {!riskData && !isCalculating && (
             <div className="text-center py-6">
-              <Brain className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 mb-3">Analyze patient history to calculate risk scores</p>
+              <Brain className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm text-slate-500 mb-3">Analyze patient history to calculate risk scores</p>
               <Button onClick={calculateRisk} className="bg-indigo-600 hover:bg-indigo-700">
                 <Shield className="w-4 h-4 mr-2" />
                 Calculate Risk Scores
@@ -346,7 +346,7 @@ Return JSON:
           {isCalculating && !riskData && (
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-3" />
-              <p className="text-sm text-gray-600">Analyzing patient history...</p>
+              <p className="text-sm text-slate-600">Analyzing patient history...</p>
             </div>
           )}
 
@@ -379,7 +379,7 @@ Return JSON:
                       <Badge className={`${getRiskColor(cat.level)} text-xs`}>{cat.level}</Badge>
                     </div>
                     <Progress value={cat.score} className="h-1.5 mt-2" />
-                    <p className="text-xs text-gray-600 mt-2 line-clamp-2">{cat.primary_driver}</p>
+                    <p className="text-xs text-slate-600 mt-2 line-clamp-2">{cat.primary_driver}</p>
                   </div>
                 ))}
               </div>
@@ -387,7 +387,7 @@ Return JSON:
               {/* Priority Interventions */}
               {riskData.priority_interventions?.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
                     <AlertTriangle className="w-4 h-4 text-orange-500" />
                     Priority Interventions
                   </h4>
@@ -406,7 +406,7 @@ Return JSON:
                         </Badge>
                         <div>
                           <p className="text-sm font-medium">{int.intervention}</p>
-                          <p className="text-xs text-gray-600">{int.rationale}</p>
+                          <p className="text-xs text-slate-600">{int.rationale}</p>
                         </div>
                       </div>
                     ))}
@@ -421,7 +421,7 @@ Return JSON:
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className="bg-blue-600">Visit {riskData.monitoring_recommendation.frequency}</Badge>
                   </div>
-                  <p className="text-xs text-gray-700 mb-1">
+                  <p className="text-xs text-slate-700 mb-1">
                     <strong>Focus:</strong> {riskData.monitoring_recommendation.focus_areas?.join(', ')}
                   </p>
                   <p className="text-xs text-red-700">
@@ -433,7 +433,7 @@ Return JSON:
               {/* Predictive Insights */}
               {riskData.predictive_insights?.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
                     <Brain className="w-4 h-4 text-purple-500" />
                     Predictive Insights
                   </h4>
@@ -443,7 +443,7 @@ Return JSON:
                         <Badge variant="outline" className="text-xs flex-shrink-0">{insight.confidence}</Badge>
                         <div>
                           <span>{insight.insight}</span>
-                          <span className="text-gray-500 ml-1">({insight.timeframe})</span>
+                          <span className="text-slate-500 ml-1">({insight.timeframe})</span>
                         </div>
                       </div>
                     ))}
@@ -453,7 +453,7 @@ Return JSON:
 
               {/* Last Calculated */}
               {lastCalculated && (
-                <p className="text-xs text-gray-400 text-center">
+                <p className="text-xs text-slate-400 text-center">
                   Last calculated: {lastCalculated.toLocaleTimeString()}
                 </p>
               )}

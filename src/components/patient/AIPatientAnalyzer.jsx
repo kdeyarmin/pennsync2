@@ -150,7 +150,7 @@ Format as JSON with clear, actionable clinical insights.`;
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -158,8 +158,8 @@ Format as JSON with clear, actionable clinical insights.`;
     switch (confidence?.toLowerCase()) {
       case 'high': return 'bg-green-500';
       case 'moderate': return 'bg-yellow-500';
-      case 'low': return 'bg-gray-400';
-      default: return 'bg-gray-300';
+      case 'low': return 'bg-slate-400';
+      default: return 'bg-slate-300';
     }
   };
 
@@ -189,7 +189,7 @@ Format as JSON with clear, actionable clinical insights.`;
             )}
           </Button>
         </div>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-sm text-slate-600 mt-2">
           AI-powered analysis of patient history to identify potential diagnoses, risk factors, and personalized care recommendations
         </p>
       </CardHeader>
@@ -197,8 +197,8 @@ Format as JSON with clear, actionable clinical insights.`;
         {!analysis && !isAnalyzing && (
           <div className="text-center py-12">
             <Brain className="w-16 h-16 text-purple-200 mx-auto mb-4" />
-            <p className="text-gray-600 mb-2">Click "Run Analysis" to generate AI-powered clinical insights</p>
-            <p className="text-sm text-gray-500">Analysis includes potential diagnoses, risk factors, and care recommendations</p>
+            <p className="text-slate-600 mb-2">Click "Run Analysis" to generate AI-powered clinical insights</p>
+            <p className="text-sm text-slate-500">Analysis includes potential diagnoses, risk factors, and care recommendations</p>
           </div>
         )}
 
@@ -211,7 +211,7 @@ Format as JSON with clear, actionable clinical insights.`;
                   onClick={() => toggleSection('diagnoses')}
                   className="w-full flex items-center justify-between p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
                 >
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                     <Target className="w-5 h-5 text-purple-600" />
                     Potential Additional Diagnoses ({analysis.potential_diagnoses.length})
                   </h3>
@@ -223,12 +223,12 @@ Format as JSON with clear, actionable clinical insights.`;
                       <Card key={idx} className="border-l-4 border-l-purple-500">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-semibold text-gray-900">{dx.diagnosis}</h4>
+                            <h4 className="font-semibold text-slate-900">{dx.diagnosis}</h4>
                             <Badge className={getConfidenceColor(dx.confidence)}>
                               {dx.confidence} Confidence
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-700">{dx.rationale}</p>
+                          <p className="text-sm text-slate-700">{dx.rationale}</p>
                         </CardContent>
                       </Card>
                     ))}
@@ -244,7 +244,7 @@ Format as JSON with clear, actionable clinical insights.`;
                   onClick={() => toggleSection('risks')}
                   className="w-full flex items-center justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
                 >
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-orange-600" />
                     Identified Risk Factors ({analysis.risk_factors.length})
                   </h3>
@@ -286,7 +286,7 @@ Format as JSON with clear, actionable clinical insights.`;
                   onClick={() => toggleSection('recommendations')}
                   className="w-full flex items-center justify-between p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                 >
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-blue-600" />
                     Personalized Care Recommendations ({analysis.care_recommendations.length})
                   </h3>
@@ -298,7 +298,7 @@ Format as JSON with clear, actionable clinical insights.`;
                       <Card key={idx} className="border-l-4 border-l-blue-500">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-semibold text-gray-900 flex-1">{rec.recommendation}</h4>
+                            <h4 className="font-semibold text-slate-900 flex-1">{rec.recommendation}</h4>
                             <Badge className={
                               rec.priority === 'High' ? 'bg-red-500' :
                               rec.priority === 'Medium' ? 'bg-yellow-500' :
@@ -307,7 +307,7 @@ Format as JSON with clear, actionable clinical insights.`;
                               {rec.priority} Priority
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-slate-600">
                             <span className="font-medium">Expected Outcome:</span> {rec.expected_outcome}
                           </p>
                         </CardContent>
@@ -329,15 +329,15 @@ Format as JSON with clear, actionable clinical insights.`;
                     <div className="space-y-3">
                       {analysis.monitoring_priorities.map((monitor, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-green-200">
-                          <p className="font-semibold text-gray-900">{monitor.parameter}</p>
+                          <p className="font-semibold text-slate-900">{monitor.parameter}</p>
                           <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
                             <div>
-                              <p className="text-xs text-gray-500">Frequency</p>
-                              <p className="text-gray-700">{monitor.frequency}</p>
+                              <p className="text-xs text-slate-500">Frequency</p>
+                              <p className="text-slate-700">{monitor.frequency}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Alert Criteria</p>
-                              <p className="text-gray-700">{monitor.alert_criteria}</p>
+                              <p className="text-xs text-slate-500">Alert Criteria</p>
+                              <p className="text-slate-700">{monitor.alert_criteria}</p>
                             </div>
                           </div>
                         </div>
@@ -359,14 +359,14 @@ Format as JSON with clear, actionable clinical insights.`;
                     <div className="space-y-3">
                       {analysis.suggested_care_plans.map((plan, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-indigo-200">
-                          <p className="font-semibold text-gray-900 mb-1">{plan.problem}</p>
-                          <p className="text-sm text-gray-700 mb-2"><span className="font-medium">Goal:</span> {plan.goal}</p>
+                          <p className="font-semibold text-slate-900 mb-1">{plan.problem}</p>
+                          <p className="text-sm text-slate-700 mb-2"><span className="font-medium">Goal:</span> {plan.goal}</p>
                           {plan.interventions && plan.interventions.length > 0 && (
                             <div>
-                              <p className="text-xs font-semibold text-gray-500 mb-1">Interventions:</p>
+                              <p className="text-xs font-semibold text-slate-500 mb-1">Interventions:</p>
                               <ul className="text-xs space-y-1">
                                 {plan.interventions.map((intervention, i) => (
-                                  <li key={i} className="text-gray-600">• {intervention}</li>
+                                  <li key={i} className="text-slate-600">• {intervention}</li>
                                 ))}
                               </ul>
                             </div>

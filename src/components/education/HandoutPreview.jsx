@@ -28,7 +28,7 @@ export default function HandoutPreview({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] p-0">
         <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-          <DialogTitle className="text-2xl font-bold text-gray-900">Preview: {template.title}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-slate-900">Preview: {template.title}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="flex-1 px-6 py-4">
@@ -44,7 +44,7 @@ export default function HandoutPreview({
                     className="h-12"
                   />
                 </div>
-                <div className="text-right text-sm text-gray-600">
+                <div className="text-right text-sm text-slate-600">
                   <div className="font-semibold">724-465-0440</div>
                   <div>www.pennhh.com</div>
                 </div>
@@ -61,13 +61,13 @@ export default function HandoutPreview({
 
             {/* Patient Info */}
             {patientName && (
-              <div className="px-8 py-4 bg-gray-50 border-b">
+              <div className="px-8 py-4 bg-slate-50 border-b">
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="font-semibold text-gray-700">Prepared for: </span>
-                    <span className="text-gray-900">{patientName}</span>
+                    <span className="font-semibold text-slate-700">Prepared for: </span>
+                    <span className="text-slate-900">{patientName}</span>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-slate-600">
                     {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </div>
                 </div>
@@ -96,7 +96,7 @@ export default function HandoutPreview({
                   {/* Content */}
                   {section.content && (
                     <div className={`${section.highlight ? 'bg-blue-50 border border-blue-200 rounded-lg p-4' : ''}`}>
-                      <p className="text-gray-700 leading-relaxed">{section.content}</p>
+                      <p className="text-slate-700 leading-relaxed">{section.content}</p>
                     </div>
                   )}
 
@@ -107,7 +107,7 @@ export default function HandoutPreview({
                       {subsection.bullets && (
                         <ul className="ml-6 space-y-1">
                           {subsection.bullets.map((bullet, bulletIdx) => (
-                            <li key={bulletIdx} className="text-gray-700 flex items-start">
+                            <li key={bulletIdx} className="text-slate-700 flex items-start">
                               <span className="text-blue-600 mr-2">•</span>
                               <span>{bullet}</span>
                             </li>
@@ -123,7 +123,7 @@ export default function HandoutPreview({
                       {section.bullets
                         .filter((bullet, idx) => !selectedSections?.[section.heading]?.bullets || selectedSections[section.heading].bullets[idx] !== false)
                         .map((bullet, bulletIdx) => (
-                          <li key={bulletIdx} className="text-gray-700 flex items-start">
+                          <li key={bulletIdx} className="text-slate-700 flex items-start">
                             <span className="text-blue-600 mr-2 font-bold">•</span>
                             <span className="flex-1">{bullet}</span>
                           </li>
@@ -137,17 +137,17 @@ export default function HandoutPreview({
               {customNotes && customNotes.trim() && (
                 <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-6 space-y-2">
                   <h2 className="text-xl font-bold text-amber-700">Special Instructions from Your Nurse</h2>
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{customNotes}</p>
+                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{customNotes}</p>
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="px-8 py-6 bg-gray-100 border-t">
+            <div className="px-8 py-6 bg-slate-100 border-t">
               <div className="text-center space-y-2">
                 <div className="font-bold text-blue-700">Penn Home Health Inc.</div>
-                <div className="text-sm text-gray-600">Phone: 724-465-0440 | www.pennhh.com</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-sm text-slate-600">Phone: 724-465-0440 | www.pennhh.com</div>
+                <div className="text-xs text-slate-500">
                   This information is for educational purposes only. Always follow your healthcare provider's advice.
                 </div>
               </div>
@@ -156,7 +156,7 @@ export default function HandoutPreview({
         </ScrollArea>
 
         {/* Action buttons */}
-        <div className="px-6 py-4 border-t bg-gray-50 flex justify-between items-center">
+        <div className="px-6 py-4 border-t bg-slate-50 flex justify-between items-center">
           <Button variant="outline" onClick={onClose}>
             <X className="w-4 h-4 mr-2" />
             Close Preview

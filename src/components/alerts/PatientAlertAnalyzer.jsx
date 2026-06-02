@@ -319,15 +319,15 @@ Return JSON:
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
   if (!patientId) {
     return (
-      <Card className="border-gray-200">
-        <CardContent className="p-6 text-center text-gray-500">
-          <Brain className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+      <Card className="border-slate-200">
+        <CardContent className="p-6 text-center text-slate-500">
+          <Brain className="w-12 h-12 mx-auto mb-3 text-slate-300" />
           <p>Select a patient to analyze for alerts</p>
         </CardContent>
       </Card>
@@ -362,10 +362,10 @@ Return JSON:
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-orange-600" />
-              <span className="text-sm text-gray-600">Analyzing patient data...</span>
+              <span className="text-sm text-slate-600">Analyzing patient data...</span>
             </div>
             <Progress value={analysisProgress} className="h-2" />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               {analysisProgress < 30 && "Gathering patient history..."}
               {analysisProgress >= 30 && analysisProgress < 50 && "Analyzing vital trends..."}
               {analysisProgress >= 50 && analysisProgress < 80 && "Identifying risk patterns..."}
@@ -374,11 +374,11 @@ Return JSON:
           </div>
         ) : generatedAlerts.length > 0 ? (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               {generatedAlerts.length} new alert(s) identified
             </p>
             {generatedAlerts.slice(0, 3).map((alert, idx) => (
-              <div key={idx} className="p-2 bg-gray-50 rounded-lg border">
+              <div key={idx} className="p-2 bg-slate-50 rounded-lg border">
                 <div className="flex items-center gap-2 mb-1">
                   {getAlertIcon(alert.alert_type)}
                   <Badge className={getSeverityColor(alert.severity)}>
@@ -386,11 +386,11 @@ Return JSON:
                   </Badge>
                   <span className="text-sm font-medium">{alert.title}</span>
                 </div>
-                <p className="text-xs text-gray-600">{alert.message}</p>
+                <p className="text-xs text-slate-600">{alert.message}</p>
               </div>
             ))}
             {generatedAlerts.length > 3 && (
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-slate-500 text-center">
                 +{generatedAlerts.length - 3} more alerts
               </p>
             )}
@@ -398,7 +398,7 @@ Return JSON:
         ) : (
           <div className="text-center py-4">
             <Brain className="w-10 h-10 text-orange-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-slate-600 mb-2">
               Analyze patient data to identify potential risks
             </p>
             <Button

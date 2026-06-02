@@ -185,7 +185,7 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
               </Button>
               <div className="flex items-center gap-2 ml-auto">
                 <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="text-sm font-semibold text-slate-700">
                   {formatTime(recordingTime)}
                 </span>
               </div>
@@ -203,7 +203,7 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
               {isTranscribing && (
                 <div className="flex items-center gap-2 ml-auto">
                   <Loader className="w-4 h-4 animate-spin text-indigo-600" />
-                  <span className="text-sm text-gray-600">Transcribing...</span>
+                  <span className="text-sm text-slate-600">Transcribing...</span>
                 </div>
               )}
             </>
@@ -224,8 +224,8 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
         {/* Transcript Display */}
         {transcript && (
           <div className="space-y-3">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <p className="text-gray-900 leading-relaxed">{transcript}</p>
+            <div className="bg-white p-4 rounded-lg border border-slate-200">
+              <p className="text-slate-900 leading-relaxed">{transcript}</p>
             </div>
 
             {/* Transcript Actions */}
@@ -254,7 +254,7 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
 
         {/* Instructions */}
         {!transcript && !isRecording && (
-          <div className="text-xs text-gray-600 space-y-1">
+          <div className="text-xs text-slate-600 space-y-1">
             <p>💡 Tips for best results:</p>
             <ul className="list-disc list-inside space-y-0.5">
               <li>Speak clearly and at a normal pace</li>

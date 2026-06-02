@@ -280,7 +280,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Generate a comprehensive, Medicare-compliant admission nursing note from the extracted referral data.
           </p>
           <Button 
@@ -362,7 +362,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
           />
         ) : (
           <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
-            <pre className="whitespace-pre-wrap font-sans text-sm text-gray-900 leading-relaxed">
+            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 leading-relaxed">
               {generatedNote}
             </pre>
           </div>

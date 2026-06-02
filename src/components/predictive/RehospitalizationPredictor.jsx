@@ -252,7 +252,7 @@ Provide a comprehensive rehospitalization risk assessment with:
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="font-medium text-sm">{patient.first_name} {patient.last_name}</p>
-                    <p className="text-xs text-gray-600">{patient.primary_diagnosis || 'No diagnosis'}</p>
+                    <p className="text-xs text-slate-600">{patient.primary_diagnosis || 'No diagnosis'}</p>
                   </div>
                   <Badge className={`${
                     patient.riskLevel === 'high' ? 'bg-red-600' :
@@ -317,12 +317,12 @@ Provide a comprehensive rehospitalization risk assessment with:
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
                   <span className="text-sm">AI Confidence</span>
                   <Badge variant="outline">{selectedPrediction.confidence}%</Badge>
                 </div>
 
-                <p className="text-sm text-gray-700">{selectedPrediction.summary}</p>
+                <p className="text-sm text-slate-700">{selectedPrediction.summary}</p>
 
                 {/* Preventive Actions */}
                 <div>
@@ -339,7 +339,7 @@ Provide a comprehensive rehospitalization risk assessment with:
                             {action.priority}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600">{action.timeframe}</p>
+                        <p className="text-xs text-slate-600">{action.timeframe}</p>
                       </div>
                     ))}
                   </div>
@@ -360,7 +360,7 @@ Provide a comprehensive rehospitalization risk assessment with:
                 )}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-slate-500">
                 <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Select a patient and click "Get AI Prediction" for detailed analysis</p>
               </div>

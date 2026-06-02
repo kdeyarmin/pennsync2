@@ -125,8 +125,8 @@ export default function SignDocument() {
       <div className="p-8 max-w-4xl mx-auto">
         <Card>
           <CardContent className="p-12 text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600">Loading document...</p>
+            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-600">Loading document...</p>
           </CardContent>
         </Card>
       </div>
@@ -146,8 +146,8 @@ export default function SignDocument() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign Document</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Sign Document</h1>
+        <p className="text-slate-600">
           {patient.first_name} {patient.last_name} • {signatureRecord.document_title}
         </p>
       </div>
@@ -167,7 +167,7 @@ export default function SignDocument() {
               />
             </div>
           ) : signatureRecord.document_content ? (
-            <div className="p-4 border rounded-lg bg-gray-50 max-h-96 overflow-auto">
+            <div className="p-4 border rounded-lg bg-slate-50 max-h-96 overflow-auto">
               <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: signatureRecord.document_content }} />
             </div>
           ) : (
@@ -194,10 +194,10 @@ export default function SignDocument() {
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-gray-600" />
+                    <User className="w-5 h-5 text-slate-600" />
                     <div>
                       <p className="font-medium">{signer.name}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         {signer.role} {signer.required && <span className="text-red-600">*</span>}
                       </p>
                     </div>

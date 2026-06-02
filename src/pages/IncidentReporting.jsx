@@ -52,7 +52,7 @@ export default function IncidentReporting() {
         <IncidentRecentList incidents={incidents} />
       </div>
 
-      {isLoading && <div className="text-sm text-gray-500">Loading active patients...</div>}
+      {isLoading && <div className="text-sm text-slate-500">Loading active patients...</div>}
     </div>
   );
 }

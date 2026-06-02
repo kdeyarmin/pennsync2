@@ -70,7 +70,7 @@ export default function AlertsPanel({ alerts }) {
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <Heart className="w-4 h-4 text-red-500" />
-        <p className="text-sm font-bold text-gray-800">Clinical Alerts</p>
+        <p className="text-sm font-bold text-slate-800">Clinical Alerts</p>
         <Badge className="bg-red-100 text-red-700 text-xs">{alerts.length}</Badge>
       </div>
       {urgentAlerts.length > 0 && (

@@ -30,7 +30,7 @@ export default function CertificateViewer({ certificate }) {
                         </div>
                         <div>
                             <CardTitle className="text-lg">{certificate.course_title}</CardTitle>
-                            <p className="text-sm text-gray-500 mt-1">Certificate ID: {certificate.certificate_id}</p>
+                            <p className="text-sm text-slate-500 mt-1">Certificate ID: {certificate.certificate_id}</p>
                         </div>
                     </div>
                     {isRevoked ? (
@@ -54,24 +54,24 @@ export default function CertificateViewer({ certificate }) {
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <p className="text-xs text-gray-500 mb-1">Completed</p>
+                        <p className="text-xs text-slate-500 mb-1">Completed</p>
                         <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <Calendar className="h-4 w-4 text-slate-400" />
                             <span className="text-sm font-medium">{formatDate(certificate.completion_date)}</span>
                         </div>
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 mb-1">Issued</p>
+                        <p className="text-xs text-slate-500 mb-1">Issued</p>
                         <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <Calendar className="h-4 w-4 text-slate-400" />
                             <span className="text-sm font-medium">{formatDate(certificate.issued_at)}</span>
                         </div>
                     </div>
                     {certificate.expiration_date && (
                         <div>
-                            <p className="text-xs text-gray-500 mb-1">Expires</p>
+                            <p className="text-xs text-slate-500 mb-1">Expires</p>
                             <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-gray-400" />
+                                <Clock className="h-4 w-4 text-slate-400" />
                                 <span className={`text-sm font-medium ${isExpired ? 'text-red-600' : ''}`}>
                                     {formatDate(certificate.expiration_date)}
                                 </span>
@@ -80,19 +80,19 @@ export default function CertificateViewer({ certificate }) {
                     )}
                     {certificate.score !== null && certificate.score !== undefined && (
                         <div>
-                            <p className="text-xs text-gray-500 mb-1">Score</p>
+                            <p className="text-xs text-slate-500 mb-1">Score</p>
                             <span className="text-sm font-medium">{certificate.score}%</span>
                         </div>
                     )}
                     {certificate.hours && (
                         <div>
-                            <p className="text-xs text-gray-500 mb-1">CEU Hours</p>
+                            <p className="text-xs text-slate-500 mb-1">CEU Hours</p>
                             <span className="text-sm font-medium">{certificate.hours}</span>
                         </div>
                     )}
                     {certificate.training_category && (
                         <div>
-                            <p className="text-xs text-gray-500 mb-1">Category</p>
+                            <p className="text-xs text-slate-500 mb-1">Category</p>
                             <Badge variant="outline" className="text-xs">{certificate.training_category}</Badge>
                         </div>
                     )}
@@ -100,8 +100,8 @@ export default function CertificateViewer({ certificate }) {
 
                 {certificate.verification_hash && (
                     <div className="pt-3 border-t">
-                        <p className="text-xs text-gray-500 mb-1">Verification Code</p>
-                        <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                        <p className="text-xs text-slate-500 mb-1">Verification Code</p>
+                        <code className="text-xs bg-slate-100 px-2 py-1 rounded font-mono">
                             {certificate.verification_hash.substring(0, 16).toUpperCase()}
                         </code>
                     </div>
@@ -120,7 +120,7 @@ export default function CertificateViewer({ certificate }) {
                 {isRevoked && certificate.revoked_reason && (
                     <div className="pt-3 border-t">
                         <p className="text-xs text-red-600 font-medium">Revocation Reason:</p>
-                        <p className="text-sm text-gray-700 mt-1">{certificate.revoked_reason}</p>
+                        <p className="text-sm text-slate-700 mt-1">{certificate.revoked_reason}</p>
                     </div>
                 )}
             </CardContent>

@@ -35,7 +35,7 @@ export default function Layout({ children, currentPageName }) {
   // Previously this effect mirrored the OS `prefers-color-scheme`, toggling the
   // `dark` class on <html>. That flipped only the CSS-variable tokens (popovers,
   // dropdown menus, charts, `muted` text) to dark while the hardcoded
-  // `bg-white` / `text-gray-900` surfaces stayed light — producing an
+  // `bg-white` / `text-slate-900` surfaces stayed light — producing an
   // inconsistent, partially-unreadable UI for anyone on a dark-mode device.
   // Keep the app in its intended light theme so every screen renders the same.
   useEffect(() => {
@@ -243,12 +243,12 @@ export default function Layout({ children, currentPageName }) {
               <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Clock className="w-10 h-10 text-yellow-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-3">Account Pending Approval</h1>
-              <p className="text-gray-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
+              <h1 className="text-2xl font-bold text-slate-900 mb-3">Account Pending Approval</h1>
+              <p className="text-slate-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-900"><strong>Account Details:</strong><br />{currentUser.full_name}<br />{currentUser.email}</p>
               </div>
-              <p className="text-sm text-gray-500 mb-6">You will receive an email notification once your account is approved.</p>
+              <p className="text-sm text-slate-500 mb-6">You will receive an email notification once your account is approved.</p>
               <Button onClick={handleLogout} variant="outline" className="w-full">
                 <LogOut className="w-4 h-4 mr-2" /> Sign Out
               </Button>
@@ -297,7 +297,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-gray-50/80 to-slate-100 w-0 md:w-auto">
+        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-slate-100 w-0 md:w-auto">
           <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 animate-fade-in">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}

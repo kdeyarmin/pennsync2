@@ -93,7 +93,7 @@ export default function PatientContactActions({ patient, currentUser }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-slate-500">
           Calls and texts go through your work number — your personal cell is never shared.
         </p>
 
@@ -155,7 +155,7 @@ export default function PatientContactActions({ patient, currentUser }) {
                   type="button"
                   onClick={() => insertReply(q.text)}
                   title={q.text}
-                  className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  className="text-xs px-2 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
                 >
                   {q.label}
                 </button>
@@ -172,7 +172,7 @@ export default function PatientContactActions({ patient, currentUser }) {
           {(() => {
             const meta = smsSegments(draft);
             return meta.chars > 0 ? (
-              <p className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-gray-400"}`}>
+              <p className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-slate-400"}`}>
                 {`${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`}
               </p>
             ) : null;

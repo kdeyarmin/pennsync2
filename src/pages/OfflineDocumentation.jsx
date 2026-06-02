@@ -11,8 +11,8 @@ export default function OfflineDocumentation() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Offline Documentation</h1>
-        <p className="text-gray-500">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Offline Documentation</h1>
+        <p className="text-slate-500">
           Document patient visits even without internet connection - data syncs automatically when online
         </p>
       </div>
@@ -79,8 +79,8 @@ export default function OfflineDocumentation() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <div className="text-center py-8 text-slate-500">
+                <AlertCircle className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                 <p>Use the sync status widget above to view pending items</p>
               </div>
             </CardContent>
@@ -93,7 +93,7 @@ export default function OfflineDocumentation() {
         <CardHeader>
           <CardTitle className="text-base">Storage & Sync Information</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-gray-600 space-y-2">
+        <CardContent className="text-sm text-slate-600 space-y-2">
           <p><strong>Storage Location:</strong> Browser Local Storage (persistent across sessions)</p>
           <p><strong>Auto-Sync Trigger:</strong> Automatically syncs 2 seconds after connection is restored</p>
           <p><strong>Retry Logic:</strong> Failed items retry up to 3 times with exponential backoff</p>

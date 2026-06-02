@@ -114,7 +114,7 @@ export default function ManageNewFeatures() {
       <div className="p-6 max-w-4xl mx-auto">
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-gray-600">Admin access required to manage new features.</p>
+            <p className="text-slate-600">Admin access required to manage new features.</p>
           </CardContent>
         </Card>
       </div>
@@ -125,8 +125,8 @@ export default function ManageNewFeatures() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manage New Features</h1>
-          <p className="text-gray-600 mt-1">Add and manage features to display on the dashboard</p>
+          <h1 className="text-3xl font-bold text-slate-900">Manage New Features</h1>
+          <p className="text-slate-600 mt-1">Add and manage features to display on the dashboard</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -151,7 +151,7 @@ export default function ManageNewFeatures() {
                         {!feature.is_active && <Badge variant="outline">Inactive</Badge>}
                         <Badge variant="outline" className="text-xs">Priority: {feature.priority}</Badge>
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{feature.description}</p>
+                      <p className="text-slate-600 text-sm mb-2">{feature.description}</p>
                       {feature.link && (
                         <p className="text-xs text-blue-600">Link: {feature.link}</p>
                       )}
@@ -186,8 +186,8 @@ export default function ManageNewFeatures() {
         {features.length === 0 && (
           <Card className="border-dashed">
             <CardContent className="p-12 text-center">
-              <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">No features added yet</p>
+              <Sparkles className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+              <p className="text-slate-600 mb-4">No features added yet</p>
               <Button onClick={() => handleOpenDialog()} variant="outline">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Feature
@@ -266,7 +266,7 @@ export default function ManageNewFeatures() {
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
               />
-              <p className="text-xs text-gray-500 mt-1">Higher priority features appear first</p>
+              <p className="text-xs text-slate-500 mt-1">Higher priority features appear first</p>
             </div>
 
             <div className="flex items-center justify-between">

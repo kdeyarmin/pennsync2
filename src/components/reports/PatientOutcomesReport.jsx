@@ -48,7 +48,7 @@ export default function PatientOutcomesReport({ dateRange }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-900">Patient Outcomes Analysis</h3>
+        <h3 className="text-xl font-semibold text-slate-900">Patient Outcomes Analysis</h3>
         <Button onClick={handleExport} className="bg-green-600 hover:bg-green-700">
           <Download className="w-4 h-4 mr-2" />
           Export PDF
@@ -58,19 +58,19 @@ export default function PatientOutcomesReport({ dateRange }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Total Patients</p>
-            <p className="text-3xl font-bold text-gray-900">{patients.length}</p>
+            <p className="text-sm text-slate-600 mb-1">Total Patients</p>
+            <p className="text-3xl font-bold text-slate-900">{patients.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Active</p>
+            <p className="text-sm text-slate-600 mb-1">Active</p>
             <p className="text-3xl font-bold text-green-600">{activePatients}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Discharged</p>
+            <p className="text-sm text-slate-600 mb-1">Discharged</p>
             <p className="text-3xl font-bold text-blue-600">{dischargedPatients}</p>
           </CardContent>
         </Card>

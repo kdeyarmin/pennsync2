@@ -153,8 +153,8 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3 animate-pulse" />
-          <p className="text-gray-600">Loading care plan proposals...</p>
+          <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3 animate-pulse" />
+          <p className="text-slate-600">Loading care plan proposals...</p>
         </CardContent>
       </Card>
     );
@@ -165,8 +165,8 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
       <Card>
         <CardContent className="p-8 text-center">
           <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-          <p className="text-gray-600">No pending care plan proposals</p>
-          <p className="text-sm text-gray-500 mt-1">AI monitoring is active - proposals will appear here when clinical thresholds are met</p>
+          <p className="text-slate-600">No pending care plan proposals</p>
+          <p className="text-sm text-slate-500 mt-1">AI monitoring is active - proposals will appear here when clinical thresholds are met</p>
         </CardContent>
       </Card>
     );
@@ -177,11 +177,11 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
       {!compact && (
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
               <Brain className="w-6 h-6 text-purple-600" />
               AI Care Plan Proposals
             </h2>
-            <p className="text-gray-600 text-sm mt-1">
+            <p className="text-slate-600 text-sm mt-1">
               Review and approve AI-recommended care plan updates
             </p>
           </div>
@@ -215,7 +215,7 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Link to={createPageUrl(`PatientDetails?id=${proposal.patient_id}`)}>
-                        <h3 className="font-bold text-gray-900 hover:text-blue-600">
+                        <h3 className="font-bold text-slate-900 hover:text-blue-600">
                           {getPatientName(proposal.patient_id)}
                         </h3>
                       </Link>
@@ -226,10 +226,10 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
                         {proposal.proposal_type.replace(/_/g, ' ')}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-700 font-medium">
+                    <p className="text-sm text-slate-700 font-medium">
                       {proposal.ai_analysis?.clinical_finding}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       Triggered by: {proposal.trigger_source} • 
                       Confidence: {proposal.ai_analysis?.confidence_score}% •
                       Expires: {new Date(proposal.expires_at).toLocaleDateString()}
@@ -255,13 +255,13 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
 
                   {/* Trigger Data */}
                   {proposal.trigger_data && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                      <p className="text-xs font-semibold text-gray-900 mb-2">Clinical Evidence:</p>
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-slate-900 mb-2">Clinical Evidence:</p>
                       {proposal.trigger_data.vitals && (
                         <div className="mb-2">
-                          <p className="text-xs text-gray-600 font-medium">Recent Vitals:</p>
+                          <p className="text-xs text-slate-600 font-medium">Recent Vitals:</p>
                           {proposal.trigger_data.vitals.slice(0, 3).map((v, idx) => (
-                            <p key={idx} className="text-xs text-gray-700">
+                            <p key={idx} className="text-xs text-slate-700">
                               {v.date}: BP {v.bp_sys}/{v.bp_dia}, HR {v.hr}, O2 {v.o2}%
                             </p>
                           ))}
@@ -269,9 +269,9 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
                       )}
                       {proposal.trigger_data.note_excerpts && (
                         <div>
-                          <p className="text-xs text-gray-600 font-medium">Note Excerpts:</p>
+                          <p className="text-xs text-slate-600 font-medium">Note Excerpts:</p>
                           {proposal.trigger_data.note_excerpts.map((note, idx) => (
-                            <p key={idx} className="text-xs text-gray-700 italic">"{note}..."</p>
+                            <p key={idx} className="text-xs text-slate-700 italic">"{note}..."</p>
                           ))}
                         </div>
                       )}
@@ -280,7 +280,7 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
 
                   {/* Proposed Interventions */}
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-2">Proposed Interventions:</p>
+                    <p className="text-sm font-semibold text-slate-900 mb-2">Proposed Interventions:</p>
                     <div className="space-y-2">
                       {proposal.proposed_interventions?.map((intervention, idx) => (
                         <div key={idx} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -297,10 +297,10 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
                   {/* Proposed Goals */}
                   {proposal.proposed_goals && proposal.proposed_goals.length > 0 && (
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 mb-2">Proposed Goals:</p>
+                      <p className="text-sm font-semibold text-slate-900 mb-2">Proposed Goals:</p>
                       <ul className="space-y-1">
                         {proposal.proposed_goals.map((goal, idx) => (
-                          <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                          <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                             <TrendingUp className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                             {goal}
                           </li>

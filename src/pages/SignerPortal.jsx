@@ -63,8 +63,8 @@ export default function SignerPortal() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-700 mb-4">{error}</p>
-            <p className="text-xs text-gray-600">
+            <p className="text-sm text-slate-700 mb-4">{error}</p>
+            <p className="text-xs text-slate-600">
               If you believe this is an error, please contact the document administrator or try accessing the link again.
             </p>
           </CardContent>
@@ -80,13 +80,13 @@ export default function SignerPortal() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Public Portal Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Document Signing Portal</h1>
-            <p className="text-sm text-gray-600">Secure access for authorized signers</p>
+            <h1 className="text-xl font-bold text-slate-900">Document Signing Portal</h1>
+            <p className="text-sm text-slate-600">Secure access for authorized signers</p>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-slate-600">
             <Lock className="w-4 h-4" />
             <span className="text-sm">Secure Session</span>
           </div>
@@ -98,9 +98,9 @@ export default function SignerPortal() {
         <Card className="mb-6 bg-blue-50 border-blue-200">
           <CardContent className="pt-6">
             <p className="text-sm">
-              <span className="font-semibold text-gray-900">Hello {packageData.signerName},</span>
+              <span className="font-semibold text-slate-900">Hello {packageData.signerName},</span>
             </p>
-            <p className="text-sm text-gray-700 mt-2">
+            <p className="text-sm text-slate-700 mt-2">
               You have been invited to review and sign documents. Please complete all required signatures by{' '}
               <span className="font-medium">
                 {new Date(packageData.dueDate).toLocaleDateString()}
@@ -118,11 +118,11 @@ export default function SignerPortal() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               {/* Total Documents */}
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="text-center p-4 bg-slate-50 rounded-lg">
+                <p className="text-2xl font-bold text-slate-900">
                   {packageData.documents.length}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">Total Documents</p>
+                <p className="text-xs text-slate-600 mt-1">Total Documents</p>
               </div>
 
               {/* Signed Documents */}
@@ -130,7 +130,7 @@ export default function SignerPortal() {
                 <p className="text-2xl font-bold text-green-600">
                   {packageData.documents.filter((d) => d.status === 'signed').length}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">Signed</p>
+                <p className="text-xs text-slate-600 mt-1">Signed</p>
               </div>
 
               {/* Pending Documents */}
@@ -138,7 +138,7 @@ export default function SignerPortal() {
                 <p className="text-2xl font-bold text-amber-600">
                   {packageData.documents.filter((d) => d.status !== 'signed').length}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">Pending</p>
+                <p className="text-xs text-slate-600 mt-1">Pending</p>
               </div>
             </div>
           </CardContent>
@@ -152,9 +152,9 @@ export default function SignerPortal() {
         />
 
         {/* Security Notice */}
-        <Card className="mt-6 bg-gray-50">
+        <Card className="mt-6 bg-slate-50">
           <CardContent className="pt-6">
-            <p className="text-xs text-gray-700 leading-relaxed">
+            <p className="text-xs text-slate-700 leading-relaxed">
               <strong>Security Notice:</strong> This portal uses secure, token-based authentication to protect your sensitive information. Your signing activity is encrypted and logged for audit purposes. Do not share this link with others.
             </p>
           </CardContent>

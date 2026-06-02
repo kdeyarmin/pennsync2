@@ -98,7 +98,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
           {relevantUpdates.length === 0 ? (
             <div className="text-center py-4">
               <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
-              <p className="text-sm text-gray-600">You're up to date on all regulations!</p>
+              <p className="text-sm text-slate-600">You're up to date on all regulations!</p>
             </div>
           ) : (
             (relevantUpdates || []).map(update => (
@@ -107,7 +107,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
                 className={`p-3 rounded-lg border ${
                   update.impact_level === 'critical' ? 'bg-red-50 border-red-200' :
                   update.impact_level === 'high' ? 'bg-orange-50 border-orange-200' :
-                  'bg-white border-gray-200'
+                  'bg-white border-slate-200'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -122,7 +122,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
                       </Badge>
                       <span className="font-medium text-sm">{update.title}</span>
                     </div>
-                    <p className="text-xs text-gray-600 mb-2">{update.summary}</p>
+                    <p className="text-xs text-slate-600 mb-2">{update.summary}</p>
                     
                     {/* Key Changes */}
                     {update.compliance_check_updates?.length > 0 && (
@@ -154,7 +154,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <Calendar className="w-3 h-3" />
                       Effective: {update.effective_date ? format(new Date(update.effective_date), 'MMM d, yyyy') : 'Now'}
                     </div>
@@ -164,7 +164,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
             ))
           )}
 
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-slate-500 text-center">
             ✓ Check to acknowledge you've reviewed each update
           </p>
         </CardContent>

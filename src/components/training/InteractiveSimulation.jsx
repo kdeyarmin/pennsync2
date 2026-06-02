@@ -29,7 +29,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
   if (!scenario || !steps || steps.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
+        <CardContent className="p-8 text-center text-slate-500">
           No simulation steps available for this module.
         </CardContent>
       </Card>
@@ -88,14 +88,14 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
               {score >= 80 ? 'Excellent Work!' : 'Good Progress!'}
             </h3>
             <p className="text-lg font-semibold mb-1">Final Score: {score}%</p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               You completed {Object.values(feedback).filter(f => f.correct).length} of {steps.length} steps correctly
             </p>
           </div>
 
           {/* Step by Step Review */}
           <div className="space-y-3 mb-6">
-            <h4 className="font-semibold text-gray-900">Review:</h4>
+            <h4 className="font-semibold text-slate-900">Review:</h4>
             {steps.map((step, idx) => {
               const stepFeedback = feedback[idx];
               return (
@@ -108,7 +108,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
                     )}
                     <div className="flex-1">
                       <p className="font-medium">{step.title}</p>
-                      <p className="text-sm text-gray-600 mt-1">{stepFeedback?.message}</p>
+                      <p className="text-sm text-slate-600 mt-1">{stepFeedback?.message}</p>
                       {stepFeedback?.suggestions?.length > 0 && (
                         <ul className="mt-2 space-y-1">
                           {stepFeedback.suggestions.map((suggestion, sIdx) => (
@@ -175,7 +175,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
           {/* Current Step */}
           <div>
             <h3 className="text-lg font-semibold mb-2">{currentStepData?.title}</h3>
-            <p className="text-gray-600 mb-4">{currentStepData?.prompt}</p>
+            <p className="text-slate-600 mb-4">{currentStepData?.prompt}</p>
 
             {currentStepData?.type === 'text_input' && (
               <Textarea

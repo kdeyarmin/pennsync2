@@ -104,9 +104,9 @@ export default function NurseTraining() {
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <GraduationCap className="w-8 h-8 text-indigo-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Nurse Training Hub</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Nurse Training Hub</h1>
         </div>
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           Improve your documentation skills with AI-powered training and practice scenarios
         </p>
       </div>

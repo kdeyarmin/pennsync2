@@ -61,7 +61,7 @@ export default function AutoEventExtractor({ visitId, patientId, nurseNotes, vis
       case 'high': return 'bg-orange-600';
       case 'medium': return 'bg-yellow-600';
       case 'low': return 'bg-blue-600';
-      default: return 'bg-gray-600';
+      default: return 'bg-slate-600';
     }
   };
 
@@ -130,7 +130,7 @@ export default function AutoEventExtractor({ visitId, patientId, nurseNotes, vis
                     <Icon className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-sm text-gray-900">{event.event_title}</p>
+                        <p className="font-semibold text-sm text-slate-900">{event.event_title}</p>
                         <Badge className={`${getSeverityColor(event.severity)} text-white text-xs`}>
                           {event.severity}
                         </Badge>
@@ -140,7 +140,7 @@ export default function AutoEventExtractor({ visitId, patientId, nurseNotes, vis
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-700 mb-1">{event.event_description}</p>
+                      <p className="text-xs text-slate-700 mb-1">{event.event_description}</p>
                       {event.requires_followup && (
                         <p className="text-xs text-orange-700 font-medium">
                           ⚠️ Follow-up: {event.followup_notes}

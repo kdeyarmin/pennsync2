@@ -6,20 +6,20 @@ import { Sparkles, Loader2, Copy, CheckCircle2, Tag, DollarSign, ChevronDown, Ch
 
 function CodeCard({ code, onCopy, copied }) {
   return (
-    <div className="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:border-indigo-300 transition-colors">
+    <div className="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 hover:border-indigo-300 transition-colors">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm font-bold text-indigo-700">{code.code}</span>
-          <Badge className="text-xs bg-gray-100 text-gray-600">{code.confidence}%</Badge>
+          <Badge className="text-xs bg-slate-100 text-slate-600">{code.confidence}%</Badge>
         </div>
-        <p className="text-xs text-gray-600 mt-0.5 truncate">{code.description}</p>
+        <p className="text-xs text-slate-600 mt-0.5 truncate">{code.description}</p>
         {code.rationale && (
-          <p className="text-xs text-gray-400 mt-0.5 italic">{code.rationale}</p>
+          <p className="text-xs text-slate-400 mt-0.5 italic">{code.rationale}</p>
         )}
       </div>
       <button
         onClick={() => onCopy(code.code)}
-        className="shrink-0 p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+        className="shrink-0 p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
         title="Copy code"
       >
         {copied === code.code ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
@@ -129,7 +129,7 @@ Return JSON:
   const ready = noteText?.trim().length >= 20;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Tag className="w-4 h-4 text-emerald-600" />
@@ -148,7 +148,7 @@ Return JSON:
       </div>
 
       {!ready && !codes && (
-        <div className="px-4 py-3 text-xs text-gray-400 italic">
+        <div className="px-4 py-3 text-xs text-slate-400 italic">
           Enter clinical note content above to enable code suggestions.
         </div>
       )}
@@ -156,7 +156,7 @@ Return JSON:
       {loading && (
         <div className="px-4 py-6 text-center">
           <Loader2 className="w-6 h-6 text-emerald-500 mx-auto animate-spin mb-2" />
-          <p className="text-sm text-gray-500">Analyzing note for billable codes…</p>
+          <p className="text-sm text-slate-500">Analyzing note for billable codes…</p>
         </div>
       )}
 
@@ -184,7 +184,7 @@ Return JSON:
                 onClick={() => setShowICD(v => !v)}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-800">ICD-10 Codes</span>
+                  <span className="text-sm font-semibold text-slate-800">ICD-10 Codes</span>
                   <Badge className="bg-blue-100 text-blue-700 text-xs">{codes.icd10_codes.length}</Badge>
                 </div>
                 <div className="flex items-center gap-2">
@@ -195,7 +195,7 @@ Return JSON:
                     {copiedCode === "all_icd" ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                     Copy all
                   </button>
-                  {showICD ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {showICD ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </div>
               </button>
               {showICD && (
@@ -218,7 +218,7 @@ Return JSON:
                 onClick={() => setShowCPT(v => !v)}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-800">CPT Codes</span>
+                  <span className="text-sm font-semibold text-slate-800">CPT Codes</span>
                   <Badge className="bg-green-100 text-green-700 text-xs">{codes.cpt_codes.length}</Badge>
                 </div>
                 <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ Return JSON:
                     {copiedCode === "all_cpt" ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                     Copy all
                   </button>
-                  {showCPT ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {showCPT ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </div>
               </button>
               {showCPT && (
@@ -251,7 +251,7 @@ Return JSON:
             </div>
           )}
 
-          <p className="text-xs text-gray-400 italic">
+          <p className="text-xs text-slate-400 italic">
             ⚠ AI-suggested codes require clinical verification before billing submission.
           </p>
         </div>

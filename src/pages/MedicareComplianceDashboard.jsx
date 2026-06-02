@@ -275,8 +275,8 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
               <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Medicare Compliance Dashboard</h1>
-              <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">42 CFR 484 CoP Monitoring for Pennsylvania Home Health</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Medicare Compliance Dashboard</h1>
+              <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">42 CFR 484 CoP Monitoring for Pennsylvania Home Health</p>
             </div>
           </div>
           <Button onClick={generateAIInsights} disabled={isGeneratingInsights} className="w-full sm:w-auto min-h-[44px]">
@@ -389,12 +389,12 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
             {/* Overall Assessment */}
             <div className="bg-white p-3 sm:p-4 rounded-lg border-2 border-purple-200">
               <h3 className="font-bold text-purple-900 mb-2 text-sm sm:text-base">Overall Assessment</h3>
-              <p className="text-sm sm:text-base text-gray-700">{aiInsights.overall_assessment}</p>
+              <p className="text-sm sm:text-base text-slate-700">{aiInsights.overall_assessment}</p>
             </div>
 
             {/* Critical Priorities */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Critical Priorities (Immediate Action Required)</h3>
+              <h3 className="font-bold text-slate-900 mb-2 sm:mb-3 text-sm sm:text-base">Critical Priorities (Immediate Action Required)</h3>
               <div className="space-y-2">
                 {aiInsights.critical_priorities?.map((priority, idx) => (
                   <Card key={idx} className="border-l-4 border-l-red-500 bg-red-50">
@@ -415,7 +415,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
 
             {/* 30-Day Action Plan */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">30-Day Action Plan</h3>
+              <h3 className="font-bold text-slate-900 mb-3">30-Day Action Plan</h3>
               <div className="space-y-2">
                 {aiInsights.action_plan?.map((action, idx) => (
                   <div key={idx} className="bg-white p-3 rounded border flex items-start gap-3">
@@ -423,8 +423,8 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                       <span className="text-xs font-bold text-blue-600">{idx + 1}</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{action.action}</p>
-                      <div className="flex gap-3 mt-1 text-xs text-gray-600">
+                      <p className="text-sm font-medium text-slate-900">{action.action}</p>
+                      <div className="flex gap-3 mt-1 text-xs text-slate-600">
                         <span><strong>Owner:</strong> {action.owner}</span>
                         <span><strong>Timeline:</strong> {action.timeline}</span>
                         <span><strong>Metric:</strong> {action.success_metric}</span>
@@ -438,7 +438,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
             {/* Trend Analysis */}
             <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
               <h3 className="font-bold text-blue-900 mb-2">Trend Analysis</h3>
-              <p className="text-gray-700">{aiInsights.trend_analysis}</p>
+              <p className="text-slate-700">{aiInsights.trend_analysis}</p>
             </div>
           </CardContent>
         </Card>
@@ -517,7 +517,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                           <span className="text-sm capitalize font-medium">{severity}</span>
                           <span className="text-sm font-bold">{count}</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-slate-200 rounded-full h-2">
                           <div 
                             className={`bg-${color}-500 h-2 rounded-full`}
                             style={{ width: `${totalIssuesCount > 0 ? (count / totalIssuesCount * 100) : 0}%` }}
@@ -617,12 +617,12 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
             <CardContent>
               <div className="space-y-2">
                 {topIssues.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">No issues found in the selected time period</p>
+                  <p className="text-slate-500 text-center py-4">No issues found in the selected time period</p>
                 ) : topIssues.map((issue, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded border">
+                  <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded border">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">{issue.name}</span>
+                        <span className="font-medium text-slate-900">{issue.name}</span>
                         <Badge className={
                           issue.severity === 'critical' ? 'bg-red-600' :
                           issue.severity === 'high' ? 'bg-orange-600' :
@@ -631,11 +631,11 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                           {issue.severity}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-600 mt-1">CoP Reference: {issue.cop_reference}</p>
+                      <p className="text-xs text-slate-600 mt-1">CoP Reference: {issue.cop_reference}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-900">{issue.count}</p>
-                      <p className="text-xs text-gray-600">{issue.percentage}% of audits</p>
+                      <p className="text-2xl font-bold text-slate-900">{issue.count}</p>
+                      <p className="text-xs text-slate-600">{issue.percentage}% of audits</p>
                     </div>
                   </div>
                 ))}
@@ -653,8 +653,8 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                 {ruleViolations.map((rule, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-white rounded border-l-4 border-l-red-500">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{rule.rule}</p>
-                      <p className="text-xs text-gray-600">{rule.cop}</p>
+                      <p className="font-medium text-slate-900">{rule.rule}</p>
+                      <p className="text-xs text-slate-600">{rule.cop}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge className="bg-red-600">{rule.violations} violations</Badge>
@@ -699,15 +699,15 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                   }).sort((a, b) => a.avgScore - b.avgScore).slice(0, 10);
 
                   if (patientStats.length === 0) {
-                    return <p className="text-gray-500 text-center py-4">No patient audit data available</p>;
+                    return <p className="text-slate-500 text-center py-4">No patient audit data available</p>;
                   }
 
                   return patientStats.map((patient) => (
-                    <div key={patient.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-2 min-h-[44px]">
+                    <div key={patient.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg gap-2 min-h-[44px]">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div>
-                          <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{patient.name}</p>
-                          <p className="text-xs text-gray-600">{patient.auditCount} visits audited</p>
+                          <p className="font-medium text-sm sm:text-base text-slate-900 truncate">{patient.name}</p>
+                          <p className="text-xs text-slate-600">{patient.auditCount} visits audited</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
@@ -764,15 +764,15 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                   );
 
                   return (
-                    <div key={idx} className="p-3 sm:p-4 bg-gray-50 rounded border min-h-[44px]">
+                    <div key={idx} className="p-3 sm:p-4 bg-slate-50 rounded border min-h-[44px]">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                             <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">{nurse.nurse}</p>
-                            <p className="text-xs text-gray-600">{nurse.audits} audits reviewed</p>
+                            <p className="font-semibold text-sm sm:text-base text-slate-900 truncate">{nurse.nurse}</p>
+                            <p className="text-xs text-slate-600">{nurse.audits} audits reviewed</p>
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">

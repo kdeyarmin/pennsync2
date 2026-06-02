@@ -246,7 +246,7 @@ export default function AdvancedComplianceAnalytics({
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4 items-end">
             <div>
-              <Label className="text-xs text-gray-500">Time Range</Label>
+              <Label className="text-xs text-slate-500">Time Range</Label>
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
@@ -260,7 +260,7 @@ export default function AdvancedComplianceAnalytics({
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-gray-500">Nurse</Label>
+              <Label className="text-xs text-slate-500">Nurse</Label>
               <Select value={selectedNurse} onValueChange={setSelectedNurse}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="All Nurses" />
@@ -418,7 +418,7 @@ export default function AdvancedComplianceAnalytics({
               <CardContent>
                 <div className="space-y-3">
                   {orgRisks.slice(0, 6).map((risk, idx) => (
-                    <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                    <div key={idx} className="p-3 bg-slate-50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-sm">{risk.category}</span>
                         <Badge className={
@@ -430,11 +430,11 @@ export default function AdvancedComplianceAnalytics({
                         </Badge>
                       </div>
                       <div className="flex gap-2 text-xs">
-                        <span className="text-gray-500">{risk.count} issues</span>
-                        <span className="text-gray-300">|</span>
+                        <span className="text-slate-500">{risk.count} issues</span>
+                        <span className="text-slate-300">|</span>
                         <span className="text-red-600">{risk.critical} critical</span>
-                        <span className="text-gray-300">|</span>
-                        <span className="text-gray-500">{risk.affectedNurses} nurses affected</span>
+                        <span className="text-slate-300">|</span>
+                        <span className="text-slate-500">{risk.affectedNurses} nurses affected</span>
                       </div>
                     </div>
                   ))}
@@ -495,7 +495,7 @@ export default function AdvancedComplianceAnalytics({
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="h-64 flex items-center justify-center text-gray-500 text-sm">
+                  <div className="h-64 flex items-center justify-center text-slate-500 text-sm">
                     Not enough data to show training impact yet
                   </div>
                 )}
@@ -513,10 +513,10 @@ export default function AdvancedComplianceAnalytics({
                 <div className="space-y-3">
                   {trainingImpact.length > 0 ? (
                     trainingImpact.sort((a, b) => b.improvement - a.improvement).map((nurse, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                         <span className="text-sm font-medium">{nurse.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{nurse.beforeAvg}% → {nurse.afterAvg}%</span>
+                          <span className="text-xs text-slate-500">{nurse.beforeAvg}% → {nurse.afterAvg}%</span>
                           <Badge className={nurse.improvement >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
                             {nurse.improvement >= 0 ? '+' : ''}{nurse.improvement}%
                           </Badge>
@@ -524,7 +524,7 @@ export default function AdvancedComplianceAnalytics({
                       </div>
                     ))
                   ) : (
-                    <div className="text-center text-gray-500 text-sm py-8">
+                    <div className="text-center text-slate-500 text-sm py-8">
                       Complete more training modules to see impact data
                     </div>
                   )}
@@ -559,18 +559,18 @@ export default function AdvancedComplianceAnalytics({
                   </thead>
                   <tbody>
                     {nursePerformance.map((nurse, idx) => (
-                      <tr key={nurse.email} className="border-b hover:bg-gray-50">
+                      <tr key={nurse.email} className="border-b hover:bg-slate-50">
                         <td className="py-2 px-3">
                           {idx < 3 ? (
                             <Badge className={
                               idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                              idx === 1 ? 'bg-gray-300 text-gray-800' :
+                              idx === 1 ? 'bg-slate-300 text-slate-800' :
                               'bg-orange-300 text-orange-900'
                             }>
                               #{idx + 1}
                             </Badge>
                           ) : (
-                            <span className="text-gray-500">#{idx + 1}</span>
+                            <span className="text-slate-500">#{idx + 1}</span>
                           )}
                         </td>
                         <td className="py-2 px-3 font-medium">{nurse.name}</td>

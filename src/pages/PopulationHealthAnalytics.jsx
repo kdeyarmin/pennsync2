@@ -8,7 +8,7 @@ export default function PopulationHealthAnalytics() {
           <CardTitle>Population Health Analytics</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">This page is not currently available.</p>
+          <p className="text-slate-600">This page is not currently available.</p>
         </CardContent>
       </Card>
     </div>

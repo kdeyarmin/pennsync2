@@ -43,8 +43,8 @@ export default function JoinTelehealth() {
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <Video className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Invalid Session Link</h1>
-            <p className="text-gray-600 text-sm">The telehealth session link is invalid or expired.</p>
+            <h1 className="text-xl font-bold text-slate-900 mb-2">Invalid Session Link</h1>
+            <p className="text-slate-600 text-sm">The telehealth session link is invalid or expired.</p>
           </CardContent>
         </Card>
       </div>
@@ -53,7 +53,7 @@ export default function JoinTelehealth() {
 
   if (joined) {
     return (
-      <div className="min-h-screen bg-gray-900 p-2 sm:p-4">
+      <div className="min-h-screen bg-slate-900 p-2 sm:p-4">
         <div className="max-w-6xl mx-auto">
           <div className="mb-4">
             <Badge className="bg-green-100 text-green-700 gap-1">
@@ -86,14 +86,14 @@ export default function JoinTelehealth() {
               <Video className="w-8 h-8 text-blue-600" />
               <div>
                 <CardTitle className="text-2xl">Ready for Your Visit?</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">Prepare your device and join the telehealth session</p>
+                <p className="text-sm text-slate-600 mt-1">Prepare your device and join the telehealth session</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Name Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Your Name</label>
+              <label className="block text-sm font-medium text-slate-900 mb-2">Your Name</label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -137,8 +137,8 @@ export default function JoinTelehealth() {
         {/* Tips Card */}
         <Card className="bg-white/80">
           <CardContent className="p-4">
-            <h3 className="font-semibold text-sm text-gray-900 mb-3">Quick Tips</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
+            <h3 className="font-semibold text-sm text-slate-900 mb-3">Quick Tips</h3>
+            <ul className="space-y-2 text-sm text-slate-600">
               <li>✓ Find a quiet, well-lit space</li>
               <li>✓ Use headphones if available</li>
               <li>✓ Position camera at eye level</li>

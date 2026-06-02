@@ -239,7 +239,7 @@ Return JSON format:
                     </Badge>
                   </div>
                   <h3 className="font-semibold text-lg mb-2">{topic.title}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{topic.description}</p>
+                  <p className="text-sm text-slate-600 mb-3">{topic.description}</p>
                   <Button 
                     size="sm" 
                     className="w-full"
@@ -287,7 +287,7 @@ Return JSON format:
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold">{quizResults.score}%</div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-slate-600">
                   {quizResults.correctCount} / {quizResults.totalQuestions} correct
                 </div>
               </div>
@@ -338,7 +338,7 @@ Return JSON format:
                             ? 'bg-green-50 border-green-300'
                             : isUserAnswer
                             ? 'bg-red-50 border-red-300'
-                            : 'bg-white border-gray-200'
+                            : 'bg-white border-slate-200'
                         }`}
                       >
                         <div className="flex items-start gap-2">
@@ -365,8 +365,8 @@ Return JSON format:
 
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <h4 className="font-semibold text-blue-900 mb-2">Explanation:</h4>
-                  <p className="text-sm text-gray-700 mb-2">{question.explanation}</p>
-                  <p className="text-xs text-gray-600 italic">Reference: {question.references}</p>
+                  <p className="text-sm text-slate-700 mb-2">{question.explanation}</p>
+                  <p className="text-xs text-slate-600 italic">Reference: {question.references}</p>
                 </div>
               </CardContent>
             </Card>
@@ -392,7 +392,7 @@ Return JSON format:
             <Badge>{selectedTopic.difficulty}</Badge>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm text-slate-600">
               <span>Question {currentQuestionIndex + 1} of {quiz.questions.length}</span>
               <span>{Object.keys(userAnswers).length} answered</span>
             </div>
@@ -408,7 +408,7 @@ Return JSON format:
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <p className="text-gray-900 font-medium">{currentQuestion.question}</p>
+          <p className="text-slate-900 font-medium">{currentQuestion.question}</p>
 
           <RadioGroup
             value={userAnswers[currentQuestionIndex]?.toString()}
@@ -416,7 +416,7 @@ Return JSON format:
           >
             <div className="space-y-3">
               {currentQuestion.options.map((option, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 cursor-pointer">
                   <RadioGroupItem value={index.toString()} id={`q${currentQuestionIndex}-option${index}`} />
                   <Label htmlFor={`q${currentQuestionIndex}-option${index}`} className="flex-1 cursor-pointer">
                     {option}

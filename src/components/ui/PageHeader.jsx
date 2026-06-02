@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  * Standardizes the heading scale, color token (slate, per the design system),
  * icon treatment, optional description, and an actions slot so every page header
  * looks and behaves the same. This replaces the ad-hoc
- * `<h1 className="text-... text-gray-900 ...">` blocks that had drifted across
+ * `<h1 className="text-... text-slate-900 ...">` blocks that had drifted across
  * pages (varying sizes, `gray` vs `slate`, with/without description or actions).
  *
  * Usage:

@@ -156,19 +156,19 @@ Return JSON:
             {/* Topic Header */}
             <div className="bg-emerald-50 p-2 rounded">
               <p className="font-semibold text-sm text-emerald-900">{results.topic}</p>
-              <p className="text-xs text-gray-600">{results.summary}</p>
+              <p className="text-xs text-slate-600">{results.summary}</p>
             </div>
 
             {/* Nursing Interventions */}
             {results.nursing_interventions?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1">Evidence-Based Interventions</p>
+                <p className="text-xs font-semibold text-slate-600 mb-1">Evidence-Based Interventions</p>
                 {results.nursing_interventions.map((int, idx) => (
                   <div key={idx} className="bg-white p-2 rounded border mb-1 group">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="text-xs font-medium">{int.intervention}</p>
-                        <p className="text-xs text-gray-500">{int.rationale}</p>
+                        <p className="text-xs text-slate-500">{int.rationale}</p>
                       </div>
                       <Button
                         size="sm"
@@ -188,7 +188,7 @@ Return JSON:
             {results.patient_education?.length > 0 && (
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <p className="text-xs font-semibold text-gray-600">Patient Education Points</p>
+                  <p className="text-xs font-semibold text-slate-600">Patient Education Points</p>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -212,7 +212,7 @@ Return JSON:
             {/* Red Flags */}
             {results.red_flags?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1">⚠️ Red Flags</p>
+                <p className="text-xs font-semibold text-slate-600 mb-1">⚠️ Red Flags</p>
                 <div className="space-y-1">
                   {results.red_flags.map((flag, idx) => (
                     <div key={idx} className="text-xs bg-red-50 p-1 rounded border border-red-200">
@@ -226,8 +226,8 @@ Return JSON:
             {/* Documentation Tips */}
             {results.documentation_tips?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1">📝 Documentation Tips</p>
-                <ul className="text-xs text-gray-700 space-y-1">
+                <p className="text-xs font-semibold text-slate-600 mb-1">📝 Documentation Tips</p>
+                <ul className="text-xs text-slate-700 space-y-1">
                   {results.documentation_tips.map((tip, idx) => (
                     <li key={idx} className="flex items-start gap-1">
                       <span>•</span> {tip}

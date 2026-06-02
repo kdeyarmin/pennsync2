@@ -125,9 +125,9 @@ export default function SmsConversationList() {
         </CardHeader>
         <CardContent className="space-y-2">
           {isLoading ? (
-            <p className="text-sm text-gray-500 text-center py-4">Loading…</p>
+            <p className="text-sm text-slate-500 text-center py-4">Loading…</p>
           ) : threads.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">No text conversations yet.</p>
+            <p className="text-sm text-slate-500 text-center py-4">No text conversations yet.</p>
           ) : (
             threads.map((t) => (
               <div
@@ -136,15 +136,15 @@ export default function SmsConversationList() {
                 className={`p-3 rounded-lg cursor-pointer transition-colors ${
                   selectedThreadId === t.threadId
                     ? "bg-blue-100 border-2 border-blue-500"
-                    : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
+                    : "bg-slate-50 hover:bg-slate-100 border border-slate-200"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <p className="text-sm font-semibold text-gray-900 line-clamp-1">{t.label}</p>
+                  <p className="text-sm font-semibold text-slate-900 line-clamp-1">{t.label}</p>
                   {t.unreadCount > 0 && <Badge className="bg-red-600 text-white text-xs">{t.unreadCount}</Badge>}
                 </div>
-                <p className="text-xs text-gray-600 line-clamp-2 mb-1">{t.lastMessage.body}</p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <p className="text-xs text-slate-600 line-clamp-2 mb-1">{t.lastMessage.body}</p>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Clock className="w-3 h-3" />
                   {format(new Date(t.lastMessage.created_date), "MMM d, h:mm a")}
                 </div>

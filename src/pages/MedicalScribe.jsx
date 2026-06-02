@@ -113,8 +113,8 @@ export default function VisitScribePage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Visit Scribe</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900">Visit Scribe</h1>
+          <p className="text-slate-600">
             Record your patient interaction and let AI generate your clinical documentation
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function VisitScribePage() {
               <CardContent className="space-y-6">
                 {/* Patient Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Patient</label>
+                  <label className="text-sm font-medium text-slate-700">Patient</label>
                   <SearchablePatientSelect
                     patients={patients}
                     value={selectedPatient}
@@ -149,7 +149,7 @@ export default function VisitScribePage() {
 
                 {/* Visit Type */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Visit Type</label>
+                  <label className="text-sm font-medium text-slate-700">Visit Type</label>
                   <Select value={visitType} onValueChange={setVisitType}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select visit type..." />
@@ -166,7 +166,7 @@ export default function VisitScribePage() {
 
                 {/* Diagnosis */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Primary Diagnosis</label>
+                  <label className="text-sm font-medium text-slate-700">Primary Diagnosis</label>
                   <Select value={diagnosis} onValueChange={setDiagnosis}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select diagnosis..." />
@@ -184,13 +184,13 @@ export default function VisitScribePage() {
                 {/* Custom Diagnosis Input */}
                 {diagnosis === "Other" && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Specify Diagnosis</label>
+                    <label className="text-sm font-medium text-slate-700">Specify Diagnosis</label>
                     <input
                       type="text"
                       value={customDiagnosis}
                       onChange={(e) => setCustomDiagnosis(e.target.value)}
                       placeholder="Enter diagnosis..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                   </div>
                 )}

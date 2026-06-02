@@ -160,7 +160,7 @@ Provide constructive, educational feedback. Be encouraging but thorough.`,
       {scenarioCount > 0 && (
         <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
           <div className="flex items-center gap-2">
-            <Trophy className={`w-5 h-5 ${averageScore >= 80 ? 'text-yellow-500' : 'text-gray-400'}`} />
+            <Trophy className={`w-5 h-5 ${averageScore >= 80 ? 'text-yellow-500' : 'text-slate-400'}`} />
             <span className="text-sm font-medium">Practice Session</span>
           </div>
           <div className="flex items-center gap-3">
@@ -177,12 +177,12 @@ Provide constructive, educational feedback. Be encouraging but thorough.`,
         <div className="text-center py-8">
           <GraduationCap className="w-12 h-12 text-indigo-600 mx-auto mb-3" />
           <h3 className="font-semibold text-lg mb-2">Documentation Practice</h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Practice writing compliant documentation with AI-generated scenarios
           </p>
           {weakAreas.length > 0 && (
             <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-2">Focus areas based on your notes:</p>
+              <p className="text-xs text-slate-500 mb-2">Focus areas based on your notes:</p>
               <div className="flex flex-wrap justify-center gap-1">
                 {weakAreas.slice(0, 3).map((area, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs">
@@ -202,7 +202,7 @@ Provide constructive, educational feedback. Be encouraging but thorough.`,
       {isGenerating && (
         <div className="text-center py-8">
           <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Creating your practice scenario...</p>
+          <p className="text-sm text-slate-600">Creating your practice scenario...</p>
         </div>
       )}
 
@@ -254,7 +254,7 @@ Provide constructive, educational feedback. Be encouraging but thorough.`,
               className="min-h-[120px]"
             />
             <div className="flex justify-between items-center mt-2">
-              <p className="text-xs text-gray-400">{userResponse.length} characters</p>
+              <p className="text-xs text-slate-400">{userResponse.length} characters</p>
               <Button
                 onClick={evaluateResponse}
                 disabled={userResponse.length < 20 || isEvaluating}
@@ -286,7 +286,7 @@ Provide constructive, educational feedback. Be encouraging but thorough.`,
             }`}>
               {feedback.score}%
             </div>
-            <p className="text-sm text-gray-700">{feedback.overall_assessment}</p>
+            <p className="text-sm text-slate-700">{feedback.overall_assessment}</p>
           </div>
 
           {/* Strengths */}

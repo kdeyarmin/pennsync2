@@ -115,7 +115,7 @@ export default function PhoneProvisioningPanel() {
                 onChange={(e) => setAgency((a) => ({ ...a, main_office_number_e164: e.target.value }))}
                 className="mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">Off-duty calls transfer here; texts reference it.</p>
+              <p className="text-xs text-slate-500 mt-1">Off-duty calls transfer here; texts reference it.</p>
             </div>
             <div>
               <Label className="text-sm font-medium">8x8 region</Label>
@@ -150,7 +150,7 @@ export default function PhoneProvisioningPanel() {
                 onChange={(e) => setAgency((a) => ({ ...a, eight_x_eight_voice_api_base: e.target.value }))}
                 className="mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">Used for outbound click-to-call origination (from your 8x8 voice sub-account).</p>
+              <p className="text-xs text-slate-500 mt-1">Used for outbound click-to-call origination (from your 8x8 voice sub-account).</p>
             </div>
           </div>
           <div>
@@ -162,7 +162,7 @@ export default function PhoneProvisioningPanel() {
               onChange={(e) => setAgency((a) => ({ ...a, default_off_duty_template: e.target.value }))}
               className="mt-1 resize-none"
             />
-            <p className="text-xs text-gray-500 mt-1">Used when a nurse hasn't set their own. {"{office}"} inserts the main office number.</p>
+            <p className="text-xs text-slate-500 mt-1">Used when a nurse hasn't set their own. {"{office}"} inserts the main office number.</p>
           </div>
           <div>
             <Label className="text-sm font-medium">Text quick replies</Label>
@@ -178,14 +178,14 @@ export default function PhoneProvisioningPanel() {
               }
               className="mt-1 resize-none"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               One-tap snippets nurses can insert when texting (keep them PHI-free). Leave blank to use the built-in defaults.
             </p>
           </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
             <div>
               <Label className="text-sm font-semibold">SMS messaging enabled</Label>
-              <p className="text-xs text-gray-600">Agency-wide kill switch for outbound texting.</p>
+              <p className="text-xs text-slate-600">Agency-wide kill switch for outbound texting.</p>
             </div>
             <Switch
               checked={agency.sms_messaging_enabled}
@@ -220,11 +220,11 @@ export default function PhoneProvisioningPanel() {
             </AlertDescription>
           </Alert>
           {users.map((u) => (
-            <div key={u.email} className="p-3 rounded-lg border border-gray-200 bg-gray-50">
+            <div key={u.email} className="p-3 rounded-lg border border-slate-200 bg-slate-50">
               <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{u.full_name || u.email}</p>
-                  <p className="text-xs text-gray-500">{u.email} · {u.role}</p>
+                  <p className="text-sm font-semibold text-slate-900">{u.full_name || u.email}</p>
+                  <p className="text-xs text-slate-500">{u.email} · {u.role}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {u.work_phone_number ? (
@@ -233,7 +233,7 @@ export default function PhoneProvisioningPanel() {
                     <Badge variant="outline">No work number</Badge>
                   )}
                   {u.personal_cell_e164 && (
-                    <Badge className="bg-gray-200 text-gray-700">
+                    <Badge className="bg-slate-200 text-slate-700">
                       <ShieldCheck className="w-3 h-3 mr-1" /> Cell {maskPhone(u.personal_cell_e164)}
                     </Badge>
                   )}

@@ -124,7 +124,7 @@ export default function QuickActionsPanel({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-600" />
+              <FileText className="w-4 h-4 text-slate-600" />
               Recent Notes
             </CardTitle>
           </CardHeader>
@@ -133,21 +133,21 @@ export default function QuickActionsPanel({
               <Link
                 key={idx}
                 to={`${createPageUrl("VisitScribe")}?visitId=${visit.id}`}
-                className="block p-2 hover:bg-gray-50 rounded transition-colors mb-2 border border-gray-200"
+                className="block p-2 hover:bg-slate-50 rounded transition-colors mb-2 border border-slate-200"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-900">{visit.visit_type}</p>
-                  <p className="text-xs text-gray-500">{visit.visit_date}</p>
+                  <p className="text-xs font-medium text-slate-900">{visit.visit_type}</p>
+                  <p className="text-xs text-slate-500">{visit.visit_date}</p>
                 </div>
                 {visit.nurse_notes && (
-                  <p className="text-xs text-gray-600 line-clamp-2">
+                  <p className="text-xs text-slate-600 line-clamp-2">
                     {visit.nurse_notes.substring(0, 80)}...
                   </p>
                 )}
               </Link>
             ))}
             {recentVisits.length === 0 && (
-              <p className="text-xs text-gray-500 text-center py-4">No recent notes</p>
+              <p className="text-xs text-slate-500 text-center py-4">No recent notes</p>
             )}
           </CardContent>
         </Card>
@@ -167,16 +167,16 @@ export default function QuickActionsPanel({
                 className={`p-2 rounded mb-2 border ${
                   visit.visit_date === today
                     ? 'bg-green-50 border-green-300'
-                    : 'bg-gray-50 border-gray-200'
+                    : 'bg-slate-50 border-slate-200'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-900">{visit.visit_type}</p>
+                  <p className="text-xs font-medium text-slate-900">{visit.visit_type}</p>
                   {visit.visit_date === today && (
                     <Badge className="bg-green-600 text-white text-xs">Today</Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-600">
+                <div className="flex items-center gap-2 text-xs text-slate-600">
                   <Calendar className="w-3 h-3" />
                   <span>{visit.visit_date}</span>
                   {visit.visit_time && <span>at {visit.visit_time}</span>}
@@ -184,7 +184,7 @@ export default function QuickActionsPanel({
               </div>
             ))}
             {upcomingVisits.length === 0 && (
-              <p className="text-xs text-gray-500 text-center py-4">No scheduled visits</p>
+              <p className="text-xs text-slate-500 text-center py-4">No scheduled visits</p>
             )}
           </CardContent>
         </Card>
@@ -205,12 +205,12 @@ export default function QuickActionsPanel({
                 <a
                   key={idx}
                   href={action.href}
-                  className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded transition-colors border border-gray-200"
+                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded transition-colors border border-slate-200"
                 >
-                  <action.icon className="w-4 h-4 text-gray-600" />
+                  <action.icon className="w-4 h-4 text-slate-600" />
                   <div>
-                    <p className="text-xs font-medium text-gray-900">{action.label}</p>
-                    <p className="text-xs text-gray-600">{action.value}</p>
+                    <p className="text-xs font-medium text-slate-900">{action.label}</p>
+                    <p className="text-xs text-slate-600">{action.value}</p>
                   </div>
                 </a>
               ) : null
@@ -233,7 +233,7 @@ export default function QuickActionsPanel({
               {pendingTasks.slice(0, 3).map((task, idx) => (
                 <div key={idx} className="bg-white p-2 rounded border border-orange-200">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-medium text-gray-900">{task.title}</p>
+                    <p className="text-xs font-medium text-slate-900">{task.title}</p>
                     <Badge className={
                       task.priority === 'high' ? 'bg-red-600' :
                       task.priority === 'medium' ? 'bg-orange-500' : 'bg-yellow-500'
@@ -242,7 +242,7 @@ export default function QuickActionsPanel({
                     </Badge>
                   </div>
                   {task.due_date && (
-                    <p className="text-xs text-gray-600">Due: {task.due_date}</p>
+                    <p className="text-xs text-slate-600">Due: {task.due_date}</p>
                   )}
                 </div>
               ))}

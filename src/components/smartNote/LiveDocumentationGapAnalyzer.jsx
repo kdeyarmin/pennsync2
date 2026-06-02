@@ -154,10 +154,10 @@ Return JSON:
 
   if (!roughNote || roughNote.length < 80) {
     return (
-      <Card className="border-dashed border-gray-300">
+      <Card className="border-dashed border-slate-300">
         <CardContent className="p-4 text-center">
-          <Sparkles className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-          <p className="text-xs text-gray-400">AI gap analysis activates after you type your notes</p>
+          <Sparkles className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+          <p className="text-xs text-slate-400">AI gap analysis activates after you type your notes</p>
         </CardContent>
       </Card>
     );
@@ -191,16 +191,16 @@ Return JSON:
       <CardContent className="p-3 space-y-3">
         {loading && gaps.length === 0 && (
           <div className="space-y-2 animate-pulse">
-            <div className="h-3 bg-gray-200 rounded w-3/4" />
-            <div className="h-3 bg-gray-200 rounded w-5/6" />
-            <div className="h-3 bg-gray-200 rounded w-2/3" />
+            <div className="h-3 bg-slate-200 rounded w-3/4" />
+            <div className="h-3 bg-slate-200 rounded w-5/6" />
+            <div className="h-3 bg-slate-200 rounded w-2/3" />
           </div>
         )}
 
         {complianceScore !== null && !loading && (
           <div className={`rounded-lg border p-3 text-center ${scoreBg}`}>
             <p className={`text-2xl font-bold ${scoreColor}`}>{complianceScore}%</p>
-            <p className="text-xs text-gray-600 mt-0.5">Current compliance score</p>
+            <p className="text-xs text-slate-600 mt-0.5">Current compliance score</p>
             <div className="flex justify-center gap-3 mt-2">
               {criticalCount > 0 && <Badge className="bg-red-100 text-red-700 text-xs">{criticalCount} critical</Badge>}
               {highCount > 0 && <Badge className="bg-orange-100 text-orange-700 text-xs">{highCount} high</Badge>}
@@ -212,7 +212,7 @@ Return JSON:
         {/* Gaps */}
         {gaps.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-gray-700">Missing / Incomplete Elements:</p>
+            <p className="text-xs font-semibold text-slate-700">Missing / Incomplete Elements:</p>
             {gaps
               .sort((a, b) => {
                 const order = { critical: 0, high: 1, medium: 2 };
@@ -250,7 +250,7 @@ Return JSON:
           </details>
         )}
 
-        <p className="text-xs text-gray-400 text-center pt-1">
+        <p className="text-xs text-slate-400 text-center pt-1">
           Updates automatically as you type
         </p>
       </CardContent>

@@ -402,9 +402,9 @@ Provide detailed comparison showing what changed and why.`;
                   </CardHeader>
                   <CardContent className="pt-4">
                     <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="text-center p-3 bg-gray-50 rounded border">
-                        <p className="text-xs text-gray-600 mb-1">Baseline</p>
-                        <p className="text-xl font-bold text-gray-700">
+                      <div className="text-center p-3 bg-slate-50 rounded border">
+                        <p className="text-xs text-slate-600 mb-1">Baseline</p>
+                        <p className="text-xl font-bold text-slate-700">
                           {formatCurrency(simulationResult.payment_impact?.baseline_payment)}
                         </p>
                       </div>
@@ -461,7 +461,7 @@ Provide detailed comparison showing what changed and why.`;
                   <CardContent className="pt-4">
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div className="text-center p-3 bg-white rounded border">
-                        <p className="text-xs text-gray-600">Total Points</p>
+                        <p className="text-xs text-slate-600">Total Points</p>
                         <p className="text-2xl font-bold text-purple-700">
                           {simulationResult.functional_analysis?.total_points}
                         </p>
@@ -471,7 +471,7 @@ Provide detailed comparison showing what changed and why.`;
                         </Badge>
                       </div>
                       <div className="text-center p-3 bg-white rounded border">
-                        <p className="text-xs text-gray-600">Functional Level</p>
+                        <p className="text-xs text-slate-600">Functional Level</p>
                         <Badge className={
                           simulationResult.functional_analysis?.functional_level === 'high' ? 'bg-green-600' :
                           simulationResult.functional_analysis?.functional_level === 'medium' ? 'bg-yellow-600' :
@@ -480,7 +480,7 @@ Provide detailed comparison showing what changed and why.`;
                           {simulationResult.functional_analysis?.functional_level}
                         </Badge>
                         {simulationResult.functional_analysis?.level_change && (
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-xs text-slate-600 mt-1">
                             {simulationResult.functional_analysis.level_change}
                           </p>
                         )}
@@ -511,17 +511,17 @@ Provide detailed comparison showing what changed and why.`;
                   <CardContent className="pt-4">
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div className="text-center p-3 bg-white rounded border">
-                        <p className="text-xs text-gray-600">Adjustment Level</p>
+                        <p className="text-xs text-slate-600">Adjustment Level</p>
                         <Badge className={
                           simulationResult.comorbidity_analysis?.adjustment_level === 'high' ? 'bg-green-600' :
                           simulationResult.comorbidity_analysis?.adjustment_level === 'low' ? 'bg-yellow-600' :
-                          'bg-gray-600'
+                          'bg-slate-600'
                         } size="lg">
                           {simulationResult.comorbidity_analysis?.adjustment_level}
                         </Badge>
                       </div>
                       <div className="text-center p-3 bg-white rounded border">
-                        <p className="text-xs text-gray-600">High-Value Count</p>
+                        <p className="text-xs text-slate-600">High-Value Count</p>
                         <p className="text-2xl font-bold text-blue-700">
                           {simulationResult.comorbidity_analysis?.high_value_count}
                         </p>
@@ -531,7 +531,7 @@ Provide detailed comparison showing what changed and why.`;
                     <div className="bg-blue-50 p-3 rounded border border-blue-200">
                       <p className="text-xs text-blue-700 font-semibold mb-1">Change from Baseline:</p>
                       <p className="text-sm text-blue-800">{simulationResult.comorbidity_analysis?.change_from_baseline}</p>
-                      <p className="text-xs text-gray-600 mt-2">{simulationResult.comorbidity_analysis?.impact_explanation}</p>
+                      <p className="text-xs text-slate-600 mt-2">{simulationResult.comorbidity_analysis?.impact_explanation}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -635,10 +635,10 @@ Provide detailed comparison showing what changed and why.`;
           {/* Saved Scenarios */}
           <TabsContent value="saved" className="space-y-3">
             {scenarios.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
-                <Lightbulb className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">No saved scenarios yet</p>
-                <p className="text-sm text-gray-500">Create and run a simulation, then save it</p>
+              <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed">
+                <Lightbulb className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600">No saved scenarios yet</p>
+                <p className="text-sm text-slate-500">Create and run a simulation, then save it</p>
               </div>
             ) : (
               <ScrollArea className="max-h-[600px]">
@@ -648,8 +648,8 @@ Provide detailed comparison showing what changed and why.`;
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h4 className="font-semibold text-gray-900">{scenario.scenario_name}</h4>
-                            <p className="text-xs text-gray-500">
+                            <h4 className="font-semibold text-slate-900">{scenario.scenario_name}</h4>
+                            <p className="text-xs text-slate-500">
                               Saved {new Date(scenario.created_date || Date.now()).toLocaleDateString()}
                             </p>
                           </div>
@@ -666,12 +666,12 @@ Provide detailed comparison showing what changed and why.`;
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                          <div className="bg-gray-50 p-2 rounded">
-                            <p className="text-gray-600">Functional Points</p>
+                          <div className="bg-slate-50 p-2 rounded">
+                            <p className="text-slate-600">Functional Points</p>
                             <p className="font-bold">{scenario.simulation_result?.functional_analysis?.total_points}</p>
                           </div>
-                          <div className="bg-gray-50 p-2 rounded">
-                            <p className="text-gray-600">Comorbidities</p>
+                          <div className="bg-slate-50 p-2 rounded">
+                            <p className="text-slate-600">Comorbidities</p>
                             <p className="font-bold">{scenario.scenario_data?.comorbidities?.length}</p>
                           </div>
                         </div>
@@ -715,10 +715,10 @@ Provide detailed comparison showing what changed and why.`;
           {/* Comparison View */}
           <TabsContent value="compare" className="space-y-4">
             {selectedScenarios.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
-                <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">No scenarios selected for comparison</p>
-                <p className="text-sm text-gray-500">Go to Saved Scenarios and click "Compare"</p>
+              <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed">
+                <BarChart3 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600">No scenarios selected for comparison</p>
+                <p className="text-sm text-slate-500">Go to Saved Scenarios and click "Compare"</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -736,16 +736,16 @@ Provide detailed comparison showing what changed and why.`;
                   <CardContent>
                     <div className="space-y-2">
                       {selectedScenarios.map((scenario, _idx) => (
-                        <div key={scenario.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white rounded border">
+                        <div key={scenario.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-white rounded border">
                           <div>
                             <p className="font-semibold text-sm">{scenario.scenario_name}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500">
                               Functional: {scenario.simulation_result?.functional_analysis?.total_points} pts | 
                               Comorbidities: {scenario.scenario_data?.comorbidities?.length}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-bold text-gray-900">
+                            <p className="text-lg font-bold text-slate-900">
                               {formatCurrency(scenario.simulated_payment)}
                             </p>
                             <Badge className={
@@ -787,7 +787,7 @@ Provide detailed comparison showing what changed and why.`;
                         <div key={scenario.id} className="flex items-center justify-between p-2 bg-white rounded border">
                           <p className="text-sm font-medium">{scenario.scenario_name}</p>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-slate-600">
                               {scenario.simulation_result?.functional_analysis?.total_points} points
                             </span>
                             <Badge className={

@@ -87,7 +87,7 @@ export default function PDFMerger({ onMergeComplete }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Upload Area */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
+        <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
           <Input
             id="pdf-upload"
             type="file"
@@ -97,11 +97,11 @@ export default function PDFMerger({ onMergeComplete }) {
             className="hidden"
           />
           <label htmlFor="pdf-upload" className="cursor-pointer">
-            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-700">
+            <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+            <p className="text-sm font-medium text-slate-700">
               Click to upload PDF files
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Select multiple files to merge
             </p>
           </label>
@@ -110,20 +110,20 @@ export default function PDFMerger({ onMergeComplete }) {
         {/* File List */}
         {files.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-medium text-slate-700">
               Files to merge ({files.length})
             </p>
             {files.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg"
               >
                 <FileText className="w-4 h-4 text-blue-600 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-slate-900 truncate">
                     {file.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     {(file.size / 1024).toFixed(1)} KB
                   </p>
                 </div>

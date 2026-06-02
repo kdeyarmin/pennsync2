@@ -243,7 +243,7 @@ PROVIDE:
       case 'medium':
       case 'moderate': return 'bg-yellow-600 text-white';
       case 'low': return 'bg-red-600 text-white';
-      default: return 'bg-gray-600 text-white';
+      default: return 'bg-slate-600 text-white';
     }
   };
 
@@ -253,7 +253,7 @@ PROVIDE:
       case 'high': return 'border-orange-500 bg-orange-50';
       case 'medium': return 'border-yellow-500 bg-yellow-50';
       case 'low': return 'border-blue-500 bg-blue-50';
-      default: return 'border-gray-500 bg-gray-50';
+      default: return 'border-slate-500 bg-slate-50';
     }
   };
 
@@ -328,7 +328,7 @@ PROVIDE:
               <CardContent className="pt-4">
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm text-gray-600">Current Assignment:</p>
+                    <p className="text-sm text-slate-600">Current Assignment:</p>
                     <Badge variant="outline" className="text-base">
                       {pdgmData?.clinical_group || 'Not Set'}
                     </Badge>
@@ -372,13 +372,13 @@ PROVIDE:
 
                 {/* Alternative Groups */}
                 {assignment.clinical_group_assignment?.alternative_groups_considered?.length > 0 && (
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <p className="text-xs text-gray-700 font-semibold mb-2">Alternative Groups Considered:</p>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <p className="text-xs text-slate-700 font-semibold mb-2">Alternative Groups Considered:</p>
                     <div className="space-y-2">
                       {assignment.clinical_group_assignment.alternative_groups_considered.map((alt, idx) => (
                         <div key={idx} className="text-sm">
                           <Badge variant="outline" className="mb-1">{alt.group}</Badge>
-                          <p className="text-xs text-gray-600 ml-2">→ {alt.why_not_selected}</p>
+                          <p className="text-xs text-slate-600 ml-2">→ {alt.why_not_selected}</p>
                         </div>
                       ))}
                     </div>
@@ -403,7 +403,7 @@ PROVIDE:
               <CardContent className="pt-4">
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm text-gray-600">Current Assignment:</p>
+                    <p className="text-sm text-slate-600">Current Assignment:</p>
                     <Badge variant="outline" className="text-base">
                       {pdgmData?.functional_level || 'Not Set'}
                     </Badge>
@@ -435,7 +435,7 @@ PROVIDE:
                         <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="font-mono text-xs">{item.m_item}</Badge>
-                            <span className="text-sm text-gray-800">{item.contribution}</span>
+                            <span className="text-sm text-slate-800">{item.contribution}</span>
                           </div>
                           <Badge className="bg-purple-600 text-white">{item.score} pts</Badge>
                         </div>
@@ -462,7 +462,7 @@ PROVIDE:
                     {assignment.discrepancies.map((disc, idx) => (
                       <div key={idx} className={`p-3 rounded-lg border-2 ${getSeverityColor(disc.severity)}`}>
                         <div className="flex items-center justify-between mb-2">
-                          <Badge className="bg-gray-800 text-white">{disc.type}</Badge>
+                          <Badge className="bg-slate-800 text-white">{disc.type}</Badge>
                           <Badge className={
                             disc.severity === 'critical' ? 'bg-red-600 text-white' :
                             disc.severity === 'high' ? 'bg-orange-500 text-white' :
@@ -474,15 +474,15 @@ PROVIDE:
                         </div>
                         <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
                           <div>
-                            <p className="text-xs text-gray-600">Current:</p>
+                            <p className="text-xs text-slate-600">Current:</p>
                             <p className="font-semibold">{disc.current_value}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-600">Recommended:</p>
+                            <p className="text-xs text-slate-600">Recommended:</p>
                             <p className="font-semibold text-green-700">{disc.recommended_value}</p>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-700">{disc.explanation}</p>
+                        <p className="text-sm text-slate-700">{disc.explanation}</p>
                       </div>
                     ))}
                   </div>

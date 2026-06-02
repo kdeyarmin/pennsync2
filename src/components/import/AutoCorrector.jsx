@@ -142,10 +142,10 @@ export default function AutoCorrector({ csvData, columnMapping, onCorrectedData 
       <CardContent className="space-y-4">
         {!results ? (
           <>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-slate-700">
               Automatically fix common data issues before validation:
             </p>
-            <ul className="text-sm text-gray-600 space-y-2 ml-4">
+            <ul className="text-sm text-slate-600 space-y-2 ml-4">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                 <span>Convert dates to YYYY-MM-DD format</span>

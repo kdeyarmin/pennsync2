@@ -122,7 +122,7 @@ Return JSON:
       efficiency: "bg-purple-100 text-purple-800",
       communication: "bg-orange-100 text-orange-800"
     };
-    return colors[category] || "bg-gray-100 text-gray-800";
+    return colors[category] || "bg-slate-100 text-slate-800";
   };
 
   const completedCount = skillAnalysis?.recommended_modules?.filter(
@@ -156,7 +156,7 @@ Return JSON:
         <CardContent className="p-3">
           {!skillAnalysis ? (
             <div className="text-center py-4">
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Get personalized learning recommendations based on your documentation patterns.
               </p>
               <Button
@@ -177,7 +177,7 @@ Return JSON:
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-medium">Learning Progress</span>
-                  <span className="text-xs text-gray-500">{Math.round((completedCount / totalModules) * 100)}%</span>
+                  <span className="text-xs text-slate-500">{Math.round((completedCount / totalModules) * 100)}%</span>
                 </div>
                 <Progress value={(completedCount / totalModules) * 100} className="h-2" />
               </div>
@@ -212,7 +212,7 @@ Return JSON:
 
               {/* Learning Modules */}
               <div>
-                <p className="text-xs font-semibold text-gray-700 mb-2">Recommended Modules</p>
+                <p className="text-xs font-semibold text-slate-700 mb-2">Recommended Modules</p>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {skillAnalysis.recommended_modules?.map((module, idx) => (
                     <Card 
@@ -227,7 +227,7 @@ Return JSON:
                               <Badge className={`${getCategoryColor(module.category)} text-xs`}>
                                 {module.category}
                               </Badge>
-                              <span className="text-xs text-gray-500">{module.duration}</span>
+                              <span className="text-xs text-slate-500">{module.duration}</span>
                             </div>
                           </div>
                           {completedModules.includes(module.title) ? (
@@ -243,8 +243,8 @@ Return JSON:
                             </Button>
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 mb-2">{module.description}</p>
-                        <ul className="text-xs text-gray-500 space-y-0.5">
+                        <p className="text-xs text-slate-600 mb-2">{module.description}</p>
+                        <ul className="text-xs text-slate-500 space-y-0.5">
                           {module.key_points?.map((point, pIdx) => (
                             <li key={pIdx}>• {point}</li>
                           ))}

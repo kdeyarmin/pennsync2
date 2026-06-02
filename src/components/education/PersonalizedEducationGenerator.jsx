@@ -309,15 +309,15 @@ Return JSON with the complete material:`,
 
                   {/* Sections */}
                   {educationMaterial.sections?.map((section, idx) => (
-                    <div key={idx} className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                      <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <div key={idx} className="bg-white p-4 rounded-lg border-2 border-slate-200">
+                      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
                         <span className="bg-purple-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">
                           {idx + 1}
                         </span>
                         {section.section_title}
                       </h3>
                       <div className="prose prose-sm max-w-none">
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                        <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
                           {section.content}
                         </p>
                       </div>

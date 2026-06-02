@@ -49,10 +49,10 @@ export function ConfidenceProgressBar({ confidence, label }) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-sm">
-        <span className="font-medium text-gray-700">{label}</span>
-        <span className="text-gray-600">{confidence}%</span>
+        <span className="font-medium text-slate-700">{label}</span>
+        <span className="text-slate-600">{confidence}%</span>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-slate-200 rounded-full h-2">
         <div
           className={`${getColor(confidence)} h-2 rounded-full transition-all duration-500`}
           style={{ width: `${confidence}%` }}

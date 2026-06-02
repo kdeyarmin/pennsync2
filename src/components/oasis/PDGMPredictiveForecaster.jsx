@@ -334,7 +334,7 @@ Return JSON:
       case 'low': return 'bg-green-100 text-green-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'high': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -373,7 +373,7 @@ Return JSON:
           </div>
           <div className="flex items-center gap-2">
             {currentPayment && (
-              <Badge className="bg-gray-600 text-white text-lg px-3">
+              <Badge className="bg-slate-600 text-white text-lg px-3">
                 Current: {formatCurrency(currentPayment)}
               </Badge>
             )}
@@ -424,8 +424,8 @@ Return JSON:
                   <div key={key} className="bg-white p-3 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <config.icon className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-900">{config.label}</span>
+                        <config.icon className="w-4 h-4 text-slate-600" />
+                        <span className="text-sm font-medium text-slate-900">{config.label}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {hasChanged && (
@@ -433,7 +433,7 @@ Return JSON:
                             {originalValue} → {currentValue}
                           </Badge>
                         )}
-                        <Badge className={`text-sm ${hasChanged ? 'bg-orange-600' : 'bg-gray-600'}`}>
+                        <Badge className={`text-sm ${hasChanged ? 'bg-orange-600' : 'bg-slate-600'}`}>
                           {currentValue}
                         </Badge>
                       </div>
@@ -445,7 +445,7 @@ Return JSON:
                       step={1}
                       className="mt-2"
                     />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
                       <span>0 (Independent)</span>
                       <span>{config.max} (Dependent)</span>
                     </div>
@@ -480,8 +480,8 @@ Return JSON:
                 {/* Payment Impact */}
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-white p-3 rounded text-center border">
-                    <p className="text-xs text-gray-500 mb-1">Original</p>
-                    <p className="text-lg font-bold text-gray-700">
+                    <p className="text-xs text-slate-500 mb-1">Original</p>
+                    <p className="text-lg font-bold text-slate-700">
                       {formatCurrency(simulationResults.analysis.payment_breakdown?.original_payment)}
                     </p>
                   </div>
@@ -497,7 +497,7 @@ Return JSON:
                       ? 'bg-green-50 border-green-300' 
                       : 'bg-red-50 border-red-300'
                   }`}>
-                    <p className="text-xs text-gray-500 mb-1">Simulated</p>
+                    <p className="text-xs text-slate-500 mb-1">Simulated</p>
                     <p className={`text-lg font-bold ${
                       simulationResults.analysis.payment_breakdown?.difference >= 0 
                         ? 'text-green-700' 
@@ -511,32 +511,32 @@ Return JSON:
                 {/* Functional Level Impact */}
                 {simulationResults.analysis.functional_level_impact && (
                   <div className="bg-white p-3 rounded-lg border">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">Functional Level Impact</p>
+                    <p className="text-xs font-semibold text-slate-700 mb-2">Functional Level Impact</p>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="capitalize">
                           {simulationResults.analysis.functional_level_impact.original_level}
                         </Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-slate-500">
                           ({simulationResults.analysis.functional_level_impact.original_points} pts)
                         </span>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                      <ArrowRight className="w-4 h-4 text-slate-400" />
                       <div className="flex items-center gap-2">
                         <Badge className={`capitalize ${
                           simulationResults.analysis.functional_level_impact.changed 
                             ? 'bg-orange-600' 
-                            : 'bg-gray-600'
+                            : 'bg-slate-600'
                         }`}>
                           {simulationResults.analysis.functional_level_impact.new_level}
                         </Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-slate-500">
                           ({simulationResults.analysis.functional_level_impact.new_points} pts)
                         </span>
                       </div>
                     </div>
                     {simulationResults.analysis.functional_level_impact.driving_changes?.length > 0 && (
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-slate-600">
                         <p className="font-medium mb-1">Key Changes:</p>
                         <ul className="space-y-0.5">
                           {simulationResults.analysis.functional_level_impact.driving_changes.map((change, idx) => (
@@ -551,7 +551,7 @@ Return JSON:
                 {/* PDGM Grouping Changes */}
                 {simulationResults.analysis.grouping_changes && (
                   <div className="bg-white p-3 rounded-lg border">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">PDGM Grouping Changes</p>
+                    <p className="text-xs font-semibold text-slate-700 mb-2">PDGM Grouping Changes</p>
                     
                     {simulationResults.analysis.grouping_changes.clinical_group_changed ? (
                       <div className="bg-yellow-50 p-2 rounded border border-yellow-300 mb-2">
@@ -570,7 +570,7 @@ Return JSON:
                       <p className="text-xs text-orange-700 mb-2">⚠️ Comorbidity adjustment impacted</p>
                     )}
                     
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-slate-600">
                       {simulationResults.analysis.grouping_changes.case_mix_multiplier_impact}
                     </p>
                   </div>
@@ -608,7 +608,7 @@ Return JSON:
                       : 'bg-red-50 border-red-300'
                   }`}>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-semibold text-gray-800">Implementation Feasibility</p>
+                      <p className="text-xs font-semibold text-slate-800">Implementation Feasibility</p>
                       <Badge className={
                         simulationResults.analysis.implementation.realistic 
                           ? 'bg-green-600' 
@@ -619,7 +619,7 @@ Return JSON:
                     </div>
                     
                     {simulationResults.analysis.implementation.clinical_evidence_needed?.length > 0 && (
-                      <div className="text-xs text-gray-700">
+                      <div className="text-xs text-slate-700">
                         <p className="font-medium mb-1">Evidence Needed:</p>
                         <ul className="space-y-0.5">
                           {simulationResults.analysis.implementation.clinical_evidence_needed.slice(0, 2).map((evidence, idx) => (
@@ -634,7 +634,7 @@ Return JSON:
                 {/* Case-Mix Comparison Chart */}
                 {simulationResults.paymentData?.original && simulationResults.paymentData?.corrected && (
                   <div className="bg-white p-3 rounded-lg border">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">Case-Mix Component Comparison</p>
+                    <p className="text-xs font-semibold text-slate-700 mb-2">Case-Mix Component Comparison</p>
                     <ResponsiveContainer width="100%" height={200}>
                       <RechartsLineChart data={[
                         { 
@@ -675,7 +675,7 @@ Return JSON:
             {isPredicting ? (
               <div className="text-center py-8">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-                <p className="text-sm text-gray-600">Generating predictive scenarios...</p>
+                <p className="text-sm text-slate-600">Generating predictive scenarios...</p>
               </div>
             ) : !predictions ? (
           <Button onClick={generatePredictions} className="w-full bg-purple-600 hover:bg-purple-700">
@@ -709,7 +709,7 @@ Return JSON:
                 <div 
                   key={idx}
                   className={`p-4 rounded-lg border-2 ${
-                    idx === 0 ? 'bg-gray-50 border-gray-300' :
+                    idx === 0 ? 'bg-slate-50 border-slate-300' :
                     idx === 1 ? 'bg-green-50 border-green-300' :
                     idx === predictions.scenarios.length - 1 ? 'bg-purple-50 border-purple-300' :
                     'bg-blue-50 border-blue-300'
@@ -717,10 +717,10 @@ Return JSON:
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-gray-400">#{idx + 1}</span>
+                      <span className="text-2xl font-bold text-slate-400">#{idx + 1}</span>
                       <div>
-                        <h4 className="font-bold text-gray-900">{scenario.name}</h4>
-                        <p className="text-xs text-gray-600">{scenario.description}</p>
+                        <h4 className="font-bold text-slate-900">{scenario.name}</h4>
+                        <p className="text-xs text-slate-600">{scenario.description}</p>
                       </div>
                     </div>
                     <Badge className={getEffortColor(scenario.implementation_effort)}>
@@ -730,20 +730,20 @@ Return JSON:
 
                   <div className="grid grid-cols-3 gap-2 my-3">
                     <div className="bg-white p-2 rounded text-center">
-                      <p className="text-xs text-gray-500">Payment</p>
+                      <p className="text-xs text-slate-500">Payment</p>
                       <p className="text-lg font-bold text-purple-700">
                         {formatCurrency(scenario.projected_payment)}
                       </p>
                     </div>
                     <div className="bg-white p-2 rounded text-center">
-                      <p className="text-xs text-gray-500">Increase</p>
+                      <p className="text-xs text-slate-500">Increase</p>
                       <p className="text-lg font-bold text-green-700">
                         +{formatCurrency(scenario.payment_increase)}
                       </p>
                       <p className="text-xs text-green-600">+{scenario.percentage_increase}%</p>
                     </div>
                     <div className="bg-white p-2 rounded text-center">
-                      <p className="text-xs text-gray-500">Annual</p>
+                      <p className="text-xs text-slate-500">Annual</p>
                       <p className="text-lg font-bold text-indigo-700">
                         {formatCurrency(scenario.annual_impact)}
                       </p>
@@ -752,11 +752,11 @@ Return JSON:
 
                   <div className="bg-white/50 p-2 rounded mb-2 text-xs">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-gray-600">Timeline: <strong>{scenario.implementation_timeline}</strong></span>
-                      <span className="text-gray-600">ROI: <strong>{scenario.roi_timeline}</strong></span>
+                      <span className="text-slate-600">Timeline: <strong>{scenario.implementation_timeline}</strong></span>
+                      <span className="text-slate-600">ROI: <strong>{scenario.roi_timeline}</strong></span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-600">Probability:</span>
+                      <span className="text-slate-600">Probability:</span>
                       <Progress value={scenario.probability} className="h-2 flex-1" />
                       <span className="font-bold text-purple-700">{scenario.probability}%</span>
                     </div>
@@ -764,15 +764,15 @@ Return JSON:
 
                   {scenario.changes && scenario.changes.length > 0 && (
                     <div className="space-y-1 mb-2">
-                      <p className="text-xs font-semibold text-gray-700">Key Changes:</p>
+                      <p className="text-xs font-semibold text-slate-700">Key Changes:</p>
                       {scenario.changes.slice(0, 3).map((change, cIdx) => (
                         <div key={cIdx} className="flex items-center gap-2 text-xs bg-white p-1.5 rounded">
                           <ArrowRight className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                          <span className="text-gray-700">{change.item}: <strong>{change.to}</strong></span>
+                          <span className="text-slate-700">{change.item}: <strong>{change.to}</strong></span>
                         </div>
                       ))}
                       {scenario.changes.length > 3 && (
-                        <p className="text-xs text-gray-500 italic">+{scenario.changes.length - 3} more changes</p>
+                        <p className="text-xs text-slate-500 italic">+{scenario.changes.length - 3} more changes</p>
                       )}
                     </div>
                   )}
@@ -826,12 +826,12 @@ Return JSON:
                 <div className="grid grid-cols-3 gap-3">
                   {Object.entries(predictions.breakeven_analysis).map(([key, data]) => (
                     <div key={key} className="bg-white p-3 rounded border text-center">
-                      <p className="text-xs text-gray-600 mb-1 capitalize">{key.replace('_', ' ')}</p>
+                      <p className="text-xs text-slate-600 mb-1 capitalize">{key.replace('_', ' ')}</p>
                       <p className="text-sm font-bold text-indigo-700">
                         {data.episodes_to_breakeven} episodes
                       </p>
-                      <p className="text-xs text-gray-600">{data.time_to_breakeven}</p>
-                      <p className="text-xs text-gray-500 mt-1">Cost: {formatCurrency(data.cost)}</p>
+                      <p className="text-xs text-slate-600">{data.time_to_breakeven}</p>
+                      <p className="text-xs text-slate-500 mt-1">Cost: {formatCurrency(data.cost)}</p>
                     </div>
                   ))}
                 </div>
@@ -849,29 +849,29 @@ Return JSON:
                   <div className="bg-white p-3 rounded border border-red-200">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge className="bg-red-600 text-white text-xs">NOW</Badge>
-                      <p className="text-xs font-semibold text-gray-700">Immediate Focus</p>
+                      <p className="text-xs font-semibold text-slate-700">Immediate Focus</p>
                     </div>
-                    <p className="text-sm text-gray-800">{predictions.recommendations.immediate_focus}</p>
+                    <p className="text-sm text-slate-800">{predictions.recommendations.immediate_focus}</p>
                   </div>
                   <div className="bg-white p-3 rounded border border-orange-200">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge className="bg-orange-500 text-white text-xs">30 DAYS</Badge>
-                      <p className="text-xs font-semibold text-gray-700">Short-Term Goals</p>
+                      <p className="text-xs font-semibold text-slate-700">Short-Term Goals</p>
                     </div>
-                    <p className="text-sm text-gray-800">{predictions.recommendations['30_day_goals']}</p>
+                    <p className="text-sm text-slate-800">{predictions.recommendations['30_day_goals']}</p>
                   </div>
                   <div className="bg-white p-3 rounded border border-blue-200">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge className="bg-blue-600 text-white text-xs">90 DAYS</Badge>
-                      <p className="text-xs font-semibold text-gray-700">Long-Term Goals</p>
+                      <p className="text-xs font-semibold text-slate-700">Long-Term Goals</p>
                     </div>
-                    <p className="text-sm text-gray-800">{predictions.recommendations['90_day_goals']}</p>
+                    <p className="text-sm text-slate-800">{predictions.recommendations['90_day_goals']}</p>
                   </div>
                 </div>
                 {predictions.recommendations.success_metrics && (
                   <div className="mt-3 bg-white p-2 rounded border">
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Success Metrics:</p>
-                    <ul className="text-xs text-gray-700 space-y-0.5">
+                    <p className="text-xs font-semibold text-slate-700 mb-1">Success Metrics:</p>
+                    <ul className="text-xs text-slate-700 space-y-0.5">
                       {predictions.recommendations.success_metrics.map((metric, idx) => (
                         <li key={idx} className="flex items-start gap-1">
                           <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />

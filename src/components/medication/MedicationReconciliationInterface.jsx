@@ -202,7 +202,7 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                   <Label htmlFor="file-upload" className="cursor-pointer">
                     <span className="text-blue-600 hover:text-blue-700 font-semibold">
                       Click to upload
@@ -216,7 +216,7 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
                     onChange={handleFileUpload}
                     className="hidden"
                   />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-slate-500 mt-2">
                     PDF, JPEG, or PNG (Max 10MB)
                   </p>
                 </div>
@@ -273,16 +273,16 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
               <CardContent className="pt-6">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{reconciliation.total_discrepancies}</p>
-                    <p className="text-sm text-gray-600">Total Discrepancies</p>
+                    <p className="text-2xl font-bold text-slate-900">{reconciliation.total_discrepancies}</p>
+                    <p className="text-sm text-slate-600">Total Discrepancies</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-red-600">{reconciliation.critical_discrepancies}</p>
-                    <p className="text-sm text-gray-600">Critical Issues</p>
+                    <p className="text-sm text-slate-600">Critical Issues</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-blue-600">{reconciliation.ai_confidence_score}%</p>
-                    <p className="text-sm text-gray-600">AI Confidence</p>
+                    <p className="text-sm text-slate-600">AI Confidence</p>
                   </div>
                 </div>
               </CardContent>
@@ -314,7 +314,7 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
                   <Card>
                     <CardContent className="py-12 text-center">
                       <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                      <p className="text-gray-600">No discrepancies found! Medications are aligned.</p>
+                      <p className="text-slate-600">No discrepancies found! Medications are aligned.</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -338,23 +338,23 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
                                 <Badge className={
                                   disc.status === 'resolved' ? 'bg-green-100 text-green-800' :
                                   disc.status === 'reviewed' ? 'bg-blue-100 text-blue-800' :
-                                  'bg-gray-100 text-gray-800'
+                                  'bg-slate-100 text-slate-800'
                                 }>
                                   {disc.status}
                                 </Badge>
                               </div>
-                              <h4 className="font-semibold text-gray-900 mb-1">
+                              <h4 className="font-semibold text-slate-900 mb-1">
                                 {disc.medication_name}
                               </h4>
-                              <p className="text-sm text-gray-700 mb-2">{disc.description}</p>
+                              <p className="text-sm text-slate-700 mb-2">{disc.description}</p>
                               
                               <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                                 <div className="bg-white p-2 rounded border">
-                                  <p className="text-xs text-gray-500 mb-1">Current</p>
+                                  <p className="text-xs text-slate-500 mb-1">Current</p>
                                   <p className="font-semibold">{disc.current_value}</p>
                                 </div>
                                 <div className="bg-white p-2 rounded border">
-                                  <p className="text-xs text-gray-500 mb-1">Discharge Order</p>
+                                  <p className="text-xs text-slate-500 mb-1">Discharge Order</p>
                                   <p className="font-semibold">{disc.discharge_value}</p>
                                 </div>
                               </div>
@@ -418,9 +418,9 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
                   <CardContent>
                     <div className="space-y-2">
                       {reconciliation.current_medications?.map((med, idx) => (
-                        <div key={idx} className="p-3 border rounded hover:bg-gray-50">
+                        <div key={idx} className="p-3 border rounded hover:bg-slate-50">
                           <p className="font-semibold">{med.medication_name}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-slate-600">
                             {med.dosage} {med.frequency} - {med.route}
                           </p>
                         </div>
@@ -438,13 +438,13 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
                   <CardContent>
                     <div className="space-y-2">
                       {reconciliation.extracted_discharge_medications?.map((med, idx) => (
-                        <div key={idx} className="p-3 border rounded hover:bg-gray-50">
+                        <div key={idx} className="p-3 border rounded hover:bg-slate-50">
                           <p className="font-semibold">{med.medication_name}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-slate-600">
                             {med.dosage} {med.frequency} - {med.route}
                           </p>
                           {med.indication && (
-                            <p className="text-xs text-gray-500">For: {med.indication}</p>
+                            <p className="text-xs text-slate-500">For: {med.indication}</p>
                           )}
                         </div>
                       ))}
@@ -473,7 +473,7 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
               <CardContent className="pt-6 text-center">
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Reconciliation Complete</h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-slate-600 mb-4">
                   Medication list has been updated. Patient and physician notifications are ready.
                 </p>
                 <div className="flex justify-center gap-3">

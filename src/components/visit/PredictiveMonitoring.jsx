@@ -178,7 +178,7 @@ Return JSON:
       case 'high': return 'bg-orange-500 text-white';
       case 'moderate': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -201,7 +201,7 @@ Return JSON:
             <AlertDescription>
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="font-semibold text-gray-900 mb-1">30-Day Hospitalization Risk</p>
+                  <p className="font-semibold text-slate-900 mb-1">30-Day Hospitalization Risk</p>
                   <p className="text-2xl font-bold text-indigo-600">{hospitalizationRisk.risk_percentage}%</p>
                 </div>
                 <Badge className={getRiskColor(hospitalizationRisk.risk_level)}>
@@ -211,8 +211,8 @@ Return JSON:
               
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Risk Factors:</p>
-                  <ul className="list-disc ml-5 text-sm text-gray-600 space-y-1">
+                  <p className="text-sm font-medium text-slate-700 mb-1">Risk Factors:</p>
+                  <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
                     {hospitalizationRisk.risk_factors.map((factor, i) => (
                       <li key={i}>{factor}</li>
                     ))}
@@ -220,8 +220,8 @@ Return JSON:
                 </div>
                 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Preventive Actions:</p>
-                  <ul className="list-disc ml-5 text-sm text-gray-600 space-y-1">
+                  <p className="text-sm font-medium text-slate-700 mb-1">Preventive Actions:</p>
+                  <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
                     {hospitalizationRisk.interventions.map((intervention, i) => (
                       <li key={i}>{intervention}</li>
                     ))}
@@ -235,19 +235,19 @@ Return JSON:
         {/* Trend Alerts */}
         {predictions.length > 0 && (
           <div className="space-y-3">
-            <h4 className="font-semibold text-gray-900">Clinical Trend Alerts</h4>
+            <h4 className="font-semibold text-slate-900">Clinical Trend Alerts</h4>
             {predictions.map((alert, index) => {
               const Icon = alert.icon;
               return (
                 <Alert key={index} className={getSeverityColor(alert.severity)}>
                   <Icon className="w-4 h-4" />
                   <AlertDescription>
-                    <p className="font-medium text-gray-900 mb-1">
+                    <p className="font-medium text-slate-900 mb-1">
                       {alert.severity === 'high' && '🚨 '}
                       {alert.title}
                     </p>
-                    <p className="text-sm text-gray-700 mb-2">{alert.message}</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm text-slate-700 mb-2">{alert.message}</p>
+                    <p className="text-sm font-medium text-slate-900">
                       💡 {alert.suggestion}
                     </p>
                   </AlertDescription>

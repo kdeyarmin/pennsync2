@@ -144,7 +144,7 @@ Be specific and actionable. Use actual data trends.`,
       case 'high': return 'bg-orange-100 border-orange-400 text-orange-900';
       case 'medium': return 'bg-yellow-100 border-yellow-400 text-yellow-900';
       case 'low': return 'bg-blue-100 border-blue-400 text-blue-900';
-      default: return 'bg-gray-100 border-gray-400 text-gray-900';
+      default: return 'bg-slate-100 border-slate-400 text-slate-900';
     }
   };
 
@@ -169,8 +169,8 @@ Be specific and actionable. Use actual data trends.`,
       <Card className="border-2 border-purple-300">
         <CardContent className="p-6 text-center">
           <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-900 font-semibold">Analyzing Patient Data...</p>
-          <p className="text-xs text-gray-600 mt-2">🧠 Reviewing {visits?.length} visits, {incidents?.length} incidents, and clinical history</p>
+          <p className="text-sm text-slate-900 font-semibold">Analyzing Patient Data...</p>
+          <p className="text-xs text-slate-600 mt-2">🧠 Reviewing {visits?.length} visits, {incidents?.length} incidents, and clinical history</p>
         </CardContent>
       </Card>
     );
@@ -223,7 +223,7 @@ Be specific and actionable. Use actual data trends.`,
         </CardHeader>
         <CardContent className="space-y-3">
           <Progress value={insights.overall_risk_score} className="h-3" />
-          <p className="text-sm text-gray-700 bg-white p-3 rounded border">{insights.risk_summary}</p>
+          <p className="text-sm text-slate-700 bg-white p-3 rounded border">{insights.risk_summary}</p>
           
           {(criticalPredictions.length > 0 || highPredictions.length > 0) && (
             <Alert className="border-red-400 bg-red-50">
@@ -255,7 +255,7 @@ Be specific and actionable. Use actual data trends.`,
                       {getRiskIcon(prediction.category)}
                       <div>
                         <p className="font-semibold text-sm">{prediction.risk_name}</p>
-                        <p className="text-xs text-gray-600">{prediction.category}</p>
+                        <p className="text-xs text-slate-600">{prediction.category}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -280,10 +280,10 @@ Be specific and actionable. Use actual data trends.`,
                   {/* Evidence */}
                   {prediction.evidence?.length > 0 && (
                     <div className="bg-white p-3 rounded border">
-                      <p className="text-xs font-semibold text-gray-700 mb-2">📊 Evidence from Patient Data:</p>
+                      <p className="text-xs font-semibold text-slate-700 mb-2">📊 Evidence from Patient Data:</p>
                       <ul className="space-y-1">
                         {prediction.evidence.map((item, i) => (
-                          <li key={i} className="text-xs text-gray-600">• {item}</li>
+                          <li key={i} className="text-xs text-slate-600">• {item}</li>
                         ))}
                       </ul>
                     </div>
@@ -362,8 +362,8 @@ Be specific and actionable. Use actual data trends.`,
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{rec.recommendation}</p>
-                    <p className="text-xs text-gray-600 mt-1">{rec.rationale}</p>
+                    <p className="text-sm font-semibold text-slate-900">{rec.recommendation}</p>
+                    <p className="text-xs text-slate-600 mt-1">{rec.rationale}</p>
                   </div>
                   <Badge className={
                     rec.priority === 'high' ? 'bg-red-600' :

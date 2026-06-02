@@ -400,8 +400,8 @@ Generate the homebound documentation now:`;
                 <Home className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Homebound Status Verification</h3>
-                <p className="text-sm text-gray-600">Guided Medicare-compliant homebound documentation</p>
+                <h3 className="text-lg font-bold text-slate-900">Homebound Status Verification</h3>
+                <p className="text-sm text-slate-600">Guided Medicare-compliant homebound documentation</p>
               </div>
             </div>
             <Button
@@ -429,7 +429,7 @@ Generate the homebound documentation now:`;
 
           {/* Progress Bar */}
           <div className="space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm text-slate-600">
               <span>Compliance Score</span>
               <span className="font-semibold">{complianceScore}/100</span>
             </div>
@@ -440,7 +440,7 @@ Generate the homebound documentation now:`;
                 complianceScore >= 60 ? 'bg-yellow-200' : 'bg-red-200'
               }`}
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               {complianceScore >= 80 ? '✓ Excellent - Ready to generate' :
                complianceScore >= 60 ? '⚠ Good - Add more details for stronger documentation' :
                '⚠ Needs improvement - Select criteria and add details'}
@@ -504,7 +504,7 @@ Generate the homebound documentation now:`;
                             <Label htmlFor={reason.id} className="text-lg font-semibold cursor-pointer">
                               {reason.label}
                             </Label>
-                            <p className="text-sm text-gray-600 mt-1">{reason.description}</p>
+                            <p className="text-sm text-slate-600 mt-1">{reason.description}</p>
                           </div>
                         </div>
                         {criteria[reason.id] && (
@@ -548,7 +548,7 @@ Generate the homebound documentation now:`;
                               </div>
                             </AccordionTrigger>
                             <AccordionContent>
-                              <ul className="list-disc ml-5 space-y-2 text-sm text-gray-700">
+                              <ul className="list-disc ml-5 space-y-2 text-sm text-slate-700">
                                 {reason.examples.map((example, idx) => (
                                   <li key={idx}>{example}</li>
                                 ))}
@@ -583,7 +583,7 @@ Generate the homebound documentation now:`;
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {specificObservations.map((obs) => (
-                  <div key={obs.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                  <div key={obs.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-slate-50">
                     <Checkbox
                       id={obs.id}
                       checked={criteria.observations[obs.id]}
@@ -635,7 +635,7 @@ Generate the homebound documentation now:`;
                 <Label className="text-lg font-semibold mb-3 block">
                   When Does Patient Leave Home?
                 </Label>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Medicare requires documentation that patient leaves home infrequently and only for specific reasons.
                 </p>
                 
@@ -762,7 +762,7 @@ Generate the homebound documentation now:`;
                   </CardHeader>
                   <CardContent>
                     <div className="p-4 bg-white rounded border border-indigo-200">
-                      <p className="text-gray-900 leading-relaxed">{generatedText}</p>
+                      <p className="text-slate-900 leading-relaxed">{generatedText}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -825,7 +825,7 @@ Generate the homebound documentation now:`;
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-4 text-sm text-gray-700">
+                <div className="space-y-4 text-sm text-slate-700">
                   <div>
                     <h4 className="font-semibold mb-2">What Makes a Patient Homebound?</h4>
                     <p className="mb-2">Medicare defines homebound as meeting at least ONE of these criteria:</p>

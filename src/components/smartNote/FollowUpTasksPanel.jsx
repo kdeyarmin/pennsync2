@@ -56,16 +56,16 @@ export default function FollowUpTasksPanel({ tasks = [], onDismiss }) {
             <span className="text-lg shrink-0">{TYPE_EMOJI[task.type] || "•"}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium text-gray-900 leading-tight">{task.title}</p>
+                <p className="text-sm font-medium text-slate-900 leading-tight">{task.title}</p>
                 <Badge className={`shrink-0 text-xs ${PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.medium}`}>
                   {task.priority}
                 </Badge>
               </div>
               {task.due_date && (
-                <p className="text-xs text-gray-500 mt-0.5">Due: {task.due_date}</p>
+                <p className="text-xs text-slate-500 mt-0.5">Due: {task.due_date}</p>
               )}
               {task.ai_reason && (
-                <p className="text-xs text-gray-500 mt-0.5 italic">{task.ai_reason}</p>
+                <p className="text-xs text-slate-500 mt-0.5 italic">{task.ai_reason}</p>
               )}
             </div>
           </div>

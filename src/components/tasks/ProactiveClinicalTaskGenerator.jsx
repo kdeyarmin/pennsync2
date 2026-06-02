@@ -126,7 +126,7 @@ export default function ProactiveClinicalTaskGenerator({
       case 'high': return 'bg-red-100 text-red-700 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-700 border-blue-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+      default: return 'bg-slate-100 text-slate-700 border-slate-300';
     }
   };
 
@@ -171,7 +171,7 @@ export default function ProactiveClinicalTaskGenerator({
         {visibleTasks.length === 0 && !analyzing && (
           <div className="text-center py-6">
             <Brain className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               AI will analyze visit notes, care plans, and alerts to suggest follow-up tasks
             </p>
             <Button
@@ -209,7 +209,7 @@ export default function ProactiveClinicalTaskGenerator({
                   className={`border-2 transition-all ${
                     task.risk_level === 'critical' ? 'border-red-400 bg-red-50' :
                     task.priority === 'high' ? 'border-orange-300 bg-orange-50' :
-                    'border-gray-300 bg-white'
+                    'border-slate-300 bg-white'
                   }`}
                 >
                   <CardContent className="p-4">
@@ -217,7 +217,7 @@ export default function ProactiveClinicalTaskGenerator({
                       <div className="flex items-start gap-2 flex-1">
                         {getRiskIcon(task.risk_level)}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900 text-sm">{task.title}</h4>
+                          <h4 className="font-semibold text-slate-900 text-sm">{task.title}</h4>
                           <div className="flex flex-wrap gap-2 mt-1">
                             <Badge className={getPriorityColor(task.priority)} size="sm">
                               {task.priority}
@@ -247,7 +247,7 @@ export default function ProactiveClinicalTaskGenerator({
                     {expandedTasks[index] && (
                       <div className="mt-3 space-y-2 text-sm">
                         <div>
-                          <p className="text-gray-700">{task.description}</p>
+                          <p className="text-slate-700">{task.description}</p>
                         </div>
                         
                         {task.clinical_rationale && (
@@ -259,8 +259,8 @@ export default function ProactiveClinicalTaskGenerator({
 
                         {task.suggested_actions?.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-700">Suggested Actions:</p>
-                            <ul className="list-disc list-inside text-xs text-gray-600 mt-1">
+                            <p className="text-xs font-semibold text-slate-700">Suggested Actions:</p>
+                            <ul className="list-disc list-inside text-xs text-slate-600 mt-1">
                               {task.suggested_actions.map((action, i) => (
                                 <li key={i}>{action}</li>
                               ))}

@@ -154,8 +154,8 @@ export default function Dashboard() {
     return (
       <div className="max-w-lg mx-auto pt-8 px-4">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Welcome to Penn Sync!</h1>
-          <p className="text-gray-500 mt-1">Let's set up your profile before we get started.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Welcome to Penn Sync!</h1>
+          <p className="text-slate-500 mt-1">Let's set up your profile before we get started.</p>
         </div>
         <CareScopeSelector currentUser={currentUser} onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ['currentUser'] });
@@ -212,9 +212,9 @@ export default function Dashboard() {
       <div className="mb-3 flex items-center justify-center">
         <button
           onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5"
+          className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1.5"
         >
-          Press <kbd className="bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-mono">Ctrl+K</kbd> to quickly navigate anywhere
+          Press <kbd className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono">Ctrl+K</kbd> to quickly navigate anywhere
         </button>
       </div>
 
@@ -336,7 +336,7 @@ export default function Dashboard() {
 
 
 
-      <Suspense fallback={<div className="flex items-center justify-center py-12 text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" />Loading...</div>}>
+      <Suspense fallback={<div className="flex items-center justify-center py-12 text-slate-400"><Loader2 className="w-6 h-6 animate-spin mr-2" />Loading...</div>}>
         {/* AI Care Plan Proposals - Nurse Review */}
         <div className="mb-6">
           <CarePlanProposalReviewer compact={true} />

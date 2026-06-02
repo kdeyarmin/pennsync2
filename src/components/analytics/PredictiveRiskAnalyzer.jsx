@@ -102,7 +102,7 @@ export default function PredictiveRiskAnalyzer({ patientId, patientName, onAlert
         {!analysis && !isAnalyzing && (
           <div className="text-center py-6">
             <Brain className="w-12 h-12 mx-auto mb-3 text-purple-400" />
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-slate-600 mb-3">
               Analyze patient data to predict risk of adverse events
             </p>
             <Button
@@ -118,8 +118,8 @@ export default function PredictiveRiskAnalyzer({ patientId, patientName, onAlert
         {isAnalyzing && (
           <div className="text-center py-6">
             <Loader2 className="w-10 h-10 animate-spin mx-auto mb-3 text-purple-600" />
-            <p className="text-sm text-gray-600">Analyzing patient data...</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm text-slate-600">Analyzing patient data...</p>
+            <p className="text-xs text-slate-500 mt-1">
               Evaluating vitals, diagnoses, social factors, and visit history
             </p>
           </div>
@@ -145,7 +145,7 @@ export default function PredictiveRiskAnalyzer({ patientId, patientName, onAlert
 
             {/* Risk Scores */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-gray-900">Risk Scores</h4>
+              <h4 className="text-sm font-semibold text-slate-900">Risk Scores</h4>
               {Object.entries(analysis.risk_scores || {}).map(([key, score]) => (
                 <div key={key} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
@@ -171,7 +171,7 @@ export default function PredictiveRiskAnalyzer({ patientId, patientName, onAlert
             {analysis.high_risk_alerts?.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-gray-900">High Risk Alerts</h4>
+                  <h4 className="text-sm font-semibold text-slate-900">High Risk Alerts</h4>
                   <Badge className="bg-red-100 text-red-800">
                     {analysis.high_risk_alerts.length} Alert{analysis.high_risk_alerts.length !== 1 ? 's' : ''}
                   </Badge>
@@ -190,12 +190,12 @@ export default function PredictiveRiskAnalyzer({ patientId, patientName, onAlert
                         </Badge>
                       </div>
 
-                      <p className="text-xs text-gray-700">{alert.message}</p>
+                      <p className="text-xs text-slate-700">{alert.message}</p>
 
                       {alert.contributing_factors?.length > 0 && (
                         <div className="bg-white/50 p-2 rounded">
-                          <p className="text-xs font-semibold text-gray-900 mb-1">Contributing Factors:</p>
-                          <ul className="text-xs text-gray-700 space-y-0.5">
+                          <p className="text-xs font-semibold text-slate-900 mb-1">Contributing Factors:</p>
+                          <ul className="text-xs text-slate-700 space-y-0.5">
                             {alert.contributing_factors.map((factor, i) => (
                               <li key={i}>• {factor}</li>
                             ))}
@@ -226,7 +226,7 @@ export default function PredictiveRiskAnalyzer({ patientId, patientName, onAlert
                       )}
 
                       {alert.reassessment_timeframe && (
-                        <p className="text-xs text-gray-500 italic">
+                        <p className="text-xs text-slate-500 italic">
                           Reassess: {alert.reassessment_timeframe}
                         </p>
                       )}

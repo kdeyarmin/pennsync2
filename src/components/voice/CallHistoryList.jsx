@@ -67,30 +67,30 @@ export default function CallHistoryList() {
       </CardHeader>
       <CardContent className="space-y-2">
         {isLoading ? (
-          <p className="text-sm text-gray-500 text-center py-4">Loading…</p>
+          <p className="text-sm text-slate-500 text-center py-4">Loading…</p>
         ) : sorted.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">No calls yet.</p>
+          <p className="text-sm text-slate-500 text-center py-4">No calls yet.</p>
         ) : (
           sorted.map((call) => (
-            <div key={call.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+            <div key={call.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
               <div className="flex items-center gap-3 min-w-0">
                 <CallIcon call={call} />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-slate-900 truncate">
                     {formatPhoneDisplay(call.direction === "outbound" ? call.to_number : call.from_number)}
                   </p>
-                  <p className="text-xs text-gray-500">{MODE_LABEL[call.call_mode] || call.call_mode}</p>
+                  <p className="text-xs text-slate-500">{MODE_LABEL[call.call_mode] || call.call_mode}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                <span className="text-xs text-gray-500 hidden sm:flex items-center gap-1">
+                <span className="text-xs text-slate-500 hidden sm:flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {formatDuration(call.duration_seconds)}
                 </span>
-                <Badge className={`text-xs ${STATUS_STYLES[call.status] || "bg-gray-100 text-gray-700"}`}>
+                <Badge className={`text-xs ${STATUS_STYLES[call.status] || "bg-slate-100 text-slate-700"}`}>
                   {(call.status || "").replace(/_/g, " ")}
                 </Badge>
-                <span className="text-xs text-gray-400 hidden md:inline">
+                <span className="text-xs text-slate-400 hidden md:inline">
                   {format(new Date(call.created_date), "MMM d, h:mm a")}
                 </span>
               </div>

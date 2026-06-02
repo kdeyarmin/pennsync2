@@ -71,7 +71,7 @@ export default function TrainingProgressChart({
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <GraduationCap className="w-4 h-4 text-blue-600" />
-              <p className="text-xs text-gray-600">Modules Completed</p>
+              <p className="text-xs text-slate-600">Modules Completed</p>
             </div>
             <p className="text-2xl font-bold">{completedCount}/{totalAssigned}</p>
             <Progress value={overallProgress} className="h-1.5 mt-2" />
@@ -82,7 +82,7 @@ export default function TrainingProgressChart({
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Brain className="w-4 h-4 text-purple-600" />
-              <p className="text-xs text-gray-600">Avg Quiz Score</p>
+              <p className="text-xs text-slate-600">Avg Quiz Score</p>
             </div>
             <p className="text-2xl font-bold">{avgScore}%</p>
             <Progress value={avgScore} className="h-1.5 mt-2 [&>div]:bg-purple-500" />
@@ -93,7 +93,7 @@ export default function TrainingProgressChart({
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <BookOpen className="w-4 h-4 text-green-600" />
-              <p className="text-xs text-gray-600">Micro-Lessons</p>
+              <p className="text-xs text-slate-600">Micro-Lessons</p>
             </div>
             <p className="text-2xl font-bold">{microLearningProgress.filter(ml => ml.status === 'completed').length}</p>
           </CardContent>
@@ -103,7 +103,7 @@ export default function TrainingProgressChart({
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle2 className="w-4 h-4 text-indigo-600" />
-              <p className="text-xs text-gray-600">Open Tasks</p>
+              <p className="text-xs text-slate-600">Open Tasks</p>
             </div>
             <p className="text-2xl font-bold">{recommendations.length}</p>
           </CardContent>

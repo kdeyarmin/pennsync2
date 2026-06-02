@@ -169,7 +169,7 @@ export default function EnhancedCameraFaxSender() {
         {capturedImages.length > 0 && !stream && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-sm text-gray-700">{capturedImages.length} page(s) captured</p>
+              <p className="font-medium text-sm text-slate-700">{capturedImages.length} page(s) captured</p>
               <Button onClick={startCamera} variant="outline" size="sm">
                 <Camera className="w-4 h-4 mr-1" /> Add More
               </Button>

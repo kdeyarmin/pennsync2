@@ -292,8 +292,8 @@ export default function Reports() {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            <p className="text-sm text-slate-500 mb-1">{title}</p>
+            <p className="text-3xl font-bold text-slate-900">{value}</p>
             {change !== undefined && (
               <div className={`flex items-center gap-1 mt-2 ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
                 {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
@@ -316,9 +316,9 @@ export default function Reports() {
   if (!isAdminUser) {
     return (
       <div className="p-8 text-center">
-        <ClipboardCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Admin Access Required</h2>
-        <p className="text-gray-600">Reports are available to administrators only.</p>
+        <ClipboardCheck className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">Admin Access Required</h2>
+        <p className="text-slate-600">Reports are available to administrators only.</p>
       </div>
     );
   }
@@ -329,8 +329,8 @@ export default function Reports() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Reports & Analytics</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600">Comprehensive reporting, KPIs, and automated insights</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">Reports & Analytics</h1>
+            <p className="text-xs sm:text-sm md:text-base text-slate-600">Comprehensive reporting, KPIs, and automated insights</p>
           </div>
         </div>
 
@@ -346,14 +346,14 @@ export default function Reports() {
           {/* Advanced Reports Tab */}
           <TabsContent value="advanced" className="space-y-6">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white rounded-lg p-2 shadow-sm">
-              <Calendar className="w-4 h-4 text-gray-500 hidden sm:block flex-shrink-0" />
+              <Calendar className="w-4 h-4 text-slate-500 hidden sm:block flex-shrink-0" />
               <input
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
                 className="text-sm border-0 focus:ring-0 min-h-[44px]"
               />
-              <span className="text-gray-400 text-center sm:inline hidden">to</span>
+              <span className="text-slate-400 text-center sm:inline hidden">to</span>
               <input
                 type="date"
                 value={dateRange.end}
@@ -367,7 +367,7 @@ export default function Reports() {
                 <Card key={section.id} className={`border-l-4 border-l-${section.color}-500 hover:shadow-lg transition-shadow cursor-pointer`}>
                   <CardContent className="p-4">
                     <section.icon className={`w-8 h-8 text-${section.color}-600 mb-2`} />
-                    <p className="text-xs font-semibold text-gray-600 uppercase">{section.title}</p>
+                    <p className="text-xs font-semibold text-slate-600 uppercase">{section.title}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -570,13 +570,13 @@ export default function Reports() {
               </CardHeader>
               <CardContent className="p-3 sm:p-4 md:p-6">
                 {schedulesLoading ? (
-                  <p className="text-gray-500">Loading schedules...</p>
+                  <p className="text-slate-500">Loading schedules...</p>
                 ) : scheduledTasks.length === 0 ? (
-                  <p className="text-gray-500">No scheduled reports yet. Create one above.</p>
+                  <p className="text-slate-500">No scheduled reports yet. Create one above.</p>
                 ) : (
                   <div className="space-y-3">
                     {scheduledTasks.map((task) => (
-                      <div key={task.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg">
+                      <div key={task.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-lg">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{task.name}</h3>
@@ -584,10 +584,10 @@ export default function Reports() {
                               {task.is_active ? 'Active' : 'Paused'}
                             </Badge>
                           </div>
-                          <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
+                          <p className="text-xs sm:text-sm text-slate-600 mt-1 break-words">
                             {task.description} • Recipients: {task.function_args?.recipients?.join(', ') || 'None'}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-slate-500 mt-1">
                             Schedule: Every {task.repeat_interval} {task.repeat_unit}
                             {task.start_time && ` at ${task.start_time}`}
                           </p>

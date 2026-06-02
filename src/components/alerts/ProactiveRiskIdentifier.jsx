@@ -219,7 +219,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -237,7 +237,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
       this_week: 'This Week'
     };
     return (
-      <Badge className={`text-[10px] ${colors[urgency] || 'bg-gray-500 text-white'}`}>
+      <Badge className={`text-[10px] ${colors[urgency] || 'bg-slate-500 text-white'}`}>
         <Clock className="w-2.5 h-2.5 mr-1" />
         {labels[urgency] || urgency}
       </Badge>
@@ -294,7 +294,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
                 const Icon = category?.icon || AlertTriangle;
                 return (
                   <div key={idx} className="flex items-center gap-2 p-1.5 bg-white rounded text-xs">
-                    <Icon className="w-3 h-3 text-gray-600 flex-shrink-0" />
+                    <Icon className="w-3 h-3 text-slate-600 flex-shrink-0" />
                     <span className="flex-1 truncate">{alert.concern}</span>
                     <Badge className={`text-[9px] ${getRiskLevelColor(alert.risk_level)}`}>
                       {alert.risk_level}
@@ -303,7 +303,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
                 );
               })}
               {activeAlerts.length > 3 && (
-                <p className="text-[10px] text-gray-500 text-center">
+                <p className="text-[10px] text-slate-500 text-center">
                   +{activeAlerts.length - 3} more alerts
                 </p>
               )}
@@ -330,7 +330,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
           </div>
           <div className="flex items-center gap-2">
             {lastAnalyzed && (
-              <span className="text-[10px] text-gray-500">
+              <span className="text-[10px] text-slate-500">
                 Updated {lastAnalyzed.toLocaleTimeString()}
               </span>
             )}
@@ -354,7 +354,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
         {isAnalyzing && activeAlerts.length === 0 ? (
           <div className="flex items-center justify-center py-6 gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
-            <span className="text-sm text-gray-600">Analyzing patient data for risks...</span>
+            <span className="text-sm text-slate-600">Analyzing patient data for risks...</span>
           </div>
         ) : activeAlerts.length === 0 ? (
           <Alert className="bg-green-50 border-green-200">
@@ -388,7 +388,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
                             }`} />
                             <div className="flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold text-gray-900">
+                                <span className="text-sm font-semibold text-slate-900">
                                   {category?.label || alert.category}
                                 </span>
                                 <Badge className={`text-[10px] ${getRiskLevelColor(alert.risk_level)}`}>
@@ -396,14 +396,14 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
                                 </Badge>
                                 {getUrgencyBadge(alert.urgency)}
                               </div>
-                              <p className="text-sm text-gray-700 mt-1">{alert.concern}</p>
+                              <p className="text-sm text-slate-700 mt-1">{alert.concern}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                              className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 dismissAlert(idx);
@@ -412,9 +412,9 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
                               <XCircle className="w-4 h-4" />
                             </Button>
                             {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-gray-400" />
+                              <ChevronUp className="w-4 h-4 text-slate-400" />
                             ) : (
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                              <ChevronDown className="w-4 h-4 text-slate-400" />
                             )}
                           </div>
                         </div>
@@ -426,10 +426,10 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
                         {/* Contributing Factors */}
                         {alert.contributing_factors?.length > 0 && (
                           <div className="mt-3">
-                            <p className="text-xs font-semibold text-gray-600 mb-1">Contributing Factors:</p>
+                            <p className="text-xs font-semibold text-slate-600 mb-1">Contributing Factors:</p>
                             <ul className="space-y-1">
                               {alert.contributing_factors.map((factor, fidx) => (
-                                <li key={fidx} className="text-xs text-gray-700 flex items-start gap-1">
+                                <li key={fidx} className="text-xs text-slate-700 flex items-start gap-1">
                                   <span className="text-red-500 mt-0.5">•</span>
                                   {factor}
                                 </li>
@@ -477,7 +477,7 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-gray-500"
+              className="text-xs text-slate-500"
               onClick={() => setDismissedAlerts(new Set())}
             >
               Show {dismissedAlerts.size} dismissed alert{dismissedAlerts.size > 1 ? 's' : ''}

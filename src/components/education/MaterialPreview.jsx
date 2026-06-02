@@ -49,7 +49,7 @@ export default function MaterialPreview({ material, onClose, onEdit, onSend }) {
           {/* Keywords */}
           {material.keywords?.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Keywords:</p>
+              <p className="text-sm font-medium text-slate-700 mb-2">Keywords:</p>
               <div className="flex flex-wrap gap-2">
                 {material.keywords.map((keyword, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs">
@@ -64,7 +64,7 @@ export default function MaterialPreview({ material, onClose, onEdit, onSend }) {
           <Card className="bg-white">
             <CardContent className="pt-6">
               <div className="prose prose-sm max-w-none">
-                <div className="whitespace-pre-wrap text-gray-800">
+                <div className="whitespace-pre-wrap text-slate-800">
                   {material.content}
                 </div>
               </div>
@@ -74,12 +74,12 @@ export default function MaterialPreview({ material, onClose, onEdit, onSend }) {
           {/* Variables Info */}
           {material.variables?.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Personalization Variables:</p>
+              <p className="text-sm font-medium text-slate-700 mb-2">Personalization Variables:</p>
               <div className="grid grid-cols-2 gap-2">
                 {material.variables.map((variable, idx) => (
-                  <div key={idx} className="text-sm p-2 bg-gray-50 rounded border">
+                  <div key={idx} className="text-sm p-2 bg-slate-50 rounded border">
                     <code className="text-xs text-blue-600">{`{{${variable.name}}}`}</code>
-                    <p className="text-xs text-gray-600 mt-1">{variable.description}</p>
+                    <p className="text-xs text-slate-600 mt-1">{variable.description}</p>
                   </div>
                 ))}
               </div>
@@ -87,7 +87,7 @@ export default function MaterialPreview({ material, onClose, onEdit, onSend }) {
           )}
 
           {/* Metadata */}
-          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 pt-4 border-t">
+          <div className="grid grid-cols-2 gap-4 text-sm text-slate-600 pt-4 border-t">
             <div>
               <p className="font-medium">Created by:</p>
               <p>{material.created_by || 'Unknown'}</p>

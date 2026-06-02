@@ -71,7 +71,7 @@ export default function CourseManager() {
       onboarding: 'bg-indigo-100 text-indigo-800',
       leadership: 'bg-red-100 text-red-800',
     };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+    return colors[category] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -107,7 +107,7 @@ export default function CourseManager() {
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Category</label>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Category</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Categories" />
@@ -127,7 +127,7 @@ export default function CourseManager() {
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Status" />
@@ -142,7 +142,7 @@ export default function CourseManager() {
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Business Line</label>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Business Line</label>
               <Select value={businessLineFilter} onValueChange={setBusinessLineFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Business Lines" />
@@ -155,7 +155,7 @@ export default function CourseManager() {
               </Select>
             </div>
           </div>
-          <div className="mt-3 text-sm text-gray-600">
+          <div className="mt-3 text-sm text-slate-600">
             Showing {courses.length} of {allCourses.length} courses
           </div>
         </CardContent>
@@ -173,16 +173,16 @@ export default function CourseManager() {
                       {course.category}
                     </Badge>
                   </div>
-                  <Badge className={course.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                  <Badge className={course.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'}>
                     {course.status}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm mb-4">
-                  <p><span className="text-gray-600">Estimated Time:</span> {course.estimated_minutes} mins</p>
-                  <p><span className="text-gray-600">Passing Score:</span> {course.passing_score}%</p>
-                  <p><span className="text-gray-600">Required:</span> {course.is_mandatory ? 'Yes' : 'No'}</p>
+                  <p><span className="text-slate-600">Estimated Time:</span> {course.estimated_minutes} mins</p>
+                  <p><span className="text-slate-600">Passing Score:</span> {course.passing_score}%</p>
+                  <p><span className="text-slate-600">Required:</span> {course.is_mandatory ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="flex gap-2">
                   <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${course.id}&preview=true`}>
@@ -232,8 +232,8 @@ export default function CourseManager() {
         ) : (
           <Card className="col-span-full">
             <CardContent className="py-12 text-center">
-              <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-600">No courses yet. Create your first course!</p>
+              <BookOpen className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p className="text-slate-600">No courses yet. Create your first course!</p>
             </CardContent>
           </Card>
         )}

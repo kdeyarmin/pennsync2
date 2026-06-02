@@ -346,7 +346,7 @@ export default function UserManagement() {
       manager: 'Manager'
     };
     return (
-      <Badge className={colors[role] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={colors[role] || 'bg-slate-100 text-slate-800'}>
         {labels[role] || role}
       </Badge>
     );
@@ -358,8 +358,8 @@ export default function UserManagement() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-12 text-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Restricted</h2>
+            <p className="text-slate-600 mb-4">
               Only administrators can access User Management.
             </p>
           </CardContent>
@@ -381,9 +381,9 @@ export default function UserManagement() {
         <Card className="modern-card">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Total Users</p>
+                <p className="text-xs text-slate-500 truncate">Total Users</p>
                 <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
               </div>
             </div>
@@ -394,7 +394,7 @@ export default function UserManagement() {
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Admins</p>
+                <p className="text-xs text-slate-500 truncate">Admins</p>
                 <p className="text-xl sm:text-2xl font-bold text-purple-600">{stats.admins}</p>
               </div>
             </div>
@@ -405,7 +405,7 @@ export default function UserManagement() {
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Nurses</p>
+                <p className="text-xs text-slate-500 truncate">Nurses</p>
                 <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.nurses}</p>
               </div>
             </div>
@@ -416,7 +416,7 @@ export default function UserManagement() {
             <div className="flex items-center gap-2">
               <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Active</p>
+                <p className="text-xs text-slate-500 truncate">Active</p>
                 <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</p>
               </div>
             </div>
@@ -427,7 +427,7 @@ export default function UserManagement() {
             <div className="flex items-center gap-2">
               <UserX className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Inactive</p>
+                <p className="text-xs text-slate-500 truncate">Inactive</p>
                 <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.inactive}</p>
               </div>
             </div>
@@ -441,11 +441,11 @@ export default function UserManagement() {
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center flex-1">
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500" />
+                <Filter className="w-4 h-4 text-slate-500" />
                 <span className="text-sm font-medium">Filters:</span>
               </div>
               <div className="relative flex-1 w-full sm:max-w-xs">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
                   placeholder="Search users..."
                   value={searchQuery}
@@ -508,7 +508,7 @@ export default function UserManagement() {
                   <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-900">{invitation.full_name}</p>
+                        <p className="font-medium text-slate-900">{invitation.full_name}</p>
                         <Badge className="text-xs">{invitation.role}</Badge>
                         <Badge className="bg-blue-100 text-blue-800 text-xs">Pending</Badge>
                         {isExpiringSoon && (
@@ -518,8 +518,8 @@ export default function UserManagement() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{invitation.email}</p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <p className="text-sm text-slate-600 mt-1">{invitation.email}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           Expires: {format(expiresAt, 'MMM d, yyyy')}
@@ -579,12 +579,12 @@ export default function UserManagement() {
                   <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-red-200 transition-colors">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-900">{invitation.full_name}</p>
+                        <p className="font-medium text-slate-900">{invitation.full_name}</p>
                         <Badge className="text-xs">{invitation.role}</Badge>
                         <Badge className="bg-red-100 text-red-800 text-xs">Expired</Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{invitation.email}</p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <p className="text-sm text-slate-600 mt-1">{invitation.email}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           Expired: {format(expiresAt, 'MMM d, yyyy')}
@@ -635,9 +635,9 @@ export default function UserManagement() {
         </CardHeader>
         <CardContent className="p-3 sm:p-4 md:p-6">
           {isLoading ? (
-            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-gray-500">Loading users...</div>
+            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-slate-500">Loading users...</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-gray-500">No users found</div>
+            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-slate-500">No users found</div>
           ) : (
             <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
@@ -667,8 +667,8 @@ export default function UserManagement() {
                               {user.full_name?.charAt(0) || 'U'}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{user.full_name}</p>
-                              <p className="text-xs text-gray-600 md:hidden truncate">{user.email}</p>
+                              <p className="font-medium text-slate-900 truncate">{user.full_name}</p>
+                              <p className="text-xs text-slate-600 md:hidden truncate">{user.email}</p>
                               {currentUser.email === user.email && (
                                 <Badge className="text-xs bg-blue-500 text-white">You</Badge>
                               )}
@@ -676,7 +676,7 @@ export default function UserManagement() {
                           </div>
                         </TableCell>
                         <TableCell className="text-xs sm:text-sm hidden md:table-cell">
-                          <div className="flex items-center gap-1 text-gray-600">
+                          <div className="flex items-center gap-1 text-slate-600">
                             <Mail className="w-3 h-3" />
                             <span className="truncate">{user.email}</span>
                           </div>
@@ -690,7 +690,7 @@ export default function UserManagement() {
                         <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
                           {activityCount > 0 ? `${activityCount} actions` : 'No activity'}
                         </TableCell>
-                        <TableCell className="text-xs sm:text-sm text-gray-600 hidden lg:table-cell">
+                        <TableCell className="text-xs sm:text-sm text-slate-600 hidden lg:table-cell">
                           {lastActivity ? (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -786,9 +786,9 @@ export default function UserManagement() {
           {selectedUser && (
             <div className="space-y-4">
               <div>
-                <Label className="text-sm text-gray-600">User</Label>
+                <Label className="text-sm text-slate-600">User</Label>
                 <p className="font-medium">{selectedUser.full_name}</p>
-                <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                <p className="text-sm text-slate-500">{selectedUser.email}</p>
               </div>
               <div>
                 <Label>Role</Label>
@@ -970,12 +970,12 @@ export default function UserManagement() {
                       ✅ Password reset successfully! An email with the temporary password has been sent to the user.
                     </AlertDescription>
                   </Alert>
-                  <div className="p-4 bg-gray-50 rounded-lg border">
-                    <p className="text-sm text-gray-600 mb-2">Temporary Password:</p>
-                    <p className="font-mono text-lg font-bold text-gray-900 bg-white p-3 rounded border select-all">
+                  <div className="p-4 bg-slate-50 rounded-lg border">
+                    <p className="text-sm text-slate-600 mb-2">Temporary Password:</p>
+                    <p className="font-mono text-lg font-bold text-slate-900 bg-white p-3 rounded border select-all">
                       {resetPasswordResult.tempPassword}
                     </p>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-slate-500 mt-2">
                       💡 You can share this with the user if they didn't receive the email
                     </p>
                   </div>

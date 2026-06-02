@@ -59,11 +59,11 @@ export default function PredictiveAnalytics() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
             <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 flex-shrink-0" />
             <span className="truncate">Predictive Analytics</span>
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">AI-powered patient outcome forecasting and risk assessment</p>
+          <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">AI-powered patient outcome forecasting and risk assessment</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">

@@ -24,12 +24,12 @@ export default function DigitalSignaturePad({ onSave, onCancel, signerName }) {
     <Card className="border-2 border-blue-300">
       <CardHeader>
         <CardTitle className="text-lg">Digital Signature</CardTitle>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           By signing below, {signerName} confirms the accuracy of this discharge summary.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="border-2 border-gray-300 rounded-lg bg-white">
+        <div className="border-2 border-slate-300 rounded-lg bg-white">
           <SignatureCanvas
             ref={sigPad}
             canvasProps={{
@@ -57,7 +57,7 @@ export default function DigitalSignaturePad({ onSave, onCancel, signerName }) {
           </div>
         </div>
 
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-slate-500 text-center">
           Date: {new Date().toLocaleString()} • IP: System
         </p>
       </CardContent>

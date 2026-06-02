@@ -93,8 +93,8 @@ export default function OASISComplianceReport({ dateRange }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">OASIS Compliance Analysis</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-xl font-semibold text-slate-900">OASIS Compliance Analysis</h3>
+          <p className="text-sm text-slate-600">
             {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end), 'MMM d, yyyy')}
           </p>
         </div>
@@ -108,25 +108,25 @@ export default function OASISComplianceReport({ dateRange }) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Total OASIS</p>
-            <p className="text-3xl font-bold text-gray-900">{totalOASIS}</p>
+            <p className="text-sm text-slate-600 mb-1">Total OASIS</p>
+            <p className="text-3xl font-bold text-slate-900">{totalOASIS}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Completion Rate</p>
+            <p className="text-sm text-slate-600 mb-1">Completion Rate</p>
             <p className="text-3xl font-bold text-indigo-600">{completionRate}%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Avg Completion %</p>
+            <p className="text-sm text-slate-600 mb-1">Avg Completion %</p>
             <p className="text-3xl font-bold text-blue-600">{avgCompletionPercentage}%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Avg Compliance</p>
+            <p className="text-sm text-slate-600 mb-1">Avg Compliance</p>
             <p className="text-3xl font-bold text-green-600">{avgComplianceScore}%</p>
           </CardContent>
         </Card>

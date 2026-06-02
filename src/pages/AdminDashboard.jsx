@@ -22,8 +22,8 @@ export default function AdminDashboardPage() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-12 text-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-            <p className="text-gray-600">Only administrators can access the Admin Dashboard.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Restricted</h2>
+            <p className="text-slate-600">Only administrators can access the Admin Dashboard.</p>
           </CardContent>
         </Card>
       </div>

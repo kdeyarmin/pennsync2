@@ -280,8 +280,8 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Faxes</p>
-                <p className="text-3xl font-bold text-gray-900">{metrics.total}</p>
+                <p className="text-sm text-slate-600">Total Faxes</p>
+                <p className="text-3xl font-bold text-slate-900">{metrics.total}</p>
                 {prevPeriodComparison && (
                   <div className={`flex items-center gap-1 text-sm mt-1 ${prevPeriodComparison.isIncrease ? 'text-green-600' : 'text-red-600'}`}>
                     {prevPeriodComparison.isIncrease ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -298,9 +298,9 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Success Rate</p>
+                <p className="text-sm text-slate-600">Success Rate</p>
                 <p className="text-3xl font-bold text-green-600">{metrics.successRate}%</p>
-                <p className="text-xs text-gray-500 mt-1">{metrics.delivered} delivered</p>
+                <p className="text-xs text-slate-500 mt-1">{metrics.delivered} delivered</p>
               </div>
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
@@ -311,9 +311,9 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Avg Delivery Time</p>
+                <p className="text-sm text-slate-600">Avg Delivery Time</p>
                 <p className="text-3xl font-bold text-blue-600">{metrics.avgDeliveryTime}</p>
-                <p className="text-xs text-gray-500 mt-1">minutes</p>
+                <p className="text-xs text-slate-500 mt-1">minutes</p>
               </div>
               <Clock className="w-10 h-10 text-blue-600" />
             </div>
@@ -324,9 +324,9 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Cost</p>
+                <p className="text-sm text-slate-600">Total Cost</p>
                 <p className="text-3xl font-bold text-purple-600">${metrics.totalCost.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 mt-1">${metrics.avgCostPerFax} avg/fax</p>
+                <p className="text-xs text-slate-500 mt-1">${metrics.avgCostPerFax} avg/fax</p>
               </div>
               <DollarSign className="w-10 h-10 text-purple-600" />
             </div>
@@ -340,15 +340,15 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent className="p-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Failed Faxes</span>
+                <span className="text-sm text-slate-600">Failed Faxes</span>
                 <Badge className="bg-red-100 text-red-800">{metrics.failed}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Failure Rate</span>
+                <span className="text-sm text-slate-600">Failure Rate</span>
                 <span className="font-semibold text-red-600">{metrics.failureRate}%</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Pending</span>
+                <span className="text-sm text-slate-600">Pending</span>
                 <Badge className="bg-yellow-100 text-yellow-800">{metrics.pending}</Badge>
               </div>
             </div>
@@ -359,15 +359,15 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent className="p-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Pages</span>
+                <span className="text-sm text-slate-600">Total Pages</span>
                 <span className="font-semibold">{metrics.totalPages}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Avg Pages/Fax</span>
+                <span className="text-sm text-slate-600">Avg Pages/Fax</span>
                 <span className="font-semibold">{(metrics.totalPages / (metrics.total || 1)).toFixed(1)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">With Cover Page</span>
+                <span className="text-sm text-slate-600">With Cover Page</span>
                 <span className="font-semibold">
                   {filteredLogs.filter(f => f.cover_page_details).length}
                 </span>
@@ -380,15 +380,15 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent className="p-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Unique Recipients</span>
+                <span className="text-sm text-slate-600">Unique Recipients</span>
                 <span className="font-semibold">{topRecipients.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Active Users</span>
+                <span className="text-sm text-slate-600">Active Users</span>
                 <span className="font-semibold">{topSenders.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Retry Rate</span>
+                <span className="text-sm text-slate-600">Retry Rate</span>
                 <span className="font-semibold">
                   {((filteredLogs.filter(f => f.retry_count > 0).length / (metrics.total || 1)) * 100).toFixed(1)}%
                 </span>
@@ -491,12 +491,12 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent>
             <div className="space-y-3">
               {topRecipients.map((recipient, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-600">
                       {idx + 1}
                     </div>
-                    <span className="text-sm font-medium text-gray-900 truncate">
+                    <span className="text-sm font-medium text-slate-900 truncate">
                       {recipient.name}
                     </span>
                   </div>
@@ -517,12 +517,12 @@ export default function ComprehensiveFaxDashboard() {
           <CardContent>
             <div className="space-y-3">
               {topSenders.map((sender, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm font-semibold text-green-600">
                       {idx + 1}
                     </div>
-                    <span className="text-sm font-medium text-gray-900 truncate">
+                    <span className="text-sm font-medium text-slate-900 truncate">
                       {sender.email}
                     </span>
                   </div>
