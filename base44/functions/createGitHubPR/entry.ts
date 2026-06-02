@@ -1,13 +1,19 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
 Deno.serve(async (req) => {
   try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (user?.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     const githubToken = Deno.env.get('GITHUB_TOKEN');
     if (!githubToken) {
       return Response.json({ error: 'GitHub token not configured' }, { status: 400 });
     }
 
     const { owner = 'kdeyarmin', repo = 'pennsync', head = 'development', base = 'main' } = await req.json();
-
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${githubToken}`,
