@@ -93,12 +93,12 @@ const PAGE_REGISTRY = [
   { name: "MyAnnualEducation", icon: Award, category: "Learning", keywords: ["my annual education", "yearly"] },
   { name: "AnnualEducationTranscript", icon: ScrollText, category: "Learning", keywords: ["transcript", "annual education record"] },
   { name: "EmployeeTranscript", icon: ScrollText, category: "Learning", keywords: ["employee transcript", "training record"] },
-  { name: "ClinicalPathwayManager", icon: Route, category: "Learning", keywords: ["pathways", "clinical pathways", "protocols"] },
 
   // Admin (gated to admins)
   { name: "AdminOperations", icon: Settings, category: "Admin", keywords: ["admin", "operations", "manage", "operations center"] },
   { name: "AdminDashboard", icon: BarChart3, category: "Admin", keywords: ["admin", "dashboard", "overview"] },
   { name: "AdminTraining", icon: GraduationCap, category: "Admin", keywords: ["training manager", "assign training"] },
+  { name: "ClinicalPathwayManager", icon: Route, category: "Admin", keywords: ["pathways", "clinical pathways", "protocols"] },
   { name: "UserManagement", icon: Users, category: "Admin", keywords: ["users", "accounts", "roles", "permissions"] },
   { name: "PatientDataManagement", icon: Database, category: "Admin", keywords: ["data", "management", "import", "duplicates"] },
 
