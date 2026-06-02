@@ -3,19 +3,23 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const { patientId } = await req.json();
 
     if (!patientId) {
       return Response.json({ error: 'Patient ID required' }, { status: 400 });
     }
 
-    // Fetch comprehensive patient data
+    // Fetch via the RLS-scoped client (NOT asServiceRole) so the platform
+    // enforces that this caller may access this patient — prevents
+    // cross-patient IDOR via a guessed patientId.
     const [patient, visits, oasisRecords, carePlans, incidents] = await Promise.all([
-      base44.asServiceRole.entities.Patient.filter({ id: patientId }),
-      base44.asServiceRole.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 20),
-      base44.asServiceRole.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 3),
-      base44.asServiceRole.entities.CarePlan.filter({ patient_id: patientId }),
-      base44.asServiceRole.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 10)
+      base44.entities.Patient.filter({ id: patientId }),
+      base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 20),
+      base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 3),
+      base44.entities.CarePlan.filter({ patient_id: patientId }),
+      base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 10)
     ]);
 
     if (!patient[0]) {
@@ -201,14 +205,20 @@ Return comprehensive JSON analysis:`;
       success: true,
       patient_id: patientId,
       analysis_date: new Date().toISOString(),
-      ...result
+      clinical_alerts: result?.clinical_alerts || [],
+      trend_analysis: result?.trend_analysis || {},
+      care_plan_deviations: result?.care_plan_deviations || [],
+      medication_concerns: result?.medication_concerns || [],
+      predictive_insights: result?.predictive_insights || {},
+      overall_risk_score: result?.overall_risk_score || 0,
+      risk_level: result?.risk_level || 'unknown'
     });
 
   } catch (error) {
     console.error('Error analyzing clinical risks:', error);
-    return Response.json({ 
+    return Response.json({
       success: false,
-      error: error.message 
+      error: error.message
     }, { status: 500 });
   }
 });

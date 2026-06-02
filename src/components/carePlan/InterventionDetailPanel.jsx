@@ -69,7 +69,7 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
         }
       });
       setAiInsight(result);
-    } catch (e) {
+    } catch {
       setAiInsight({ error: true });
     }
     setLoadingAI(false);

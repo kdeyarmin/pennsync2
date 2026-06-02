@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
         base44.entities.Patient.filter({ id: patient_id })
       ]);
       const patient = patients[0];
-      
+
       if (patient) {
         patientContext = `\n\nPATIENT CONTEXT:
 Name: ${patient.first_name} ${patient.last_name}
@@ -91,14 +91,17 @@ Provide:
       success: true,
       thread_id,
       message_count: messages.length,
-      ...result
+      summary: result?.summary || '',
+      key_points: result?.key_points || [],
+      decisions_made: result?.decisions_made || [],
+      action_items: result?.action_items || [],
+      open_questions: result?.open_questions || []
     });
 
   } catch (error) {
     console.error('Error summarizing thread:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });
