@@ -52,21 +52,30 @@ Deno.serve(async (req) => {
       review_notes: String(note || '').slice(0, 2000),
     });
 
-    // Let the employee know the outcome (best-effort).
+    // Let the employee know the outcome (best-effort), in-app and by email.
     try {
       const trimmedNote = String(note || '').trim();
+      const prettyType = request.request_type.replace(/_/g, ' ');
+      const reviewerName = user.full_name || user.email;
       await base44.asServiceRole.entities.Notification.create({
         user_email: request.employee_email,
         title: decision === 'approved' ? 'Time off approved' : 'Time off denied',
-        message: `Your ${request.request_type.replace(/_/g, ' ')} request (${request.start_date} → ${request.end_date}) was ${decision}${trimmedNote ? `: ${trimmedNote}` : '.'}`,
+        message: `Your ${prettyType} request (${request.start_date} → ${request.end_date}) was ${decision}${trimmedNote ? `: ${trimmedNote}` : '.'}`,
         type: decision === 'approved' ? 'info' : 'compliance_alert',
         priority: 'medium',
         action_url: '/TimeOff',
         action_label: 'View request',
         metadata: { time_off_request_id: request_id, reviewed_by: user.email },
       });
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: request.employee_email,
+        from_name: 'Penn Sync Time Off',
+        subject: decision === 'approved' ? 'Your time off was approved' : 'Your time-off request was denied',
+        body: `Your ${prettyType} request for ${request.start_date} → ${request.end_date} was ${decision} by ${reviewerName}.` +
+          `${trimmedNote ? `\n\nNote: ${trimmedNote}` : ''}\n\nView the details in Penn Sync under Time Off.`,
+      }).catch(() => null);
     } catch (_notifyError) {
-      // Best-effort notification.
+      // Best-effort notification/email.
     }
 
     return Response.json({ success: true, request: updated });

@@ -136,7 +136,9 @@ export default function UserManagement({ users, currentUser }) {
       license_number: user.license_number || '',
       care_scope: user.care_scope || 'home_health',
       role: user.role,
-      is_approved: user.is_approved ?? false
+      is_approved: user.is_approved ?? false,
+      is_manager: user.is_manager ?? false,
+      manager_email: user.manager_email || ''
     });
     setShowEditDialog(true);
   };
@@ -595,6 +597,49 @@ export default function UserManagement({ users, currentUser }) {
                     <SelectItem value="both">🏥 Both Home Health & Hospice</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="p-4 bg-emerald-50 rounded-lg space-y-3 border border-emerald-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-medium">Time-off approver</Label>
+                    <p className="text-sm text-gray-600">Let this user approve their team's time-off requests</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={editingUser.is_manager ? 'bg-emerald-500' : 'bg-gray-400'}>
+                      {editingUser.is_manager ? 'Approver' : 'Not an approver'}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant={editingUser.is_manager ? 'outline' : 'default'}
+                      onClick={() => setEditingUser({ ...editingUser, is_manager: !editingUser.is_manager })}
+                      className={editingUser.is_manager ? '' : 'bg-emerald-600 hover:bg-emerald-700'}
+                    >
+                      {editingUser.is_manager ? 'Remove approver' : 'Make approver'}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm">Reports to (approver for their requests)</Label>
+                  <Select
+                    value={editingUser.manager_email || 'none'}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, manager_email: value === 'none' ? '' : value })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="No manager (route to admins)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No manager (route to admins)</SelectItem>
+                      {users
+                        .filter((u) => u.email && u.id !== editingUser.id && (u.role === 'admin' || u.is_manager === true))
+                        .map((u) => (
+                          <SelectItem key={u.id} value={u.email}>
+                            {u.full_name || u.email} {u.role === 'admin' ? '(Admin)' : ''}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {editingUser.role !== 'admin' && (

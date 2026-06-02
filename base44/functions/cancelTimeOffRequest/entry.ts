@@ -40,16 +40,24 @@ Deno.serve(async (req) => {
     // If a manager had this on their plate, let them know it was withdrawn.
     try {
       if (request.status === 'approved' && request.manager_email && request.manager_email !== user.email) {
+        const who = request.employee_name || request.employee_email;
+        const prettyType = request.request_type.replace(/_/g, ' ');
         await base44.asServiceRole.entities.Notification.create({
           user_email: request.manager_email,
           title: 'Time off cancelled',
-          message: `${request.employee_name || request.employee_email} cancelled their ${request.request_type.replace(/_/g, ' ')} (${request.start_date} → ${request.end_date}).`,
+          message: `${who} cancelled their ${prettyType} (${request.start_date} → ${request.end_date}).`,
           type: 'info',
           priority: 'low',
           action_url: '/TimeOff',
           action_label: 'View calendar',
           metadata: { time_off_request_id: request_id },
         });
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: request.manager_email,
+          from_name: 'Penn Sync Time Off',
+          subject: `Time off cancelled by ${who}`,
+          body: `${who} has cancelled their previously approved ${prettyType} for ${request.start_date} → ${request.end_date}.`,
+        }).catch(() => null);
       }
     } catch (_notifyError) {
       // Best-effort notification.

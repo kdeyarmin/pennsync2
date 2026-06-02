@@ -13,6 +13,11 @@ import {
   approvedDaysInYear,
   validateRequestDates,
   getRequestValidationError,
+  getPolicyViolation,
+  requestsCoveringDate,
+  coverageCountOnDate,
+  availableYears,
+  buildTimeOffCSV,
   typeLabel,
   statusLabel,
 } from "./timeOffUtils.js";
@@ -145,4 +150,68 @@ test("typeLabel and statusLabel resolve known values with safe fallbacks", () =>
   assert.equal(typeLabel("unknown_type"), "unknown_type");
   assert.equal(statusLabel("approved"), "Approved");
   assert.equal(statusLabel(undefined), "—");
+});
+
+test("getPolicyViolation enforces minimum advance notice", () => {
+  const today = new Date(2026, 2, 2); // 2026-03-02
+  const policy = { minimum_notice_days: 7 };
+  assert.match(getPolicyViolation("2026-03-05", "2026-03-06", policy, today), /advance notice/i);
+  assert.equal(getPolicyViolation("2026-03-09", "2026-03-10", policy, today), null); // exactly 7 days out
+  assert.equal(getPolicyViolation("2026-03-05", "2026-03-06", { minimum_notice_days: 0 }, today), null);
+  assert.equal(getPolicyViolation("2026-03-05", "2026-03-06", null, today), null);
+});
+
+test("getPolicyViolation blocks ranges overlapping a blackout period", () => {
+  const today = new Date(2026, 0, 1);
+  const policy = {
+    blackout_periods: [{ label: "Survey window", start_date: "2026-06-01", end_date: "2026-06-10" }],
+  };
+  assert.match(getPolicyViolation("2026-06-05", "2026-06-07", policy, today), /blackout period \(Survey window\)/i);
+  assert.match(getPolicyViolation("2026-05-30", "2026-06-02", policy, today), /blackout/i); // partial overlap
+  assert.equal(getPolicyViolation("2026-06-11", "2026-06-12", policy, today), null); // just after
+});
+
+test("requestsCoveringDate honors the includePending flag", () => {
+  const requests = [
+    { id: "a", status: "approved", start_date: "2026-03-02", end_date: "2026-03-06" },
+    { id: "b", status: "pending", start_date: "2026-03-02", end_date: "2026-03-06" },
+    { id: "c", status: "denied", start_date: "2026-03-02", end_date: "2026-03-06" },
+  ];
+  assert.deepEqual(requestsCoveringDate(requests, "2026-03-04").map((r) => r.id), ["a"]);
+  assert.deepEqual(
+    requestsCoveringDate(requests, "2026-03-04", { includePending: true }).map((r) => r.id),
+    ["a", "b"]
+  );
+  assert.equal(coverageCountOnDate(requests, "2026-03-04"), 1);
+});
+
+test("availableYears returns distinct start years newest-first", () => {
+  const requests = [
+    { start_date: "2026-03-02" },
+    { start_date: "2024-11-01" },
+    { start_date: "2026-07-09" },
+    { start_date: "bad" },
+  ];
+  assert.deepEqual(availableYears(requests), [2026, 2024]);
+});
+
+test("buildTimeOffCSV emits a header row and escapes special characters", () => {
+  const csv = buildTimeOffCSV([
+    {
+      employee_name: "Jane Doe",
+      employee_email: "jane@x.com",
+      request_type: "vacation",
+      start_date: "2026-03-02",
+      end_date: "2026-03-06",
+      total_days: 5,
+      status: "approved",
+      manager_name: "Boss",
+      reviewer_name: "Boss",
+      reason: 'Family trip, "the big one"',
+    },
+  ]);
+  const lines = csv.split("\n");
+  assert.equal(lines[0], "Employee,Email,Type,Start,End,Business Days,Status,Manager,Reviewed By,Reason");
+  assert.match(lines[1], /^Jane Doe,jane@x\.com,Vacation \/ PTO,2026-03-02,2026-03-06,5,Approved,Boss,Boss,/);
+  assert.match(lines[1], /"Family trip, ""the big one"""$/); // quotes + comma escaped
 });

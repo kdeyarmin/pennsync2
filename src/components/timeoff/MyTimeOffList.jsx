@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cancelTimeOffRequest } from "@/functions/cancelTimeOffRequest";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,11 +23,21 @@ import {
 import { CalendarDays, MessageSquare, X } from "lucide-react";
 import { toast } from "sonner";
 import TimeOffStatusBadge from "./TimeOffStatusBadge";
-import { formatDateRange, typeLabel, isUpcoming, totalRequestedDays } from "./timeOffUtils";
+import {
+  formatDateRange,
+  typeLabel,
+  isUpcoming,
+  totalRequestedDays,
+  availableYears,
+  parseISODate,
+  STATUSES,
+} from "./timeOffUtils";
 
 export default function MyTimeOffList({ requests = [] }) {
   const queryClient = useQueryClient();
   const [toCancel, setToCancel] = useState(null);
+  const [yearFilter, setYearFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const cancel = useMutation({
     mutationFn: async (request) => {
@@ -37,22 +54,67 @@ export default function MyTimeOffList({ requests = [] }) {
       toast.error(err?.response?.data?.error || err?.message || "Could not cancel the request."),
   });
 
-  const sorted = [...requests].sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));
+  const years = useMemo(() => availableYears(requests), [requests]);
+
+  const sorted = useMemo(() => {
+    return [...requests]
+      .filter((r) => {
+        if (yearFilter === "all") return true;
+        const s = parseISODate(r.start_date);
+        return s && String(s.getFullYear()) === yearFilter;
+      })
+      .filter((r) => (statusFilter === "all" ? true : r.status === statusFilter))
+      .sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));
+  }, [requests, yearFilter, statusFilter]);
 
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <CalendarDays className="w-5 h-5 text-slate-600" />
-          My Requests
-          <span className="text-sm font-normal text-slate-400">({sorted.length})</span>
-        </CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CalendarDays className="w-5 h-5 text-slate-600" />
+            My Requests
+            <span className="text-sm font-normal text-slate-400">({sorted.length})</span>
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUSES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="h-8 w-[100px] text-xs">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All years</SelectItem>
+                {years.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {sorted.length === 0 ? (
           <div className="text-center py-10 text-slate-400">
             <CalendarDays className="w-10 h-10 mx-auto mb-3 opacity-40" />
-            <p className="text-sm">You haven't requested any time off yet.</p>
+            <p className="text-sm">
+              {requests.length === 0
+                ? "You haven't requested any time off yet."
+                : "No requests match your filters."}
+            </p>
           </div>
         ) : (
           <ul className="divide-y divide-slate-100">

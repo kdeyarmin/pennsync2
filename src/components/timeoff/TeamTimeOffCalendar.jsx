@@ -13,8 +13,18 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
-import { toISODate, requestCoversDate, typeLabel } from "./timeOffUtils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, CalendarDays, AlertTriangle } from "lucide-react";
+import TimeOffStatusBadge from "./TimeOffStatusBadge";
+import { toISODate, requestsCoveringDate, typeLabel } from "./timeOffUtils";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -29,10 +39,10 @@ const TYPE_DOT = {
   other: "bg-slate-400",
 };
 
-export default function TeamTimeOffCalendar({ requests = [] }) {
+export default function TeamTimeOffCalendar({ requests = [], coverageThreshold = 0 }) {
   const [cursor, setCursor] = useState(() => new Date());
-
-  const approved = useMemo(() => requests.filter((r) => r.status === "approved"), [requests]);
+  const [showPending, setShowPending] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   const days = useMemo(() => {
     const gridStart = startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 });
@@ -40,15 +50,28 @@ export default function TeamTimeOffCalendar({ requests = [] }) {
     return eachDayOfInterval({ start: gridStart, end: gridEnd });
   }, [cursor]);
 
+  // For a day: approved people (always) and, optionally, pending ones.
   const peopleOn = (day) => {
     const iso = toISODate(day);
-    return approved.filter((r) => requestCoversDate(r, iso));
+    const approved = requestsCoveringDate(requests, iso);
+    const pending = showPending
+      ? requestsCoveringDate(requests, iso, { includePending: true }).filter((r) => r.status === "pending")
+      : [];
+    return { approved, pending, iso };
   };
+
+  const overThreshold = (approvedCount) => coverageThreshold > 0 && approvedCount >= coverageThreshold;
+
+  const selected = selectedDay
+    ? requestsCoveringDate(requests, selectedDay, { includePending: true }).sort((a, b) =>
+        (a.employee_name || "").localeCompare(b.employee_name || "")
+      )
+    : [];
 
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-lg">
             <CalendarDays className="w-5 h-5 text-blue-600" />
             Team Calendar
@@ -57,9 +80,7 @@ export default function TeamTimeOffCalendar({ requests = [] }) {
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCursor((c) => subMonths(c, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-sm font-semibold text-slate-700 w-32 text-center">
-              {format(cursor, "MMMM yyyy")}
-            </span>
+            <span className="text-sm font-semibold text-slate-700 w-32 text-center">{format(cursor, "MMMM yyyy")}</span>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCursor((c) => addMonths(c, 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -67,6 +88,12 @@ export default function TeamTimeOffCalendar({ requests = [] }) {
               Today
             </Button>
           </div>
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          <Switch id="show-pending" checked={showPending} onCheckedChange={setShowPending} />
+          <Label htmlFor="show-pending" className="text-xs text-slate-500 font-normal cursor-pointer">
+            Show pending
+          </Label>
         </div>
       </CardHeader>
       <CardContent>
@@ -79,31 +106,44 @@ export default function TeamTimeOffCalendar({ requests = [] }) {
           {days.map((day) => {
             const inMonth = isSameMonth(day, cursor);
             const today = isToday(day);
-            const people = peopleOn(day);
+            const { approved, pending, iso } = peopleOn(day);
+            const flagged = overThreshold(approved.length);
+            const total = approved.length + pending.length;
             return (
-              <div
+              <button
                 key={day.toISOString()}
-                className={`min-h-[86px] p-1.5 ${inMonth ? "bg-white" : "bg-slate-50/60"} ${today ? "ring-2 ring-inset ring-blue-400" : ""}`}
+                type="button"
+                onClick={() => total > 0 && setSelectedDay(iso)}
+                className={`min-h-[88px] p-1.5 text-left align-top transition-colors ${inMonth ? "bg-white" : "bg-slate-50/60"} ${
+                  total > 0 ? "hover:bg-blue-50 cursor-pointer" : "cursor-default"
+                } ${today ? "ring-2 ring-inset ring-blue-400" : ""} ${flagged ? "ring-2 ring-inset ring-amber-400 bg-amber-50/40" : ""}`}
               >
-                <div className={`text-xs font-medium mb-1 ${inMonth ? "text-slate-700" : "text-slate-300"} ${today ? "text-blue-600 font-bold" : ""}`}>
-                  {format(day, "d")}
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-medium ${inMonth ? "text-slate-700" : "text-slate-300"} ${today ? "text-blue-600 font-bold" : ""}`}>
+                    {format(day, "d")}
+                  </span>
+                  {flagged && <AlertTriangle className="w-3 h-3 text-amber-500" title={`${approved.length} people off`} />}
                 </div>
-                <div className="space-y-0.5">
-                  {people.slice(0, 3).map((r) => (
+                <div className="space-y-0.5 mt-1">
+                  {approved.slice(0, 3).map((r) => (
                     <div
                       key={r.id}
-                      title={`${r.employee_name || r.employee_email} — ${typeLabel(r.request_type)}`}
                       className="flex items-center gap-1 text-[11px] text-slate-700 truncate"
                     >
                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${TYPE_DOT[r.request_type] || "bg-slate-400"}`} />
                       <span className="truncate">{(r.employee_name || r.employee_email || "").split(" ")[0]}</span>
                     </div>
                   ))}
-                  {people.length > 3 && (
-                    <div className="text-[10px] text-slate-400 font-medium">+{people.length - 3} more</div>
-                  )}
+                  {showPending &&
+                    pending.slice(0, Math.max(0, 3 - approved.length)).map((r) => (
+                      <div key={r.id} className="flex items-center gap-1 text-[11px] text-slate-400 italic truncate">
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 border border-slate-400" />
+                        <span className="truncate">{(r.employee_name || r.employee_email || "").split(" ")[0]}</span>
+                      </div>
+                    ))}
+                  {total > 3 && <div className="text-[10px] text-slate-400 font-medium">+{total - 3} more</div>}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -120,9 +160,44 @@ export default function TeamTimeOffCalendar({ requests = [] }) {
               {label}
             </span>
           ))}
-          <span className="text-slate-400">· Approved time off only</span>
+          {coverageThreshold > 0 && (
+            <span className="inline-flex items-center gap-1 text-amber-600">
+              <AlertTriangle className="w-3 h-3" /> {coverageThreshold}+ off
+            </span>
+          )}
         </div>
       </CardContent>
+
+      <Dialog open={!!selectedDay} onOpenChange={(open) => !open && setSelectedDay(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedDay
+                ? new Date(`${selectedDay}T00:00:00`).toLocaleDateString(undefined, {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : ""}
+            </DialogTitle>
+            <DialogDescription>
+              {selected.length} {selected.length === 1 ? "person" : "people"} off this day
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+            {selected.map((r) => (
+              <li key={r.id} className="py-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{r.employee_name || r.employee_email}</p>
+                  <p className="text-xs text-slate-500">{typeLabel(r.request_type)}</p>
+                </div>
+                <TimeOffStatusBadge status={r.status} />
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

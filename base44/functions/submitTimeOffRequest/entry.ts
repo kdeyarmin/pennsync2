@@ -46,6 +46,38 @@ function totalRequestedDays(start, end, halfDay) {
   return halfDay ? Math.max(0.5, business - 0.5) : business;
 }
 
+function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+  const as = parseISODate(aStart);
+  const ae = parseISODate(aEnd);
+  const bs = parseISODate(bStart);
+  const be = parseISODate(bEnd);
+  if (!as || !ae || !bs || !be) return false;
+  return as <= be && bs <= ae;
+}
+
+// Authoritative copy of the client-side policy check (getPolicyViolation).
+function getPolicyViolation(start, end, policy) {
+  const s = parseISODate(start);
+  if (!policy || !s) return null;
+  const notice = Number(policy.minimum_notice_days) || 0;
+  if (notice > 0) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const earliest = new Date(today);
+    earliest.setDate(earliest.getDate() + notice);
+    if (s < earliest) {
+      return `Time off requires at least ${notice} day${notice === 1 ? '' : 's'} of advance notice.`;
+    }
+  }
+  const periods = Array.isArray(policy.blackout_periods) ? policy.blackout_periods : [];
+  for (const p of periods) {
+    if (p && rangesOverlap(start, end, p.start_date, p.end_date)) {
+      return `Your selected dates fall within a blackout period${p.label ? ` (${p.label})` : ''}.`;
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -79,6 +111,13 @@ Deno.serve(async (req) => {
     const total = totalRequestedDays(start_date, end_date, !!half_day);
     if (total <= 0) {
       return Response.json({ error: 'The selected range contains no working days.' }, { status: 400 });
+    }
+
+    // Enforce agency policy (minimum notice + blackout periods) authoritatively.
+    const policies = await base44.asServiceRole.entities.TimeOffPolicy.list('-created_date', 1).catch(() => []);
+    const policyViolation = getPolicyViolation(start_date, end_date, policies && policies[0]);
+    if (policyViolation) {
+      return Response.json({ error: policyViolation }, { status: 400 });
     }
 
     // Validate the chosen approver: must be an admin or a flagged manager, and
@@ -123,12 +162,15 @@ Deno.serve(async (req) => {
         const users = await base44.asServiceRole.entities.User.list('-created_date', 500);
         recipients = users.filter((u) => u.role === 'admin' && u.email);
       }
+      const requesterName = user.full_name || user.email;
+      const prettyType = request_type.replace(/_/g, ' ');
+      const summary = `${total} day(s) of ${prettyType} (${start_date} → ${end_date})`;
       await Promise.all(
         recipients.map((r) =>
           base44.asServiceRole.entities.Notification.create({
             user_email: r.email,
             title: 'New time-off request',
-            message: `${user.full_name || user.email} requested ${total} day(s) of ${request_type.replace(/_/g, ' ')} (${start_date} → ${end_date}).`,
+            message: `${requesterName} requested ${summary}.`,
             type: 'info',
             priority: 'medium',
             action_url: '/TimeOff',
@@ -137,8 +179,22 @@ Deno.serve(async (req) => {
           })
         )
       );
+      // Email the approver(s) in addition to the in-app notification.
+      await Promise.all(
+        recipients.map((r) =>
+          base44.asServiceRole.integrations.Core.SendEmail({
+            to: r.email,
+            from_name: 'Penn Sync Time Off',
+            subject: `Time-off request from ${requesterName}`,
+            body: `${requesterName} has requested time off and needs your review.\n\n` +
+              `Type: ${prettyType}\nDates: ${start_date} → ${end_date}\nBusiness days: ${total}\n` +
+              `${reason ? `Reason: ${reason}\n` : ''}${coverage ? `Coverage: ${coverage}\n` : ''}` +
+              `\nReview it in Penn Sync under Time Off → Approvals.`,
+          }).catch(() => null)
+        )
+      );
     } catch (_notifyError) {
-      // Notifications are best-effort; the dashboard remains the source of truth.
+      // Notifications/emails are best-effort; the dashboard remains the source of truth.
     }
 
     return Response.json({ success: true, request: created });

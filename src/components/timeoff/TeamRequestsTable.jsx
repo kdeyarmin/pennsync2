@@ -16,15 +16,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, ListFilter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, ListFilter, Download } from "lucide-react";
 import TimeOffStatusBadge from "./TimeOffStatusBadge";
 import {
   formatDateRange,
   typeLabel,
   totalRequestedDays,
+  buildTimeOffCSV,
   REQUEST_TYPES,
   STATUSES,
 } from "./timeOffUtils";
+
+function downloadCSV(filename, csv) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export default function TeamRequestsTable({ requests = [] }) {
   const [search, setSearch] = useState("");
@@ -47,11 +61,22 @@ export default function TeamRequestsTable({ requests = [] }) {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <ListFilter className="w-5 h-5 text-slate-600" />
-          All Requests
-          <span className="text-sm font-normal text-slate-400">({rows.length})</span>
-        </CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ListFilter className="w-5 h-5 text-slate-600" />
+            All Requests
+            <span className="text-sm font-normal text-slate-400">({rows.length})</span>
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={rows.length === 0}
+            onClick={() => downloadCSV(`time-off-${new Date().toISOString().slice(0, 10)}.csv`, buildTimeOffCSV(rows))}
+          >
+            <Download className="w-4 h-4 mr-1.5" />
+            Export CSV
+          </Button>
+        </div>
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />

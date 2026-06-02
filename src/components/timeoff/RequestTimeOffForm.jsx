@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { CalendarPlus, Send, Info } from "lucide-react";
 import { toast } from "sonner";
-import { REQUEST_TYPES, totalRequestedDays, getRequestValidationError } from "./timeOffUtils";
+import { REQUEST_TYPES, totalRequestedDays, getRequestValidationError, getPolicyViolation } from "./timeOffUtils";
 
 function todayISO() {
   const d = new Date();
@@ -34,7 +34,7 @@ const EMPTY = {
   coverage: "",
 };
 
-export default function RequestTimeOffForm({ currentUser, approvers = [], defaultManagerEmail = "" }) {
+export default function RequestTimeOffForm({ currentUser, approvers = [], defaultManagerEmail = "", policy = null }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ ...EMPTY, manager_email: defaultManagerEmail || "" });
   const [error, setError] = useState("");
@@ -54,10 +54,18 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
     [form.start_date, form.end_date, form.half_day]
   );
 
+  // Live policy feedback (notice + blackout). Server re-validates authoritatively.
+  const policyViolation = useMemo(
+    () => (form.start_date && form.end_date ? getPolicyViolation(form.start_date, form.end_date, policy) : null),
+    [form.start_date, form.end_date, policy]
+  );
+
   const submit = useMutation({
     mutationFn: async () => {
       const validationError = getRequestValidationError(form.start_date, form.end_date, form.half_day);
       if (validationError) throw new Error(validationError);
+      const policyError = getPolicyViolation(form.start_date, form.end_date, policy);
+      if (policyError) throw new Error(policyError);
 
       // Identity, day totals, approver validation, and notifications are all
       // handled server-side by the function (the entity is admin-write-only),
@@ -85,7 +93,8 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
     },
   });
 
-  const canSubmit = form.start_date && form.end_date && totalDays > 0 && !submit.isPending && !!currentUser?.email;
+  const canSubmit =
+    form.start_date && form.end_date && totalDays > 0 && !policyViolation && !submit.isPending && !!currentUser?.email;
 
   return (
     <Card className="shadow-sm">
@@ -96,6 +105,22 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {(Number(policy?.minimum_notice_days) > 0 || policy?.blackout_periods?.length > 0) && (
+          <div className="mb-4 rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 space-y-1">
+            {Number(policy?.minimum_notice_days) > 0 && (
+              <p>• Requests need {policy.minimum_notice_days} day{policy.minimum_notice_days === 1 ? "" : "s"} of advance notice.</p>
+            )}
+            {policy?.blackout_periods?.length > 0 && (
+              <p>
+                • Blackout dates:{" "}
+                {policy.blackout_periods
+                  .filter((p) => p.start_date && p.end_date)
+                  .map((p) => `${p.label ? `${p.label} ` : ""}(${p.start_date} → ${p.end_date})`)
+                  .join(", ")}
+              </p>
+            )}
+          </div>
+        )}
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -213,6 +238,13 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
               onChange={(e) => update({ coverage: e.target.value })}
             />
           </div>
+
+          {policyViolation && !error && (
+            <Alert className="bg-amber-50 border-amber-200">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">{policyViolation}</AlertDescription>
+            </Alert>
+          )}
 
           {error && (
             <Alert variant="destructive">

@@ -189,3 +189,83 @@ export function formatDateRange(start, end) {
   const endStr = e.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   return `${startStr} – ${endStr}`;
 }
+
+/**
+ * Enforce agency time-off policy (minimum advance notice + blackout periods)
+ * against a requested range. Returns an error string or null. Mirrored
+ * server-side in submitTimeOffRequest so the client check is advisory only.
+ */
+export function getPolicyViolation(start, end, policy, today = new Date()) {
+  const s = parseISODate(start);
+  if (!policy || !s) return null;
+
+  const notice = Number(policy.minimum_notice_days) || 0;
+  if (notice > 0) {
+    const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const earliest = new Date(t);
+    earliest.setDate(earliest.getDate() + notice);
+    if (s < earliest) {
+      return `Time off requires at least ${notice} day${notice === 1 ? "" : "s"} of advance notice.`;
+    }
+  }
+
+  const periods = Array.isArray(policy.blackout_periods) ? policy.blackout_periods : [];
+  for (const p of periods) {
+    if (p && rangesOverlap(start, end, p.start_date, p.end_date)) {
+      return `Your selected dates fall within a blackout period${p.label ? ` (${p.label})` : ""}.`;
+    }
+  }
+  return null;
+}
+
+/**
+ * Requests covering a given day. Approved always counts; pending is optional
+ * (used for the calendar's muted pending layer).
+ */
+export function requestsCoveringDate(requests = [], isoDate, { includePending = false } = {}) {
+  const allowed = includePending ? ["approved", "pending"] : ["approved"];
+  return requests.filter((r) => allowed.includes(r.status) && requestCoversDate(r, isoDate));
+}
+
+/** Count of approved people off on a given day (for coverage-threshold checks). */
+export function coverageCountOnDate(requests = [], isoDate) {
+  return requestsCoveringDate(requests, isoDate).length;
+}
+
+/** Distinct years (newest first) that requests start in — drives the year filter. */
+export function availableYears(requests = []) {
+  const years = [];
+  for (const r of requests) {
+    const s = parseISODate(r.start_date);
+    if (s) {
+      const y = s.getFullYear();
+      if (!years.includes(y)) years.push(y);
+    }
+  }
+  return years.sort((a, b) => b - a);
+}
+
+/** Serialize requests to a CSV string with properly escaped fields. */
+export function buildTimeOffCSV(requests = []) {
+  const headers = [
+    "Employee", "Email", "Type", "Start", "End", "Business Days",
+    "Status", "Manager", "Reviewed By", "Reason",
+  ];
+  const escape = (value) => {
+    const str = value == null ? "" : String(value);
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+  const rows = requests.map((r) => [
+    r.employee_name || "",
+    r.employee_email || "",
+    typeLabel(r.request_type),
+    r.start_date || "",
+    r.end_date || "",
+    Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day),
+    statusLabel(r.status),
+    r.manager_name || "",
+    r.reviewer_name || "",
+    r.reason || "",
+  ]);
+  return [headers, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+}
