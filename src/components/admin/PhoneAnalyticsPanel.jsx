@@ -3,8 +3,53 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, MessageSquare, PhoneCall, ShieldCheck, Users } from "lucide-react";
+import { BarChart3, MessageSquare, PhoneCall, ShieldCheck, Users, Download } from "lucide-react";
 import { summarizePhoneActivity, formatDuration } from "@/components/admin/phoneAnalytics";
+import { toCsv, exportTimestamp } from "@/components/admin/csvExport";
+import { toast } from "sonner";
+
+// PHI-conscious export columns: metadata only — never the SMS body or media.
+const SMS_COLUMNS = [
+  { key: "created_date", label: "Date" },
+  { key: "direction", label: "Direction" },
+  { key: "from_number", label: "From" },
+  { key: "to_number", label: "To" },
+  { key: "nurse_email", label: "Nurse" },
+  { key: "status", label: "Status" },
+  { key: "patient_id", label: "Patient ID" },
+  { key: "body", label: "Body length", format: (v) => (v ? String(v).length : 0) },
+  { key: "failure_reason", label: "Failure reason" },
+];
+const CALL_COLUMNS = [
+  { key: "created_date", label: "Date" },
+  { key: "direction", label: "Direction" },
+  { key: "from_number", label: "From" },
+  { key: "to_number", label: "To" },
+  { key: "displayed_number", label: "Caller ID shown" },
+  { key: "nurse_email", label: "Nurse" },
+  { key: "call_mode", label: "Mode" },
+  { key: "status", label: "Status" },
+  { key: "duration_seconds", label: "Duration (s)" },
+  { key: "disposition", label: "Disposition" },
+  { key: "has_voicemail", label: "Voicemail", format: (v) => (v ? "yes" : "") },
+];
+
+/** Trigger a client-side CSV file download (browser only). */
+function downloadCsv(filename, csv) {
+  try {
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    toast.error("Couldn't generate the export");
+  }
+}
 
 const WINDOWS = [
   { label: "7 days", days: 7 },
@@ -64,6 +109,13 @@ export default function PhoneAnalyticsPanel() {
     [smsMessages, callLogs, consents, users, windowDays]
   );
 
+  const inWindow = (rows) =>
+    windowDays > 0
+      ? rows.filter((r) => new Date(r.created_date).getTime() >= Date.now() - windowDays * 86400000)
+      : rows;
+  const exportSms = () => downloadCsv(`sms-export_${exportTimestamp()}.csv`, toCsv(SMS_COLUMNS, inWindow(smsMessages)));
+  const exportCalls = () => downloadCsv(`calls-export_${exportTimestamp()}.csv`, toCsv(CALL_COLUMNS, inWindow(callLogs)));
+
   if (!isAdmin) return null;
 
   return (
@@ -92,6 +144,15 @@ export default function PhoneAnalyticsPanel() {
         <CardDescription>Texting and calling activity, delivery health, consent, and nurse coverage.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-gray-500 mr-1">Export current window (metadata only — no message content):</span>
+          <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={exportSms}>
+            <Download className="w-3.5 h-3.5 mr-1.5" /> Texts CSV
+          </Button>
+          <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={exportCalls}>
+            <Download className="w-3.5 h-3.5 mr-1.5" /> Calls CSV
+          </Button>
+        </div>
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" /> Text messages

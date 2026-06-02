@@ -1,0 +1,54 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { toCsv, exportTimestamp } from "./csvExport.js";
+
+test("toCsv writes a header row from column labels", () => {
+  const csv = toCsv([{ key: "a", label: "Col A" }, { key: "b", label: "Col B" }], []);
+  assert.equal(csv, "Col A,Col B");
+});
+
+test("toCsv emits one CRLF-separated line per record", () => {
+  const csv = toCsv(
+    [{ key: "name", label: "Name" }, { key: "n", label: "Count" }],
+    [{ name: "Ada", n: 2 }, { name: "Bob", n: 3 }]
+  );
+  assert.equal(csv, "Name,Count\r\nAda,2\r\nBob,3");
+});
+
+test("toCsv escaping is correct for each special case", () => {
+  assert.equal(toCsv([{ key: "v", label: "V" }], [{ v: "a,b" }]), 'V\r\n"a,b"');
+  assert.equal(toCsv([{ key: "v", label: "V" }], [{ v: 'x"y' }]), 'V\r\n"x""y"');
+  assert.equal(toCsv([{ key: "v", label: "V" }], [{ v: "x\ny" }]), 'V\r\n"x\ny"');
+  assert.equal(toCsv([{ key: "v", label: "V" }], [{ v: "plain" }]), "V\r\nplain");
+});
+
+test("toCsv renders null/undefined as empty fields", () => {
+  const csv = toCsv([{ key: "a", label: "A" }, { key: "b", label: "B" }], [{ a: null }]);
+  assert.equal(csv, "A,B\r\n,");
+});
+
+test("toCsv applies a column format function (e.g. body -> length, never the body)", () => {
+  const csv = toCsv(
+    [{ key: "body", label: "Length", format: (v) => (v ? String(v).length : 0) }],
+    [{ body: "hello" }, { body: "" }]
+  );
+  assert.equal(csv, "Length\r\n5\r\n0");
+});
+
+test("toCsv format receives the whole row as a second argument", () => {
+  const csv = toCsv(
+    [{ key: "first", label: "Full", format: (v, row) => `${row.first} ${row.last}` }],
+    [{ first: "Ada", last: "Lovelace" }]
+  );
+  assert.equal(csv, "Full\r\nAda Lovelace");
+});
+
+test("toCsv tolerates non-array input", () => {
+  assert.equal(toCsv(null, null), "");
+});
+
+test("exportTimestamp is filename-safe", () => {
+  const ts = exportTimestamp(new Date("2026-06-02T14:30:00"));
+  assert.equal(ts, "2026-06-02_1430");
+  assert.match(ts, /^[\w-]+$/);
+});
