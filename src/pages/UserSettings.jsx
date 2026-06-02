@@ -33,6 +33,7 @@ import {
   AlertTriangle,
   Shield
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
@@ -221,13 +222,11 @@ export default function UserSettings() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
-          <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-          <span className="truncate">Settings & Profile</span>
-        </h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2">Manage your profile, credentials, and AI preferences</p>
-      </div>
+      <PageHeader
+        icon={Settings}
+        title="Settings & Profile"
+        description="Manage your profile, credentials, and AI preferences"
+      />
 
       {saveSuccess && (
         <Alert className="mb-6 bg-green-50 border-green-300">
@@ -333,7 +332,7 @@ export default function UserSettings() {
             <CardContent>
               {currentUser?.care_scope && (
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Current setting:</span>
+                  <span className="text-sm text-slate-600">Current setting:</span>
                   <CareScopeBadge careScope={currentUser.care_scope} />
                 </div>
               )}
@@ -432,8 +431,8 @@ export default function UserSettings() {
               <div className="space-y-4">
                 {myCredentials.length === 0 ? (
                   <Card>
-                    <CardContent className="p-10 text-center text-gray-500">
-                      <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <CardContent className="p-10 text-center text-slate-500">
+                      <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                       <p>No credentials uploaded yet. Add your license, certifications, and insurance.</p>
                     </CardContent>
                   </Card>
@@ -443,17 +442,17 @@ export default function UserSettings() {
                       <CardContent className="p-5 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap mb-2">
-                            <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                            <h3 className="font-semibold text-slate-900">{item.title}</h3>
                             <PersonnelStatusBadge status={item.status} />
                           </div>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-slate-600">
                             {item.item_type} • Expires {new Date(item.expiration_date).toLocaleDateString()}
                           </p>
                           {item.issuing_organization && (
-                            <p className="text-sm text-gray-500">{item.issuing_organization}</p>
+                            <p className="text-sm text-slate-500">{item.issuing_organization}</p>
                           )}
                           {item.credential_number && (
-                            <p className="text-sm text-gray-500">#{item.credential_number}</p>
+                            <p className="text-sm text-slate-500">#{item.credential_number}</p>
                           )}
                           {item.uploaded_file_url && (
                             <a href={item.uploaded_file_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline hover:text-indigo-700 mt-2 inline-block">
@@ -520,19 +519,19 @@ export default function UserSettings() {
                     <SelectItem value="concise">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Concise</span>
-                        <span className="text-xs text-gray-500">Brief, essential information only</span>
+                        <span className="text-xs text-slate-500">Brief, essential information only</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="balanced">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Balanced</span>
-                        <span className="text-xs text-gray-500">Standard detail level (recommended)</span>
+                        <span className="text-xs text-slate-500">Standard detail level (recommended)</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="detailed">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Detailed</span>
-                        <span className="text-xs text-gray-500">Comprehensive documentation with full context</span>
+                        <span className="text-xs text-slate-500">Comprehensive documentation with full context</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -565,19 +564,19 @@ export default function UserSettings() {
                     <SelectItem value="standard">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Standard Medical</span>
-                        <span className="text-xs text-gray-500">Traditional clinical terminology</span>
+                        <span className="text-xs text-slate-500">Traditional clinical terminology</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="simplified">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Simplified</span>
-                        <span className="text-xs text-gray-500">Easier to understand, less jargon</span>
+                        <span className="text-xs text-slate-500">Easier to understand, less jargon</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="technical">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Technical/Academic</span>
-                        <span className="text-xs text-gray-500">Advanced medical terminology</span>
+                        <span className="text-xs text-slate-500">Advanced medical terminology</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -669,19 +668,19 @@ export default function UserSettings() {
                     <SelectItem value="narrative">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Narrative</span>
-                        <span className="text-xs text-gray-500">Story-like flow, paragraph format</span>
+                        <span className="text-xs text-slate-500">Story-like flow, paragraph format</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="soap">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">SOAP Format</span>
-                        <span className="text-xs text-gray-500">Subjective, Objective, Assessment, Plan</span>
+                        <span className="text-xs text-slate-500">Subjective, Objective, Assessment, Plan</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="structured">
                       <div className="flex flex-col items-start">
                         <span className="font-medium">Structured Sections</span>
-                        <span className="text-xs text-gray-500">Clear headings and bullet points</span>
+                        <span className="text-xs text-slate-500">Clear headings and bullet points</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -759,11 +758,11 @@ export default function UserSettings() {
       {/* Delete Account Section - Danger Zone */}
       <div className="mt-8 pt-8 border-t-2 border-red-300">
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600" />
             Danger Zone
           </h2>
-          <p className="text-sm text-gray-600 mt-1">Actions that cannot be undone</p>
+          <p className="text-sm text-slate-600 mt-1">Actions that cannot be undone</p>
         </div>
 
         <Card className="border-red-200 bg-red-50">
@@ -793,17 +792,17 @@ export default function UserSettings() {
                       This is permanent
                     </p>
                   </div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-slate-700">
                     You are about to permanently delete your PENNSync account. This action:
                   </p>
-                  <ul className="text-sm text-gray-700 space-y-1 ml-4 list-disc">
+                  <ul className="text-sm text-slate-700 space-y-1 ml-4 list-disc">
                     <li>Cannot be reversed</li>
                     <li>Deletes all your patient records</li>
                     <li>Removes all your notes and documents</li>
                     <li>Logs you out immediately</li>
                   </ul>
                   <div className="pt-3 border-t">
-                    <label className="text-sm font-medium text-gray-900 block mb-2">
+                    <label className="text-sm font-medium text-slate-900 block mb-2">
                       Type <span className="font-bold text-red-600">DELETE</span> to confirm:
                     </label>
                     <Input
@@ -838,10 +837,10 @@ export default function UserSettings() {
 
 function FeatureToggle({ label, description, enabled, onToggle, badge, compact }) {
   return (
-    <div className={`flex items-start justify-between ${compact ? 'py-2' : 'p-4'} bg-gray-50 rounded-lg border border-gray-200`}>
+    <div className={`flex items-start justify-between ${compact ? 'py-2' : 'p-4'} bg-slate-50 rounded-lg border border-slate-200`}>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
-          <Label className="font-medium text-gray-900 cursor-pointer" onClick={onToggle}>
+          <Label className="font-medium text-slate-900 cursor-pointer" onClick={onToggle}>
             {label}
           </Label>
           {badge && (
@@ -850,12 +849,12 @@ function FeatureToggle({ label, description, enabled, onToggle, badge, compact }
             </Badge>
           )}
         </div>
-        <p className="text-sm text-gray-600">{description}</p>
+        <p className="text-sm text-slate-600">{description}</p>
       </div>
       <button
         onClick={onToggle}
         className={`ml-4 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-          enabled ? 'bg-blue-600' : 'bg-gray-300'
+          enabled ? 'bg-blue-600' : 'bg-slate-300'
         }`}
         role="switch"
         aria-checked={enabled}

@@ -28,7 +28,7 @@ export default function LinkedNoteViewer({ event, visit, onClose }) {
       const after = notes.substring(event.text_anchor_end);
 
       return (
-        <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
+        <div className="whitespace-pre-wrap text-sm text-slate-800 leading-relaxed">
           {before}
           <span 
             ref={highlightRef}
@@ -46,7 +46,7 @@ export default function LinkedNoteViewer({ event, visit, onClose }) {
       const parts = notes.split(event.source_text);
       if (parts.length > 1) {
         return (
-          <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
+          <div className="whitespace-pre-wrap text-sm text-slate-800 leading-relaxed">
             {parts[0]}
             <span 
               ref={highlightRef}
@@ -62,7 +62,7 @@ export default function LinkedNoteViewer({ event, visit, onClose }) {
 
     // No highlighting possible
     return (
-      <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
+      <div className="whitespace-pre-wrap text-sm text-slate-800 leading-relaxed">
         {notes}
       </div>
     );
@@ -106,9 +106,9 @@ export default function LinkedNoteViewer({ event, visit, onClose }) {
             <p className="text-xs text-indigo-700 mt-1">{event.event_description}</p>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="bg-white border border-slate-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-900">Full Visit Note</h3>
+              <h3 className="font-semibold text-slate-900">Full Visit Note</h3>
               {event.text_anchor_start !== null && (
                 <Badge className="bg-green-600 text-white text-xs">
                   Highlighted below ↓

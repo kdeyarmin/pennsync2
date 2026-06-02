@@ -366,7 +366,7 @@ Provide a brief triage assessment in JSON format:
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-black';
       case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -384,7 +384,7 @@ Provide a brief triage assessment in JSON format:
     switch (trend) {
       case 'increasing': return <TrendingUp className="w-4 h-4 text-red-500" />;
       case 'decreasing': return <TrendingDown className="w-4 h-4 text-blue-500" />;
-      default: return <Minus className="w-4 h-4 text-gray-400" />;
+      default: return <Minus className="w-4 h-4 text-slate-400" />;
     }
   };
 
@@ -403,12 +403,12 @@ Provide a brief triage assessment in JSON format:
               </div>
               <div>
                 <CardTitle className="text-xl">AI Patient Triage System</CardTitle>
-                <p className="text-sm text-gray-600">Intelligent prioritization and risk assessment</p>
+                <p className="text-sm text-slate-600">Intelligent prioritization and risk assessment</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               {lastAnalyzed && (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-slate-500">
                   Last analyzed: {format(lastAnalyzed, 'h:mm a')}
                 </span>
               )}
@@ -493,9 +493,9 @@ Provide a brief triage assessment in JSON format:
       ) : (
         <Card className="border-2 border-dashed">
           <CardContent className="p-12 text-center">
-            <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to Analyze</h3>
-            <p className="text-gray-500 mb-4">
+            <Brain className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">Ready to Analyze</h3>
+            <p className="text-slate-500 mb-4">
               Click "Run Triage Analysis" to assess {patients.length} active patients
             </p>
             <Button onClick={runTriageAnalysis} disabled={isAnalyzing || patients.length === 0}>
@@ -518,7 +518,7 @@ function TriageResultCard({ result, rank }) {
       case 'high': return 'border-l-orange-500 bg-orange-50';
       case 'medium': return 'border-l-yellow-500 bg-yellow-50';
       case 'low': return 'border-l-green-500 bg-white';
-      default: return 'border-l-gray-500 bg-white';
+      default: return 'border-l-slate-500 bg-white';
     }
   };
 
@@ -528,7 +528,7 @@ function TriageResultCard({ result, rank }) {
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-black';
       case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -549,7 +549,7 @@ function TriageResultCard({ result, rank }) {
             {/* Patient Info */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-bold text-slate-900">
                   {result.patient.first_name} {result.patient.last_name}
                 </h3>
                 <Badge className={getBadgeColor(result.urgencyLevel)}>
@@ -560,7 +560,7 @@ function TriageResultCard({ result, rank }) {
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 mb-3">
                 <span className="flex items-center gap-1">
                   <Stethoscope className="w-4 h-4" />
                   {result.patient.primary_diagnosis || 'No diagnosis'}
@@ -574,7 +574,7 @@ function TriageResultCard({ result, rank }) {
               {/* Risk Score Bar */}
               <div className="mb-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Risk Score</span>
+                  <span className="text-sm font-medium text-slate-700">Risk Score</span>
                   <span className={`text-sm font-bold ${
                     result.riskScore >= 70 ? 'text-red-600' :
                     result.riskScore >= 50 ? 'text-orange-600' :
@@ -599,7 +599,7 @@ function TriageResultCard({ result, rank }) {
                   <Clock className="w-3 h-3 mr-1" />
                   {result.suggestedVisitType.label}
                 </Badge>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-slate-600">
                   {result.suggestedVisitType.timing}
                 </span>
               </div>
@@ -627,20 +627,20 @@ function TriageResultCard({ result, rank }) {
 
               {/* Expanded Details */}
               {expanded && (
-                <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                <div className="mt-4 pt-4 border-t border-slate-200 space-y-4">
                   {/* AI Analysis */}
                   {result.aiAnalysis && (
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
                         <Brain className="w-4 h-4 text-purple-600" />
                         AI Triage Assessment
                       </h4>
-                      <p className="text-sm text-gray-700 mb-3">{result.aiAnalysis.urgency_rationale}</p>
+                      <p className="text-sm text-slate-700 mb-3">{result.aiAnalysis.urgency_rationale}</p>
                       
                       {result.aiAnalysis.key_concerns?.length > 0 && (
                         <div className="mb-3">
-                          <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Key Concerns</p>
-                          <ul className="list-disc ml-5 text-sm text-gray-700">
+                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Key Concerns</p>
+                          <ul className="list-disc ml-5 text-sm text-slate-700">
                             {result.aiAnalysis.key_concerns.map((concern, idx) => (
                               <li key={idx}>{concern}</li>
                             ))}
@@ -650,8 +650,8 @@ function TriageResultCard({ result, rank }) {
 
                       {result.aiAnalysis.recommended_actions?.length > 0 && (
                         <div className="mb-3">
-                          <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Recommended Actions</p>
-                          <ul className="list-disc ml-5 text-sm text-gray-700">
+                          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Recommended Actions</p>
+                          <ul className="list-disc ml-5 text-sm text-slate-700">
                             {result.aiAnalysis.recommended_actions.map((action, idx) => (
                               <li key={idx}>{action}</li>
                             ))}
@@ -671,8 +671,8 @@ function TriageResultCard({ result, rank }) {
                   )}
 
                   {/* Vital Signs Trends */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <div className="bg-white rounded-lg p-4 border border-slate-200">
+                    <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
                       <Activity className="w-4 h-4 text-blue-600" />
                       Vital Sign Trends
                     </h4>
@@ -681,11 +681,11 @@ function TriageResultCard({ result, rank }) {
                         <div 
                           key={key} 
                           className={`p-2 rounded-lg border ${
-                            data.concern ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
+                            data.concern ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-gray-500 capitalize">
+                            <span className="text-xs text-slate-500 capitalize">
                               {key.replace(/_/g, ' ')}
                             </span>
                             {data.values.length >= 2 && (
@@ -693,10 +693,10 @@ function TriageResultCard({ result, rank }) {
                                 <TrendingUp className={`w-3 h-3 ${data.concern ? 'text-red-500' : 'text-orange-500'}`} /> :
                               data.trend === 'decreasing' ?
                                 <TrendingDown className={`w-3 h-3 ${data.concern ? 'text-red-500' : 'text-blue-500'}`} /> :
-                                <Minus className="w-3 h-3 text-gray-400" />
+                                <Minus className="w-3 h-3 text-slate-400" />
                             )}
                           </div>
-                          <p className={`text-sm font-semibold ${data.concern ? 'text-red-700' : 'text-gray-900'}`}>
+                          <p className={`text-sm font-semibold ${data.concern ? 'text-red-700' : 'text-slate-900'}`}>
                             {data.values[0] || 'N/A'}
                           </p>
                         </div>
@@ -706,8 +706,8 @@ function TriageResultCard({ result, rank }) {
 
                   {/* Recent Incidents */}
                   {result.recentIncidents.length > 0 && (
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4 text-orange-600" />
                         Recent Incidents
                       </h4>
@@ -717,7 +717,7 @@ function TriageResultCard({ result, rank }) {
                             <Badge variant="outline" className="capitalize">
                               {incident.incident_type.replace(/_/g, ' ')}
                             </Badge>
-                            <span className="text-gray-600">
+                            <span className="text-slate-600">
                               {format(new Date(incident.incident_date), 'MMM d, yyyy')}
                             </span>
                           </div>

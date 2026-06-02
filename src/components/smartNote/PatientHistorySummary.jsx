@@ -160,9 +160,9 @@ Return JSON:
 
   if (!patientId) {
     return (
-      <Card className="border-gray-200">
-        <CardContent className="p-4 text-center text-gray-500 text-sm">
-          <History className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+      <Card className="border-slate-200">
+        <CardContent className="p-4 text-center text-slate-500 text-sm">
+          <History className="w-8 h-8 mx-auto mb-2 text-slate-300" />
           Select a patient to see history summary
         </CardContent>
       </Card>
@@ -204,7 +204,7 @@ Return JSON:
       {isExpanded && (
         <CardContent className="p-3 space-y-3 max-h-96 overflow-y-auto">
           {previousVisits.length === 0 ? (
-            <p className="text-xs text-gray-500 text-center py-4">
+            <p className="text-xs text-slate-500 text-center py-4">
               No previous visits found for this patient.
             </p>
           ) : !summary ? (
@@ -217,7 +217,7 @@ Return JSON:
           ) : (
             <>
               {/* Quick Stats */}
-              <div className="flex items-center gap-2 text-xs text-gray-600">
+              <div className="flex items-center gap-2 text-xs text-slate-600">
                 <Calendar className="w-3 h-3" />
                 <span>{previousVisits.length} previous visits</span>
                 <span>•</span>
@@ -233,22 +233,22 @@ Return JSON:
 
               {/* Last Visit */}
               {summary.last_visit_summary && (
-                <div className="bg-gray-50 p-2 rounded text-xs">
-                  <p className="font-semibold text-gray-700 mb-1">Last Visit:</p>
-                  <p className="text-gray-600">{summary.last_visit_summary}</p>
+                <div className="bg-slate-50 p-2 rounded text-xs">
+                  <p className="font-semibold text-slate-700 mb-1">Last Visit:</p>
+                  <p className="text-slate-600">{summary.last_visit_summary}</p>
                 </div>
               )}
 
               {/* Key Trends */}
               {summary.key_trends?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-600">Trends:</p>
+                  <p className="text-xs font-semibold text-slate-600">Trends:</p>
                   <div className="space-y-1">
                     {summary.key_trends.slice(0, 3).map((trend, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-xs bg-white p-1.5 rounded border">
                         {getTrendIcon(trend.direction)}
                         <span className="font-medium">{trend.metric}</span>
-                        <span className="text-gray-500">- {trend.significance}</span>
+                        <span className="text-slate-500">- {trend.significance}</span>
                       </div>
                     ))}
                   </div>
@@ -258,7 +258,7 @@ Return JSON:
               {/* Unresolved Issues */}
               {summary.unresolved_issues?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3 text-yellow-500" />
                     Unresolved Issues
                   </p>
@@ -270,7 +270,7 @@ Return JSON:
                           <Badge className={`text-xs py-0 ${
                             issue.priority === 'high' ? 'bg-red-100 text-red-800' : 
                             issue.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
-                            'bg-gray-100 text-gray-800'
+                            'bg-slate-100 text-slate-800'
                           }`}>{issue.priority}</Badge>
                         </div>
                       </div>
@@ -282,13 +282,13 @@ Return JSON:
               {/* Focus Areas Today */}
               {summary.focus_areas_today?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-green-500" />
                     Focus Today
                   </p>
                   <ul className="text-xs space-y-0.5">
                     {summary.focus_areas_today.slice(0, 4).map((focus, idx) => (
-                      <li key={idx} className="flex items-start gap-1 text-gray-700">
+                      <li key={idx} className="flex items-start gap-1 text-slate-700">
                         <span className="text-green-500 mt-0.5">•</span>
                         {focus}
                       </li>

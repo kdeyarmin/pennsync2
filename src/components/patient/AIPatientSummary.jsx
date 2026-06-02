@@ -162,7 +162,7 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-black';
       case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -198,8 +198,8 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
       </CardHeader>
       <CardContent className="pt-4">
         {!summary && !isGenerating && (
-          <div className="text-center py-8 text-gray-500">
-            <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <div className="text-center py-8 text-slate-500">
+            <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <p>Click "Generate Summary" to create an AI-powered clinical overview</p>
             <p className="text-sm mt-2">
               Synthesizes data from {visits.length} visits, {incidents.length} incidents, and {carePlans.filter(cp => cp.status === 'active').length} active care plans
@@ -215,7 +215,7 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
                 <Badge className={getPriorityColor(summary.priority_level)}>
                   {summary.priority_level?.toUpperCase()} Priority
                 </Badge>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-500">
                   Generated {format(new Date(summary.generated_at), 'MMM d, h:mm a')}
                 </span>
               </div>
@@ -252,19 +252,19 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
 
             {/* Clinical Status */}
             <div>
-              <h4 className="font-semibold text-gray-900 text-sm mb-1 flex items-center gap-1">
+              <h4 className="font-semibold text-slate-900 text-sm mb-1 flex items-center gap-1">
                 <Activity className="w-4 h-4" /> Clinical Status
               </h4>
-              <p className="text-sm text-gray-700">{summary.clinical_status}</p>
+              <p className="text-sm text-slate-700">{summary.clinical_status}</p>
             </div>
 
             {/* Key Findings */}
             {summary.key_findings?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 text-sm mb-1 flex items-center gap-1">
+                <h4 className="font-semibold text-slate-900 text-sm mb-1 flex items-center gap-1">
                   <FileText className="w-4 h-4" /> Key Findings
                 </h4>
-                <ul className="list-disc ml-5 text-sm text-gray-700 space-y-1">
+                <ul className="list-disc ml-5 text-sm text-slate-700 space-y-1">
                   {summary.key_findings.map((finding, idx) => (
                     <li key={idx}>{finding}</li>
                   ))}
@@ -275,7 +275,7 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
             {/* Active Issues */}
             {summary.active_issues?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 text-sm mb-1 flex items-center gap-1">
+                <h4 className="font-semibold text-slate-900 text-sm mb-1 flex items-center gap-1">
                   <AlertTriangle className="w-4 h-4 text-orange-600" /> Active Issues
                 </h4>
                 <div className="flex flex-wrap gap-1">
@@ -291,7 +291,7 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
             {/* Risk Factors */}
             {summary.risk_factors?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 text-sm mb-1 flex items-center gap-1">
+                <h4 className="font-semibold text-slate-900 text-sm mb-1 flex items-center gap-1">
                   <AlertTriangle className="w-4 h-4 text-red-600" /> Risk Factors
                 </h4>
                 <div className="flex flex-wrap gap-1">

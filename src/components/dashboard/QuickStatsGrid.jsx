@@ -69,9 +69,9 @@ export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, p
         {stats.map((stat, idx) => (
           <Card key={idx} className="overflow-hidden">
             <CardContent className="p-4">
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-              <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
+              <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-sm font-medium text-slate-600">{stat.label}</p>
+              <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
             </CardContent>
           </Card>
         ))}
@@ -82,9 +82,9 @@ export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, p
         {lastVisit && (
           <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
             <CardContent className="p-4">
-              <p className="text-sm font-medium text-gray-600">Last Visit</p>
-              <p className="font-semibold text-gray-900">{formatEastern(lastVisit.visit_date, 'MMM d, yyyy')}</p>
-              <p className="text-xs text-gray-600">{lastVisit.visit_type?.replace(/_/g, ' ')}</p>
+              <p className="text-sm font-medium text-slate-600">Last Visit</p>
+              <p className="font-semibold text-slate-900">{formatEastern(lastVisit.visit_date, 'MMM d, yyyy')}</p>
+              <p className="text-xs text-slate-600">{lastVisit.visit_type?.replace(/_/g, ' ')}</p>
             </CardContent>
           </Card>
         )}
@@ -92,9 +92,9 @@ export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, p
         {nextVisit && (
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
             <CardContent className="p-4">
-              <p className="text-sm font-medium text-gray-600">Next Visit</p>
-              <p className="font-semibold text-gray-900">{formatEastern(nextVisit.visit_date, 'MMM d, yyyy')}</p>
-              <p className="text-xs text-gray-600">{nextVisit.visit_type?.replace(/_/g, ' ')}</p>
+              <p className="text-sm font-medium text-slate-600">Next Visit</p>
+              <p className="font-semibold text-slate-900">{formatEastern(nextVisit.visit_date, 'MMM d, yyyy')}</p>
+              <p className="text-xs text-slate-600">{nextVisit.visit_type?.replace(/_/g, ' ')}</p>
             </CardContent>
           </Card>
         )}

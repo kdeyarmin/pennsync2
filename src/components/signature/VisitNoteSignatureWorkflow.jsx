@@ -29,16 +29,16 @@ export default function VisitNoteSignatureWorkflow({ visitId, visitNote, onSigna
                 <>
                   <CheckCircle2 className="w-6 h-6 text-green-600" />
                   <div>
-                    <p className="font-semibold text-gray-900">Document Signed</p>
-                    <p className="text-sm text-gray-600">This visit note has been electronically signed</p>
+                    <p className="font-semibold text-slate-900">Document Signed</p>
+                    <p className="text-sm text-slate-600">This visit note has been electronically signed</p>
                   </div>
                 </>
               ) : (
                 <>
                   <PenTool className="w-6 h-6 text-indigo-600" />
                   <div>
-                    <p className="font-semibold text-gray-900">Signature Required</p>
-                    <p className="text-sm text-gray-600">Sign this visit note to finalize documentation</p>
+                    <p className="font-semibold text-slate-900">Signature Required</p>
+                    <p className="text-sm text-slate-600">Sign this visit note to finalize documentation</p>
                   </div>
                 </>
               )}

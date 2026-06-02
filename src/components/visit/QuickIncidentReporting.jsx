@@ -137,9 +137,9 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
       id: 'refusal_of_care',
       name: 'Refusal of Care',
       icon: UserX,
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50',
-      borderColor: 'border-gray-300',
+      color: 'text-slate-600',
+      bgColor: 'bg-slate-50',
+      borderColor: 'border-slate-300',
       severity: 'medium',
       fields: [
         { name: 'whatRefused', label: 'What was refused?', type: 'text', placeholder: 'e.g., vital signs, medication, wound care' },
@@ -998,7 +998,7 @@ Full report available in patient record.`;
                     <div className={`${incident.color} bg-white p-3 rounded-full shadow-md group-hover:scale-110 transition-transform`}>
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 text-center">
+                    <span className="text-sm font-semibold text-slate-900 text-center">
                       {incident.name}
                     </span>
                     {incident.severity === 'high' && (

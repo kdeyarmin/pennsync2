@@ -71,7 +71,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
       <CardContent className="space-y-4">
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search visit notes..."
             value={searchTerm}
@@ -83,7 +83,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
         {/* Visit Notes List */}
         <div className="space-y-3 max-h-[500px] overflow-y-auto">
           {filteredVisits.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">No matching notes found</p>
+            <p className="text-sm text-slate-500 text-center py-4">No matching notes found</p>
           ) : (
             filteredVisits.map((visit, index) => {
               const snippets = extractKeySnippets(visit.nurse_notes);
@@ -94,7 +94,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <FileText className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-slate-900">
                           {visit.visit_type?.replace(/_/g, ' ').toUpperCase()}
                         </span>
                         <Badge variant="outline" className="text-xs">
@@ -108,7 +108,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
                   <div className="space-y-2">
                     {snippets.map((snippet, sIdx) => (
                       <div key={sIdx} className="bg-purple-50 p-2 rounded text-sm">
-                        <p className="text-gray-700 mb-2">{snippet}</p>
+                        <p className="text-slate-700 mb-2">{snippet}</p>
                         <div className="flex gap-2">
                           <Button
                             size="sm"

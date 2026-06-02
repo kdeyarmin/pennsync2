@@ -100,7 +100,7 @@ Generate the polished version now:`;
       <CardContent>
         <Alert className="bg-white border-emerald-200">
           <Sparkles className="w-4 h-4 text-emerald-600" />
-          <AlertDescription className="text-gray-700">
+          <AlertDescription className="text-slate-700">
             Penn Sync AI will automatically improve grammar, fix errors, enhance clarity, and ensure professional formatting - while keeping all clinical facts intact.
           </AlertDescription>
         </Alert>

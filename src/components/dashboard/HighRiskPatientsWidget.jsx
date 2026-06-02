@@ -109,7 +109,7 @@ export default function HighRiskPatientsWidget() {
                       <RiskIcon className="w-4 h-4 text-red-600 flex-shrink-0" />
                       <Link
                         to={createPageUrl(`PatientDetails?id=${assessment.patient_id}`)}
-                        className="font-semibold text-gray-900 text-sm hover:text-blue-600 truncate"
+                        className="font-semibold text-slate-900 text-sm hover:text-blue-600 truncate"
                       >
                         {getPatientName(assessment.patient_id)}
                       </Link>
@@ -143,7 +143,7 @@ export default function HighRiskPatientsWidget() {
                     </div>
                     
                     {assessment.priority_actions?.[0] && (
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-1">
+                      <p className="text-xs text-slate-600 mt-1 line-clamp-1">
                         Priority: {assessment.priority_actions[0].action}
                       </p>
                     )}

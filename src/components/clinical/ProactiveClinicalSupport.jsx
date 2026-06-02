@@ -71,7 +71,7 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
       <Card className="border-2 border-purple-200">
         <CardContent className="p-6 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-600">Analyzing patient data...</p>
+          <p className="text-sm text-slate-600">Analyzing patient data...</p>
         </CardContent>
       </Card>
     );
@@ -111,7 +111,7 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm text-gray-600">Overall Risk Score</p>
+              <p className="text-sm text-slate-600">Overall Risk Score</p>
               <div className="flex items-center gap-2">
                 <p className="text-3xl font-bold">{analysis.overall_risk_score}/100</p>
                 {getRiskIcon(analysis.risk_level)}
@@ -161,8 +161,8 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
         {/* Trend Analysis Summary */}
         {analysis.trend_analysis && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white p-3 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-600 mb-1">Vital Signs</p>
+            <div className="bg-white p-3 rounded-lg border border-slate-200">
+              <p className="text-xs text-slate-600 mb-1">Vital Signs</p>
               <div className="flex items-center gap-1">
                 {analysis.trend_analysis.vital_signs_trend?.includes('deteriorating') ? 
                   <TrendingDown className="w-4 h-4 text-red-600" /> : 
@@ -171,16 +171,16 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
                 <p className="text-xs font-medium">{analysis.trend_analysis.vital_signs_trend}</p>
               </div>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-600 mb-1">Functional Status</p>
+            <div className="bg-white p-3 rounded-lg border border-slate-200">
+              <p className="text-xs text-slate-600 mb-1">Functional Status</p>
               <p className="text-xs font-medium">{analysis.trend_analysis.functional_status_trend}</p>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-600 mb-1">Care Plan Progress</p>
+            <div className="bg-white p-3 rounded-lg border border-slate-200">
+              <p className="text-xs text-slate-600 mb-1">Care Plan Progress</p>
               <p className="text-xs font-medium">{analysis.trend_analysis.care_plan_progress}</p>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-600 mb-1">Incidents</p>
+            <div className="bg-white p-3 rounded-lg border border-slate-200">
+              <p className="text-xs text-slate-600 mb-1">Incidents</p>
               <p className="text-xs font-medium">{analysis.trend_analysis.incident_frequency}</p>
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
         {/* Clinical Alerts */}
         {analysis.clinical_alerts?.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
               <Shield className="w-5 h-5 text-purple-600" />
               Clinical Alerts ({analysis.clinical_alerts.length})
             </h3>
@@ -207,7 +207,7 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
                           }`} />
                           <div>
                             <p className="font-semibold text-sm">{alert.title}</p>
-                            <p className="text-xs text-gray-600">{alert.alert_type}</p>
+                            <p className="text-xs text-slate-600">{alert.alert_type}</p>
                           </div>
                         </div>
                         {getSeverityBadge(alert.severity)}
@@ -216,12 +216,12 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
                     <AccordionContent className="px-4 pb-4 space-y-4">
                       {/* Clinical Evidence */}
                       {alert.clinical_evidence?.length > 0 && (
-                        <div className="bg-white p-3 rounded border border-gray-200">
-                          <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                        <div className="bg-white p-3 rounded border border-slate-200">
+                          <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                             <Activity className="w-3 h-3" />
                             Clinical Evidence:
                           </p>
-                          <ul className="text-xs text-gray-800 space-y-1">
+                          <ul className="text-xs text-slate-800 space-y-1">
                             {alert.clinical_evidence.map((evidence, i) => (
                               <li key={i} className="flex items-start gap-2">
                                 <span className="text-purple-600">•</span>
@@ -245,8 +245,8 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
                                 <div className="flex items-start gap-2">
                                   <Badge className="bg-blue-600 text-white text-xs">#{intervention.priority}</Badge>
                                   <div className="flex-1">
-                                    <p className="text-xs font-medium text-gray-900">{intervention.intervention}</p>
-                                    <p className="text-xs text-gray-600 mt-1 italic">Rationale: {intervention.rationale}</p>
+                                    <p className="text-xs font-medium text-slate-900">{intervention.intervention}</p>
+                                    <p className="text-xs text-slate-600 mt-1 italic">Rationale: {intervention.rationale}</p>
                                     <p className="text-xs text-green-700 mt-1">
                                       <CheckCircle2 className="w-3 h-3 inline mr-1" />
                                       Expected: {intervention.expected_outcome}
@@ -298,9 +298,9 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
                       {/* Monitoring & Escalation */}
                       <div className="flex gap-2 text-xs">
                         {alert.monitoring_frequency && (
-                          <div className="flex-1 bg-gray-100 p-2 rounded">
-                            <p className="font-semibold text-gray-700">Monitor:</p>
-                            <p className="text-gray-600">{alert.monitoring_frequency}</p>
+                          <div className="flex-1 bg-slate-100 p-2 rounded">
+                            <p className="font-semibold text-slate-700">Monitor:</p>
+                            <p className="text-slate-600">{alert.monitoring_frequency}</p>
                           </div>
                         )}
                         {alert.escalation_criteria && (
@@ -329,10 +329,10 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
               {analysis.medication_concerns.map((concern, idx) => (
                 <div key={idx} className="bg-white p-3 rounded border border-orange-200">
                   <Badge className="bg-orange-600 text-white mb-2">{concern.concern_type}</Badge>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-slate-900">
                     {concern.medications_involved?.join(', ')}
                   </p>
-                  <p className="text-xs text-gray-700 mt-1">{concern.risk_description}</p>
+                  <p className="text-xs text-slate-700 mt-1">{concern.risk_description}</p>
                   <p className="text-xs text-blue-700 mt-2 font-medium">
                     → {concern.recommendation}
                   </p>
@@ -349,8 +349,8 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
             <div className="space-y-2">
               {analysis.care_plan_deviations.map((deviation, idx) => (
                 <div key={idx} className="bg-white p-3 rounded border border-yellow-200">
-                  <p className="text-sm font-medium text-gray-900">{deviation.care_plan_problem}</p>
-                  <p className="text-xs text-gray-700 mt-1">{deviation.deviation_description}</p>
+                  <p className="text-sm font-medium text-slate-900">{deviation.care_plan_problem}</p>
+                  <p className="text-xs text-slate-700 mt-1">{deviation.deviation_description}</p>
                   <p className="text-xs text-green-700 mt-2 font-medium">
                     ✓ {deviation.corrective_action}
                   </p>

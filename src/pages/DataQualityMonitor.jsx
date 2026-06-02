@@ -14,7 +14,7 @@ export default function DataQualityMonitor() {
       <div className="max-w-2xl mx-auto mt-8">
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-gray-500">This page is only accessible to administrators.</p>
+            <p className="text-slate-500">This page is only accessible to administrators.</p>
           </CardContent>
         </Card>
       </div>

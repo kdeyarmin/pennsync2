@@ -283,7 +283,7 @@ Nurse Signature: _______________________`;
       case 'easy': return 'bg-green-100 text-green-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -355,7 +355,7 @@ Nurse Signature: _______________________`;
           <div className="space-y-4">
             {/* Progress */}
             <div className="space-y-2">
-              <div className="flex justify-between text-sm text-gray-600">
+              <div className="flex justify-between text-sm text-slate-600">
                 <span>Question {currentPromptIdx + 1} of {prompts.prompts.length}</span>
                 <span>{prompts.topic}</span>
               </div>
@@ -381,8 +381,8 @@ Nurse Signature: _______________________`;
 
               {/* Alternative Phrasings */}
               <div className="bg-white p-2 rounded border border-indigo-200 mt-3">
-                <p className="text-xs font-medium text-gray-600 mb-1">Alternative ways to ask:</p>
-                <ul className="text-xs text-gray-700 space-y-1">
+                <p className="text-xs font-medium text-slate-600 mb-1">Alternative ways to ask:</p>
+                <ul className="text-xs text-slate-700 space-y-1">
                   {currentPrompt.alternative_phrasings?.map((alt, idx) => (
                     <li key={idx}>• "{alt}"</li>
                   ))}
@@ -514,9 +514,9 @@ Nurse Signature: _______________________`;
             </div>
 
             {/* Teaching Tips */}
-            <div className="bg-gray-50 p-3 rounded-lg border">
-              <p className="text-xs font-semibold text-gray-700 mb-1">💡 Teaching Tips:</p>
-              <ul className="text-xs text-gray-600 space-y-1">
+            <div className="bg-slate-50 p-3 rounded-lg border">
+              <p className="text-xs font-semibold text-slate-700 mb-1">💡 Teaching Tips:</p>
+              <ul className="text-xs text-slate-600 space-y-1">
                 {prompts.general_teaching_tips?.slice(0, 2).map((tip, idx) => (
                   <li key={idx}>• {tip}</li>
                 ))}
@@ -557,7 +557,7 @@ Nurse Signature: _______________________`;
             {/* Response Details */}
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {responses.map((r, idx) => (
-                <div key={idx} className="p-2 bg-gray-50 rounded border text-sm">
+                <div key={idx} className="p-2 bg-slate-50 rounded border text-sm">
                   <div className="flex items-center justify-between mb-1">
                     <Badge variant="outline" className="text-xs">{r.category}</Badge>
                     <Badge className={
@@ -568,7 +568,7 @@ Nurse Signature: _______________________`;
                       {r.understandingLevel}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-600">{r.question}</p>
+                  <p className="text-xs text-slate-600">{r.question}</p>
                 </div>
               ))}
             </div>

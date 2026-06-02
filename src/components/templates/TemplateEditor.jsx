@@ -121,8 +121,8 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
                 <FileText className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">{templateData?.template?.name || 'Clinical Template'}</h3>
-                <p className="text-sm text-gray-600">{templateData?.template?.description}</p>
+                <h3 className="font-semibold text-slate-900">{templateData?.template?.name || 'Clinical Template'}</h3>
+                <p className="text-sm text-slate-600">{templateData?.template?.description}</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -166,7 +166,7 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
               <div key={section} className="border rounded-lg">
                 <button
                   onClick={() => toggleSection(section)}
-                  className="w-full flex items-center justify-between p-3 hover:bg-gray-50"
+                  className="w-full flex items-center justify-between p-3 hover:bg-slate-50"
                 >
                   <span className="font-medium capitalize">{section.replace(/_/g, ' ')}</span>
                   {expandedSections[section] ? (
@@ -179,7 +179,7 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
                   <div className="p-3 pt-0 space-y-3 border-t">
                     {prompts.map((prompt, idx) => (
                       <div key={idx}>
-                        <Label className="text-sm text-gray-700">{prompt.prompt}</Label>
+                        <Label className="text-sm text-slate-700">{prompt.prompt}</Label>
                         {prompt.options && prompt.options.length > 0 ? (
                           <Select
                             value={clinicalResponses[`${section}_${idx}`] || ''}

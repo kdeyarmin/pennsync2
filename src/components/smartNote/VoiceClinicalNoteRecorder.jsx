@@ -163,7 +163,7 @@ Return only the enhanced clinical narrative, no explanations.`,
             )}
           </Button>
           {isRecording && (
-            <span className="text-lg font-mono text-gray-700">{formatTime(recordingTime)}</span>
+            <span className="text-lg font-mono text-slate-700">{formatTime(recordingTime)}</span>
           )}
         </div>
 
@@ -171,7 +171,7 @@ Return only the enhanced clinical narrative, no explanations.`,
         {transcription && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="font-semibold text-gray-700">Raw Transcription</label>
+              <label className="font-semibold text-slate-700">Raw Transcription</label>
               <Button
                 variant="ghost"
                 size="sm"
@@ -180,7 +180,7 @@ Return only the enhanced clinical narrative, no explanations.`,
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-gray-200 text-sm text-gray-900 max-h-32 overflow-y-auto">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 text-sm text-slate-900 max-h-32 overflow-y-auto">
               {transcription}
             </div>
           </div>
@@ -192,7 +192,7 @@ Return only the enhanced clinical narrative, no explanations.`,
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <label className="font-semibold text-gray-700">Enhanced Clinical Narrative</label>
+                <label className="font-semibold text-slate-700">Enhanced Clinical Narrative</label>
               </div>
               <Button
                 variant="ghost"
@@ -202,7 +202,7 @@ Return only the enhanced clinical narrative, no explanations.`,
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
-            <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+            <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-slate-900 whitespace-pre-wrap leading-relaxed">
               {enhancedNote}
             </div>
           </div>

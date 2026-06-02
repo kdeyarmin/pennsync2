@@ -134,7 +134,7 @@ export default function PatientRecordDashboard() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading patient records...</p>
+          <p className="text-slate-600">Loading patient records...</p>
         </div>
       </div>
     );
@@ -146,11 +146,11 @@ export default function PatientRecordDashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 md:gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 md:gap-3">
               <LayoutDashboard className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
               Patient Record Dashboard
             </h1>
-            <p className="text-sm md:text-base text-gray-600 mt-1">Comprehensive patient management and overview</p>
+            <p className="text-sm md:text-base text-slate-600 mt-1">Comprehensive patient management and overview</p>
           </div>
           <PatientQuickActions onActionComplete={() => {
             // Refresh data
@@ -255,8 +255,8 @@ export default function PatientRecordDashboard() {
                 <ScrollArea className="h-[600px] pr-4">
                   {filteredPatients.length === 0 ? (
                     <div className="text-center py-12">
-                      <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">No patients found matching your criteria</p>
+                      <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                      <p className="text-slate-500">No patients found matching your criteria</p>
                     </div>
                   ) : (
                     <div className={view === "grid" ? "grid grid-cols-1 gap-4" : "space-y-2"}>
@@ -305,22 +305,22 @@ export default function PatientRecordDashboard() {
                 <CardContent>
                   <div className="space-y-3">
                     <div>
-                      <p className="font-semibold text-lg text-gray-900">
+                      <p className="font-semibold text-lg text-slate-900">
                         {selectedPatient.first_name} {selectedPatient.last_name}
                       </p>
-                      <p className="text-sm text-gray-600">MRN: {selectedPatient.medical_record_number || 'N/A'}</p>
+                      <p className="text-sm text-slate-600">MRN: {selectedPatient.medical_record_number || 'N/A'}</p>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Status:</span>
+                        <span className="text-slate-600">Status:</span>
                         <span className="font-medium capitalize">{selectedPatient.status}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Care Type:</span>
+                        <span className="text-slate-600">Care Type:</span>
                         <span className="font-medium">{selectedPatient.care_type?.replace('_', ' ')}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Diagnosis:</span>
+                        <span className="text-slate-600">Diagnosis:</span>
                         <span className="font-medium text-right">{selectedPatient.primary_diagnosis || 'N/A'}</span>
                       </div>
                     </div>

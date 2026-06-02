@@ -279,7 +279,7 @@ Return JSON:
       case 'travel_impossible': return <Navigation className="w-4 h-4 text-orange-600" />;
       case 'time_conflict': return <Clock className="w-4 h-4 text-yellow-600" />;
       case 'acuity_concern': return <Zap className="w-4 h-4 text-purple-600" />;
-      default: return <AlertTriangle className="w-4 h-4 text-gray-600" />;
+      default: return <AlertTriangle className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -302,7 +302,7 @@ Return JSON:
           {!optimizedSchedule ? (
             <div className="text-center py-6">
               <Route className="w-12 h-12 text-indigo-300 mx-auto mb-3" />
-              <p className="text-gray-600 mb-4">
+              <p className="text-slate-600 mb-4">
                 {visits.length} visit(s) scheduled for this day
               </p>
               <Button
@@ -371,7 +371,7 @@ Return JSON:
 
               {/* Optimized Visit Order */}
               <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">Optimized Route</p>
+                <p className="text-sm font-semibold text-slate-700 mb-2">Optimized Route</p>
                 <div className="space-y-2">
                   {optimizedSchedule.optimized_visits?.map((visit, idx) => (
                     <div
@@ -383,12 +383,12 @@ Return JSON:
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900 truncate">{visit.patient_name}</p>
+                          <p className="font-medium text-slate-900 truncate">{visit.patient_name}</p>
                           <Badge variant="outline" className="text-xs">
                             {visit.visit_type?.replace(/_/g, ' ')}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                        <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" /> {visit.suggested_time}
                           </span>
@@ -398,7 +398,7 @@ Return JSON:
                         </div>
                         <p className="text-xs text-indigo-600 mt-1">{visit.optimization_reason}</p>
                       </div>
-                      <div className="text-right text-xs text-gray-500">
+                      <div className="text-right text-xs text-slate-500">
                         <p>{visit.estimated_duration_minutes}min visit</p>
                         {visit.travel_time_to_next_minutes > 0 && (
                           <p className="flex items-center gap-1 text-blue-600">
@@ -410,7 +410,7 @@ Return JSON:
                         size="sm"
                         variant="ghost"
                         onClick={() => openFeedbackDialog(visit)}
-                        className="text-gray-400 hover:text-indigo-600"
+                        className="text-slate-400 hover:text-indigo-600"
                       >
                         <MessageSquare className="w-4 h-4" />
                       </Button>
@@ -514,7 +514,7 @@ Return JSON:
               />
             </div>
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               Your feedback helps the AI learn your preferences and improve future scheduling suggestions.
             </p>
           </div>

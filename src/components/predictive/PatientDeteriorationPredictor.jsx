@@ -117,8 +117,8 @@ Return a deterioration risk assessment with:
 
   if (!recentVisits || recentVisits.length < 2) {
     return (
-      <Alert className="bg-gray-50 border-gray-200">
-        <AlertDescription className="text-sm text-gray-600">
+      <Alert className="bg-slate-50 border-slate-200">
+        <AlertDescription className="text-sm text-slate-600">
           Need at least 2 visits with vital signs to analyze deterioration trends
         </AlertDescription>
       </Alert>
@@ -157,7 +157,7 @@ Return a deterioration risk assessment with:
         {isAnalyzing && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-orange-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Analyzing vital trends and clinical notes...</p>
+            <p className="text-sm text-slate-600">Analyzing vital trends and clinical notes...</p>
           </div>
         )}
 
@@ -209,7 +209,7 @@ Return a deterioration risk assessment with:
                       'bg-blue-50 border-blue-200'
                     }`}>
                       <p className="text-sm font-medium">{concern.concern}</p>
-                      <p className="text-xs text-gray-600 mt-1">{concern.evidence}</p>
+                      <p className="text-xs text-slate-600 mt-1">{concern.evidence}</p>
                     </div>
                   ))}
                 </div>
@@ -232,8 +232,8 @@ Return a deterioration risk assessment with:
                 <div className="mt-3 space-y-3">
                   {/* Vital Trends */}
                   {analysis.vital_trends && (
-                    <div className="p-3 bg-gray-50 rounded-lg border">
-                      <p className="text-xs font-semibold text-gray-700 mb-2">Vital Signs Trends</p>
+                    <div className="p-3 bg-slate-50 rounded-lg border">
+                      <p className="text-xs font-semibold text-slate-700 mb-2">Vital Signs Trends</p>
                       {Object.entries(analysis.vital_trends).map(([vital, trend]) => (
                         <div key={vital} className="text-xs">
                           <span className="font-medium capitalize">{vital.replace('_', ' ')}:</span> {trend}

@@ -133,8 +133,8 @@ Provide 2-4 relevant suggestions max. Only suggest for sections that come AFTER 
                         {suggestion.priority}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-800">{suggestion.suggestion_text}</p>
-                    <p className="text-xs text-gray-500 italic mt-1">{suggestion.rationale}</p>
+                    <p className="text-xs text-slate-800">{suggestion.suggestion_text}</p>
+                    <p className="text-xs text-slate-500 italic mt-1">{suggestion.rationale}</p>
                   </div>
                   <Button
                     size="sm"

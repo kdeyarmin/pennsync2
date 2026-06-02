@@ -150,8 +150,8 @@ export default function ComplianceTrendsDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Compliance Trends Dashboard</h2>
-          <p className="text-sm text-gray-600">Track documentation quality and compliance over time</p>
+          <h2 className="text-2xl font-bold text-slate-900">Compliance Trends Dashboard</h2>
+          <p className="text-sm text-slate-600">Track documentation quality and compliance over time</p>
         </div>
         <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -186,7 +186,7 @@ export default function ComplianceTrendsDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className={getScoreBg(trends.avgScore)}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Average Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Average Score</CardTitle>
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${getScoreColor(trends.avgScore)}`}>
@@ -197,7 +197,7 @@ export default function ComplianceTrendsDashboard() {
 
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Passed</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Passed</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600 flex items-center gap-2">
@@ -209,7 +209,7 @@ export default function ComplianceTrendsDashboard() {
 
         <Card className="bg-yellow-50 border-yellow-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Flagged</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Flagged</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-yellow-600 flex items-center gap-2">
@@ -221,7 +221,7 @@ export default function ComplianceTrendsDashboard() {
 
         <Card className="bg-red-50 border-red-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Critical</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Critical</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-600 flex items-center gap-2">
@@ -251,12 +251,12 @@ export default function ComplianceTrendsDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {trends.nurseStats.map((nurse, idx) => (
-                  <div key={nurse.email} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={nurse.email} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className="font-bold text-lg text-gray-500 w-6">#{idx + 1}</div>
+                      <div className="font-bold text-lg text-slate-500 w-6">#{idx + 1}</div>
                       <div>
-                        <p className="font-medium text-gray-900">{nurse.name}</p>
-                        <p className="text-xs text-gray-600">{nurse.auditCount} audits</p>
+                        <p className="font-medium text-slate-900">{nurse.name}</p>
+                        <p className="text-xs text-slate-600">{nurse.auditCount} audits</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -285,11 +285,11 @@ export default function ComplianceTrendsDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {trends.patientStats.map((patient, _idx) => (
-                  <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={patient.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div>
-                        <p className="font-medium text-gray-900">{patient.name}</p>
-                        <p className="text-xs text-gray-600">{patient.auditCount} visits audited</p>
+                        <p className="font-medium text-slate-900">{patient.name}</p>
+                        <p className="text-xs text-slate-600">{patient.auditCount} visits audited</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -318,10 +318,10 @@ export default function ComplianceTrendsDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {trends.topIssues.map((issue, idx) => (
-                  <div key={issue.element} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={issue.element} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className="font-bold text-lg text-gray-500 w-6">#{idx + 1}</div>
-                      <p className="font-medium text-gray-900">{issue.element}</p>
+                      <div className="font-bold text-lg text-slate-500 w-6">#{idx + 1}</div>
+                      <p className="font-medium text-slate-900">{issue.element}</p>
                     </div>
                     <Badge variant="outline" className="text-red-600 border-red-300">
                       {issue.count} occurrences

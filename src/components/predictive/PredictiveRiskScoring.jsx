@@ -205,7 +205,7 @@ Return JSON array:
       case 'high': return 'bg-orange-500 text-white';
       case 'moderate': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -227,7 +227,7 @@ Return JSON array:
     switch (trend) {
       case 'increasing': return <TrendingUp className="w-3 h-3 text-red-500" />;
       case 'decreasing': return <TrendingDown className="w-3 h-3 text-green-500" />;
-      default: return <Activity className="w-3 h-3 text-gray-500" />;
+      default: return <Activity className="w-3 h-3 text-slate-500" />;
     }
   };
 
@@ -258,7 +258,7 @@ Return JSON array:
         </CardHeader>
         <CardContent className="p-3">
           {isAnalyzing ? (
-            <div className="flex items-center justify-center py-4 text-sm text-gray-500">
+            <div className="flex items-center justify-center py-4 text-sm text-slate-500">
               <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
               Analyzing patient risks...
             </div>
@@ -272,17 +272,17 @@ Return JSON array:
                       {patient.overall_risk_level}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-600">{patient.alert_summary}</p>
+                  <p className="text-xs text-slate-600">{patient.alert_summary}</p>
                 </div>
               ))}
               {highRiskPatients.length > 3 && (
-                <p className="text-xs text-center text-gray-500">
+                <p className="text-xs text-center text-slate-500">
                   +{highRiskPatients.length - 3} more high-risk patients
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-sm text-center text-gray-500 py-4">
+            <p className="text-sm text-center text-slate-500 py-4">
               No high-risk patients identified
             </p>
           )}
@@ -296,17 +296,17 @@ Return JSON array:
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <Brain className="w-6 h-6 text-purple-600" />
             AI Predictive Risk Scoring
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Proactive identification of patients at risk for adverse events
           </p>
         </div>
         <div className="flex items-center gap-2">
           {lastAnalyzed && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-slate-500">
               Last analyzed: {format(lastAnalyzed, 'MMM d, h:mm a')}
             </span>
           )}
@@ -419,8 +419,8 @@ Return JSON array:
         <Card>
           <CardContent className="p-12 text-center">
             <RefreshCw className="w-12 h-12 mx-auto mb-4 text-purple-500 animate-spin" />
-            <p className="text-lg font-medium text-gray-700">Analyzing Patient Risk Factors...</p>
-            <p className="text-sm text-gray-500">This may take a moment</p>
+            <p className="text-lg font-medium text-slate-700">Analyzing Patient Risk Factors...</p>
+            <p className="text-sm text-slate-500">This may take a moment</p>
           </CardContent>
         </Card>
       ) : riskScores.risk_assessments?.length > 0 ? (
@@ -449,13 +449,13 @@ Return JSON array:
                           <User className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900">{assessment.patient_name}</h3>
+                          <h3 className="font-semibold text-slate-900">{assessment.patient_name}</h3>
                           <Badge className={getRiskLevelColor(assessment.overall_risk_level)}>
                             {assessment.overall_risk_level.toUpperCase()} RISK
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">{assessment.alert_summary}</p>
+                      <p className="text-sm text-slate-600 mb-3">{assessment.alert_summary}</p>
                       
                       <Link to={`${createPageUrl("PatientDetails")}?patientId=${assessment.patient_id}`}>
                         <Button size="sm" variant="outline" className="gap-1">
@@ -467,15 +467,15 @@ Return JSON array:
                     {/* Risk Scores */}
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
                       {/* Readmission Risk */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium text-gray-600">Readmission</span>
+                          <span className="text-xs font-medium text-slate-600">Readmission</span>
                           {getTrendIcon(assessment.readmission_risk?.trend)}
                         </div>
                         <p className={`text-xl font-bold ${getRiskScoreColor(assessment.readmission_risk?.score)}`}>
                           {assessment.readmission_risk?.score}%
                         </p>
-                        <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="mt-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                           <div 
                             className={`h-full ${getProgressColor(assessment.readmission_risk?.score)}`}
                             style={{ width: `${assessment.readmission_risk?.score}%` }}
@@ -484,15 +484,15 @@ Return JSON array:
                       </div>
 
                       {/* Fall Risk */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium text-gray-600">Fall Risk</span>
+                          <span className="text-xs font-medium text-slate-600">Fall Risk</span>
                           {getTrendIcon(assessment.fall_risk?.trend)}
                         </div>
                         <p className={`text-xl font-bold ${getRiskScoreColor(assessment.fall_risk?.score)}`}>
                           {assessment.fall_risk?.score}%
                         </p>
-                        <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="mt-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                           <div 
                             className={`h-full ${getProgressColor(assessment.fall_risk?.score)}`}
                             style={{ width: `${assessment.fall_risk?.score}%` }}
@@ -501,15 +501,15 @@ Return JSON array:
                       </div>
 
                       {/* Decline Risk */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium text-gray-600">Decline</span>
+                          <span className="text-xs font-medium text-slate-600">Decline</span>
                           {getTrendIcon(assessment.decline_risk?.trend)}
                         </div>
                         <p className={`text-xl font-bold ${getRiskScoreColor(assessment.decline_risk?.score)}`}>
                           {assessment.decline_risk?.score}%
                         </p>
-                        <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="mt-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                           <div 
                             className={`h-full ${getProgressColor(assessment.decline_risk?.score)}`}
                             style={{ width: `${assessment.decline_risk?.score}%` }}
@@ -518,15 +518,15 @@ Return JSON array:
                       </div>
 
                       {/* Care Gap Risk */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium text-gray-600">Care Gap</span>
+                          <span className="text-xs font-medium text-slate-600">Care Gap</span>
                           {getTrendIcon(assessment.care_gap_risk?.trend)}
                         </div>
                         <p className={`text-xl font-bold ${getRiskScoreColor(assessment.care_gap_risk?.score)}`}>
                           {assessment.care_gap_risk?.score}%
                         </p>
-                        <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="mt-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                           <div 
                             className={`h-full ${getProgressColor(assessment.care_gap_risk?.score)}`}
                             style={{ width: `${assessment.care_gap_risk?.score}%` }}
@@ -538,10 +538,10 @@ Return JSON array:
                     {/* Interventions */}
                     {assessment.priority_interventions?.length > 0 && (
                       <div className="lg:w-64 flex-shrink-0">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Recommended Interventions:</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-2">Recommended Interventions:</p>
                         <ul className="space-y-1">
                           {assessment.priority_interventions.slice(0, 3).map((intervention, idx) => (
-                            <li key={idx} className="text-xs text-gray-600 flex items-start gap-1">
+                            <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
                               <ChevronRight className="w-3 h-3 mt-0.5 text-purple-500 flex-shrink-0" />
                               {intervention}
                             </li>
@@ -557,8 +557,8 @@ Return JSON array:
       ) : (
         <Card>
           <CardContent className="p-12 text-center">
-            <Brain className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">Click "Analyze Risks" to generate predictive risk scores</p>
+            <Brain className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+            <p className="text-slate-500">Click "Analyze Risks" to generate predictive risk scores</p>
           </CardContent>
         </Card>
       )}

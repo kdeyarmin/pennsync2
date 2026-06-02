@@ -157,7 +157,7 @@ Return JSON with:
                       <h3 className="text-lg font-semibold">{scenario.title}</h3>
                       <Badge>{scenario.difficulty}</Badge>
                     </div>
-                    <div className="text-sm text-gray-600 whitespace-pre-line">
+                    <div className="text-sm text-slate-600 whitespace-pre-line">
                       {scenario.scenario.split('\n').slice(0, 3).join('\n')}...
                     </div>
                   </div>
@@ -194,10 +194,10 @@ Return JSON with:
           </div>
         </CardHeader>
         <CardContent>
-          <Card className="bg-gray-50 border-gray-200 mb-4">
+          <Card className="bg-slate-50 border-slate-200 mb-4">
             <CardContent className="p-4">
-              <p className="text-sm font-medium text-gray-900 mb-2">Scenario:</p>
-              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+              <p className="text-sm font-medium text-slate-900 mb-2">Scenario:</p>
+              <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans">
                 {selectedScenario.scenario}
               </pre>
             </CardContent>
@@ -213,7 +213,7 @@ Return JSON with:
                 className="min-h-[300px] font-mono text-sm"
                 disabled={!!feedback}
               />
-              <p className="text-xs text-gray-500 mt-1">{practiceNote.length} characters</p>
+              <p className="text-xs text-slate-500 mt-1">{practiceNote.length} characters</p>
             </div>
 
             {!feedback && (
@@ -301,14 +301,14 @@ Return JSON with:
                       <Card key={idx} className="bg-orange-50 border-orange-200">
                         <CardContent className="p-4 space-y-2">
                           <Badge className="bg-orange-600">{(weakness.category || '').replace(/_/g, ' ')}</Badge>
-                          <p className="text-sm font-medium text-gray-900">{weakness.issue}</p>
+                          <p className="text-sm font-medium text-slate-900">{weakness.issue}</p>
                           <div className="bg-white p-3 rounded border border-orange-200">
-                            <p className="text-xs font-medium text-gray-700 mb-1">💡 Suggestion:</p>
-                            <p className="text-xs text-gray-800">{weakness.suggestion}</p>
+                            <p className="text-xs font-medium text-slate-700 mb-1">💡 Suggestion:</p>
+                            <p className="text-xs text-slate-800">{weakness.suggestion}</p>
                           </div>
                           <div className="bg-white p-3 rounded border border-green-200">
                             <p className="text-xs font-medium text-green-700 mb-1">✏️ Example:</p>
-                            <p className="text-xs text-gray-800 italic">{weakness.example}</p>
+                            <p className="text-xs text-slate-800 italic">{weakness.example}</p>
                           </div>
                         </CardContent>
                       </Card>

@@ -116,7 +116,7 @@ export default function PreJoinDeviceCheck({ role = 'patient', onJoin }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
+        <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video">
           <video
             ref={videoRef}
             autoPlay
@@ -143,8 +143,8 @@ export default function PreJoinDeviceCheck({ role = 'patient', onJoin }) {
 
         {/* Mic level meter */}
         <div className="flex items-center gap-2">
-          <Mic className="w-4 h-4 text-gray-500" />
-          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <Mic className="w-4 h-4 text-slate-500" />
+          <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-green-500 transition-[width] duration-75"
               style={{ width: `${Math.round(level * 100)}%` }}

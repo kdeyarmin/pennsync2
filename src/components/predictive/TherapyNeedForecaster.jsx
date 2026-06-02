@@ -230,7 +230,7 @@ Provide therapy need forecast including:
                 <Bar dataKey="count" fill="#8b5cf6" />
               </BarChart>
             </ResponsiveContainer>
-            <p className="text-xs text-gray-500 text-center mt-2">
+            <p className="text-xs text-slate-500 text-center mt-2">
               Patients with ≥50% therapy need indicator
             </p>
           </CardContent>
@@ -272,7 +272,7 @@ Provide therapy need forecast including:
           </CardHeader>
           <CardContent className="space-y-2 max-h-96 overflow-y-auto">
             {displayPatients.map(patient => (
-              <div key={patient.id} className="p-3 bg-gray-50 rounded-lg border">
+              <div key={patient.id} className="p-3 bg-slate-50 rounded-lg border">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-medium text-sm">{patient.first_name} {patient.last_name}</p>
                   <Badge variant="outline">{patient.primary_diagnosis?.slice(0, 20) || 'No dx'}</Badge>
@@ -332,13 +332,13 @@ Provide therapy need forecast including:
                         <span className="font-medium uppercase">{type}</span>
                         <Badge className="bg-blue-600 text-white">{therapy.probability}% recommended</Badge>
                       </div>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-slate-700">
                         <strong>Frequency:</strong> {therapy.frequency} for {therapy.duration_weeks} weeks
                       </p>
                       {therapy.goals?.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-xs text-gray-600 font-medium">Goals:</p>
-                          <ul className="text-xs text-gray-600 list-disc list-inside">
+                          <p className="text-xs text-slate-600 font-medium">Goals:</p>
+                          <ul className="text-xs text-slate-600 list-disc list-inside">
                             {therapy.goals.slice(0, 3).map((g, i) => <li key={i}>{g}</li>)}
                           </ul>
                         </div>
@@ -371,7 +371,7 @@ Provide therapy need forecast including:
                 )}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-slate-500">
                 <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Click "Get AI Forecast" on a patient for detailed therapy predictions</p>
               </div>

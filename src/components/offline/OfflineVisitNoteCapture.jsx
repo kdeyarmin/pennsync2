@@ -174,12 +174,12 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">Patient</label>
-            <Input value={visitData.patient_name} disabled className="bg-gray-50" />
+            <label className="text-sm font-medium text-slate-700 mb-1 block">Patient</label>
+            <Input value={visitData.patient_name} disabled className="bg-slate-50" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Visit Date</label>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Visit Date</label>
               <Input
                 type="date"
                 value={visitData.visit_date}
@@ -187,7 +187,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Visit Type</label>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Visit Type</label>
               <Select value={visitData.visit_type} onValueChange={(val) => updateField('visit_type', val)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -214,7 +214,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">BP Systolic</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">BP Systolic</label>
               <Input
                 type="number"
                 placeholder="120"
@@ -223,7 +223,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">BP Diastolic</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">BP Diastolic</label>
               <Input
                 type="number"
                 placeholder="80"
@@ -232,7 +232,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">Heart Rate</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">Heart Rate</label>
               <Input
                 type="number"
                 placeholder="72"
@@ -241,7 +241,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">Resp Rate</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">Resp Rate</label>
               <Input
                 type="number"
                 placeholder="16"
@@ -250,7 +250,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">Temp (°F)</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">Temp (°F)</label>
               <Input
                 type="number"
                 step="0.1"
@@ -260,7 +260,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">O2 Sat (%)</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">O2 Sat (%)</label>
               <Input
                 type="number"
                 placeholder="98"
@@ -269,7 +269,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">Pain (0-10)</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">Pain (0-10)</label>
               <Input
                 type="number"
                 min="0"
@@ -280,7 +280,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">Weight (lbs)</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">Weight (lbs)</label>
               <Input
                 type="number"
                 placeholder="150"
@@ -299,7 +299,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
+            <label className="text-sm font-medium text-slate-700 mb-1 block">
               Chief Complaint
             </label>
             <Textarea
@@ -311,7 +311,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
+            <label className="text-sm font-medium text-slate-700 mb-1 block">
               Assessment <span className="text-red-500">*</span>
             </label>
             <Textarea
@@ -323,7 +323,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
+            <label className="text-sm font-medium text-slate-700 mb-1 block">
               Interventions Performed
             </label>
             <Textarea
@@ -335,7 +335,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
+            <label className="text-sm font-medium text-slate-700 mb-1 block">
               Patient Response
             </label>
             <Textarea
@@ -347,7 +347,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
+            <label className="text-sm font-medium text-slate-700 mb-1 block">
               Plan of Care <span className="text-red-500">*</span>
             </label>
             <Textarea
@@ -359,7 +359,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
+            <label className="text-sm font-medium text-slate-700 mb-1 block">
               Additional Clinical Notes
             </label>
             <Textarea
@@ -373,7 +373,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 sticky bottom-4 bg-white p-4 rounded-lg border-2 border-gray-200 shadow-lg">
+      <div className="flex gap-3 sticky bottom-4 bg-white p-4 rounded-lg border-2 border-slate-200 shadow-lg">
         <Button
           onClick={saveVisitNote}
           className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"

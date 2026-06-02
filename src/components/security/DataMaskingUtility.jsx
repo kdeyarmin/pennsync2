@@ -88,7 +88,7 @@ export function MaskedField({ value, maskFn, label, className = "" }) {
   return (
     <div className={`flex items-center justify-between ${className}`}>
       <div className="flex-1">
-        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-xs text-slate-500">{label}</p>
         <p className="font-medium text-sm">
           {showValue ? value : maskFn(value)}
         </p>

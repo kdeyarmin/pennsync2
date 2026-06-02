@@ -175,7 +175,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
   };
 
   return (
-    <Card className={`border-2 ${isExpanded ? 'border-purple-300' : 'border-gray-200'} bg-gradient-to-br from-purple-50 to-pink-50`}>
+    <Card className={`border-2 ${isExpanded ? 'border-purple-300' : 'border-slate-200'} bg-gradient-to-br from-purple-50 to-pink-50`}>
       <CardHeader 
         className="pb-3 cursor-pointer bg-gradient-to-r from-purple-100 to-pink-100"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -235,7 +235,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
 
               {/* Quick Topics */}
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-2">Quick Topics:</p>
+                <p className="text-xs font-semibold text-slate-600 mb-2">Quick Topics:</p>
                 <div className="grid grid-cols-2 gap-2">
                   {quickTopics.map((topic, idx) => (
                     <Button
@@ -255,7 +255,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
               {/* Recent Searches */}
               {recentSearches.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Recent Searches:</p>
+                  <p className="text-xs font-semibold text-slate-600 mb-2">Recent Searches:</p>
                   <div className="space-y-1">
                     {recentSearches.map((search, idx) => (
                       <button
@@ -266,8 +266,8 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                           handleSearch(search.query);
                         }}
                       >
-                        <Search className="w-3 h-3 text-gray-400" />
-                        <span className="text-xs text-gray-700 flex-1 truncate">{search.query}</span>
+                        <Search className="w-3 h-3 text-slate-400" />
+                        <span className="text-xs text-slate-700 flex-1 truncate">{search.query}</span>
                       </button>
                     ))}
                   </div>
@@ -302,7 +302,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <h4 className="text-sm font-bold text-purple-900">{searchResults.query}</h4>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           Retrieved {new Date(searchResults.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
@@ -324,7 +324,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                         <BookOpen className="w-4 h-4 text-purple-600 mt-1 flex-shrink-0" />
                         <div>
                           <p className="text-xs font-semibold text-purple-900 mb-1">Overview</p>
-                          <p className="text-sm text-gray-700">{searchResults.overview}</p>
+                          <p className="text-sm text-slate-700">{searchResults.overview}</p>
                         </div>
                       </div>
                     </div>
@@ -338,7 +338,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                         </div>
                         <ul className="space-y-1 ml-6">
                           {searchResults.key_points.map((point, idx) => (
-                            <li key={idx} className="text-sm text-gray-700 list-disc">
+                            <li key={idx} className="text-sm text-slate-700 list-disc">
                               {point}
                             </li>
                           ))}
@@ -370,7 +370,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                         </div>
                         <ul className="space-y-1 ml-6">
                           {searchResults.monitoring.map((item, idx) => (
-                            <li key={idx} className="text-sm text-gray-700 list-disc">
+                            <li key={idx} className="text-sm text-slate-700 list-disc">
                               {item}
                             </li>
                           ))}
@@ -404,7 +404,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                         </div>
                         <ul className="space-y-1 ml-6">
                           {searchResults.documentation_tips.map((tip, idx) => (
-                            <li key={idx} className="text-sm text-gray-700 list-disc">
+                            <li key={idx} className="text-sm text-slate-700 list-disc">
                               {tip}
                             </li>
                           ))}
@@ -414,8 +414,8 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
 
                     {/* Sources */}
                     {searchResults.sources?.length > 0 && (
-                      <div className="p-3 bg-gray-50 rounded-lg border">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Sources & References:</p>
+                      <div className="p-3 bg-slate-50 rounded-lg border">
+                        <p className="text-xs font-semibold text-slate-700 mb-2">Sources & References:</p>
                         <div className="space-y-2">
                           {searchResults.sources.map((source, idx) => (
                             <a
@@ -429,7 +429,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                               <div>
                                 <span className="font-medium">{source.title}</span>
                                 {source.organization && (
-                                  <span className="text-gray-500"> - {source.organization}</span>
+                                  <span className="text-slate-500"> - {source.organization}</span>
                                 )}
                               </div>
                             </a>
@@ -467,7 +467,7 @@ ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.re
                     {/* Related Topics */}
                     {searchResults.related_topics?.length > 0 && (
                       <div className="pt-2 border-t">
-                        <p className="text-xs font-semibold text-gray-600 mb-2">Related Topics:</p>
+                        <p className="text-xs font-semibold text-slate-600 mb-2">Related Topics:</p>
                         <div className="flex flex-wrap gap-1">
                           {searchResults.related_topics.map((topic, idx) => (
                             <Badge

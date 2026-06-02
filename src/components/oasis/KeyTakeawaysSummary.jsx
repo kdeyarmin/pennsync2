@@ -132,7 +132,7 @@ export default function KeyTakeawaysSummary({ analysisResults, revenueData }) {
       case 'error': return { bg: 'bg-red-50', border: 'border-red-200', icon: 'text-red-600', text: 'text-red-800' };
       case 'warning': return { bg: 'bg-yellow-50', border: 'border-yellow-200', icon: 'text-yellow-600', text: 'text-yellow-800' };
       case 'success': return { bg: 'bg-green-50', border: 'border-green-200', icon: 'text-green-600', text: 'text-green-800' };
-      default: return { bg: 'bg-gray-50', border: 'border-gray-200', icon: 'text-gray-600', text: 'text-gray-800' };
+      default: return { bg: 'bg-slate-50', border: 'border-slate-200', icon: 'text-slate-600', text: 'text-slate-800' };
     }
   };
 
@@ -150,9 +150,9 @@ export default function KeyTakeawaysSummary({ analysisResults, revenueData }) {
       <CardContent className="space-y-4 pt-4">
         {/* Score Summary */}
         <div className="grid grid-cols-4 gap-2">
-          <div className="text-center p-2 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-800">{analysisResults.overall_score}%</p>
-            <p className="text-xs text-gray-500">Overall</p>
+          <div className="text-center p-2 bg-slate-50 rounded-lg">
+            <p className="text-2xl font-bold text-slate-800">{analysisResults.overall_score}%</p>
+            <p className="text-xs text-slate-500">Overall</p>
           </div>
           <div className="text-center p-2 bg-blue-50 rounded-lg">
             <p className="text-2xl font-bold text-blue-700">{analysisResults.accuracy_score}%</p>
@@ -184,7 +184,7 @@ export default function KeyTakeawaysSummary({ analysisResults, revenueData }) {
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium ${styles.text}`}>{takeaway.text}</p>
                     {takeaway.detail && (
-                      <p className="text-xs text-gray-600 mt-1">{takeaway.detail}</p>
+                      <p className="text-xs text-slate-600 mt-1">{takeaway.detail}</p>
                     )}
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export default function KeyTakeawaysSummary({ analysisResults, revenueData }) {
 
         {/* Quick Summary Line */}
         <div className="text-center pt-2 border-t">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             {takeaways.critical.length > 0 
               ? `⚠️ ${takeaways.critical.length} critical issue${takeaways.critical.length > 1 ? 's' : ''} • `
               : '✓ No critical issues • '}

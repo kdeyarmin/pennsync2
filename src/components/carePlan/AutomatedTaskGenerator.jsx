@@ -186,7 +186,7 @@ Return JSON:`,
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-blue-100 text-blue-800 border-blue-300"
     };
-    return colors[priority] || "bg-gray-100 text-gray-800";
+    return colors[priority] || "bg-slate-100 text-slate-800";
   };
 
   const getTypeIcon = (type) => {
@@ -262,7 +262,7 @@ Return JSON:`,
                       className={`border transition-all ${
                         selectedTasks[idx] 
                           ? 'border-indigo-400 bg-indigo-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <CardContent className="p-4">
@@ -275,7 +275,7 @@ Return JSON:`,
                           <div className="flex-1 min-w-0 space-y-2">
                             {/* Header */}
                             <div className="flex items-start gap-2">
-                              <TypeIcon className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                              <TypeIcon className="w-4 h-4 text-slate-500 mt-1 flex-shrink-0" />
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                                   <Badge className={getPriorityColor(task.priority)}>
@@ -289,7 +289,7 @@ Return JSON:`,
                                     {task.due_timeframe?.replace('_', ' ')}
                                   </Badge>
                                 </div>
-                                <h4 className="font-semibold text-gray-900">{task.title}</h4>
+                                <h4 className="font-semibold text-slate-900">{task.title}</h4>
                               </div>
                             </div>
 
@@ -301,7 +301,7 @@ Return JSON:`,
                             </div>
 
                             {/* Description */}
-                            <p className="text-sm text-gray-700">{task.description}</p>
+                            <p className="text-sm text-slate-700">{task.description}</p>
 
                             {/* Rationale */}
                             {task.rationale && (
@@ -322,7 +322,7 @@ Return JSON:`,
                             )}
 
                             {/* Timing */}
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500">
                               <strong>Due:</strong> {task.suggested_due_days} day(s) from now
                             </p>
                           </div>

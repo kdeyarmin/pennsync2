@@ -213,27 +213,27 @@ export default function SecureESignatureCapture({
       </CardHeader>
       <CardContent className="p-6 space-y-6">
         {/* Document Info */}
-        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+        <div className="bg-slate-50 p-4 rounded-lg space-y-2">
           <div className="flex items-center gap-2 text-sm">
-            <Lock className="w-4 h-4 text-gray-600" />
-            <span className="font-semibold text-gray-900">Document:</span>
-            <span className="text-gray-700">{documentTitle}</span>
+            <Lock className="w-4 h-4 text-slate-600" />
+            <span className="font-semibold text-slate-900">Document:</span>
+            <span className="text-slate-700">{documentTitle}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <User className="w-4 h-4 text-gray-600" />
-            <span className="font-semibold text-gray-900">Signer:</span>
-            <span className="text-gray-700">{user?.full_name} {signatureRole ? `(${signatureRole})` : ''}</span>
+            <User className="w-4 h-4 text-slate-600" />
+            <span className="font-semibold text-slate-900">Signer:</span>
+            <span className="text-slate-700">{user?.full_name} {signatureRole ? `(${signatureRole})` : ''}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Calendar className="w-4 h-4 text-gray-600" />
-            <span className="font-semibold text-gray-900">Date:</span>
-            <span className="text-gray-700">{new Date().toLocaleString()}</span>
+            <Calendar className="w-4 h-4 text-slate-600" />
+            <span className="font-semibold text-slate-900">Date:</span>
+            <span className="text-slate-700">{new Date().toLocaleString()}</span>
           </div>
           {locationData && (
             <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-gray-600" />
-              <span className="font-semibold text-gray-900">Location:</span>
-              <span className="text-gray-700">
+              <MapPin className="w-4 h-4 text-slate-600" />
+              <span className="font-semibold text-slate-900">Location:</span>
+              <span className="text-slate-700">
                 {locationData.latitude.toFixed(6)}, {locationData.longitude.toFixed(6)}
               </span>
             </div>
@@ -251,7 +251,7 @@ export default function SecureESignatureCapture({
 
         {/* Credentials Input */}
         <div className="space-y-2">
-          <Label htmlFor="credentials" className="text-sm font-semibold text-gray-900">
+          <Label htmlFor="credentials" className="text-sm font-semibold text-slate-900">
             Your Credentials <span className="text-red-500">*</span>
           </Label>
           <Input
@@ -260,15 +260,15 @@ export default function SecureESignatureCapture({
             value={credentials}
             onChange={(e) => setCredentials(e.target.value)}
           />
-          <p className="text-xs text-gray-600">Enter your professional credentials as they should appear on the signature</p>
+          <p className="text-xs text-slate-600">Enter your professional credentials as they should appear on the signature</p>
         </div>
 
         {/* Signature Canvas */}
         <div className="space-y-2">
-          <Label className="text-sm font-semibold text-gray-900">
+          <Label className="text-sm font-semibold text-slate-900">
             Draw Your Signature <span className="text-red-500">*</span>
           </Label>
-          <div className="border-2 border-gray-300 rounded-lg bg-white">
+          <div className="border-2 border-slate-300 rounded-lg bg-white">
             <SignatureCanvas
               ref={signatureRef}
               canvasProps={{

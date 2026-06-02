@@ -162,11 +162,11 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     const actionLower = action?.toLowerCase() || '';
     if (actionLower.includes('delete')) return <Trash2 className="w-4 h-4 text-red-600" />;
     if (actionLower.includes('edit') || actionLower.includes('update')) return <FileEdit className="w-4 h-4 text-blue-600" />;
-    if (actionLower.includes('view') || actionLower.includes('access')) return <Eye className="w-4 h-4 text-gray-600" />;
+    if (actionLower.includes('view') || actionLower.includes('access')) return <Eye className="w-4 h-4 text-slate-600" />;
     if (actionLower.includes('login')) return <UnlockKeyhole className="w-4 h-4 text-green-600" />;
     if (actionLower.includes('logout') || actionLower.includes('denied')) return <Lock className="w-4 h-4 text-red-600" />;
     if (actionLower.includes('data') || actionLower.includes('patient')) return <Database className="w-4 h-4 text-purple-600" />;
-    return <Shield className="w-4 h-4 text-gray-600" />;
+    return <Shield className="w-4 h-4 text-slate-600" />;
   };
 
   const getActionColor = (action) => {
@@ -174,7 +174,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     if (action?.includes('approved') || action?.includes('completed') || action?.includes('login')) return 'text-green-600';
     if (action?.includes('updated') || action?.includes('edited')) return 'text-blue-600';
     if (action?.includes('access') || action?.includes('view')) return 'text-purple-600';
-    return 'text-gray-600';
+    return 'text-slate-600';
   };
 
   if (!isAdmin) {
@@ -183,8 +183,8 @@ export default function AuditTrailViewer({ filterType = "all" }) {
         <Card className="border-2 border-red-200">
           <CardContent className="p-12 text-center">
             <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-600">Only administrators can view the audit trail.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h2>
+            <p className="text-slate-600">Only administrators can view the audit trail.</p>
           </CardContent>
         </Card>
       </div>
@@ -200,10 +200,10 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1 truncate">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 mb-1 truncate">
             {filterType === 'security' ? 'Security Events Log' : 'Complete Audit Trail'}
           </h2>
-          <p className="text-xs sm:text-sm text-gray-600">
+          <p className="text-xs sm:text-sm text-slate-600">
             {filterType === 'security' 
               ? 'Monitor security-critical actions and access attempts'
               : 'Comprehensive log of all user actions and system events'
@@ -220,25 +220,25 @@ export default function AuditTrailViewer({ filterType = "all" }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
           <CardContent className="p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-gray-600 truncate">Total Events</p>
+            <p className="text-xs sm:text-sm text-slate-600 truncate">Total Events</p>
             <p className="text-xl sm:text-2xl font-bold">{sortedLogs.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-gray-600 truncate">Filtered</p>
+            <p className="text-xs sm:text-sm text-slate-600 truncate">Filtered</p>
             <p className="text-xl sm:text-2xl font-bold">{filteredLogs.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-gray-600 truncate">Critical Events</p>
+            <p className="text-xs sm:text-sm text-slate-600 truncate">Critical Events</p>
             <p className="text-xl sm:text-2xl font-bold text-red-600">{criticalCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-gray-600 truncate">
+            <p className="text-xs sm:text-sm text-slate-600 truncate">
               {filterType === 'security' ? 'Security Events' : 'Active Users'}
             </p>
             <p className="text-xl sm:text-2xl font-bold">
@@ -259,7 +259,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
         <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search users, actions..."
                 value={searchTerm}
@@ -352,16 +352,16 @@ export default function AuditTrailViewer({ filterType = "all" }) {
                     </TableRow>
                   ) : filteredLogs.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                         No audit logs found matching filters
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredLogs.map((log, idx) => (
-                      <TableRow key={idx} className="hover:bg-gray-50">
+                      <TableRow key={idx} className="hover:bg-slate-50">
                         <TableCell className="text-xs whitespace-nowrap">
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-gray-400 hidden sm:inline" />
+                            <Calendar className="w-3 h-3 text-slate-400 hidden sm:inline" />
                             <span className="hidden sm:inline">
                               {formatEastern(new Date(log.created_date || log.timestamp), 'MMM d, yyyy HH:mm:ss')}
                             </span>
@@ -372,10 +372,10 @@ export default function AuditTrailViewer({ filterType = "all" }) {
                         </TableCell>
                         <TableCell className="text-xs">
                           <div className="flex items-center gap-1">
-                            <User className="w-3 h-3 text-gray-400 hidden sm:inline flex-shrink-0" />
+                            <User className="w-3 h-3 text-slate-400 hidden sm:inline flex-shrink-0" />
                             <div className="min-w-0">
                               <p className="text-xs font-medium truncate">{log.user_name || log.user_email?.split('@')[0]}</p>
-                              <p className="text-xs text-gray-500 truncate hidden sm:block">{log.user_email}</p>
+                              <p className="text-xs text-slate-500 truncate hidden sm:block">{log.user_email}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -394,7 +394,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
                                 {log.entity_type}
                               </Badge>
                               {log.entity_id && (
-                                <p className="text-gray-500 mt-1 truncate text-xs">
+                                <p className="text-slate-500 mt-1 truncate text-xs">
                                   ID: {log.entity_id.substring(0, 8)}...
                                 </p>
                               )}
@@ -406,7 +406,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
                         </TableCell>
                         <TableCell className="text-xs hidden xl:table-cell">
                           {log.ip_address && (
-                            <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            <code className="text-xs bg-slate-100 px-2 py-1 rounded">
                               {log.ip_address}
                             </code>
                           )}

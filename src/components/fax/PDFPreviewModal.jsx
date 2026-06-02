@@ -30,7 +30,7 @@ export default function PDFPreviewModal({ isOpen, onClose, pdfUrl, documentName 
             </div>
           </div>
         </DialogHeader>
-        <div className="flex-1 overflow-auto p-4 bg-gray-100">
+        <div className="flex-1 overflow-auto p-4 bg-slate-100">
           <iframe
             src={pdfUrl}
             className="w-full h-full border-0 rounded-lg bg-white shadow-lg"

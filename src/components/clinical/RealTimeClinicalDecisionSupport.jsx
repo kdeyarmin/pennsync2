@@ -243,7 +243,7 @@ Return JSON:
       case 'major': return 'bg-orange-500 text-white';
       case 'moderate': return 'bg-yellow-500 text-black';
       case 'minor': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -252,7 +252,7 @@ Return JSON:
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
       case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
@@ -373,7 +373,7 @@ Return JSON:
                           <Badge variant="outline" className={
                             dx.urgency === 'immediate' ? 'border-red-300 text-red-700' :
                             dx.urgency === 'soon' ? 'border-orange-300 text-orange-700' :
-                            'border-gray-300 text-gray-700'
+                            'border-slate-300 text-slate-700'
                           }>
                             {dx.urgency}
                           </Badge>
@@ -382,8 +382,8 @@ Return JSON:
                       
                       <div className="text-sm space-y-2">
                         <div>
-                          <p className="text-xs font-semibold text-gray-500">Supporting Evidence:</p>
-                          <ul className="list-disc ml-4 text-gray-700">
+                          <p className="text-xs font-semibold text-slate-500">Supporting Evidence:</p>
+                          <ul className="list-disc ml-4 text-slate-700">
                             {dx.supporting_evidence?.map((ev, i) => (
                               <li key={i}>{ev}</li>
                             ))}
@@ -392,7 +392,7 @@ Return JSON:
                         
                         {dx.recommended_workup?.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-500">Recommended Workup:</p>
+                            <p className="text-xs font-semibold text-slate-500">Recommended Workup:</p>
                             <div className="flex flex-wrap gap-1">
                               {dx.recommended_workup.map((w, i) => (
                                 <Badge key={i} variant="outline" className="text-xs">{w}</Badge>
@@ -413,7 +413,7 @@ Return JSON:
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No differential diagnoses identified</p>
+                  <p className="text-slate-500 text-center py-4">No differential diagnoses identified</p>
                 )}
               </TabsContent>
 
@@ -440,7 +440,7 @@ Return JSON:
                         </Badge>
                       </div>
                       
-                      <p className="text-sm text-gray-700 mb-2">{interaction.description}</p>
+                      <p className="text-sm text-slate-700 mb-2">{interaction.description}</p>
                       
                       <div className="grid gap-2 text-xs">
                         <div className="p-2 bg-blue-50 rounded">
@@ -496,7 +496,7 @@ Return JSON:
                         </div>
                         
                         <p className="font-medium text-sm mb-1">{rec.recommendation}</p>
-                        <p className="text-xs text-gray-600 mb-2">{rec.rationale}</p>
+                        <p className="text-xs text-slate-600 mb-2">{rec.rationale}</p>
                         
                         {rec.guideline_source && (
                           <p className="text-xs text-blue-600">
@@ -508,7 +508,7 @@ Return JSON:
                     );
                   })
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No treatment recommendations</p>
+                  <p className="text-slate-500 text-center py-4">No treatment recommendations</p>
                 )}
               </TabsContent>
 
@@ -537,11 +537,11 @@ Return JSON:
                           </Button>
                         </div>
                         
-                        <p className="text-xs text-gray-600 mb-2">{edu.relevance}</p>
+                        <p className="text-xs text-slate-600 mb-2">{edu.relevance}</p>
                         
                         <div className="mb-2">
-                          <p className="text-xs font-semibold text-gray-500 mb-1">Key Points:</p>
-                          <ul className="list-disc ml-4 text-xs text-gray-700">
+                          <p className="text-xs font-semibold text-slate-500 mb-1">Key Points:</p>
+                          <ul className="list-disc ml-4 text-xs text-slate-700">
                             {edu.key_points?.map((point, i) => (
                               <li key={i}>{point}</li>
                             ))}
@@ -565,7 +565,7 @@ Return JSON:
                     );
                   })
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No education materials suggested</p>
+                  <p className="text-slate-500 text-center py-4">No education materials suggested</p>
                 )}
               </TabsContent>
             </Tabs>

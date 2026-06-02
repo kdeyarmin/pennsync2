@@ -42,7 +42,7 @@ export default function ActivitySummaryWidget() {
     if (['user_disabled', 'user_deleted', 'invitation_deleted', 'document_deleted'].includes(action)) {
       return 'bg-red-100 text-red-800';
     }
-    return 'bg-gray-100 text-gray-800';
+    return 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -57,19 +57,19 @@ export default function ActivitySummaryWidget() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">Recent Changes (24h)</span>
+            <span className="text-slate-600">Recent Changes (24h)</span>
             <Badge className="bg-blue-600 text-white">{userManagementActions.slice(0, 24).length}</Badge>
           </div>
           <div className="space-y-2">
             {userManagementActions.slice(0, 5).map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 text-xs sm:text-sm">
+              <div key={activity.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs sm:text-sm">
                 <div className="flex items-center gap-2 min-w-0">
                   <Badge className={getActionBadgeColor(activity.action)}>
                     {activity.action.replace('user_', '')}
                   </Badge>
-                  <span className="text-gray-700 truncate">{activity.user_name}</span>
+                  <span className="text-slate-700 truncate">{activity.user_name}</span>
                 </div>
-                <span className="text-gray-500 whitespace-nowrap ml-2">
+                <span className="text-slate-500 whitespace-nowrap ml-2">
                   {formatEastern(activity.created_date, 'HH:mm')}
                 </span>
               </div>
@@ -109,12 +109,12 @@ export default function ActivitySummaryWidget() {
           </div>
           <div className="space-y-1 text-xs">
             {invitationActions.slice(0, 3).map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-1.5 rounded bg-gray-50">
+              <div key={activity.id} className="flex items-center justify-between p-1.5 rounded bg-slate-50">
                 <span className="truncate">
                   <span className="font-medium">{activity.details?.invited_email}</span>
-                  <span className="text-gray-500 ml-1">({activity.action.replace('invitation_', '')})</span>
+                  <span className="text-slate-500 ml-1">({activity.action.replace('invitation_', '')})</span>
                 </span>
-                <span className="text-gray-400 whitespace-nowrap text-[10px] ml-1">
+                <span className="text-slate-400 whitespace-nowrap text-[10px] ml-1">
                   {formatEastern(activity.created_date, 'HH:mm')}
                 </span>
               </div>
@@ -148,12 +148,12 @@ export default function ActivitySummaryWidget() {
           </div>
           <div className="space-y-1 text-xs">
             {documentActions.slice(0, 3).map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-1.5 rounded bg-gray-50">
+              <div key={activity.id} className="flex items-center justify-between p-1.5 rounded bg-slate-50">
                 <span className="truncate">
-                  <span className="font-medium text-gray-700 capitalize">
+                  <span className="font-medium text-slate-700 capitalize">
                     {activity.action.replace('document_', '')}
                   </span>
-                  <span className="text-gray-500 ml-1">by {activity.user_name}</span>
+                  <span className="text-slate-500 ml-1">by {activity.user_name}</span>
                 </span>
               </div>
             ))}

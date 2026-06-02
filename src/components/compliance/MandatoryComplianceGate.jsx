@@ -220,7 +220,7 @@ Return JSON:
         {!complianceResult ? (
           <div className="text-center py-4">
             <Lock className="w-12 h-12 mx-auto mb-3 text-red-300" />
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-slate-600 mb-3">
               Notes must pass compliance check before finalization
             </p>
             <Button
@@ -278,7 +278,7 @@ Return JSON:
                     </p>
                     {issue.fix && (
                       <div className="mt-2 flex items-start gap-2">
-                        <div className="flex-1 bg-white p-2 rounded text-xs text-gray-700 border">
+                        <div className="flex-1 bg-white p-2 rounded text-xs text-slate-700 border">
                           <strong>Suggested Fix:</strong> {issue.fix}
                         </div>
                         <Button
@@ -338,7 +338,7 @@ Return JSON:
             {/* Override Section (only for warnings, not critical) */}
             {!complianceResult.passed && complianceResult.critical_issues?.length === 0 && (
               <div className="border-t pt-4 mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">
+                <p className="text-sm font-medium text-slate-700 mb-2">
                   Override with Justification:
                 </p>
                 <Textarea

@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, TrendingUp, Activity, Brain, RefreshCw } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import ReferralVolumeReport from "@/components/reports/ReferralVolumeReport";
 import PatientOutcomesReport from "@/components/reports/PatientOutcomesReport";
 import NursePerformanceReport from "@/components/reports/NursePerformanceReport";
@@ -73,26 +74,20 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
   if (!isAdmin) {
     return (
       <div className="p-8 text-center">
-        <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Admin Access Required</h2>
-        <p className="text-gray-600">Reports & Analytics are available to administrators only.</p>
+        <BarChart3 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">Admin Access Required</h2>
+        <p className="text-slate-600">Reports & Analytics are available to administrators only.</p>
       </div>
     );
   }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <div className="mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-indigo-600" />
-            Reports & Analytics
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">
-            KPIs, outcomes, performance metrics, and AI-powered population health insights
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={BarChart3}
+        title="Reports & Analytics"
+        description="KPIs, outcomes, performance metrics, and AI-powered population health insights"
+      />
 
       <Tabs defaultValue="kpi" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
@@ -152,9 +147,9 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
           {!populationData && !analyzing && (
             <Card>
               <CardContent className="p-12 text-center">
-                <Activity className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Population Health Intelligence</h3>
-                <p className="text-gray-600 mb-6">
+                <Activity className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">Population Health Intelligence</h3>
+                <p className="text-slate-600 mb-6">
                   AI-powered analytics to identify infection clusters, readmission patterns,
                   and emerging clinical trends across your entire patient population.
                 </p>
@@ -170,8 +165,8 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
             <Card>
               <CardContent className="p-12 text-center">
                 <RefreshCw className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-spin" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Analyzing Population Data...</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">Analyzing Population Data...</h3>
+                <p className="text-slate-600">
                   Processing {patients.length} patients, {visits.length} visits, {incidents.length} incidents
                 </p>
               </CardContent>
@@ -187,26 +182,26 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
                 <CardContent>
                   <div className="grid grid-cols-4 gap-4">
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-1">Overall Risk</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm text-slate-600 mb-1">Overall Risk</p>
+                      <p className="text-2xl font-bold text-slate-900">
                         {populationData.executive_summary?.overall_risk_level?.toUpperCase()}
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-1">Key Findings</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm text-slate-600 mb-1">Key Findings</p>
+                      <p className="text-2xl font-bold text-slate-900">
                         {populationData.executive_summary?.key_findings_count}
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-1">Urgent Actions</p>
+                      <p className="text-sm text-slate-600 mb-1">Urgent Actions</p>
                       <p className="text-2xl font-bold text-red-600">
                         {populationData.executive_summary?.urgent_actions_needed}
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-1">Trend</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm text-slate-600 mb-1">Trend</p>
+                      <p className="text-2xl font-bold text-slate-900">
                         {populationData.executive_summary?.trend_direction}
                       </p>
                     </div>
@@ -223,8 +218,8 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
                     <div className="space-y-2">
                       {populationData.urgent_actions.map((action, idx) => (
                         <div key={idx} className="bg-white p-3 rounded border-l-4 border-l-red-500">
-                          <p className="font-semibold text-gray-900">{action.action_needed}</p>
-                          <p className="text-sm text-gray-600">Area: {action.affected_area}</p>
+                          <p className="font-semibold text-slate-900">{action.action_needed}</p>
+                          <p className="text-sm text-slate-600">Area: {action.affected_area}</p>
                         </div>
                       ))}
                     </div>

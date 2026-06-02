@@ -75,7 +75,7 @@ export default function SameAsLastVisit({ previousVisit, onCopyContent }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           Select sections that haven't changed since {previousVisit.visit_date}:
         </p>
 
@@ -95,10 +95,10 @@ export default function SameAsLastVisit({ previousVisit, onCopyContent }) {
                 />
                 <Label 
                   htmlFor={section.id} 
-                  className={`cursor-pointer flex-1 ${!hasContent ? 'text-gray-400' : ''}`}
+                  className={`cursor-pointer flex-1 ${!hasContent ? 'text-slate-400' : ''}`}
                 >
                   {section.label}
-                  {!hasContent && <span className="text-xs block text-gray-400">Not in previous note</span>}
+                  {!hasContent && <span className="text-xs block text-slate-400">Not in previous note</span>}
                 </Label>
                 {hasContent && <CheckCircle2 className="w-4 h-4 text-green-500" />}
               </div>

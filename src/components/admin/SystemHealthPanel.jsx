@@ -36,9 +36,9 @@ export default function SystemHealthPanel() {
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <Zap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">System Health Monitor</h3>
-          <p className="text-gray-600 mb-6">
+          <Zap className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">System Health Monitor</h3>
+          <p className="text-slate-600 mb-6">
             Run automated tests to verify all critical functions are operating correctly
           </p>
           <Button onClick={() => runHealthCheckMutation.mutate()} disabled={runHealthCheckMutation.isPending}>
@@ -55,7 +55,7 @@ export default function SystemHealthPanel() {
       <Card>
         <CardContent className="p-12 text-center">
           <Loader2 className="w-16 h-16 text-indigo-500 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600">Running system health checks...</p>
+          <p className="text-slate-600">Running system health checks...</p>
         </CardContent>
       </Card>
     );
@@ -69,8 +69,8 @@ export default function SystemHealthPanel() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">System Health Status</h2>
-          <p className="text-sm text-gray-600">Last checked: {healthResults?.timestamp ? new Date(healthResults.timestamp).toLocaleString() : 'Never'}</p>
+          <h2 className="text-2xl font-bold text-slate-900">System Health Status</h2>
+          <p className="text-sm text-slate-600">Last checked: {healthResults?.timestamp ? new Date(healthResults.timestamp).toLocaleString() : 'Never'}</p>
         </div>
         <Button onClick={() => runHealthCheckMutation.mutate()} disabled={runHealthCheckMutation.isPending}>
           <Zap className="w-4 h-4 mr-2" />
@@ -101,12 +101,12 @@ export default function SystemHealthPanel() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-900">{func.name}</h3>
+                    <h3 className="font-semibold text-slate-900">{func.name}</h3>
                     <Badge className={func.status === 'passed' ? 'bg-green-600' : 'bg-red-600'}>
                       {func.status}
                     </Badge>
                   </div>
-                  {func.message && <p className="text-sm text-gray-600">{func.message}</p>}
+                  {func.message && <p className="text-sm text-slate-600">{func.message}</p>}
                   {func.error && (
                     <pre className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2 overflow-x-auto">
                       {func.error}

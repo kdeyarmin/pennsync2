@@ -213,7 +213,7 @@ export default function SecurityAuditScheduler() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-slate-700">
             Comprehensive security audit checks access controls, authentication, data encryption, 
             PHI access patterns, and compliance with HIPAA security requirements.
           </p>
@@ -228,7 +228,7 @@ export default function SecurityAuditScheduler() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Security Score</p>
+                    <p className="text-sm text-slate-600">Security Score</p>
                     <p className={`text-3xl font-bold ${
                       lastAuditScore >= 90 ? 'text-green-600' :
                       lastAuditScore >= 70 ? 'text-yellow-600' : 'text-red-600'
@@ -248,8 +248,8 @@ export default function SecurityAuditScheduler() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Findings</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-sm text-slate-600">Findings</p>
+                    <p className="text-3xl font-bold text-slate-900">
                       {lastAuditFindings.length}
                     </p>
                   </div>
@@ -262,15 +262,15 @@ export default function SecurityAuditScheduler() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Last Audit</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm text-slate-600">Last Audit</p>
+                    <p className="text-sm font-medium text-slate-900">
                       {formatEastern(new Date(lastAudit.created_date), 'MMM d, yyyy')}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {formatEastern(new Date(lastAudit.created_date), 'h:mm a')}
                     </p>
                   </div>
-                  <Calendar className="w-8 h-8 text-gray-400" />
+                  <Calendar className="w-8 h-8 text-slate-400" />
                 </div>
               </CardContent>
             </Card>
@@ -317,14 +317,14 @@ export default function SecurityAuditScheduler() {
                             {finding.category}
                           </Badge>
                         </div>
-                        <p className="font-semibold text-sm text-gray-900 mb-1">
+                        <p className="font-semibold text-sm text-slate-900 mb-1">
                           {finding.issue}
                         </p>
-                        <p className="text-xs text-gray-700 mb-2">
+                        <p className="text-xs text-slate-700 mb-2">
                           <strong>Recommendation:</strong> {finding.recommendation}
                         </p>
                         {finding.affected_count > 0 && (
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-slate-600">
                             Affected: {finding.affected_count} item(s)
                           </p>
                         )}
@@ -359,22 +359,22 @@ export default function SecurityAuditScheduler() {
         <CardContent>
           <div className="space-y-2">
             {auditHistory.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-slate-500 text-center py-8">
                 No audit history available. Run your first security audit.
               </p>
             ) : (
               auditHistory.slice(0, 10).map((audit, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg border bg-slate-50 hover:bg-slate-100 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <Calendar className="w-4 h-4 text-slate-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-slate-900">
                         {formatEastern(new Date(audit.created_date), 'MMM d, yyyy')}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         {formatEastern(new Date(audit.created_date), 'h:mm a')}
                       </p>
                     </div>
@@ -386,7 +386,7 @@ export default function SecurityAuditScheduler() {
                     } text-white`}>
                       {audit.details?.security_score || 0}%
                     </Badge>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-slate-600">
                       {audit.details?.findings_count || 0} findings
                     </span>
                   </div>

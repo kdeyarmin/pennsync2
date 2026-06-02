@@ -135,11 +135,11 @@ Return JSON:
       </CardHeader>
       <CardContent className="p-3 space-y-3 max-h-96 overflow-y-auto">
         {!currentText || currentText.length < 15 ? (
-          <p className="text-xs text-gray-500 text-center py-4">
+          <p className="text-xs text-slate-500 text-center py-4">
             Start typing your notes to see real-time AI suggestions...
           </p>
         ) : !hasContent && !isLoading ? (
-          <p className="text-xs text-gray-500 text-center py-4">
+          <p className="text-xs text-slate-500 text-center py-4">
             Keep typing for suggestions...
           </p>
         ) : (
@@ -147,7 +147,7 @@ Return JSON:
             {/* Sentence Completions */}
             {sentenceCompletions.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                   <Type className="w-3 h-3" /> Complete Sentence
                 </p>
                 {sentenceCompletions.slice(0, 2).map((comp, idx) => (
@@ -170,7 +170,7 @@ Return JSON:
             {/* Terminology Hints */}
             {terminologyHints.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                   <Stethoscope className="w-3 h-3" /> Medical Terminology
                 </p>
                 {terminologyHints.map((hint, idx) => (
@@ -180,11 +180,11 @@ Return JSON:
                     onClick={() => onInsertSuggestion(hint.formal, 'inline')}
                   >
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="line-through text-gray-500">{hint.informal}</span>
+                      <span className="line-through text-slate-500">{hint.informal}</span>
                       <span>→</span>
                       <span className="font-medium text-amber-900">{hint.formal}</span>
                     </div>
-                    <p className="text-xs text-gray-600 mt-1">{hint.context}</p>
+                    <p className="text-xs text-slate-600 mt-1">{hint.context}</p>
                   </div>
                 ))}
               </div>
@@ -193,11 +193,11 @@ Return JSON:
             {/* Contextual Suggestions */}
             {suggestions.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-600">Suggestions</p>
+                <p className="text-xs font-semibold text-slate-600">Suggestions</p>
                 {suggestions.slice(0, 4).map((suggestion, idx) => (
                   <div
                     key={idx}
-                    className="p-2 bg-gray-50 rounded-lg border cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="p-2 bg-slate-50 rounded-lg border cursor-pointer hover:bg-slate-100 transition-colors"
                     onClick={() => onInsertSuggestion(suggestion.insert_text || suggestion.suggestion, 'block')}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -211,7 +211,7 @@ Return JSON:
                         <Badge className="bg-red-100 text-red-800 text-xs py-0">!</Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-700 mt-1">{suggestion.suggestion}</p>
+                    <p className="text-xs text-slate-700 mt-1">{suggestion.suggestion}</p>
                   </div>
                 ))}
               </div>

@@ -186,11 +186,11 @@ export default function FaxContactsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
             <BookUser className="w-8 h-8 text-indigo-600" />
             Fax Contacts
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-slate-600 mt-1">
             Manage your fax contact directory for quick recipient selection
           </p>
         </div>
@@ -205,7 +205,7 @@ export default function FaxContactsPage() {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search by name, organization, or fax number..."
                 value={searchTerm}
@@ -243,17 +243,17 @@ export default function FaxContactsPage() {
       {isLoading ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <p className="text-gray-500">Loading contacts...</p>
+            <p className="text-slate-500">Loading contacts...</p>
           </CardContent>
         </Card>
       ) : filteredContacts.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <BookUser className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <BookUser className="w-16 h-16 mx-auto text-slate-300 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               {searchTerm ? "No contacts found" : "No contacts yet"}
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-slate-500 mb-4">
               {searchTerm
                 ? "Try a different search term"
                 : "Add your first contact or import from CSV"}
@@ -273,11 +273,11 @@ export default function FaxContactsPage() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                    <h3 className="font-semibold text-lg text-slate-900 mb-1">
                       {contact.name}
                     </h3>
                     {contact.organization && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                      <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
                         <Building2 className="w-4 h-4" />
                         {contact.organization}
                       </div>
@@ -312,17 +312,17 @@ export default function FaxContactsPage() {
                 </div>
 
                 {contact.notes && (
-                  <div className="bg-gray-50 rounded-lg p-2 mt-3">
+                  <div className="bg-slate-50 rounded-lg p-2 mt-3">
                     <div className="flex items-start gap-2">
-                      <FileText className="w-3 h-3 mt-0.5 text-gray-500" />
-                      <p className="text-xs text-gray-600 line-clamp-2">
+                      <FileText className="w-3 h-3 mt-0.5 text-slate-500" />
+                      <p className="text-xs text-slate-600 line-clamp-2">
                         {contact.notes}
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="text-xs text-gray-400 mt-3 pt-3 border-t">
+                <div className="text-xs text-slate-400 mt-3 pt-3 border-t">
                   Added {format(new Date(contact.created_date), 'MMM d, yyyy')}
                 </div>
               </CardContent>

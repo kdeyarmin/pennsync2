@@ -188,7 +188,7 @@ Provide actionable, specific feedback for each issue found.`;
         {isReviewing && (
           <div className="text-center py-8">
             <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-            <p className="text-gray-600">AI is reviewing the OASIS document...</p>
+            <p className="text-slate-600">AI is reviewing the OASIS document...</p>
           </div>
         )}
 
@@ -203,11 +203,11 @@ Provide actionable, specific feedback for each issue found.`;
 
         {!isReviewing && !reviewResults && (
           <div className="text-center py-8">
-            <FileSearch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <FileSearch className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               AI Review Available
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               Get AI-powered analysis of this OASIS document for errors and compliance issues
             </p>
             <Button onClick={performAIReview} className="bg-purple-600 hover:bg-purple-700">
@@ -223,13 +223,13 @@ Provide actionable, specific feedback for each issue found.`;
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardContent className="p-4">
-                  <p className="text-sm text-gray-600 mb-2">Quality Score</p>
+                  <p className="text-sm text-slate-600 mb-2">Quality Score</p>
                   <div className="flex items-center gap-3">
                     <div className="text-4xl font-bold text-purple-600">
                       {reviewResults.overall_score}
                     </div>
                     <div className="flex-1">
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${
                             reviewResults.overall_score >= 80 ? "bg-green-600" :
@@ -246,7 +246,7 @@ Provide actionable, specific feedback for each issue found.`;
 
               <Card>
                 <CardContent className="p-4">
-                  <p className="text-sm text-gray-600 mb-2">Compliance Status</p>
+                  <p className="text-sm text-slate-600 mb-2">Compliance Status</p>
                   <Badge className={`${getComplianceStatusColor(reviewResults.compliance_status)} text-white text-lg px-4 py-2`}>
                     {reviewResults.compliance_status?.replace(/_/g, ' ').toUpperCase()}
                   </Badge>
@@ -278,8 +278,8 @@ Provide actionable, specific feedback for each issue found.`;
                       <div className="flex items-start gap-2 mb-2">
                         <XCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{error.field}</p>
-                          <p className="text-sm text-gray-700 mt-1">{error.issue}</p>
+                          <p className="font-semibold text-slate-900">{error.field}</p>
+                          <p className="text-sm text-slate-700 mt-1">{error.issue}</p>
                         </div>
                       </div>
                       <div className="ml-6 space-y-1 text-sm">
@@ -332,8 +332,8 @@ Provide actionable, specific feedback for each issue found.`;
                 <CardContent className="space-y-2">
                   {reviewResults.warnings.map((warning, idx) => (
                     <div key={idx} className="p-3 bg-yellow-50 rounded border border-yellow-200">
-                      <p className="font-semibold text-sm text-gray-900">{warning.field}</p>
-                      <p className="text-sm text-gray-700 mt-1">{warning.issue}</p>
+                      <p className="font-semibold text-sm text-slate-900">{warning.field}</p>
+                      <p className="text-sm text-slate-700 mt-1">{warning.issue}</p>
                       <p className="text-sm text-blue-700 mt-1">
                         <strong>Recommendation:</strong> {warning.recommendation}
                       </p>
@@ -355,8 +355,8 @@ Provide actionable, specific feedback for each issue found.`;
                 <CardContent className="space-y-2">
                   {reviewResults.missing_information.map((missing, idx) => (
                     <div key={idx} className="p-3 bg-blue-50 rounded border border-blue-200">
-                      <p className="font-semibold text-sm text-gray-900">{missing.field}</p>
-                      <p className="text-sm text-gray-700 mt-1">{missing.reason_required}</p>
+                      <p className="font-semibold text-sm text-slate-900">{missing.field}</p>
+                      <p className="text-sm text-slate-700 mt-1">{missing.reason_required}</p>
                       <p className="text-sm text-orange-700 mt-1">
                         <strong>Impact:</strong> {missing.impact_if_missing}
                       </p>
@@ -378,11 +378,11 @@ Provide actionable, specific feedback for each issue found.`;
                 <CardContent className="space-y-2">
                   {reviewResults.best_practices.map((practice, idx) => (
                     <div key={idx} className="p-3 bg-green-50 rounded border border-green-200">
-                      <p className="font-semibold text-sm text-gray-900">{practice.area}</p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="font-semibold text-sm text-slate-900">{practice.area}</p>
+                      <p className="text-sm text-slate-600 mt-1">
                         <strong>Current:</strong> {practice.current_status}
                       </p>
-                      <p className="text-sm text-gray-700 mt-1">{practice.recommendation}</p>
+                      <p className="text-sm text-slate-700 mt-1">{practice.recommendation}</p>
                       <p className="text-sm text-green-700 mt-1">
                         <strong>Benefit:</strong> {practice.expected_benefit}
                       </p>
@@ -406,7 +406,7 @@ Provide actionable, specific feedback for each issue found.`;
                     {reviewResults.strengths.map((strength, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-gray-900">{strength}</span>
+                        <span className="text-sm text-slate-900">{strength}</span>
                       </li>
                     ))}
                   </ul>

@@ -224,7 +224,7 @@ ${extractedData.action_items?.length > 0 ? `\nAction Items:\n${extractedData.act
   };
 
   return (
-    <Card className={`border-2 ${isExpanded ? 'border-blue-300' : 'border-gray-200'} bg-gradient-to-br from-blue-50 to-cyan-50`}>
+    <Card className={`border-2 ${isExpanded ? 'border-blue-300' : 'border-slate-200'} bg-gradient-to-br from-blue-50 to-cyan-50`}>
       <CardHeader 
         className="pb-3 cursor-pointer bg-gradient-to-r from-blue-100 to-cyan-100"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -257,13 +257,13 @@ ${extractedData.action_items?.length > 0 ? `\nAction Items:\n${extractedData.act
             />
             <label htmlFor="document-upload" className="cursor-pointer">
               <Upload className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-slate-700">
                 {uploading ? 'Uploading...' : analyzing ? 'Analyzing document...' : 'Upload Clinical Document'}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Physician orders, lab reports, discharge summaries, etc.
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 PDF, PNG, JPG, DOC (max 10MB)
               </p>
             </label>
@@ -387,8 +387,8 @@ ${extractedData.action_items?.length > 0 ? `\nAction Items:\n${extractedData.act
                             {med.name}
                             {med.is_new && <Badge className="ml-2 text-xs bg-green-500">New</Badge>}
                           </p>
-                          {med.dosage && <p className="text-gray-600">{med.dosage} - {med.frequency}</p>}
-                          {med.indication && <p className="text-gray-500 text-xs">For: {med.indication}</p>}
+                          {med.dosage && <p className="text-slate-600">{med.dosage} - {med.frequency}</p>}
+                          {med.indication && <p className="text-slate-500 text-xs">For: {med.indication}</p>}
                         </div>
                       ))}
                     </div>
@@ -475,7 +475,7 @@ ${extractedData.action_items?.length > 0 ? `\nAction Items:\n${extractedData.act
                             {item.priority}
                           </Badge>
                           <p className="mt-1">{item.action}</p>
-                          <p className="text-xs text-gray-600">{item.timeframe}</p>
+                          <p className="text-xs text-slate-600">{item.timeframe}</p>
                         </div>
                       ))}
                     </div>

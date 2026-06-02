@@ -111,10 +111,10 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="font-bold text-gray-900">Level {currentLevel.level}: {currentLevel.name}</p>
+                <p className="font-bold text-slate-900">Level {currentLevel.level}: {currentLevel.name}</p>
                 <div className="flex items-center gap-2">
                   <Progress value={getProgressToNextLevel()} className="w-24 h-2" />
-                  <span className="text-xs text-gray-600">{userStats.points} pts</span>
+                  <span className="text-xs text-slate-600">{userStats.points} pts</span>
                 </div>
               </div>
             </div>
@@ -185,28 +185,28 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
           <CardContent className="p-4 text-center">
             <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
             <p className="text-2xl font-bold">{userStats.completedVisits || 0}</p>
-            <p className="text-xs text-gray-600">Visits Documented</p>
+            <p className="text-xs text-slate-600">Visits Documented</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <Target className="w-8 h-8 mx-auto mb-2 text-blue-500" />
             <p className="text-2xl font-bold">{userStats.avgCompliance || 0}%</p>
-            <p className="text-xs text-gray-600">Avg Compliance</p>
+            <p className="text-xs text-slate-600">Avg Compliance</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <Award className="w-8 h-8 mx-auto mb-2 text-purple-500" />
             <p className="text-2xl font-bold">{userStats.completedTraining || 0}</p>
-            <p className="text-xs text-gray-600">Training Completed</p>
+            <p className="text-xs text-slate-600">Training Completed</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
             <p className="text-2xl font-bold">{userStats.avgDocTime || 0}m</p>
-            <p className="text-xs text-gray-600">Avg Doc Time</p>
+            <p className="text-xs text-slate-600">Avg Doc Time</p>
           </CardContent>
         </Card>
       </div>
@@ -229,13 +229,13 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
                   className={`p-4 rounded-lg text-center transition-all ${
                     earned 
                       ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300' 
-                      : 'bg-gray-100 opacity-50'
+                      : 'bg-slate-100 opacity-50'
                   }`}
                 >
                   <span className="text-3xl">{badge.icon}</span>
                   <p className="font-semibold text-sm mt-2">{badge.name}</p>
-                  <p className="text-xs text-gray-600">{badge.description}</p>
-                  <Badge className={`mt-2 ${earned ? 'bg-yellow-500' : 'bg-gray-400'}`}>
+                  <p className="text-xs text-slate-600">{badge.description}</p>
+                  <Badge className={`mt-2 ${earned ? 'bg-yellow-500' : 'bg-slate-400'}`}>
                     +{badge.points} pts
                   </Badge>
                 </div>
@@ -261,14 +261,14 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
               { name: 'Complete 2 training modules', progress: 1, total: 2, reward: 40 },
               { name: 'Maintain 7-day streak', progress: userStats.streak, total: 7, reward: 100 },
             ].map((challenge, idx) => (
-              <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+              <div key={idx} className="p-3 bg-slate-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-sm">{challenge.name}</span>
                   <Badge variant="outline" className="text-xs">+{challenge.reward} pts</Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <Progress value={(challenge.progress / challenge.total) * 100} className="flex-1 h-2" />
-                  <span className="text-xs text-gray-600">{challenge.progress}/{challenge.total}</span>
+                  <span className="text-xs text-slate-600">{challenge.progress}/{challenge.total}</span>
                 </div>
               </div>
             ))}

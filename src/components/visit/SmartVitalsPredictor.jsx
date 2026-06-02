@@ -122,7 +122,7 @@ export default function SmartVitalsPredictor({
       case 'high': return 'border-green-300 bg-green-50';
       case 'medium': return 'border-blue-300 bg-blue-50';
       case 'low': return 'border-yellow-300 bg-yellow-50';
-      default: return 'border-gray-300 bg-gray-50';
+      default: return 'border-slate-300 bg-slate-50';
     }
   };
 
@@ -132,7 +132,7 @@ export default function SmartVitalsPredictor({
       case 'high': return 'bg-green-500 text-white';
       case 'medium': return 'bg-blue-500 text-white';
       case 'low': return 'bg-yellow-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -147,7 +147,7 @@ export default function SmartVitalsPredictor({
           <Activity className="w-5 h-5 text-green-600" />
           Smart Vitals Predictions ({predictions.length})
         </CardTitle>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           Based on previous visit and current context
         </p>
       </CardHeader>
@@ -158,15 +158,15 @@ export default function SmartVitalsPredictor({
               <TrendingUp className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-gray-900">{prediction.label}</p>
+                  <p className="font-semibold text-slate-900">{prediction.label}</p>
                   <Badge className={`${getConfidenceBadge(prediction.confidence)} text-xs`}>
                     {prediction.confidence} confidence
                   </Badge>
                 </div>
-                <p className="text-lg font-bold text-gray-900 mb-2">
+                <p className="text-lg font-bold text-slate-900 mb-2">
                   Suggested: {prediction.value}
                 </p>
-                <p className="text-xs text-gray-600 mb-3">
+                <p className="text-xs text-slate-600 mb-3">
                   {prediction.reasoning}
                 </p>
                 <div className="flex gap-2">

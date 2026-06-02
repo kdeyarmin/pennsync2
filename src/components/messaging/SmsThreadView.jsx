@@ -76,8 +76,8 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
   if (!thread) {
     return (
       <Card className="lg:col-span-2">
-        <CardContent className="p-12 text-center text-gray-500">
-          <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+        <CardContent className="p-12 text-center text-slate-500">
+          <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p>Select a conversation to view messages.</p>
         </CardContent>
       </Card>
@@ -102,7 +102,7 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
             <MessageSquare className="w-4 h-4" />
             {otherPartyLabel}
           </span>
-          <span className="text-xs font-normal text-gray-500">{formatPhoneDisplay(otherPartyNumber)}</span>
+          <span className="text-xs font-normal text-slate-500">{formatPhoneDisplay(otherPartyNumber)}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -110,18 +110,18 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
           {thread.messages.map((msg) => {
             const outbound = msg.direction === "outbound";
             return (
-              <div key={msg.id} className={`p-3 rounded-lg ${outbound ? "bg-blue-100 ml-8" : "bg-gray-100 mr-8"}`}>
+              <div key={msg.id} className={`p-3 rounded-lg ${outbound ? "bg-blue-100 ml-8" : "bg-slate-100 mr-8"}`}>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-semibold text-gray-900">{outbound ? "You" : otherPartyLabel}</p>
+                  <p className="text-xs font-semibold text-slate-900">{outbound ? "You" : otherPartyLabel}</p>
                   <div className="flex items-center gap-2">
                     {msg.status === "failed" && <Badge className="bg-red-600 text-white text-xs">failed</Badge>}
                     {outbound && msg.status && msg.status !== "failed" && (
-                      <span className="text-xs text-gray-400">{msg.status}</span>
+                      <span className="text-xs text-slate-400">{msg.status}</span>
                     )}
-                    <p className="text-xs text-gray-500">{format(new Date(msg.created_date), "MMM d, h:mm a")}</p>
+                    <p className="text-xs text-slate-500">{format(new Date(msg.created_date), "MMM d, h:mm a")}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.body}</p>
+                <p className="text-sm text-slate-800 whitespace-pre-wrap">{msg.body}</p>
                 {outbound && msg.status === "failed" && !optedOut && (
                   <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-red-200">
                     {msg.failure_reason
@@ -167,7 +167,7 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                     {templates.map((t, i) => (
                       <DropdownMenuItem key={i} onSelect={() => applyTemplate(t.body)} className="flex-col items-start">
                         <span className="text-xs font-medium">{t.label}</span>
-                        <span className="text-[11px] text-gray-500 line-clamp-2">{renderTemplate(t.body, templateContext)}</span>
+                        <span className="text-[11px] text-slate-500 line-clamp-2">{renderTemplate(t.body, templateContext)}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -179,7 +179,7 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                   type="button"
                   onClick={() => insertReply(q.text)}
                   title={q.text}
-                  className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  className="text-xs px-2 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
                 >
                   {q.label}
                 </button>
@@ -193,7 +193,7 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
               className="resize-none"
             />
             <div className="flex justify-between items-center gap-2">
-              <span className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-gray-400"}`}>
+              <span className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-slate-400"}`}>
                 {meta.chars > 0
                   ? `${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`
                   : ""}

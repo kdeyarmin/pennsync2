@@ -121,7 +121,7 @@ export default function PendingPatientUpdates() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-12 text-center text-gray-500">
+        <CardContent className="p-12 text-center text-slate-500">
           Loading pending updates...
         </CardContent>
       </Card>
@@ -143,7 +143,7 @@ export default function PendingPatientUpdates() {
       </CardHeader>
       <CardContent>
         {pendingUpdates.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-slate-500">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-500" />
             <p>No pending updates requiring review</p>
           </div>
@@ -168,7 +168,7 @@ export default function PendingPatientUpdates() {
                         <div className="flex items-center gap-3">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-gray-900">
+                              <span className="font-semibold text-slate-900">
                                 {patient.first_name} {patient.last_name}
                               </span>
                               {getSeverityBadge(update.change_type)}
@@ -179,7 +179,7 @@ export default function PendingPatientUpdates() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-slate-600">
                               {(update.field_changes || []).length} field{(update.field_changes || []).length > 1 ? 's' : ''} to review
                               {(update.field_changes || []).filter(c => c.is_critical).length > 0 && (
                                 <span className="text-red-600 ml-2">
@@ -223,11 +223,11 @@ export default function PendingPatientUpdates() {
                           <div
                             key={changeIdx}
                             className={`p-3 rounded border ${
-                              change.is_critical ? 'border-red-300 bg-white' : 'border-gray-200 bg-white'
+                              change.is_critical ? 'border-red-300 bg-white' : 'border-slate-200 bg-white'
                             }`}
                           >
                             <div className="flex items-start justify-between mb-2">
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-slate-900">
                                 {change.field.replace(/_/g, ' ')}
                               </span>
                               {change.is_critical && (
@@ -318,7 +318,7 @@ export default function PendingPatientUpdates() {
                   <h4 className="font-semibold">Proposed Changes:</h4>
                   {(reviewingUpdate.field_changes || []).map((change, idx) => (
                     <div key={idx} className={`p-3 rounded border ${
-                      change.is_critical ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
+                      change.is_critical ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50'
                     }`}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium">{change.field.replace(/_/g, ' ')}</span>

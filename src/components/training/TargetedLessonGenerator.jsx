@@ -203,8 +203,8 @@ Provide constructive feedback:`,
           <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-8 h-8 text-purple-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">{module.title}</h2>
-          <p className="text-sm text-gray-600 mb-4">{module.description}</p>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">{module.title}</h2>
+          <p className="text-sm text-slate-600 mb-4">{module.description}</p>
           <Badge variant="outline" className="mb-6">{module.duration} minutes</Badge>
           <div className="flex justify-center gap-3">
             <Button variant="outline" onClick={onExit}>Cancel</Button>
@@ -237,13 +237,13 @@ Provide constructive feedback:`,
       <Card className={`border-2 ${passed ? 'border-green-300 bg-green-50' : 'border-orange-300 bg-orange-50'}`}>
         <CardContent className="p-8 text-center">
           <Trophy className={`w-16 h-16 mx-auto mb-4 ${passed ? 'text-green-600' : 'text-orange-600'}`} />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
             {passed ? 'Lesson Completed!' : 'Keep Practicing!'}
           </h2>
           <Badge className={`text-lg px-4 py-2 mb-4 ${passed ? 'bg-green-600' : 'bg-orange-600'}`}>
             Quiz Score: {quizResults?.score}%
           </Badge>
-          <p className="text-sm text-gray-600 mb-6">
+          <p className="text-sm text-slate-600 mb-6">
             {passed 
               ? 'Great job! You\'ve demonstrated understanding of this topic.'
               : 'Review the material and try again to improve your score.'}
@@ -264,8 +264,8 @@ Provide constructive feedback:`,
     if (currentSection === 0) {
       return (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Introduction</h3>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{lessonContent.introduction}</p>
+          <h3 className="text-lg font-semibold text-slate-900">Introduction</h3>
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">{lessonContent.introduction}</p>
         </div>
       );
     }
@@ -276,8 +276,8 @@ Provide constructive feedback:`,
       const section = lessonContent.sections[contentIndex];
       return (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{section.content}</p>
+          <h3 className="text-lg font-semibold text-slate-900">{section.title}</h3>
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">{section.content}</p>
           
           {section.examples?.length > 0 && (
             <div className="bg-blue-50 p-4 rounded-lg">
@@ -331,7 +331,7 @@ Provide constructive feedback:`,
     if (currentSection === lessonContent.sections.length + 1) {
       return (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Play className="w-5 h-5 text-green-600" /> Practice Scenario
           </h3>
           
@@ -405,15 +405,15 @@ Provide constructive feedback:`,
     if (currentSection === lessonContent.sections.length + 2) {
       return (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Target className="w-5 h-5 text-purple-600" /> Knowledge Check
           </h3>
 
           {!quizResults ? (
             <>
               {lessonContent.quiz.map((q, qIdx) => (
-                <div key={qIdx} className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-900 mb-3">{qIdx + 1}. {q.question}</p>
+                <div key={qIdx} className="p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm font-medium text-slate-900 mb-3">{qIdx + 1}. {q.question}</p>
                   <RadioGroup
                     value={quizAnswers[qIdx]?.toString()}
                     onValueChange={(val) => setQuizAnswers(prev => ({ ...prev, [qIdx]: parseInt(val) }))}
@@ -455,11 +455,11 @@ Provide constructive feedback:`,
                         <XCircle className="w-4 h-4 text-red-600 mt-0.5" />
                       )}
                       <div>
-                        <p className="text-xs font-medium text-gray-900">{q.question}</p>
+                        <p className="text-xs font-medium text-slate-900">{q.question}</p>
                         {!result.correct && (
                           <p className="text-xs text-green-700 mt-1">Correct: {q.options[q.correct_index]}</p>
                         )}
-                        <p className="text-xs text-gray-600 mt-1">{q.explanation}</p>
+                        <p className="text-xs text-slate-600 mt-1">{q.explanation}</p>
                       </div>
                     </div>
                   </div>
@@ -474,7 +474,7 @@ Provide constructive feedback:`,
     // Summary/Quick Reference
     return (
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <Lightbulb className="w-5 h-5 text-yellow-600" /> Quick Reference
         </h3>
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">

@@ -94,7 +94,7 @@ export default function CredentialComplianceReport() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Credential Compliance Status</h3>
-          <p className="text-sm text-gray-500">Track expiring licenses, certifications, and insurance</p>
+          <p className="text-sm text-slate-500">Track expiring licenses, certifications, and insurance</p>
         </div>
         <Button onClick={downloadCSV} variant="outline" size="sm">
           <Download className="h-4 w-4 mr-2" />
@@ -109,7 +109,7 @@ export default function CredentialComplianceReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{complianceData.no_credentials.length}</div>
-            <p className="text-xs text-gray-500">Need upload</p>
+            <p className="text-xs text-slate-500">Need upload</p>
           </CardContent>
         </Card>
 
@@ -119,7 +119,7 @@ export default function CredentialComplianceReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{complianceData.expired.length}</div>
-            <p className="text-xs text-gray-500">Immediate action</p>
+            <p className="text-xs text-slate-500">Immediate action</p>
           </CardContent>
         </Card>
 
@@ -129,7 +129,7 @@ export default function CredentialComplianceReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-600">{complianceData.expiring_30.length}</div>
-            <p className="text-xs text-gray-500">Critical</p>
+            <p className="text-xs text-slate-500">Critical</p>
           </CardContent>
         </Card>
 
@@ -141,7 +141,7 @@ export default function CredentialComplianceReport() {
             <div className="text-2xl font-bold text-blue-600">
               {complianceData.expiring_60.length + complianceData.expiring_90.length}
             </div>
-            <p className="text-xs text-gray-500">Plan ahead</p>
+            <p className="text-xs text-slate-500">Plan ahead</p>
           </CardContent>
         </Card>
       </div>
@@ -164,10 +164,10 @@ export default function CredentialComplianceReport() {
             {complianceData.staff
               .filter(s => s.status !== 'good' || s.total_credentials === 0)
               .map(staff => (
-                <div key={staff.email} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={staff.email} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
                     <p className="font-medium text-sm">{staff.name}</p>
-                    <p className="text-xs text-gray-500">{staff.email}</p>
+                    <p className="text-xs text-slate-500">{staff.email}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {staff.total_credentials === 0 && (

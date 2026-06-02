@@ -118,7 +118,7 @@ function ComplianceSettings({ getConfigValue, onSave }) {
       <div className="space-y-4">
         <div>
           <Label className="text-base font-semibold mb-3 block">Compliance Target Score</Label>
-          <p className="text-sm text-gray-600 mb-3">Default compliance threshold for all documentation</p>
+          <p className="text-sm text-slate-600 mb-3">Default compliance threshold for all documentation</p>
           <div className="flex items-center gap-4">
             <Slider
               value={[targetScore]}
@@ -143,7 +143,7 @@ function ComplianceSettings({ getConfigValue, onSave }) {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-base font-semibold">Strict Compliance Mode</Label>
-              <p className="text-sm text-gray-600 mt-1">Require all critical elements before allowing note submission</p>
+              <p className="text-sm text-slate-600 mt-1">Require all critical elements before allowing note submission</p>
             </div>
             <Switch
               checked={strictMode}
@@ -168,7 +168,7 @@ function DocumentationSettings({ getConfigValue, onSave }) {
       <div className="space-y-4">
         <div>
           <Label className="text-base font-semibold mb-3 block">Documentation Detail Level</Label>
-          <p className="text-sm text-gray-600 mb-3">Control how verbose AI-generated notes are</p>
+          <p className="text-sm text-slate-600 mb-3">Control how verbose AI-generated notes are</p>
           <div className="grid grid-cols-3 gap-2">
             {['concise', 'standard', 'detailed'].map((level) => (
               <Button
@@ -189,7 +189,7 @@ function DocumentationSettings({ getConfigValue, onSave }) {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-base font-semibold">Auto-Enhance on Save</Label>
-              <p className="text-sm text-gray-600 mt-1">Automatically enhance notes when saving (skips manual enhance step)</p>
+              <p className="text-sm text-slate-600 mt-1">Automatically enhance notes when saving (skips manual enhance step)</p>
             </div>
             <Switch
               checked={autoEnhance}
@@ -214,9 +214,9 @@ function AnalysisSettings({ getConfigValue, onSave }) {
       <div className="space-y-4">
         <div>
           <Label className="text-base font-semibold mb-3 block">Risk Detection Sensitivity</Label>
-          <p className="text-sm text-gray-600 mb-3">Higher = more alerts, Lower = only critical risks</p>
+          <p className="text-sm text-slate-600 mb-3">Higher = more alerts, Lower = only critical risks</p>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-gray-500">Conservative</span>
+            <span className="text-xs text-slate-500">Conservative</span>
             <Slider
               value={[riskSensitivity]}
               onValueChange={([val]) => setRiskSensitivity(val)}
@@ -225,7 +225,7 @@ function AnalysisSettings({ getConfigValue, onSave }) {
               step={10}
               className="flex-1"
             />
-            <span className="text-xs text-gray-500">Aggressive</span>
+            <span className="text-xs text-slate-500">Aggressive</span>
           </div>
           <div className="flex items-center justify-between mt-2">
             <Badge variant="outline">{riskSensitivity}% Sensitivity</Badge>
@@ -242,7 +242,7 @@ function AnalysisSettings({ getConfigValue, onSave }) {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-base font-semibold">Auto-Run Risk Analysis</Label>
-              <p className="text-sm text-gray-600 mt-1">Automatically analyze patient risk after each visit completion</p>
+              <p className="text-sm text-slate-600 mt-1">Automatically analyze patient risk after each visit completion</p>
             </div>
             <Switch
               checked={autoAnalyze}
@@ -281,7 +281,7 @@ function GeneralSettings({ getConfigValue, onSave }) {
 
         <div className="border-t pt-4">
           <Label className="text-base font-semibold mb-3 block">AI Response Cache Duration</Label>
-          <p className="text-sm text-gray-600 mb-3">How long to cache AI responses (reduces API costs)</p>
+          <p className="text-sm text-slate-600 mb-3">How long to cache AI responses (reduces API costs)</p>
           <div className="flex items-center gap-4">
             <Input
               type="number"
@@ -291,7 +291,7 @@ function GeneralSettings({ getConfigValue, onSave }) {
               max={60}
               className="w-24"
             />
-            <span className="text-sm text-gray-600">minutes</span>
+            <span className="text-sm text-slate-600">minutes</span>
             <Button 
               size="sm"
               onClick={() => onSave('ai_cache_time', 'general', { minutes: cacheTime }, 'AI response cache duration')}

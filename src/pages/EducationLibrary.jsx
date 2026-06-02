@@ -125,8 +125,8 @@ export default function EducationLibrary() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Patient Education Library</h1>
-        <p className="text-gray-600">Create, manage, and send personalized education materials to patients</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Patient Education Library</h1>
+        <p className="text-slate-600">Create, manage, and send personalized education materials to patients</p>
       </div>
 
       {/* Stats */}
@@ -138,8 +138,8 @@ export default function EducationLibrary() {
                 <BookOpen className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalMaterials}</p>
-                <p className="text-sm text-gray-600">Total Materials</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.totalMaterials}</p>
+                <p className="text-sm text-slate-600">Total Materials</p>
               </div>
             </div>
           </CardContent>
@@ -152,8 +152,8 @@ export default function EducationLibrary() {
                 <Send className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalSent}</p>
-                <p className="text-sm text-gray-600">Total Sent</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.totalSent}</p>
+                <p className="text-sm text-slate-600">Total Sent</p>
               </div>
             </div>
           </CardContent>
@@ -166,8 +166,8 @@ export default function EducationLibrary() {
                 <Clock className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.recentSent}</p>
-                <p className="text-sm text-gray-600">Sent This Week</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.recentSent}</p>
+                <p className="text-sm text-slate-600">Sent This Week</p>
               </div>
             </div>
           </CardContent>
@@ -180,10 +180,10 @@ export default function EducationLibrary() {
                 <Star className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="text-sm font-semibold text-slate-900 truncate">
                   {stats.mostUsed?.title || 'N/A'}
                 </p>
-                <p className="text-xs text-gray-600">Most Popular</p>
+                <p className="text-xs text-slate-600">Most Popular</p>
               </div>
             </div>
           </CardContent>
@@ -203,7 +203,7 @@ export default function EducationLibrary() {
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search by title, category, or keywords..."
                     value={searchTerm}
@@ -233,15 +233,15 @@ export default function EducationLibrary() {
           {/* Materials Grid */}
           {isLoading ? (
             <Card>
-              <CardContent className="py-12 text-center text-gray-500">
+              <CardContent className="py-12 text-center text-slate-500">
                 Loading materials...
               </CardContent>
             </Card>
           ) : filteredMaterials.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No materials found</p>
+                <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">No materials found</p>
                 <Button 
                   onClick={() => { setEditorMode('create'); setSelectedMaterial(null); }}
                   className="mt-4"
@@ -335,26 +335,26 @@ export default function EducationLibrary() {
             </CardHeader>
             <CardContent>
               {sentMaterials.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <div className="text-center py-8 text-slate-500">
+                  <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                   <p>No materials sent yet</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {sentMaterials.map((sent) => (
-                    <div key={sent.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div key={sent.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">{sent.material_title}</h4>
-                          <p className="text-sm text-gray-600">
+                          <h4 className="font-semibold text-slate-900">{sent.material_title}</h4>
+                          <p className="text-sm text-slate-600">
                             Patient: {sent.patient_name}
                           </p>
                         </div>
-                        <Badge className={sent.patient_acknowledged ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                        <Badge className={sent.patient_acknowledged ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'}>
                           {sent.patient_acknowledged ? 'Acknowledged' : 'Pending'}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 text-xs text-slate-500">
                         <span>Sent by: {sent.sent_by}</span>
                         <span>•</span>
                         <span>{new Date(sent.sent_date).toLocaleDateString()}</span>

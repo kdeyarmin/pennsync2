@@ -85,7 +85,7 @@ export default function DashboardCustomizer({ currentUser, widgets, onUpdate }) 
           </DialogHeader>
 
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Show, hide, and reorder widgets to personalize your dashboard view.
             </p>
 
@@ -118,7 +118,7 @@ export default function DashboardCustomizer({ currentUser, widgets, onUpdate }) 
                         
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm">{widget.title}</h4>
-                          <p className="text-xs text-gray-600">{widget.description}</p>
+                          <p className="text-xs text-slate-600">{widget.description}</p>
                         </div>
                       </div>
 

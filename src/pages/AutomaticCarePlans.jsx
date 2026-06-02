@@ -45,6 +45,7 @@ import {
   CheckCircle2,
   AlertTriangle
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import { useNavigate } from "react-router-dom";
 
 export default function AutomaticCarePlans() {
@@ -211,7 +212,7 @@ export default function AutomaticCarePlans() {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
@@ -220,7 +221,7 @@ export default function AutomaticCarePlans() {
       case 'home_health': return 'bg-blue-100 text-blue-800';
       case 'hospice': return 'bg-purple-100 text-purple-800';
       case 'both': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -240,17 +241,11 @@ export default function AutomaticCarePlans() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Automatic Care Plans</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Set up care plans that trigger automatically based on diagnosis or medication</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={Zap}
+        title="Automatic Care Plans"
+        description="Set up care plans that trigger automatically based on diagnosis or medication"
+      />
 
       <Alert className="mb-4 sm:mb-6 bg-blue-50 border-blue-200">
         <Shield className="w-4 h-4 text-blue-600" />
@@ -284,11 +279,11 @@ export default function AutomaticCarePlans() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-center text-gray-500 py-8">Loading triggers...</p>
+            <p className="text-center text-slate-500 py-8">Loading triggers...</p>
           ) : triggers.length === 0 ? (
             <div className="text-center py-12">
-              <Zap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">No automatic care plan triggers configured yet</p>
+              <Zap className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500 mb-4">No automatic care plan triggers configured yet</p>
               <Button onClick={() => setShowDialog(true)} className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Your First Trigger
@@ -316,7 +311,7 @@ export default function AutomaticCarePlans() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleToggleActive(trigger.id, trigger.is_active)}
-                          className={`min-h-[44px] ${trigger.is_active ? "text-green-600" : "text-gray-400"}`}
+                          className={`min-h-[44px] ${trigger.is_active ? "text-green-600" : "text-slate-400"}`}
                         >
                           {trigger.is_active ? (
                             <CheckCircle2 className="w-5 h-5" />
@@ -329,8 +324,8 @@ export default function AutomaticCarePlans() {
                         <div className="flex items-center gap-2">
                           {getTriggerIcon(trigger.trigger_type)}
                           <div className="min-w-0">
-                            <p className="font-medium text-gray-900 truncate">{trigger.trigger_value}</p>
-                            <p className="text-xs text-gray-500 capitalize">{trigger.trigger_type}</p>
+                            <p className="font-medium text-slate-900 truncate">{trigger.trigger_value}</p>
+                            <p className="text-xs text-slate-500 capitalize">{trigger.trigger_type}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -341,12 +336,12 @@ export default function AutomaticCarePlans() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm">
-                        <p className="font-medium text-gray-900 max-w-[150px] sm:max-w-xs truncate">
+                        <p className="font-medium text-slate-900 max-w-[150px] sm:max-w-xs truncate">
                           {trigger.problem}
                         </p>
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
-                        <p className="text-gray-600 max-w-xs truncate">
+                        <p className="text-slate-600 max-w-xs truncate">
                           {trigger.goal}
                         </p>
                       </TableCell>
@@ -510,7 +505,7 @@ export default function AutomaticCarePlans() {
               </div>
               <div className="space-y-2">
                 {formData.interventions.map((intervention, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                  <div key={index} className="flex items-center gap-2 p-2 bg-slate-50 rounded border">
                     <span className="flex-1 text-sm">{intervention}</span>
                     <Button
                       type="button"

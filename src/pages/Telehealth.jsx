@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Video, Plus, Calendar, Clock, CheckCircle2 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import { toast } from "sonner";
 import TelehealthCall from "../components/telehealth/TelehealthCall";
 import SessionCard from "../components/telehealth/SessionCard";
@@ -163,17 +164,18 @@ export default function Telehealth() {
   return (
     <div className="w-full space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Video className="w-6 h-6 text-blue-600" />
-            Telehealth
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Secure video visits with patients via Twilio</p>
-        </div>
-        <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-          <Plus className="w-4 h-4" /> New Session
-        </Button>
+      <div className="px-3 sm:px-4 md:px-6">
+        <PageHeader
+          icon={Video}
+          title="Telehealth"
+          description="Secure video visits with patients via Twilio"
+          className="mb-0 sm:mb-0"
+          actions={
+            <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <Plus className="w-4 h-4" /> New Session
+            </Button>
+          }
+        />
       </div>
 
       {/* Stats */}
@@ -188,8 +190,8 @@ export default function Telehealth() {
             <CardContent className="p-4 flex items-center gap-3">
               <s.icon className={`w-8 h-8 ${s.color} flex-shrink-0`} />
               <div>
-                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-                <p className="text-xs text-gray-500">{s.label}</p>
+                <p className="text-2xl font-bold text-slate-900">{s.value}</p>
+                <p className="text-xs text-slate-500">{s.label}</p>
               </div>
             </CardContent>
           </Card>
@@ -244,13 +246,13 @@ export default function Telehealth() {
             Upcoming <Badge className="ml-1.5 bg-blue-100 text-blue-700">{upcoming.length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="past">
-            Past <Badge className="ml-1.5 bg-gray-100 text-gray-600">{past.length}</Badge>
+            Past <Badge className="ml-1.5 bg-slate-100 text-slate-600">{past.length}</Badge>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming" className="mt-4 space-y-3">
           {upcoming.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-slate-400">
               <Video className="w-10 h-10 mx-auto mb-2 opacity-40" />
               <p>No upcoming sessions. Create one to get started.</p>
             </div>
@@ -261,7 +263,7 @@ export default function Telehealth() {
 
         <TabsContent value="past" className="mt-4 space-y-3">
           {past.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-slate-400">
               <Clock className="w-10 h-10 mx-auto mb-2 opacity-40" />
               <p>No completed sessions yet.</p>
             </div>
@@ -275,7 +277,7 @@ export default function Telehealth() {
       {/* New Session Dialog */}
       <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
         <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto sm:rounded-2xl border-0 shadow-2xl">
-          <DialogTitle className="text-xl font-bold text-gray-900">New Telehealth Session</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-slate-900">New Telehealth Session</DialogTitle>
           <NewSessionForm
             patients={patients}
             currentUser={currentUser}
@@ -319,9 +321,9 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 py-2">
       <div className="space-y-3">
-        <Label className="text-sm font-semibold text-gray-900">Patient</Label>
+        <Label className="text-sm font-semibold text-slate-900">Patient</Label>
         <Select value={form.patient_id} onValueChange={v => setForm(f => ({ ...f, patient_id: v }))}>
-          <SelectTrigger className="w-full h-11 border-gray-300 rounded-lg shadow-sm hover:border-gray-400">
+          <SelectTrigger className="w-full h-11 border-slate-300 rounded-lg shadow-sm hover:border-slate-400">
             <SelectValue placeholder="Select patient..." />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={4}>
@@ -333,9 +335,9 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
       </div>
 
       <div className="space-y-3">
-        <Label className="text-sm font-semibold text-gray-900">Visit Type</Label>
+        <Label className="text-sm font-semibold text-slate-900">Visit Type</Label>
         <Select value={form.visit_type} onValueChange={v => setForm(f => ({ ...f, visit_type: v }))}>
-          <SelectTrigger className="w-full h-11 border-gray-300 rounded-lg shadow-sm hover:border-gray-400">
+          <SelectTrigger className="w-full h-11 border-slate-300 rounded-lg shadow-sm hover:border-slate-400">
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={4}>
@@ -347,10 +349,10 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
       </div>
 
       <div className="space-y-3">
-        <Label className="text-sm font-semibold text-gray-900">Scheduled Date & Time</Label>
+        <Label className="text-sm font-semibold text-slate-900">Scheduled Date & Time</Label>
         <Input
           type="datetime-local"
-          className="w-full h-11 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+          className="w-full h-11 border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
           value={form.scheduled_at}
           onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))}
         />

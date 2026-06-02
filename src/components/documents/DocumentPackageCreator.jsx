@@ -406,7 +406,7 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
                 onValueChange={setSelectedPatient}
               />
               {patients.length === 0 && <p className="text-xs text-amber-600 mt-2">No patients found. Create one or check access permissions.</p>}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Patient data will auto-populate in documents
                 {patients.length > 0 && ` (${patients.length} patients available)`}
               </p>
@@ -415,7 +415,7 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
 
           {/* Manual Patient Information */}
           {!useExistingPatient && (
-            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
+            <div className="space-y-3 p-4 border rounded-lg bg-slate-50">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>First Name *</Label>
@@ -468,7 +468,7 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
                   placeholder="123 Main St, City, State ZIP"
                 />
               </div>
-              <p className="text-xs text-gray-600">This information will be pre-filled in the documents</p>
+              <p className="text-xs text-slate-600">This information will be pre-filled in the documents</p>
             </div>
           )}
 
@@ -513,13 +513,13 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
           {/* File Upload */}
           <div>
             <Label>Upload Additional Documents</Label>
-            <p className="text-xs text-gray-500 mt-1 mb-2">Upload custom PDFs to include in this package</p>
+            <p className="text-xs text-slate-500 mt-1 mb-2">Upload custom PDFs to include in this package</p>
             <div className="mt-2">
               <label htmlFor="file-upload" className="cursor-pointer">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Click to upload PDF files</p>
-                  <p className="text-xs text-gray-500 mt-1">or drag and drop</p>
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
+                  <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                  <p className="text-sm text-slate-600">Click to upload PDF files</p>
+                  <p className="text-xs text-slate-500 mt-1">or drag and drop</p>
                 </div>
               </label>
               <input
@@ -534,7 +534,7 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
               {uploadedFiles.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {uploadedFiles.map((file) => (
-                    <div key={file.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border">
+                    <div key={file.id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <File className="w-4 h-4 text-blue-600 shrink-0" />
                         <span className="text-sm truncate">{file.name}</span>
@@ -557,7 +557,7 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
           {/* Document Selection */}
           <div>
             <Label>Or Select from Templates ({selectedDocuments.length} selected)</Label>
-            <p className="text-xs text-gray-500 mt-1 mb-2">Patient information will auto-populate if patient exists in system</p>
+            <p className="text-xs text-slate-500 mt-1 mb-2">Patient information will auto-populate if patient exists in system</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 max-h-96 overflow-y-auto p-2 border rounded-lg">
               {templates.map((template) => (
                 <div
@@ -566,14 +566,14 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
                   className={`p-3 border rounded-lg cursor-pointer transition-all ${
                     selectedDocuments.includes(template.id)
                       ? 'bg-blue-50 border-blue-300'
-                      : 'hover:bg-gray-50'
+                      : 'hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-start gap-2">
                     {selectedDocuments.includes(template.id) ? (
                       <CheckSquare className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                     ) : (
-                      <Square className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                      <Square className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                     )}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm break-words">{template.template_name}</h4>

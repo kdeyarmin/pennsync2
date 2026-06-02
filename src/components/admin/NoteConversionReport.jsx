@@ -124,7 +124,7 @@ export default function NoteEnhancementReport() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-gray-500">
+        <CardContent className="py-8 text-center text-slate-500">
           Loading enhancement data...
         </CardContent>
       </Card>
@@ -135,8 +135,8 @@ export default function NoteEnhancementReport() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">AI Note Enhancement Statistics</h2>
-          <p className="text-sm text-gray-600">Track rough notes enhanced to clinical documentation</p>
+          <h2 className="text-xl font-bold text-slate-900">AI Note Enhancement Statistics</h2>
+          <p className="text-sm text-slate-600">Track rough notes enhanced to clinical documentation</p>
         </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-40">
@@ -161,7 +161,7 @@ export default function NoteEnhancementReport() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalEnhancements}</p>
-                <p className="text-xs text-gray-500">Total Enhancements</p>
+                <p className="text-xs text-slate-500">Total Enhancements</p>
               </div>
             </div>
           </CardContent>
@@ -174,7 +174,7 @@ export default function NoteEnhancementReport() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{avgQualityScore}%</p>
-                <p className="text-xs text-gray-500">Avg Quality Score</p>
+                <p className="text-xs text-slate-500">Avg Quality Score</p>
               </div>
             </div>
           </CardContent>
@@ -187,7 +187,7 @@ export default function NoteEnhancementReport() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{avgEnhancementTime} min</p>
-                <p className="text-xs text-gray-500">Avg Enhancement Time</p>
+                <p className="text-xs text-slate-500">Avg Enhancement Time</p>
               </div>
             </div>
           </CardContent>
@@ -200,7 +200,7 @@ export default function NoteEnhancementReport() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{uniqueNurses}</p>
-                <p className="text-xs text-gray-500">Active Nurses</p>
+                <p className="text-xs text-slate-500">Active Nurses</p>
               </div>
             </div>
           </CardContent>
@@ -299,7 +299,7 @@ export default function NoteEnhancementReport() {
               ))}
               {nurseStats.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-gray-500">
+                  <TableCell colSpan={3} className="text-center text-slate-500">
                     No data available
                   </TableCell>
                 </TableRow>

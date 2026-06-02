@@ -162,7 +162,7 @@ Return up to 10 matching codes with their descriptions. Include common codes for
       case 'high': return 'bg-green-100 text-green-800 border-green-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-orange-100 text-orange-800 border-orange-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -211,8 +211,8 @@ Return up to 10 matching codes with their descriptions. Include common codes for
 
         {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className="border rounded-lg p-2 bg-gray-50 max-h-40 overflow-auto">
-            <p className="text-xs font-semibold text-gray-500 mb-2">Search Results</p>
+          <div className="border rounded-lg p-2 bg-slate-50 max-h-40 overflow-auto">
+            <p className="text-xs font-semibold text-slate-500 mb-2">Search Results</p>
             <div className="space-y-1">
               {searchResults.map((result, idx) => (
                 <div
@@ -224,12 +224,12 @@ Return up to 10 matching codes with their descriptions. Include common codes for
                     <Badge variant="outline" className="font-mono text-xs">
                       {result.code}
                     </Badge>
-                    <span className="text-xs text-gray-700">{result.description}</span>
+                    <span className="text-xs text-slate-700">{result.description}</span>
                   </div>
                   {selectedCodes.find(c => c.code === result.code) ? (
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                   ) : (
-                    <Plus className="w-4 h-4 text-gray-400" />
+                    <Plus className="w-4 h-4 text-slate-400" />
                   )}
                 </div>
               ))}
@@ -268,12 +268,12 @@ Return up to 10 matching codes with their descriptions. Include common codes for
                             <Badge className="bg-blue-100 text-blue-800 text-[10px]">Primary</Badge>
                           )}
                         </div>
-                        <p className="text-xs font-medium text-gray-900 mt-1">{code.description}</p>
+                        <p className="text-xs font-medium text-slate-900 mt-1">{code.description}</p>
                       </div>
                       {isSelected ? (
                         <CheckCircle2 className="w-5 h-5 text-purple-600 flex-shrink-0" />
                       ) : (
-                        <Plus className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        <Plus className="w-5 h-5 text-slate-400 flex-shrink-0" />
                       )}
                     </div>
                     <Popover>
@@ -284,7 +284,7 @@ Return up to 10 matching codes with their descriptions. Include common codes for
                       </PopoverTrigger>
                       <PopoverContent className="w-72 p-3">
                         <p className="text-xs font-semibold mb-1">Clinical Rationale:</p>
-                        <p className="text-xs text-gray-600">{code.rationale}</p>
+                        <p className="text-xs text-slate-600">{code.rationale}</p>
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -308,7 +308,7 @@ Return up to 10 matching codes with their descriptions. Include common codes for
         {selectedCodes.length > 0 && (
           <div className="border-t pt-3">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-gray-700">
+              <p className="text-xs font-semibold text-slate-700">
                 Selected Codes ({selectedCodes.length})
               </p>
               <Button

@@ -33,7 +33,7 @@ export default function UserPerformanceTable({ users }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b bg-gray-50">
+          <tr className="border-b bg-slate-50">
             <th className="text-left p-3 font-semibold">User</th>
             <th className="text-left p-3">
               <Button 
@@ -89,11 +89,11 @@ export default function UserPerformanceTable({ users }) {
         </thead>
         <tbody>
           {sortedUsers.map((user, idx) => (
-            <tr key={idx} className="border-b hover:bg-gray-50">
+            <tr key={idx} className="border-b hover:bg-slate-50">
               <td className="p-3">
                 <div>
                   <p className="font-medium">{user.name}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
+                  <p className="text-xs text-slate-500">{user.email}</p>
                 </div>
               </td>
               <td className="p-3">{user.notesCount}</td>

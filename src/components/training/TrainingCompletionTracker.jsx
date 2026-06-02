@@ -93,7 +93,7 @@ export default function TrainingCompletionTracker({ users = [] }) {
       case 'assigned':
         return <Badge className="bg-yellow-100 text-yellow-800">Assigned</Badge>;
       case 'expired':
-        return <Badge className="bg-gray-100 text-gray-800">Expired</Badge>;
+        return <Badge className="bg-slate-100 text-slate-800">Expired</Badge>;
       default:
         return <Badge variant="outline">{completion.status}</Badge>;
     }
@@ -113,7 +113,7 @@ export default function TrainingCompletionTracker({ users = [] }) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+          <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" />
         </CardContent>
       </Card>
     );
@@ -146,19 +146,19 @@ export default function TrainingCompletionTracker({ users = [] }) {
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-3 rounded-lg text-center">
             <p className="text-2xl font-bold text-blue-700">{stats.total}</p>
-            <p className="text-xs text-gray-600">Total Assigned</p>
+            <p className="text-xs text-slate-600">Total Assigned</p>
           </div>
           <div className="bg-green-50 p-3 rounded-lg text-center">
             <p className="text-2xl font-bold text-green-700">{stats.completed}</p>
-            <p className="text-xs text-gray-600">Completed</p>
+            <p className="text-xs text-slate-600">Completed</p>
           </div>
           <div className="bg-yellow-50 p-3 rounded-lg text-center">
             <p className="text-2xl font-bold text-yellow-700">{stats.inProgress}</p>
-            <p className="text-xs text-gray-600">In Progress</p>
+            <p className="text-xs text-slate-600">In Progress</p>
           </div>
           <div className="bg-red-50 p-3 rounded-lg text-center">
             <p className="text-2xl font-bold text-red-700">{stats.overdue}</p>
-            <p className="text-xs text-gray-600">Overdue</p>
+            <p className="text-xs text-slate-600">Overdue</p>
           </div>
         </div>
 
@@ -186,7 +186,7 @@ export default function TrainingCompletionTracker({ users = [] }) {
             <TableBody>
               {filteredCompletions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={5} className="text-center py-8 text-slate-500">
                     No training assignments found
                   </TableCell>
                 </TableRow>
@@ -206,7 +206,7 @@ export default function TrainingCompletionTracker({ users = [] }) {
                           </div>
                           <div>
                             <p className="font-medium text-sm">{user?.full_name || completion.nurse_email}</p>
-                            <p className="text-xs text-gray-500">{completion.nurse_email}</p>
+                            <p className="text-xs text-slate-500">{completion.nurse_email}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -217,7 +217,7 @@ export default function TrainingCompletionTracker({ users = [] }) {
                       <TableCell>
                         {completion.due_date ? (
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-gray-400" />
+                            <Calendar className="w-3 h-3 text-slate-400" />
                             <span className={`text-sm ${daysLeft !== null && daysLeft < 0 ? 'text-red-600 font-medium' : ''}`}>
                               {format(new Date(completion.due_date), 'MMM d, yyyy')}
                             </span>
@@ -228,7 +228,7 @@ export default function TrainingCompletionTracker({ users = [] }) {
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-400 text-sm">No due date</span>
+                          <span className="text-slate-400 text-sm">No due date</span>
                         )}
                       </TableCell>
                       <TableCell>

@@ -145,11 +145,11 @@ export default function VoiceCommandListener({ onCommand, commands = [], context
                 <Mic className="w-5 h-5 text-blue-600" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
               </div>
-              <span className="text-sm font-semibold text-gray-900">Listening...</span>
+              <span className="text-sm font-semibold text-slate-900">Listening...</span>
             </div>
             
             {transcript && (
-              <p className="text-sm text-gray-600 italic">"{transcript}"</p>
+              <p className="text-sm text-slate-600 italic">"{transcript}"</p>
             )}
             
             {recognizedCommand && (
@@ -222,26 +222,26 @@ export default function VoiceCommandListener({ onCommand, commands = [], context
 
           <div className="space-y-4 py-4">
             {commands.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-slate-500 text-center py-8">
                 No voice commands available in this context.
               </p>
             ) : (
               commands.map((cmd, index) => (
                 <div 
                   key={index} 
-                  className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  className="p-4 bg-slate-50 rounded-lg border border-slate-200"
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold text-gray-900">{cmd.name}</h4>
+                    <h4 className="font-semibold text-slate-900">{cmd.name}</h4>
                     <Badge variant="outline" className="text-xs">
                       {cmd.category}
                     </Badge>
                   </div>
                   
-                  <p className="text-sm text-gray-600 mb-3">{cmd.description}</p>
+                  <p className="text-sm text-slate-600 mb-3">{cmd.description}</p>
                   
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-gray-700">Say any of these:</p>
+                    <p className="text-xs font-medium text-slate-700">Say any of these:</p>
                     <div className="flex flex-wrap gap-2">
                       {cmd.triggers.map((trigger, idx) => (
                         <Badge key={idx} variant="secondary" className="font-mono text-xs">

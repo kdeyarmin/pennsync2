@@ -191,7 +191,7 @@ export default function DuplicatePatientManager() {
     return (
       <Card>
         <CardContent className="py-8 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
         </CardContent>
       </Card>
     );
@@ -255,7 +255,7 @@ export default function DuplicatePatientManager() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 w-7 p-0 text-gray-400"
+                        className="h-7 w-7 p-0 text-slate-400"
                         onClick={() => handleDismissGroup(group.id)}
                         title="Dismiss - not duplicates"
                       >
@@ -279,10 +279,10 @@ export default function DuplicatePatientManager() {
                           <span className="font-medium">
                             {patient.first_name} {patient.last_name}
                           </span>
-                          <span className="text-gray-500 text-xs">
+                          <span className="text-slate-500 text-xs">
                             MRN: {patient.medical_record_number || 'N/A'}
                           </span>
-                          <span className="text-gray-500 text-xs">
+                          <span className="text-slate-500 text-xs">
                             DOB: {patient.date_of_birth || 'N/A'}
                           </span>
                         </div>
@@ -301,7 +301,7 @@ export default function DuplicatePatientManager() {
         )}
 
         {dismissedGroups.size > 0 && (
-          <div className="text-xs text-gray-500 text-center">
+          <div className="text-xs text-slate-500 text-center">
             {dismissedGroups.size} group{dismissedGroups.size !== 1 ? 's' : ''} dismissed •{" "}
             <button 
               className="text-blue-600 hover:underline"
@@ -357,7 +357,7 @@ export default function DuplicatePatientManager() {
                       className={`p-3 rounded-lg border ${
                         patient.id === primaryPatientId 
                           ? 'bg-green-50 border-green-300' 
-                          : 'bg-gray-50 border-gray-200'
+                          : 'bg-slate-50 border-slate-200'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -371,7 +371,7 @@ export default function DuplicatePatientManager() {
                           )}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
                         <div><strong>MRN:</strong> {patient.medical_record_number || 'N/A'}</div>
                         <div><strong>DOB:</strong> {patient.date_of_birth || 'N/A'}</div>
                         <div><strong>Phone:</strong> {patient.phone || 'N/A'}</div>

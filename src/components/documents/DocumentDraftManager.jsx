@@ -217,14 +217,14 @@ export default function DocumentDraftManager({
                 onChange={(e) => setEditedContent(e.target.value)}
                 className="min-h-[400px] font-mono text-sm"
               />
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-slate-500">
                 <span>{editedContent.length} characters</span>
                 <span>Use Ctrl+Z for undo</span>
               </div>
             </div>
           ) : (
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <pre className="whitespace-pre-wrap text-sm text-gray-800 font-sans">
+            <div className="bg-slate-50 p-4 rounded-lg border">
+              <pre className="whitespace-pre-wrap text-sm text-slate-800 font-sans">
                 {getCurrentContent()}
               </pre>
             </div>

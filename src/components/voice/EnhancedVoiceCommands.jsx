@@ -272,7 +272,7 @@ export default function EnhancedVoiceCommands({
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 animate-pulse">
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span className="text-xs text-gray-600">
+              <span className="text-xs text-slate-600">
                 Listening ({commandMode === 'command' ? 'Command Mode' : 'Dictation Mode'})
               </span>
             </div>

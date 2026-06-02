@@ -55,8 +55,8 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
 
   if (events.length === 0) {
     return (
-      <Card className="bg-gray-50">
-        <CardContent className="p-4 text-center text-sm text-gray-500">
+      <Card className="bg-slate-50">
+        <CardContent className="p-4 text-center text-sm text-slate-500">
           No clinical events recorded yet
         </CardContent>
       </Card>
@@ -107,7 +107,7 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
         {/* Recent Events */}
         <div className="space-y-2">
           {recentEvents.map((event) => (
-            <div key={event.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded text-xs">
+            <div key={event.id} className="flex items-start gap-2 p-2 bg-slate-50 rounded text-xs">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <Badge className={`text-xs ${
@@ -117,11 +117,11 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
                   }`}>
                     {event.event_type.replace(/_/g, ' ')}
                   </Badge>
-                  <span className="text-gray-500">
+                  <span className="text-slate-500">
                     {format(new Date(event.event_date), 'MMM d')}
                   </span>
                 </div>
-                <p className="font-medium text-gray-900 truncate">{event.event_title}</p>
+                <p className="font-medium text-slate-900 truncate">{event.event_title}</p>
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {event.requires_followup && (
                     <Badge className="bg-yellow-600 text-xs">

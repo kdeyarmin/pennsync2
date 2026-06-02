@@ -52,7 +52,7 @@ export default function QuickEditPreview({
             className="font-mono text-sm"
             placeholder="Edit content here..."
           />
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-slate-500 mt-2">
             Make any edits needed, then click Insert to add to your note.
           </p>
         </div>

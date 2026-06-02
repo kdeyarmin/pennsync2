@@ -440,15 +440,15 @@ Return JSON:
     <div
       key={itemKey}
       className={`p-3 rounded-lg border ${
-        selectedItem === itemKey ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 hover:bg-gray-100'
+        selectedItem === itemKey ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 hover:bg-slate-100'
       } cursor-pointer transition-colors`}
       onClick={() => setSelectedItem(itemKey)}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          <h4 className="font-semibold text-gray-900">{itemKey}: {item.name}</h4>
+          <h4 className="font-semibold text-slate-900">{itemKey}: {item.name}</h4>
           {item.description && (
-            <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+            <p className="text-xs text-slate-600 mt-1">{item.description}</p>
           )}
         </div>
         <div className="flex gap-1 items-center ml-2">
@@ -465,7 +465,7 @@ Return JSON:
               {bookmarkedItems[itemKey] ? (
                 <BookmarkCheck className="w-4 h-4 text-purple-600" />
               ) : (
-                <Bookmark className="w-4 h-4 text-gray-400" />
+                <Bookmark className="w-4 h-4 text-slate-400" />
               )}
             </Button>
           )}
@@ -487,7 +487,7 @@ Return JSON:
       
       {item.scoringScale && (
         <div className="mt-2">
-          <p className="text-xs font-medium text-gray-700 mb-1">Scoring Scale:</p>
+          <p className="text-xs font-medium text-slate-700 mb-1">Scoring Scale:</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs">
             {Object.entries(item.scoringScale).map(([score, desc]) => (
               <div key={score} className="bg-white p-1.5 rounded border">
@@ -500,7 +500,7 @@ Return JSON:
 
       {item.subItems && (
         <div className="mt-2">
-          <p className="text-xs font-medium text-gray-700 mb-1">Sub-items:</p>
+          <p className="text-xs font-medium text-slate-700 mb-1">Sub-items:</p>
           <div className="flex flex-wrap gap-1">
             {item.subItems.map((sub, idx) => (
               <Badge key={idx} variant="outline" className="text-xs">{sub}</Badge>
@@ -581,7 +581,7 @@ Return JSON:
       <CardContent className="space-y-4">
         {/* Search */}
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search OASIS items, keywords (e.g., M1830, pressure ulcer, bathing)..."
             value={searchTerm}
@@ -721,8 +721,8 @@ Return JSON:
           {/* Bookmarks Tab */}
           <TabsContent value="bookmarks" className="mt-4">
             {Object.keys(bookmarkedItems).length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Bookmark className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-slate-500">
+                <Bookmark className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                 <p className="text-sm">No bookmarked items yet.</p>
                 <p className="text-xs mt-1">Click the bookmark icon on any item to save it for quick access.</p>
               </div>
@@ -752,8 +752,8 @@ Return JSON:
                     'bg-red-100 border-red-300'
                   }`}>
                     <p className="font-bold capitalize">{level}</p>
-                    <p className="text-gray-700">{data.range}</p>
-                    <p className="text-gray-600">×{data.multiplier}</p>
+                    <p className="text-slate-700">{data.range}</p>
+                    <p className="text-slate-600">×{data.multiplier}</p>
                   </div>
                 ))}
               </div>
@@ -771,7 +771,7 @@ Return JSON:
 
             {/* External Resources */}
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <ExternalLink className="w-4 h-4" />
                 Official CMS Resources
               </h4>
@@ -782,13 +782,13 @@ Return JSON:
                     href={resource.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                    className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border hover:bg-blue-50 hover:border-blue-200 transition-colors"
                   >
                     <ExternalLink className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-blue-600">{resource.name}</p>
                       {resource.description && (
-                        <p className="text-xs text-gray-600 mt-0.5">{resource.description}</p>
+                        <p className="text-xs text-slate-600 mt-0.5">{resource.description}</p>
                       )}
                     </div>
                   </a>

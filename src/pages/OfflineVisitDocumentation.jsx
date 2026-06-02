@@ -52,10 +52,10 @@ export default function OfflineVisitDocumentation() {
         </Button>
 
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
             Visit Documentation - {selectedPatient.first_name} {selectedPatient.last_name}
           </h1>
-          <p className="text-gray-600">{selectedPatient.primary_diagnosis}</p>
+          <p className="text-slate-600">{selectedPatient.primary_diagnosis}</p>
         </div>
 
         <OfflineVisitNoteCapture
@@ -83,8 +83,8 @@ export default function OfflineVisitDocumentation() {
             <WifiOff className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Offline Visit Documentation</h1>
-            <p className="text-gray-600">Document patient visits with or without internet connection</p>
+            <h1 className="text-3xl font-bold text-slate-900">Offline Visit Documentation</h1>
+            <p className="text-slate-600">Document patient visits with or without internet connection</p>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function OfflineVisitDocumentation() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Connection Status</p>
+                <p className="text-sm font-medium text-slate-700">Connection Status</p>
                 <p className={`text-xl font-bold ${isOnline ? 'text-green-700' : 'text-orange-700'}`}>
                   {isOnline ? 'Online' : 'Offline'}
                 </p>
@@ -113,7 +113,7 @@ export default function OfflineVisitDocumentation() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Pending Sync</p>
+                <p className="text-sm font-medium text-slate-700">Pending Sync</p>
                 <p className="text-xl font-bold text-blue-700">{pendingCount}</p>
               </div>
               <FileText className="w-8 h-8 text-blue-500" />
@@ -125,7 +125,7 @@ export default function OfflineVisitDocumentation() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Total Patients</p>
+                <p className="text-sm font-medium text-slate-700">Total Patients</p>
                 <p className="text-xl font-bold text-purple-700">{patients.length}</p>
               </div>
               <Users className="w-8 h-8 text-purple-500" />
@@ -149,7 +149,7 @@ export default function OfflineVisitDocumentation() {
         <CardContent>
           <div className="mb-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search patients by name or diagnosis..."
                 value={searchTerm}
@@ -161,11 +161,11 @@ export default function OfflineVisitDocumentation() {
 
           <div className="grid md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
             {isLoading ? (
-              <div className="col-span-2 text-center py-12 text-gray-500">
+              <div className="col-span-2 text-center py-12 text-slate-500">
                 Loading patients...
               </div>
             ) : filteredPatients.length === 0 ? (
-              <div className="col-span-2 text-center py-12 text-gray-500">
+              <div className="col-span-2 text-center py-12 text-slate-500">
                 No patients found
               </div>
             ) : (
@@ -178,10 +178,10 @@ export default function OfflineVisitDocumentation() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">
+                        <h3 className="font-semibold text-slate-900 mb-1">
                           {patient.first_name} {patient.last_name}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-sm text-slate-600 mb-2">
                           {patient.primary_diagnosis || 'No diagnosis'}
                         </p>
                         <div className="flex gap-2 flex-wrap">
@@ -195,7 +195,7 @@ export default function OfflineVisitDocumentation() {
                               className={
                                 patient.status === 'active'
                                   ? 'bg-green-500'
-                                  : 'bg-gray-500'
+                                  : 'bg-slate-500'
                               }
                             >
                               {patient.status}

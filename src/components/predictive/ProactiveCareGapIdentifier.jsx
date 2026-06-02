@@ -195,7 +195,7 @@ Return structured JSON with prioritized gaps.`,
   const getTimelineIcon = (timeline) => {
     if (timeline === 'urgent') return <AlertTriangle className="w-4 h-4 text-red-600" />;
     if (timeline === 'this_week') return <Clock className="w-4 h-4 text-orange-600" />;
-    return <Clock className="w-4 h-4 text-gray-600" />;
+    return <Clock className="w-4 h-4 text-slate-600" />;
   };
 
   if (!patients || patients.length === 0) {
@@ -233,7 +233,7 @@ Return structured JSON with prioritized gaps.`,
             <div>
               <span>AI Care Gap Identifier</span>
               {identifiedGaps && (
-                <p className="text-xs font-normal text-gray-600 mt-0.5">
+                <p className="text-xs font-normal text-slate-600 mt-0.5">
                   Analyzed {identifiedGaps.total_patients_analyzed} patients
                 </p>
               )}
@@ -256,7 +256,7 @@ Return structured JSON with prioritized gaps.`,
         {isAnalyzing ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-            <p className="text-sm text-gray-600">Analyzing patient data for potential care gaps...</p>
+            <p className="text-sm text-slate-600">Analyzing patient data for potential care gaps...</p>
           </div>
         ) : identifiedGaps ? (
           <div className="space-y-4">
@@ -288,13 +288,13 @@ Return structured JSON with prioritized gaps.`,
                             </Badge>
                             {getTimelineIcon(gap.suggested_timeline)}
                           </div>
-                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-2">
+                          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-2">
                             {(gap.gap_category || '').replace(/_/g, ' ')}
                           </p>
                         </div>
                       </div>
 
-                      <p className="text-sm text-gray-900 mb-2">{gap.gap_description}</p>
+                      <p className="text-sm text-slate-900 mb-2">{gap.gap_description}</p>
 
                       <div className="bg-blue-50 p-3 rounded mb-3">
                         <p className="text-xs font-semibold text-blue-900 mb-1">Clinical Rationale:</p>
@@ -312,7 +312,7 @@ Return structured JSON with prioritized gaps.`,
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                      <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
                         <span className="flex items-center gap-1">
                           <Target className="w-3 h-3" />
                           Impact: {gap.estimated_impact.replace(/_/g, ' ')}
@@ -336,7 +336,7 @@ Return structured JSON with prioritized gaps.`,
               <div className="text-center py-8">
                 <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
                 <p className="text-sm text-green-700 font-medium">No significant care gaps identified</p>
-                <p className="text-xs text-gray-600 mt-1">Current care patterns are appropriate</p>
+                <p className="text-xs text-slate-600 mt-1">Current care patterns are appropriate</p>
               </div>
             )}
           </div>
@@ -349,7 +349,7 @@ Return structured JSON with prioritized gaps.`,
               <Brain className="w-5 h-5 mr-2" />
               Analyze for Care Gaps
             </Button>
-            <p className="text-xs text-gray-500 mt-3">
+            <p className="text-xs text-slate-500 mt-3">
               AI will analyze {patients.length} patients to identify potential care gaps
             </p>
           </div>

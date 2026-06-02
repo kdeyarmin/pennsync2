@@ -220,7 +220,7 @@ Return only the enhanced content, keeping all {{variable}} placeholders exactly 
               rows={12}
               className="font-mono text-sm"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2">
               Tip: Use variables like {`{{patient_name}}`}, {`{{diagnosis}}`}, {`{{medications}}`} for automatic personalization
             </p>
           </div>
@@ -233,7 +233,7 @@ Return only the enhanced content, keeping all {{variable}} placeholders exactly 
                 {formData.variables.map((variable, idx) => (
                   <Badge key={idx} variant="outline" className="gap-1">
                     {`{{${variable.name}}}`}
-                    <span className="text-xs text-gray-500">({variable.source})</span>
+                    <span className="text-xs text-slate-500">({variable.source})</span>
                   </Badge>
                 ))}
               </div>

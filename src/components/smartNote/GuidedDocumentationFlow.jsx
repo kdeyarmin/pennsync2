@@ -283,7 +283,7 @@ Return JSON:
                     ? 'bg-green-100 border-green-300 text-green-700' 
                     : getSectionCompleteness(section.id) > 0
                     ? 'bg-yellow-100 border-yellow-300 text-yellow-700'
-                    : 'bg-gray-100'
+                    : 'bg-slate-100'
                 }`}
               >
                 {section.label.charAt(0)}
@@ -369,8 +369,8 @@ Return JSON:
 
               {/* Vital Signs Comparison - Objective section */}
               {section.id === 'objective' && vitalBaselines && (
-                <div className="bg-gray-50 p-2 rounded-lg border">
-                  <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                <div className="bg-slate-50 p-2 rounded-lg border">
+                  <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                     <Activity className="w-3 h-3" />
                     Last Visit Vitals (compare today):
                   </p>
@@ -391,7 +391,7 @@ Return JSON:
                     )}
                   </div>
                   {sentenceStarters.vital_comparisons?.length > 0 && (
-                    <p className="text-xs text-gray-500 mt-1 italic">
+                    <p className="text-xs text-slate-500 mt-1 italic">
                       Compare: {sentenceStarters.vital_comparisons.join(', ')}
                     </p>
                   )}
@@ -469,7 +469,7 @@ Return JSON:
 
               {/* Loading indicator */}
               {isLoadingPrompts && (
-                <div className="flex items-center justify-center py-2 text-xs text-gray-500">
+                <div className="flex items-center justify-center py-2 text-xs text-slate-500">
                   <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                   Loading condition-specific prompts...
                 </div>
@@ -483,7 +483,7 @@ Return JSON:
               />
 
               <div className="flex justify-between">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500">
                   {sections[section.id].length} characters
                 </p>
                 {activeSection !== 'plan' && (

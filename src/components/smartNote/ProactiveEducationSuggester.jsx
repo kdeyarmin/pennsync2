@@ -157,7 +157,7 @@ If you have any questions, please contact your nurse.
         {analyzing ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-            <span className="ml-2 text-sm text-gray-600">Analyzing education needs...</span>
+            <span className="ml-2 text-sm text-slate-600">Analyzing education needs...</span>
           </div>
         ) : (
           <>
@@ -175,14 +175,14 @@ If you have any questions, please contact your nurse.
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{suggestion.topic}</h4>
+                      <h4 className="font-semibold text-slate-900">{suggestion.topic}</h4>
                       <Badge variant="outline" className="text-xs">
                         {suggestion.priority} priority
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-700 mb-2">{suggestion.rationale}</p>
+                    <p className="text-xs text-slate-700 mb-2">{suggestion.rationale}</p>
                     
-                    <div className="text-xs text-gray-600 space-y-1">
+                    <div className="text-xs text-slate-600 space-y-1">
                       <p className="font-medium">Key Points:</p>
                       <ul className="list-disc list-inside space-y-0.5">
                         {suggestion.key_points.slice(0, 3).map((point, i) => (

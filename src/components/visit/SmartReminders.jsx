@@ -100,7 +100,7 @@ export default function SmartReminders({ patient, visit, allVisits }) {
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Bell className="w-5 h-5 text-orange-600" />
-          <h3 className="font-semibold text-gray-900">Smart Reminders</h3>
+          <h3 className="font-semibold text-slate-900">Smart Reminders</h3>
           <Badge variant="outline">{reminders.length}</Badge>
         </div>
         

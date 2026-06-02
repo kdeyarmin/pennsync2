@@ -295,7 +295,7 @@ Return comprehensive JSON:
       moderate: 'bg-yellow-500 text-white',
       low: 'bg-green-500 text-white'
     };
-    return colors[level] || 'bg-gray-500 text-white';
+    return colors[level] || 'bg-slate-500 text-white';
   };
 
   const getSeverityStyle = (severity) => {
@@ -305,7 +305,7 @@ Return comprehensive JSON:
       moderate: 'border-yellow-400 bg-yellow-50',
       low: 'border-blue-300 bg-blue-50'
     };
-    return styles[severity] || 'border-gray-300 bg-gray-50';
+    return styles[severity] || 'border-slate-300 bg-slate-50';
   };
 
   const totalAlerts = cdsResults ? (
@@ -365,7 +365,7 @@ Return comprehensive JSON:
           {!cdsResults && !isAnalyzing && (
             <div className="text-center py-4">
               <Brain className="w-8 h-8 text-indigo-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500 mb-3">AI will analyze as you document</p>
+              <p className="text-sm text-slate-500 mb-3">AI will analyze as you document</p>
               <Button
                 onClick={() => debouncedAnalyze(true)}
                 disabled={!currentNoteText || currentNoteText.length < 30}
@@ -381,7 +381,7 @@ Return comprehensive JSON:
           {isAnalyzing && !cdsResults && (
             <div className="flex flex-col items-center justify-center py-6">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-2" />
-              <p className="text-sm text-gray-600">Analyzing clinical data...</p>
+              <p className="text-sm text-slate-600">Analyzing clinical data...</p>
             </div>
           )}
 
@@ -445,12 +445,12 @@ Return comprehensive JSON:
                             <span className="font-semibold text-sm">{alert.title}</span>
                             <Badge variant="outline" className="text-xs">{alert.alert_type}</Badge>
                           </div>
-                          <p className="text-xs text-gray-700">{alert.description}</p>
-                          <p className="text-xs text-gray-600 mt-1 italic">{alert.clinical_significance}</p>
+                          <p className="text-xs text-slate-700">{alert.description}</p>
+                          <p className="text-xs text-slate-600 mt-1 italic">{alert.clinical_significance}</p>
                           {alert.immediate_actions?.length > 0 && (
                             <div className="mt-2">
                               <p className="text-xs font-medium text-red-800">Immediate Actions:</p>
-                              <ul className="list-disc ml-4 text-xs text-gray-700">
+                              <ul className="list-disc ml-4 text-xs text-slate-700">
                                 {alert.immediate_actions.map((action, i) => (
                                   <li key={i}>{action}</li>
                                 ))}
@@ -484,7 +484,7 @@ Return comprehensive JSON:
                 {/* Differential Considerations */}
                 {cdsResults.differential_considerations?.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                       <FlaskConical className="w-3 h-3" />
                       Differential Considerations
                     </p>
@@ -494,7 +494,7 @@ Return comprehensive JSON:
                           <span className="text-xs font-medium">{diff.condition}</span>
                           <Badge variant="outline" className="text-xs">{diff.urgency}</Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-slate-600 mt-1">
                           Supporting: {diff.supporting_findings?.join(', ')}
                         </p>
                         {diff.rule_out_with?.length > 0 && (
@@ -520,8 +520,8 @@ Return comprehensive JSON:
                           <strong>{di.drugs?.join(' + ')}</strong>
                           <Badge variant="outline" className="ml-2 text-xs">{di.interaction_type}</Badge>
                           <p className="mt-1">{di.effect}</p>
-                          <p className="text-gray-700 mt-1">→ {di.recommendation}</p>
-                          {di.monitoring && <p className="text-gray-600 italic">Monitor: {di.monitoring}</p>}
+                          <p className="text-slate-700 mt-1">→ {di.recommendation}</p>
+                          {di.monitoring && <p className="text-slate-600 italic">Monitor: {di.monitoring}</p>}
                         </AlertDescription>
                       </Alert>
                     ))}
@@ -539,7 +539,7 @@ Return comprehensive JSON:
                     {cdsResults.drug_safety.contraindications.map((ci, idx) => (
                       <div key={idx} className="bg-orange-50 p-2 rounded border border-orange-200 mb-1">
                         <p className="text-xs font-medium">{ci.drug}</p>
-                        <p className="text-xs text-gray-600">Contraindicated for: {ci.contraindicated_for}</p>
+                        <p className="text-xs text-slate-600">Contraindicated for: {ci.contraindicated_for}</p>
                         <p className="text-xs text-orange-700">{ci.reason}</p>
                         {ci.alternative && <p className="text-xs text-green-700">Alternative: {ci.alternative}</p>}
                       </div>
@@ -581,9 +581,9 @@ Return comprehensive JSON:
                       <div key={idx} className={`p-2 rounded border mb-1 ${getSeverityStyle(af.concern_level)}`}>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium">{af.vital}: {af.value}</span>
-                          <span className="text-xs text-gray-500">Normal: {af.normal_range}</span>
+                          <span className="text-xs text-slate-500">Normal: {af.normal_range}</span>
                         </div>
-                        <p className="text-xs text-gray-700 mt-1">{af.clinical_implication}</p>
+                        <p className="text-xs text-slate-700 mt-1">{af.clinical_implication}</p>
                       </div>
                     ))}
                   </div>
@@ -606,7 +606,7 @@ Return comprehensive JSON:
                           <span className="text-xs font-medium">{ta.vital}</span>
                           <Badge variant="outline" className="text-xs">{ta.trend}</Badge>
                         </div>
-                        <p className="text-xs text-gray-600">{ta.significance}</p>
+                        <p className="text-xs text-slate-600">{ta.significance}</p>
                         <p className="text-xs text-blue-700">Escalate if: {ta.action_threshold}</p>
                       </div>
                     ))}
@@ -626,7 +626,7 @@ Return comprehensive JSON:
                         </Badge>
                       </div>
                       <p className="text-xs font-medium">{rec.recommendation}</p>
-                      <p className="text-xs text-gray-600 italic mt-1">{rec.rationale}</p>
+                      <p className="text-xs text-slate-600 italic mt-1">{rec.rationale}</p>
                       {rec.insert_text && (
                         <Button
                           size="sm"
@@ -641,7 +641,7 @@ Return comprehensive JSON:
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-gray-500 text-center py-4">No specific recommendations at this time</p>
+                  <p className="text-xs text-slate-500 text-center py-4">No specific recommendations at this time</p>
                 )}
 
                 {/* Missing Assessments */}
@@ -657,7 +657,7 @@ Return comprehensive JSON:
                           <span className="text-xs font-medium">{ma.assessment}</span>
                           <Badge variant="outline" className="text-xs">{ma.priority}</Badge>
                         </div>
-                        <p className="text-xs text-gray-600">{ma.reason}</p>
+                        <p className="text-xs text-slate-600">{ma.reason}</p>
                         {ma.template_text && (
                           <Button
                             size="sm"
@@ -681,7 +681,7 @@ Return comprehensive JSON:
                     {cdsResults.care_plan_alignment.gaps_identified.map((gap, idx) => (
                       <div key={idx} className="bg-purple-50 p-2 rounded border border-purple-200 mb-1">
                         <p className="text-xs font-medium">{gap.goal}</p>
-                        <p className="text-xs text-gray-600">{gap.gap}</p>
+                        <p className="text-xs text-slate-600">{gap.gap}</p>
                         {gap.suggested_documentation && (
                           <Button
                             size="sm"
@@ -708,13 +708,13 @@ Return comprehensive JSON:
                         <span className="text-xs font-medium capitalize">{pa.risk_type} Risk</span>
                         <Badge className={getRiskColor(pa.risk_level)}>{pa.risk_level}</Badge>
                       </div>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-slate-600">
                         Factors: {pa.risk_factors?.join(', ')}
                       </p>
                       {pa.preventive_actions?.length > 0 && (
                         <div className="mt-1">
-                          <p className="text-xs font-medium text-gray-700">Preventive Actions:</p>
-                          <ul className="list-disc ml-4 text-xs text-gray-600">
+                          <p className="text-xs font-medium text-slate-700">Preventive Actions:</p>
+                          <ul className="list-disc ml-4 text-xs text-slate-600">
                             {pa.preventive_actions.map((action, i) => (
                               <li key={i}>{action}</li>
                             ))}
@@ -735,7 +735,7 @@ Return comprehensive JSON:
 
           {/* Clinical Summary */}
           {cdsResults?.clinical_summary && (
-            <div className="mt-3 p-2 bg-gray-50 rounded border text-xs text-gray-700">
+            <div className="mt-3 p-2 bg-slate-50 rounded border text-xs text-slate-700">
               <strong>Clinical Summary:</strong> {cdsResults.clinical_summary}
             </div>
           )}

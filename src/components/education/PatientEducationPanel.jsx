@@ -67,7 +67,7 @@ export default function PatientEducationPanel({ patientId }) {
       case 'warning_signs': return 'bg-red-600';
       case 'self_care': return 'bg-green-600';
       case 'care_plan': return 'bg-blue-600';
-      default: return 'bg-gray-600';
+      default: return 'bg-slate-600';
     }
   };
 
@@ -194,7 +194,7 @@ export default function PatientEducationPanel({ patientId }) {
                           {(material.category || '').replace('_', ' ')}
                         </Badge>
                       </div>
-                      <h4 className="font-semibold text-sm text-gray-900">{material.title}</h4>
+                      <h4 className="font-semibold text-sm text-slate-900">{material.title}</h4>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm">
@@ -203,20 +203,20 @@ export default function PatientEducationPanel({ patientId }) {
                 </div>
 
                 {isExpanded && (
-                  <div className="space-y-3 border-t border-gray-200 pt-3 mt-3">
-                    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  <div className="space-y-3 border-t border-slate-200 pt-3 mt-3">
+                    <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
                       {material.content}
                     </div>
 
                     {material.key_points?.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                        <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                           <Target className="w-3 h-3" />
                           Key Points:
                         </p>
                         <ul className="space-y-1">
                           {material.key_points.map((point, idx) => (
-                            <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
+                            <li key={idx} className="text-xs text-slate-600 flex items-start gap-2">
                               <span className="text-teal-600 font-bold">•</span>
                               <span>{point}</span>
                             </li>

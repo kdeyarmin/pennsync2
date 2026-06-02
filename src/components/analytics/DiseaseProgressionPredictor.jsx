@@ -172,7 +172,7 @@ Provide:
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             AI-powered analysis of patient vital signs trends to predict disease progression and identify intervention opportunities.
           </p>
           <div className="space-y-3">
@@ -237,7 +237,7 @@ Provide:
               <Brain className="w-5 h-5 text-purple-600" />
               30-Day Progression Prediction
             </CardTitle>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               {selectedPatient.patient.first_name} {selectedPatient.patient.last_name} - {selectedPatient.patient.primary_diagnosis}
             </p>
           </CardHeader>
@@ -261,14 +261,14 @@ Provide:
                 <h4 className="font-semibold mb-2">Expected Complications:</h4>
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {progressionData.expected_complications?.map((comp, i) => (
-                    <li key={i} className="text-gray-700">{comp}</li>
+                    <li key={i} className="text-slate-700">{comp}</li>
                   ))}
                 </ul>
               </div>
 
               <div>
                 <h4 className="font-semibold mb-2">Monitoring Frequency:</h4>
-                <p className="text-sm text-gray-700">{progressionData.monitoring_frequency}</p>
+                <p className="text-sm text-slate-700">{progressionData.monitoring_frequency}</p>
               </div>
             </div>
 
@@ -277,7 +277,7 @@ Provide:
               <div className="space-y-2">
                 {progressionData.interventions?.map((intervention, i) => (
                   <div key={i} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-gray-700">{intervention}</p>
+                    <p className="text-sm text-slate-700">{intervention}</p>
                   </div>
                 ))}
               </div>
@@ -288,7 +288,7 @@ Provide:
               <div className="space-y-2">
                 {progressionData.care_plan_adjustments?.map((adjustment, i) => (
                   <div key={i} className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <p className="text-sm text-gray-700">{adjustment}</p>
+                    <p className="text-sm text-slate-700">{adjustment}</p>
                   </div>
                 ))}
               </div>

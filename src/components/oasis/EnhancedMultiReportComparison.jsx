@@ -263,17 +263,17 @@ export default function EnhancedMultiReportComparison({
 
   if (availableReports.length < 2) {
     return (
-      <Card className="border-2 border-gray-200">
+      <Card className="border-2 border-slate-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <GitCompare className="w-5 h-5 text-gray-400" />
+            <GitCompare className="w-5 h-5 text-slate-400" />
             Multi-Report Comparison
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert className="bg-gray-50 border-gray-200">
-            <Info className="w-4 h-4 text-gray-500" />
-            <AlertDescription className="text-gray-600 text-sm">
+          <Alert className="bg-slate-50 border-slate-200">
+            <Info className="w-4 h-4 text-slate-500" />
+            <AlertDescription className="text-slate-600 text-sm">
               Upload and analyze at least 2 OASIS documents to enable comparison. Use batch analysis for multiple documents.
             </AlertDescription>
           </Alert>
@@ -299,7 +299,7 @@ export default function EnhancedMultiReportComparison({
         {/* Report Selection */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-700">Select Reports to Compare (2-4)</p>
+            <p className="text-sm font-medium text-slate-700">Select Reports to Compare (2-4)</p>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={selectAll} className="text-xs h-7">
                 Select All
@@ -318,7 +318,7 @@ export default function EnhancedMultiReportComparison({
                   className={`flex items-center gap-3 p-2 rounded-lg border transition-colors cursor-pointer ${
                     selectedReports.includes(report.id) 
                       ? 'bg-purple-50 border-purple-300' 
-                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                      : 'bg-white border-slate-200 hover:bg-slate-50'
                   }`}
                   onClick={() => toggleReportSelection(report.id)}
                 >
@@ -332,7 +332,7 @@ export default function EnhancedMultiReportComparison({
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{report.label}</p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-slate-500 truncate">
                       {report.pdgmData?.primary_diagnosis?.substring(0, 40) || 'No diagnosis'}
                     </p>
                   </div>
@@ -345,11 +345,11 @@ export default function EnhancedMultiReportComparison({
           </ScrollArea>
 
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className={selectedReports.length >= 2 ? 'text-green-700' : 'text-gray-500'}>
+            <Badge variant="outline" className={selectedReports.length >= 2 ? 'text-green-700' : 'text-slate-500'}>
               {selectedReports.length} selected
             </Badge>
             {selectedReports.length < 2 && (
-              <span className="text-xs text-gray-500">Select at least 2 reports</span>
+              <span className="text-xs text-slate-500">Select at least 2 reports</span>
             )}
           </div>
         </div>
@@ -389,13 +389,13 @@ export default function EnhancedMultiReportComparison({
                   {comparisonResults.statistics.highestReport?.shortLabel}
                 </p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg border text-center">
-                <Minus className="w-4 h-4 text-gray-500 mx-auto mb-1" />
-                <p className="text-xs text-gray-500">Lowest</p>
-                <p className="text-sm font-bold text-gray-700">
+              <div className="p-3 bg-slate-50 rounded-lg border text-center">
+                <Minus className="w-4 h-4 text-slate-500 mx-auto mb-1" />
+                <p className="text-xs text-slate-500">Lowest</p>
+                <p className="text-sm font-bold text-slate-700">
                   {formatCurrency(comparisonResults.statistics.minRevenue)}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-slate-500 truncate">
                   {comparisonResults.statistics.lowestReport?.shortLabel}
                 </p>
               </div>
@@ -416,8 +416,8 @@ export default function EnhancedMultiReportComparison({
             </div>
 
             {/* Revenue Comparison Chart */}
-            <div className="bg-gray-50 rounded-lg p-4 border">
-              <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <div className="bg-slate-50 rounded-lg p-4 border">
+              <p className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-green-600" />
                 Revenue Comparison
               </p>
@@ -442,8 +442,8 @@ export default function EnhancedMultiReportComparison({
             </div>
 
             {/* Case-Mix Components Radar */}
-            <div className="bg-gray-50 rounded-lg p-4 border">
-              <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <div className="bg-slate-50 rounded-lg p-4 border">
+              <p className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-purple-600" />
                 Case-Mix Component Comparison
               </p>
@@ -483,7 +483,7 @@ export default function EnhancedMultiReportComparison({
                 </thead>
                 <tbody className="divide-y">
                   {comparisonResults.reports.map((report, idx) => (
-                    <tr key={report.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <tr key={report.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                       <td className="p-2">
                         <div className="flex items-center gap-2">
                           <div 
@@ -499,8 +499,8 @@ export default function EnhancedMultiReportComparison({
                       <td className="p-2 text-center">
                         <span className={`font-bold ${
                           report.revenue === comparisonResults.statistics.maxRevenue ? 'text-green-700' :
-                          report.revenue === comparisonResults.statistics.minRevenue ? 'text-gray-500' :
-                          'text-gray-700'
+                          report.revenue === comparisonResults.statistics.minRevenue ? 'text-slate-500' :
+                          'text-slate-700'
                         }`}>
                           {formatCurrency(report.revenue)}
                         </span>
@@ -512,12 +512,12 @@ export default function EnhancedMultiReportComparison({
                       </td>
                       <td className="p-2 text-center">
                         <span className="capitalize">{report.functionalLevel}</span>
-                        <span className="text-gray-400 ml-1">({report.functionalPoints}pts)</span>
+                        <span className="text-slate-400 ml-1">({report.functionalPoints}pts)</span>
                       </td>
                       <td className="p-2 text-center capitalize">{report.comorbidityLevel}</td>
                       <td className="p-2 text-center">
                         <span className="capitalize">{report.admissionSource}</span>
-                        <span className="text-gray-400"> / </span>
+                        <span className="text-slate-400"> / </span>
                         <span className="capitalize">{report.episodeTiming}</span>
                       </td>
                     </tr>
@@ -529,7 +529,7 @@ export default function EnhancedMultiReportComparison({
             {/* Key Differences */}
             {comparisonResults.keyDifferences.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                   Key Differences & Insights
                 </p>
@@ -543,7 +543,7 @@ export default function EnhancedMultiReportComparison({
                     <Info className={`w-4 h-4 ${diff.severity === 'high' ? 'text-red-600' : 'text-yellow-600'}`} />
                     <AlertDescription>
                       <p className="font-semibold text-sm">{diff.title}</p>
-                      <p className="text-xs text-gray-700 mt-1">{diff.description}</p>
+                      <p className="text-xs text-slate-700 mt-1">{diff.description}</p>
                       <p className="text-xs text-purple-700 mt-1 font-medium">💡 {diff.impact}</p>
                     </AlertDescription>
                   </Alert>

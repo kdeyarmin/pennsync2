@@ -37,8 +37,8 @@ export default function QuickPresetsSelector({ onSelectPreset }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Quick Presets</h3>
-        <p className="text-sm text-gray-600">Start with a pre-configured package</p>
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Quick Presets</h3>
+        <p className="text-sm text-slate-600">Start with a pre-configured package</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -51,10 +51,10 @@ export default function QuickPresetsSelector({ onSelectPreset }) {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="text-2xl mb-2">{preset.icon}</div>
-                <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                <h4 className="font-semibold text-slate-900 text-sm sm:text-base truncate">
                   {preset.name}
                 </h4>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
+                <p className="text-xs sm:text-sm text-slate-600 mt-1 line-clamp-2">
                   {preset.description}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1">

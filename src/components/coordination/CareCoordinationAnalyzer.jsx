@@ -236,7 +236,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
       medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
       low: 'bg-blue-100 text-blue-800 border-blue-300'
     };
-    return colors[severity] || 'bg-gray-100 text-gray-800';
+    return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
   if (!patientId) {
@@ -255,8 +255,8 @@ Return comprehensive analysis with actionable coordination alerts.`,
       <Card className="border-2 border-purple-300">
         <CardContent className="p-8 text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
-          <p className="text-lg font-medium text-gray-900 mb-2">Analyzing Care Coordination...</p>
-          <p className="text-sm text-gray-600">
+          <p className="text-lg font-medium text-slate-900 mb-2">Analyzing Care Coordination...</p>
+          <p className="text-sm text-slate-600">
             Reviewing {visits.length} visits, {carePlans.length} care plans, {incidents.length} incidents...
           </p>
         </CardContent>
@@ -274,7 +274,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Analyze patient data to identify care gaps, provider coordination needs, and suggest team meetings.
           </p>
           {existingAlerts.length > 0 && (
@@ -337,7 +337,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm text-gray-900 mb-2">{alert.description}</p>
+              <p className="text-sm text-slate-900 mb-2">{alert.description}</p>
               <div className="bg-orange-50 p-3 rounded border border-orange-200">
                 <p className="text-xs font-semibold text-orange-900 mb-1">Identified Gap:</p>
                 <p className="text-sm text-orange-800">{alert.identified_gap}</p>
@@ -371,15 +371,15 @@ Return comprehensive analysis with actionable coordination alerts.`,
 
             {/* Supporting Evidence */}
             {alert.supporting_evidence?.length > 0 && (
-              <div className="bg-gray-50 p-3 rounded border">
-                <p className="text-xs font-semibold text-gray-900 mb-2">Supporting Evidence:</p>
+              <div className="bg-slate-50 p-3 rounded border">
+                <p className="text-xs font-semibold text-slate-900 mb-2">Supporting Evidence:</p>
                 <div className="space-y-2">
                   {alert.supporting_evidence.map((evidence, i) => (
                     <div key={i} className="bg-white p-2 rounded border text-xs">
-                      <p className="font-medium text-gray-700">
+                      <p className="font-medium text-slate-700">
                         {evidence.source} - {evidence.date}
                       </p>
-                      <p className="text-gray-600 italic">"{evidence.excerpt}"</p>
+                      <p className="text-slate-600 italic">"{evidence.excerpt}"</p>
                     </div>
                   ))}
                 </div>

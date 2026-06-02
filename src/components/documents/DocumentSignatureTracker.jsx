@@ -59,9 +59,9 @@ export default function DocumentSignatureTracker({ patientId }) {
       case 'declined':
         return <XCircle className="w-4 h-4 text-red-600" />;
       case 'expired':
-        return <AlertCircle className="w-4 h-4 text-gray-600" />;
+        return <AlertCircle className="w-4 h-4 text-slate-600" />;
       default:
-        return <FileText className="w-4 h-4 text-gray-600" />;
+        return <FileText className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -70,9 +70,9 @@ export default function DocumentSignatureTracker({ patientId }) {
       signed: 'bg-green-100 text-green-800',
       pending: 'bg-yellow-100 text-yellow-800',
       declined: 'bg-red-100 text-red-800',
-      expired: 'bg-gray-100 text-gray-800'
+      expired: 'bg-slate-100 text-slate-800'
     };
-    return variants[status] || 'bg-gray-100 text-gray-800';
+    return variants[status] || 'bg-slate-100 text-slate-800';
   };
 
   const getPatientName = (patientId) => {
@@ -119,7 +119,7 @@ export default function DocumentSignatureTracker({ patientId }) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <p className="text-gray-500">Loading documents...</p>
+          <p className="text-slate-500">Loading documents...</p>
         </CardContent>
       </Card>
     );
@@ -146,7 +146,7 @@ export default function DocumentSignatureTracker({ patientId }) {
         {/* Search and Filter */}
         <div className="flex gap-2 mt-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="Search documents..."
               value={searchTerm}
@@ -172,21 +172,21 @@ export default function DocumentSignatureTracker({ patientId }) {
       <CardContent>
         {filteredDocuments.length === 0 ? (
           <div className="text-center py-8">
-            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No documents found</p>
+            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500">No documents found</p>
           </div>
         ) : (
           <div className="space-y-3">
             {filteredDocuments.map((doc) => (
               <div
                 key={doc.id}
-                className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-4 border rounded-lg hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       {getStatusIcon(doc.normalizedStatus)}
-                      <h4 className="font-semibold text-gray-900 truncate">
+                      <h4 className="font-semibold text-slate-900 truncate">
                         {doc.normalizedName}
                       </h4>
                       <Badge className={getStatusBadge(doc.normalizedStatus)}>
@@ -195,12 +195,12 @@ export default function DocumentSignatureTracker({ patientId }) {
                     </div>
 
                     {!patientId && (
-                      <p className="text-sm text-gray-600 mb-1">
+                      <p className="text-sm text-slate-600 mb-1">
                         Patient: {getPatientName(doc.patient_id)}
                       </p>
                     )}
 
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       Created: {formatEastern(doc.created_date, 'MMM d, yyyy')}
                     </p>
 
@@ -224,12 +224,12 @@ export default function DocumentSignatureTracker({ patientId }) {
                             <div
                               key={idx}
                               className={`h-1 flex-1 rounded-full ${
-                                sig.is_signed ? 'bg-green-500' : 'bg-gray-200'
+                                sig.is_signed ? 'bg-green-500' : 'bg-slate-200'
                               }`}
                             />
                           ))}
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {doc.required_signatures.filter(s => s.is_signed).length} of {doc.required_signatures.length} signatures completed
                         </p>
                       </div>

@@ -172,7 +172,7 @@ export default function PatientChartExporter({ patientId, patientName }) {
               </AlertDescription>
             </Alert>
 
-            <Card className="bg-gray-50 border-gray-200">
+            <Card className="bg-slate-50 border-slate-200">
               <CardHeader>
                 <CardTitle className="text-sm">Include in Export</CardTitle>
               </CardHeader>

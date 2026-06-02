@@ -201,8 +201,8 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
       <Card className="border-2 border-green-300">
         <CardContent className="p-6 text-center">
           <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-900 font-semibold">Generating Personalized Education Materials...</p>
-          <p className="text-xs text-gray-600 mt-2">📚 Customizing content based on patient's condition, language, and compliance status</p>
+          <p className="text-sm text-slate-900 font-semibold">Generating Personalized Education Materials...</p>
+          <p className="text-xs text-slate-600 mt-2">📚 Customizing content based on patient's condition, language, and compliance status</p>
         </CardContent>
       </Card>
     );
@@ -325,22 +325,22 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
               </ul>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded border border-gray-200">
-              <h3 className="font-semibold text-sm text-gray-900 mb-2">Safety at Home</h3>
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">{educationMaterials.safety_at_home}</p>
+            <div className="bg-slate-50 p-4 rounded border border-slate-200">
+              <h3 className="font-semibold text-sm text-slate-900 mb-2">Safety at Home</h3>
+              <p className="text-sm text-slate-800 whitespace-pre-wrap">{educationMaterials.safety_at_home}</p>
             </div>
           </TabsContent>
 
           <TabsContent value="resources" className="space-y-4 mt-4">
             {educationMaterials.resources?.length > 0 && (
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-gray-900">Helpful Resources</h3>
+                <h3 className="font-semibold text-sm text-slate-900">Helpful Resources</h3>
                 {educationMaterials.resources.map((resource, idx) => (
                   <div key={idx} className="bg-white p-3 rounded border hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="font-semibold text-sm text-gray-900">{resource.name}</p>
-                        <p className="text-xs text-gray-600 mt-1">{resource.description}</p>
+                        <p className="font-semibold text-sm text-slate-900">{resource.name}</p>
+                        <p className="text-xs text-slate-600 mt-1">{resource.description}</p>
                       </div>
                       {resource.link && (
                         <a

@@ -132,7 +132,7 @@ Return JSON:
       soon: 'bg-yellow-100 text-yellow-800',
       recommended: 'bg-blue-100 text-blue-800'
     };
-    return colors[urgency] || 'bg-gray-100 text-gray-800';
+    return colors[urgency] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -147,7 +147,7 @@ Return JSON:
         {!recommendations ? (
           <div className="text-center py-6">
             <Sparkles className="w-12 h-12 text-purple-300 mx-auto mb-3" />
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               Get personalized training recommendations based on your skills, patient population, and career goals
             </p>
             <Button
@@ -175,7 +175,7 @@ Return JSON:
             {/* High Priority */}
             {recommendations.high_priority_recommendations?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-red-600" /> High Priority Training
                 </h4>
                 <div className="space-y-2">
@@ -185,7 +185,7 @@ Return JSON:
                         <span className="font-medium">{rec.module_title}</span>
                         <Badge className={getUrgencyColor(rec.urgency)}>{rec.urgency}</Badge>
                       </div>
-                      <p className="text-sm text-gray-600">{rec.reason}</p>
+                      <p className="text-sm text-slate-600">{rec.reason}</p>
                       <p className="text-xs text-purple-600 mt-1">Addresses: {rec.skill_gap_addressed}</p>
                       {onEnroll && (
                         <Button size="sm" className="mt-2" onClick={() => onEnroll(rec.module_title)}>
@@ -201,7 +201,7 @@ Return JSON:
             {/* Skill Development */}
             {recommendations.skill_development?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-green-600" /> Skill Development Path
                 </h4>
                 <div className="space-y-2">
@@ -211,7 +211,7 @@ Return JSON:
                         <span className="font-medium">{dev.current_skill}</span>
                         <Badge variant="outline">{dev.current_level} → {dev.target_level}</Badge>
                       </div>
-                      <p className="text-sm text-gray-600">{dev.recommended_training}</p>
+                      <p className="text-sm text-slate-600">{dev.recommended_training}</p>
                       <p className="text-xs text-green-600 mt-1">
                         <Clock className="w-3 h-3 inline mr-1" /> {dev.timeline}
                       </p>
@@ -224,14 +224,14 @@ Return JSON:
             {/* Career Growth */}
             {recommendations.career_growth?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
                   <Target className="w-4 h-4 text-blue-600" /> Career Growth Opportunities
                 </h4>
                 <div className="space-y-2">
                   {recommendations.career_growth.map((growth, idx) => (
                     <div key={idx} className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <span className="font-medium">{growth.certification}</span>
-                      <p className="text-sm text-gray-600">{growth.benefit}</p>
+                      <p className="text-sm text-slate-600">{growth.benefit}</p>
                       <p className="text-xs text-blue-600 mt-1">Prerequisites: {growth.prerequisites}</p>
                     </div>
                   ))}
@@ -242,12 +242,12 @@ Return JSON:
             {/* Quick Wins */}
             {recommendations.quick_wins?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-indigo-600" /> Quick Wins This Week
                 </h4>
                 <ul className="space-y-1">
                   {recommendations.quick_wins.map((win, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 flex items-center gap-2">
+                    <li key={idx} className="text-sm text-slate-700 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full" /> {win}
                     </li>
                   ))}

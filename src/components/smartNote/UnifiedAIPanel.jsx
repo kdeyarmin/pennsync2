@@ -166,10 +166,10 @@ export default function UnifiedAIPanel({
 
     if (allItems.length === 0) {
       return (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-slate-500">
           <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-500" />
           <p className="text-sm">No AI suggestions at this time</p>
-          <p className="text-xs text-gray-400 mt-1">Continue documenting your visit</p>
+          <p className="text-xs text-slate-400 mt-1">Continue documenting your visit</p>
         </div>
       );
     }
@@ -188,7 +188,7 @@ export default function UnifiedAIPanel({
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               <item.sourceIcon className={`w-4 h-4 ${item.sourceColor}`} />
-              <span className="text-xs font-semibold text-gray-600 uppercase">
+              <span className="text-xs font-semibold text-slate-600 uppercase">
                 {item.source}
               </span>
             </div>
@@ -202,23 +202,23 @@ export default function UnifiedAIPanel({
             </Badge>
           </div>
           
-          <p className="text-sm font-semibold text-gray-900 mb-2">{item.title}</p>
+          <p className="text-sm font-semibold text-slate-900 mb-2">{item.title}</p>
           
           {item.description && (
-            <p className="text-xs text-gray-600 mb-2">{item.description}</p>
+            <p className="text-xs text-slate-600 mb-2">{item.description}</p>
           )}
 
           {item.action && (
             <div className="bg-white p-2 rounded border mb-2">
-              <p className="text-xs font-semibold text-gray-700 mb-1">Recommended Action:</p>
-              <p className="text-xs text-gray-600">{item.action}</p>
+              <p className="text-xs font-semibold text-slate-700 mb-1">Recommended Action:</p>
+              <p className="text-xs text-slate-600">{item.action}</p>
             </div>
           )}
 
           {item.suggestions && item.suggestions.length > 0 && (
             <div className="space-y-1 mb-2">
               {item.suggestions.map((suggestion, i) => (
-                <div key={i} className="text-xs text-gray-700 flex items-start gap-1">
+                <div key={i} className="text-xs text-slate-700 flex items-start gap-1">
                   <span>•</span>
                   <span>{suggestion}</span>
                 </div>

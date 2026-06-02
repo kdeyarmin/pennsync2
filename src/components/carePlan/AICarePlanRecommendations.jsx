@@ -131,7 +131,7 @@ Return JSON:`,
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-blue-100 text-blue-800 border-blue-300"
     };
-    return colors[priority] || "bg-gray-100 text-gray-800";
+    return colors[priority] || "bg-slate-100 text-slate-800";
   };
 
   return (
@@ -208,14 +208,14 @@ Return JSON:`,
                                 </Badge>
                               )}
                             </div>
-                            <h4 className="font-semibold text-gray-900">{rec.problem}</h4>
+                            <h4 className="font-semibold text-slate-900">{rec.problem}</h4>
                           </div>
                         </div>
 
                         {/* Goal */}
                         <div className="bg-white p-3 rounded-lg border">
-                          <p className="text-xs font-medium text-gray-500 mb-1">SMART Goal:</p>
-                          <p className="text-sm text-gray-900 font-medium">{rec.goal}</p>
+                          <p className="text-xs font-medium text-slate-500 mb-1">SMART Goal:</p>
+                          <p className="text-sm text-slate-900 font-medium">{rec.goal}</p>
                         </div>
 
                         {/* Rationale */}
@@ -245,8 +245,8 @@ Return JSON:`,
 
                         {/* Interventions */}
                         <div>
-                          <p className="text-xs font-medium text-gray-600 mb-2">Recommended Interventions:</p>
-                          <ul className="text-sm text-gray-700 space-y-1">
+                          <p className="text-xs font-medium text-slate-600 mb-2">Recommended Interventions:</p>
+                          <ul className="text-sm text-slate-700 space-y-1">
                             {rec.interventions?.map((intervention, i) => (
                               <li key={i} className="flex items-start gap-2">
                                 <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -274,14 +274,14 @@ Return JSON:`,
                         )}
 
                         {/* Metadata */}
-                        <div className="flex gap-3 text-xs text-gray-500 pt-2 border-t">
+                        <div className="flex gap-3 text-xs text-slate-500 pt-2 border-t">
                           <span><strong>Baseline:</strong> {rec.baseline_measurement}</span>
                           <span><strong>Frequency:</strong> {rec.frequency}</span>
                           <span><strong>Target:</strong> {rec.target_days} days</span>
                         </div>
 
                         {rec.evidence_source && (
-                          <p className="text-xs text-gray-500 italic">
+                          <p className="text-xs text-slate-500 italic">
                             Evidence: {rec.evidence_source}
                           </p>
                         )}

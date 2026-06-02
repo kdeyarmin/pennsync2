@@ -80,10 +80,10 @@ export default function AdminUserSetup() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
           User Setup & Invitations
         </h1>
-        <p className="text-gray-600">Manage user invitations and setup new team members</p>
+        <p className="text-slate-600">Manage user invitations and setup new team members</p>
       </div>
 
       {/* Invite New User */}
@@ -140,8 +140,8 @@ export default function AdminUserSetup() {
         </CardHeader>
         <CardContent>
           {allUsers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Shield className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <div className="text-center py-8 text-slate-500">
+              <Shield className="w-12 h-12 mx-auto mb-3 text-slate-300" />
               <p>No users yet. Start by inviting your team members above.</p>
             </div>
           ) : (
@@ -149,11 +149,11 @@ export default function AdminUserSetup() {
               {allUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
+                  className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900">{user.full_name}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
+                    <p className="font-medium text-slate-900">{user.full_name}</p>
+                    <p className="text-sm text-slate-500">{user.email}</p>
                   </div>
                   <Badge
                     variant={user.role === 'admin' ? 'default' : 'outline'}

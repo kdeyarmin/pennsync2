@@ -41,7 +41,7 @@ export default function ReportFilters({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {showBusinessLine && (
             <div>
-              <label className="text-sm font-medium text-gray-700">Business Line</label>
+              <label className="text-sm font-medium text-slate-700">Business Line</label>
               <Select 
                 value={filters.businessLine}
                 onValueChange={(value) => handleFilterChange('businessLine', value)}
@@ -64,7 +64,7 @@ export default function ReportFilters({
           {showDateRange && (
             <>
               <div>
-                <label className="text-sm font-medium text-gray-700">From Date</label>
+                <label className="text-sm font-medium text-slate-700">From Date</label>
                 <Input
                   type="date"
                   value={filters.dateStart}
@@ -72,7 +72,7 @@ export default function ReportFilters({
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">To Date</label>
+                <label className="text-sm font-medium text-slate-700">To Date</label>
                 <Input
                   type="date"
                   value={filters.dateEnd}
@@ -84,7 +84,7 @@ export default function ReportFilters({
 
           {showEmployee && (
             <div>
-              <label className="text-sm font-medium text-gray-700">Employee Name</label>
+              <label className="text-sm font-medium text-slate-700">Employee Name</label>
               <Input
                 placeholder="Search employee..."
                 value={filters.employee}
@@ -95,7 +95,7 @@ export default function ReportFilters({
 
           {showCourse && (
             <div>
-              <label className="text-sm font-medium text-gray-700">Course</label>
+              <label className="text-sm font-medium text-slate-700">Course</label>
               <Input
                 placeholder="Search course..."
                 value={filters.course}
@@ -106,7 +106,7 @@ export default function ReportFilters({
 
           {showPlan && planOptions.length > 0 && (
             <div>
-              <label className="text-sm font-medium text-gray-700">Learning Plan</label>
+              <label className="text-sm font-medium text-slate-700">Learning Plan</label>
               <Select value={filters.plan} onValueChange={(value) => handleFilterChange('plan', value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -125,7 +125,7 @@ export default function ReportFilters({
 
           {showStatus && (
             <div>
-              <label className="text-sm font-medium text-gray-700">Status</label>
+              <label className="text-sm font-medium text-slate-700">Status</label>
               <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
                 <SelectTrigger>
                   <SelectValue />

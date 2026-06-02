@@ -89,8 +89,8 @@ export default function NextStepsPanel({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-3 border border-gray-200">
-          <p className="text-xs text-gray-500 mb-2 uppercase font-semibold">Optional Actions</p>
+        <div className="bg-white rounded-lg p-3 border border-slate-200">
+          <p className="text-xs text-slate-500 mb-2 uppercase font-semibold">Optional Actions</p>
           <div className="space-y-2">
             <Button
               onClick={onGenerateTasks}
@@ -116,7 +116,7 @@ export default function NextStepsPanel({
               onClick={onStartNew}
               variant="outline"
               size="sm"
-              className="w-full justify-start text-gray-600"
+              className="w-full justify-start text-slate-600"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Start New Note

@@ -114,7 +114,7 @@ export default function PatientEducationPortal() {
             />
             <div className="max-h-96 overflow-y-auto space-y-2">
               {filteredPatients.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No patients found</p>
+                <p className="text-sm text-slate-500 text-center py-4">No patients found</p>
               ) : (
                 filteredPatients.map((p) => (
                   <button
@@ -123,17 +123,17 @@ export default function PatientEducationPortal() {
                     className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                       selectedPatientId === p.id
                         ? "border-purple-600 bg-purple-50"
-                        : "border-gray-200 hover:border-purple-300 bg-white"
+                        : "border-slate-200 hover:border-purple-300 bg-white"
                     }`}
                   >
-                    <p className="font-semibold text-sm text-gray-900">
+                    <p className="font-semibold text-sm text-slate-900">
                       {p.first_name} {p.last_name}
                     </p>
-                    <p className="text-xs text-gray-600 mt-0.5">
+                    <p className="text-xs text-slate-600 mt-0.5">
                       {p.medical_record_number && `MRN: ${p.medical_record_number}`}
                     </p>
                     {p.primary_diagnosis && (
-                      <p className="text-xs text-gray-500 mt-1">{p.primary_diagnosis}</p>
+                      <p className="text-xs text-slate-500 mt-1">{p.primary_diagnosis}</p>
                     )}
                   </button>
                 ))
@@ -147,27 +147,27 @@ export default function PatientEducationPortal() {
           <>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm font-medium text-gray-600">Patient</p>
-                <p className="text-lg font-bold text-gray-900 mt-1">
+                <p className="text-sm font-medium text-slate-600">Patient</p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
                   {selectedPatient.first_name} {selectedPatient.last_name}
                 </p>
-                <p className="text-xs text-gray-500 mt-2">{selectedPatient.primary_diagnosis}</p>
+                <p className="text-xs text-slate-500 mt-2">{selectedPatient.primary_diagnosis}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm font-medium text-gray-600">Education Status</p>
+                <p className="text-sm font-medium text-slate-600">Education Status</p>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-orange-600" />
                     <span className="text-sm font-bold text-orange-600">{pendingMaterials.length}</span>
-                    <span className="text-xs text-gray-600">Pending</span>
+                    <span className="text-xs text-slate-600">Pending</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-bold text-green-600">{deliveredMaterials.length}</span>
-                    <span className="text-xs text-gray-600">Delivered</span>
+                    <span className="text-xs text-slate-600">Delivered</span>
                   </div>
                 </div>
               </CardContent>
@@ -209,8 +209,8 @@ export default function PatientEducationPortal() {
             <TabsContent value="pending" className="space-y-3">
               {pendingMaterials.length === 0 ? (
                 <Card>
-                  <CardContent className="p-8 text-center text-gray-500">
-                    <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <CardContent className="p-8 text-center text-slate-500">
+                    <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p>No pending education materials</p>
                   </CardContent>
                 </Card>
@@ -234,8 +234,8 @@ export default function PatientEducationPortal() {
             <TabsContent value="delivered" className="space-y-3">
               {deliveredMaterials.length === 0 ? (
                 <Card>
-                  <CardContent className="p-8 text-center text-gray-500">
-                    <CheckCircle2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <CardContent className="p-8 text-center text-slate-500">
+                    <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p>No delivered education materials yet</p>
                   </CardContent>
                 </Card>
@@ -298,14 +298,14 @@ function EducationMaterialCard({
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-gray-900">{material.topic}</h4>
+              <h4 className="font-semibold text-slate-900">{material.topic}</h4>
               {delivered ? (
                 <Badge className="bg-green-600">Delivered</Badge>
               ) : (
                 <Badge className="bg-orange-600">Pending</Badge>
               )}
             </div>
-            <p className="text-sm text-gray-600">{material.diagnosis_related}</p>
+            <p className="text-sm text-slate-600">{material.diagnosis_related}</p>
           </div>
           <Button
             variant="ghost"
@@ -325,7 +325,7 @@ function EducationMaterialCard({
           <div className="space-y-3 pt-3 border-t border-current/20">
             {/* Content Preview */}
             <div className="bg-white p-3 rounded-lg">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
                 {material.education_content}
               </p>
             </div>
@@ -333,10 +333,10 @@ function EducationMaterialCard({
             {/* Delivery Verification */}
             {!delivered && (
               <div className="bg-white p-3 rounded-lg space-y-3">
-                <h5 className="font-semibold text-sm text-gray-900">Mark as Delivered</h5>
+                <h5 className="font-semibold text-sm text-slate-900">Mark as Delivered</h5>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">
+                  <label className="text-xs font-medium text-slate-600 block mb-2">
                     Delivery Method
                   </label>
                   <select
@@ -353,7 +353,7 @@ function EducationMaterialCard({
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">
+                  <label className="text-xs font-medium text-slate-600 block mb-2">
                     Teach-Back Notes (Patient Understanding)
                   </label>
                   <Textarea
@@ -368,7 +368,7 @@ function EducationMaterialCard({
                   <Checkbox id={`teach-back-${material.id}`} defaultChecked />
                   <label
                     htmlFor={`teach-back-${material.id}`}
-                    className="text-xs text-gray-700"
+                    className="text-xs text-slate-700"
                   >
                     Patient demonstrated understanding via teach-back
                   </label>

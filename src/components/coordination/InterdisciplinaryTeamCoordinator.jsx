@@ -190,7 +190,7 @@ Return recommendation with:
         {isAnalyzing && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Analyzing patient complexity...</p>
+            <p className="text-sm text-slate-600">Analyzing patient complexity...</p>
           </div>
         )}
 
@@ -220,14 +220,14 @@ Return recommendation with:
             {recommendation.meeting_recommended && (
               <>
                 {/* Complexity Score */}
-                <div className="p-3 bg-gray-50 rounded-lg border">
+                <div className="p-3 bg-slate-50 rounded-lg border">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold">Complexity Score</span>
                     <span className="text-xl font-bold text-indigo-600">
                       {recommendation.complexity_score}/100
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-slate-200 rounded-full h-2">
                     <div 
                       className="bg-indigo-600 h-2 rounded-full transition-all"
                       style={{ width: `${recommendation.complexity_score}%` }}

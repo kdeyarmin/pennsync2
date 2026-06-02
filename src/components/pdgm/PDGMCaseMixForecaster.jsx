@@ -169,7 +169,7 @@ Return JSON:
   const getTrendIcon = (trend) => {
     if (trend === 'increasing') return <ArrowUpRight className="w-4 h-4 text-green-600" />;
     if (trend === 'decreasing') return <ArrowDownRight className="w-4 h-4 text-red-600" />;
-    return <Minus className="w-4 h-4 text-gray-500" />;
+    return <Minus className="w-4 h-4 text-slate-500" />;
   };
 
   const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -192,14 +192,14 @@ Return JSON:
           {forecast ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">Projected Revenue ({timeframe}d)</span>
+                <span className="text-xs text-slate-600">Projected Revenue ({timeframe}d)</span>
                 <span className="text-lg font-bold text-purple-700">
                   {formatCurrency(forecast.forecast_summary?.total_projected_revenue)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-600">Episodes: {forecast.forecast_summary?.total_projected_episodes}</span>
-                <span className="text-gray-600">Avg CMW: {forecast.forecast_summary?.average_case_mix_weight?.toFixed(4)}</span>
+                <span className="text-slate-600">Episodes: {forecast.forecast_summary?.total_projected_episodes}</span>
+                <span className="text-slate-600">Avg CMW: {forecast.forecast_summary?.average_case_mix_weight?.toFixed(4)}</span>
               </div>
               {forecast.trend_analysis && (
                 <div className="flex items-center gap-1 text-xs">
@@ -311,7 +311,7 @@ Return JSON:
               {/* Revenue Chart */}
               {forecast.revenue_by_month?.length > 0 && (
                 <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-semibold text-gray-900 mb-3 text-sm">Revenue Projection</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3 text-sm">Revenue Projection</h4>
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={forecast.revenue_by_month}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -327,7 +327,7 @@ Return JSON:
               {/* Clinical Group Distribution */}
               {forecast.clinical_group_distribution?.length > 0 && (
                 <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-semibold text-gray-900 mb-3 text-sm">Clinical Group Distribution</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3 text-sm">Clinical Group Distribution</h4>
                   <div className="flex items-center gap-4">
                     <ResponsiveContainer width="40%" height={150}>
                       <PieChart>
@@ -365,7 +365,7 @@ Return JSON:
             <TabsContent value="patients" className="mt-4">
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {forecast.patient_level_forecasts?.map((pf, idx) => (
-                  <div key={idx} className="p-3 bg-gray-50 rounded-lg border">
+                  <div key={idx} className="p-3 bg-slate-50 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-sm">{pf.patient_name}</span>
                       <Badge className="bg-purple-100 text-purple-800">
@@ -374,19 +374,19 @@ Return JSON:
                     </div>
                     <div className="grid grid-cols-4 gap-2 text-xs">
                       <div>
-                        <p className="text-gray-500">Clinical</p>
+                        <p className="text-slate-500">Clinical</p>
                         <p className="font-medium">{pf.predicted_clinical_group}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Functional</p>
+                        <p className="text-slate-500">Functional</p>
                         <p className="font-medium capitalize">{pf.predicted_functional_level}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Comorbidity</p>
+                        <p className="text-slate-500">Comorbidity</p>
                         <p className="font-medium capitalize">{pf.predicted_comorbidity_tier}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500">CMW</p>
+                        <p className="text-slate-500">CMW</p>
                         <p className="font-medium">{pf.predicted_case_mix_weight?.toFixed(4)}</p>
                       </div>
                     </div>
@@ -460,7 +460,7 @@ Return JSON:
                               {rec.implementation_effort} effort
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-700 mt-1">{rec.recommendation}</p>
+                          <p className="text-sm text-slate-700 mt-1">{rec.recommendation}</p>
                         </div>
                         <span className="text-green-700 font-bold text-sm">
                           +{formatCurrency(rec.potential_revenue_impact)}

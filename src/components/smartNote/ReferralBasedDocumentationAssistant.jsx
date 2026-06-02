@@ -164,7 +164,7 @@ Make all documentation Medicare-compliant, objective, and specific. Include clin
         {loading && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Analyzing referral data and generating documentation suggestions...</p>
+            <p className="text-slate-600">Analyzing referral data and generating documentation suggestions...</p>
           </div>
         )}
 
@@ -210,27 +210,27 @@ Make all documentation Medicare-compliant, objective, and specific. Include clin
                 const isCopied = copiedSection === section.key;
 
                 return (
-                  <Card key={section.key} className="border-gray-200">
+                  <Card key={section.key} className="border-slate-200">
                     <CardHeader 
-                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="cursor-pointer hover:bg-slate-50 transition-colors"
                       onClick={() => setExpandedSection(isExpanded ? null : section.key)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-xl">{section.icon}</span>
-                          <span className="font-semibold text-gray-900">{section.title}</span>
+                          <span className="font-semibold text-slate-900">{section.title}</span>
                         </div>
                         {isExpanded ? (
-                          <ChevronUp className="w-5 h-5 text-gray-500" />
+                          <ChevronUp className="w-5 h-5 text-slate-500" />
                         ) : (
-                          <ChevronDown className="w-5 h-5 text-gray-500" />
+                          <ChevronDown className="w-5 h-5 text-slate-500" />
                         )}
                       </div>
                     </CardHeader>
                     {isExpanded && (
                       <CardContent>
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3">
-                          <p className="text-sm text-gray-800 whitespace-pre-wrap">{content}</p>
+                        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-3">
+                          <p className="text-sm text-slate-800 whitespace-pre-wrap">{content}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button

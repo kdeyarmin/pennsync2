@@ -259,7 +259,7 @@ Focus on key OASIS items: M1021 (Primary Diagnosis), M1023 (Other Diagnoses), M1
                             <p className="text-sm font-semibold text-green-900 mb-1">
                               Suggested: {item.suggested_answer}
                             </p>
-                            <p className="text-xs text-gray-700">
+                            <p className="text-xs text-slate-700">
                               Evidence: {item.supporting_evidence}
                             </p>
                           </div>
@@ -304,12 +304,12 @@ Focus on key OASIS items: M1021 (Primary Diagnosis), M1023 (Other Diagnoses), M1
                           } text-white font-semibold text-xs`}>
                             {item.item_code}
                           </Badge>
-                          <strong className="text-gray-900">{item.item_name}</strong>
+                          <strong className="text-slate-900">{item.item_name}</strong>
                           <Badge variant="outline" className="text-xs">
                             {item.priority} priority
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mt-1">
+                        <p className="text-sm text-slate-700 mt-1">
                           📝 What to assess: {item.what_to_assess}
                         </p>
                       </AlertDescription>
@@ -350,7 +350,7 @@ Focus on key OASIS items: M1021 (Primary Diagnosis), M1023 (Other Diagnoses), M1
             </>
           )}
 
-          <div className="pt-2 border-t border-gray-200 flex items-center justify-between text-xs text-gray-600">
+          <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
             <span>OASIS integration for {visitType} visit</span>
             <label className="flex items-center gap-2 cursor-pointer">
               <input

@@ -57,8 +57,8 @@ export default function SignerPackageViewer({
                   <div className="flex items-start gap-3 flex-1">
                     <FileText className="w-5 h-5 text-amber-600 mt-1 shrink-0" />
                     <div>
-                      <p className="font-medium text-gray-900">{doc.name}</p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="font-medium text-slate-900">{doc.name}</p>
+                      <p className="text-xs text-slate-600 mt-1">
                         Awaiting your signature
                       </p>
                     </div>
@@ -98,8 +98,8 @@ export default function SignerPackageViewer({
                   <div className="flex items-start gap-3 flex-1">
                     <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 shrink-0" />
                     <div>
-                      <p className="font-medium text-gray-900">{doc.name}</p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="font-medium text-slate-900">{doc.name}</p>
+                      <p className="text-xs text-slate-600 mt-1">
                         Signed on{' '}
                         {new Date(doc.signedAt).toLocaleDateString()} at{' '}
                         {new Date(doc.signedAt).toLocaleTimeString()}

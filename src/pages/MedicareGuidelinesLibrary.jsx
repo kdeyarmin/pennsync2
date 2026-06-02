@@ -147,7 +147,7 @@ export default function MedicareGuidelinesLibrary() {
       quality_measures: "bg-yellow-100 text-yellow-800",
       compliance_audit: "bg-orange-100 text-orange-800",
       pdgm: "bg-teal-100 text-teal-800",
-      other: "bg-gray-100 text-gray-800"
+      other: "bg-slate-100 text-slate-800"
     };
     return colors[category] || colors.other;
   };
@@ -157,11 +157,11 @@ export default function MedicareGuidelinesLibrary() {
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
               <span className="truncate">Medicare Guidelines Library</span>
             </h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-1">
               Official CMS guidelines and regulations for home health documentation
             </p>
           </div>
@@ -284,7 +284,7 @@ export default function MedicareGuidelinesLibrary() {
         {/* Search and Filter */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <Input
               placeholder="Search guidelines by title, keywords, or content..."
               value={searchTerm}
@@ -321,8 +321,8 @@ export default function MedicareGuidelinesLibrary() {
       ) : filteredGuidelines.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500">
+            <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+            <p className="text-slate-500">
               {searchTerm || categoryFilter !== "all" 
                 ? "No guidelines found matching your search"
                 : "No guidelines available yet"}
@@ -371,8 +371,8 @@ export default function MedicareGuidelinesLibrary() {
                 </div>
               </CardHeader>
               <CardContent className="p-3 sm:p-4 md:p-6">
-                <p className="text-xs sm:text-sm text-gray-600 mb-3">{guideline.summary}</p>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                <p className="text-xs sm:text-sm text-slate-600 mb-3">{guideline.summary}</p>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-500">
                   {guideline.effective_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -457,16 +457,16 @@ export default function MedicareGuidelinesLibrary() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   {selectedGuideline.effective_date && (
                     <div>
-                      <span className="font-medium text-gray-700">Effective Date:</span>
-                      <p className="text-gray-600">
+                      <span className="font-medium text-slate-700">Effective Date:</span>
+                      <p className="text-slate-600">
                         {new Date(selectedGuideline.effective_date).toLocaleDateString()}
                       </p>
                     </div>
                   )}
                   {selectedGuideline.cms_manual_chapter && (
                     <div>
-                      <span className="font-medium text-gray-700">CMS Manual:</span>
-                      <p className="text-gray-600">{selectedGuideline.cms_manual_chapter}</p>
+                      <span className="font-medium text-slate-700">CMS Manual:</span>
+                      <p className="text-slate-600">{selectedGuideline.cms_manual_chapter}</p>
                     </div>
                   )}
                 </div>
@@ -474,7 +474,7 @@ export default function MedicareGuidelinesLibrary() {
                 {/* Keywords */}
                 {selectedGuideline.keywords && selectedGuideline.keywords.length > 0 && (
                   <div>
-                    <p className="font-medium text-gray-700 text-sm mb-2">Keywords:</p>
+                    <p className="font-medium text-slate-700 text-sm mb-2">Keywords:</p>
                     <div className="flex flex-wrap gap-2">
                       {selectedGuideline.keywords.map((kw, idx) => (
                         <Badge key={idx} variant="secondary">{kw}</Badge>
@@ -486,7 +486,7 @@ export default function MedicareGuidelinesLibrary() {
                 {/* Related Diagnoses */}
                 {selectedGuideline.related_diagnoses && selectedGuideline.related_diagnoses.length > 0 && (
                   <div>
-                    <p className="font-medium text-gray-700 text-sm mb-2">Applies to Diagnoses:</p>
+                    <p className="font-medium text-slate-700 text-sm mb-2">Applies to Diagnoses:</p>
                     <div className="flex flex-wrap gap-2">
                       {selectedGuideline.related_diagnoses.map((dx, idx) => (
                         <Badge key={idx} variant="outline">{dx}</Badge>
@@ -497,8 +497,8 @@ export default function MedicareGuidelinesLibrary() {
 
                 {/* Full Content */}
                 <div className="border-t pt-4">
-                  <p className="font-medium text-gray-700 text-sm mb-3">Full Guideline Content:</p>
-                  <div className="prose prose-sm max-w-none bg-gray-50 p-4 rounded-lg">
+                  <p className="font-medium text-slate-700 text-sm mb-3">Full Guideline Content:</p>
+                  <div className="prose prose-sm max-w-none bg-slate-50 p-4 rounded-lg">
                     <ReactMarkdown>{selectedGuideline.content_markdown}</ReactMarkdown>
                   </div>
                 </div>
@@ -514,7 +514,7 @@ export default function MedicareGuidelinesLibrary() {
                     View Original on CMS.gov
                     <ExternalLink className="w-3 h-3" />
                   </a>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Last fetched: {new Date(selectedGuideline.last_fetched_date).toLocaleString()}
                   </p>
                 </div>

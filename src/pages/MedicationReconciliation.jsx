@@ -50,34 +50,34 @@ export default function MedicationReconciliation() {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Medication Reconciliation</h1>
-        <p className="text-gray-600">Compare discharge orders with current medications and resolve discrepancies</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Medication Reconciliation</h1>
+        <p className="text-slate-600">Compare discharge orders with current medications and resolve discrepancies</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            <p className="text-sm text-gray-600">Total Reconciliations</p>
+            <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+            <p className="text-sm text-slate-600">Total Reconciliations</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-            <p className="text-sm text-gray-600">Pending / In Progress</p>
+            <p className="text-sm text-slate-600">Pending / In Progress</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-2xl font-bold text-red-600">{stats.critical}</p>
-            <p className="text-sm text-gray-600">Critical Discrepancies</p>
+            <p className="text-sm text-slate-600">Critical Discrepancies</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
-            <p className="text-sm text-gray-600">Completed</p>
+            <p className="text-sm text-slate-600">Completed</p>
           </CardContent>
         </Card>
       </div>
@@ -90,7 +90,7 @@ export default function MedicationReconciliation() {
         <CardContent>
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search patients..."
                 value={searchTerm}
@@ -105,7 +105,7 @@ export default function MedicationReconciliation() {
               {filteredPatients.map(patient => (
                 <div
                   key={patient.id}
-                  className="flex items-center justify-between p-3 border rounded hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center justify-between p-3 border rounded hover:bg-slate-50 cursor-pointer"
                   onClick={() => {
                     setSelectedPatientId(patient.id);
                     setShowInterface(true);
@@ -114,7 +114,7 @@ export default function MedicationReconciliation() {
                 >
                   <div>
                     <p className="font-semibold">{patient.first_name} {patient.last_name}</p>
-                    <p className="text-sm text-gray-600">{patient.primary_diagnosis}</p>
+                    <p className="text-sm text-slate-600">{patient.primary_diagnosis}</p>
                   </div>
                   <Button size="sm">
                     <Plus className="w-4 h-4 mr-1" />
@@ -134,11 +134,11 @@ export default function MedicationReconciliation() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="py-8 text-center text-gray-500">Loading...</div>
+            <div className="py-8 text-center text-slate-500">Loading...</div>
           ) : reconciliations.length === 0 ? (
             <div className="py-8 text-center">
-              <Pill className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No reconciliations yet</p>
+              <Pill className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500">No reconciliations yet</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -150,8 +150,8 @@ export default function MedicationReconciliation() {
                   <div key={recon.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{recon.patient_name}</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="font-semibold text-slate-900">{recon.patient_name}</h3>
+                        <p className="text-sm text-slate-600">
                           {new Date(recon.reconciliation_date).toLocaleDateString()}
                         </p>
                       </div>
@@ -162,7 +162,7 @@ export default function MedicationReconciliation() {
                     </div>
 
                     <div className="flex gap-4 text-sm mb-3">
-                      <span className="text-gray-600">
+                      <span className="text-slate-600">
                         {recon.total_discrepancies} discrepancies
                       </span>
                       {recon.critical_discrepancies > 0 && (

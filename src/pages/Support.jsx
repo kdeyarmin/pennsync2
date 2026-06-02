@@ -163,9 +163,9 @@ export default function Support() {
             <CardContent className="p-6 flex items-start gap-4">
               <Mail className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-bold text-gray-900 mb-1">Email Support</h3>
-                <p className="text-sm text-gray-600 mb-3">support@pennsync.io</p>
-                <p className="text-xs text-gray-500">Response time: 24 hours</p>
+                <h3 className="font-bold text-slate-900 mb-1">Email Support</h3>
+                <p className="text-sm text-slate-600 mb-3">support@pennsync.io</p>
+                <p className="text-xs text-slate-500">Response time: 24 hours</p>
               </div>
             </CardContent>
           </Card>
@@ -173,9 +173,9 @@ export default function Support() {
             <CardContent className="p-6 flex items-start gap-4">
               <Clock className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-bold text-gray-900 mb-1">Business Hours Support</h3>
-                <p className="text-sm text-gray-600 mb-3">Mon-Fri, 8am-6pm ET</p>
-                <p className="text-xs text-gray-500">Call your admin for emergencies</p>
+                <h3 className="font-bold text-slate-900 mb-1">Business Hours Support</h3>
+                <p className="text-sm text-slate-600 mb-3">Mon-Fri, 8am-6pm ET</p>
+                <p className="text-xs text-slate-500">Call your admin for emergencies</p>
               </div>
             </CardContent>
           </Card>
@@ -184,7 +184,7 @@ export default function Support() {
 
       {/* Knowledge Base Resources */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Resources</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">Resources</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {resources.map((resource, index) => {
             const Icon = resource.icon;
@@ -195,8 +195,8 @@ export default function Support() {
                     <Icon className="w-6 h-6 text-indigo-600" />
                     <Button variant="ghost" size="sm">{resource.action}</Button>
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-2">{resource.title}</h3>
-                  <p className="text-sm text-gray-600">{resource.description}</p>
+                  <h3 className="font-bold text-slate-900 mb-2">{resource.title}</h3>
+                  <p className="text-sm text-slate-600">{resource.description}</p>
                 </CardContent>
               </Card>
             );
@@ -206,11 +206,11 @@ export default function Support() {
 
       {/* FAQ Section */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">Frequently Asked Questions</h2>
         <div className="space-y-4">
           {faqs.map((category, catIndex) => (
             <div key={catIndex}>
-              <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
                 <div className="w-1 h-6 bg-indigo-600 rounded" />
                 {category.category}
               </h3>
@@ -218,20 +218,20 @@ export default function Support() {
                 {category.items.map((item, itemIndex) => {
                   const currentIndex = faqIndex++;
                   return (
-                    <Card key={itemIndex} className="border-gray-200">
+                    <Card key={itemIndex} className="border-slate-200">
                       <button
                         onClick={() => handleFAQToggle(currentIndex)}
-                        className="w-full text-left p-4 hover:bg-gray-50 transition-colors flex items-start justify-between gap-4"
+                        className="w-full text-left p-4 hover:bg-slate-50 transition-colors flex items-start justify-between gap-4"
                       >
-                        <span className="font-semibold text-gray-900">{item.question}</span>
+                        <span className="font-semibold text-slate-900">{item.question}</span>
                         {openFAQ === currentIndex ? (
-                          <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <ChevronUp className="w-5 h-5 text-slate-500 flex-shrink-0" />
                         ) : (
-                          <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <ChevronDown className="w-5 h-5 text-slate-500 flex-shrink-0" />
                         )}
                       </button>
                       {openFAQ === currentIndex && (
-                        <div className="px-4 pb-4 pt-0 text-gray-700 border-t border-gray-200">
+                        <div className="px-4 pb-4 pt-0 text-slate-700 border-t border-slate-200">
                           {item.answer}
                         </div>
                       )}
@@ -248,8 +248,8 @@ export default function Support() {
       <div className="mb-12">
         <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
           <CardContent className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">Still need help?</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Still need help?</h2>
+            <p className="text-slate-600 mb-6">
               Our support team is ready to help. Contact us via email or ask your agency admin for more assistance.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

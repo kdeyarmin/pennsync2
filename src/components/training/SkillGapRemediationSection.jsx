@@ -143,7 +143,7 @@ export default function SkillGapRemediationSection({
       <Card>
         <CardContent className="p-12 text-center">
           <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-600">Analyzing your skill gaps...</p>
+          <p className="text-slate-600">Analyzing your skill gaps...</p>
         </CardContent>
       </Card>
     );
@@ -230,7 +230,7 @@ export default function SkillGapRemediationSection({
                       }>
                         {module.priority} priority
                       </Badge>
-                      <p className="text-sm font-medium text-gray-900 mt-2">{module.description}</p>
+                      <p className="text-sm font-medium text-slate-900 mt-2">{module.description}</p>
                       <Badge variant="outline" className="text-xs mt-1">
                         Source: {module.source.replace(/_/g, ' ')}
                       </Badge>
@@ -272,11 +272,11 @@ export default function SkillGapRemediationSection({
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                 <Target className="w-6 h-6 text-indigo-600" />
                 Personalized Skill Gap Remediation
               </h2>
-              <p className="text-gray-600 mt-1">
+              <p className="text-slate-600 mt-1">
                 Complete these modules to address your identified areas of improvement
               </p>
             </div>
@@ -287,7 +287,7 @@ export default function SkillGapRemediationSection({
           
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-700 font-medium">Overall Progress</span>
+              <span className="text-slate-700 font-medium">Overall Progress</span>
               <span className="text-indigo-600 font-bold">{progress}%</span>
             </div>
             <Progress value={progress} className="h-3" />
@@ -339,13 +339,13 @@ export default function SkillGapRemediationSection({
                       {recommendation.severity} priority
                     </Badge>
                   </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-slate-600 mt-1">
                     {recommendation.count} AI suggestions identified in this area
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">{categoryProgress}%</p>
-                  <p className="text-xs text-gray-500">complete</p>
+                  <p className="text-2xl font-bold text-slate-900">{categoryProgress}%</p>
+                  <p className="text-xs text-slate-500">complete</p>
                 </div>
               </div>
               <Progress value={categoryProgress} className="mt-2 h-2" />
@@ -355,7 +355,7 @@ export default function SkillGapRemediationSection({
               {/* Practice Scenarios */}
               {recommendation.suggestedScenarios.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-sm font-semibold text-slate-700 flex items-center gap-1">
                     <BookOpen className="w-4 h-4 text-blue-600" />
                     Practice Scenarios
                   </p>
@@ -392,7 +392,7 @@ export default function SkillGapRemediationSection({
               {/* Knowledge Quizzes */}
               {recommendation.suggestedQuizzes.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-sm font-semibold text-slate-700 flex items-center gap-1">
                     <Brain className="w-4 h-4 text-purple-600" />
                     Knowledge Quizzes
                   </p>
@@ -427,7 +427,7 @@ export default function SkillGapRemediationSection({
               )}
 
               <div className="pt-3 border-t">
-                <p className="text-xs text-gray-600 italic">
+                <p className="text-xs text-slate-600 italic">
                   <strong>Rationale:</strong> {recommendation.rationale}
                 </p>
               </div>

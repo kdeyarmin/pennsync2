@@ -156,7 +156,7 @@ For each issue found, provide:
       case 'high': return 'bg-orange-600 text-white';
       case 'moderate': return 'bg-yellow-600 text-white';
       case 'low': return 'bg-blue-600 text-white';
-      default: return 'bg-gray-600 text-white';
+      default: return 'bg-slate-600 text-white';
     }
   };
 
@@ -230,7 +230,7 @@ For each issue found, provide:
                         </div>
                         
                         {issue.location && (
-                          <p className="text-xs text-gray-600 mb-1">
+                          <p className="text-xs text-slate-600 mb-1">
                             <strong>Location:</strong> {issue.location}
                           </p>
                         )}
@@ -245,12 +245,12 @@ For each issue found, provide:
                           <div className="space-y-1 text-xs">
                             <div className="bg-red-50 border border-red-200 p-2 rounded">
                               <strong className="text-red-700">Original:</strong>
-                              <p className="text-gray-700 mt-1">{issue.original_text}</p>
+                              <p className="text-slate-700 mt-1">{issue.original_text}</p>
                             </div>
                             {issue.suggested_fix && (
                               <div className="bg-green-50 border border-green-200 p-2 rounded">
                                 <strong className="text-green-700">Suggested Fix:</strong>
-                                <p className="text-gray-700 mt-1">{issue.suggested_fix}</p>
+                                <p className="text-slate-700 mt-1">{issue.suggested_fix}</p>
                               </div>
                             )}
                           </div>

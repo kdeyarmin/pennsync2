@@ -67,11 +67,11 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
   return (
     <Card className="p-4 space-y-4">
-      <h4 className="font-semibold text-gray-900">Configure Field</h4>
+      <h4 className="font-semibold text-slate-900">Configure Field</h4>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Label</label>
+          <label className="block text-xs font-medium text-slate-700 mb-1">Label</label>
           <Input
             placeholder="e.g., Patient Name"
             value={formData.label}
@@ -80,7 +80,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Field Name</label>
+          <label className="block text-xs font-medium text-slate-700 mb-1">Field Name</label>
           <Input
             placeholder="e.g., patient_name"
             value={formData.field_name}
@@ -92,7 +92,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Field Type</label>
+          <label className="block text-xs font-medium text-slate-700 mb-1">Field Type</label>
           <Select value={formData.field_type} onValueChange={(val) =>
             setFormData({ ...formData, field_type: val, select_options: [] })
           }>
@@ -107,7 +107,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           </Select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Data Source</label>
+          <label className="block text-xs font-medium text-slate-700 mb-1">Data Source</label>
           <Select value={formData.data_source} onValueChange={(val) =>
             setFormData({ ...formData, data_source: val, field_path: "" })
           }>
@@ -125,7 +125,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       {formData.data_source === "patient" && formData.field_type !== "signature" && (
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Patient Field</label>
+          <label className="block text-xs font-medium text-slate-700 mb-1">Patient Field</label>
           <Select value={formData.field_path} onValueChange={(val) =>
             setFormData({ ...formData, field_path: val })
           }>
@@ -144,7 +144,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
       {formData.field_type !== "signature" && (
         <>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Placeholder</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">Placeholder</label>
             <Input
               placeholder="Hint text..."
               value={formData.placeholder}
@@ -154,7 +154,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Default Value</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">Default Value</label>
             <Input
               placeholder="Default value..."
               value={formData.default_value}
@@ -167,7 +167,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       {formData.field_type === "select" && (
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-gray-700">Options</label>
+          <label className="block text-xs font-medium text-slate-700">Options</label>
           <div className="flex gap-2">
             <Input
               placeholder="Add option..."
@@ -181,7 +181,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           {formData.select_options?.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-2">
               {formData.select_options.map((opt, i) => (
-                <div key={i} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-sm">
+                <div key={i} className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-sm">
                   {opt}
                   <button onClick={() => removeOption(i)} className="text-red-500 hover:text-red-700">×</button>
                 </div>
@@ -196,7 +196,7 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           checked={formData.required}
           onCheckedChange={(checked) => setFormData({ ...formData, required: checked })}
         />
-        <label className="text-sm font-medium text-gray-700">Required field</label>
+        <label className="text-sm font-medium text-slate-700">Required field</label>
       </div>
 
       {/* Conditional Visibility */}
@@ -211,11 +211,11 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
       {showConditional && (
         <div className="p-3 bg-purple-50 rounded-lg space-y-2 text-sm">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Show if field equals:</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">Show if field equals:</label>
             <Input placeholder="Field name" className="text-xs" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Value:</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">Value:</label>
             <Input placeholder="Value" className="text-xs" />
           </div>
         </div>

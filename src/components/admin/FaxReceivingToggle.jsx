@@ -67,12 +67,12 @@ export default function FaxReceivingToggle() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
           <div className="flex-1">
             <Label className="text-base font-semibold">
               {isEnabled ? "Fax Receiving Active" : "Fax Receiving Disabled"}
             </Label>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-slate-600 mt-1">
               {isEnabled 
                 ? "Your agency is currently accepting incoming faxes" 
                 : "Incoming faxes will be rejected until re-enabled"}

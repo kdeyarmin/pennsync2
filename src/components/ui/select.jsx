@@ -16,7 +16,7 @@ const SelectTrigger = React.forwardRef((props, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm ring-offset-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50",
+      "flex h-10 w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm ring-offset-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50",
       props.className
     )}
     {...props}
@@ -34,7 +34,7 @@ const SelectContent = React.forwardRef((props, ref) => (
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-[9999] max-h-96 min-w-[8rem] overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-900 shadow-xl animate-in fade-in-80",
+        "relative z-[9999] max-h-96 min-w-[8rem] overflow-hidden rounded-lg border border-slate-300 bg-white text-slate-900 shadow-xl animate-in fade-in-80",
         props.className
       )}
       position={props.position || "popper"}
@@ -61,7 +61,7 @@ const SelectItem = React.forwardRef((props, ref) => (
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-md py-2.5 pl-8 pr-2 text-sm bg-white text-gray-900 outline-none focus:bg-blue-50 focus:text-blue-900 hover:bg-gray-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
+      "relative flex w-full cursor-pointer select-none items-center rounded-md py-2.5 pl-8 pr-2 text-sm bg-white text-slate-900 outline-none focus:bg-blue-50 focus:text-blue-900 hover:bg-slate-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
       props.className
     )}
     {...props}
@@ -80,7 +80,7 @@ SelectItem.displayName = SelectPrimitive.Item.displayName
 const SelectSeparator = React.forwardRef((props, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-gray-100", props.className)}
+    className={cn("-mx-1 my-1 h-px bg-slate-100", props.className)}
     {...props}
   />
 ))

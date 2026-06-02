@@ -154,7 +154,7 @@ export default function TemplateLibrary() {
       care_plan: 'bg-green-100 text-green-800',
       discharge: 'bg-orange-100 text-orange-800',
       admission: 'bg-cyan-100 text-cyan-800',
-      other: 'bg-gray-100 text-gray-800'
+      other: 'bg-slate-100 text-slate-800'
     };
     return colors[category] || colors.other;
   };
@@ -165,7 +165,7 @@ export default function TemplateLibrary() {
       procedure: 'bg-yellow-100 text-yellow-800',
       form: 'bg-blue-100 text-blue-800',
       education: 'bg-green-100 text-green-800',
-      other: 'bg-gray-100 text-gray-800'
+      other: 'bg-slate-100 text-slate-800'
     };
     return colors[category] || colors.other;
   };
@@ -175,7 +175,7 @@ export default function TemplateLibrary() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
         <div className="relative w-full sm:w-96">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search templates & documents..."
             value={searchQuery}
@@ -184,7 +184,7 @@ export default function TemplateLibrary() {
           />
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowUploadModal(true)} className="bg-white text-gray-900 border hover:bg-gray-50">
+          <Button onClick={() => setShowUploadModal(true)} className="bg-white text-slate-900 border hover:bg-slate-50">
             <Upload className="w-4 h-4 mr-2" />
             Upload Document
           </Button>
@@ -211,16 +211,16 @@ export default function TemplateLibrary() {
                         </Badge>
                       </div>
                       {!template.is_active && (
-                        <Archive className="w-5 h-5 text-gray-400 shrink-0" />
+                        <Archive className="w-5 h-5 text-slate-400 shrink-0" />
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 space-y-3">
                     {template.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">{template.description}</p>
+                      <p className="text-sm text-slate-600 line-clamp-2">{template.description}</p>
                     )}
 
-                    <div className="text-xs text-gray-500 space-y-1">
+                    <div className="text-xs text-slate-500 space-y-1">
                       <p>Version: {template.version}</p>
                       <p>{template.is_packet ? `${template.document_count || template.packet_documents?.length || 1} documents in packet` : 'Single document template'}</p>
                       <p>Used {template.usage_count || 0} times</p>
@@ -269,8 +269,8 @@ export default function TemplateLibrary() {
           ) : (
             <Card>
               <CardContent className="text-center py-12">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600">
                   {searchQuery ? 'No templates match your search' : 'No templates created yet'}
                 </p>
               </CardContent>
@@ -292,16 +292,16 @@ export default function TemplateLibrary() {
                         </Badge>
                       </div>
                       {!doc.is_active && (
-                        <Archive className="w-5 h-5 text-gray-400 shrink-0" />
+                        <Archive className="w-5 h-5 text-slate-400 shrink-0" />
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 space-y-3">
                     {doc.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">{doc.description}</p>
+                      <p className="text-sm text-slate-600 line-clamp-2">{doc.description}</p>
                     )}
 
-                    <div className="text-xs text-gray-500 space-y-1">
+                    <div className="text-xs text-slate-500 space-y-1">
                       <p>Type: {doc.file_type?.toUpperCase()}</p>
                       <p>Added: {new Date(doc.created_date).toLocaleDateString()}</p>
                     </div>
@@ -343,8 +343,8 @@ export default function TemplateLibrary() {
           ) : (
             <Card>
               <CardContent className="text-center py-12">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600">
                   {searchQuery ? 'No documents match your search' : 'No common documents uploaded yet'}
                 </p>
                 <Button onClick={() => setShowUploadModal(true)} variant="outline" className="mt-4">

@@ -225,7 +225,7 @@ export default function WorkflowMonitoringDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-gray-600 mb-1">Total Executions</p>
+            <p className="text-xs text-slate-600 mb-1">Total Executions</p>
             <p className="text-2xl font-bold text-purple-600">{stats.total_executions}</p>
           </CardContent>
         </Card>
@@ -341,7 +341,7 @@ export default function WorkflowMonitoringDashboard() {
         </CardHeader>
         <CardContent>
           {filteredExecutions.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No workflow executions found</p>
+            <p className="text-center text-slate-500 py-8">No workflow executions found</p>
           ) : (
             <div className="space-y-3">
               {filteredExecutions.slice(0, 20).map((exec) => (
@@ -349,9 +349,9 @@ export default function WorkflowMonitoringDashboard() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{exec.rule_name}</p>
-                        <p className="text-xs text-gray-600">{exec.patient_name || 'Unknown Patient'}</p>
-                        <p className="text-xs text-gray-500 mt-1">{exec.trigger_reason}</p>
+                        <p className="font-semibold text-slate-900">{exec.rule_name}</p>
+                        <p className="text-xs text-slate-600">{exec.patient_name || 'Unknown Patient'}</p>
+                        <p className="text-xs text-slate-500 mt-1">{exec.trigger_reason}</p>
                       </div>
                       <div className="text-right">
                         <Badge className={
@@ -362,7 +362,7 @@ export default function WorkflowMonitoringDashboard() {
                         }>
                           {exec.status}
                         </Badge>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           {new Date(exec.created_date).toLocaleString()}
                         </p>
                       </div>
@@ -384,13 +384,13 @@ export default function WorkflowMonitoringDashboard() {
                     </div>
 
                     {exec.outcome_summary && (
-                      <p className="text-xs text-gray-600 mt-2 italic">{exec.outcome_summary}</p>
+                      <p className="text-xs text-slate-600 mt-2 italic">{exec.outcome_summary}</p>
                     )}
 
                     {exec.execution_time_ms && (
                       <div className="flex items-center gap-1 mt-2">
-                        <Clock className="w-3 h-3 text-gray-400" />
-                        <p className="text-xs text-gray-500">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <p className="text-xs text-slate-500">
                           Executed in {exec.execution_time_ms}ms
                         </p>
                       </div>

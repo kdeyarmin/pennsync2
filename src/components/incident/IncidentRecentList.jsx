@@ -19,7 +19,7 @@ export default function IncidentRecentList({ incidents = [] }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {incidents.length === 0 ? (
-          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500">
             No incidents reported yet.
           </div>
         ) : (
@@ -27,8 +27,8 @@ export default function IncidentRecentList({ incidents = [] }) {
             <div key={incident.id} className="rounded-xl border p-3 bg-white">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div>
-                  <p className="font-medium text-gray-900">{incident.incident_name || incident.incident_type}</p>
-                  <p className="text-xs text-gray-500">{incident.patient_name || "Patient"} • {incident.incident_date}</p>
+                  <p className="font-medium text-slate-900">{incident.incident_name || incident.incident_type}</p>
+                  <p className="text-xs text-slate-500">{incident.patient_name || "Patient"} • {incident.incident_date}</p>
                 </div>
                 <Badge className={severityClasses[incident.severity] || severityClasses.medium}>
                   {incident.severity}

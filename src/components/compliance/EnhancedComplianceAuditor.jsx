@@ -359,7 +359,7 @@ Return JSON:
       hipaa: 'bg-red-100 text-red-800',
       quality_measure: 'bg-teal-100 text-teal-800'
     };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+    return colors[category] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -379,7 +379,7 @@ Return JSON:
         {/* Configuration */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">Date Range</label>
+            <label className="text-xs font-medium text-slate-600 mb-1 block">Date Range</label>
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -391,7 +391,7 @@ Return JSON:
             </Select>
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">Care Type</label>
+            <label className="text-xs font-medium text-slate-600 mb-1 block">Care Type</label>
             <Select value={careType} onValueChange={setCareType}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -438,7 +438,7 @@ Return JSON:
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
             {complianceRules.map(rule => (
-              <div key={rule.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+              <div key={rule.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
                 <Checkbox
                   checked={selectedRules.includes(rule.id)}
                   onCheckedChange={(checked) => {
@@ -449,7 +449,7 @@ Return JSON:
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{rule.rule_name}</p>
-                  <p className="text-xs text-gray-500">{rule.rule_code}</p>
+                  <p className="text-xs text-slate-500">{rule.rule_code}</p>
                 </div>
                 <Badge className={getCategoryColor(rule.rule_category)} variant="outline">
                   {(rule.rule_category || '').replace(/_/g, ' ')}
@@ -458,7 +458,7 @@ Return JSON:
             ))}
           </div>
           {complianceRules.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-slate-500 text-center py-4">
               No compliance rules configured. Add rules in the Rules Configuration section.
             </p>
           )}
@@ -493,22 +493,22 @@ Return JSON:
               <div className="bg-blue-50 p-3 rounded-lg text-center">
                 <FileText className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                 <p className="text-xl font-bold text-blue-700">{auditResults.audited}</p>
-                <p className="text-xs text-gray-600">Audited</p>
+                <p className="text-xs text-slate-600">Audited</p>
               </div>
               <div className="bg-green-50 p-3 rounded-lg text-center">
                 <CheckCircle2 className="w-5 h-5 text-green-600 mx-auto mb-1" />
                 <p className="text-xl font-bold text-green-700">{auditResults.passed}</p>
-                <p className="text-xs text-gray-600">Passed</p>
+                <p className="text-xs text-slate-600">Passed</p>
               </div>
               <div className="bg-yellow-50 p-3 rounded-lg text-center">
                 <AlertTriangle className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
                 <p className="text-xl font-bold text-yellow-700">{auditResults.flagged}</p>
-                <p className="text-xs text-gray-600">Flagged</p>
+                <p className="text-xs text-slate-600">Flagged</p>
               </div>
               <div className="bg-red-50 p-3 rounded-lg text-center">
                 <XCircle className="w-5 h-5 text-red-600 mx-auto mb-1" />
                 <p className="text-xl font-bold text-red-700">{auditResults.critical}</p>
-                <p className="text-xs text-gray-600">Critical</p>
+                <p className="text-xs text-slate-600">Critical</p>
               </div>
             </div>
 
@@ -520,12 +520,12 @@ Return JSON:
                   const total = stats.compliant + stats.violations;
                   const complianceRate = total > 0 ? Math.round((stats.compliant / total) * 100) : 0;
                   return (
-                    <div key={ruleId} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                    <div key={ruleId} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium">{stats.rule_name}</p>
                           {stats.rule_code && (
-                            <span className="text-xs text-gray-500 font-mono">{stats.rule_code}</span>
+                            <span className="text-xs text-slate-500 font-mono">{stats.rule_code}</span>
                           )}
                         </div>
                         <Progress value={complianceRate} className="h-1.5 mt-1" />
@@ -534,7 +534,7 @@ Return JSON:
                         <p className={`text-lg font-bold ${complianceRate >= 80 ? 'text-green-600' : complianceRate >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
                           {complianceRate}%
                         </p>
-                        <p className="text-xs text-gray-500">{stats.violations} violations</p>
+                        <p className="text-xs text-slate-500">{stats.violations} violations</p>
                       </div>
                     </div>
                   );
@@ -550,16 +550,16 @@ Return JSON:
                   {Object.entries(auditResults.byNurse)
                     .sort((a, b) => a[1].avgScore - b[1].avgScore)
                     .map(([email, stats]) => (
-                      <div key={email} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                      <div key={email} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
                         <div className="flex-1">
                           <p className="text-sm font-medium">{email.split('@')[0]}</p>
-                          <p className="text-xs text-gray-500">{stats.total} notes audited</p>
+                          <p className="text-xs text-slate-500">{stats.total} notes audited</p>
                         </div>
                         <div className="text-right">
                           <p className={`text-lg font-bold ${stats.avgScore >= 80 ? 'text-green-600' : stats.avgScore >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
                             {stats.avgScore}%
                           </p>
-                          <p className="text-xs text-gray-500">{stats.flagged} flagged</p>
+                          <p className="text-xs text-slate-500">{stats.flagged} flagged</p>
                         </div>
                         {stats.avgScore < 70 && (
                           <Badge className="bg-orange-100 text-orange-800">
@@ -585,7 +585,7 @@ Return JSON:
                           <p className="text-sm font-medium">
                             {detail.patient?.first_name} {detail.patient?.last_name}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {format(new Date(detail.visit.visit_date), 'MMM d, yyyy')} • {detail.visit.created_by?.split('@')[0]}
                           </p>
                         </div>
@@ -640,7 +640,7 @@ Return JSON:
                   <p className="font-semibold">
                     {selectedVisitDetail.patient?.first_name} {selectedVisitDetail.patient?.last_name}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-500">
                     {format(new Date(selectedVisitDetail.visit.visit_date), 'MMMM d, yyyy')}
                   </p>
                 </div>
@@ -651,7 +651,7 @@ Return JSON:
 
               <div>
                 <p className="text-sm font-semibold mb-2">Summary</p>
-                <p className="text-sm text-gray-600">{selectedVisitDetail.auditResult.summary}</p>
+                <p className="text-sm text-slate-600">{selectedVisitDetail.auditResult.summary}</p>
               </div>
 
               {selectedVisitDetail.auditResult.critical_issues?.length > 0 && (
@@ -683,13 +683,13 @@ Return JSON:
                           <XCircle className="w-4 h-4 text-red-600" />
                         )}
                         <span className="font-medium text-sm">{rr.rule_name}</span>
-                        {rr.rule_code && <span className="text-xs text-gray-500 font-mono">{rr.rule_code}</span>}
+                        {rr.rule_code && <span className="text-xs text-slate-500 font-mono">{rr.rule_code}</span>}
                       </div>
                       {!rr.is_compliant && (
                         <>
                           <p className="text-sm text-red-700 mb-1">{rr.issue_description}</p>
                           {rr.missing_elements?.length > 0 && (
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-slate-600">
                               Missing: {rr.missing_elements.join(', ')}
                             </p>
                           )}
@@ -699,7 +699,7 @@ Return JSON:
                         </>
                       )}
                       {rr.is_compliant && rr.evidence_quotes?.length > 0 && (
-                        <p className="text-xs text-gray-600 italic">
+                        <p className="text-xs text-slate-600 italic">
                           "{rr.evidence_quotes[0]?.substring(0, 100)}..."
                         </p>
                       )}
@@ -711,7 +711,7 @@ Return JSON:
               {selectedVisitDetail.auditResult.recommendations?.length > 0 && (
                 <div>
                   <p className="text-sm font-semibold mb-2">Recommendations</p>
-                  <ul className="list-disc ml-4 text-sm text-gray-600">
+                  <ul className="list-disc ml-4 text-sm text-slate-600">
                     {selectedVisitDetail.auditResult.recommendations.map((rec, i) => (
                       <li key={i}>{rec}</li>
                     ))}

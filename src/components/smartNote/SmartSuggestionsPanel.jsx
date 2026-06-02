@@ -110,10 +110,10 @@ Return JSON:
                 <button
                   key={i}
                   onClick={() => onInsert(s.text)}
-                  className="group flex items-center gap-1.5 text-xs bg-white border border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 text-gray-700 rounded-lg px-2.5 py-1.5 transition-all text-left"
+                  className="group flex items-center gap-1.5 text-xs bg-white border border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 text-slate-700 rounded-lg px-2.5 py-1.5 transition-all text-left"
                   title={s.text}
                 >
-                  <Badge className={`text-[10px] px-1.5 py-0 shrink-0 ${CATEGORY_COLORS[s.category] || "bg-gray-100 text-gray-700"}`}>
+                  <Badge className={`text-[10px] px-1.5 py-0 shrink-0 ${CATEGORY_COLORS[s.category] || "bg-slate-100 text-slate-700"}`}>
                     {s.label}
                   </Badge>
                   <span className="truncate max-w-[200px]">{s.text}</span>

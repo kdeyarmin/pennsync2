@@ -27,7 +27,7 @@ export default function AnnouncementsWidget() {
         <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-100">
           <Bell className="w-4 h-4 text-blue-600" />
         </div>
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Announcements</h2>
+        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Announcements</h2>
         <span className="ml-auto text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
           {announcements.length}
         </span>
@@ -48,12 +48,12 @@ export default function AnnouncementsWidget() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <h4 className="font-semibold text-gray-900 text-sm leading-tight">{announcement.title}</h4>
-                  <span className="shrink-0 text-xs text-gray-400 mt-0.5">
+                  <h4 className="font-semibold text-slate-900 text-sm leading-tight">{announcement.title}</h4>
+                  <span className="shrink-0 text-xs text-slate-400 mt-0.5">
                     {format(new Date(announcement.created_date), 'MMM d')}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1 leading-relaxed whitespace-pre-wrap">{announcement.content}</p>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed whitespace-pre-wrap">{announcement.content}</p>
               </div>
             </div>
           );

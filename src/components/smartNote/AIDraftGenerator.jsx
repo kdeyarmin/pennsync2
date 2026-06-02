@@ -87,7 +87,7 @@ Return ONLY the rough note text, no JSON wrapper.`;
       <CardContent className="space-y-3">
         <Alert className="bg-white border-purple-200">
           <Sparkles className="w-4 h-4 text-purple-600" />
-          <AlertDescription className="text-xs text-gray-700">
+          <AlertDescription className="text-xs text-slate-700">
             Let AI create a preliminary rough note based on your visit context, patient data, and vitals.
             You can then edit and expand it as needed.
           </AlertDescription>

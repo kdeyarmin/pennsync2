@@ -82,7 +82,7 @@ export default function PatientResponsePrompter({ narrativeText, onAddSuggestion
         <div className="space-y-3">
           {RESPONSE_PROMPTS.map((category) => (
             <div key={category.category}>
-              <p className="text-xs font-medium text-gray-600 mb-1">{category.category}</p>
+              <p className="text-xs font-medium text-slate-600 mb-1">{category.category}</p>
               <div className="flex flex-wrap gap-1">
                 {category.prompts.slice(0, 2).map((prompt, idx) => (
                   <Button

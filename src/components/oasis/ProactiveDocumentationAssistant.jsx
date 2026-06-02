@@ -166,7 +166,7 @@ For EACH gap found, provide:
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -237,7 +237,7 @@ For EACH gap found, provide:
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
             <p className="text-purple-700 font-medium">AI analyzing documentation for gaps...</p>
-            <p className="text-sm text-gray-600 mt-2">Checking reimbursement, quality, and compliance areas</p>
+            <p className="text-sm text-slate-600 mt-2">Checking reimbursement, quality, and compliance areas</p>
           </div>
         )}
 
@@ -246,17 +246,17 @@ For EACH gap found, provide:
             {/* Summary Card */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white p-3 rounded-lg border-2 border-purple-300 text-center">
-                <p className="text-xs text-gray-600 mb-1">Documentation Score</p>
+                <p className="text-xs text-slate-600 mb-1">Documentation Score</p>
                 <p className={`text-3xl font-bold ${getScoreColor(gaps.overall_documentation_score)}`}>
                   {gaps.overall_documentation_score}%
                 </p>
               </div>
               <div className="bg-white p-3 rounded-lg border-2 border-orange-300 text-center">
-                <p className="text-xs text-gray-600 mb-1">Gaps Found</p>
+                <p className="text-xs text-slate-600 mb-1">Gaps Found</p>
                 <p className="text-3xl font-bold text-orange-600">{gaps.total_gaps_found}</p>
               </div>
               <div className="bg-white p-3 rounded-lg border-2 border-green-300 text-center">
-                <p className="text-xs text-gray-600 mb-1">Applied</p>
+                <p className="text-xs text-slate-600 mb-1">Applied</p>
                 <p className="text-3xl font-bold text-green-600">{appliedSuggestions.size}</p>
               </div>
             </div>
@@ -277,7 +277,7 @@ For EACH gap found, provide:
                   {gaps.quick_wins.map((win, idx) => (
                     <div key={idx} className="bg-white p-3 rounded border border-green-200">
                       <p className="font-semibold text-sm text-green-900">{win.title}</p>
-                      <p className="text-sm text-gray-700 mt-1">{win.action}</p>
+                      <p className="text-sm text-slate-700 mt-1">{win.action}</p>
                       <Badge className="mt-2 bg-green-600 text-white text-xs">{win.impact}</Badge>
                     </div>
                   ))}
@@ -301,7 +301,7 @@ For EACH gap found, provide:
                         {getSeverityIcon(gap.severity)}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900">{gap.gap_title}</h4>
+                            <h4 className="font-semibold text-slate-900">{gap.gap_title}</h4>
                             <Badge className={getSeverityColor(gap.severity)}>
                               {gap.severity}
                             </Badge>
@@ -312,10 +312,10 @@ For EACH gap found, provide:
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <div className="flex items-center gap-2 text-xs text-slate-600">
                             <Badge variant="outline" className="text-xs">{gap.category}</Badge>
                             {gap.m_item_affected && (
-                              <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">
+                              <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">
                                 {gap.m_item_affected}
                               </span>
                             )}
@@ -404,7 +404,7 @@ For EACH gap found, provide:
                           className="text-sm mb-2 min-h-[100px]"
                         />
                       ) : (
-                        <p className="text-sm text-gray-800 italic bg-white p-3 rounded border">
+                        <p className="text-sm text-slate-800 italic bg-white p-3 rounded border">
                           "{gap.suggested_narrative}"
                         </p>
                       )}

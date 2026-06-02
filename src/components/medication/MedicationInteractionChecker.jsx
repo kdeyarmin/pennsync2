@@ -132,9 +132,9 @@ Return comprehensive analysis with:
 
   if (!medications || medications.length === 0) {
     return (
-      <Alert className="bg-gray-50 border-gray-200">
-        <Pill className="w-4 h-4 text-gray-400" />
-        <AlertDescription className="text-sm text-gray-600">
+      <Alert className="bg-slate-50 border-slate-200">
+        <Pill className="w-4 h-4 text-slate-400" />
+        <AlertDescription className="text-sm text-slate-600">
           No medications documented to analyze
         </AlertDescription>
       </Alert>
@@ -160,14 +160,14 @@ Return comprehensive analysis with:
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-slate-600">
           <p className="font-medium mb-1">Analyzing {medications.length} medications</p>
           <div className="text-xs space-y-0.5">
             {medications.slice(0, 5).map((med, idx) => (
               <div key={idx}>• {typeof med === 'string' ? med : med.name}</div>
             ))}
             {medications.length > 5 && (
-              <div className="text-gray-500">+ {medications.length - 5} more...</div>
+              <div className="text-slate-500">+ {medications.length - 5} more...</div>
             )}
           </div>
         </div>
@@ -185,7 +185,7 @@ Return comprehensive analysis with:
         {isChecking && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Analyzing medication safety...</p>
+            <p className="text-sm text-slate-600">Analyzing medication safety...</p>
           </div>
         )}
 

@@ -74,7 +74,7 @@ export default function SignaturePad({ onSave, onCancel, width = 500, height = 1
 
   return (
     <div className="space-y-3">
-      <div className="border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-white">
+      <div className="border-2 border-dashed border-slate-300 rounded-lg overflow-hidden bg-white">
         <canvas
           ref={canvasRef}
           width={width}
@@ -89,7 +89,7 @@ export default function SignaturePad({ onSave, onCancel, width = 500, height = 1
           onTouchEnd={stopDraw}
         />
       </div>
-      <p className="text-xs text-gray-400 text-center">Draw your signature above</p>
+      <p className="text-xs text-slate-400 text-center">Draw your signature above</p>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={clear} className="flex-1">
           <Trash2 className="w-4 h-4 mr-1" /> Clear

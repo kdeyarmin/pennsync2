@@ -112,7 +112,7 @@ export default function AIReferralCarePlanGenerator({
       case 'high': return 'bg-red-100 text-red-700 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-700 border-blue-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+      default: return 'bg-slate-100 text-slate-700 border-slate-300';
     }
   };
 
@@ -129,7 +129,7 @@ export default function AIReferralCarePlanGenerator({
         {generatedPlans.length === 0 ? (
           <div className="text-center py-8">
             <Target className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               Generate AI-powered care plans based on the referral analysis and patient data
             </p>
             <Button
@@ -180,7 +180,7 @@ export default function AIReferralCarePlanGenerator({
                             className="font-semibold"
                           />
                         ) : (
-                          <h4 className="font-semibold text-gray-900">{plan.problem}</h4>
+                          <h4 className="font-semibold text-slate-900">{plan.problem}</h4>
                         )}
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
@@ -190,7 +190,7 @@ export default function AIReferralCarePlanGenerator({
                               <CheckCircle2 className="w-4 h-4 text-green-600" />
                             </Button>
                             <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
-                              <X className="w-4 h-4 text-gray-600" />
+                              <X className="w-4 h-4 text-slate-600" />
                             </Button>
                           </>
                         ) : (
@@ -208,7 +208,7 @@ export default function AIReferralCarePlanGenerator({
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
-                      <Label className="text-xs font-semibold text-gray-600">Goal</Label>
+                      <Label className="text-xs font-semibold text-slate-600">Goal</Label>
                       {editingIndex === index ? (
                         <Textarea
                           value={editedPlan.goal}
@@ -217,12 +217,12 @@ export default function AIReferralCarePlanGenerator({
                           rows={2}
                         />
                       ) : (
-                        <p className="text-sm text-gray-700 mt-1">{plan.goal}</p>
+                        <p className="text-sm text-slate-700 mt-1">{plan.goal}</p>
                       )}
                     </div>
 
                     <div>
-                      <Label className="text-xs font-semibold text-gray-600">Interventions</Label>
+                      <Label className="text-xs font-semibold text-slate-600">Interventions</Label>
                       {editingIndex === index ? (
                         <div className="space-y-2 mt-1">
                           {editedPlan.interventions.map((intervention, i) => (
@@ -240,7 +240,7 @@ export default function AIReferralCarePlanGenerator({
                       ) : (
                         <ul className="list-disc list-inside space-y-1 mt-1">
                           {plan.interventions.map((intervention, i) => (
-                            <li key={i} className="text-sm text-gray-700">{intervention}</li>
+                            <li key={i} className="text-sm text-slate-700">{intervention}</li>
                           ))}
                         </ul>
                       )}
@@ -248,7 +248,7 @@ export default function AIReferralCarePlanGenerator({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Frequency</Label>
+                        <Label className="text-xs font-semibold text-slate-600">Frequency</Label>
                         {editingIndex === index ? (
                           <Input
                             value={editedPlan.frequency}
@@ -256,11 +256,11 @@ export default function AIReferralCarePlanGenerator({
                             className="mt-1"
                           />
                         ) : (
-                          <p className="text-sm text-gray-700 mt-1">{plan.frequency}</p>
+                          <p className="text-sm text-slate-700 mt-1">{plan.frequency}</p>
                         )}
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Baseline</Label>
+                        <Label className="text-xs font-semibold text-slate-600">Baseline</Label>
                         {editingIndex === index ? (
                           <Input
                             value={editedPlan.baseline_measurement}
@@ -268,7 +268,7 @@ export default function AIReferralCarePlanGenerator({
                             className="mt-1"
                           />
                         ) : (
-                          <p className="text-sm text-gray-700 mt-1">{plan.baseline_measurement}</p>
+                          <p className="text-sm text-slate-700 mt-1">{plan.baseline_measurement}</p>
                         )}
                       </div>
                     </div>

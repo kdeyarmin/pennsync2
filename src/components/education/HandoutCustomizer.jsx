@@ -200,7 +200,7 @@ export default function HandoutCustomizer({ topicId, selectedSections, onSelecti
                       )}
                       {section.bullets} items
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 space-y-2 pl-4 border-l-2 border-gray-200">
+                    <CollapsibleContent className="mt-2 space-y-2 pl-4 border-l-2 border-slate-200">
                       {Array.from({ length: section.bullets }).map((_, bulletIdx) => (
                         <div key={bulletIdx} className="flex items-center gap-2">
                           <Checkbox
@@ -211,7 +211,7 @@ export default function HandoutCustomizer({ topicId, selectedSections, onSelecti
                           />
                           <Label
                             htmlFor={`bullet-${idx}-${bulletIdx}`}
-                            className="text-xs text-gray-600 cursor-pointer"
+                            className="text-xs text-slate-600 cursor-pointer"
                           >
                             Item {bulletIdx + 1}
                           </Label>

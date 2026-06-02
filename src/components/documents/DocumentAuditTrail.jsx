@@ -6,7 +6,7 @@ import { format } from "date-fns";
 const actionConfig = {
   sent: { icon: Mail, color: "bg-blue-100 text-blue-800", label: "Sent" },
   signed: { icon: CheckCircle2, color: "bg-green-100 text-green-800", label: "Signed" },
-  viewed: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Viewed" },
+  viewed: { icon: Clock, color: "bg-slate-100 text-slate-800", label: "Viewed" },
   archived: { icon: FileArchive, color: "bg-purple-100 text-purple-800", label: "Archived" },
   declined: { icon: AlertCircle, color: "bg-red-100 text-red-800", label: "Declined" }
 };
@@ -17,7 +17,7 @@ export default function DocumentAuditTrail({ auditTrail = [] }) {
   }
 
   return (
-    <Card className="mt-6 border-gray-200">
+    <Card className="mt-6 border-slate-200">
       <CardHeader>
         <CardTitle className="text-sm">Audit Trail</CardTitle>
       </CardHeader>
@@ -26,13 +26,13 @@ export default function DocumentAuditTrail({ auditTrail = [] }) {
           {auditTrail.map((entry, idx) => {
             const config = actionConfig[entry.action] || { 
               icon: Clock, 
-              color: "bg-gray-100 text-gray-800", 
+              color: "bg-slate-100 text-slate-800", 
               label: entry.action 
             };
             const Icon = config.icon;
             
             return (
-              <div key={idx} className="flex gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0">
+              <div key={idx} className="flex gap-3 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
                 <div className="flex-shrink-0 mt-1">
                   <div className={`p-1.5 rounded-full ${config.color}`}>
                     <Icon className="w-3 h-3" />
@@ -43,12 +43,12 @@ export default function DocumentAuditTrail({ auditTrail = [] }) {
                     <Badge variant="outline" className="text-xs">
                       {config.label}
                     </Badge>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-slate-600">
                       {format(new Date(entry.timestamp), 'MMM d, yyyy h:mm a')}
                     </span>
                   </div>
                   {entry.notes && (
-                    <p className="text-xs text-gray-600">{entry.notes}</p>
+                    <p className="text-xs text-slate-600">{entry.notes}</p>
                   )}
                 </div>
               </div>

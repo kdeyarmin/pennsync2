@@ -122,7 +122,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BookTemplate className="w-5 h-5 text-indigo-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Fax Templates</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Fax Templates</h2>
           <Badge variant="secondary">{templates.length}</Badge>
         </div>
         <Button onClick={openNew} size="sm" className="gap-2">
@@ -132,15 +132,15 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12 text-gray-400">
+        <div className="flex items-center justify-center py-12 text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading templates...
         </div>
       ) : templates.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-12 text-center">
-            <BookTemplate className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No templates yet</p>
-            <p className="text-sm text-gray-400 mt-1">Save common fax configurations for quick reuse</p>
+            <BookTemplate className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500 font-medium">No templates yet</p>
+            <p className="text-sm text-slate-400 mt-1">Save common fax configurations for quick reuse</p>
             <Button onClick={openNew} variant="outline" size="sm" className="mt-4 gap-2">
               <Plus className="w-4 h-4" /> Create First Template
             </Button>
@@ -154,7 +154,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate">{tpl.name}</h3>
+                      <h3 className="font-semibold text-slate-900 truncate">{tpl.name}</h3>
                       {tpl.is_default && (
                         <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1 text-xs">
                           <Star className="w-3 h-3" /> Default
@@ -167,16 +167,16 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
                       )}
                     </div>
                     {tpl.description && (
-                      <p className="text-sm text-gray-500 mb-2">{tpl.description}</p>
+                      <p className="text-sm text-slate-500 mb-2">{tpl.description}</p>
                     )}
-                    <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                    <div className="flex flex-wrap gap-2 text-xs text-slate-600">
                       {tpl.recipient_name && (
-                        <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
                           <User className="w-3 h-3" /> {tpl.recipient_name}
                         </span>
                       )}
                       {tpl.recipient_organization && (
-                        <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
                           <Building2 className="w-3 h-3" /> {tpl.recipient_organization}
                         </span>
                       )}
@@ -203,7 +203,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-gray-400 hover:text-indigo-600"
+                      className="h-8 w-8 text-slate-400 hover:text-indigo-600"
                       onClick={() => openEdit(tpl)}
                     >
                       <Edit2 className="w-4 h-4" />
@@ -211,7 +211,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-gray-400 hover:text-red-600"
+                      className="h-8 w-8 text-slate-400 hover:text-red-600"
                       onClick={() => handleDelete(tpl)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -249,7 +249,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
             </div>
 
             <div className="border-t pt-4">
-              <p className="text-sm font-medium text-gray-700 mb-3">Pre-filled Recipient Info</p>
+              <p className="text-sm font-medium text-slate-700 mb-3">Pre-filled Recipient Info</p>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label>Recipient Name</Label>
@@ -280,7 +280,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
             </div>
 
             <div className="border-t pt-4">
-              <p className="text-sm font-medium text-gray-700 mb-3">Cover Sheet Defaults</p>
+              <p className="text-sm font-medium text-slate-700 mb-3">Cover Sheet Defaults</p>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label>Subject</Label>

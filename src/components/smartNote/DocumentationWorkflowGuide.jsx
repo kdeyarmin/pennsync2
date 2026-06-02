@@ -62,14 +62,14 @@ export default function DocumentationWorkflowGuide({
           <Badge variant="outline" className={
             progressPercent === 100 ? 'bg-green-100 text-green-800' :
             progressPercent >= 50 ? 'bg-blue-100 text-blue-800' :
-            'bg-gray-100 text-gray-800'
+            'bg-slate-100 text-slate-800'
           }>
             {progressPercent}%
           </Badge>
         </div>
         
         {/* Progress bar */}
-        <div className="h-1.5 bg-gray-200 rounded-full mb-3 overflow-hidden">
+        <div className="h-1.5 bg-slate-200 rounded-full mb-3 overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
@@ -89,14 +89,14 @@ export default function DocumentationWorkflowGuide({
                   className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all flex-1 min-w-0 ${
                     status === 'completed' ? 'bg-green-100' :
                     status === 'current' ? 'bg-indigo-100 ring-2 ring-indigo-400' :
-                    'bg-gray-100 opacity-50'
+                    'bg-slate-100 opacity-50'
                   }`}
                   title={step.label}
                 >
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                     status === 'completed' ? 'bg-green-500 text-white' :
                     status === 'current' ? 'bg-indigo-500 text-white' :
-                    'bg-gray-300 text-gray-600'
+                    'bg-slate-300 text-slate-600'
                   }`}>
                     {status === 'completed' ? (
                       <CheckCircle2 className="w-4 h-4" />
@@ -107,14 +107,14 @@ export default function DocumentationWorkflowGuide({
                   <span className={`text-[9px] font-medium truncate w-full text-center ${
                     status === 'current' ? 'text-indigo-700' :
                     status === 'completed' ? 'text-green-700' :
-                    'text-gray-500'
+                    'text-slate-500'
                   }`}>
                     {step.label}
                   </span>
                 </button>
                 {idx < steps.length - 1 && (
                   <ChevronRight className={`w-3 h-3 flex-shrink-0 ${
-                    progress[step.key] ? 'text-green-400' : 'text-gray-300'
+                    progress[step.key] ? 'text-green-400' : 'text-slate-300'
                   }`} />
                 )}
               </React.Fragment>

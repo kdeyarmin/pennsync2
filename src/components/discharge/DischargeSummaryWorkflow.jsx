@@ -145,12 +145,12 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
               <div className={`flex items-center gap-2 ${
                 currentStep === step ? 'text-blue-600 font-semibold' : 
                 ['review', 'sign', 'complete'].indexOf(currentStep) > idx ? 'text-green-600' : 
-                'text-gray-400'
+                'text-slate-400'
               }`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
                   currentStep === step ? 'border-blue-600 bg-blue-50' :
                   ['review', 'sign', 'complete'].indexOf(currentStep) > idx ? 'border-green-600 bg-green-50' :
-                  'border-gray-300'
+                  'border-slate-300'
                 }`}>
                   {['review', 'sign', 'complete'].indexOf(currentStep) > idx ? (
                     <CheckCircle className="w-5 h-5" />
@@ -162,7 +162,7 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
               </div>
               {idx < 3 && (
                 <div className={`h-0.5 flex-1 mx-2 ${
-                  ['review', 'sign', 'complete'].indexOf(currentStep) > idx ? 'bg-green-600' : 'bg-gray-300'
+                  ['review', 'sign', 'complete'].indexOf(currentStep) > idx ? 'bg-green-600' : 'bg-slate-300'
                 }`} />
               )}
             </div>
@@ -186,11 +186,11 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Patient Name</p>
+                    <p className="text-sm text-slate-600">Patient Name</p>
                     <p className="font-semibold">{patient?.first_name} {patient?.last_name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Primary Diagnosis</p>
+                    <p className="text-sm text-slate-600">Primary Diagnosis</p>
                     <p className="font-semibold">{patient?.primary_diagnosis || 'Not specified'}</p>
                   </div>
                 </div>
@@ -285,17 +285,17 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
                               <p className="font-semibold">{outcome.problem}</p>
-                              <p className="text-sm text-gray-600">{outcome.goal}</p>
+                              <p className="text-sm text-slate-600">{outcome.goal}</p>
                             </div>
                             <Badge className={
                               outcome.outcome === 'met' ? 'bg-green-100 text-green-800' :
                               outcome.outcome === 'partially_met' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
+                              'bg-slate-100 text-slate-800'
                             }>
                               {outcome.outcome.replace('_', ' ')}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-700">{outcome.notes}</p>
+                          <p className="text-sm text-slate-700">{outcome.notes}</p>
                         </div>
                       ))}
                     </div>
@@ -328,7 +328,7 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
                                 {change.change_type.replace('_', ' ')}
                               </Badge>
                               <p>{change.medication}</p>
-                              <p className="text-gray-600 text-xs">{change.reason}</p>
+                              <p className="text-slate-600 text-xs">{change.reason}</p>
                             </div>
                           ))}
                         </div>
@@ -346,19 +346,19 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600">Visits Analyzed</p>
+                        <p className="text-slate-600">Visits Analyzed</p>
                         <p className="font-semibold">{summary.ai_generation_metadata?.visits_analyzed || 0}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Care Plans Analyzed</p>
+                        <p className="text-slate-600">Care Plans Analyzed</p>
                         <p className="font-semibold">{summary.ai_generation_metadata?.care_plans_analyzed || 0}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Total Visits</p>
+                        <p className="text-slate-600">Total Visits</p>
                         <p className="font-semibold">{summary.visit_summary?.total_visits || 0}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Confidence Score</p>
+                        <p className="text-slate-600">Confidence Score</p>
                         <p className="font-semibold">{summary.ai_generation_metadata?.generation_confidence || 0}%</p>
                       </div>
                     </div>
@@ -404,7 +404,7 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
                 <CardTitle>Summary Preview</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                <div className="bg-slate-50 p-4 rounded-lg max-h-96 overflow-y-auto">
                   <div className="whitespace-pre-wrap text-sm">
                     {summary.summary_of_care}
                   </div>
@@ -446,7 +446,7 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Summary Complete</h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-slate-600 mb-4">
                   Signed by {summary.signature?.signed_by_name} on{' '}
                   {new Date(summary.signature?.signed_date).toLocaleString()}
                 </p>

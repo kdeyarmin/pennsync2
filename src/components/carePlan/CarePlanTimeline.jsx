@@ -13,8 +13,8 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
   if (!carePlans || carePlans.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+        <CardContent className="p-8 text-center text-slate-500">
+          <Target className="w-12 h-12 mx-auto mb-3 text-slate-300" />
           <p>No care plans to display</p>
         </CardContent>
       </Card>
@@ -51,7 +51,7 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
       case 'met': return 'bg-blue-500';
       case 'not_met': return 'bg-red-500';
       case 'revised': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -89,10 +89,10 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
         {/* Timeline Header */}
         <div className="mb-6 pb-4 border-b">
           <div className="flex justify-between items-center text-sm">
-            <div className="text-gray-600">
+            <div className="text-slate-600">
               <strong>Timeline:</strong> {format(earliestDate, 'MMM d, yyyy')} - {format(latestDate, 'MMM d, yyyy')}
             </div>
-            <div className="text-gray-600">
+            <div className="text-slate-600">
               <strong>Duration:</strong> {totalDays} days
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
         {/* Timeline Visualization */}
         <div className="relative">
           {/* Timeline Bar with Today Marker */}
-          <div className="relative h-3 bg-gray-200 rounded-full mb-8">
+          <div className="relative h-3 bg-slate-200 rounded-full mb-8">
             {/* Today Indicator */}
             <div 
               className="absolute top-0 bottom-0 w-0.5 bg-blue-600 z-10"
@@ -144,7 +144,7 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
                     isOverdue ? 'border-l-red-500 bg-red-50' :
                     plan.status === 'met' ? 'border-l-blue-500 bg-blue-50' :
                     plan.status === 'active' ? 'border-l-green-500' :
-                    'border-l-gray-300'
+                    'border-l-slate-300'
                   }`}
                 >
                   <CardContent className="p-4">
@@ -168,19 +168,19 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
                               </Badge>
                             )}
                             {plan.target_date && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-slate-500">
                                 Target: {format(parseISO(plan.target_date), 'MMM d, yyyy')}
                               </span>
                             )}
                           </div>
                           
-                          <h4 className="font-semibold text-gray-900 mb-1">{plan.problem}</h4>
-                          <p className="text-sm text-gray-700 mb-2">{plan.goal}</p>
+                          <h4 className="font-semibold text-slate-900 mb-1">{plan.problem}</h4>
+                          <p className="text-sm text-slate-700 mb-2">{plan.goal}</p>
 
                           {plan.interventions && plan.interventions.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-xs font-medium text-gray-600 mb-1">Interventions:</p>
-                              <ul className="list-disc ml-5 text-xs text-gray-600 space-y-0.5">
+                              <p className="text-xs font-medium text-slate-600 mb-1">Interventions:</p>
+                              <ul className="list-disc ml-5 text-xs text-slate-600 space-y-0.5">
                                 {plan.interventions.map((intervention, i) => (
                                   <li key={i}>{intervention}</li>
                                 ))}
@@ -188,7 +188,7 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
                             </div>
                           )}
 
-                          <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                          <div className="flex gap-4 mt-2 text-xs text-slate-500">
                             {plan.frequency && <span><strong>Frequency:</strong> {plan.frequency}</span>}
                             {plan.baseline_measurement && <span><strong>Baseline:</strong> {plan.baseline_measurement}</span>}
                           </div>
@@ -198,7 +198,7 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
                       {/* Progress Bar */}
                       {plan.target_date && plan.status === 'active' && (
                         <div className="w-24 shrink-0">
-                          <p className="text-xs text-gray-500 mb-1 text-center">Progress</p>
+                          <p className="text-xs text-slate-500 mb-1 text-center">Progress</p>
                           <div className="relative">
                             {(() => {
                               const created = parseISO(plan.created_date);
@@ -209,13 +209,13 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
                               
                               return (
                                 <>
-                                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                                     <div 
                                       className={`h-full ${isOverdue ? 'bg-red-500' : 'bg-green-500'} transition-all`}
                                       style={{ width: `${progress}%` }}
                                     />
                                   </div>
-                                  <p className="text-xs text-center mt-1 text-gray-600">
+                                  <p className="text-xs text-center mt-1 text-slate-600">
                                     {Math.round(progress)}%
                                   </p>
                                 </>
@@ -234,23 +234,23 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
 
         {/* Legend */}
         <div className="mt-6 pt-4 border-t">
-          <p className="text-xs font-medium text-gray-600 mb-2">Status Legend:</p>
+          <p className="text-xs font-medium text-slate-600 mb-2">Status Legend:</p>
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="text-xs text-gray-600">Active</span>
+              <span className="text-xs text-slate-600">Active</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-blue-500" />
-              <span className="text-xs text-gray-600">Met</span>
+              <span className="text-xs text-slate-600">Met</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-500" />
-              <span className="text-xs text-gray-600">Not Met</span>
+              <span className="text-xs text-slate-600">Not Met</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-yellow-500" />
-              <span className="text-xs text-gray-600">Revised</span>
+              <span className="text-xs text-slate-600">Revised</span>
             </div>
           </div>
         </div>

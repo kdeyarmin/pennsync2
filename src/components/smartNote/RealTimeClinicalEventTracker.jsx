@@ -245,22 +245,22 @@ export default function RealTimeClinicalEventTracker({
                             </Badge>
                           )}
                         </div>
-                        <p className="font-semibold text-sm text-gray-900 mb-1">{event.title}</p>
-                        <p className="text-xs text-gray-700 mb-2">{event.description}</p>
+                        <p className="font-semibold text-sm text-slate-900 mb-1">{event.title}</p>
+                        <p className="text-xs text-slate-700 mb-2">{event.description}</p>
                         
                         {event.structured_data && Object.keys(event.structured_data).length > 0 && (
                           <div className="bg-white rounded p-2 mb-2 text-xs">
                             {Object.entries(event.structured_data).map(([key, value]) => (
                               <div key={key} className="flex gap-2">
-                                <span className="font-medium text-gray-700">{key}:</span>
-                                <span className="text-gray-600">{String(value)}</span>
+                                <span className="font-medium text-slate-700">{key}:</span>
+                                <span className="text-slate-600">{String(value)}</span>
                               </div>
                             ))}
                           </div>
                         )}
                         
                         {event.source_text && (
-                          <p className="text-xs text-gray-500 italic mb-2 bg-gray-50 p-2 rounded">
+                          <p className="text-xs text-slate-500 italic mb-2 bg-slate-50 p-2 rounded">
                             "{event.source_text.substring(0, 100)}..."
                           </p>
                         )}

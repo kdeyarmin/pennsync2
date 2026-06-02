@@ -29,9 +29,9 @@ export default function TeachBackConfirmation({ material, patient, onRecorded })
 
   if (!material || !material.teach_back_questions?.length) {
     return (
-      <Card className="border-gray-200">
-        <CardContent className="p-6 text-center text-gray-500">
-          <HelpCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+      <Card className="border-slate-200">
+        <CardContent className="p-6 text-center text-slate-500">
+          <HelpCircle className="w-12 h-12 mx-auto mb-3 text-slate-300" />
           <p>Generate educational material to see teach-back questions.</p>
         </CardContent>
       </Card>
@@ -121,7 +121,7 @@ Nurse Signature: _______________________`;
       fair: "bg-yellow-100 text-yellow-800 border-yellow-300",
       poor: "bg-red-100 text-red-800 border-red-300"
     };
-    return colors[level] || "bg-gray-100 text-gray-800";
+    return colors[level] || "bg-slate-100 text-slate-800";
   };
 
   return (
@@ -147,7 +147,7 @@ Nurse Signature: _______________________`;
           {!isComplete ? (
             <div className="space-y-4">
               {/* Progress */}
-              <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center justify-between text-sm text-slate-600">
                 <span>Question {currentQuestionIdx + 1} of {questions.length}</span>
                 <div className="flex gap-1">
                   {questions.map((_, idx) => (
@@ -155,7 +155,7 @@ Nurse Signature: _______________________`;
                       key={idx}
                       className={`w-2 h-2 rounded-full ${
                         idx < currentQuestionIdx ? 'bg-green-500' :
-                        idx === currentQuestionIdx ? 'bg-blue-500' : 'bg-gray-300'
+                        idx === currentQuestionIdx ? 'bg-blue-500' : 'bg-slate-300'
                       }`}
                     />
                   ))}
@@ -174,9 +174,9 @@ Nurse Signature: _______________________`;
               </div>
 
               {/* Expected Answer Hint */}
-              <Alert className="bg-gray-50 border-gray-200">
-                <HelpCircle className="w-4 h-4 text-gray-600" />
-                <AlertDescription className="text-xs text-gray-600">
+              <Alert className="bg-slate-50 border-slate-200">
+                <HelpCircle className="w-4 h-4 text-slate-600" />
+                <AlertDescription className="text-xs text-slate-600">
                   <strong>Expected answer should include:</strong> {currentQuestion.expected_answer}
                 </AlertDescription>
               </Alert>
@@ -244,9 +244,9 @@ Nurse Signature: _______________________`;
               {/* Summary */}
               <div className="space-y-2">
                 {responses.map((r, idx) => (
-                  <div key={idx} className="p-3 bg-gray-50 rounded border">
+                  <div key={idx} className="p-3 bg-slate-50 rounded border">
                     <p className="text-sm font-medium">{r.question}</p>
-                    <p className="text-sm text-gray-600 mt-1">Response: "{r.patientResponse}"</p>
+                    <p className="text-sm text-slate-600 mt-1">Response: "{r.patientResponse}"</p>
                     <Badge className={`mt-2 ${getUnderstandingColor(r.understandingLevel)}`}>
                       {r.understandingLevel}
                     </Badge>

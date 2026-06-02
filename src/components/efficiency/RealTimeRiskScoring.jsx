@@ -124,7 +124,7 @@ For each risk, provide:
       case 'high': return 'bg-orange-600 text-white';
       case 'moderate': return 'bg-yellow-600 text-white';
       case 'low': return 'bg-green-600 text-white';
-      default: return 'bg-gray-600 text-white';
+      default: return 'bg-slate-600 text-white';
     }
   };
 
@@ -145,7 +145,7 @@ For each risk, provide:
     return (
       <div className="flex items-center gap-2">
         {isCalculating ? (
-          <Badge className="bg-gray-400 animate-pulse">Calculating...</Badge>
+          <Badge className="bg-slate-400 animate-pulse">Calculating...</Badge>
         ) : riskScore ? (
           <>
             <Badge className={getRiskColor(riskScore.overall_risk_level)}>
@@ -187,7 +187,7 @@ For each risk, provide:
           <>
             {/* Overall Score */}
             <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border-2 border-orange-300">
-              <p className="text-sm font-medium text-gray-600 mb-1">Overall Composite Risk</p>
+              <p className="text-sm font-medium text-slate-600 mb-1">Overall Composite Risk</p>
               <div className="flex items-center justify-center gap-3">
                 <div className="text-4xl font-bold text-orange-600">
                   {Math.round(riskScore.overall_risk_score)}
@@ -199,12 +199,12 @@ For each risk, provide:
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-gray-600 mt-1">Last updated: Just now</p>
+              <p className="text-xs text-slate-600 mt-1">Last updated: Just now</p>
             </div>
 
             {/* Risk Categories */}
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700">Risk Breakdown:</p>
+              <p className="text-sm font-semibold text-slate-700">Risk Breakdown:</p>
               {riskScore.risk_categories?.map((category) => {
                 const Icon = getRiskIcon(category.category);
                 return (
@@ -212,7 +212,7 @@ For each risk, provide:
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Icon className="w-4 h-4 text-gray-600" />
+                          <Icon className="w-4 h-4 text-slate-600" />
                           <span className="font-medium text-sm">{category.category}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ For each risk, provide:
                       </div>
                       
                       {category.factors && category.factors.length > 0 && (
-                        <div className="text-xs text-gray-600 mb-1">
+                        <div className="text-xs text-slate-600 mb-1">
                           <strong>Factors:</strong> {category.factors.slice(0, 2).join(', ')}
                           {category.factors.length > 2 && ` +${category.factors.length - 2} more`}
                         </div>

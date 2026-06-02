@@ -18,7 +18,7 @@ export default function RiskTrendVisualizer({ trends }) {
   const getTrendIcon = (trend) => {
     if (trend === 'increasing') return <TrendingUp className="w-4 h-4 text-red-600" />;
     if (trend === 'decreasing') return <TrendingDown className="w-4 h-4 text-green-600" />;
-    return <Minus className="w-4 h-4 text-gray-600" />;
+    return <Minus className="w-4 h-4 text-slate-600" />;
   };
 
   const getTrendColor = (trend, key) => {
@@ -34,7 +34,7 @@ export default function RiskTrendVisualizer({ trends }) {
       if (badIfDecreasing.includes(key)) return 'text-red-600 bg-red-50';
       if (goodIfDecreasing.includes(key)) return 'text-green-600 bg-green-50';
     }
-    return 'text-gray-600 bg-gray-50';
+    return 'text-slate-600 bg-slate-50';
   };
 
   return (
@@ -67,7 +67,7 @@ export default function RiskTrendVisualizer({ trends }) {
         {/* Chart for most critical trend */}
         {Object.entries(trends).length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">
+            <h4 className="text-sm font-semibold text-slate-700 mb-3">
               {Object.keys(trends)[0].replace(/_/g, ' ').toUpperCase()} History
             </h4>
             <ResponsiveContainer width="100%" height={200}>

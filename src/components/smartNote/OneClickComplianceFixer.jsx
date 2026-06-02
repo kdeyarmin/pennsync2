@@ -158,7 +158,7 @@ export default function OneClickComplianceFixer({
               
               <div className="bg-white p-3 rounded border mt-3">
                 <p className="text-xs font-semibold mb-1">Suggested Fix:</p>
-                <p className="text-xs text-gray-700 italic mb-3">
+                <p className="text-xs text-slate-700 italic mb-3">
                   "{getFixText(currentIssue).substring(0, 200)}..."
                 </p>
                 
@@ -182,7 +182,7 @@ export default function OneClickComplianceFixer({
             </AlertDescription>
           </Alert>
 
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-slate-500">
             <span>{actionableIssues.length - currentStep - 1} issues remaining</span>
             <Button
               variant="ghost"
@@ -238,7 +238,7 @@ export default function OneClickComplianceFixer({
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <p className="text-xs font-semibold">{issue.element || issue.name}</p>
-                  <p className="text-[10px] text-gray-600 mt-0.5">
+                  <p className="text-[10px] text-slate-600 mt-0.5">
                     {issue.suggestion || issue.problem || 'Required for compliance'}
                   </p>
                 </div>
