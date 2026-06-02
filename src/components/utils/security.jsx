@@ -101,6 +101,43 @@ export function sanitizeInput(input) {
 }
 
 /**
+ * Validate that a URL is safe to navigate to / open in a new tab. Only http(s)
+ * (and protocol-relative) URLs are allowed; javascript:, data:, vbscript: etc.
+ * are rejected. Use before window.open()/href when the URL comes from entity or
+ * AI-generated data.
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isSafeExternalUrl(url) {
+  if (typeof url !== 'string' || url.trim() === '') return false;
+  const trimmed = url.trim();
+  // Allow protocol-relative and site-relative URLs.
+  if (trimmed.startsWith('//') || trimmed.startsWith('/')) return true;
+  try {
+    const protocol = new URL(trimmed, window.location.origin).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Open an (untrusted) URL in a new tab only if it uses a safe scheme. Returns
+ * true if it opened, false if the URL was rejected. Always applies
+ * noopener,noreferrer.
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function openExternalUrl(url) {
+  if (!isSafeExternalUrl(url)) {
+    console.error('Blocked attempt to open unsafe URL');
+    return false;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+  return true;
+}
+
+/**
  * Sanitize an HTML string for safe use with dangerouslySetInnerHTML.
  *
  * The regex-based sanitizeInput() above is for plain-text fields and is NOT a

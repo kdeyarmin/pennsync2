@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { openExternalUrl } from "@/components/utils/security";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -183,7 +184,7 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
                     )}
                     <div className="flex gap-2">
                       {log.document_url && (
-                        <Button variant="outline" size="sm" onClick={() => window.open(log.document_url, '_blank')}>
+                        <Button variant="outline" size="sm" onClick={() => openExternalUrl(log.document_url)}>
                           <Eye className="w-3 h-3 mr-1" /> View
                         </Button>
                       )}
