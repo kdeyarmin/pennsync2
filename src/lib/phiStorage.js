@@ -30,9 +30,12 @@ const PHI_CACHE_KEY_PREFIXES = [
 ];
 
 /**
- * Purge re-fetchable cached PHI from local storage. Best-effort and never throws.
+ * Purge re-fetchable cached PHI from local storage. Best-effort and never
+ * throws. Returns a promise that resolves once the IndexedDB patient cache has
+ * actually been cleared — await it before redirecting on logout/timeout so the
+ * clear isn't abandoned mid-flight by the navigation, leaving the roster behind.
  */
-export function clearCachedPHI() {
+export async function clearCachedPHI() {
   try {
     if (typeof localStorage !== 'undefined') {
       const toRemove = [];
@@ -50,8 +53,8 @@ export function clearCachedPHI() {
 
   // Clear the IndexedDB patient cache (re-fetchable); preserves drafts/sync queue.
   try {
-    clearCachedPatients().catch(() => {});
+    await clearCachedPatients();
   } catch {
-    /* indexedDB unavailable */
+    /* indexedDB unavailable or clear failed — localStorage purge already done */
   }
 }

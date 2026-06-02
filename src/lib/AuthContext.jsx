@@ -122,15 +122,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = (shouldRedirect = true) => {
+  const logout = async (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
     // HIPAA: purge all cached PHI so the next user on a shared device can't
     // see the previous session's patient data before refetch.
     try { queryClientInstance.clear(); } catch (_e) { /* no-op */ }
     // Also purge re-fetchable PHI persisted to localStorage/IndexedDB (the
-    // in-memory React Query cache is not the only copy).
-    try { clearCachedPHI(); } catch (_e) { /* no-op */ }
+    // in-memory React Query cache is not the only copy). Await so the IndexedDB
+    // clear finishes before the redirect navigation abandons it.
+    try { await clearCachedPHI(); } catch (_e) { /* no-op */ }
 
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect

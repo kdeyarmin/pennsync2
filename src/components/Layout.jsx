@@ -224,9 +224,10 @@ export default function Layout({ children, currentPageName }) {
         user_agent: navigator.userAgent,
       });
     } catch {}
-    // HIPAA: purge cached PHI before logging out (shared-device safety).
+    // HIPAA: purge cached PHI before logging out (shared-device safety). Await
+    // the storage purge so the IndexedDB clear isn't abandoned by the redirect.
     try { queryClientInstance.clear(); } catch { /* no-op */ }
-    try { clearCachedPHI(); } catch { /* no-op */ }
+    try { await clearCachedPHI(); } catch { /* no-op */ }
     base44.auth.logout();
 
   }, [currentUser?.email]);

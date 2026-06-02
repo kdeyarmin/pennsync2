@@ -34,8 +34,9 @@ export default function SessionTimeoutManager({
     sessionStorage.clear();
     try { queryClientInstance.clear(); } catch (_e) { /* no-op */ }
     // Purge re-fetchable PHI persisted to localStorage/IndexedDB (preserves
-    // unsynced offline work — see clearCachedPHI).
-    try { clearCachedPHI(); } catch (_e) { /* no-op */ }
+    // unsynced offline work — see clearCachedPHI). Await so the IndexedDB clear
+    // completes before the logout redirect navigates away.
+    try { await clearCachedPHI(); } catch (_e) { /* no-op */ }
 
     // Logout and redirect
     base44.auth.logout();
