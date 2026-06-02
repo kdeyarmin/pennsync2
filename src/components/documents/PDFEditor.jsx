@@ -237,7 +237,7 @@ export default function PDFEditor({ pdfUrl, onSave }) {
       <Card>
         <CardContent className="p-8 text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading PDF...</p>
+          <p className="text-slate-600">Loading PDF...</p>
         </CardContent>
       </Card>
     );
@@ -250,7 +250,7 @@ export default function PDFEditor({ pdfUrl, onSave }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-50 rounded-lg">
+        <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 rounded-lg">
           <Button
             variant={tool === 'text' ? 'default' : 'outline'}
             size="sm"
@@ -273,7 +273,7 @@ export default function PDFEditor({ pdfUrl, onSave }) {
             <Pencil className="w-4 h-4" />
           </Button>
           
-          <div className="h-6 w-px bg-gray-300 mx-1" />
+          <div className="h-6 w-px bg-slate-300 mx-1" />
           
           <Input
             type="color"
@@ -282,7 +282,7 @@ export default function PDFEditor({ pdfUrl, onSave }) {
             className="w-12 h-9 p-1"
           />
           
-          <div className="h-6 w-px bg-gray-300 mx-1" />
+          <div className="h-6 w-px bg-slate-300 mx-1" />
           
           <Button variant="outline" size="sm" onClick={handleUndo} disabled={historyIndex <= 0}>
             <Undo className="w-4 h-4" />
@@ -291,7 +291,7 @@ export default function PDFEditor({ pdfUrl, onSave }) {
             <Redo className="w-4 h-4" />
           </Button>
           
-          <div className="h-6 w-px bg-gray-300 mx-1" />
+          <div className="h-6 w-px bg-slate-300 mx-1" />
           
           <Button variant="outline" size="sm" onClick={() => setScale(s => Math.min(s + 0.25, 3))}>
             <ZoomIn className="w-4 h-4" />
@@ -309,7 +309,7 @@ export default function PDFEditor({ pdfUrl, onSave }) {
         </div>
 
         {/* Canvas */}
-        <div className="border rounded-lg overflow-auto bg-gray-100 p-4" style={{ maxHeight: '600px' }}>
+        <div className="border rounded-lg overflow-auto bg-slate-100 p-4" style={{ maxHeight: '600px' }}>
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}

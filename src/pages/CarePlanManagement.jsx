@@ -249,7 +249,7 @@ export default function CarePlanManagement() {
       case 'met': return 'bg-blue-500';
       case 'not_met': return 'bg-red-500';
       case 'revised': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -375,7 +375,7 @@ export default function CarePlanManagement() {
 
   const BuilderTab = () => (
     <div className="flex flex-col h-[calc(100vh-16rem)] overflow-hidden">
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex flex-wrap items-center gap-3">
+      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Target className="w-5 h-5 text-indigo-600 flex-shrink-0" />
             <Input
@@ -388,25 +388,25 @@ export default function CarePlanManagement() {
           <div className="relative">
             <button
               onClick={() => setShowPatientDropdown(!showPatientDropdown)}
-              className="flex items-center gap-2 text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 text-sm border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors"
             >
-              <User className="w-4 h-4 text-gray-500" />
-              <span className={builderPatient ? "text-gray-800 font-medium" : "text-gray-400"}>
+              <User className="w-4 h-4 text-slate-500" />
+              <span className={builderPatient ? "text-slate-800 font-medium" : "text-slate-400"}>
                 {builderPatient ? `${builderPatient.first_name} ${builderPatient.last_name}` : "Select Patient"}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
             {showPatientDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50">
                 <div className="p-2 border-b">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <input
                       value={patientSearch}
                       onChange={e => setPatientSearch(e.target.value)}
                       placeholder="Search patients..."
-                      className="w-full text-sm pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-indigo-400"
+                      className="w-full text-sm pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-400"
                       autoFocus
                     />
                   </div>
@@ -419,10 +419,10 @@ export default function CarePlanManagement() {
                     <button
                       key={p.id}
                       onClick={() => { setBuilderPatient(p); setShowPatientDropdown(false); setPatientSearch(""); }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition-colors ${builderPatient?.id === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-gray-700"}`}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition-colors ${builderPatient?.id === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700"}`}
                     >
                       <div className="font-medium">{p.first_name} {p.last_name}</div>
-                      {p.primary_diagnosis && <div className="text-xs text-gray-400 truncate">{p.primary_diagnosis}</div>}
+                      {p.primary_diagnosis && <div className="text-xs text-slate-400 truncate">{p.primary_diagnosis}</div>}
                     </button>
                   ))}
                 </div>
@@ -430,25 +430,25 @@ export default function CarePlanManagement() {
             )}
           </div>
 
-          <div className="hidden sm:flex items-center gap-3 text-xs text-gray-500 border-x border-gray-200 px-3">
+          <div className="hidden sm:flex items-center gap-3 text-xs text-slate-500 border-x border-slate-200 px-3">
             <span className="flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
-              <span><strong className="text-gray-700">{planItems.length}</strong> interventions</span>
+              <span><strong className="text-slate-700">{planItems.length}</strong> interventions</span>
             </span>
             <span className="flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span><strong className="text-gray-700">{complianceCount}</strong> compliant</span>
+              <span><strong className="text-slate-700">{complianceCount}</strong> compliant</span>
             </span>
             <span className="flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-              <span><strong className="text-gray-700">{linkedCount}</strong> linked</span>
+              <span><strong className="text-slate-700">{linkedCount}</strong> linked</span>
             </span>
           </div>
 
           <select
             value={careType}
             onChange={(e) => setCareType(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors bg-white"
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors bg-white"
           >
             <option value="home_health">Home Health</option>
             <option value="hospice">Hospice</option>
@@ -469,7 +469,7 @@ export default function CarePlanManagement() {
         </div>
 
         {showAIAnalyzer && (
-          <div className="absolute right-0 top-14 bottom-0 w-96 border-l border-gray-200 bg-white overflow-y-auto p-4 z-10">
+          <div className="absolute right-0 top-14 bottom-0 w-96 border-l border-slate-200 bg-white overflow-y-auto p-4 z-10">
             <AICarePlanAnalyzer
               patientId={builderPatient?.id}
               patientName={builderPatient ? `${builderPatient.first_name} ${builderPatient.last_name}` : ""}
@@ -521,8 +521,8 @@ export default function CarePlanManagement() {
             <Target className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Care Plans</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Manage plans and build new interventions</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Care Plans</h1>
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Manage plans and build new interventions</p>
           </div>
           <FavoriteButton type="page" id="CarePlanManagement" name="Care Plans" />
         </div>
@@ -598,7 +598,7 @@ export default function CarePlanManagement() {
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search care plans or patients..."
                 value={searchTerm}
@@ -723,16 +723,16 @@ export default function CarePlanManagement() {
       <div className="space-y-6">
         {isLoading ? (
           <Card>
-            <CardContent className="p-12 text-center text-gray-500">
+            <CardContent className="p-12 text-center text-slate-500">
               Loading care plans...
             </CardContent>
           </Card>
         ) : filteredCarePlans.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
-              <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No care plans found</h3>
-              <p className="text-gray-500">Try adjusting your search or filters.</p>
+              <Target className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">No care plans found</h3>
+              <p className="text-slate-500">Try adjusting your search or filters.</p>
             </CardContent>
           </Card>
         ) : viewMode === "timeline" ? (
@@ -747,10 +747,10 @@ export default function CarePlanManagement() {
                     <User className="w-6 h-6 text-slate-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900">
+                    <h3 className="text-lg font-bold text-slate-900">
                       {patient.first_name} {patient.last_name}
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       {patient.primary_diagnosis} • {plans.length} care plan{plans.length !== 1 ? 's' : ''}
                     </p>
                   </div>
@@ -788,10 +788,10 @@ export default function CarePlanManagement() {
                         <User className="w-6 h-6 text-slate-600" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">
+                        <h3 className="text-xl font-bold text-slate-900">
                           {patient.first_name} {patient.last_name}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600">
                           {patient.primary_diagnosis} • {plans.length} active care plan{plans.length !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -839,22 +839,22 @@ export default function CarePlanManagement() {
                 <CardContent>
                   <div className="space-y-3">
                     {plans.map((plan) => (
-                      <Card key={plan.id} className="bg-gray-50">
+                      <Card key={plan.id} className="bg-slate-50">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold text-gray-900">{plan.problem}</h4>
+                                <h4 className="font-semibold text-slate-900">{plan.problem}</h4>
                                 <Badge className={getStatusColor(plan.status)}>
                                   {plan.status.replace('_', ' ')}
                                 </Badge>
                               </div>
-                              <p className="text-sm text-gray-600 mb-2">{plan.goal}</p>
+                              <p className="text-sm text-slate-600 mb-2">{plan.goal}</p>
                               
                               {plan.interventions && plan.interventions.length > 0 && (
                                 <div className="mt-2">
-                                  <p className="text-xs font-medium text-gray-700 mb-1">Interventions:</p>
-                                  <ul className="list-disc ml-5 text-xs text-gray-600 space-y-0.5">
+                                  <p className="text-xs font-medium text-slate-700 mb-1">Interventions:</p>
+                                  <ul className="list-disc ml-5 text-xs text-slate-600 space-y-0.5">
                                     {plan.interventions.map((intervention, idx) => (
                                       <li key={idx}>{intervention}</li>
                                     ))}
@@ -862,7 +862,7 @@ export default function CarePlanManagement() {
                                 </div>
                               )}
 
-                              <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                              <div className="flex gap-4 mt-2 text-xs text-slate-500">
                                 {plan.frequency && <span><strong>Frequency:</strong> {plan.frequency}</span>}
                                 {plan.target_date && (
                                   <span>

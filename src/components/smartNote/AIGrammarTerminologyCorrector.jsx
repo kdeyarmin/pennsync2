@@ -174,7 +174,7 @@ Return JSON:
       needs_improvement: 'bg-yellow-100 text-yellow-800',
       poor: 'bg-red-100 text-red-800'
     };
-    return colors[quality] || 'bg-gray-100 text-gray-800';
+    return colors[quality] || 'bg-slate-100 text-slate-800';
   };
 
   const getScoreColor = (score) => {
@@ -192,8 +192,8 @@ Return JSON:
   if (!noteContent || noteContent.length < 30) {
     return (
       <Card className="border-purple-200">
-        <CardContent className="p-4 text-center text-gray-500 text-sm">
-          <PenTool className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+        <CardContent className="p-4 text-center text-slate-500 text-sm">
+          <PenTool className="w-8 h-8 mx-auto mb-2 text-slate-300" />
           Enter at least 30 characters for AI grammar & terminology analysis
         </CardContent>
       </Card>
@@ -243,26 +243,26 @@ Return JSON:
           {isAnalyzing && !analysis ? (
             <div className="text-center py-6">
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-purple-600 mb-2" />
-              <p className="text-xs text-gray-500">Analyzing grammar and terminology...</p>
+              <p className="text-xs text-slate-500">Analyzing grammar and terminology...</p>
             </div>
           ) : analysis ? (
             <>
               {/* Scores */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-xs text-gray-500">Grammar</p>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <p className="text-xs text-slate-500">Grammar</p>
                   <p className={`text-lg font-bold ${getScoreColor(analysis.grammar_score)}`}>
                     {analysis.grammar_score}%
                   </p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-xs text-gray-500">Terminology</p>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <p className="text-xs text-slate-500">Terminology</p>
                   <p className={`text-lg font-bold ${getScoreColor(analysis.terminology_score)}`}>
                     {analysis.terminology_score}%
                   </p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-xs text-gray-500">Clarity</p>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <p className="text-xs text-slate-500">Clarity</p>
                   <p className={`text-lg font-bold ${getScoreColor(analysis.clarity_score)}`}>
                     {analysis.clarity_score}%
                   </p>
@@ -295,7 +295,7 @@ Return JSON:
               {/* Grammar Issues */}
               {analysis.grammar_issues?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3 text-red-500" />
                     Grammar Issues ({analysis.grammar_issues.length})
                   </p>
@@ -307,10 +307,10 @@ Return JSON:
                           <div className="flex-1">
                             <div className="flex items-center gap-2 text-xs mb-1">
                               <span className="line-through text-red-600">{issue.original}</span>
-                              <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                              <ArrowRight className="w-3 h-3 text-slate-400 flex-shrink-0" />
                               <span className="text-green-700 font-medium">{issue.corrected}</span>
                             </div>
-                            <p className="text-xs text-gray-500">{issue.explanation}</p>
+                            <p className="text-xs text-slate-500">{issue.explanation}</p>
                           </div>
                           {!isApplied && onApplyCorrection && (
                             <Button
@@ -333,7 +333,7 @@ Return JSON:
               {/* Terminology Corrections */}
               {analysis.terminology_corrections?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <Stethoscope className="w-3 h-3 text-blue-500" />
                     Medical Terminology ({analysis.terminology_corrections.length})
                   </p>
@@ -345,7 +345,7 @@ Return JSON:
                           <Badge variant="outline" className="text-xs bg-white">
                             {term.informal_term}
                           </Badge>
-                          <ArrowRight className="w-3 h-3 text-gray-400" />
+                          <ArrowRight className="w-3 h-3 text-slate-400" />
                           <Badge className="bg-blue-600 text-white text-xs">
                             {term.proper_term}
                           </Badge>
@@ -361,7 +361,7 @@ Return JSON:
                           )}
                           {isApplied && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
                         </div>
-                        <p className="text-xs text-gray-600">{term.explanation}</p>
+                        <p className="text-xs text-slate-600">{term.explanation}</p>
                       </div>
                     );
                   })}
@@ -371,7 +371,7 @@ Return JSON:
               {/* Phrasing Improvements */}
               {analysis.phrasing_improvements?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-purple-500" />
                     Better Clinical Phrasing ({analysis.phrasing_improvements.length})
                   </p>
@@ -381,7 +381,7 @@ Return JSON:
                       <div key={idx} className={`p-2 rounded border ${isApplied ? 'bg-green-50 border-green-200' : 'bg-purple-50 border-purple-200'}`}>
                         <Badge variant="outline" className="text-xs mb-1">{phrase.improvement_type}</Badge>
                         <div className="text-xs space-y-1">
-                          <p className="text-gray-600">
+                          <p className="text-slate-600">
                             <span className="font-medium">Original:</span> {phrase.original_phrase}
                           </p>
                           <p className="text-purple-700">
@@ -389,7 +389,7 @@ Return JSON:
                           </p>
                         </div>
                         <div className="flex justify-between items-center mt-1">
-                          <p className="text-xs text-gray-500 italic">{phrase.rationale}</p>
+                          <p className="text-xs text-slate-500 italic">{phrase.rationale}</p>
                           {!isApplied && onApplyCorrection && (
                             <Button
                               size="sm"
@@ -410,19 +410,19 @@ Return JSON:
               {/* Clarity Suggestions */}
               {analysis.clarity_suggestions?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <BookOpen className="w-3 h-3 text-green-500" />
                     Clarity Improvements ({analysis.clarity_suggestions.length})
                   </p>
                   {analysis.clarity_suggestions.slice(0, 3).map((clarity, idx) => (
                     <div key={idx} className="bg-green-50 p-2 rounded border border-green-200">
-                      <p className="text-xs text-gray-700">
+                      <p className="text-xs text-slate-700">
                         <span className="font-medium">Vague:</span> "{clarity.vague_statement}"
                       </p>
                       <p className="text-xs text-green-700 mt-1">
                         <span className="font-medium">Better:</span> "{clarity.specific_alternative}"
                       </p>
-                      <p className="text-xs text-gray-500 italic mt-1">
+                      <p className="text-xs text-slate-500 italic mt-1">
                         Add: {clarity.what_to_specify}
                       </p>
                     </div>
@@ -459,7 +459,7 @@ Return JSON:
                 <div className="text-center py-4">
                   <CheckCircle2 className="w-8 h-8 mx-auto text-green-500 mb-2" />
                   <p className="text-xs text-green-700 font-medium">Excellent! No corrections needed.</p>
-                  <p className="text-xs text-gray-500">Your documentation meets clinical standards.</p>
+                  <p className="text-xs text-slate-500">Your documentation meets clinical standards.</p>
                 </div>
               )}
             </>

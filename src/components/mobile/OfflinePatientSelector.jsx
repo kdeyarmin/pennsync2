@@ -192,8 +192,8 @@ export default function OfflinePatientSelector({ onCacheComplete, showDetails = 
         )}
 
         {patientsWithVisits.length === 0 ? (
-          <div className="text-center py-6 text-gray-500">
-            <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+          <div className="text-center py-6 text-slate-500">
+            <Users className="w-12 h-12 text-slate-300 mx-auto mb-2" />
             <p className="text-sm">No patients with scheduled visits</p>
           </div>
         ) : (
@@ -235,7 +235,7 @@ export default function OfflinePatientSelector({ onCacheComplete, showDetails = 
                       <p className="font-medium text-sm">
                         {patient.first_name} {patient.last_name}
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-slate-600">
                         {patient.primary_diagnosis || 'No diagnosis'}
                       </p>
                       <Badge variant="outline" className="text-xs mt-1">

@@ -388,7 +388,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
       case 'high': return 'bg-red-500 text-white';
       case 'moderate': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -419,7 +419,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
       {isPredicting && (
         <CardContent className="py-6">
           <Progress value={50} className="h-2" />
-          <p className="text-sm text-gray-600 mt-3 text-center">
+          <p className="text-sm text-slate-600 mt-3 text-center">
             Analyzing {patientHistory?.visits?.length || 0} visits, {populationData.length} benchmark cases, and clinical patterns...
           </p>
         </CardContent>
@@ -444,22 +444,22 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
             <CardContent>
               <div className="grid grid-cols-4 gap-3 mb-4">
                 <div className="text-center">
-                  <p className="text-xs text-gray-600 mb-1">30-Day Risk</p>
+                  <p className="text-xs text-slate-600 mb-1">30-Day Risk</p>
                   <p className="text-2xl font-bold text-red-600">{predictions.readmission_risk?.thirty_day_risk}%</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-600 mb-1">60-Day Risk</p>
+                  <p className="text-xs text-slate-600 mb-1">60-Day Risk</p>
                   <p className="text-2xl font-bold text-orange-600">{predictions.readmission_risk?.sixty_day_risk}%</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-600 mb-1">90-Day Risk</p>
+                  <p className="text-xs text-slate-600 mb-1">90-Day Risk</p>
                   <p className="text-2xl font-bold text-yellow-600">{predictions.readmission_risk?.ninety_day_risk}%</p>
                 </div>
                 <div className="text-center">
                   <Badge className={getRiskColor(predictions.readmission_risk?.risk_level)} size="lg">
                     {predictions.readmission_risk?.risk_level?.replace('_', ' ').toUpperCase()}
                   </Badge>
-                  <p className="text-xs text-gray-600 mt-1">{predictions.readmission_risk?.confidence} confidence</p>
+                  <p className="text-xs text-slate-600 mt-1">{predictions.readmission_risk?.confidence} confidence</p>
                 </div>
               </div>
 
@@ -558,7 +558,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
             <CardContent className="pt-4">
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">Direction</p>
+                  <p className="text-xs text-slate-600">Direction</p>
                   <Badge className={
                     predictions.functional_trajectory?.predicted_direction === 'improvement' ? 'bg-green-600' :
                     predictions.functional_trajectory?.predicted_direction === 'decline' ? 'bg-red-600' :
@@ -568,11 +568,11 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                   </Badge>
                 </div>
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">Improvement Likelihood</p>
+                  <p className="text-xs text-slate-600">Improvement Likelihood</p>
                   <p className="text-2xl font-bold text-purple-600">{predictions.functional_trajectory?.improvement_likelihood}%</p>
                 </div>
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">Timeline to Goals</p>
+                  <p className="text-xs text-slate-600">Timeline to Goals</p>
                   <p className="text-sm font-bold text-purple-700">{predictions.functional_trajectory?.timeline_to_goals}</p>
                 </div>
               </div>
@@ -586,12 +586,12 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                         <p className="text-sm font-medium">{pred.domain}</p>
                         <div className="flex items-center gap-2 justify-center">
                           <Badge variant="outline">{pred.current_score}</Badge>
-                          <span className="text-gray-400">→</span>
+                          <span className="text-slate-400">→</span>
                           <Badge className={pred.predicted_score > pred.current_score ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}>
                             {pred.predicted_score}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600 text-right">{pred.timeline}</p>
+                        <p className="text-xs text-slate-600 text-right">{pred.timeline}</p>
                       </div>
                     ))}
                   </div>
@@ -619,19 +619,19 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
             <CardContent className="pt-4">
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">Next Period</p>
+                  <p className="text-xs text-slate-600">Next Period</p>
                   <p className="text-2xl font-bold text-green-600">
                     ${predictions.revenue_forecast?.next_period_payment?.toLocaleString()}
                   </p>
                 </div>
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">6-Month Total</p>
+                  <p className="text-xs text-slate-600">6-Month Total</p>
                   <p className="text-2xl font-bold text-green-700">
                     ${predictions.revenue_forecast?.six_month_projection?.toLocaleString()}
                   </p>
                 </div>
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">Trend</p>
+                  <p className="text-xs text-slate-600">Trend</p>
                   <Badge className={
                     predictions.revenue_forecast?.payment_trend === 'increasing' ? 'bg-green-600' :
                     predictions.revenue_forecast?.payment_trend === 'decreasing' ? 'bg-red-600' :
@@ -692,13 +692,13 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
             <CardContent className="pt-4">
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">Audit Flag Probability</p>
+                  <p className="text-xs text-slate-600">Audit Flag Probability</p>
                   <p className="text-3xl font-bold text-red-600">
                     {predictions.compliance_risk_projection?.next_audit_flag_probability}%
                   </p>
                 </div>
                 <div className="text-center p-3 bg-white rounded border-2">
-                  <p className="text-xs text-gray-600">Documentation Risk</p>
+                  <p className="text-xs text-slate-600">Documentation Risk</p>
                   <Badge className={getRiskColor(predictions.compliance_risk_projection?.documentation_deterioration_risk)} size="lg">
                     {predictions.compliance_risk_projection?.documentation_deterioration_risk}
                   </Badge>
@@ -718,13 +718,13 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
 
               {predictions.compliance_risk_projection?.specific_compliance_predictions?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-900">Specific Area Predictions:</p>
+                  <p className="text-sm font-semibold text-slate-900">Specific Area Predictions:</p>
                   {predictions.compliance_risk_projection.specific_compliance_predictions.map((pred, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border">
                       <span className="text-sm">{pred.area}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">{pred.current_score}%</span>
-                        <span className="text-gray-400">→</span>
+                        <span className="text-xs text-slate-500">{pred.current_score}%</span>
+                        <span className="text-slate-400">→</span>
                         <span className={`text-sm font-bold ${pred.predicted_score < pred.current_score ? 'text-red-600' : 'text-green-600'}`}>
                           {pred.predicted_score}%
                         </span>
@@ -750,19 +750,19 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {predictions.clinical_outcomes.pain_management_success !== undefined && (
                     <div className="p-3 bg-white rounded border text-center">
-                      <p className="text-xs text-gray-600 mb-1">Pain Management Success</p>
+                      <p className="text-xs text-slate-600 mb-1">Pain Management Success</p>
                       <p className="text-xl font-bold text-blue-600">{predictions.clinical_outcomes.pain_management_success}%</p>
                     </div>
                   )}
                   {predictions.clinical_outcomes.medication_adherence_likelihood !== undefined && (
                     <div className="p-3 bg-white rounded border text-center">
-                      <p className="text-xs text-gray-600 mb-1">Medication Adherence</p>
+                      <p className="text-xs text-slate-600 mb-1">Medication Adherence</p>
                       <p className="text-xl font-bold text-green-600">{predictions.clinical_outcomes.medication_adherence_likelihood}%</p>
                     </div>
                   )}
                   {predictions.clinical_outcomes.fall_risk_trajectory && (
                     <div className="p-3 bg-white rounded border text-center">
-                      <p className="text-xs text-gray-600 mb-1">Fall Risk Trend</p>
+                      <p className="text-xs text-slate-600 mb-1">Fall Risk Trend</p>
                       <Badge className={
                         predictions.clinical_outcomes.fall_risk_trajectory.includes('decreasing') ? 'bg-green-600' :
                         predictions.clinical_outcomes.fall_risk_trajectory.includes('increasing') ? 'bg-red-600' :
@@ -774,13 +774,13 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                   )}
                   {predictions.clinical_outcomes.emergency_visit_risk !== undefined && (
                     <div className="p-3 bg-white rounded border text-center">
-                      <p className="text-xs text-gray-600 mb-1">Emergency Visit Risk</p>
+                      <p className="text-xs text-slate-600 mb-1">Emergency Visit Risk</p>
                       <p className="text-xl font-bold text-orange-600">{predictions.clinical_outcomes.emergency_visit_risk}%</p>
                     </div>
                   )}
                   {predictions.clinical_outcomes.wound_healing_timeline && (
                     <div className="p-3 bg-white rounded border">
-                      <p className="text-xs text-gray-600 mb-1">Wound Healing Timeline</p>
+                      <p className="text-xs text-slate-600 mb-1">Wound Healing Timeline</p>
                       <p className="text-sm font-bold text-purple-600">{predictions.clinical_outcomes.wound_healing_timeline}</p>
                     </div>
                   )}
@@ -808,7 +808,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                     }`}>
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between mb-2">
-                          <p className="font-semibold text-gray-900">{signal.signal}</p>
+                          <p className="font-semibold text-slate-900">{signal.signal}</p>
                           <Badge className={
                             signal.severity === 'critical' ? 'bg-red-600' :
                             signal.severity === 'high' ? 'bg-orange-500' :
@@ -817,7 +817,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                             {signal.severity}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">{signal.action_needed}</p>
+                        <p className="text-sm text-slate-700 mb-2">{signal.action_needed}</p>
                         <Badge variant="outline" className="text-xs">
                           <Clock className="w-3 h-3 mr-1" />
                           {signal.timeframe}
@@ -846,8 +846,8 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-1">{strategy.risk_addressed}</h4>
-                            <p className="text-sm text-gray-700">{strategy.intervention}</p>
+                            <h4 className="font-semibold text-slate-900 mb-1">{strategy.risk_addressed}</h4>
+                            <p className="text-sm text-slate-700">{strategy.intervention}</p>
                           </div>
                           <Badge className="bg-green-600 text-white">
                             {strategy.expected_risk_reduction}
@@ -911,19 +911,19 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
               <CardContent className="pt-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                   <div className="text-center p-3 bg-white rounded border">
-                    <p className="text-xs text-gray-600 mb-1">SN Visits/Week</p>
+                    <p className="text-xs text-slate-600 mb-1">SN Visits/Week</p>
                     <p className="text-2xl font-bold text-blue-700">{predictions.resource_allocation_plan.skilled_nursing_visits_per_week}</p>
                   </div>
                   <div className="text-center p-3 bg-white rounded border">
-                    <p className="text-xs text-gray-600 mb-1">PT Sessions</p>
+                    <p className="text-xs text-slate-600 mb-1">PT Sessions</p>
                     <p className="text-2xl font-bold text-green-700">{predictions.resource_allocation_plan.pt_sessions_recommended}</p>
                   </div>
                   <div className="text-center p-3 bg-white rounded border">
-                    <p className="text-xs text-gray-600 mb-1">OT Sessions</p>
+                    <p className="text-xs text-slate-600 mb-1">OT Sessions</p>
                     <p className="text-2xl font-bold text-purple-700">{predictions.resource_allocation_plan.ot_sessions_recommended}</p>
                   </div>
                   <div className="text-center p-3 bg-white rounded border">
-                    <p className="text-xs text-gray-600 mb-1">Aide Visits/Week</p>
+                    <p className="text-xs text-slate-600 mb-1">Aide Visits/Week</p>
                     <p className="text-2xl font-bold text-orange-700">{predictions.resource_allocation_plan.aide_visits_per_week}</p>
                   </div>
                 </div>
@@ -977,10 +977,10 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                 <div className="space-y-3">
                   {predictions.care_planning_insights.primary_goals?.length > 0 && (
                     <div className="bg-white p-3 rounded border">
-                      <p className="text-sm font-semibold text-gray-900 mb-2">🎯 Primary Care Goals:</p>
+                      <p className="text-sm font-semibold text-slate-900 mb-2">🎯 Primary Care Goals:</p>
                       <ul className="space-y-1">
                         {predictions.care_planning_insights.primary_goals.map((goal, idx) => (
-                          <li key={idx} className="text-sm text-gray-800">• {goal}</li>
+                          <li key={idx} className="text-sm text-slate-800">• {goal}</li>
                         ))}
                       </ul>
                     </div>
@@ -1060,7 +1060,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                             <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
                               {idx + 1}
                             </span>
-                            <p className="font-semibold text-gray-900">{rec.recommendation}</p>
+                            <p className="font-semibold text-slate-900">{rec.recommendation}</p>
                           </div>
                           <Badge className={
                             rec.priority === 'critical' ? 'bg-red-600' :
@@ -1095,10 +1095,10 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
 
                         {rec.success_indicators?.length > 0 && (
                           <div className="bg-white p-2 rounded border">
-                            <p className="text-xs text-gray-600 mb-1">Success Indicators:</p>
+                            <p className="text-xs text-slate-600 mb-1">Success Indicators:</p>
                             <ul className="space-y-0.5">
                               {rec.success_indicators.map((indicator, sIdx) => (
-                                <li key={sIdx} className="text-xs text-gray-800">✓ {indicator}</li>
+                                <li key={sIdx} className="text-xs text-slate-800">✓ {indicator}</li>
                               ))}
                             </ul>
                           </div>
@@ -1124,9 +1124,9 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
 
       {!predictions && !isPredicting && (
         <CardContent className="py-8 text-center">
-          <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600 mb-4">Click "Generate Predictions" for AI-powered outcome analysis</p>
-          <p className="text-xs text-gray-500">
+          <Brain className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-600 mb-4">Click "Generate Predictions" for AI-powered outcome analysis</p>
+          <p className="text-xs text-slate-500">
             Analyzes current assessment + {patientHistory?.visits?.length || 0} historical visits + {populationData.length} population benchmarks
           </p>
         </CardContent>

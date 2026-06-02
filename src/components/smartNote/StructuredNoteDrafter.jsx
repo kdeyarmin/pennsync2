@@ -117,7 +117,7 @@ Return ONLY the clinical narrative note text — nothing else.`
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <button
         className="w-full px-4 py-3 bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100 flex items-center justify-between"
         onClick={() => setCollapsed(v => !v)}
@@ -127,18 +127,18 @@ Return ONLY the clinical narrative note text — nothing else.`
           <span className="text-sm font-bold text-violet-800">Structured Note Drafter</span>
           <Badge className="bg-violet-100 text-violet-700 text-xs">AI</Badge>
         </div>
-        {collapsed ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronUp className="w-4 h-4 text-gray-400" />}
+        {collapsed ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
       </button>
 
       {!collapsed && (
         <div className="p-4 space-y-4">
-          <p className="text-xs text-gray-500">Fill in structured fields to generate a complete clinical note draft.</p>
+          <p className="text-xs text-slate-500">Fill in structured fields to generate a complete clinical note draft.</p>
 
           {/* Visit Type */}
           <div>
-            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Visit Type</Label>
+            <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Visit Type</Label>
             <Select value={visitType} onValueChange={setVisitType}>
-              <SelectTrigger className="h-9 text-sm bg-gray-50">
+              <SelectTrigger className="h-9 text-sm bg-slate-50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -149,7 +149,7 @@ Return ONLY the clinical narrative note text — nothing else.`
 
           {/* Vitals grid */}
           <div>
-            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Vital Signs</Label>
+            <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Vital Signs</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { key: "bp_systolic", placeholder: "Systolic", label: "BP Sys" },
@@ -162,12 +162,12 @@ Return ONLY the clinical narrative note text — nothing else.`
                 { key: "pain_level", placeholder: "0-10", label: "Pain" },
               ].map(f => (
                 <div key={f.key}>
-                  <Label className="text-xs text-gray-500 mb-0.5 block">{f.label}</Label>
+                  <Label className="text-xs text-slate-500 mb-0.5 block">{f.label}</Label>
                   <Input
                     value={vitals[f.key]}
                     onChange={e => setVital(f.key, e.target.value)}
                     placeholder={f.placeholder}
-                    className="h-8 text-sm bg-gray-50"
+                    className="h-8 text-sm bg-slate-50"
                   />
                 </div>
               ))}
@@ -183,7 +183,7 @@ Return ONLY the clinical narrative note text — nothing else.`
           ].map(f => (
             <div key={f.label}>
               <div className="flex items-center justify-between mb-1.5">
-                <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{f.label}</Label>
+                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{f.label}</Label>
                 <VoiceNoteIntegration 
                   onInsertText={(text) => handleInsertVoiceText(f.fieldName, text)}
                   disabled={loading}
@@ -194,7 +194,7 @@ Return ONLY the clinical narrative note text — nothing else.`
                 value={f.val}
                 onChange={e => f.set(e.target.value)}
                 placeholder={f.placeholder}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus:ring-2 focus:ring-violet-300 focus:border-violet-400 outline-none resize-none min-h-[70px] leading-relaxed"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-violet-300 focus:border-violet-400 outline-none resize-none min-h-[70px] leading-relaxed"
               />
             </div>
           ))}
@@ -215,7 +215,7 @@ Return ONLY the clinical narrative note text — nothing else.`
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-semibold text-gray-800">Draft Ready</span>
+                  <span className="text-sm font-semibold text-slate-800">Draft Ready</span>
                 </div>
                 <div className="flex gap-2">
                   {onDraftReady && (
@@ -231,9 +231,9 @@ Return ONLY the clinical narrative note text — nothing else.`
               <textarea
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
-                className="w-full min-h-[200px] text-sm font-mono border border-gray-200 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-violet-300 outline-none resize-none"
+                className="w-full min-h-[200px] text-sm font-mono border border-slate-200 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-violet-300 outline-none resize-none"
               />
-              <p className="text-xs text-gray-400 italic">Review and edit before using. Click "Use in Note Builder" to run full compliance check.</p>
+              <p className="text-xs text-slate-400 italic">Review and edit before using. Click "Use in Note Builder" to run full compliance check.</p>
             </div>
           )}
         </div>

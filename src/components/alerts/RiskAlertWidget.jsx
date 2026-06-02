@@ -75,7 +75,7 @@ function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }
   if (isLoading) {
     return (
       <Card className={compact ? 'border-yellow-200' : ''}>
-        <CardContent className="p-4 text-center text-sm text-gray-500">
+        <CardContent className="p-4 text-center text-sm text-slate-500">
           Loading alerts...
         </CardContent>
       </Card>
@@ -88,7 +88,7 @@ function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }
         <CardContent className="p-4 text-center">
           <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
           <p className="text-sm text-green-700 font-medium">No active risk alerts</p>
-          <p className="text-xs text-gray-500 mt-1">Patient risk profile is within normal range</p>
+          <p className="text-xs text-slate-500 mt-1">Patient risk profile is within normal range</p>
         </CardContent>
       </Card>
     );
@@ -152,9 +152,9 @@ function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }
                           </Link>
                         </Button>
                       )}
-                      <p className="text-xs text-gray-700">{alert.message}</p>
+                      <p className="text-xs text-slate-700">{alert.message}</p>
                       {alert.risk_score && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           Risk Score: <strong>{alert.risk_score}/100</strong>
                         </p>
                       )}
@@ -165,7 +165,7 @@ function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }
                       className="h-6 w-6 p-0"
                       onClick={() => resolveMutation.mutate(alert.id)}
                     >
-                      <X className="w-4 h-4 text-gray-400" />
+                      <X className="w-4 h-4 text-slate-400" />
                     </Button>
                   </div>
 
@@ -177,7 +177,7 @@ function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }
                           <li key={i}>✓ {action}</li>
                         ))}
                         {alert.recommended_actions.length > 3 && (
-                          <li className="text-gray-500">...and {alert.recommended_actions.length - 3} more</li>
+                          <li className="text-slate-500">...and {alert.recommended_actions.length - 3} more</li>
                         )}
                       </ul>
                     </div>

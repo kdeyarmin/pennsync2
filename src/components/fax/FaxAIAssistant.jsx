@@ -74,7 +74,7 @@ export default function FaxAIAssistant({ faxLogId }) {
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -94,8 +94,8 @@ export default function FaxAIAssistant({ faxLogId }) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-          <p className="text-gray-500 mt-2">Loading fax details...</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-slate-400" />
+          <p className="text-slate-500 mt-2">Loading fax details...</p>
         </CardContent>
       </Card>
     );
@@ -112,7 +112,7 @@ export default function FaxAIAssistant({ faxLogId }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             AI-powered analysis, summaries, and reply drafting for your faxes
           </p>
           <div className="flex gap-2">
@@ -164,7 +164,7 @@ export default function FaxAIAssistant({ faxLogId }) {
               >
                 {getSeverityIcon(alert.severity)}
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{alert.message}</p>
+                  <p className="font-medium text-slate-900">{alert.message}</p>
                   {alert.action_required && (
                     <Badge className="mt-1 bg-orange-600 text-white">
                       Action Required
@@ -194,15 +194,15 @@ export default function FaxAIAssistant({ faxLogId }) {
                 </Badge>
                 <Badge variant="outline">{analysis.summary.category}</Badge>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">
+              <h4 className="font-semibold text-slate-900 mb-2">
                 {analysis.summary.topic}
               </h4>
             </div>
 
             {analysis.summary.key_points?.length > 0 && (
               <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">Key Points:</p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <p className="text-sm font-semibold text-slate-700 mb-2">Key Points:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm text-slate-600">
                   {analysis.summary.key_points.map((point, idx) => (
                     <li key={idx}>{point}</li>
                   ))}
@@ -237,9 +237,9 @@ export default function FaxAIAssistant({ faxLogId }) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-1">Subject:</p>
+              <p className="text-sm font-semibold text-slate-700 mb-1">Subject:</p>
               <div className="flex items-center gap-2">
-                <p className="text-gray-900 flex-1">{analysis.reply_draft.subject}</p>
+                <p className="text-slate-900 flex-1">{analysis.reply_draft.subject}</p>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -252,7 +252,7 @@ export default function FaxAIAssistant({ faxLogId }) {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold text-gray-700">Message:</p>
+                <p className="text-sm font-semibold text-slate-700">Message:</p>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -271,11 +271,11 @@ export default function FaxAIAssistant({ faxLogId }) {
             </div>
 
             {analysis.reply_draft.suggested_attachments?.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm font-semibold text-gray-700 mb-2">
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-sm font-semibold text-slate-700 mb-2">
                   Suggested Attachments:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                <ul className="list-disc list-inside space-y-1 text-sm text-slate-600">
                   {analysis.reply_draft.suggested_attachments.map((att, idx) => (
                     <li key={idx}>{att}</li>
                   ))}
@@ -304,19 +304,19 @@ export default function FaxAIAssistant({ faxLogId }) {
             {analysis.suggested_contacts.map((contact, idx) => (
               <div
                 key={idx}
-                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900">{contact.name}</p>
+                    <p className="font-semibold text-slate-900">{contact.name}</p>
                     {contact.matched && (
                       <Badge className="bg-green-600 text-white text-xs">
                         In Contacts
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">{contact.fax_number}</p>
-                  <p className="text-xs text-gray-500 mt-1">{contact.reason}</p>
+                  <p className="text-sm text-slate-600">{contact.fax_number}</p>
+                  <p className="text-xs text-slate-500 mt-1">{contact.reason}</p>
                 </div>
                 <Button variant="outline" size="sm">
                   <Send className="w-3 h-3 mr-1" />

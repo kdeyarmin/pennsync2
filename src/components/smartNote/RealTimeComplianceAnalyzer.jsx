@@ -173,7 +173,7 @@ Return JSON with compliance score and suggestions.`,
           {analyzing && (
             <div className="text-center py-6">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Analyzing compliance...</p>
+              <p className="text-sm text-slate-600">Analyzing compliance...</p>
             </div>
           )}
 
@@ -212,7 +212,7 @@ Return JSON with compliance score and suggestions.`,
               {analysis.suggestions?.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-700">Compliance Improvements</p>
+                    <p className="text-xs font-semibold text-slate-700">Compliance Improvements</p>
                     {pendingSuggestions.length > 0 && (
                       <Button
                         size="sm"
@@ -243,9 +243,9 @@ Return JSON with compliance score and suggestions.`,
                                 }`}>
                                   {suggestion.priority}
                                 </Badge>
-                                <span className="text-xs font-semibold text-gray-900">{suggestion.category}</span>
+                                <span className="text-xs font-semibold text-slate-900">{suggestion.category}</span>
                               </div>
-                              <p className="text-xs text-gray-700 mb-2">{suggestion.gap}</p>
+                              <p className="text-xs text-slate-700 mb-2">{suggestion.gap}</p>
                             </div>
                             {!isApplied && (
                               <Button
@@ -267,7 +267,7 @@ Return JSON with compliance score and suggestions.`,
                             <p className="text-xs text-blue-900 font-mono">{suggestion.suggested_text}</p>
                           </div>
                           
-                          <p className="text-xs text-gray-600 italic">{suggestion.rationale}</p>
+                          <p className="text-xs text-slate-600 italic">{suggestion.rationale}</p>
                         </CardContent>
                       </Card>
                     );

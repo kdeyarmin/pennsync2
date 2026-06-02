@@ -37,19 +37,19 @@ export default function PreVisitChecklist({ onReadyChange, isNurse = false }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Pre-Visit Checklist</CardTitle>
-        <p className="text-sm text-gray-600 mt-1">Please confirm these before joining</p>
+        <p className="text-sm text-slate-600 mt-1">Please confirm these before joining</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {checkItems.map(item => (
-          <label key={item.key} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition">
+          <label key={item.key} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
             <input
               type="checkbox"
               checked={checks[item.key]}
               onChange={() => toggleCheck(item.key)}
-              className="w-5 h-5 rounded border-gray-300"
+              className="w-5 h-5 rounded border-slate-300"
             />
-            <item.icon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-            <span className="text-sm text-gray-700 flex-1">{item.label}</span>
+            <item.icon className="w-5 h-5 text-slate-500 flex-shrink-0" />
+            <span className="text-sm text-slate-700 flex-1">{item.label}</span>
             {checks[item.key] && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />}
           </label>
         ))}

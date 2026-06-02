@@ -111,10 +111,10 @@ export default function ComplianceAlertNotifications({
 
   if (isLoading) {
     return (
-      <Card className={compact ? 'border-gray-200' : 'border-2 border-purple-200'}>
+      <Card className={compact ? 'border-slate-200' : 'border-2 border-purple-200'}>
         <CardContent className="p-4 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto" />
-          <p className="text-sm text-gray-600 mt-2">Loading compliance alerts...</p>
+          <p className="text-sm text-slate-600 mt-2">Loading compliance alerts...</p>
         </CardContent>
       </Card>
     );
@@ -125,7 +125,7 @@ export default function ComplianceAlertNotifications({
   }
 
   return (
-    <Card className={`${compact ? 'border-gray-200' : 'border-2 border-purple-200'} ${criticalCount > 0 ? 'ring-2 ring-red-400' : ''}`}>
+    <Card className={`${compact ? 'border-slate-200' : 'border-2 border-purple-200'} ${criticalCount > 0 ? 'ring-2 ring-red-400' : ''}`}>
       <CardHeader className="py-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -189,14 +189,14 @@ export default function ComplianceAlertNotifications({
                             </Badge>
                           </div>
                           <p className="font-semibold text-sm">{alert.title}</p>
-                          <p className="text-sm text-gray-700 mt-1">{alert.message}</p>
+                          <p className="text-sm text-slate-700 mt-1">{alert.message}</p>
                         </div>
 
                         {/* Contributing Factors */}
                         {alert.contributing_factors?.length > 0 && (
-                          <div className="bg-white/60 p-2 rounded border border-gray-200">
-                            <p className="text-xs font-semibold text-gray-700 mb-1">Contributing Factors:</p>
-                            <ul className="text-xs text-gray-600 space-y-0.5">
+                          <div className="bg-white/60 p-2 rounded border border-slate-200">
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Contributing Factors:</p>
+                            <ul className="text-xs text-slate-600 space-y-0.5">
                               {alert.contributing_factors.slice(0, 3).map((factor, idx) => (
                                 <li key={idx} className="flex items-start gap-1">
                                   <span className="text-orange-500">•</span>

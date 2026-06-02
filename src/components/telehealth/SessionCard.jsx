@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const statusColors = {
   scheduled: "bg-blue-100 text-blue-700",
   active: "bg-green-100 text-green-700",
-  completed: "bg-gray-100 text-gray-600",
+  completed: "bg-slate-100 text-slate-600",
   cancelled: "bg-red-100 text-red-600"
 };
 
@@ -36,12 +36,12 @@ export default function SessionCard({ session, onJoin, onCancel, onTextPatient }
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Badge className={statusColors[session.status]}>{session.status}</Badge>
-              <span className="text-xs text-gray-500">{visitLabels[session.visit_type] || session.visit_type}</span>
+              <span className="text-xs text-slate-500">{visitLabels[session.visit_type] || session.visit_type}</span>
             </div>
-            <h3 className="font-semibold text-gray-900 truncate">
+            <h3 className="font-semibold text-slate-900 truncate">
               {session.patient_name || "Unknown Patient"}
             </h3>
-            <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-gray-500">
+            <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-slate-500">
               {session.scheduled_at && (
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />

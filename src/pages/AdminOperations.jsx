@@ -23,8 +23,8 @@ export default function AdminOperations() {
         <Card className="modern-card border-l-4 border-l-red-500">
           <CardContent className="p-12 text-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-            <p className="text-gray-600">Only administrators can access Admin Operations.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Restricted</h2>
+            <p className="text-slate-600">Only administrators can access Admin Operations.</p>
           </CardContent>
         </Card>
       </div>
@@ -34,11 +34,11 @@ export default function AdminOperations() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
           <Settings className="w-8 h-8 text-indigo-600" />
           Admin Operations
         </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
+        <p className="text-sm sm:text-base text-slate-600 mt-2">
           System monitoring, data quality, user activity, and operational oversight
         </p>
       </div>

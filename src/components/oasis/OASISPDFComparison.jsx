@@ -139,7 +139,7 @@ export default function OASISPDFComparison({
     return (
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1">
-          <Label className="text-sm font-medium text-gray-700">{label}</Label>
+          <Label className="text-sm font-medium text-slate-700">{label}</Label>
           <div className="flex items-center gap-1">
             {hasDiscrepancy && (
               <Badge className="bg-yellow-600 text-white text-xs">
@@ -190,9 +190,9 @@ export default function OASISPDFComparison({
             autoFocus
           />
         ) : (
-          <div className={`p-2 bg-gray-50 rounded border ${hasDiscrepancy ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200'}`}>
-            <p className="text-sm text-gray-900">
-              {currentValue || <span className="text-gray-400 italic">No value</span>}
+          <div className={`p-2 bg-slate-50 rounded border ${hasDiscrepancy ? 'border-yellow-400 bg-yellow-50' : 'border-slate-200'}`}>
+            <p className="text-sm text-slate-900">
+              {currentValue || <span className="text-slate-400 italic">No value</span>}
             </p>
           </div>
         )}
@@ -278,10 +278,10 @@ export default function OASISPDFComparison({
           {showPDF && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-700">Original PDF Document</h3>
+                <h3 className="text-sm font-semibold text-slate-700">Original PDF Document</h3>
                 <Badge variant="outline">Source</Badge>
               </div>
-              <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100">
+              <div className="border-2 border-slate-300 rounded-lg overflow-hidden bg-slate-100">
                 <iframe
                   src={uploadedFileUrl}
                   className="w-full h-[800px]"
@@ -294,7 +294,7 @@ export default function OASISPDFComparison({
           {/* Extracted Data Editor */}
           <div className={showPDF ? '' : 'lg:col-span-2'}>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-700">Extracted Data (Editable)</h3>
+              <h3 className="text-sm font-semibold text-slate-700">Extracted Data (Editable)</h3>
               <Badge variant="outline" className="bg-blue-50 text-blue-700">
                 AI Extracted
               </Badge>
@@ -328,20 +328,20 @@ export default function OASISPDFComparison({
                   
                   {/* Comorbidities List */}
                   <div className="mt-4">
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <Label className="text-sm font-medium text-slate-700 mb-2 block">
                       Other Diagnoses (M1023)
                     </Label>
                     {pdgmData?.comorbidities?.length > 0 ? (
                       <div className="space-y-2">
                         {pdgmData.comorbidities.map((comorbidity, idx) => (
-                          <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                          <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded border">
                             <Badge variant="outline" className="text-xs">{idx + 1}</Badge>
                             <span className="text-sm flex-1">{comorbidity}</span>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-400 italic">No comorbidities extracted</p>
+                      <p className="text-sm text-slate-400 italic">No comorbidities extracted</p>
                     )}
                   </div>
                 </div>
@@ -365,19 +365,19 @@ export default function OASISPDFComparison({
                     <p className="text-xs font-semibold text-blue-900 mb-2">Functional Impairment Level</p>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="text-center p-2 bg-white rounded">
-                        <p className="text-xs text-gray-500">Low (0)</p>
+                        <p className="text-xs text-slate-500">Low (0)</p>
                         <p className="text-sm font-bold text-green-600">
                           {Object.values(pdgmData?.functional_scores || {}).filter(v => v === 0).length}
                         </p>
                       </div>
                       <div className="text-center p-2 bg-white rounded">
-                        <p className="text-xs text-gray-500">Med (1-2)</p>
+                        <p className="text-xs text-slate-500">Med (1-2)</p>
                         <p className="text-sm font-bold text-yellow-600">
                           {Object.values(pdgmData?.functional_scores || {}).filter(v => v >= 1 && v <= 2).length}
                         </p>
                       </div>
                       <div className="text-center p-2 bg-white rounded">
-                        <p className="text-xs text-gray-500">High (3+)</p>
+                        <p className="text-xs text-slate-500">High (3+)</p>
                         <p className="text-sm font-bold text-red-600">
                           {Object.values(pdgmData?.functional_scores || {}).filter(v => v >= 3).length}
                         </p>
@@ -396,8 +396,8 @@ export default function OASISPDFComparison({
                   {renderEditableField('M1242 Pain Frequency', 'm1242_pain_freq', 'number')}
                   
                   {/* Wound Status */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded border">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">Wound Status</p>
+                  <div className="mt-4 p-3 bg-slate-50 rounded border">
+                    <p className="text-xs font-semibold text-slate-700 mb-2">Wound Status</p>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Pressure Ulcer:</span>
@@ -428,7 +428,7 @@ export default function OASISPDFComparison({
         {/* Discrepancies Log */}
         {discrepancies.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Flag className="w-4 h-4 text-yellow-600" />
               Correction History ({discrepancies.length})
             </h3>
@@ -437,7 +437,7 @@ export default function OASISPDFComparison({
                 <div key={idx} className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-900 mb-1">{disc.field}</p>
+                      <p className="font-semibold text-slate-900 mb-1">{disc.field}</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <p className="text-xs text-red-600">Original:</p>

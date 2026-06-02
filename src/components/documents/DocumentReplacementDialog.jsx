@@ -134,9 +134,9 @@ export default function DocumentReplacementDialog({
             <Label>Upload New Document *</Label>
             <div className="mt-2">
               <label htmlFor="doc-upload" className="cursor-pointer">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
-                  <Upload className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                  <p className="text-xs text-gray-600">
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
+                  <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+                  <p className="text-xs text-slate-600">
                     {newFile ? newFile.name : 'Click to upload PDF'}
                   </p>
                 </div>

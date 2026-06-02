@@ -82,7 +82,7 @@ export default function FaxRetrySettings() {
           <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex-1">
               <Label className="text-base font-semibold">Enable Automatic Retry</Label>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 Automatically retry failed faxes based on configuration
               </p>
             </div>
@@ -107,7 +107,7 @@ export default function FaxRetrySettings() {
                   setFormData({ ...formData, max_retries: parseInt(e.target.value) })
                 }
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500">
                 Number of retry attempts before giving up
               </p>
             </div>
@@ -123,7 +123,7 @@ export default function FaxRetrySettings() {
                   setFormData({ ...formData, retry_delay_minutes: parseInt(e.target.value) })
                 }
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500">
                 Base delay between retry attempts
               </p>
             </div>
@@ -132,7 +132,7 @@ export default function FaxRetrySettings() {
           {/* Priority Multipliers */}
           <div className="space-y-3">
             <Label className="text-base font-semibold">Priority Delay Multipliers</Label>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Adjust retry delays based on fax priority (1.0 = normal delay)
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -197,7 +197,7 @@ export default function FaxRetrySettings() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Low (slower)</Label>
+                <Label className="text-xs text-slate-600">Low (slower)</Label>
                 <Input
                   type="number"
                   step="0.1"
@@ -219,10 +219,10 @@ export default function FaxRetrySettings() {
           </div>
 
           {/* Notifications */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
             <div className="flex-1">
               <Label className="text-sm font-semibold">Notify on Final Failure</Label>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 Send email when all retry attempts are exhausted
               </p>
             </div>

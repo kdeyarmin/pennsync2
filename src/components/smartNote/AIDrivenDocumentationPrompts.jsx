@@ -319,7 +319,7 @@ Return JSON:
           {isAnalyzing ? (
             <div className="flex items-center justify-center py-6 gap-2">
               <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
-              <span className="text-sm text-gray-600">Analyzing documentation...</span>
+              <span className="text-sm text-slate-600">Analyzing documentation...</span>
             </div>
           ) : prompts ? (
             <>
@@ -349,7 +349,7 @@ Return JSON:
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2">
                               {getCategoryIcon(item.category)}
-                              <span className="text-sm font-medium text-gray-900">{item.element}</span>
+                              <span className="text-sm font-medium text-slate-900">{item.element}</span>
                             </div>
                             <Badge className={`${getCategoryColor(item.category)} text-xs`}>
                               {item.category}
@@ -357,13 +357,13 @@ Return JSON:
                           </div>
                           
                           <div className="bg-white p-2 rounded border mb-2">
-                            <p className="text-sm text-gray-800 flex items-start gap-2">
+                            <p className="text-sm text-slate-800 flex items-start gap-2">
                               <MessageSquare className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
                               <span className="font-medium">{item.question}</span>
                             </p>
                           </div>
                           
-                          <p className="text-xs text-gray-600 mb-2 italic">
+                          <p className="text-xs text-slate-600 mb-2 italic">
                             Why: {item.reason}
                           </p>
                           
@@ -411,12 +411,12 @@ Return JSON:
                             📊 {item.historical_reference}
                           </p>
                         </div>
-                        <p className="text-sm font-medium text-gray-900 mb-2">{item.prompt}</p>
-                        <p className="text-xs text-gray-600 mb-2">⚠️ {item.why_important}</p>
+                        <p className="text-sm font-medium text-slate-900 mb-2">{item.prompt}</p>
+                        <p className="text-xs text-slate-600 mb-2">⚠️ {item.why_important}</p>
                         {item.suggested_text && (
                           <div className="bg-white p-2 rounded border border-purple-200">
-                            <p className="text-xs font-medium text-gray-500 mb-1">Suggested documentation:</p>
-                            <p className="text-xs text-gray-700">{item.suggested_text}</p>
+                            <p className="text-xs font-medium text-slate-500 mb-1">Suggested documentation:</p>
+                            <p className="text-xs text-slate-700">{item.suggested_text}</p>
                           </div>
                         )}
                         <div className="flex gap-2 mt-2">
@@ -457,8 +457,8 @@ Return JSON:
                   <div className="space-y-2">
                     {prompts.diagnosis_specific_prompts.map((item, idx) => (
                       <div key={idx} className="p-2 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-sm font-medium text-gray-900 mb-1">{item.prompt}</p>
-                        <div className="flex justify-between text-xs text-gray-600">
+                        <p className="text-sm font-medium text-slate-900 mb-1">{item.prompt}</p>
+                        <div className="flex justify-between text-xs text-slate-600">
                           <span>Assess: {item.assessment_area}</span>
                         </div>
                         <p className="text-xs text-blue-700 mt-1 italic">
@@ -484,12 +484,12 @@ Return JSON:
                       .map((item, idx) => (
                         <div key={idx} className="p-2 bg-purple-50 rounded-lg border border-purple-200">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-900">{item.element}</span>
+                            <span className="text-sm font-medium text-slate-900">{item.element}</span>
                             <Badge className={`${getCategoryColor(item.category)} text-xs`}>
                               {item.category}
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-700 mb-2">{item.question}</p>
+                          <p className="text-xs text-slate-700 mb-2">{item.question}</p>
                           <div className="flex gap-2">
                             {item.suggested_text && (
                               <Button
@@ -506,7 +506,7 @@ Return JSON:
                               size="sm"
                               variant="ghost"
                               onClick={() => handleMarkComplete(item.element)}
-                              className="text-xs gap-1 h-6 text-gray-400"
+                              className="text-xs gap-1 h-6 text-slate-400"
                             >
                               Skip
                             </Button>

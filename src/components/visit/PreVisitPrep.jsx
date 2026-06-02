@@ -128,24 +128,24 @@ export default function PreVisitPrep({ patient, visit, previousVisit, carePlans 
               <AccordionContent>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="p-2 bg-white rounded border">
-                    <p className="text-gray-600 text-xs">Primary Diagnosis</p>
-                    <p className="font-medium text-gray-900">{patient.primary_diagnosis}</p>
+                    <p className="text-slate-600 text-xs">Primary Diagnosis</p>
+                    <p className="font-medium text-slate-900">{patient.primary_diagnosis}</p>
                   </div>
                   <div className="p-2 bg-white rounded border">
-                    <p className="text-gray-600 text-xs">Care Type</p>
-                    <p className="font-medium text-gray-900 capitalize">
+                    <p className="text-slate-600 text-xs">Care Type</p>
+                    <p className="font-medium text-slate-900 capitalize">
                       {patient.care_type?.replace('_', ' ')}
                     </p>
                   </div>
                   {daysSinceLastVisit && (
                     <div className="p-2 bg-white rounded border">
-                      <p className="text-gray-600 text-xs">Last Visit</p>
-                      <p className="font-medium text-gray-900">{daysSinceLastVisit} days ago</p>
+                      <p className="text-slate-600 text-xs">Last Visit</p>
+                      <p className="font-medium text-slate-900">{daysSinceLastVisit} days ago</p>
                     </div>
                   )}
                   <div className="p-2 bg-white rounded border">
-                    <p className="text-gray-600 text-xs">Visit Type</p>
-                    <p className="font-medium text-gray-900 capitalize">
+                    <p className="text-slate-600 text-xs">Visit Type</p>
+                    <p className="font-medium text-slate-900 capitalize">
                       {visit.visit_type?.replace('_', ' ')}
                     </p>
                   </div>
@@ -167,14 +167,14 @@ export default function PreVisitPrep({ patient, visit, previousVisit, carePlans 
                     {activeCarePlans.slice(0, 5).map((plan) => (
                       <div key={plan.id} className="p-3 bg-white rounded border text-sm">
                         <div className="flex items-start justify-between mb-1">
-                          <p className="font-medium text-gray-900">{plan.problem}</p>
+                          <p className="font-medium text-slate-900">{plan.problem}</p>
                           <Badge variant="outline" className="text-xs">
                             {plan.frequency || 'Each visit'}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-2">Goal: {plan.goal}</p>
+                        <p className="text-xs text-slate-600 mb-2">Goal: {plan.goal}</p>
                         {plan.target_date && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             Target: {format(new Date(plan.target_date), 'MMM d, yyyy')}
                           </p>
                         )}
@@ -197,27 +197,27 @@ export default function PreVisitPrep({ patient, visit, previousVisit, carePlans 
                 <AccordionContent>
                   <div className="space-y-3">
                     <div className="p-3 bg-white rounded border">
-                      <p className="text-xs text-gray-600 mb-1">
+                      <p className="text-xs text-slate-600 mb-1">
                         {format(new Date(previousVisit.visit_date), 'MMMM d, yyyy')}
                       </p>
                       {previousVisit.vital_signs && Object.keys(previousVisit.vital_signs).length > 0 && (
                         <div className="space-y-1 mt-2">
-                          <p className="text-xs font-semibold text-gray-700">Vital Signs:</p>
+                          <p className="text-xs font-semibold text-slate-700">Vital Signs:</p>
                           {previousVisit.vital_signs.blood_pressure_systolic && (
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-slate-600">
                               BP: {previousVisit.vital_signs.blood_pressure_systolic}/
                               {previousVisit.vital_signs.blood_pressure_diastolic}
                             </p>
                           )}
                           {previousVisit.vital_signs.oxygen_saturation && (
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-slate-600">
                               O2: {previousVisit.vital_signs.oxygen_saturation}%
                             </p>
                           )}
                         </div>
                       )}
                       {previousVisit.nurse_notes && (
-                        <p className="text-xs text-gray-600 mt-2 line-clamp-3">
+                        <p className="text-xs text-slate-600 mt-2 line-clamp-3">
                           {previousVisit.nurse_notes.substring(0, 200)}...
                         </p>
                       )}
@@ -230,7 +230,7 @@ export default function PreVisitPrep({ patient, visit, previousVisit, carePlans 
 
           <Alert className="bg-white border-cyan-200">
             <CheckCircle2 className="w-4 h-4 text-cyan-600" />
-            <AlertDescription className="text-sm text-gray-700">
+            <AlertDescription className="text-sm text-slate-700">
               <strong>Penn Sync Ready:</strong> All patient information loaded. Review alerts and care plans before documenting.
             </AlertDescription>
           </Alert>

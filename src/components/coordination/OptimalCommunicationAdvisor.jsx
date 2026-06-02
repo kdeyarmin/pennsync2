@@ -128,7 +128,7 @@ Consider patient preferences, accessibility needs, and likelihood of successful 
         {isAnalyzing && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-teal-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Analyzing optimal outreach strategy...</p>
+            <p className="text-sm text-slate-600">Analyzing optimal outreach strategy...</p>
           </div>
         )}
 
@@ -208,7 +208,7 @@ Consider patient preferences, accessibility needs, and likelihood of successful 
 
             {/* Accessibility Notes */}
             {recommendation.accessibility_notes && (
-              <div className="p-2 bg-gray-50 border rounded text-xs text-gray-700">
+              <div className="p-2 bg-slate-50 border rounded text-xs text-slate-700">
                 <strong>Accessibility:</strong> {recommendation.accessibility_notes}
               </div>
             )}

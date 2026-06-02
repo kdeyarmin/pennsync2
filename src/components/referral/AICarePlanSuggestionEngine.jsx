@@ -222,7 +222,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
       critical: "bg-red-100 text-red-800 border-red-300",
       high: "bg-orange-100 text-orange-800 border-orange-300",
       medium: "bg-blue-100 text-blue-800 border-blue-300",
-      low: "bg-gray-100 text-gray-800 border-gray-300"
+      low: "bg-slate-100 text-slate-800 border-slate-300"
     };
     return colors[priority] || colors.medium;
   };
@@ -251,7 +251,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Generate evidence-based, individualized care plan suggestions based on referral data and OASIS assessment.
           </p>
           <Button 
@@ -312,7 +312,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                 {editingIndex === index ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-semibold text-gray-700">Problem/Diagnosis</label>
+                      <label className="text-sm font-semibold text-slate-700">Problem/Diagnosis</label>
                       <Textarea
                         value={editedPlan.problem}
                         onChange={(e) => setEditedPlan({ ...editedPlan, problem: e.target.value })}
@@ -321,7 +321,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-gray-700">Goal</label>
+                      <label className="text-sm font-semibold text-slate-700">Goal</label>
                       <Textarea
                         value={editedPlan.goal}
                         onChange={(e) => setEditedPlan({ ...editedPlan, goal: e.target.value })}
@@ -330,7 +330,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-gray-700">Baseline Measurement</label>
+                      <label className="text-sm font-semibold text-slate-700">Baseline Measurement</label>
                       <Input
                         value={editedPlan.baseline_measurement}
                         onChange={(e) => setEditedPlan({ ...editedPlan, baseline_measurement: e.target.value })}
@@ -338,7 +338,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-gray-700">Frequency</label>
+                      <label className="text-sm font-semibold text-slate-700">Frequency</label>
                       <Input
                         value={editedPlan.frequency}
                         onChange={(e) => setEditedPlan({ ...editedPlan, frequency: e.target.value })}
@@ -359,14 +359,14 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                   <div className="space-y-4">
                     <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                       <p className="text-xs font-semibold text-green-900 mb-1">GOAL</p>
-                      <p className="text-sm text-gray-900">{plan.goal}</p>
+                      <p className="text-sm text-slate-900">{plan.goal}</p>
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-2">INTERVENTIONS</p>
+                      <p className="text-xs font-semibold text-slate-700 mb-2">INTERVENTIONS</p>
                       <ul className="space-y-1">
                         {plan.interventions?.map((intervention, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-gray-900">
+                          <li key={i} className="flex items-start gap-2 text-sm text-slate-900">
                             <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                             <span>{intervention}</span>
                           </li>
@@ -377,11 +377,11 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-blue-50 p-2 rounded">
                         <p className="text-xs font-semibold text-blue-900">Baseline</p>
-                        <p className="text-sm text-gray-900">{plan.baseline_measurement}</p>
+                        <p className="text-sm text-slate-900">{plan.baseline_measurement}</p>
                       </div>
                       <div className="bg-purple-50 p-2 rounded">
                         <p className="text-xs font-semibold text-purple-900">Frequency</p>
-                        <p className="text-sm text-gray-900">{plan.frequency}</p>
+                        <p className="text-sm text-slate-900">{plan.frequency}</p>
                       </div>
                     </div>
 
@@ -400,9 +400,9 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                     )}
 
                     {plan.evidence_rationale && (
-                      <div className="bg-gray-50 p-3 rounded border">
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Evidence & Rationale</p>
-                        <p className="text-xs text-gray-600 italic">{plan.evidence_rationale}</p>
+                      <div className="bg-slate-50 p-3 rounded border">
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Evidence & Rationale</p>
+                        <p className="text-xs text-slate-600 italic">{plan.evidence_rationale}</p>
                       </div>
                     )}
 

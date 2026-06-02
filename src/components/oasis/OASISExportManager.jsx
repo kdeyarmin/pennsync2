@@ -232,7 +232,7 @@ export default function OASISExportManager({
       </CardHeader>
       <CardContent className="pt-4">
         <div className="space-y-3">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Download a comprehensive report including OASIS analysis, PDGM grouping, quality scores, and recommendations.
           </p>
 
@@ -266,7 +266,7 @@ export default function OASISExportManager({
             </Button>
           </div>
 
-          <div className="bg-gray-50 p-3 rounded border text-xs text-gray-600">
+          <div className="bg-slate-50 p-3 rounded border text-xs text-slate-600">
             <p className="font-medium mb-1">Export includes:</p>
             <ul className="space-y-0.5">
               <li>✓ Overall analysis scores</li>

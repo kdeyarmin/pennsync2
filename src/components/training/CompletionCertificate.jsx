@@ -40,25 +40,25 @@ export default function CompletionCertificate({ completion, module, userName }) 
           
           <div className="mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <h3 className="text-xl font-bold text-gray-900">Module Completed!</h3>
-            <p className="text-sm text-gray-600 mt-1">{module.title}</p>
+            <h3 className="text-xl font-bold text-slate-900">Module Completed!</h3>
+            <p className="text-sm text-slate-600 mt-1">{module.title}</p>
           </div>
 
           <div className="bg-white rounded-lg p-4 mb-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Completion Date:</span>
+              <span className="text-slate-600">Completion Date:</span>
               <span className="font-medium">
                 {new Date(completion.completion_date).toLocaleDateString()}
               </span>
             </div>
             {completion.score && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Score:</span>
+                <span className="text-slate-600">Score:</span>
                 <span className="font-bold text-green-600">{completion.score}%</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Certificate ID:</span>
+              <span className="text-slate-600">Certificate ID:</span>
               <span className="font-mono text-xs">{completion.id.slice(0, 8)}</span>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function CompletionCertificate({ completion, module, userName }) 
             Download Certificate
           </Button>
           
-          <p className="text-xs text-gray-500 mt-3">
+          <p className="text-xs text-slate-500 mt-3">
             This certificate can be used for continuing education records
           </p>
         </div>

@@ -292,8 +292,8 @@ export default function UserGuides() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">User Guides & Training Materials</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">User Guides & Training Materials</h1>
+          <p className="text-slate-600">
             Download comprehensive PDF guides with step-by-step instructions and screenshots
           </p>
         </div>
@@ -314,19 +314,19 @@ export default function UserGuides() {
                     </div>
                     <CardTitle className="text-2xl mb-1">{guide.title}</CardTitle>
                     <div className="flex items-center gap-2 mb-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">{guide.audience}</span>
+                      <Users className="w-4 h-4 text-slate-500" />
+                      <span className="text-sm text-slate-600">{guide.audience}</span>
                     </div>
-                    <p className="text-sm text-gray-700 font-medium">{guide.description}</p>
+                    <p className="text-sm text-slate-700 font-medium">{guide.description}</p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">Complete Coverage:</p>
+                  <p className="text-xs font-semibold text-slate-700 mb-2">Complete Coverage:</p>
                   <div className="grid grid-cols-2 gap-2">
                     {guide.topics.map((topic, index) => (
-                      <div key={index} className="text-sm text-gray-600 flex items-center gap-2 bg-white p-2 rounded">
+                      <div key={index} className="text-sm text-slate-600 flex items-center gap-2 bg-white p-2 rounded">
                         <span className="w-1.5 h-1.5 rounded-full bg-purple-600" />
                         {topic}
                       </div>
@@ -357,8 +357,8 @@ export default function UserGuides() {
         })}
 
         <div className="mb-4">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Feature-Specific Guides</h2>
-          <p className="text-sm text-gray-600">Detailed guides for specific features and workflows</p>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Feature-Specific Guides</h2>
+          <p className="text-sm text-slate-600">Detailed guides for specific features and workflows</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -380,19 +380,19 @@ export default function UserGuides() {
                     <div className="flex-1">
                       <CardTitle className="text-xl mb-1">{guide.title}</CardTitle>
                       <div className="flex items-center gap-2 mb-2">
-                        <Users className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">{guide.audience}</span>
+                        <Users className="w-4 h-4 text-slate-500" />
+                        <span className="text-sm text-slate-600">{guide.audience}</span>
                       </div>
-                      <p className="text-sm text-gray-600">{guide.description}</p>
+                      <p className="text-sm text-slate-600">{guide.description}</p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">Topics Covered:</p>
+                    <p className="text-xs font-semibold text-slate-700 mb-2">Topics Covered:</p>
                     <ul className="space-y-1">
                       {guide.topics.map((topic, index) => (
-                        <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
+                        <li key={index} className="text-sm text-slate-600 flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                           {topic}
                         </li>

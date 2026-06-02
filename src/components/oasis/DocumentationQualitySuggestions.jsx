@@ -139,7 +139,7 @@ export default function DocumentationQualitySuggestions({ analysisResults }) {
       case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -195,16 +195,16 @@ export default function DocumentationQualitySuggestions({ analysisResults }) {
                     </Badge>
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="w-4 h-4 text-gray-500" />
+                    <ChevronUp className="w-4 h-4 text-slate-500" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 text-slate-500" />
                   )}
                 </button>
 
                 {isExpanded && (
                   <div className="p-3 bg-white space-y-3">
                     {section.items.map((item, idx) => (
-                      <div key={idx} className="p-3 bg-gray-50 rounded-lg border">
+                      <div key={idx} className="p-3 bg-slate-50 rounded-lg border">
                         <div className="flex items-start justify-between mb-2">
                           <Badge variant="outline" className="text-xs font-mono">
                             {item.item}
@@ -216,15 +216,15 @@ export default function DocumentationQualitySuggestions({ analysisResults }) {
 
                         {item.current && (
                           <div className="mb-2">
-                            <p className="text-xs text-gray-500">Current Issue:</p>
-                            <p className="text-xs text-gray-700">{item.current}</p>
+                            <p className="text-xs text-slate-500">Current Issue:</p>
+                            <p className="text-xs text-slate-700">{item.current}</p>
                           </div>
                         )}
 
                         {item.problem && (
                           <div className="mb-2">
-                            <p className="text-xs text-gray-500">Problem:</p>
-                            <p className="text-xs text-gray-700">{item.problem}</p>
+                            <p className="text-xs text-slate-500">Problem:</p>
+                            <p className="text-xs text-slate-700">{item.problem}</p>
                           </div>
                         )}
 
@@ -239,7 +239,7 @@ export default function DocumentationQualitySuggestions({ analysisResults }) {
                         </div>
 
                         {item.rationale && (
-                          <p className="text-xs text-gray-500 mt-2 italic">
+                          <p className="text-xs text-slate-500 mt-2 italic">
                             Why: {item.rationale}
                           </p>
                         )}

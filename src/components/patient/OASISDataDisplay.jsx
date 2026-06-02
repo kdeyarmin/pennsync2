@@ -41,7 +41,7 @@ export default function OASISDataDisplay({ oasisData, compact = false }) {
         <CardContent className="p-3 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
             <div>
-              <p className="text-gray-500 font-medium mb-1">Admission Source</p>
+              <p className="text-slate-500 font-medium mb-1">Admission Source</p>
               <Badge variant="outline" className="text-xs">
                 {admissionSource === '1' || admissionSource.toLowerCase().includes('community') 
                   ? 'Community' 
@@ -52,12 +52,12 @@ export default function OASISDataDisplay({ oasisData, compact = false }) {
             </div>
             
             <div>
-              <p className="text-gray-500 font-medium mb-1">Clinical Grouping</p>
+              <p className="text-slate-500 font-medium mb-1">Clinical Grouping</p>
               <Badge variant="outline" className="text-xs">{clinicalGroup}</Badge>
             </div>
 
             <div>
-              <p className="text-gray-500 font-medium mb-1">Functional Impairment</p>
+              <p className="text-slate-500 font-medium mb-1">Functional Impairment</p>
               <Badge variant="outline" className="text-xs">
                 {functionalImpairment === 'low' ? 'Low' : 
                  functionalImpairment === 'medium' ? 'Medium' : 
@@ -66,7 +66,7 @@ export default function OASISDataDisplay({ oasisData, compact = false }) {
             </div>
 
             <div>
-              <p className="text-gray-500 font-medium mb-1">Comorbidity Adjustment</p>
+              <p className="text-slate-500 font-medium mb-1">Comorbidity Adjustment</p>
               <Badge variant="outline" className="text-xs">
                 {Array.isArray(comorbidities) && comorbidities.length > 0 
                   ? `${comorbidities.length} comorbidities` 
@@ -79,14 +79,14 @@ export default function OASISDataDisplay({ oasisData, compact = false }) {
 
           {primaryDx && primaryDx !== 'Not specified' && (
             <div className="pt-2 border-t border-purple-200">
-              <p className="text-gray-500 font-medium mb-1 text-xs">OASIS Primary Diagnosis</p>
-              <p className="text-xs text-gray-700">{primaryDx}</p>
+              <p className="text-slate-500 font-medium mb-1 text-xs">OASIS Primary Diagnosis</p>
+              <p className="text-xs text-slate-700">{primaryDx}</p>
             </div>
           )}
 
           {Array.isArray(comorbidities) && comorbidities.length > 0 && (
             <div className="pt-2 border-t border-purple-200">
-              <p className="text-gray-500 font-medium mb-1 text-xs">Documented Comorbidities</p>
+              <p className="text-slate-500 font-medium mb-1 text-xs">Documented Comorbidities</p>
               <div className="flex flex-wrap gap-1">
                 {comorbidities.slice(0, 5).map((condition, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs bg-white">

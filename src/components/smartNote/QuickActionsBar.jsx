@@ -97,7 +97,7 @@ export default function QuickActionsBar({
       icon: RotateCcw,
       variant: 'ghost',
       onClick: onClear,
-      className: 'text-gray-500 hover:text-gray-700'
+      className: 'text-slate-500 hover:text-slate-700'
     });
   }
 

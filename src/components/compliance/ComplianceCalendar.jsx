@@ -263,7 +263,7 @@ export default function ComplianceCalendar() {
       case 'critical': return 'bg-red-100 border-red-300 text-red-900';
       case 'warning': return 'bg-yellow-100 border-yellow-300 text-yellow-900';
       case 'upcoming': return 'bg-blue-100 border-blue-300 text-blue-900';
-      default: return 'bg-gray-100 border-gray-300 text-gray-900';
+      default: return 'bg-slate-100 border-slate-300 text-slate-900';
     }
   };
 
@@ -272,7 +272,7 @@ export default function ComplianceCalendar() {
       case 'critical': return 'bg-red-600';
       case 'warning': return 'bg-yellow-500';
       case 'upcoming': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -301,7 +301,7 @@ export default function ComplianceCalendar() {
   if (!currentUser) {
     return (
       <Card>
-        <CardContent className="p-12 text-center text-gray-500">
+        <CardContent className="p-12 text-center text-slate-500">
           Loading compliance data...
         </CardContent>
       </Card>
@@ -366,8 +366,8 @@ export default function ComplianceCalendar() {
         <CardContent className="p-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filters:</span>
+              <Filter className="w-5 h-5 text-slate-500" />
+              <span className="text-sm font-medium text-slate-700">Filters:</span>
             </div>
 
             <Select value={filterUrgency} onValueChange={setFilterUrgency}>
@@ -412,13 +412,13 @@ export default function ComplianceCalendar() {
 
       {/* Alerts List */}
       {filteredAlerts.length === 0 ? (
-        <Card className="border-2 border-dashed border-gray-200">
+        <Card className="border-2 border-dashed border-slate-200">
           <CardContent className="p-12 text-center">
             <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">
               All Clear!
             </h3>
-            <p className="text-gray-600">
+            <p className="text-slate-600">
               No compliance alerts match your current filters.
             </p>
           </CardContent>
@@ -442,7 +442,7 @@ export default function ComplianceCalendar() {
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-bold text-gray-900">
+                          <h3 className="text-lg font-bold text-slate-900">
                             {alert.title}
                           </h3>
                           <Badge className={getUrgencyBadge(alert.urgency)}>
@@ -453,16 +453,16 @@ export default function ComplianceCalendar() {
                           </Badge>
                         </div>
 
-                        <p className="text-gray-700 mb-3">
+                        <p className="text-slate-700 mb-3">
                           <strong>Patient:</strong> {alert.patient.first_name} {alert.patient.last_name}
                           {alert.patient.medical_record_number && ` (MRN: ${alert.patient.medical_record_number})`}
                         </p>
 
-                        <p className="text-gray-600 mb-3">
+                        <p className="text-slate-600 mb-3">
                           {alert.description}
                         </p>
 
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                           <div className="flex items-center gap-1">
                             <CalendarIcon className="w-4 h-4" />
                             <span>Due: {format(alert.dueDate, 'MMM d, yyyy')}</span>
@@ -481,8 +481,8 @@ export default function ComplianceCalendar() {
 
                         {alert.details && (
                           <div className="mt-3 p-3 bg-white bg-opacity-50 rounded-lg text-sm">
-                            <p className="font-medium text-gray-700 mb-1">Details:</p>
-                            <ul className="list-disc list-inside space-y-1 text-gray-600">
+                            <p className="font-medium text-slate-700 mb-1">Details:</p>
+                            <ul className="list-disc list-inside space-y-1 text-slate-600">
                               {Object.entries(alert.details).map(([key, value]) => (
                                 <li key={key}>
                                   {key.replace(/_/g, ' ')}: {

@@ -55,10 +55,10 @@ export default function FaxNotificationPreferences() {
         <div className="space-y-3 border-b pb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-gray-600" />
+              <Mail className="w-4 h-4 text-slate-600" />
               <div>
                 <p className="font-medium text-sm">Email Notifications</p>
-                <p className="text-xs text-gray-600">Send alerts to your email address</p>
+                <p className="text-xs text-slate-600">Send alerts to your email address</p>
               </div>
             </div>
             <Switch
@@ -72,10 +72,10 @@ export default function FaxNotificationPreferences() {
         <div className="space-y-3 border-b pb-6">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-gray-600" />
+              <Phone className="w-4 h-4 text-slate-600" />
               <div>
                 <p className="font-medium text-sm">SMS Notifications</p>
-                <p className="text-xs text-gray-600">Receive text message alerts</p>
+                <p className="text-xs text-slate-600">Receive text message alerts</p>
               </div>
             </div>
             <Switch
@@ -98,7 +98,7 @@ export default function FaxNotificationPreferences() {
         <div className="space-y-3">
           <p className="font-medium text-sm">Alert Me When:</p>
           <div className="flex items-center justify-between pl-2">
-            <label className="text-sm text-gray-700 cursor-pointer">
+            <label className="text-sm text-slate-700 cursor-pointer">
               Fax is delivered
             </label>
             <Switch
@@ -107,7 +107,7 @@ export default function FaxNotificationPreferences() {
             />
           </div>
           <div className="flex items-center justify-between pl-2">
-            <label className="text-sm text-gray-700 cursor-pointer">
+            <label className="text-sm text-slate-700 cursor-pointer">
               Fax fails to send
             </label>
             <Switch
@@ -126,7 +126,7 @@ export default function FaxNotificationPreferences() {
           >
             {isSaving ? 'Saving...' : 'Save Preferences'}
           </Button>
-          <p className="text-xs text-gray-500 flex items-center">
+          <p className="text-xs text-slate-500 flex items-center">
             Changes are saved to your profile
           </p>
         </div>

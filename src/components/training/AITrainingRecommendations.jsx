@@ -268,11 +268,11 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {/* Completion Progress */}
         <div className="bg-white p-4 rounded-lg border border-purple-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Training Progress</span>
+            <span className="text-sm font-medium text-slate-700">Training Progress</span>
             <span className="text-sm font-bold text-purple-600">{completedCount} / {totalAssigned}</span>
           </div>
           <Progress value={completionRate} className="h-2" />
-          <p className="text-xs text-gray-500 mt-1">{completionRate}% completed</p>
+          <p className="text-xs text-slate-500 mt-1">{completionRate}% completed</p>
         </div>
 
         {/* AI Analysis */}
@@ -288,7 +288,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {/* Priority Training Modules */}
         {pendingTraining.length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
               <Target className="w-4 h-4 text-purple-600" />
               Assigned Training ({pendingTraining.length})
             </h4>
@@ -300,14 +300,14 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
                 <div key={training.id} className="bg-white p-3 rounded-lg border border-purple-200">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <h5 className="font-medium text-gray-900 text-sm">{module.title}</h5>
-                      <p className="text-xs text-gray-600 mt-1">{module.description}</p>
+                      <h5 className="font-medium text-slate-900 text-sm">{module.title}</h5>
+                      <p className="text-xs text-slate-600 mt-1">{module.description}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="outline" className="text-xs">
                           {module.category}
                         </Badge>
                         {module.duration_minutes && (
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <span className="text-xs text-slate-500 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {module.duration_minutes} min
                           </span>
@@ -355,7 +355,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {/* AI Recommendations */}
         {recommendations?.recommendations && recommendations.recommendations.length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-purple-600" />
               Recommended for You
             </h4>
@@ -371,10 +371,10 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
                     <div className="flex items-center gap-2 text-xs">
                       <GraduationCap className="w-3 h-3" />
                       <span className="font-medium">{rec.module_title}</span>
-                      <span className="text-gray-600">• {rec.timeline}</span>
+                      <span className="text-slate-600">• {rec.timeline}</span>
                     </div>
                     {rec.estimated_impact && (
-                      <p className="text-xs mt-2 text-gray-700">
+                      <p className="text-xs mt-2 text-slate-700">
                         <strong>Expected Impact:</strong> {rec.estimated_impact}
                       </p>
                     )}
@@ -389,8 +389,8 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {pendingTraining.length === 0 && !recommendations && !analyzing && (
           <div className="text-center py-8">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-900">All Caught Up!</p>
-            <p className="text-xs text-gray-500 mt-1">No pending training at this time</p>
+            <p className="text-sm font-medium text-slate-900">All Caught Up!</p>
+            <p className="text-xs text-slate-500 mt-1">No pending training at this time</p>
           </div>
         )}
 
@@ -398,7 +398,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {analyzing && !recommendations && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">Analyzing your performance...</p>
+            <p className="text-sm text-slate-600">Analyzing your performance...</p>
           </div>
         )}
       </CardContent>

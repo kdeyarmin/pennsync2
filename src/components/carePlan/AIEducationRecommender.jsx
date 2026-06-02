@@ -160,7 +160,7 @@ Return JSON:`,
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-blue-100 text-blue-800 border-blue-300"
     };
-    return colors[priority] || "bg-gray-100 text-gray-800";
+    return colors[priority] || "bg-slate-100 text-slate-800";
   };
 
   const selectedCount = Object.values(selectedTopics).filter(Boolean).length;
@@ -216,7 +216,7 @@ Return JSON:`,
                     className={`border transition-all ${
                       selectedTopics[idx] 
                         ? 'border-green-400 bg-green-50' 
-                        : 'border-gray-200'
+                        : 'border-slate-200'
                     }`}
                   >
                     <CardContent className="p-4">
@@ -236,7 +236,7 @@ Return JSON:`,
                             </Badge>
                           </div>
 
-                          <h4 className="font-semibold text-gray-900">{rec.topic}</h4>
+                          <h4 className="font-semibold text-slate-900">{rec.topic}</h4>
                           
                           <div className="bg-blue-50 p-2 rounded border border-blue-200">
                             <p className="text-xs text-blue-900">
@@ -244,7 +244,7 @@ Return JSON:`,
                             </p>
                           </div>
 
-                          <p className="text-sm text-gray-700">{rec.content}</p>
+                          <p className="text-sm text-slate-700">{rec.content}</p>
 
                           {rec.learning_objectives?.length > 0 && (
                             <div className="bg-purple-50 p-2 rounded border border-purple-200">

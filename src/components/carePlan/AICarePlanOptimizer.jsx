@@ -152,7 +152,7 @@ Return JSON:
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -304,7 +304,7 @@ Return JSON:
             {/* Recommendations */}
             {activeRecommendations.length > 0 && (
               <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-slate-900">
                   Recommendations ({activeRecommendations.length})
                 </p>
                 
@@ -330,39 +330,39 @@ Return JSON:
                                   {rec.severity}
                                 </Badge>
                               </div>
-                              <p className="text-xs text-gray-600">{rec.goal}</p>
+                              <p className="text-xs text-slate-600">{rec.goal}</p>
                             </div>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-4 pb-4 space-y-3">
                           {/* Rationale */}
                           <div>
-                            <p className="text-xs font-semibold text-gray-700 mb-1">Why This Matters:</p>
-                            <p className="text-xs text-gray-600">{rec.rationale}</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Why This Matters:</p>
+                            <p className="text-xs text-slate-600">{rec.rationale}</p>
                           </div>
 
                           {/* Evidence Basis */}
                           {rec.evidence_basis && (
                             <div className="bg-white/50 rounded p-2">
-                              <p className="text-xs font-semibold text-gray-700 mb-1">Evidence Basis:</p>
-                              <p className="text-xs text-gray-600 italic">{rec.evidence_basis}</p>
+                              <p className="text-xs font-semibold text-slate-700 mb-1">Evidence Basis:</p>
+                              <p className="text-xs text-slate-600 italic">{rec.evidence_basis}</p>
                             </div>
                           )}
 
                           {/* Goal */}
                           <div>
-                            <p className="text-xs font-semibold text-gray-700 mb-1">SMART Goal:</p>
-                            <p className="text-xs text-gray-800 font-medium">{rec.goal}</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-1">SMART Goal:</p>
+                            <p className="text-xs text-slate-800 font-medium">{rec.goal}</p>
                           </div>
 
                           {/* Interventions */}
                           <div>
-                            <p className="text-xs font-semibold text-gray-700 mb-1">
+                            <p className="text-xs font-semibold text-slate-700 mb-1">
                               Evidence-Based Interventions:
                             </p>
                             <ul className="space-y-1">
                               {rec.interventions?.map((intervention, iIdx) => (
-                                <li key={iIdx} className="text-xs text-gray-700 flex items-start gap-2">
+                                <li key={iIdx} className="text-xs text-slate-700 flex items-start gap-2">
                                   <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
                                   <span>{intervention}</span>
                                 </li>
@@ -382,7 +382,7 @@ Return JSON:
 
                           {/* Duration */}
                           {rec.estimated_duration_weeks && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500">
                               Estimated Duration: {rec.estimated_duration_weeks} weeks
                             </p>
                           )}

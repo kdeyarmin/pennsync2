@@ -199,7 +199,7 @@ export default function OASISTaskGenerator({
       validation: 'bg-purple-100 text-purple-800 border-purple-300',
       quality: 'bg-blue-100 text-blue-800 border-blue-300'
     };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+    return colors[category] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -223,7 +223,7 @@ export default function OASISTaskGenerator({
           </Alert>
         ) : (
           <>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Based on the OASIS analysis, the following tasks are recommended:
             </p>
 
@@ -236,7 +236,7 @@ export default function OASISTaskGenerator({
                     className={`p-3 rounded-lg border-2 transition-colors ${
                       selectedTasks.includes(task.id) 
                         ? 'bg-amber-50 border-amber-300' 
-                        : 'bg-gray-50 border-gray-200'
+                        : 'bg-slate-50 border-slate-200'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -247,7 +247,7 @@ export default function OASISTaskGenerator({
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <Icon className="w-4 h-4 text-gray-600" />
+                          <Icon className="w-4 h-4 text-slate-600" />
                           <span className="font-medium text-sm">{task.title}</span>
                           <Badge className={`text-xs ${getCategoryColor(task.category)}`}>
                             {task.category}
@@ -256,7 +256,7 @@ export default function OASISTaskGenerator({
                             {task.priority}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-1">{task.description}</p>
+                        <p className="text-xs text-slate-600 mb-1">{task.description}</p>
                         <p className="text-xs text-blue-600">Due: {task.due_date}</p>
                       </div>
                     </div>

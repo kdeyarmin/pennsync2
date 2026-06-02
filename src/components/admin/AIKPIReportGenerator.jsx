@@ -231,7 +231,7 @@ Return as JSON:
   const getTrendIcon = (trend) => {
     if (trend === 'improving') return <TrendingUp className="w-4 h-4 text-green-600" />;
     if (trend === 'declining' || trend === 'concerning') return <TrendingDown className="w-4 h-4 text-red-600" />;
-    return <Activity className="w-4 h-4 text-gray-600" />;
+    return <Activity className="w-4 h-4 text-slate-600" />;
   };
 
   const getScoreColor = (score) => {
@@ -304,7 +304,7 @@ Return as JSON:
               </TabsList>
 
               <TabsContent value="compliance" className="space-y-3">
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="bg-white rounded-lg p-4 border border-slate-200">
                   <div className="flex items-center justify-between mb-3">
                     <p className="font-semibold">Overall Compliance Rate</p>
                     <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ Return as JSON:
                   <Badge className={`${
                     report.documentation_compliance.trend === 'improving' ? 'bg-green-100 text-green-800' :
                     report.documentation_compliance.trend === 'declining' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
+                    'bg-slate-100 text-slate-800'
                   }`}>
                     {report.documentation_compliance.trend}
                   </Badge>
@@ -354,54 +354,54 @@ Return as JSON:
 
               <TabsContent value="outcomes" className="space-y-3">
                 {report.patient_outcomes?.map((outcome, idx) => (
-                  <div key={idx} className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div key={idx} className="bg-white rounded-lg p-4 border border-slate-200">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-semibold">{outcome.diagnosis}</p>
                       {getTrendIcon(outcome.trend)}
                     </div>
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <div className="text-sm">
-                        <span className="text-gray-500">Visits:</span>{' '}
+                        <span className="text-slate-500">Visits:</span>{' '}
                         <span className="font-medium">{outcome.visit_count}</span>
                       </div>
                       <div className="text-sm">
-                        <span className="text-gray-500">Incidents:</span>{' '}
+                        <span className="text-slate-500">Incidents:</span>{' '}
                         <span className="font-medium">{outcome.incident_count}</span>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-600">{outcome.insights}</p>
+                    <p className="text-xs text-slate-600">{outcome.insights}</p>
                   </div>
                 ))}
               </TabsContent>
 
               <TabsContent value="operations" className="space-y-3">
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 text-center">
                     <p className="text-2xl font-bold text-blue-600">
                       {report.operational_metrics.visit_completion_rate}%
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">Completion Rate</p>
+                    <p className="text-xs text-slate-600 mt-1">Completion Rate</p>
                   </div>
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 text-center">
                     <p className="text-2xl font-bold text-purple-600">
                       {report.operational_metrics.avg_visits_per_patient?.toFixed(1)}
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">Avg Visits/Patient</p>
+                    <p className="text-xs text-slate-600 mt-1">Avg Visits/Patient</p>
                   </div>
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 text-center">
                     <p className={`text-2xl font-bold ${getScoreColor(report.operational_metrics.efficiency_score)}`}>
                       {report.operational_metrics.efficiency_score}%
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">Efficiency Score</p>
+                    <p className="text-xs text-slate-600 mt-1">Efficiency Score</p>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <p className="text-sm text-gray-700">{report.operational_metrics.insights}</p>
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <p className="text-sm text-slate-700">{report.operational_metrics.insights}</p>
                 </div>
               </TabsContent>
 
               <TabsContent value="risks" className="space-y-3">
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="bg-white rounded-lg p-4 border border-slate-200">
                   <div className="flex items-center justify-between mb-3">
                     <p className="font-semibold">Safety Score</p>
                     <span className={`text-2xl font-bold ${getScoreColor(report.risk_analysis.safety_score)}`}>
@@ -424,9 +424,9 @@ Return as JSON:
                   </div>
                 )}
 
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                   <p className="font-semibold text-sm mb-2">Incident Trends</p>
-                  <p className="text-sm text-gray-700">{report.risk_analysis.incident_trends}</p>
+                  <p className="text-sm text-slate-700">{report.risk_analysis.incident_trends}</p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -448,10 +448,10 @@ Return as JSON:
                       } text-white text-xs`}>
                         {rec.priority}
                       </Badge>
-                      <span className="text-xs text-gray-600">{rec.category}</span>
+                      <span className="text-xs text-slate-600">{rec.category}</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-900 mb-1">{rec.recommendation}</p>
-                    <p className="text-xs text-gray-600">Expected Impact: {rec.expected_impact}</p>
+                    <p className="text-sm font-medium text-slate-900 mb-1">{rec.recommendation}</p>
+                    <p className="text-xs text-slate-600">Expected Impact: {rec.expected_impact}</p>
                   </div>
                 ))}
               </div>

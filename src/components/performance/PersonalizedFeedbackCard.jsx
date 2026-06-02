@@ -24,8 +24,8 @@ export default function PersonalizedFeedbackCard({ feedback, onAcknowledge }) {
         <div className="flex items-start gap-3">
           <TrendingUp className="w-6 h-6 text-indigo-600 mt-1 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-gray-900 font-medium mb-2">{feedback.message}</p>
-            <p className="text-sm text-gray-600">{feedback.details}</p>
+            <p className="text-slate-900 font-medium mb-2">{feedback.message}</p>
+            <p className="text-sm text-slate-600">{feedback.details}</p>
           </div>
           <Badge className={priorityColor[feedback.priority] + ' text-white'}>
             {feedback.priority}

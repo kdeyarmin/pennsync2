@@ -957,8 +957,8 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                 <div className="flex items-start gap-3">
                   <selectedReportType.icon className="w-6 h-6 text-blue-600 mt-1" />
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">{selectedReportType.label}</h4>
-                    <p className="text-sm text-gray-700">{selectedReportType.description}</p>
+                    <h4 className="font-semibold text-slate-900 mb-1">{selectedReportType.label}</h4>
+                    <p className="text-sm text-slate-700">{selectedReportType.description}</p>
                   </div>
                 </div>
               </CardContent>
@@ -1010,8 +1010,8 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                   <Badge className="bg-green-500">Selected</Badge>
                 )}
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">{type.label}</h3>
-              <p className="text-sm text-gray-600">{type.description}</p>
+              <h3 className="font-semibold text-slate-900 mb-2">{type.label}</h3>
+              <p className="text-sm text-slate-600">{type.description}</p>
             </CardContent>
           </Card>
         ))}
@@ -1118,9 +1118,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                     </thead>
                     <tbody>
                       {reportPreview.map((d, idx) => (
-                        <tr key={idx} className="border-b hover:bg-gray-50">
+                        <tr key={idx} className="border-b hover:bg-slate-50">
                           <td className="p-2">
-                            <Badge className={idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-gray-400' : idx === 2 ? 'bg-orange-600' : 'bg-blue-500'}>
+                            <Badge className={idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-slate-400' : idx === 2 ? 'bg-orange-600' : 'bg-blue-500'}>
                               #{idx + 1}
                             </Badge>
                           </td>
@@ -1169,19 +1169,19 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                 <div className="grid md:grid-cols-3 gap-4">
                   <Card className="bg-gradient-to-br from-green-50 to-emerald-50">
                     <CardContent className="p-6">
-                      <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+                      <p className="text-sm text-slate-600 mb-1">Total Revenue</p>
                       <p className="text-3xl font-bold text-green-600">${reportPreview.totalRevenue.toLocaleString()}</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-gradient-to-br from-blue-50 to-indigo-50">
                     <CardContent className="p-6">
-                      <p className="text-sm text-gray-600 mb-1">Cost Savings</p>
+                      <p className="text-sm text-slate-600 mb-1">Cost Savings</p>
                       <p className="text-3xl font-bold text-blue-600">${Math.round(reportPreview.costSavings).toLocaleString()}</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-gradient-to-br from-purple-50 to-pink-50">
                     <CardContent className="p-6">
-                      <p className="text-sm text-gray-600 mb-1">ROI</p>
+                      <p className="text-sm text-slate-600 mb-1">ROI</p>
                       <p className="text-3xl font-bold text-purple-600">{reportPreview.roi}%</p>
                     </CardContent>
                   </Card>
@@ -1225,7 +1225,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                 <div className="grid md:grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="p-4">
-                      <p className="text-xs text-gray-600 mb-1">Avg Daily Visits</p>
+                      <p className="text-xs text-slate-600 mb-1">Avg Daily Visits</p>
                       <p className="text-2xl font-bold">
                         {Math.round(reportPreview.reduce((sum, d) => sum + d.visits, 0) / reportPreview.length)}
                       </p>
@@ -1233,7 +1233,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <p className="text-xs text-gray-600 mb-1">Peak Day</p>
+                      <p className="text-xs text-slate-600 mb-1">Peak Day</p>
                       <p className="text-2xl font-bold">
                         {reportPreview.reduce((max, d) => d.visits > max.visits ? d : max, reportPreview[0])?.date}
                       </p>
@@ -1241,7 +1241,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <p className="text-xs text-gray-600 mb-1">Total Incidents</p>
+                      <p className="text-xs text-slate-600 mb-1">Total Incidents</p>
                       <p className="text-2xl font-bold text-red-600">
                         {reportPreview.reduce((sum, d) => sum + d.incidents, 0)}
                       </p>
@@ -1249,7 +1249,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <p className="text-xs text-gray-600 mb-1">Completion Rate</p>
+                      <p className="text-xs text-slate-600 mb-1">Completion Rate</p>
                       <p className="text-2xl font-bold text-green-600">
                         {Math.round((reportPreview.reduce((sum, d) => sum + d.completed, 0) / reportPreview.reduce((sum, d) => sum + d.visits, 0)) * 100)}%
                       </p>

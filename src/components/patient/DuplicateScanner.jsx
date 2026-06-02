@@ -290,7 +290,7 @@ export default function DuplicateScanner() {
             </Alert>
 
             {/* Scan Mode Selection */}
-            <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+            <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">Scan Mode</Label>
                 <Badge variant="outline" className="text-xs">
@@ -320,7 +320,7 @@ export default function DuplicateScanner() {
                 </Button>
               </div>
               
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-slate-600">
                 {scanMode === 'standard' 
                   ? 'Fast server-side scan using name and DOB matching'
                   : 'Comprehensive multi-algorithm scan with fuzzy matching and auto-merge'}
@@ -539,7 +539,7 @@ export default function DuplicateScanner() {
                               <div className="ml-6 space-y-1">
                                 {detail.removed.map((removed, rIdx) => (
                                   <div key={rIdx} className="space-y-1">
-                                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                                    <div className="flex items-center gap-2 text-xs text-slate-600">
                                       <Trash2 className="w-3 h-3 text-red-600" />
                                       <span>Removed: {removed.name}</span>
                                       <Badge variant="outline" className="text-xs">

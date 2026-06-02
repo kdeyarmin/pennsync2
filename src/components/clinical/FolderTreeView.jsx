@@ -44,7 +44,7 @@ export default function FolderTreeView({
   };
 
   const colorOptions = [
-    { value: 'gray', class: 'text-gray-600', bg: 'bg-gray-100' },
+    { value: 'gray', class: 'text-slate-600', bg: 'bg-slate-100' },
     { value: 'blue', class: 'text-blue-600', bg: 'bg-blue-100' },
     { value: 'green', class: 'text-green-600', bg: 'bg-green-100' },
     { value: 'purple', class: 'text-purple-600', bg: 'bg-purple-100' },
@@ -70,7 +70,7 @@ export default function FolderTreeView({
           <div key={folder.id}>
             <div
               className={cn(
-                "flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-gray-100 cursor-pointer group transition-colors",
+                "flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-slate-100 cursor-pointer group transition-colors",
                 isSelected && "bg-indigo-50 hover:bg-indigo-100",
                 depth > 0 && "ml-4"
               )}
@@ -82,7 +82,7 @@ export default function FolderTreeView({
                     e.stopPropagation();
                     toggleFolder(folder.id);
                   }}
-                  className="p-0.5 hover:bg-gray-200 rounded"
+                  className="p-0.5 hover:bg-slate-200 rounded"
                 >
                   {isExpanded ? (
                     <ChevronDown className="w-3 h-3" />
@@ -119,7 +119,7 @@ export default function FolderTreeView({
                 <>
                   <span className="text-sm flex-1 truncate">{folder.name}</span>
                   {count > 0 && (
-                    <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                    <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                       {count}
                     </span>
                   )}
@@ -149,7 +149,7 @@ export default function FolderTreeView({
                           className={cn(
                             "w-8 h-8 rounded border-2 hover:scale-110 transition-transform",
                             color.bg,
-                            folder.color === color.value && "border-gray-900 scale-110"
+                            folder.color === color.value && "border-slate-900 scale-110"
                           )}
                           title={color.value}
                         />
@@ -184,7 +184,7 @@ export default function FolderTreeView({
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-gray-700">Folders</h3>
+        <h3 className="text-sm font-semibold text-slate-700">Folders</h3>
         <Button
           variant="ghost"
           size="sm"
@@ -198,14 +198,14 @@ export default function FolderTreeView({
       
       <div
         className={cn(
-          "flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors",
+          "flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors",
           selectedFolderId === null && "bg-indigo-50 hover:bg-indigo-100"
         )}
         onClick={() => onSelectFolder(null)}
       >
-        <Folder className="w-4 h-4 text-gray-600" />
+        <Folder className="w-4 h-4 text-slate-600" />
         <span className="text-sm flex-1">All Templates</span>
-        <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+        <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
           {templatesCount.uncategorized || 0}
         </span>
       </div>

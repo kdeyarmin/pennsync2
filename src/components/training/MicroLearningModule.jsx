@@ -270,7 +270,7 @@ Return JSON:
           <CardContent className="p-8 text-center">
             <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Generating Your Personalized Learning</h3>
-            <p className="text-gray-600">Creating micro-lesson, quiz, and scenario for: {skillGap?.area}</p>
+            <p className="text-slate-600">Creating micro-lesson, quiz, and scenario for: {skillGap?.area}</p>
           </CardContent>
         </Card>
       </div>
@@ -290,15 +290,15 @@ Return JSON:
         </DialogHeader>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between px-4 py-2 bg-slate-50 rounded-lg">
           {steps.map((step, idx) => (
             <div 
               key={step.id}
-              className={`flex items-center gap-2 ${idx <= currentStep ? 'text-purple-600' : 'text-gray-400'}`}
+              className={`flex items-center gap-2 ${idx <= currentStep ? 'text-purple-600' : 'text-slate-400'}`}
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 idx < currentStep ? 'bg-green-100' : 
-                idx === currentStep ? 'bg-purple-100' : 'bg-gray-100'
+                idx === currentStep ? 'bg-purple-100' : 'bg-slate-100'
               }`}>
                 {idx < currentStep ? (
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -307,7 +307,7 @@ Return JSON:
                 )}
               </div>
               <span className="text-sm font-medium hidden sm:inline">{step.title}</span>
-              {idx < steps.length - 1 && <ChevronRight className="w-4 h-4 text-gray-300 hidden sm:inline" />}
+              {idx < steps.length - 1 && <ChevronRight className="w-4 h-4 text-slate-300 hidden sm:inline" />}
             </div>
           ))}
         </div>
@@ -317,7 +317,7 @@ Return JSON:
           {/* Step 0: Micro-Lesson */}
           {currentStep === 0 && (
             <div className="space-y-6">
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-4 text-sm text-slate-500">
                 <span className="flex items-center gap-1">
                   <Clock className="w-4 h-4" /> {moduleContent.estimated_minutes} min
                 </span>
@@ -341,18 +341,18 @@ Return JSON:
 
               {/* Introduction */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Why This Matters</h4>
-                <p className="text-gray-700">{moduleContent.micro_lesson?.introduction}</p>
+                <h4 className="font-semibold text-slate-900 mb-2">Why This Matters</h4>
+                <p className="text-slate-700">{moduleContent.micro_lesson?.introduction}</p>
               </div>
 
               {/* Key Concepts */}
               <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Key Concepts</h4>
+                <h4 className="font-semibold text-slate-900">Key Concepts</h4>
                 {moduleContent.micro_lesson?.key_concepts?.map((concept, idx) => (
                   <Card key={idx} className="border-l-4 border-l-blue-500">
                     <CardContent className="p-4">
                       <h5 className="font-semibold text-blue-900 mb-2">{concept.title}</h5>
-                      <p className="text-gray-700 mb-2">{concept.explanation}</p>
+                      <p className="text-slate-700 mb-2">{concept.explanation}</p>
                       {concept.clinical_tip && (
                         <div className="flex items-start gap-2 p-2 bg-yellow-50 rounded text-sm">
                           <Lightbulb className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0" />
@@ -389,7 +389,7 @@ Return JSON:
           {currentStep === 1 && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-gray-900">Knowledge Check</h4>
+                <h4 className="font-semibold text-slate-900">Knowledge Check</h4>
                 <Badge variant="outline">
                   {Object.keys(quizAnswers).length}/{moduleContent.quiz?.questions?.length} answered
                 </Badge>
@@ -446,7 +446,7 @@ Return JSON:
                               Correct answer: {moduleContent.quiz.questions[idx].options[r.correctAnswer]}
                             </p>
                           )}
-                          <p className="text-sm text-gray-600 mt-2">{r.explanation}</p>
+                          <p className="text-sm text-slate-600 mt-2">{r.explanation}</p>
                         </div>
                       </div>
                     </Card>
@@ -477,19 +477,19 @@ Return JSON:
                   <CardTitle className="text-lg">{moduleContent.scenario?.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-gray-700">{moduleContent.scenario?.patient_context}</p>
+                  <p className="text-slate-700">{moduleContent.scenario?.patient_context}</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="p-3 bg-white rounded-lg">
-                      <p className="text-xs font-semibold text-gray-500 mb-1">VITALS</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-1">VITALS</p>
                       <p className="text-sm">{moduleContent.scenario?.clinical_data?.vitals}</p>
                     </div>
                     <div className="p-3 bg-white rounded-lg">
-                      <p className="text-xs font-semibold text-gray-500 mb-1">SYMPTOMS</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-1">SYMPTOMS</p>
                       <p className="text-sm">{moduleContent.scenario?.clinical_data?.symptoms}</p>
                     </div>
                     <div className="p-3 bg-white rounded-lg">
-                      <p className="text-xs font-semibold text-gray-500 mb-1">HISTORY</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-1">HISTORY</p>
                       <p className="text-sm">{moduleContent.scenario?.clinical_data?.history}</p>
                     </div>
                   </div>
@@ -563,7 +563,7 @@ Return JSON:
                       </div>
                     )}
 
-                    <p className="text-sm text-gray-600 italic">{scenarioFeedback.encouragement}</p>
+                    <p className="text-sm text-slate-600 italic">{scenarioFeedback.encouragement}</p>
                   </CardContent>
                 </Card>
               )}
@@ -582,23 +582,23 @@ Return JSON:
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="font-semibold text-gray-900 mb-2">Your Task:</p>
-                    <p className="text-gray-700">{moduleContent.practice_exercise?.task}</p>
+                    <p className="font-semibold text-slate-900 mb-2">Your Task:</p>
+                    <p className="text-slate-700">{moduleContent.practice_exercise?.task}</p>
                   </div>
 
                   {moduleContent.practice_exercise?.template && (
-                    <div className="p-4 bg-white rounded-lg border border-gray-200">
-                      <p className="text-sm font-semibold text-gray-500 mb-2">TEMPLATE TO FOLLOW:</p>
-                      <p className="text-gray-700 whitespace-pre-line">{moduleContent.practice_exercise.template}</p>
+                    <div className="p-4 bg-white rounded-lg border border-slate-200">
+                      <p className="text-sm font-semibold text-slate-500 mb-2">TEMPLATE TO FOLLOW:</p>
+                      <p className="text-slate-700 whitespace-pre-line">{moduleContent.practice_exercise.template}</p>
                     </div>
                   )}
 
                   <div>
-                    <p className="font-semibold text-gray-900 mb-2">Checklist:</p>
+                    <p className="font-semibold text-slate-900 mb-2">Checklist:</p>
                     <div className="space-y-2">
                       {moduleContent.practice_exercise?.checklist?.map((item, idx) => (
                         <label key={idx} className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
+                          <input type="checkbox" className="w-4 h-4 rounded border-slate-300" />
                           <span className="text-sm">{item}</span>
                         </label>
                       ))}
@@ -614,8 +614,8 @@ Return JSON:
 
               <div className="p-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg text-center">
                 <Award className="w-12 h-12 text-purple-600 mx-auto mb-2" />
-                <h4 className="font-semibold text-lg text-gray-900 mb-1">Module Complete!</h4>
-                <p className="text-gray-600 mb-4">Great job completing this micro-learning module.</p>
+                <h4 className="font-semibold text-lg text-slate-900 mb-1">Module Complete!</h4>
+                <p className="text-slate-600 mb-4">Great job completing this micro-learning module.</p>
                 <div className="flex items-center justify-center gap-4 text-sm">
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" /> 

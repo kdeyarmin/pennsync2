@@ -52,38 +52,38 @@ export default function RealTimeSignatureTracker({ patientId }) {
         {/* Progress Bar */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Completion Rate</span>
-            <span className="text-sm font-bold text-gray-900">{completionRate.toFixed(0)}%</span>
+            <span className="text-sm font-medium text-slate-700">Completion Rate</span>
+            <span className="text-sm font-bold text-slate-900">{completionRate.toFixed(0)}%</span>
           </div>
           <Progress value={completionRate} className="h-2" />
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
-            <p className="text-xs text-gray-600">Total</p>
+          <div className="text-center p-3 bg-slate-50 rounded-lg">
+            <p className="text-xl sm:text-2xl font-bold text-slate-900">{stats.total}</p>
+            <p className="text-xs text-slate-600">Total</p>
           </div>
           <div className="text-center p-3 bg-green-50 rounded-lg">
             <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.signed}</p>
-            <p className="text-xs text-gray-600">Signed</p>
+            <p className="text-xs text-slate-600">Signed</p>
           </div>
           <div className="text-center p-3 bg-yellow-50 rounded-lg">
             <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
-            <p className="text-xs text-gray-600">Pending</p>
+            <p className="text-xs text-slate-600">Pending</p>
           </div>
           <div className="text-center p-3 bg-red-50 rounded-lg">
             <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.overdue}</p>
-            <p className="text-xs text-gray-600">Overdue</p>
+            <p className="text-xs text-slate-600">Overdue</p>
           </div>
         </div>
 
         {/* Recent Signatures */}
         {normalizedSignatures.length > 0 && (
           <div className="space-y-2 mt-4">
-            <p className="text-sm font-medium text-gray-700">Recent Activity</p>
+            <p className="text-sm font-medium text-slate-700">Recent Activity</p>
             {normalizedSignatures.slice(0, 3).map((sig) => (
-              <div key={sig.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+              <div key={sig.id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {sig.normalizedStatus === 'signed' ? (
                     <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />

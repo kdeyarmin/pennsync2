@@ -41,7 +41,7 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
   if (!questions || questions.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
+        <CardContent className="p-8 text-center text-slate-500">
           No quiz questions available for this module.
         </CardContent>
       </Card>
@@ -116,7 +116,7 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
     return (
       <Card className="border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-orange-50">
         <CardContent className="p-8 text-center">
-          <Trophy className={`w-24 h-24 mx-auto mb-4 ${isPerfect ? 'text-yellow-500' : 'text-gray-400'}`} />
+          <Trophy className={`w-24 h-24 mx-auto mb-4 ${isPerfect ? 'text-yellow-500' : 'text-slate-400'}`} />
           <h2 className="text-3xl font-bold mb-2">
             {isPerfect ? '🎉 Perfect Score!' : 'Quiz Complete!'}
           </h2>
@@ -125,17 +125,17 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
             <div className="p-4 bg-white rounded-lg border-2 border-green-200">
               <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-green-600">{score}/{questions.length}</p>
-              <p className="text-sm text-gray-600">Correct</p>
+              <p className="text-sm text-slate-600">Correct</p>
             </div>
             <div className="p-4 bg-white rounded-lg border-2 border-purple-200">
               <Star className="w-8 h-8 text-purple-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-purple-600">{points}</p>
-              <p className="text-sm text-gray-600">Points</p>
+              <p className="text-sm text-slate-600">Points</p>
             </div>
             <div className="p-4 bg-white rounded-lg border-2 border-orange-200">
               <Flame className="w-8 h-8 text-orange-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-orange-600">{percentage}%</p>
-              <p className="text-sm text-gray-600">Accuracy</p>
+              <p className="text-sm text-slate-600">Accuracy</p>
             </div>
           </div>
 
@@ -220,7 +220,7 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
                       showCorrect ? 'border-green-500 bg-green-50' :
                       showWrong ? 'border-red-500 bg-red-50' :
                       isSelected ? 'border-purple-500 bg-purple-50' :
-                      'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <RadioGroupItem value={idx.toString()} id={`option-${idx}`} />
@@ -242,7 +242,7 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
               <p className="font-semibold mb-2">
                 {currentAnswer?.correct ? '🎉 Correct!' : '💡 Learn More'}
               </p>
-              <p className="text-sm text-gray-700">{question.explanation}</p>
+              <p className="text-sm text-slate-700">{question.explanation}</p>
               {currentAnswer?.points > 0 && (
                 <p className="text-sm font-bold text-green-600 mt-2">
                   +{currentAnswer.points} points earned!

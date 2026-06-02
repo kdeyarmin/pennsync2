@@ -249,7 +249,7 @@ Return JSON:
       case 'behind': return <TrendingDown className="w-4 h-4 text-orange-500" />;
       case 'stalled': return <AlertTriangle className="w-4 h-4 text-red-500" />;
       case 'goal_met': return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-      default: return <Activity className="w-4 h-4 text-gray-500" />;
+      default: return <Activity className="w-4 h-4 text-slate-500" />;
     }
   };
 
@@ -260,7 +260,7 @@ Return JSON:
       case 'behind': return 'bg-orange-100 text-orange-800';
       case 'stalled': return 'bg-red-100 text-red-800';
       case 'goal_met': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -269,7 +269,7 @@ Return JSON:
       case 'high': return 'bg-red-500';
       case 'medium': return 'bg-yellow-500';
       case 'low': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -304,7 +304,7 @@ Return JSON:
           {!recommendations ? (
             <div className="text-center py-4">
               <Brain className="w-12 h-12 mx-auto mb-3 text-indigo-300" />
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Analyze patient progress to get AI recommendations for care plan updates
               </p>
               <Button 
@@ -344,7 +344,7 @@ Return JSON:
                     className={`p-3 rounded-lg border-2 transition-all ${
                       selectedUpdates.includes(rec.care_plan_id)
                         ? 'border-indigo-400 bg-indigo-50'
-                        : 'border-gray-200 bg-white'
+                        : 'border-slate-200 bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -373,11 +373,11 @@ Return JSON:
 
                         {/* Progress Bar */}
                         <div className="mb-2">
-                          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                          <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
                             <span>Progress toward goal</span>
                             <span>{rec.progress_percentage}%</span>
                           </div>
-                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                             <div 
                               className={`h-full ${
                                 rec.progress_percentage >= 80 ? 'bg-green-500' :
@@ -391,7 +391,7 @@ Return JSON:
                         </div>
 
                         {/* Current Goal */}
-                        <p className="text-xs text-gray-600 mb-2">
+                        <p className="text-xs text-slate-600 mb-2">
                           <strong>Current Goal:</strong> {rec.current_goal}
                         </p>
 
@@ -402,7 +402,7 @@ Return JSON:
                               <ArrowRight className="w-3 h-3" />
                               Recommended: {rec.recommendation_type.replace(/_/g, ' ')}
                             </div>
-                            <p className="text-xs text-gray-700 mb-2">{rec.rationale}</p>
+                            <p className="text-xs text-slate-700 mb-2">{rec.rationale}</p>
                             
                             {rec.suggested_changes?.new_goal && (
                               <p className="text-xs">
@@ -418,7 +418,7 @@ Return JSON:
                         )}
 
                         {rec.clinical_notes && (
-                          <p className="text-xs text-gray-500 mt-2 italic">
+                          <p className="text-xs text-slate-500 mt-2 italic">
                             💡 {rec.clinical_notes}
                           </p>
                         )}
@@ -431,14 +431,14 @@ Return JSON:
               {/* New Care Plan Suggestions */}
               {recommendations.new_care_plan_suggestions?.length > 0 && (
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                  <p className="text-sm font-semibold text-slate-700 mb-2">
                     Suggested New Care Plans:
                   </p>
                   {recommendations.new_care_plan_suggestions.map((suggestion, idx) => (
                     <div key={idx} className="p-2 bg-green-50 rounded border border-green-200 mb-2">
                       <p className="text-xs font-medium text-green-800">{suggestion.problem}</p>
                       <p className="text-xs text-green-700">{suggestion.goal}</p>
-                      <p className="text-xs text-gray-600 italic">{suggestion.rationale}</p>
+                      <p className="text-xs text-slate-600 italic">{suggestion.rationale}</p>
                     </div>
                   ))}
                 </div>

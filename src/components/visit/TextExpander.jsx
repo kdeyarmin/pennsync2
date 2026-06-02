@@ -34,7 +34,7 @@ export default function TextExpander({ onExpand }) {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-yellow-600" />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-slate-700">
             Penn Sync Text Expanders
           </span>
           <Badge variant="outline" className="text-xs">
@@ -64,15 +64,15 @@ export default function TextExpander({ onExpand }) {
             {allShortcuts.map((shortcut, index) => (
               <div
                 key={index}
-                className="p-3 bg-gray-50 rounded-lg border border-gray-200"
+                className="p-3 bg-slate-50 rounded-lg border border-slate-200"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <Badge variant="secondary" className="font-mono text-xs">
                     {shortcut.trigger}
                   </Badge>
-                  <span className="text-xs text-gray-500">→</span>
+                  <span className="text-xs text-slate-500">→</span>
                 </div>
-                <p className="text-sm text-gray-700">{shortcut.expansion}</p>
+                <p className="text-sm text-slate-700">{shortcut.expansion}</p>
               </div>
             ))}
           </div>

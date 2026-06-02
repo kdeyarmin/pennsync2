@@ -192,7 +192,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
           <div className="flex gap-2">
             {["signers", "review", "sent", "tracking"].map((s, idx) => (
               <div key={s} className="flex-1">
-                <div className={`h-1 rounded-full ${step === s ? "bg-blue-600" : idx < ["signers", "review", "sent", "tracking"].indexOf(step) ? "bg-green-600" : "bg-gray-300"}`} />
+                <div className={`h-1 rounded-full ${step === s ? "bg-blue-600" : idx < ["signers", "review", "sent", "tracking"].indexOf(step) ? "bg-green-600" : "bg-slate-300"}`} />
               </div>
             ))}
           </div>
@@ -203,7 +203,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                 <Label className="text-base font-semibold mb-3 block">Signers (in order)</Label>
                 <div className="space-y-3">
                   {signers.map((signer, idx) => (
-                    <div key={signer.id} className="flex gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                    <div key={signer.id} className="flex gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50">
                       <div className="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full text-sm font-semibold flex-shrink-0">
                         {idx + 1}
                       </div>
@@ -266,7 +266,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                     className="mt-1"
                     min={new Date().toISOString().split('T')[0]}
                   />
-                  <p className="text-xs text-gray-600 mt-1">Signers must complete by this date</p>
+                  <p className="text-xs text-slate-600 mt-1">Signers must complete by this date</p>
                 </div>
 
                 <div className="space-y-2">
@@ -327,19 +327,19 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Signers to be notified:</Label>
                 {signers.map((signer) => (
-                  <div key={signer.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                    <User className="w-4 h-4 text-gray-600" />
+                  <div key={signer.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded">
+                    <User className="w-4 h-4 text-slate-600" />
                     <div>
                       <p className="font-medium text-sm">{signer.name}</p>
-                      <p className="text-xs text-gray-600">{signer.email} • {signer.role}</p>
+                      <p className="text-xs text-slate-600">{signer.email} • {signer.role}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
               {signMessage && (
-                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                  <p className="text-xs text-gray-600 font-semibold mb-1">Message:</p>
+                <div className="p-3 bg-slate-50 rounded border border-slate-200">
+                  <p className="text-xs text-slate-600 font-semibold mb-1">Message:</p>
                   <p className="text-sm">{signMessage}</p>
                 </div>
               )}
@@ -373,12 +373,12 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                 <Label className="text-base font-semibold mb-3 block">Signing Status</Label>
                 <div className="space-y-2">
                   {signers.map((signer) => (
-                    <div key={signer.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <div key={signer.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <Mail className="w-4 h-4 text-gray-600" />
+                        <Mail className="w-4 h-4 text-slate-600" />
                         <div>
                           <p className="font-medium text-sm">{signer.name}</p>
-                          <p className="text-xs text-gray-600">{signer.email}</p>
+                          <p className="text-xs text-slate-600">{signer.email}</p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
@@ -395,10 +395,10 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {recentDocuments.length > 0 ? (
                     recentDocuments.map((doc) => (
-                      <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <div>
                           <p className="font-medium text-sm">{doc.normalizedName}</p>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-slate-600">
                             Status: <Badge variant={doc.normalizedStatus === "signed" ? "default" : "secondary"}>{doc.normalizedStatus}</Badge>
                           </p>
                         </div>
@@ -410,7 +410,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-600">No previous documents</p>
+                    <p className="text-sm text-slate-600">No previous documents</p>
                   )}
                 </div>
               </div>

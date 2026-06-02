@@ -119,13 +119,13 @@ export default function PatientMergeDialog({
         className={`block cursor-pointer rounded-lg border-2 p-4 transition-all ${
           isSelected 
             ? 'border-blue-600 bg-blue-50' 
-            : 'border-gray-200 hover:border-gray-300'
+            : 'border-slate-200 hover:border-slate-300'
         }`}
       >
         <div className="flex items-start justify-between mb-3">
           <div>
             <h3 className="font-semibold text-lg">{patient.first_name} {patient.last_name}</h3>
-            <p className="text-xs text-gray-500">MRN: {patient.medical_record_number || 'N/A'}</p>
+            <p className="text-xs text-slate-500">MRN: {patient.medical_record_number || 'N/A'}</p>
           </div>
           {isSelected && (
             <Badge className="bg-blue-600">Primary</Badge>
@@ -133,24 +133,24 @@ export default function PatientMergeDialog({
         </div>
 
         <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-slate-600">
             <Calendar className="w-4 h-4" />
             <span>DOB: {patient.date_of_birth || 'N/A'}</span>
           </div>
           {patient.phone && (
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-slate-600">
               <Phone className="w-4 h-4" />
               <span>{patient.phone}</span>
             </div>
           )}
           {patient.email && (
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-slate-600">
               <Mail className="w-4 h-4" />
               <span>{patient.email}</span>
             </div>
           )}
           {patient.address && (
-            <div className="flex items-start gap-2 text-gray-600">
+            <div className="flex items-start gap-2 text-slate-600">
               <MapPin className="w-4 h-4 mt-0.5" />
               <span className="text-xs">{patient.address}</span>
             </div>
@@ -159,16 +159,16 @@ export default function PatientMergeDialog({
 
         <div className="flex gap-4 mt-3 pt-3 border-t">
           <div className="text-center">
-            <p className="text-xs text-gray-500">Visits</p>
+            <p className="text-xs text-slate-500">Visits</p>
             <p className="text-lg font-semibold text-blue-600">{visits.length}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-500">Care Plans</p>
+            <p className="text-xs text-slate-500">Care Plans</p>
             <p className="text-lg font-semibold text-green-600">{carePlans.length}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-500">Created</p>
-            <p className="text-xs font-medium text-gray-700">
+            <p className="text-xs text-slate-500">Created</p>
+            <p className="text-xs font-medium text-slate-700">
               {format(new Date(patient.created_date), 'MM/dd/yyyy')}
             </p>
           </div>
@@ -238,7 +238,7 @@ export default function PatientMergeDialog({
                     {(selectedPrimary === 'patient1' ? patient1 : patient2).first_name}{' '}
                     {(selectedPrimary === 'patient1' ? patient1 : patient2).last_name}
                   </h3>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-slate-600">
                     MRN: {(selectedPrimary === 'patient1' ? patient1 : patient2).medical_record_number || 'N/A'}
                   </p>
                 </CardContent>
@@ -257,7 +257,7 @@ export default function PatientMergeDialog({
                     {(selectedPrimary === 'patient1' ? patient2 : patient1).first_name}{' '}
                     {(selectedPrimary === 'patient1' ? patient2 : patient1).last_name}
                   </h3>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-slate-600">
                     MRN: {(selectedPrimary === 'patient1' ? patient2 : patient1).medical_record_number || 'N/A'}
                   </p>
                 </CardContent>
@@ -298,9 +298,9 @@ export default function PatientMergeDialog({
               </AlertDescription>
             </Alert>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-slate-50 p-4 rounded-lg">
               <p className="text-sm font-medium mb-2">You are about to:</p>
-              <ul className="space-y-1 text-sm text-gray-700">
+              <ul className="space-y-1 text-sm text-slate-700">
                 <li>• Merge {(selectedPrimary === 'patient1' ? patient2 : patient1).first_name} {(selectedPrimary === 'patient1' ? patient2 : patient1).last_name} into {(selectedPrimary === 'patient1' ? patient1 : patient2).first_name} {(selectedPrimary === 'patient1' ? patient1 : patient2).last_name}</li>
                 <li>• Transfer {(selectedPrimary === 'patient1' ? patient2Visits.length : patient1Visits.length)} visits and {(selectedPrimary === 'patient1' ? patient2CarePlans.length : patient1CarePlans.length)} care plans</li>
                 <li>• Permanently delete the secondary patient record</li>

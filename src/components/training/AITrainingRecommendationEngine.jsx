@@ -137,7 +137,7 @@ Return JSON:
       high: "bg-red-100 text-red-800 border-red-300",
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-blue-100 text-blue-800 border-blue-300"
-    }[priority] || "bg-gray-100 text-gray-800";
+    }[priority] || "bg-slate-100 text-slate-800";
   };
 
   return (
@@ -152,7 +152,7 @@ Return JSON:
         {!recommendations ? (
           <div className="text-center py-8">
             <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               AI will analyze performance data, audit findings, and alerts to recommend targeted training
             </p>
             <Button
@@ -201,7 +201,7 @@ Return JSON:
 
             {/* Recommended Training */}
             <div>
-              <p className="font-semibold text-gray-900 mb-3">Recommended Training Modules</p>
+              <p className="font-semibold text-slate-900 mb-3">Recommended Training Modules</p>
               <div className="space-y-3">
                 {recommendations.recommended_training?.map((training, idx) => (
                   <Card key={idx} className={`border-2 ${getPriorityColor(training.priority)}`}>
@@ -209,19 +209,19 @@ Return JSON:
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900">{training.title}</h4>
+                            <h4 className="font-semibold text-slate-900">{training.title}</h4>
                             <Badge className={getPriorityColor(training.priority)}>
                               {training.priority} priority
                             </Badge>
                             <Badge variant="outline">{training.category}</Badge>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{training.rationale}</p>
+                          <p className="text-sm text-slate-600 mb-2">{training.rationale}</p>
                           <div className="bg-white/60 rounded p-2 mb-2">
-                            <p className="text-xs text-gray-700">
+                            <p className="text-xs text-slate-700">
                               <strong>Expected Impact:</strong> {training.expected_impact}
                             </p>
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-4 text-xs text-slate-500">
                             <span>⏱️ {training.estimated_duration_minutes} min</span>
                             <span>📅 Due in {training.due_in_days} days</span>
                           </div>

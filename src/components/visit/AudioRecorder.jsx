@@ -92,10 +92,10 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
             <Mic className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 mb-2">Voice Dictation - Penn Sync AI</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">Voice Dictation - Penn Sync AI</h3>
             
             <Alert className="bg-white border-purple-200 mb-4">
-              <AlertDescription className="text-sm text-gray-700">
+              <AlertDescription className="text-sm text-slate-700">
                 <strong>🎤 How Penn Sync Voice Works:</strong>
                 <ul className="list-disc ml-5 mt-2 space-y-1">
                   <li>Click "Start Recording" and speak naturally about your patient visit</li>
@@ -129,7 +129,7 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
                   </Button>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-slate-700">
                       {formatTime(recordingTime)}
                     </span>
                   </div>
@@ -152,7 +152,7 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
                     <Trash2 className="w-4 h-4 mr-2" />
                     Discard
                   </Button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-slate-600">
                     Recorded: {formatTime(recordingTime)}
                   </span>
                 </>

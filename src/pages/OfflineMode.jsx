@@ -43,8 +43,8 @@ export default function OfflineMode() {
             {isOnline ? <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <WifiOff className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Offline Mode</h1>
-            <p className="text-xs sm:text-sm text-gray-600">Work without internet, sync when ready</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Offline Mode</h1>
+            <p className="text-xs sm:text-sm text-slate-600">Work without internet, sync when ready</p>
           </div>
         </div>
 
@@ -126,8 +126,8 @@ export default function OfflineMode() {
             </CardHeader>
             <CardContent className="p-3 sm:p-4">
               {cachedPatients.length === 0 ? (
-                <div className="text-center py-4 sm:py-6 text-gray-500">
-                  <Users className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-2" />
+                <div className="text-center py-4 sm:py-6 text-slate-500">
+                  <Users className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 mx-auto mb-2" />
                   <p className="text-xs sm:text-sm">No patients cached</p>
                   <p className="text-xs mt-1">Download patient data to work offline</p>
                 </div>
@@ -139,7 +139,7 @@ export default function OfflineMode() {
                      className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors min-h-[60px] touch-target ${
                        selectedPatientId === cache.patient.id 
                          ? 'bg-blue-50 border-blue-300' 
-                         : 'bg-white hover:bg-gray-50'
+                         : 'bg-white hover:bg-slate-50'
                      }`}
                      onClick={() => {
                        setSelectedPatientId(cache.patient.id);
@@ -149,7 +149,7 @@ export default function OfflineMode() {
                       <p className="font-medium text-sm sm:text-base">
                         {cache.patient.first_name} {cache.patient.last_name}
                       </p>
-                      <p className="text-xs sm:text-sm text-gray-600 truncate">{cache.patient.primary_diagnosis}</p>
+                      <p className="text-xs sm:text-sm text-slate-600 truncate">{cache.patient.primary_diagnosis}</p>
                       <div className="flex flex-wrap gap-2 mt-2">
                         <Badge variant="outline" className="text-xs">
                           {cache.carePlans?.length || 0} care plans

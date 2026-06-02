@@ -160,7 +160,7 @@ Return JSON:
       case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -195,7 +195,7 @@ Return JSON:
           {!optimizedRoute ? (
             <div className="text-center py-4">
               <Navigation className="w-12 h-12 mx-auto mb-3 text-blue-300" />
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Optimize your {visits.length} visits for the most efficient route
               </p>
               <Button
@@ -230,7 +230,7 @@ Return JSON:
               </Alert>
 
               {/* Route Summary */}
-              <p className="text-sm text-gray-700 bg-blue-50 p-2 rounded">
+              <p className="text-sm text-slate-700 bg-blue-50 p-2 rounded">
                 📍 {optimizedRoute.route_summary}
               </p>
 
@@ -251,18 +251,18 @@ Return JSON:
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-900">{visit.patient_name}</p>
+                        <p className="font-medium text-slate-900">{visit.patient_name}</p>
                         <Badge className={getPriorityColor(visit.priority)}>
                           {visit.priority}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+                      <div className="flex items-center gap-2 text-xs text-slate-600 mt-1">
                         <Clock className="w-3 h-3" />
                         <span>{visit.suggested_time}</span>
                         <span>•</span>
                         <span>{visit.estimated_duration_minutes} min</span>
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                      <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
                         <MapPin className="w-3 h-3" />
                         <span className="truncate">{visit.address}</span>
                       </div>
@@ -272,7 +272,7 @@ Return JSON:
                           <span>{visit.travel_time_from_previous} min drive</span>
                         </div>
                       )}
-                      <p className="text-xs text-gray-500 italic mt-1">
+                      <p className="text-xs text-slate-500 italic mt-1">
                         {visit.optimization_reason}
                       </p>
                     </div>

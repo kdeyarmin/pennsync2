@@ -67,15 +67,15 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Map PDF Fields</h3>
-        <p className="text-sm text-gray-600">Define fields and link them to patient data</p>
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Map PDF Fields</h3>
+        <p className="text-sm text-slate-600">Define fields and link them to patient data</p>
       </div>
 
       {/* Add New Field */}
       <Card className="p-4">
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Field Type
             </label>
             <Select value={newField.type} onValueChange={(val) => 
@@ -96,7 +96,7 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Label
               </label>
               <Input
@@ -108,7 +108,7 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Field Name
               </label>
               <Input
@@ -122,7 +122,7 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
 
           {newField.type !== "signature" && newField.type !== "initials" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Data Source
               </label>
               <Select value={newField.dataSource} onValueChange={(val) =>
@@ -141,7 +141,7 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
 
           {newField.dataSource === "patient" && newField.type !== "signature" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Patient Field
               </label>
               <Select value={newField.dataField} onValueChange={(val) =>
@@ -178,16 +178,16 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
             {fields.map((field) => (
               <div
                 key={field.id}
-                className="flex items-start justify-between p-3 bg-gray-50 rounded-lg gap-2"
+                className="flex items-start justify-between p-3 bg-slate-50 rounded-lg gap-2"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <Type className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Type className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-slate-900">
                         {field.label}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         {FIELD_TYPES.find(ft => ft.value === field.type)?.label} 
                         {field.dataSource === "patient" && ` • ${field.dataField}`}
                       </p>
@@ -197,7 +197,7 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
 
                 <button
                   onClick={() => removeField(field.id)}
-                  className="p-1 hover:bg-gray-200 rounded text-gray-600 flex-shrink-0"
+                  className="p-1 hover:bg-slate-200 rounded text-slate-600 flex-shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

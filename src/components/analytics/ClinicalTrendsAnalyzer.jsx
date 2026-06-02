@@ -194,9 +194,9 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
                               {trend.concern_level}
                             </Badge>
                           </div>
-                          <p className="text-gray-700">{trend.description}</p>
+                          <p className="text-slate-700">{trend.description}</p>
                           {trend.recommendation && (
-                            <p className="text-gray-600 mt-1 italic">→ {trend.recommendation}</p>
+                            <p className="text-slate-600 mt-1 italic">→ {trend.recommendation}</p>
                           )}
                         </AlertDescription>
                       </Alert>
@@ -234,7 +234,7 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
                         </Badge>
                         <strong>{risk.risk_type}</strong>
                       </div>
-                      <p className="text-gray-700 mb-1">{risk.evidence}</p>
+                      <p className="text-slate-700 mb-1">{risk.evidence}</p>
                       <p className="text-red-700 font-medium">Action: {risk.action_needed}</p>
                     </AlertDescription>
                   </Alert>
@@ -263,10 +263,10 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
               <CardContent className="space-y-2">
                 {analysis.symptom_patterns.map((pattern, idx) => (
                   <div key={idx} className="text-xs bg-orange-50 border border-orange-200 rounded p-2">
-                    <p className="font-semibold text-gray-900">{pattern.symptom}</p>
-                    <p className="text-gray-700">Pattern: {pattern.pattern}</p>
-                    <p className="text-gray-700">Severity Trend: {pattern.severity_trend}</p>
-                    <p className="text-gray-600 italic mt-1">{pattern.clinical_notes}</p>
+                    <p className="font-semibold text-slate-900">{pattern.symptom}</p>
+                    <p className="text-slate-700">Pattern: {pattern.pattern}</p>
+                    <p className="text-slate-700">Severity Trend: {pattern.severity_trend}</p>
+                    <p className="text-slate-600 italic mt-1">{pattern.clinical_notes}</p>
                   </div>
                 ))}
               </CardContent>
@@ -296,7 +296,7 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
                     <GitCompare className="w-4 h-4 text-purple-600" />
                     <AlertDescription className="text-xs">
                       <p className="font-semibold text-purple-900 mb-1">{insight.correlation}</p>
-                      <div className="text-gray-700 space-y-1">
+                      <div className="text-slate-700 space-y-1">
                         <p>Metric A: {insight.metric_a}</p>
                         <p>Metric B: {insight.metric_b}</p>
                         <p>Relationship: {insight.relationship}</p>
@@ -364,14 +364,14 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
 
                 {analysis.predictive_analytics.predicted_outcomes?.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-gray-900">Predicted Outcomes:</p>
+                    <p className="text-xs font-semibold text-slate-900">Predicted Outcomes:</p>
                     {analysis.predictive_analytics.predicted_outcomes.map((outcome, idx) => (
                       <div key={idx} className="bg-indigo-50 border border-indigo-200 rounded p-2">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-xs font-semibold text-indigo-900">{outcome.outcome}</p>
                           <Badge className="bg-indigo-600 text-white text-xs">{outcome.probability}</Badge>
                         </div>
-                        <p className="text-xs text-gray-700">Timeframe: {outcome.timeframe}</p>
+                        <p className="text-xs text-slate-700">Timeframe: {outcome.timeframe}</p>
                         {outcome.prevention_strategies?.length > 0 && (
                           <div className="mt-2">
                             <p className="text-xs font-semibold text-indigo-800">Prevention:</p>
@@ -411,7 +411,7 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
                 {analysis.positive_trends.map((trend, idx) => (
                   <div key={idx} className="text-xs bg-green-50 border border-green-200 rounded p-2">
                     <p className="font-semibold text-green-900">✓ {trend.achievement}</p>
-                    <p className="text-gray-600">{trend.supporting_data}</p>
+                    <p className="text-slate-600">{trend.supporting_data}</p>
                   </div>
                 ))}
               </CardContent>

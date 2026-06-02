@@ -74,9 +74,9 @@ export default function SkillGapLearningHub({ nurseEmail }) {
       completed: 'bg-green-100 text-green-800',
       in_progress: 'bg-blue-100 text-blue-800',
       needs_review: 'bg-yellow-100 text-yellow-800',
-      not_started: 'bg-gray-100 text-gray-800'
+      not_started: 'bg-slate-100 text-slate-800'
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -90,7 +90,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
             </div>
             <div>
               <p className="text-2xl font-bold">{storedGaps.length}</p>
-              <p className="text-sm text-gray-500">Active Gaps</p>
+              <p className="text-sm text-slate-500">Active Gaps</p>
             </div>
           </CardContent>
         </Card>
@@ -102,7 +102,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
             </div>
             <div>
               <p className="text-2xl font-bold">{completedModules.length}</p>
-              <p className="text-sm text-gray-500">Completed</p>
+              <p className="text-sm text-slate-500">Completed</p>
             </div>
           </CardContent>
         </Card>
@@ -114,7 +114,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
             </div>
             <div>
               <p className="text-2xl font-bold">{totalTimeSpent}</p>
-              <p className="text-sm text-gray-500">Minutes Learned</p>
+              <p className="text-sm text-slate-500">Minutes Learned</p>
             </div>
           </CardContent>
         </Card>
@@ -126,7 +126,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
             </div>
             <div>
               <p className="text-2xl font-bold">{averageScore}%</p>
-              <p className="text-sm text-gray-500">Avg Score</p>
+              <p className="text-sm text-slate-500">Avg Score</p>
             </div>
           </CardContent>
         </Card>
@@ -154,8 +154,8 @@ export default function SkillGapLearningHub({ nurseEmail }) {
             <Card className="border-dashed">
               <CardContent className="p-8 text-center">
                 <CheckCircle2 className="w-12 h-12 text-green-300 mx-auto mb-3" />
-                <h4 className="font-semibold text-gray-700 mb-1">No Active Skill Gaps!</h4>
-                <p className="text-gray-500 text-sm">
+                <h4 className="font-semibold text-slate-700 mb-1">No Active Skill Gaps!</h4>
+                <p className="text-slate-500 text-sm">
                   Skill gaps are identified when you use the AI Note Review feature.
                 </p>
               </CardContent>
@@ -169,9 +169,9 @@ export default function SkillGapLearningHub({ nurseEmail }) {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Brain className="w-4 h-4 text-purple-600" />
-                          <h4 className="font-semibold text-gray-900">{gap.area}</h4>
+                          <h4 className="font-semibold text-slate-900">{gap.area}</h4>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">{gap.evidence}</p>
+                        <p className="text-sm text-slate-600 mb-2">{gap.evidence}</p>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
                             <BookOpen className="w-3 h-3 mr-1" />
@@ -199,8 +199,8 @@ export default function SkillGapLearningHub({ nurseEmail }) {
             <Card className="border-dashed">
               <CardContent className="p-8 text-center">
                 <BookOpen className="w-12 h-12 text-blue-300 mx-auto mb-3" />
-                <h4 className="font-semibold text-gray-700 mb-1">No Modules In Progress</h4>
-                <p className="text-gray-500 text-sm">Start a micro-learning module from your skill gaps.</p>
+                <h4 className="font-semibold text-slate-700 mb-1">No Modules In Progress</h4>
+                <p className="text-slate-500 text-sm">Start a micro-learning module from your skill gaps.</p>
               </CardContent>
             </Card>
           ) : (
@@ -210,8 +210,8 @@ export default function SkillGapLearningHub({ nurseEmail }) {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-semibold text-gray-900">{module.skill_area}</h4>
-                        <p className="text-sm text-gray-500">
+                        <h4 className="font-semibold text-slate-900">{module.skill_area}</h4>
+                        <p className="text-sm text-slate-500">
                           Started: {module.created_date ? format(parseISO(module.created_date), 'MMM d, yyyy') : 'Unknown'}
                         </p>
                       </div>
@@ -234,9 +234,9 @@ export default function SkillGapLearningHub({ nurseEmail }) {
           {completedModules.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="p-8 text-center">
-                <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <h4 className="font-semibold text-gray-700 mb-1">No Completed Modules Yet</h4>
-                <p className="text-gray-500 text-sm">Complete micro-learning modules to build your skills.</p>
+                <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h4 className="font-semibold text-slate-700 mb-1">No Completed Modules Yet</h4>
+                <p className="text-slate-500 text-sm">Complete micro-learning modules to build your skills.</p>
               </CardContent>
             </Card>
           ) : (
@@ -248,8 +248,8 @@ export default function SkillGapLearningHub({ nurseEmail }) {
                       <div className="flex items-center gap-3">
                         <CheckCircle2 className="w-6 h-6 text-green-600" />
                         <div>
-                          <h4 className="font-semibold text-gray-900">{module.skill_area}</h4>
-                          <div className="flex items-center gap-3 text-sm text-gray-500">
+                          <h4 className="font-semibold text-slate-900">{module.skill_area}</h4>
+                          <div className="flex items-center gap-3 text-sm text-slate-500">
                             <span>Score: {module.score}%</span>
                             <span>Time: {module.time_spent_minutes} min</span>
                             {module.updated_date && (

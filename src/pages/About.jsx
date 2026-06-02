@@ -61,15 +61,15 @@ export default function About() {
 
       {/* Overview Section */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">What is Penn Sync?</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">What is Penn Sync?</h2>
         <Card className="border-blue-200">
           <CardContent className="p-6 md:p-8">
-            <p className="text-gray-700 text-lg mb-4 leading-relaxed">
+            <p className="text-slate-700 text-lg mb-4 leading-relaxed">
               Penn Sync is a comprehensive, cloud-based platform designed specifically for home health and hospice agencies. 
               It transforms clinical documentation, improves operational efficiency, and enhances patient outcomes through intelligent 
               automation, real-time analytics, and seamless team collaboration.
             </p>
-            <p className="text-gray-700 text-lg leading-relaxed">
+            <p className="text-slate-700 text-lg leading-relaxed">
               Built on cutting-edge AI technology and designed with clinician workflows in mind, Penn Sync helps agencies meet 
               regulatory requirements, reduce administrative burden, and focus more on patient care.
             </p>
@@ -79,7 +79,7 @@ export default function About() {
 
       {/* Key Features */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Core Features</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">Core Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((feature, index) => {
             const Icon = feature.icon;
@@ -91,8 +91,8 @@ export default function About() {
                       <Icon className="w-6 h-6 text-indigo-600" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 mb-2">{feature.title}</h3>
-                      <p className="text-sm text-gray-600">{feature.description}</p>
+                      <h3 className="font-bold text-slate-900 mb-2">{feature.title}</h3>
+                      <p className="text-sm text-slate-600">{feature.description}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -104,12 +104,12 @@ export default function About() {
 
       {/* Key Benefits */}
       <div className="mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Why Choose Penn Sync?</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">Why Choose Penn Sync?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {benefits.map((benefit, index) => (
             <div key={index} className="flex items-start gap-3 bg-green-50 p-4 rounded-lg border border-green-200">
               <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <span className="text-gray-800 font-medium">{benefit}</span>
+              <span className="text-slate-800 font-medium">{benefit}</span>
             </div>
           ))}
         </div>
@@ -119,8 +119,8 @@ export default function About() {
       <div className="mb-12">
         <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
           <CardContent className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to Transform Your Agency?</h2>
-            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to Transform Your Agency?</h2>
+            <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
               Join home health and hospice organizations using Penn Sync to streamline operations, improve compliance, and deliver better patient care.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

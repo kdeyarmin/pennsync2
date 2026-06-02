@@ -32,7 +32,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
       case 'high': return 'bg-green-100 text-green-800 border-green-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-orange-100 text-orange-800 border-orange-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -83,7 +83,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-xs font-medium text-gray-600">Confidence Level</span>
+                <span className="text-xs font-medium text-slate-600">Confidence Level</span>
                 <div className="mt-1">
                   <Badge className={getConfidenceColor(matchAnalysis.confidence_level) + " text-sm"}>
                     {matchAnalysis.confidence_level.toUpperCase()}
@@ -91,10 +91,10 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                 </div>
               </div>
               <div>
-                <span className="text-xs font-medium text-gray-600">Confidence Score</span>
+                <span className="text-xs font-medium text-slate-600">Confidence Score</span>
                 <div className="mt-1">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-slate-200 rounded-full h-2">
                       <div 
                         className={`h-2 rounded-full ${
                           matchAnalysis.confidence_score >= 80 ? "bg-green-500" :
@@ -111,14 +111,14 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
             </div>
             
             <div className="pt-3 border-t">
-              <span className="text-sm font-medium text-gray-900">AI Reasoning:</span>
-              <p className="text-sm text-gray-700 mt-1 bg-gray-50 p-3 rounded">{matchAnalysis.reasoning}</p>
+              <span className="text-sm font-medium text-slate-900">AI Reasoning:</span>
+              <p className="text-sm text-slate-700 mt-1 bg-slate-50 p-3 rounded">{matchAnalysis.reasoning}</p>
             </div>
 
             {matchAnalysis.match_factors && matchAnalysis.match_factors.length > 0 && (
               <div>
                 <span className="text-sm font-medium text-green-700">Supporting Evidence:</span>
-                <ul className="list-disc list-inside mt-1 text-sm text-gray-700 space-y-1">
+                <ul className="list-disc list-inside mt-1 text-sm text-slate-700 space-y-1">
                   {matchAnalysis.match_factors.map((factor, i) => (
                     <li key={i} className="text-green-600">{factor}</li>
                   ))}
@@ -131,7 +131,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
 
       {viewMode === 'list' && referral.match_suggestions && referral.match_suggestions.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900">Potential Matches ({referral.match_suggestions.length})</h3>
+          <h3 className="font-semibold text-slate-900">Potential Matches ({referral.match_suggestions.length})</h3>
           
           {referral.match_suggestions.map((match, index) => {
             const patient = suggestedPatients.find(p => p.id === match.patient_id);
@@ -149,7 +149,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <User className="w-4 h-4 text-gray-500" />
+                        <User className="w-4 h-4 text-slate-500" />
                         <span className="font-medium">
                           {patient ? `${patient.first_name} ${patient.last_name}` : `Match Option ${index + 1}`}
                         </span>
@@ -166,7 +166,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                       </div>
                       
                       {patient && (
-                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-2">
+                        <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-2">
                           {patient.date_of_birth && (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -194,10 +194,10 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                         </div>
                       )}
                       
-                      <div className="text-sm text-gray-700 space-y-2">
+                      <div className="text-sm text-slate-700 space-y-2">
                         <div>
                           <strong className="text-green-700">✓ Matching Factors:</strong>
-                          <ul className="list-disc list-inside mt-1 text-xs space-y-1 text-gray-600">
+                          <ul className="list-disc list-inside mt-1 text-xs space-y-1 text-slate-600">
                             {match.reasons?.map((reason, i) => (
                               <li key={i} className="text-green-700">{reason}</li>
                             ))}
@@ -231,7 +231,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
       {/* Side-by-Side Comparison View */}
       {viewMode === 'comparison' && selectedPatient && (
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900 text-center">Side-by-Side Comparison</h3>
+          <h3 className="font-semibold text-slate-900 text-center">Side-by-Side Comparison</h3>
           
           <div className="grid md:grid-cols-2 gap-4">
             {/* Referral Data */}
@@ -244,32 +244,32 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Full Name</label>
+                  <label className="text-xs font-semibold text-slate-500">Full Name</label>
                   <p className="text-sm font-medium">{referralData.full_name || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Date of Birth</label>
+                  <label className="text-xs font-semibold text-slate-500">Date of Birth</label>
                   <p className="text-sm">{referralData.date_of_birth || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Phone</label>
+                  <label className="text-xs font-semibold text-slate-500">Phone</label>
                   <p className="text-sm">{referralData.phone || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Address</label>
+                  <label className="text-xs font-semibold text-slate-500">Address</label>
                   <p className="text-sm">{referralData.address || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Medical Record #</label>
+                  <label className="text-xs font-semibold text-slate-500">Medical Record #</label>
                   <p className="text-sm">{referralData.medical_record_number || referralData.mrn || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Primary Diagnosis</label>
+                  <label className="text-xs font-semibold text-slate-500">Primary Diagnosis</label>
                   <p className="text-sm">{referral.extracted_data?.diagnoses?.primary_diagnosis || 'N/A'}</p>
                 </div>
                 {referralData.referring_physician && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Referring Physician</label>
+                    <label className="text-xs font-semibold text-slate-500">Referring Physician</label>
                     <p className="text-sm">{referralData.referring_physician}</p>
                   </div>
                 )}
@@ -286,7 +286,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Full Name</label>
+                  <label className="text-xs font-semibold text-slate-500">Full Name</label>
                   <p className={`text-sm font-medium ${
                     referralData.full_name?.toLowerCase() === `${selectedPatient.first_name} ${selectedPatient.last_name}`.toLowerCase()
                       ? 'text-green-600' : 'text-orange-600'
@@ -295,7 +295,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Date of Birth</label>
+                  <label className="text-xs font-semibold text-slate-500">Date of Birth</label>
                   <p className={`text-sm ${
                     referralData.date_of_birth === selectedPatient.date_of_birth
                       ? 'text-green-600' : 'text-orange-600'
@@ -304,7 +304,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Phone</label>
+                  <label className="text-xs font-semibold text-slate-500">Phone</label>
                   <p className={`text-sm ${
                     referralData.phone === selectedPatient.phone
                       ? 'text-green-600' : selectedPatient.phone ? 'text-orange-600' : ''
@@ -313,7 +313,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Address</label>
+                  <label className="text-xs font-semibold text-slate-500">Address</label>
                   <p className={`text-sm ${
                     referralData.address === selectedPatient.address
                       ? 'text-green-600' : selectedPatient.address ? 'text-orange-600' : ''
@@ -322,16 +322,16 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Medical Record #</label>
+                  <label className="text-xs font-semibold text-slate-500">Medical Record #</label>
                   <p className="text-sm">{selectedPatient.medical_record_number || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Primary Diagnosis</label>
+                  <label className="text-xs font-semibold text-slate-500">Primary Diagnosis</label>
                   <p className="text-sm">{selectedPatient.primary_diagnosis || 'N/A'}</p>
                 </div>
                 {selectedPatient.physician_name && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Physician</label>
+                    <label className="text-xs font-semibold text-slate-500">Physician</label>
                     <p className="text-sm">{selectedPatient.physician_name}</p>
                   </div>
                 )}
@@ -344,8 +344,8 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Overall Match Confidence</p>
-                  <p className="text-xs text-gray-600">Based on {referral.match_factors?.length || 0} matching factors</p>
+                  <p className="text-sm font-semibold text-slate-900">Overall Match Confidence</p>
+                  <p className="text-xs text-slate-600">Based on {referral.match_factors?.length || 0} matching factors</p>
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-green-700">{Math.round(referral.match_confidence || 0)}%</p>

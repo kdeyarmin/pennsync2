@@ -11,13 +11,13 @@ export default function SmartNoteHeader({ careScope, onReset, step, activeTab })
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-indigo-600" /> Smart Note Assistant
         </h1>
-        <p className="text-sm text-gray-500 mt-1">{getDescription()}</p>
+        <p className="text-sm text-slate-500 mt-1">{getDescription()}</p>
       </div>
       {activeTab === "builder" && step > 1 && (
-        <Button variant="outline" size="sm" onClick={onReset} className="gap-1.5 text-gray-600">
+        <Button variant="outline" size="sm" onClick={onReset} className="gap-1.5 text-slate-600">
           <RotateCcw className="w-4 h-4" /> New Note
         </Button>
       )}

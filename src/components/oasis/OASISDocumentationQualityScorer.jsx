@@ -221,7 +221,7 @@ Return JSON:
       'D': 'bg-orange-500',
       'F': 'bg-red-500'
     };
-    return colors[grade] || 'bg-gray-500';
+    return colors[grade] || 'bg-slate-500';
   };
 
   const getScoreColor = (score) => {
@@ -308,7 +308,7 @@ Return JSON:
                       <span className={`text-sm font-medium ${colors.text}`}>{criteria.name}</span>
                       <Badge variant="outline" className="text-xs ml-auto">{criteria.weight * 100}%</Badge>
                     </div>
-                    <p className="text-xs text-gray-600">{criteria.description}</p>
+                    <p className="text-xs text-slate-600">{criteria.description}</p>
                   </div>
                 );
               })}
@@ -332,25 +332,25 @@ Return JSON:
             <div className={`p-4 rounded-lg border-2 ${getScoreBg(qualityScore.overall_quality_score)}`}>
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-xs text-gray-600">Overall Documentation Quality</p>
+                  <p className="text-xs text-slate-600">Overall Documentation Quality</p>
                   <p className={`text-3xl font-bold ${getScoreColor(qualityScore.overall_quality_score)}`}>
                     {qualityScore.overall_quality_score}%
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">Audit Risk</p>
+                  <p className="text-xs text-slate-500">Audit Risk</p>
                   <Badge className={`${getRiskBadge(qualityScore.audit_risk_level)} text-sm`}>
                     {qualityScore.audit_risk_level?.toUpperCase()}
                   </Badge>
                 </div>
               </div>
               <Progress value={qualityScore.overall_quality_score} className="h-3" />
-              <p className="text-xs text-gray-600 mt-2">{qualityScore.audit_risk_explanation}</p>
+              <p className="text-xs text-slate-600 mt-2">{qualityScore.audit_risk_explanation}</p>
             </div>
 
             {/* Summary */}
-            <div className="bg-gray-50 p-3 rounded-lg border">
-              <p className="text-sm text-gray-800">{qualityScore.summary}</p>
+            <div className="bg-slate-50 p-3 rounded-lg border">
+              <p className="text-sm text-slate-800">{qualityScore.summary}</p>
             </div>
 
             {/* Criteria Breakdown */}
@@ -381,10 +381,10 @@ Return JSON:
                     <AccordionContent className="px-4 pb-4 pt-2">
                       {/* Subcriteria Scores */}
                       <div className="space-y-2 mb-4">
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Subcriteria Scores</p>
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Subcriteria Scores</p>
                         {criteria.subcriteria.map((sub, idx) => (
                           <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="text-gray-700">{sub}</span>
+                            <span className="text-slate-700">{sub}</span>
                             <div className="flex items-center gap-2">
                               <Progress 
                                 value={scoreData.subcriteria_scores?.[idx] || 0} 
@@ -404,7 +404,7 @@ Return JSON:
                           <p className="text-xs font-semibold text-green-700 mb-1 flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" /> Positive Findings
                           </p>
-                          <ul className="text-xs text-gray-700 space-y-1">
+                          <ul className="text-xs text-slate-700 space-y-1">
                             {scoreData.findings.map((f, i) => (
                               <li key={i} className="flex items-start gap-1">
                                 <span className="text-green-500">✓</span> {f}
@@ -420,7 +420,7 @@ Return JSON:
                           <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1">
                             <XCircle className="w-3 h-3" /> Gaps Identified
                           </p>
-                          <ul className="text-xs text-gray-700 space-y-1">
+                          <ul className="text-xs text-slate-700 space-y-1">
                             {scoreData.gaps.map((g, i) => (
                               <li key={i} className="flex items-start gap-1">
                                 <span className="text-red-500">✗</span> {g}
@@ -475,7 +475,7 @@ Return JSON:
                           {imp.severity}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-700 mb-2">{imp.current_state}</p>
+                      <p className="text-sm text-slate-700 mb-2">{imp.current_state}</p>
                       <div className="bg-green-50 p-2 rounded border border-green-200 mb-2">
                         <p className="text-xs font-medium text-green-800">Required Action:</p>
                         <p className="text-sm text-green-900">{imp.required_action}</p>
@@ -487,7 +487,7 @@ Return JSON:
                         </div>
                       )}
                       {imp.cms_reference && (
-                        <p className="text-xs text-gray-500">CMS Reference: {imp.cms_reference}</p>
+                        <p className="text-xs text-slate-500">CMS Reference: {imp.cms_reference}</p>
                       )}
                     </div>
                   ))}

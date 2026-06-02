@@ -219,7 +219,7 @@ Return detailed JSON with all findings.`;
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-400';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-400';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-400';
-      default: return 'bg-gray-100 text-gray-800 border-gray-400';
+      default: return 'bg-slate-100 text-slate-800 border-slate-400';
     }
   };
 
@@ -230,7 +230,7 @@ Return detailed JSON with all findings.`;
       case 'moderate': return 'bg-yellow-600 text-white';
       case 'low': return 'bg-green-600 text-white';
       case 'minimal': return 'bg-green-700 text-white';
-      default: return 'bg-gray-600 text-white';
+      default: return 'bg-slate-600 text-white';
     }
   };
 
@@ -266,14 +266,14 @@ Return detailed JSON with all findings.`;
           <div className="text-center py-12">
             <Loader2 className="w-16 h-16 animate-spin text-indigo-600 mx-auto mb-4" />
             <p className="text-indigo-700 font-medium mb-2">AI performing comprehensive OASIS review...</p>
-            <p className="text-sm text-gray-600">Analyzing compliance, quality measures, and documentation consistency</p>
+            <p className="text-sm text-slate-600">Analyzing compliance, quality measures, and documentation consistency</p>
           </div>
         )}
 
         {!isReviewing && !reviewResults && (
           <div className="text-center py-8">
             <FileSearch className="w-16 h-16 text-indigo-300 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">Click below to perform a comprehensive AI review</p>
+            <p className="text-slate-600 mb-4">Click below to perform a comprehensive AI review</p>
             <Button onClick={performComprehensiveReview} className="bg-indigo-600 hover:bg-indigo-700">
               <FileSearch className="w-4 h-4 mr-2" />
               Start Comprehensive Review
@@ -293,10 +293,10 @@ Return detailed JSON with all findings.`;
             }>
               <AlertDescription>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-semibold text-gray-900">Review Summary</p>
+                  <p className="font-semibold text-slate-900">Review Summary</p>
                   <Badge variant="outline">{reviewResults.total_findings} findings</Badge>
                 </div>
-                <p className="text-sm text-gray-800">{reviewResults.review_summary}</p>
+                <p className="text-sm text-slate-800">{reviewResults.review_summary}</p>
               </AlertDescription>
             </Alert>
 
@@ -316,7 +316,7 @@ Return detailed JSON with all findings.`;
                           <p className="font-semibold text-red-900">{item.action}</p>
                         </div>
                         <Badge className="text-xs mb-2">{item.urgency}</Badge>
-                        <p className="text-sm text-gray-700">{item.expected_outcome}</p>
+                        <p className="text-sm text-slate-700">{item.expected_outcome}</p>
                       </div>
                     ))}
                   </div>
@@ -370,7 +370,7 @@ Return detailed JSON with all findings.`;
                               </div>
                             </div>
 
-                            <p className="text-sm text-gray-800 mb-3">{risk.description}</p>
+                            <p className="text-sm text-slate-800 mb-3">{risk.description}</p>
 
                             {/* Plain Language Explanation */}
                             <div className="bg-blue-50 p-3 rounded-lg border border-blue-300 mb-3">
@@ -588,7 +588,7 @@ Return detailed JSON with all findings.`;
                             {/* Data Points Involved */}
                             {inconsistency.data_points_involved?.length > 0 && (
                               <div className="mb-3">
-                                <p className="text-xs text-gray-600 mb-1">Data Points Involved:</p>
+                                <p className="text-xs text-slate-600 mb-1">Data Points Involved:</p>
                                 <div className="flex flex-wrap gap-1">
                                   {inconsistency.data_points_involved.map((point, i) => (
                                     <Badge key={i} variant="outline" className="text-xs font-mono bg-white">
@@ -599,7 +599,7 @@ Return detailed JSON with all findings.`;
                               </div>
                             )}
 
-                            <p className="text-sm text-gray-800 mb-3">{inconsistency.description}</p>
+                            <p className="text-sm text-slate-800 mb-3">{inconsistency.description}</p>
 
                             {/* Plain Language Explanation */}
                             <div className="bg-blue-50 p-3 rounded-lg border border-blue-300 mb-3">

@@ -9,9 +9,9 @@ const Badge = React.forwardRef((props, ref) => {
   
   const variants = {
     default: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm",
-    secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 shadow-sm",
+    secondary: "bg-slate-200 text-slate-900 hover:bg-slate-300 shadow-sm",
     destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
-    outline: "text-gray-900 border border-gray-300 hover:bg-gray-50",
+    outline: "text-slate-900 border border-slate-300 hover:bg-slate-50",
   }
   
   return (

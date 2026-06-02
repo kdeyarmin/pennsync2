@@ -409,12 +409,12 @@ export default function Patients() {
 
       {/* Sort & Results Count */}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-500">
           {filteredPatients.length} {filteredPatients.length === 1 ? 'patient' : 'patients'}
           {filters.search && ` matching "${filters.search}"`}
         </p>
         <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+          <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue placeholder="Sort by..." />
@@ -460,9 +460,9 @@ export default function Patients() {
         ) : filteredPatients.length === 0 ? (
           <Card className="border-2 border-dashed">
             <CardContent className="p-8 text-center">
-              <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
-              <p className="text-gray-500 mb-6">
+              <User className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">No patients found</h3>
+              <p className="text-slate-500 mb-6">
                 {filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
               </p>
               {!filters.search && (
@@ -508,9 +508,9 @@ export default function Patients() {
         ) : filteredPatients.length === 0 ? (
           <Card className="md:col-span-2 border-2 border-dashed">
             <CardContent className="p-8 sm:p-12 text-center">
-              <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
-              <p className="text-gray-500 mb-6">
+              <User className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">No patients found</h3>
+              <p className="text-slate-500 mb-6">
                 {filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
               </p>
               {!filters.search && (

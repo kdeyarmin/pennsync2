@@ -128,20 +128,20 @@ export default function AdminUserSetup() {
 
           <div className="space-y-2 p-3 bg-white rounded-lg border border-green-200">
             <div>
-              <p className="text-sm text-gray-600">Name</p>
+              <p className="text-sm text-slate-600">Name</p>
               <p className="font-semibold">{createdUser.full_name}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Email</p>
+              <p className="text-sm text-slate-600">Email</p>
               <p className="font-semibold">{createdUser.email}</p>
             </div>
             <div>
-                <p className="text-sm text-gray-600">Role</p>
+                <p className="text-sm text-slate-600">Role</p>
                 <p className="font-semibold capitalize">{createdUser.role}</p>
               </div>
               {createdUser.staff_type && (
                 <div>
-                  <p className="text-sm text-gray-600">Staff Type</p>
+                  <p className="text-sm text-slate-600">Staff Type</p>
                   <p className="font-semibold uppercase">{createdUser.staff_type}</p>
                 </div>
               )}
@@ -227,7 +227,7 @@ export default function AdminUserSetup() {
                      <SelectItem value="office">Office Staff</SelectItem>
                    </SelectContent>
                  </Select>
-                 <p className="text-xs text-gray-500 mt-1">
+                 <p className="text-xs text-slate-500 mt-1">
                    Specify the staff member's role for proper permissions and training tracking.
                  </p>
                </div>
@@ -260,7 +260,7 @@ export default function AdminUserSetup() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -269,7 +269,7 @@ export default function AdminUserSetup() {
                   Generate
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 This temporary password will be included in the welcome email. User must change it on first login.
               </p>
             </div>

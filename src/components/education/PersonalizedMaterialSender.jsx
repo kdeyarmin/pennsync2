@@ -167,7 +167,7 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="pt-6">
                 <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap text-sm text-gray-800">
+                  <div className="whitespace-pre-wrap text-sm text-slate-800">
                     {personalizedContent}
                   </div>
                 </div>
@@ -176,8 +176,8 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
           )}
 
           {!selectedPatientId && showPreview && (
-            <Card className="bg-gray-50">
-              <CardContent className="py-8 text-center text-gray-500">
+            <Card className="bg-slate-50">
+              <CardContent className="py-8 text-center text-slate-500">
                 Select a patient to see personalized preview
               </CardContent>
             </Card>

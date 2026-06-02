@@ -346,7 +346,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
       case 'moderate': return 'bg-yellow-500';
       case 'high': return 'bg-orange-500';
       case 'critical': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -429,7 +429,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                         </Badge>
                       </div>
                       <Progress value={predictions.deterioration_prediction.risk_score} className="mb-2" />
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         Predicted timeframe: <strong>{predictions.deterioration_prediction.timeframe}</strong> • 
                         Confidence: <strong>{predictions.deterioration_prediction.confidence}%</strong>
                       </p>
@@ -484,7 +484,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                         </Badge>
                       </div>
                       <Progress value={predictions.readmission_prediction.risk_score} className="mb-2" />
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         Confidence: <strong>{predictions.readmission_prediction.confidence}%</strong>
                       </p>
                     </div>
@@ -492,15 +492,15 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-orange-50 p-3 rounded-lg">
-                      <p className="text-xs text-gray-600">7-Day Risk</p>
+                      <p className="text-xs text-slate-600">7-Day Risk</p>
                       <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction.timeframe_7day}%</p>
                     </div>
                     <div className="bg-orange-50 p-3 rounded-lg">
-                      <p className="text-xs text-gray-600">30-Day Risk</p>
+                      <p className="text-xs text-slate-600">30-Day Risk</p>
                       <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction.timeframe_30day}%</p>
                     </div>
                     <div className="bg-orange-50 p-3 rounded-lg">
-                      <p className="text-xs text-gray-600">90-Day Risk</p>
+                      <p className="text-xs text-slate-600">90-Day Risk</p>
                       <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction.timeframe_90day}%</p>
                     </div>
                   </div>
@@ -548,7 +548,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                                 Impact: {plan.expected_impact}
                               </Badge>
                             </div>
-                            <p className="font-semibold text-gray-900">{plan.intervention}</p>
+                            <p className="font-semibold text-slate-900">{plan.intervention}</p>
                           </div>
                           <Button
                             size="sm"
@@ -561,13 +561,13 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
 
                         <div className="space-y-2 text-sm">
                           <div>
-                            <p className="text-gray-600"><strong>Problem:</strong> {plan.problem}</p>
+                            <p className="text-slate-600"><strong>Problem:</strong> {plan.problem}</p>
                           </div>
                           <div>
-                            <p className="text-gray-600"><strong>Goal:</strong> {plan.goal}</p>
+                            <p className="text-slate-600"><strong>Goal:</strong> {plan.goal}</p>
                           </div>
                           <div>
-                            <p className="text-gray-600 mb-1"><strong>Interventions:</strong></p>
+                            <p className="text-slate-600 mb-1"><strong>Interventions:</strong></p>
                             <ul className="text-xs space-y-1 ml-4">
                               {plan.interventions?.map((int, idx) => (
                                 <li key={idx}>• {int}</li>
@@ -575,9 +575,9 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                             </ul>
                           </div>
                           <div className="bg-white p-2 rounded border border-green-200">
-                            <p className="text-xs text-gray-700"><strong>Rationale:</strong> {plan.rationale}</p>
+                            <p className="text-xs text-slate-700"><strong>Rationale:</strong> {plan.rationale}</p>
                           </div>
-                          <div className="flex gap-2 text-xs text-gray-600">
+                          <div className="flex gap-2 text-xs text-slate-600">
                             <Clock className="w-3 h-3" />
                             <span>{plan.timeframe}</span>
                           </div>
@@ -600,11 +600,11 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                   <CardContent className="space-y-3">
                     <div>
                       <p className="text-sm font-semibold mb-1">Vital Signs:</p>
-                      <p className="text-sm text-gray-700">{predictions.monitoring_protocol.vital_signs_frequency}</p>
+                      <p className="text-sm text-slate-700">{predictions.monitoring_protocol.vital_signs_frequency}</p>
                     </div>
                     <div>
                       <p className="text-sm font-semibold mb-1">Contact Schedule:</p>
-                      <p className="text-sm text-gray-700">{predictions.monitoring_protocol.contact_frequency}</p>
+                      <p className="text-sm text-slate-700">{predictions.monitoring_protocol.contact_frequency}</p>
                     </div>
                     {predictions.monitoring_protocol.red_flags?.length > 0 && (
                       <Alert className="bg-red-50 border-red-300">
@@ -632,16 +632,16 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
                       <div>
-                        <p className="text-gray-600">Visit Frequency:</p>
+                        <p className="text-slate-600">Visit Frequency:</p>
                         <p className="font-semibold">{predictions.resource_forecast.visit_frequency}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Est. Nursing Hours:</p>
+                        <p className="text-slate-600">Est. Nursing Hours:</p>
                         <p className="font-semibold">{predictions.resource_forecast.estimated_nursing_hours} hours</p>
                       </div>
                       {predictions.resource_forecast.additional_services?.length > 0 && (
                         <div>
-                          <p className="text-gray-600 mb-1">Additional Services:</p>
+                          <p className="text-slate-600 mb-1">Additional Services:</p>
                           <div className="flex flex-wrap gap-1">
                             {predictions.resource_forecast.additional_services.map((svc, i) => (
                               <Badge key={i} variant="outline" className="text-xs">{svc}</Badge>
@@ -660,15 +660,15 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">30-Day:</span>
+                        <span className="text-slate-600">30-Day:</span>
                         <Badge>{predictions.outcome_predictions.day_30_trajectory}</Badge>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">60-Day:</span>
+                        <span className="text-slate-600">60-Day:</span>
                         <Badge>{predictions.outcome_predictions.day_60_trajectory}</Badge>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">90-Day:</span>
+                        <span className="text-slate-600">90-Day:</span>
                         <Badge>{predictions.outcome_predictions.day_90_trajectory}</Badge>
                       </div>
                     </CardContent>

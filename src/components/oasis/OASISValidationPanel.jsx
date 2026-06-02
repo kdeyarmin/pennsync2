@@ -37,7 +37,7 @@ export default function OASISValidationPanel({ pdgmData, analysisResults }) {
       case 'high': return 'text-orange-700 bg-orange-100 border-orange-300';
       case 'medium': return 'text-yellow-700 bg-yellow-100 border-yellow-300';
       case 'low': return 'text-blue-700 bg-blue-100 border-blue-300';
-      default: return 'text-gray-700 bg-gray-100 border-gray-300';
+      default: return 'text-slate-700 bg-slate-100 border-slate-300';
     }
   };
 
@@ -98,8 +98,8 @@ export default function OASISValidationPanel({ pdgmData, analysisResults }) {
         {/* Validation Score Progress */}
         <div className="bg-white p-4 rounded-lg border">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Validation Score</span>
-            <span className="text-sm text-gray-600">{passedChecks} of {totalChecks} checks passed</span>
+            <span className="text-sm font-medium text-slate-700">Validation Score</span>
+            <span className="text-sm text-slate-600">{passedChecks} of {totalChecks} checks passed</span>
           </div>
           <Progress value={validationScore} className="h-3" />
         </div>

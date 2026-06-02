@@ -209,7 +209,7 @@ export default function PatientDetails() {
     return (
       <div className="p-8 max-w-6xl mx-auto">
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-12 text-center text-slate-500">
             Loading patient information...
           </CardContent>
         </Card>
@@ -222,8 +222,8 @@ export default function PatientDetails() {
       <div className="p-8 max-w-6xl mx-auto">
         <Card>
           <CardContent className="p-12 text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Patient not found</h2>
-            <p className="text-sm text-gray-600 mb-4">Patient ID: {patientId}</p>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">Patient not found</h2>
+            <p className="text-sm text-slate-600 mb-4">Patient ID: {patientId}</p>
             <Button onClick={() => navigate(createPageUrl("Patients"))}>
               Return to Patients
             </Button>
@@ -261,7 +261,7 @@ export default function PatientDetails() {
               <div className="flex flex-col gap-3">
                 <div className="min-w-0">
                   <div className="flex items-start gap-2">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 break-words flex-1">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 break-words flex-1">
                       {sanitizeInput(patient.first_name)} {sanitizeInput(patient.last_name)}
                     </h1>
                     <FavoriteButton 
@@ -270,7 +270,7 @@ export default function PatientDetails() {
                       name={`${patient.first_name} ${patient.last_name}`} 
                     />
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600">
                     <span>MRN: {sanitizeInput(patient.medical_record_number) || 'N/A'}</span>
                     <span className="hidden sm:inline">•</span>
                     <span className="block sm:inline w-full sm:w-auto">DOB: {patient.date_of_birth && isValid(new Date(patient.date_of_birth)) ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
@@ -293,12 +293,12 @@ export default function PatientDetails() {
                   {patient.secondary_diagnoses && patient.secondary_diagnoses.length > 0 && (
                     <>
                       {patient.secondary_diagnoses.slice(0, 2).map((dx, idx) => (
-                        <Badge key={idx} variant="outline" className="bg-gray-50 text-gray-700">
+                        <Badge key={idx} variant="outline" className="bg-slate-50 text-slate-700">
                           {sanitizeInput(dx)}
                         </Badge>
                       ))}
                       {patient.secondary_diagnoses.length > 2 && (
-                        <Badge variant="outline" className="bg-gray-50 text-gray-500">
+                        <Badge variant="outline" className="bg-slate-50 text-slate-500">
                           +{patient.secondary_diagnoses.length - 2} more
                         </Badge>
                       )}
@@ -348,7 +348,7 @@ export default function PatientDetails() {
                 <p key={idx} className="text-sm">• {alert.title}</p>
               ))}
               {activeAlerts.length > 3 && (
-                <p className="text-sm text-gray-600">+ {activeAlerts.length - 3} more alerts</p>
+                <p className="text-sm text-slate-600">+ {activeAlerts.length - 3} more alerts</p>
               )}
             </div>
           </AlertDescription>
@@ -387,7 +387,7 @@ export default function PatientDetails() {
          <TabsContent value="health-history" className="space-y-6 mt-4">
            <Card>
              <CardHeader>
-               <CardTitle className="text-gray-900">Health History</CardTitle>
+               <CardTitle className="text-slate-900">Health History</CardTitle>
              </CardHeader>
              <CardContent className="space-y-6">
                <HealthHistorySection patient={patient} />
@@ -450,23 +450,23 @@ export default function PatientDetails() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <p className="text-sm font-medium text-slate-500 flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
                     Address
                   </p>
-                  <p className="text-gray-900">{sanitizeInput(patient.address) || 'Not specified'}</p>
+                  <p className="text-slate-900">{sanitizeInput(patient.address) || 'Not specified'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <p className="text-sm font-medium text-slate-500 flex items-center gap-1">
                     <Phone className="w-3 h-3" />
                     Phone
                   </p>
-                  <p className="text-gray-900">{sanitizeInput(patient.phone) || 'Not specified'}</p>
+                  <p className="text-slate-900">{sanitizeInput(patient.phone) || 'Not specified'}</p>
                 </div>
                 {patient.email && (
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Email</p>
-                    <p className="text-gray-900">{sanitizeInput(patient.email)}</p>
+                    <p className="text-sm font-medium text-slate-500">Email</p>
+                    <p className="text-slate-900">{sanitizeInput(patient.email)}</p>
                   </div>
                 )}
               </CardContent>
@@ -483,24 +483,24 @@ export default function PatientDetails() {
                 {patient.emergency_contact_name ? (
                   <>
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Name</p>
-                      <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_name)}</p>
+                      <p className="text-sm font-medium text-slate-500">Name</p>
+                      <p className="text-slate-900">{sanitizeInput(patient.emergency_contact_name)}</p>
                     </div>
                     {patient.emergency_contact_relationship && (
                       <div>
-                        <p className="text-sm font-medium text-gray-500">Relationship</p>
-                        <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_relationship)}</p>
+                        <p className="text-sm font-medium text-slate-500">Relationship</p>
+                        <p className="text-slate-900">{sanitizeInput(patient.emergency_contact_relationship)}</p>
                       </div>
                     )}
                     {patient.emergency_contact_phone && (
                       <div>
-                        <p className="text-sm font-medium text-gray-500">Phone</p>
-                        <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_phone)}</p>
+                        <p className="text-sm font-medium text-slate-500">Phone</p>
+                        <p className="text-slate-900">{sanitizeInput(patient.emergency_contact_phone)}</p>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-gray-500">No emergency contact on file</p>
+                  <p className="text-sm text-slate-500">No emergency contact on file</p>
                 )}
               </CardContent>
             </Card>
@@ -515,18 +515,18 @@ export default function PatientDetails() {
               <CardContent className="space-y-4">
                 {patient.physician_name ? (
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Primary Physician</p>
-                    <p className="text-gray-900">{sanitizeInput(patient.physician_name)}</p>
+                    <p className="text-sm font-medium text-slate-500">Primary Physician</p>
+                    <p className="text-slate-900">{sanitizeInput(patient.physician_name)}</p>
                     {patient.physician_phone && (
-                      <p className="text-sm text-gray-600">{sanitizeInput(patient.physician_phone)}</p>
+                      <p className="text-sm text-slate-600">{sanitizeInput(patient.physician_phone)}</p>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No physician on file</p>
+                  <p className="text-sm text-slate-500">No physician on file</p>
                 )}
                 {patient.payor && (
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Payor</p>
+                    <p className="text-sm font-medium text-slate-500">Payor</p>
                     <Badge className="bg-purple-100 text-purple-800">{sanitizeInput(patient.payor)}</Badge>
                   </div>
                 )}
@@ -571,13 +571,13 @@ export default function PatientDetails() {
                             <CardContent className="p-4">
                               <div className="flex items-center gap-2 mb-2">
                                 <Pill className="w-4 h-4 text-blue-600" />
-                                <h4 className="font-semibold text-gray-900">{sanitizeInput(med.name)}</h4>
+                                <h4 className="font-semibold text-slate-900">{sanitizeInput(med.name)}</h4>
                               </div>
                               <div className="space-y-1 text-sm">
-                                <p className="text-gray-700">
+                                <p className="text-slate-700">
                                   <span className="font-medium">Dosage:</span> {sanitizeInput(med.dosage) || 'Not specified'}
                                 </p>
-                                <p className="text-gray-700">
+                                <p className="text-slate-700">
                                   <span className="font-medium">Frequency:</span> {sanitizeInput(med.frequency) || 'Not specified'}
                                 </p>
                               </div>
@@ -587,8 +587,8 @@ export default function PatientDetails() {
                       </div>
                     </ScrollArea>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Pill className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <div className="text-center py-8 text-slate-500">
+                      <Pill className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                       <p>No current medications documented</p>
                     </div>
                   )}
@@ -601,12 +601,12 @@ export default function PatientDetails() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div>
-                        <p className="text-sm font-medium text-gray-500">Primary</p>
-                        <p className="text-gray-900 font-semibold">{sanitizeInput(patient.primary_diagnosis) || 'Not specified'}</p>
+                        <p className="text-sm font-medium text-slate-500">Primary</p>
+                        <p className="text-slate-900 font-semibold">{sanitizeInput(patient.primary_diagnosis) || 'Not specified'}</p>
                       </div>
                       {patient.secondary_diagnoses && patient.secondary_diagnoses.length > 0 && (
                         <div>
-                          <p className="text-sm font-medium text-gray-500 mb-2">Secondary</p>
+                          <p className="text-sm font-medium text-slate-500 mb-2">Secondary</p>
                           <div className="flex flex-wrap gap-2">
                             {patient.secondary_diagnoses.map((diagnosis, index) => (
                               <Badge key={index} variant="outline">{sanitizeInput(diagnosis)}</Badge>
@@ -635,8 +635,8 @@ export default function PatientDetails() {
 
                 <TabsContent value="visits" className="space-y-4">
                   {visits.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <div className="text-center py-8 text-slate-500">
+                      <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                       <p>No visit notes available</p>
                     </div>
                   ) : (
@@ -647,7 +647,7 @@ export default function PatientDetails() {
                             <CardContent className="p-4">
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <p className="font-semibold text-gray-900">
+                                  <p className="font-semibold text-slate-900">
                                     {visit.visit_date && isValid(new Date(visit.visit_date)) ? format(new Date(visit.visit_date), 'MMM d, yyyy') : 'Invalid date'}
                                   </p>
                                   <Badge variant="outline" className="text-xs mt-1">
@@ -664,8 +664,8 @@ export default function PatientDetails() {
                                 </Button>
                               </div>
                               {visit.nurse_notes && (
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                  <p className="text-sm text-gray-900 whitespace-pre-wrap line-clamp-3">
+                                <div className="bg-slate-50 p-3 rounded-lg">
+                                  <p className="text-sm text-slate-900 whitespace-pre-wrap line-clamp-3">
                                     {sanitizeInput(visit.nurse_notes)}
                                   </p>
                                 </div>
@@ -831,7 +831,7 @@ export default function PatientDetails() {
                       }`}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-2">
-                            <p className="font-semibold text-gray-900">{sanitizeInput(plan.problem)}</p>
+                            <p className="font-semibold text-slate-900">{sanitizeInput(plan.problem)}</p>
                             <Badge className={
                               plan.status === 'met' ? 'bg-green-500' :
                               plan.status === 'not_met' ? 'bg-red-500' :
@@ -841,9 +841,9 @@ export default function PatientDetails() {
                               {(plan.status || '').replace('_', ' ')}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600">{sanitizeInput(plan.goal)}</p>
+                          <p className="text-sm text-slate-600">{sanitizeInput(plan.goal)}</p>
                           {plan.target_date && (
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-slate-500 mt-2">
                               Target: {format(new Date(plan.target_date), 'MMM d, yyyy')}
                             </p>
                           )}

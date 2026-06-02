@@ -142,7 +142,7 @@ export default function PDFSignatureCapture({
         <CardContent className="space-y-4">
           <div className="space-y-2">
             {signatureFields.map(field => (
-              <p key={field.name} className="text-sm text-gray-600">
+              <p key={field.name} className="text-sm text-slate-600">
                 <strong>{field.label}:</strong> {signatures[field.name]?.signerName}
               </p>
             ))}
@@ -182,7 +182,7 @@ export default function PDFSignatureCapture({
             <div
               key={field.name}
               className={`h-2 flex-1 rounded-full ${
-                signatures[field.name] ? 'bg-green-500' : idx === currentSignatureIndex ? 'bg-blue-500' : 'bg-gray-200'
+                signatures[field.name] ? 'bg-green-500' : idx === currentSignatureIndex ? 'bg-blue-500' : 'bg-slate-200'
               }`}
             />
           ))}
@@ -203,7 +203,7 @@ export default function PDFSignatureCapture({
           {/* Form Fields Tab */}
           {formFields.length > 0 && (
             <TabsContent value="-1" className="space-y-4">
-              <div className="border rounded-lg overflow-hidden bg-gray-50 mb-4">
+              <div className="border rounded-lg overflow-hidden bg-slate-50 mb-4">
                 <iframe src={pdfUrl} className="w-full h-96" title="Document Preview" />
               </div>
               
@@ -238,7 +238,7 @@ export default function PDFSignatureCapture({
           {/* Signature Tabs */}
           {signatureFields.map((field, idx) => (
             <TabsContent key={field.name} value={idx.toString()} className="space-y-4">
-              <div className="border rounded-lg overflow-hidden bg-gray-50">
+              <div className="border rounded-lg overflow-hidden bg-slate-50">
                 <iframe src={pdfUrl} className="w-full h-64" title="Document Preview" />
               </div>
 
@@ -258,7 +258,7 @@ export default function PDFSignatureCapture({
 
               <div>
                 <Label>{field.label}</Label>
-                <div className="border-2 border-gray-300 rounded-lg bg-white touch-none">
+                <div className="border-2 border-slate-300 rounded-lg bg-white touch-none">
                   <SignatureCanvas
                     ref={(ref) => { sigCanvasRefs.current[field.name] = ref; }}
                     canvasProps={{
@@ -268,7 +268,7 @@ export default function PDFSignatureCapture({
                     backgroundColor="white"
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Sign above using your finger or stylus
                 </p>
               </div>
@@ -323,7 +323,7 @@ export default function PDFSignatureCapture({
           </Button>
         )}
 
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-slate-500 text-center">
           By signing, you acknowledge that you have read and agree to the terms outlined in this document.
         </p>
       </CardContent>

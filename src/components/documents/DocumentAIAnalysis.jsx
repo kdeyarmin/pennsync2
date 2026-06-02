@@ -73,7 +73,7 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
             </AlertDescription>
           </Alert>
         )}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-slate-600">
           <Brain className="w-4 h-4 text-purple-600" />
           <span>AI analyzed • Confidence: {analysis.confidence_score}%</span>
         </div>
@@ -98,7 +98,7 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
         {/* Critical Flags */}
         {analysis.critical_flags?.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-semibold text-sm text-gray-900 flex items-center gap-2">
+            <h4 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-600" />
               Critical Findings
             </h4>
@@ -119,7 +119,7 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
                     </Badge>
                     <div className="flex-1">
                       <p className="font-semibold text-sm">{flag.finding}</p>
-                      <p className="text-sm text-gray-700 mt-1">{flag.details}</p>
+                      <p className="text-sm text-slate-700 mt-1">{flag.details}</p>
                     </div>
                   </div>
                 </AlertDescription>
@@ -130,11 +130,11 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
 
         {/* Summary */}
         <div>
-          <h4 className="font-semibold text-sm text-gray-900 mb-2 flex items-center gap-2">
+          <h4 className="font-semibold text-sm text-slate-900 mb-2 flex items-center gap-2">
             <FileText className="w-4 h-4 text-blue-600" />
             Summary
           </h4>
-          <p className="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg">{analysis.summary}</p>
+          <p className="text-sm text-slate-700 bg-blue-50 p-3 rounded-lg">{analysis.summary}</p>
         </div>
 
         {/* Extracted Data */}
@@ -150,11 +150,11 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
               {Object.entries(analysis.extracted_data).map(([key, value]) => {
                 if (!value || (Array.isArray(value) && value.length === 0)) return null;
                 return (
-                  <div key={key} className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                  <div key={key} className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
                       {key.replace(/_/g, ' ')}
                     </p>
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-slate-900">
                       {Array.isArray(value) ? (
                         <ul className="list-disc list-inside space-y-1">
                           {value.map((item, idx) => (
@@ -184,7 +184,7 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
           </div>
         )}
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-slate-500">
           Analyzed on {new Date(analysis.analyzed_date).toLocaleString()}
         </p>
       </CardContent>

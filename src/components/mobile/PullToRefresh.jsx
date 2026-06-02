@@ -62,14 +62,14 @@ export default function PullToRefresh({ onRefresh, children, threshold = 80, con
         <div className="flex justify-center items-center pt-2 px-4 select-none">
           <div className="flex flex-col items-center">
             <RefreshCw
-              className={`w-5 h-5 text-gray-400 transition-transform ${
+              className={`w-5 h-5 text-slate-400 transition-transform ${
                 isRefreshing ? 'animate-spin' : ''
               }`}
               style={{
                 transform: `rotate(${Math.min(pullDistance / threshold, 1) * 180}deg)`,
               }}
             />
-            <span className="text-xs text-gray-500 mt-1">
+            <span className="text-xs text-slate-500 mt-1">
               {pullDistance >= threshold ? 'Release to refresh' : 'Pull to refresh'}
             </span>
           </div>

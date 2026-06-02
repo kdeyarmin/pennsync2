@@ -197,7 +197,7 @@ Return JSON:
       declining: 'bg-red-100 text-red-800 border-red-300',
       fluctuating: 'bg-yellow-100 text-yellow-800 border-yellow-300'
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-slate-100 text-slate-800';
   };
 
   const getStatusIcon = (status) => {
@@ -219,9 +219,9 @@ Return JSON:
 
   if (!patientId) {
     return (
-      <Card className="border-gray-200">
-        <CardContent className="p-4 text-center text-gray-500 text-sm">
-          <History className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+      <Card className="border-slate-200">
+        <CardContent className="p-4 text-center text-slate-500 text-sm">
+          <History className="w-8 h-8 mx-auto mb-2 text-slate-300" />
           Select a patient to see AI-powered history summary
         </CardContent>
       </Card>
@@ -263,13 +263,13 @@ Return JSON:
       {isExpanded && (
         <CardContent className="p-3 space-y-3 max-h-[500px] overflow-y-auto">
           {previousVisits.length === 0 ? (
-            <p className="text-xs text-gray-500 text-center py-4">
+            <p className="text-xs text-slate-500 text-center py-4">
               No previous visits found. Summary will be available after the first visit.
             </p>
           ) : isLoading ? (
             <div className="text-center py-6">
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-cyan-600 mb-2" />
-              <p className="text-xs text-gray-500">Analyzing patient history...</p>
+              <p className="text-xs text-slate-500">Analyzing patient history...</p>
             </div>
           ) : !summary ? (
             <div className="text-center py-4">
@@ -321,7 +321,7 @@ Return JSON:
               {/* Recommended Focus */}
               {summary.recommended_focus?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-green-600" />
                     Focus Areas Today
                   </p>
@@ -344,7 +344,7 @@ Return JSON:
               {/* Unresolved Concerns */}
               {summary.unresolved_concerns?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3 text-yellow-600" />
                     Unresolved From Previous Visits
                   </p>
@@ -367,17 +367,17 @@ Return JSON:
               {/* Vital Patterns */}
               {summary.vital_patterns?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-700">Vital Sign Patterns</p>
+                  <p className="text-xs font-semibold text-slate-700">Vital Sign Patterns</p>
                   <div className="grid grid-cols-2 gap-1">
                     {summary.vital_patterns.slice(0, 4).map((vp, idx) => (
-                      <div key={idx} className="bg-gray-50 p-1.5 rounded text-xs border">
+                      <div key={idx} className="bg-slate-50 p-1.5 rounded text-xs border">
                         <div className="flex items-center gap-1">
                           {vp.trend === 'up' ? <TrendingUp className="w-3 h-3 text-red-500" /> :
                            vp.trend === 'down' ? <TrendingDown className="w-3 h-3 text-blue-500" /> :
-                           <Minus className="w-3 h-3 text-gray-500" />}
+                           <Minus className="w-3 h-3 text-slate-500" />}
                           <span className="font-medium">{vp.vital}</span>
                         </div>
-                        <p className="text-gray-600 truncate">{vp.pattern}</p>
+                        <p className="text-slate-600 truncate">{vp.pattern}</p>
                       </div>
                     ))}
                   </div>
@@ -415,7 +415,7 @@ Return JSON:
                 </div>
               )}
 
-              <p className="text-xs text-gray-400 text-center">
+              <p className="text-xs text-slate-400 text-center">
                 Based on {summary.visit_count_analyzed || previousVisits.length} previous visits
               </p>
             </>

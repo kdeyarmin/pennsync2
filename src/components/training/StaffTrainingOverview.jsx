@@ -83,7 +83,7 @@ export default function StaffTrainingOverview() {
                 <Users className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Active Nurses</p>
+                <p className="text-sm text-slate-500">Active Nurses</p>
                 <p className="text-2xl font-bold">{nurses.length}</p>
               </div>
             </div>
@@ -97,7 +97,7 @@ export default function StaffTrainingOverview() {
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Completion Rate</p>
+                <p className="text-sm text-slate-500">Completion Rate</p>
                 <p className="text-2xl font-bold">{overallCompletionRate}%</p>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function StaffTrainingOverview() {
                 <Target className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Avg Score</p>
+                <p className="text-sm text-slate-500">Avg Score</p>
                 <p className="text-2xl font-bold">{avgScoreAll}%</p>
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function StaffTrainingOverview() {
                 <AlertTriangle className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">At Risk</p>
+                <p className="text-sm text-slate-500">At Risk</p>
                 <p className="text-2xl font-bold">{atRisk}</p>
               </div>
             </div>
@@ -159,8 +159,8 @@ export default function StaffTrainingOverview() {
                         {stat.nurse.full_name?.charAt(0) || 'U'}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{stat.nurse.full_name}</p>
-                        <p className="text-xs text-gray-500">{stat.nurse.email}</p>
+                        <p className="font-semibold text-slate-900">{stat.nurse.full_name}</p>
+                        <p className="text-xs text-slate-500">{stat.nurse.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -176,33 +176,33 @@ export default function StaffTrainingOverview() {
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                     <div className="text-center p-2 bg-white rounded border">
-                      <p className="text-xs text-gray-500">Completion</p>
-                      <p className="text-lg font-bold text-gray-900">{stat.completionRate}%</p>
+                      <p className="text-xs text-slate-500">Completion</p>
+                      <p className="text-lg font-bold text-slate-900">{stat.completionRate}%</p>
                     </div>
                     <div className="text-center p-2 bg-white rounded border">
-                      <p className="text-xs text-gray-500">Avg Score</p>
-                      <p className="text-lg font-bold text-gray-900">{stat.avgScore}%</p>
+                      <p className="text-xs text-slate-500">Avg Score</p>
+                      <p className="text-lg font-bold text-slate-900">{stat.avgScore}%</p>
                     </div>
                     <div className="text-center p-2 bg-white rounded border">
-                      <p className="text-xs text-gray-500">Completed</p>
-                      <p className="text-lg font-bold text-gray-900">{stat.completed}/{stat.assigned}</p>
+                      <p className="text-xs text-slate-500">Completed</p>
+                      <p className="text-lg font-bold text-slate-900">{stat.completed}/{stat.assigned}</p>
                     </div>
                     <div className="text-center p-2 bg-white rounded border">
-                      <p className="text-xs text-gray-500">In Progress</p>
-                      <p className="text-lg font-bold text-gray-900">{stat.inProgress}</p>
+                      <p className="text-xs text-slate-500">In Progress</p>
+                      <p className="text-lg font-bold text-slate-900">{stat.inProgress}</p>
                     </div>
                   </div>
 
                   <div className="mb-2">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-gray-600">Training Progress</span>
-                      <span className="text-xs text-gray-500">{stat.completed}/{stat.assigned}</span>
+                      <span className="text-xs text-slate-600">Training Progress</span>
+                      <span className="text-xs text-slate-500">{stat.completed}/{stat.assigned}</span>
                     </div>
                     <Progress value={stat.completionRate} className="h-2" />
                   </div>
 
                   {stat.lastActivity && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       Last activity: {new Date(stat.lastActivity).toLocaleDateString()}
                     </p>
                   )}

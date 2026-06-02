@@ -138,7 +138,7 @@ export default function DocumentManagementDashboard() {
       case 'in_progress':
         return <Clock className="w-4 h-4 text-yellow-600" />;
       case 'declined': return <XCircle className="w-4 h-4 text-red-600" />;
-      default: return <FileText className="w-4 h-4 text-gray-600" />;
+      default: return <FileText className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -148,9 +148,9 @@ export default function DocumentManagementDashboard() {
       pending: "bg-yellow-100 text-yellow-800",
       in_progress: "bg-blue-100 text-blue-800",
       declined: "bg-red-100 text-red-800",
-      expired: "bg-gray-100 text-gray-700"
+      expired: "bg-slate-100 text-slate-700"
     };
-    return <Badge className={styles[status] || "bg-gray-100 text-gray-700"}>{getSignatureStatusLabel(status)}</Badge>;
+    return <Badge className={styles[status] || "bg-slate-100 text-slate-700"}>{getSignatureStatusLabel(status)}</Badge>;
   };
 
   const handleSignDocument = (doc) => {
@@ -189,10 +189,10 @@ export default function DocumentManagementDashboard() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Total Documents</p>
+                <p className="text-xs sm:text-sm text-slate-600">Total Documents</p>
                 <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
               </div>
-              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
             </div>
           </CardContent>
         </Card>
@@ -201,7 +201,7 @@ export default function DocumentManagementDashboard() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Pending</p>
+                <p className="text-xs sm:text-sm text-slate-600">Pending</p>
                 <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
               </div>
               <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400" />
@@ -213,7 +213,7 @@ export default function DocumentManagementDashboard() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Signed</p>
+                <p className="text-xs sm:text-sm text-slate-600">Signed</p>
                 <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.signed}</p>
               </div>
               <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
@@ -225,7 +225,7 @@ export default function DocumentManagementDashboard() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Overdue</p>
+                <p className="text-xs sm:text-sm text-slate-600">Overdue</p>
                 <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.overdue}</p>
               </div>
               <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
@@ -237,7 +237,7 @@ export default function DocumentManagementDashboard() {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Packages</p>
+                <p className="text-xs sm:text-sm text-slate-600">Packages</p>
                 <p className="text-xl sm:text-2xl font-bold text-blue-600">{documentPackages.length}</p>
               </div>
               <Package className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
@@ -251,7 +251,7 @@ export default function DocumentManagementDashboard() {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search by patient or document..."
                 value={searchQuery}
@@ -296,13 +296,13 @@ export default function DocumentManagementDashboard() {
                 {group.documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-slate-50"
                   >
                     <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
                       {getStatusIcon(doc.normalizedStatus)}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900 break-words">{doc.normalizedName}</h4>
+                          <h4 className="font-medium text-slate-900 break-words">{doc.normalizedName}</h4>
                           {getStatusBadge(doc.normalizedStatus)}
                           {doc.isOverdue && (
                             <Badge className="bg-red-100 text-red-700">
@@ -311,7 +311,7 @@ export default function DocumentManagementDashboard() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600 break-words">
+                        <p className="text-xs sm:text-sm text-slate-600 break-words">
                           Type: {doc.document_type}
                           {doc.normalizedDueDate && ` • Due: ${new Date(doc.normalizedDueDate).toLocaleDateString()}`}
                           {doc.normalizedSignedAt && ` • Signed: ${new Date(doc.normalizedSignedAt).toLocaleDateString()}`}
@@ -362,8 +362,8 @@ export default function DocumentManagementDashboard() {
         {filteredGroups.length === 0 && (
           <Card>
             <CardContent className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-600">No documents found</p>
+              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-600">No documents found</p>
             </CardContent>
           </Card>
         )}

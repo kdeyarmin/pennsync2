@@ -93,14 +93,14 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
     <Card className="shadow-lg">
       <CardContent className="p-6 space-y-5">
         <div className="space-y-2">
-          <Label className="text-sm font-semibold text-gray-700">Select Document</Label>
+          <Label className="text-sm font-semibold text-slate-700">Select Document</Label>
           <Select value={selectedDocId} onValueChange={setSelectedDocId}>
             <SelectTrigger className="h-11">
               <SelectValue placeholder="Choose a PDF document" />
             </SelectTrigger>
             <SelectContent>
               {pdfDocuments.length === 0 ? (
-                <div className="p-4 text-sm text-gray-500 text-center">No PDF documents available</div>
+                <div className="p-4 text-sm text-slate-500 text-center">No PDF documents available</div>
               ) : (
                 pdfDocuments.map(doc => (
                   <SelectItem key={doc.id} value={doc.id}>{doc.title}</SelectItem>
@@ -150,7 +150,7 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
         })()}
 
         <div className="space-y-2">
-          <Label className="text-sm font-semibold text-gray-700">Recipient Fax Number</Label>
+          <Label className="text-sm font-semibold text-slate-700">Recipient Fax Number</Label>
           <Input
             type="tel"
             placeholder="+1234567890"

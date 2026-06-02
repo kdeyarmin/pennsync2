@@ -297,14 +297,14 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex flex-col">
       {/* Top Toolbar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3 flex-wrap shadow-md">
-        <div className="flex items-center gap-1 font-semibold text-gray-800 mr-2">
+      <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-3 flex-wrap shadow-md">
+        <div className="flex items-center gap-1 font-semibold text-slate-800 mr-2">
           <Pen className="w-4 h-4 text-indigo-600" />
           Annotate PDF
         </div>
 
         {/* Tool selector */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
           {toolButtons.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
@@ -313,7 +313,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
               className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium transition-all ${
                 tool === id
                   ? "bg-white shadow text-indigo-700 ring-1 ring-indigo-300"
-                  : "text-gray-600 hover:bg-white/60"
+                  : "text-slate-600 hover:bg-white/60"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -329,7 +329,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
               key={c}
               onClick={() => setColor(c)}
               className={`w-5 h-5 rounded-full border-2 transition-transform ${
-                color === c ? "scale-125 border-gray-700" : "border-transparent hover:scale-110"
+                color === c ? "scale-125 border-slate-700" : "border-transparent hover:scale-110"
               }`}
               style={{ backgroundColor: c }}
             />
@@ -339,14 +339,14 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
         {/* Stroke width */}
         {tool !== TOOLS.TEXT && tool !== TOOLS.DATE && (
           <div className="flex items-center gap-2 min-w-[100px]">
-            <span className="text-xs text-gray-500">Size</span>
+            <span className="text-xs text-slate-500">Size</span>
             <Slider
               min={1} max={10} step={1}
               value={[strokeWidth]}
               onValueChange={([v]) => setStrokeWidth(v)}
               className="w-20"
             />
-            <span className="text-xs text-gray-500 w-4">{strokeWidth}</span>
+            <span className="text-xs text-slate-500 w-4">{strokeWidth}</span>
           </div>
         )}
 
@@ -365,13 +365,13 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
           {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
           {isSaving ? "Saving..." : "Apply & Use"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0 text-gray-500">
+        <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0 text-slate-500">
           <X className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Canvas Area */}
-      <div className="flex-1 overflow-auto bg-gray-700 flex items-start justify-center p-6" ref={containerRef}>
+      <div className="flex-1 overflow-auto bg-slate-700 flex items-start justify-center p-6" ref={containerRef}>
         {isLoading && (
           <div className="flex items-center gap-2 text-white mt-20">
             <Loader2 className="w-6 h-6 animate-spin" />
@@ -420,7 +420,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
       </div>
 
       {/* Bottom Page Navigation */}
-      <div className="bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-center gap-4 shadow-md">
+      <div className="bg-white border-t border-slate-200 px-4 py-2 flex items-center justify-center gap-4 shadow-md">
         <Button variant="outline" size="sm" disabled={pageNum <= 1} onClick={() => setPageNum(p => p - 1)} className="h-8 w-8 p-0">
           <ChevronLeft className="w-4 h-4" />
         </Button>
@@ -441,7 +441,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setScale(s => Math.max(0.6, s - 0.2))}>
             <ZoomOut className="w-4 h-4" />
           </Button>
-          <span className="text-xs text-gray-500 w-10 text-center">{Math.round(scale * 100)}%</span>
+          <span className="text-xs text-slate-500 w-10 text-center">{Math.round(scale * 100)}%</span>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setScale(s => Math.min(2.5, s + 0.2))}>
             <ZoomIn className="w-4 h-4" />
           </Button>

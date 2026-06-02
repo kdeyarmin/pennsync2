@@ -44,7 +44,7 @@ export default function TelehealthChat({ messages = [], onSend, userName }) {
         <ScrollArea ref={scrollRef} className="flex-1 pr-4">
           <div className="space-y-3">
             {messages.length === 0 ? (
-              <div className="text-center py-8 text-gray-400 text-sm">
+              <div className="text-center py-8 text-slate-400 text-sm">
                 No messages yet. Say hello!
               </div>
             ) : (
@@ -57,7 +57,7 @@ export default function TelehealthChat({ messages = [], onSend, userName }) {
                     className={`max-w-[80%] rounded-lg px-3 py-2 ${
                       msg.isSelf
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
+                        : 'bg-slate-100 text-slate-900'
                     }`}
                   >
                     {!msg.isSelf && msg.sender && (

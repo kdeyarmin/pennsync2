@@ -203,7 +203,7 @@ Return JSON:
       moderate: "bg-yellow-100 text-yellow-800 border-yellow-300",
       high: "bg-red-100 text-red-800 border-red-300"
     };
-    return colors[level] || "bg-gray-100 text-gray-800";
+    return colors[level] || "bg-slate-100 text-slate-800";
   };
 
   return (
@@ -213,7 +213,7 @@ Return JSON:
           <Sparkles className="w-5 h-5 text-purple-600" />
           AI Care Plan Analyzer
         </CardTitle>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-sm text-slate-600 mt-2">
           Analyzes patient assessments to generate personalized interventions, visit schedules, and documentation templates
         </p>
       </CardHeader>
@@ -255,14 +255,14 @@ Return JSON:
             <TabsContent value="overview" className="space-y-4 mt-4">
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 mb-2">RISK ASSESSMENT</p>
+                  <p className="text-xs font-medium text-slate-500 mb-2">RISK ASSESSMENT</p>
                   <Badge className={getRiskColor(analysis.risk_assessment.overall_risk_level)}>
                     {analysis.risk_assessment.overall_risk_level.toUpperCase()}
                   </Badge>
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-gray-500 mb-2">KEY RISK FACTORS</p>
+                  <p className="text-xs font-medium text-slate-500 mb-2">KEY RISK FACTORS</p>
                   <div className="flex flex-wrap gap-2">
                     {analysis.risk_assessment.key_risk_factors.map((factor, idx) => (
                       <Badge key={idx} variant="outline" className="text-xs">
@@ -278,9 +278,9 @@ Return JSON:
                   </p>
                 </div>
 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <p className="text-sm text-gray-700 font-medium">Clinical Approach:</p>
-                  <p className="text-sm text-gray-600 mt-1">{analysis.clinical_summary}</p>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                  <p className="text-sm text-slate-700 font-medium">Clinical Approach:</p>
+                  <p className="text-sm text-slate-600 mt-1">{analysis.clinical_summary}</p>
                 </div>
               </div>
             </TabsContent>
@@ -288,12 +288,12 @@ Return JSON:
             {/* Interventions Tab */}
             <TabsContent value="interventions" className="space-y-3 mt-4">
               {analysis.personalized_interventions.map((intervention, idx) => (
-                <Card key={idx} className="border-gray-200">
+                <Card key={idx} className="border-slate-200">
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900">{intervention.name}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{intervention.description}</p>
+                        <h4 className="font-semibold text-slate-900">{intervention.name}</h4>
+                        <p className="text-sm text-slate-600 mt-1">{intervention.description}</p>
                       </div>
                       <input
                         type="checkbox"
@@ -305,17 +305,17 @@ Return JSON:
                         className="mt-1"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-2 rounded">
                       <div>
-                        <p className="font-medium text-gray-700">Frequency:</p>
+                        <p className="font-medium text-slate-700">Frequency:</p>
                         <p>{intervention.frequency}</p>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-700">Measurement:</p>
+                        <p className="font-medium text-slate-700">Measurement:</p>
                         <p>{intervention.measurement}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500 italic">
+                    <p className="text-xs text-slate-500 italic">
                       <strong>Why:</strong> {intervention.rationale}
                     </p>
                   </CardContent>
@@ -328,35 +328,35 @@ Return JSON:
               <div className="space-y-3 bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="font-semibold text-gray-900 flex items-center gap-1">
+                    <p className="font-semibold text-slate-900 flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       Initial Visit
                     </p>
-                    <p className="text-gray-600 text-xs mt-1">{analysis.visit_schedule.initial_visit}</p>
+                    <p className="text-slate-600 text-xs mt-1">{analysis.visit_schedule.initial_visit}</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 flex items-center gap-1">
+                    <p className="font-semibold text-slate-900 flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       Routine Frequency
                     </p>
-                    <p className="text-gray-600 text-xs mt-1">{analysis.visit_schedule.routine_frequency}</p>
+                    <p className="text-slate-600 text-xs mt-1">{analysis.visit_schedule.routine_frequency}</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">Assessment Frequency</p>
-                    <p className="text-gray-600 text-xs mt-1">{analysis.visit_schedule.assessment_frequency}</p>
+                    <p className="font-semibold text-slate-900">Assessment Frequency</p>
+                    <p className="text-slate-600 text-xs mt-1">{analysis.visit_schedule.assessment_frequency}</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">Skilled Nursing Hours</p>
-                    <p className="text-gray-600 text-xs mt-1">{analysis.visit_schedule.skilled_nursing_hours_per_visit}/visit</p>
+                    <p className="font-semibold text-slate-900">Skilled Nursing Hours</p>
+                    <p className="text-slate-600 text-xs mt-1">{analysis.visit_schedule.skilled_nursing_hours_per_visit}/visit</p>
                   </div>
                 </div>
                 <div className="border-t border-amber-300 pt-3">
-                  <p className="text-xs font-medium text-gray-600 mb-1">Phone Follow-up:</p>
-                  <p className="text-sm text-gray-700">{analysis.visit_schedule.phone_follow_up}</p>
+                  <p className="text-xs font-medium text-slate-600 mb-1">Phone Follow-up:</p>
+                  <p className="text-sm text-slate-700">{analysis.visit_schedule.phone_follow_up}</p>
                 </div>
                 <div className="border-t border-amber-300 pt-3 bg-white rounded p-2">
-                  <p className="text-xs font-medium text-gray-600 mb-1">Rationale:</p>
-                  <p className="text-sm text-gray-700">{analysis.visit_schedule.rationale}</p>
+                  <p className="text-xs font-medium text-slate-600 mb-1">Rationale:</p>
+                  <p className="text-sm text-slate-700">{analysis.visit_schedule.rationale}</p>
                 </div>
               </div>
             </TabsContent>
@@ -364,11 +364,11 @@ Return JSON:
             {/* Documentation Templates Tab */}
             <TabsContent value="templates" className="space-y-3 mt-4">
               {analysis.documentation_templates.map((template, idx) => (
-                <Card key={idx} className="border-gray-200">
+                <Card key={idx} className="border-slate-200">
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                           <FileText className="w-4 h-4 text-blue-600" />
                           {template.template_name}
                         </h4>
@@ -380,8 +380,8 @@ Return JSON:
                     </div>
                     <div className="text-xs space-y-2">
                       <div>
-                        <p className="font-medium text-gray-700">Key Sections:</p>
-                        <ul className="list-disc list-inside text-gray-600 ml-2 mt-1">
+                        <p className="font-medium text-slate-700">Key Sections:</p>
+                        <ul className="list-disc list-inside text-slate-600 ml-2 mt-1">
                           {template.key_sections.map((section, sIdx) => (
                             <li key={sIdx}>{section}</li>
                           ))}

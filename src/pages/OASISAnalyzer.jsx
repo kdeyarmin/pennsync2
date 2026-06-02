@@ -186,9 +186,9 @@ function OASISAnalyticsDashboard({ savedOASISUploads }) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Data Available</h3>
-          <p className="text-gray-600">Upload and analyze OASIS documents to see analytics and trends.</p>
+          <BarChart3 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">No Data Available</h3>
+          <p className="text-slate-600">Upload and analyze OASIS documents to see analytics and trends.</p>
         </CardContent>
       </Card>
     );
@@ -1731,7 +1731,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-blue-100 text-blue-800 border-blue-300"
     };
-    return colors[severity] || "bg-gray-100 text-gray-800";
+    return colors[severity] || "bg-slate-100 text-slate-800";
   };
 
   const [isDownloading, setIsDownloading] = useState(false);
@@ -1761,8 +1761,8 @@ Return scores (0-100) and top 3-5 issues in each category.`,
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto pb-12 sm:pb-20">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">OASIS Analyzer</h1>
-        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">OASIS Analyzer</h1>
+        <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 sm:mb-6">
@@ -1807,7 +1807,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardHeader>
             <CardContent>
               {savedOASISUploads.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
+                <p className="text-center text-slate-500 py-8">
                   No saved OASIS analyses yet. Upload and analyze a document, then save it to a patient.
                 </p>
               ) : (
@@ -1815,7 +1815,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                   {savedOASISUploads.map((oasis) => (
                     <div 
                       key={oasis.id} 
-                      className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="p-4 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
                       onClick={() => handleLoadSavedOASIS(oasis)}
                     >
                       <div className="flex items-center justify-between">
@@ -1823,10 +1823,10 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                           <FileText className="w-8 h-8 text-blue-500" />
                           <div>
                             <p className="font-medium">{oasis.patient_name || 'Unknown Patient'}</p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-slate-500">
                               {oasis.assessment_type} - {oasis.assessment_date || 'No date'}
                             </p>
-                            <p className="text-xs text-gray-400">{oasis.file_name}</p>
+                            <p className="text-xs text-slate-400">{oasis.file_name}</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -1840,7 +1840,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-slate-400 mt-1">
                             {new Date(oasis.created_date).toLocaleDateString()}
                           </p>
                         </div>
@@ -1941,7 +1941,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 </div>
 
                 {!useDataEntryAssistant && (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
                     <input
                       type="file"
                       accept=".pdf"
@@ -1949,11 +1949,11 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                       className="hidden"
                       id="oasis-upload"
                     />
-                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-sm text-gray-600 mb-2">
+                    <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-sm text-slate-600 mb-2">
                       {file ? file.name : "No file selected"}
                     </p>
-                    <p className="text-xs text-gray-400 mb-4">Upload your OASIS PDF for accuracy review</p>
+                    <p className="text-xs text-slate-400 mb-4">Upload your OASIS PDF for accuracy review</p>
                     <Button 
                       className="bg-blue-600 hover:bg-blue-700"
                       onClick={() => document.getElementById('oasis-upload').click()}
@@ -1997,7 +1997,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               {(isUploading || isAnalyzing) && (
                 <div className="mt-4">
                   <Progress value={uploadProgress} className="h-2" />
-                  <p className="text-xs text-gray-500 mt-2 text-center">
+                  <p className="text-xs text-slate-500 mt-2 text-center">
                     {isUploading ? "Uploading document..." : "AI is analyzing your OASIS document..."}
                   </p>
                 </div>
@@ -2208,8 +2208,8 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-blue-600" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Save OASIS Analysis</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-slate-700">Save OASIS Analysis</p>
+                    <p className="text-xs text-slate-500">
                       {selectedPatientId && patients.find(p => p.id === selectedPatientId)
                         ? `Link to ${patients.find(p => p.id === selectedPatientId)?.first_name} ${patients.find(p => p.id === selectedPatientId)?.last_name}`
                         : 'Save as standalone record'}
@@ -2271,7 +2271,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                   </Button>
                 </Link>
               </div>
-              <p className="text-xs text-gray-600 mt-3 text-center">Click any section above to view detailed analysis and AI-powered recommendations</p>
+              <p className="text-xs text-slate-600 mt-3 text-center">Click any section above to view detailed analysis and AI-powered recommendations</p>
             </CardContent>
           </Card>
 
@@ -2363,25 +2363,25 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                                  {mismatch.severity}
                                </Badge>
                              </div>
-                             <p className="text-sm font-medium text-gray-800 mb-1">{mismatch.m_item_question}</p>
+                             <p className="text-sm font-medium text-slate-800 mb-1">{mismatch.m_item_question}</p>
 
                              <div className="grid grid-cols-2 gap-2 my-2">
                                <div className="bg-white p-2 rounded border">
-                                 <p className="text-xs text-gray-500">Coded Response:</p>
+                                 <p className="text-xs text-slate-500">Coded Response:</p>
                                  <p className="text-sm font-medium text-red-700">{mismatch.coded_response}</p>
                                </div>
                                <div className="bg-white p-2 rounded border">
-                                 <p className="text-xs text-gray-500">Should Be:</p>
+                                 <p className="text-xs text-slate-500">Should Be:</p>
                                  <p className="text-sm font-medium text-green-700">{mismatch.correct_response_should_be}</p>
                                </div>
                              </div>
 
                              <div className="bg-white p-2 rounded border my-2">
-                               <p className="text-xs text-gray-500 mb-1">Narrative Quote:</p>
-                               <p className="text-sm text-gray-700 italic">"{mismatch.narrative_quote}"</p>
+                               <p className="text-xs text-slate-500 mb-1">Narrative Quote:</p>
+                               <p className="text-sm text-slate-700 italic">"{mismatch.narrative_quote}"</p>
                              </div>
 
-                             <p className="text-sm text-gray-800 mb-2">{mismatch.explanation}</p>
+                             <p className="text-sm text-slate-800 mb-2">{mismatch.explanation}</p>
 
                              {mismatch.revenue_impact && (
                                <div className="bg-green-50 p-2 rounded text-xs text-green-800 mb-1">
@@ -2476,25 +2476,25 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.overall_score)}`}>
-                  <p className="text-xs text-gray-600 mb-1">Overall Score</p>
+                  <p className="text-xs text-slate-600 mb-1">Overall Score</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.overall_score)}`}>
                     {analysisResults.overall_score}%
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.accuracy_score)}`}>
-                  <p className="text-xs text-gray-600 mb-1">Accuracy</p>
+                  <p className="text-xs text-slate-600 mb-1">Accuracy</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.accuracy_score)}`}>
                     {analysisResults.accuracy_score}%
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.compliance_score)}`}>
-                  <p className="text-xs text-gray-600 mb-1">Compliance</p>
+                  <p className="text-xs text-slate-600 mb-1">Compliance</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.compliance_score)}`}>
                     {analysisResults.compliance_score}%
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.revenue_optimization_score)}`}>
-                  <p className="text-xs text-gray-600 mb-1">Revenue Optimization</p>
+                  <p className="text-xs text-slate-600 mb-1">Revenue Optimization</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.revenue_optimization_score)}`}>
                     {analysisResults.revenue_optimization_score}%
                   </p>
@@ -2531,7 +2531,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </Badge>
                   </h3>
                   {analysisResults.validation_summary.recommendation && (
-                    <p className="text-sm text-gray-700 mb-2">{analysisResults.validation_summary.recommendation}</p>
+                    <p className="text-sm text-slate-700 mb-2">{analysisResults.validation_summary.recommendation}</p>
                   )}
                   {/* PDGM Readiness Summary */}
                   {analysisResults.validation_summary.pdgm_readiness && (
@@ -2571,9 +2571,9 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                             <Badge variant="outline" className="text-xs">
                               {issue.type?.replace('_', ' ')}
                             </Badge>
-                            {issue.item && <span className="font-mono text-xs bg-gray-100 px-1 rounded">{issue.item}</span>}
+                            {issue.item && <span className="font-mono text-xs bg-slate-100 px-1 rounded">{issue.item}</span>}
                           </div>
-                          <p className="text-gray-700">{issue.description}</p>
+                          <p className="text-slate-700">{issue.description}</p>
                           {issue.pdgm_impact && (
                             <p className="text-purple-700 text-xs mt-1">
                               <span className="font-medium">PDGM Impact:</span> {issue.pdgm_impact}
@@ -2835,9 +2835,9 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                          <Badge variant="outline" className="font-mono">{issue.item}</Badge>
                          <Badge className={getSeverityBadge(issue.severity)}>{issue.severity}</Badge>
                        </div>
-                       <p className="text-sm text-gray-800 mb-2">{issue.issue}</p>
+                       <p className="text-sm text-slate-800 mb-2">{issue.issue}</p>
                        <div className="bg-white p-2 rounded border">
-                         <p className="text-xs text-gray-500 mb-1">Recommendation:</p>
+                         <p className="text-xs text-slate-500 mb-1">Recommendation:</p>
                          <p className="text-sm text-green-700">{issue.recommendation}</p>
                        </div>
                        <InlineDocumentationAssistant 
@@ -2869,12 +2869,12 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                          <span className="font-semibold text-red-900">{concern.area}</span>
                          <Badge className={getSeverityBadge(concern.severity)}>{concern.severity}</Badge>
                        </div>
-                       <p className="text-sm text-gray-800 mb-2">{concern.issue}</p>
+                       <p className="text-sm text-slate-800 mb-2">{concern.issue}</p>
                        {concern.cms_reference && (
-                         <p className="text-xs text-gray-500 mb-2">CMS Reference: {concern.cms_reference}</p>
+                         <p className="text-xs text-slate-500 mb-2">CMS Reference: {concern.cms_reference}</p>
                        )}
                        <div className="bg-white p-2 rounded border">
-                         <p className="text-xs text-gray-500 mb-1">Recommendation:</p>
+                         <p className="text-xs text-slate-500 mb-1">Recommendation:</p>
                          <p className="text-sm text-green-700">{concern.recommendation}</p>
                        </div>
                        <InlineDocumentationAssistant 
@@ -2911,15 +2911,15 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                        </div>
                        <div className="space-y-2 text-sm">
                          <div>
-                           <p className="text-xs text-gray-500">Current Documentation:</p>
-                           <p className="text-gray-700">{tip.current_documentation}</p>
+                           <p className="text-xs text-slate-500">Current Documentation:</p>
+                           <p className="text-slate-700">{tip.current_documentation}</p>
                          </div>
                          <div>
-                           <p className="text-xs text-gray-500">Opportunity:</p>
+                           <p className="text-xs text-slate-500">Opportunity:</p>
                            <p className="text-green-700">{tip.opportunity}</p>
                          </div>
                          <div className="bg-white p-2 rounded border">
-                           <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                           <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
                              <Lightbulb className="w-3 h-3 text-yellow-500" />
                              Specific Action:
                            </p>
@@ -2955,9 +2955,9 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                           <span className="font-semibold text-orange-900">{risk.area}</span>
                           <Badge className={getSeverityBadge(risk.risk_level)}>{risk.risk_level} risk</Badge>
                         </div>
-                        <p className="text-sm text-gray-800 mb-2">{risk.explanation}</p>
+                        <p className="text-sm text-slate-800 mb-2">{risk.explanation}</p>
                         <div className="bg-white p-2 rounded border">
-                          <p className="text-xs text-gray-500 mb-1">Mitigation:</p>
+                          <p className="text-xs text-slate-500 mb-1">Mitigation:</p>
                           <p className="text-sm text-green-700">{risk.mitigation}</p>
                         </div>
                       </div>
@@ -3004,7 +3004,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                            <p className="text-sm text-blue-900 italic">"{imp.exact_text_to_add}"</p>
                          </div>
                        )}
-                       <p className="text-xs text-gray-600 mt-2 italic">{imp.rationale}</p>
+                       <p className="text-xs text-slate-600 mt-2 italic">{imp.rationale}</p>
                        <InlineDocumentationAssistant 
                          issue={imp} 
                          issueType="documentation_improvement"
@@ -3048,8 +3048,8 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                          </div>
                        </div>
                        <div className="bg-white p-2 rounded border mb-2">
-                         <p className="text-xs text-gray-500 mb-1">Clinical Evidence:</p>
-                         <p className="text-sm text-gray-800">{opp.clinical_evidence}</p>
+                         <p className="text-xs text-slate-500 mb-1">Clinical Evidence:</p>
+                         <p className="text-sm text-slate-800">{opp.clinical_evidence}</p>
                        </div>
                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
                          <p className="text-xs text-blue-600 mb-1 font-medium">✅ Action Required:</p>
@@ -3086,11 +3086,11 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                            <Badge className="bg-amber-600 text-white">{doc.potential_value}</Badge>
                          )}
                        </div>
-                       <p className="text-sm text-gray-700 mb-2">{doc.why_it_matters}</p>
+                       <p className="text-sm text-slate-700 mb-2">{doc.why_it_matters}</p>
                        {doc.suggested_text && (
                          <div className="bg-white p-2 rounded border border-amber-200">
                            <p className="text-xs text-amber-600 mb-1 font-medium">📝 Suggested Documentation:</p>
-                           <p className="text-sm text-gray-800 italic">"{doc.suggested_text}"</p>
+                           <p className="text-sm text-slate-800 italic">"{doc.suggested_text}"</p>
                          </div>
                        )}
                        <InlineDocumentationAssistant 
@@ -3131,7 +3131,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                         {win.how_to && (
                           <div className="bg-white p-2 rounded border">
                             <p className="text-xs text-purple-600 mb-1 font-medium">How to do it:</p>
-                            <p className="text-sm text-gray-800">{win.how_to}</p>
+                            <p className="text-sm text-slate-800">{win.how_to}</p>
                           </div>
                         )}
                       </div>

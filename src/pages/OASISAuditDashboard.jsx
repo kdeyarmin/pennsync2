@@ -112,9 +112,9 @@ export default function OASISAuditDashboard() {
       in_review: 'bg-blue-100 text-blue-800',
       reviewed: 'bg-green-100 text-green-800',
       corrected: 'bg-purple-100 text-purple-800',
-      dismissed: 'bg-gray-100 text-gray-800'
+      dismissed: 'bg-slate-100 text-slate-800'
     };
-    return styles[status] || 'bg-gray-100 text-gray-800';
+    return styles[status] || 'bg-slate-100 text-slate-800';
   };
 
   const getPriorityBadge = (priority) => {
@@ -124,7 +124,7 @@ export default function OASISAuditDashboard() {
       medium: 'bg-yellow-500 text-white',
       low: 'bg-blue-500 text-white'
     };
-    return styles[priority] || 'bg-gray-500 text-white';
+    return styles[priority] || 'bg-slate-500 text-white';
   };
 
   const getFlagIcon = (reason) => {
@@ -133,7 +133,7 @@ export default function OASISAuditDashboard() {
       case 'low_compliance': return <Shield className="w-4 h-4 text-orange-500" />;
       case 'high_audit_risk': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'revenue_opportunity': return <DollarSign className="w-4 h-4 text-green-500" />;
-      default: return <FileText className="w-4 h-4 text-gray-500" />;
+      default: return <FileText className="w-4 h-4 text-slate-500" />;
     }
   };
 
@@ -174,8 +174,8 @@ export default function OASISAuditDashboard() {
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">OASIS Audit Dashboard</h1>
-        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Review flagged OASIS documents and generate audit reports</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">OASIS Audit Dashboard</h1>
+        <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Review flagged OASIS documents and generate audit reports</p>
       </div>
 
       {/* Stats Cards */}
@@ -183,9 +183,9 @@ export default function OASISAuditDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-500" />
+              <FileText className="w-5 h-5 text-slate-500" />
               <div>
-                <p className="text-xs text-gray-500">Total Flagged</p>
+                <p className="text-xs text-slate-500">Total Flagged</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function OASISAuditDashboard() {
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-yellow-500" />
               <div>
-                <p className="text-xs text-gray-500">Pending Review</p>
+                <p className="text-xs text-slate-500">Pending Review</p>
                 <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
               </div>
             </div>
@@ -207,7 +207,7 @@ export default function OASISAuditDashboard() {
             <div className="flex items-center gap-2">
               <Eye className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-xs text-gray-500">In Review</p>
+                <p className="text-xs text-slate-500">In Review</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.inReview}</p>
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function OASISAuditDashboard() {
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               <div>
-                <p className="text-xs text-gray-500">Critical</p>
+                <p className="text-xs text-slate-500">Critical</p>
                 <p className="text-2xl font-bold text-red-600">{stats.critical}</p>
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function OASISAuditDashboard() {
             <div className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-green-500" />
               <div>
-                <p className="text-xs text-gray-500">Revenue Impact</p>
+                <p className="text-xs text-slate-500">Revenue Impact</p>
                 <p className="text-xl font-bold text-green-600">
                   ${stats.totalRevenue.toLocaleString()}
                 </p>
@@ -244,11 +244,11 @@ export default function OASISAuditDashboard() {
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <Filter className="w-4 h-4 text-slate-500 flex-shrink-0" />
               <span className="text-xs sm:text-sm font-medium">Filters:</span>
             </div>
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Search patient..."
                 value={searchQuery}
@@ -288,15 +288,15 @@ export default function OASISAuditDashboard() {
       {/* Audit List */}
       {isLoading ? (
         <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-          <p className="text-sm text-gray-500 mt-2">Loading audits...</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-slate-400" />
+          <p className="text-sm text-slate-500 mt-2">Loading audits...</p>
         </div>
       ) : filteredAudits.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-            <p className="text-lg font-medium text-gray-700">No flagged documents</p>
-            <p className="text-sm text-gray-500">All OASIS documents meet quality thresholds</p>
+            <p className="text-lg font-medium text-slate-700">No flagged documents</p>
+            <p className="text-sm text-slate-500">All OASIS documents meet quality thresholds</p>
           </CardContent>
         </Card>
       ) : (
@@ -321,10 +321,10 @@ export default function OASISAuditDashboard() {
                           {audit.status.replace('_', ' ')}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 capitalize">
+                      <p className="text-sm text-slate-600 capitalize">
                         {audit.flag_reason?.replace(/_/g, ' ')}
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                           <Target className="w-3 h-3" />
                           Accuracy: {audit.accuracy_score}%
@@ -346,7 +346,7 @@ export default function OASISAuditDashboard() {
                         +${audit.estimated_revenue_impact.toLocaleString()}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {audit.key_issues?.length || 0} issues
                     </p>
                   </div>
@@ -373,25 +373,25 @@ export default function OASISAuditDashboard() {
                 {/* Scores */}
                 <div className="grid grid-cols-4 gap-3">
                   <div className={`p-3 rounded-lg text-center ${selectedAudit.overall_score < 70 ? 'bg-red-50' : 'bg-green-50'}`}>
-                    <p className="text-xs text-gray-500">Overall</p>
+                    <p className="text-xs text-slate-500">Overall</p>
                     <p className={`text-2xl font-bold ${selectedAudit.overall_score < 70 ? 'text-red-600' : 'text-green-600'}`}>
                       {selectedAudit.overall_score}%
                     </p>
                   </div>
                   <div className={`p-3 rounded-lg text-center ${selectedAudit.accuracy_score < 75 ? 'bg-red-50' : 'bg-green-50'}`}>
-                    <p className="text-xs text-gray-500">Accuracy</p>
+                    <p className="text-xs text-slate-500">Accuracy</p>
                     <p className={`text-2xl font-bold ${selectedAudit.accuracy_score < 75 ? 'text-red-600' : 'text-green-600'}`}>
                       {selectedAudit.accuracy_score}%
                     </p>
                   </div>
                   <div className={`p-3 rounded-lg text-center ${selectedAudit.compliance_score < 80 ? 'bg-red-50' : 'bg-green-50'}`}>
-                    <p className="text-xs text-gray-500">Compliance</p>
+                    <p className="text-xs text-slate-500">Compliance</p>
                     <p className={`text-2xl font-bold ${selectedAudit.compliance_score < 80 ? 'text-red-600' : 'text-green-600'}`}>
                       {selectedAudit.compliance_score}%
                     </p>
                   </div>
                   <div className="p-3 rounded-lg text-center bg-green-50">
-                    <p className="text-xs text-gray-500">Revenue Impact</p>
+                    <p className="text-xs text-slate-500">Revenue Impact</p>
                     <p className="text-2xl font-bold text-green-600">
                       ${selectedAudit.estimated_revenue_impact?.toLocaleString() || 0}
                     </p>
@@ -404,7 +404,7 @@ export default function OASISAuditDashboard() {
                     <p className="text-sm font-semibold mb-2">Key Issues ({selectedAudit.key_issues.length})</p>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {selectedAudit.key_issues.map((issue, idx) => (
-                        <div key={idx} className="p-2 bg-gray-50 rounded border text-sm">
+                        <div key={idx} className="p-2 bg-slate-50 rounded border text-sm">
                           <div className="flex items-center gap-2 mb-1">
                             <Badge variant="outline" className="text-xs">{issue.category}</Badge>
                             {issue.item && <Badge className="text-xs bg-purple-100 text-purple-800">{issue.item}</Badge>}
@@ -414,7 +414,7 @@ export default function OASISAuditDashboard() {
                               'bg-blue-100 text-blue-800'
                             }`}>{issue.severity}</Badge>
                           </div>
-                          <p className="text-gray-700">{issue.issue}</p>
+                          <p className="text-slate-700">{issue.issue}</p>
                           {issue.recommendation && (
                             <p className="text-xs text-green-700 mt-1">💡 {issue.recommendation}</p>
                           )}
@@ -458,7 +458,7 @@ export default function OASISAuditDashboard() {
                 {/* Assignment */}
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 mb-1">Assign To</p>
+                    <p className="text-xs text-slate-500 mb-1">Assign To</p>
                     <Select 
                       value={selectedAudit.assigned_to || ''} 
                       onValueChange={(val) => {
@@ -481,7 +481,7 @@ export default function OASISAuditDashboard() {
                     </Select>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 mb-1">Status</p>
+                    <p className="text-xs text-slate-500 mb-1">Status</p>
                     <Select 
                       value={selectedAudit.status} 
                       onValueChange={(val) => {

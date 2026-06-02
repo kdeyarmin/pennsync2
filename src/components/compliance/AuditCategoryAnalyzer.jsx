@@ -77,7 +77,7 @@ export default function AuditCategoryAnalyzer({ audits = [] }) {
   if (audits.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-gray-500">
+        <CardContent className="p-6 text-center text-slate-500">
           No audit data available for analysis.
         </CardContent>
       </Card>
@@ -127,7 +127,7 @@ export default function AuditCategoryAnalyzer({ audits = [] }) {
               const percentage = Math.round((cat.count / totalIssues) * 100);
 
               return (
-                <div key={idx} className="p-2 bg-gray-50 rounded-lg">
+                <div key={idx} className="p-2 bg-slate-50 rounded-lg">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div 
@@ -136,13 +136,13 @@ export default function AuditCategoryAnalyzer({ audits = [] }) {
                       >
                         <Icon className="w-3 h-3" style={{ color: config.color }} />
                       </div>
-                      <span className="text-xs font-medium text-gray-900">{cat.name}</span>
+                      <span className="text-xs font-medium text-slate-900">{cat.name}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Badge variant="outline" className="text-[10px]">
                         {cat.count} issues
                       </Badge>
-                      <span className="text-[10px] text-gray-500">{percentage}%</span>
+                      <span className="text-[10px] text-slate-500">{percentage}%</span>
                     </div>
                   </div>
                   <Progress 
@@ -170,24 +170,24 @@ export default function AuditCategoryAnalyzer({ audits = [] }) {
         {/* Summary Stats */}
         <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t">
           <div className="text-center">
-            <p className="text-lg font-bold text-gray-900">{totalIssues}</p>
-            <p className="text-[10px] text-gray-500">Total Issues</p>
+            <p className="text-lg font-bold text-slate-900">{totalIssues}</p>
+            <p className="text-[10px] text-slate-500">Total Issues</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-red-600">
               {categoryData.reduce((sum, c) => sum + c.critical, 0)}
             </p>
-            <p className="text-[10px] text-gray-500">Critical</p>
+            <p className="text-[10px] text-slate-500">Critical</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-orange-600">
               {categoryData.reduce((sum, c) => sum + c.high, 0)}
             </p>
-            <p className="text-[10px] text-gray-500">High</p>
+            <p className="text-[10px] text-slate-500">High</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-blue-600">{categoryData.length}</p>
-            <p className="text-[10px] text-gray-500">Categories</p>
+            <p className="text-[10px] text-slate-500">Categories</p>
           </div>
         </div>
       </CardContent>

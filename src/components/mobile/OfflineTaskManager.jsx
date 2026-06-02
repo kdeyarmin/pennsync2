@@ -158,9 +158,9 @@ export default function OfflineTaskManager({ patientId, patientName }) {
         )}
 
         {/* Patient Info */}
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="p-3 bg-slate-50 rounded-lg">
           <p className="text-sm font-semibold">{patientName}</p>
-          <p className="text-xs text-gray-600">Patient ID: {patientId}</p>
+          <p className="text-xs text-slate-600">Patient ID: {patientId}</p>
         </div>
 
         {/* Task Type Selector */}
@@ -204,7 +204,7 @@ export default function OfflineTaskManager({ patientId, patientName }) {
                 id="visit_type"
                 value={formData.visit_type}
                 onChange={(e) => setFormData({ ...formData, visit_type: e.target.value })}
-                className="w-full h-10 px-3 rounded-md border border-gray-300"
+                className="w-full h-10 px-3 rounded-md border border-slate-300"
               >
                 <option value="routine_visit">Routine Visit</option>
                 <option value="skilled_nursing">Skilled Nursing</option>
@@ -337,7 +337,7 @@ export default function OfflineTaskManager({ patientId, patientName }) {
 
         {/* Pending Count */}
         <div className="pt-3 border-t">
-          <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center justify-between text-sm text-slate-600">
             <span>Pending items to sync:</span>
             <Badge variant="outline">{offlineStorage.getPendingCount()}</Badge>
           </div>

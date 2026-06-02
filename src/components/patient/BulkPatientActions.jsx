@@ -159,7 +159,7 @@ export default function BulkPatientActions({ selectedPatients, onClearSelection 
             <DialogTitle>Delete {selectedPatients.length} Patient(s)?</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Are you sure you want to delete {selectedPatients.length} patient(s)? This action cannot be undone and will remove all associated visits, care plans, and data.
             </p>
             <div className="bg-red-50 border border-red-200 rounded p-3 mt-3">

@@ -99,7 +99,7 @@ export default function PatientInfoSignatureFlow({
           <User className="w-5 h-5 text-blue-600" />
           Patient Information - {documentType}
         </CardTitle>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           Fill out patient information below. It will be automatically added to the document.
         </p>
       </CardHeader>
@@ -107,7 +107,7 @@ export default function PatientInfoSignatureFlow({
         <form onSubmit={(e) => { e.preventDefault(); handlePreparePdf(); }} className="space-y-6">
           {/* Patient Demographics */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
               <User className="w-4 h-4" />
               Patient Demographics
             </h3>
@@ -139,7 +139,7 @@ export default function PatientInfoSignatureFlow({
 
           {/* Address Information */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Address</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Address</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Label htmlFor="address">Street Address</Label>
@@ -189,7 +189,7 @@ export default function PatientInfoSignatureFlow({
 
           {/* Contact Information */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Contact</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Contact</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
@@ -218,7 +218,7 @@ export default function PatientInfoSignatureFlow({
 
           {/* Emergency Contact */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Emergency Contact</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Emergency Contact</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="emergency_contact_name">Name</Label>
@@ -246,7 +246,7 @@ export default function PatientInfoSignatureFlow({
 
           {/* Physician Information */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Physician</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Physician</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="physician_name">Physician Name</Label>
@@ -274,7 +274,7 @@ export default function PatientInfoSignatureFlow({
 
           {/* Insurance Information */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Insurance</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Insurance</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="insurance_provider">Insurance Provider</Label>
@@ -301,7 +301,7 @@ export default function PatientInfoSignatureFlow({
 
           {/* Admission Date */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Admission</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Admission</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="admission_date">Admission Date</Label>

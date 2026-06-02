@@ -75,8 +75,8 @@ export default function CustomPDFUploader({ onFileAdded, existingFiles = [] }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Custom PDFs</h3>
-        <p className="text-sm text-gray-600">Upload additional documents to include in the package</p>
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Custom PDFs</h3>
+        <p className="text-sm text-slate-600">Upload additional documents to include in the package</p>
       </div>
 
       {/* Upload Area */}
@@ -88,7 +88,7 @@ export default function CustomPDFUploader({ onFileAdded, existingFiles = [] }) {
         className={`relative rounded-lg border-2 border-dashed transition-all ${
           dragActive
             ? "border-indigo-500 bg-indigo-50"
-            : "border-gray-300 bg-gray-50"
+            : "border-slate-300 bg-slate-50"
         } p-6 sm:p-8`}
       >
         <input
@@ -105,11 +105,11 @@ export default function CustomPDFUploader({ onFileAdded, existingFiles = [] }) {
           htmlFor="pdf-upload"
           className="flex flex-col items-center justify-center cursor-pointer"
         >
-          <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 mb-2" />
-          <p className="text-sm sm:text-base font-medium text-gray-700 text-center">
+          <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-slate-400 mb-2" />
+          <p className="text-sm sm:text-base font-medium text-slate-700 text-center">
             Drag and drop PDFs here
           </p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">or click to browse</p>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">or click to browse</p>
         </label>
 
         <Button
@@ -130,15 +130,15 @@ export default function CustomPDFUploader({ onFileAdded, existingFiles = [] }) {
             {files.map((file) => (
               <div
                 key={file.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-2"
+                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg gap-2"
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <File className="w-4 h-4 text-red-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-slate-900 truncate">
                       {file.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -146,7 +146,7 @@ export default function CustomPDFUploader({ onFileAdded, existingFiles = [] }) {
                 </div>
                 <button
                   onClick={() => removeFile(file.id)}
-                  className="p-1 hover:bg-gray-200 rounded text-gray-600 flex-shrink-0"
+                  className="p-1 hover:bg-slate-200 rounded text-slate-600 flex-shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>

@@ -171,11 +171,11 @@ Example: {"name": "Lisinopril", "dosage": "10mg", "frequency": "once daily", "pr
   // Extraction result state
   if (isExtracting) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
         <div className="flex flex-col items-center gap-3 text-center">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          <p className="font-semibold text-gray-800">Extracting medication information…</p>
-          <p className="text-xs text-gray-500">Analyzing bottle label</p>
+          <p className="font-semibold text-slate-800">Extracting medication information…</p>
+          <p className="text-xs text-slate-500">Analyzing bottle label</p>
         </div>
       </div>
     );
@@ -183,18 +183,18 @@ Example: {"name": "Lisinopril", "dosage": "10mg", "frequency": "once daily", "pr
 
   if (extractedData && editedData) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="font-semibold text-slate-900 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-green-600" /> Medication Extracted
           </h3>
-          <button onClick={resetScanner} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-4 h-4 text-gray-400" />
+          <button onClick={resetScanner} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="w-4 h-4 text-slate-400" />
           </button>
         </div>
 
         {capturedImage && (
-          <div className="rounded-lg overflow-hidden border border-gray-200">
+          <div className="rounded-lg overflow-hidden border border-slate-200">
             <img src={capturedImage} alt="Captured medication bottle" className="w-full h-auto max-h-[200px] object-cover" />
           </div>
         )}
@@ -208,48 +208,48 @@ Example: {"name": "Lisinopril", "dosage": "10mg", "frequency": "once daily", "pr
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-semibold text-gray-700 mb-1 block">Medication Name *</label>
+            <label className="text-xs font-semibold text-slate-700 mb-1 block">Medication Name *</label>
             <Input
               value={editedData.name || ""}
               onChange={(e) => setEditedData({ ...editedData, name: e.target.value })}
-              className="h-9 text-sm bg-gray-50"
+              className="h-9 text-sm bg-slate-50"
               placeholder="e.g., Lisinopril"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs font-semibold text-gray-700 mb-1 block">Dosage</label>
+              <label className="text-xs font-semibold text-slate-700 mb-1 block">Dosage</label>
               <Input
                 value={editedData.dosage || ""}
                 onChange={(e) => setEditedData({ ...editedData, dosage: e.target.value })}
-                className="h-9 text-sm bg-gray-50"
+                className="h-9 text-sm bg-slate-50"
                 placeholder="e.g., 10mg"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-700 mb-1 block">Frequency</label>
+              <label className="text-xs font-semibold text-slate-700 mb-1 block">Frequency</label>
               <Input
                 value={editedData.frequency || ""}
                 onChange={(e) => setEditedData({ ...editedData, frequency: e.target.value })}
-                className="h-9 text-sm bg-gray-50"
+                className="h-9 text-sm bg-slate-50"
                 placeholder="e.g., twice daily"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-700 mb-1 block">Prescriber</label>
+            <label className="text-xs font-semibold text-slate-700 mb-1 block">Prescriber</label>
             <Input
               value={editedData.prescriber || ""}
               onChange={(e) => setEditedData({ ...editedData, prescriber: e.target.value })}
-              className="h-9 text-sm bg-gray-50"
+              className="h-9 text-sm bg-slate-50"
               placeholder="Optional"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-700 mb-1 block">Status</label>
+            <label className="text-xs font-semibold text-slate-700 mb-1 block">Status</label>
             <div className="flex gap-2">
               {["active", "held", "discontinued"].map((s) => (
                 <button
@@ -262,7 +262,7 @@ Example: {"name": "Lisinopril", "dosage": "10mg", "frequency": "once daily", "pr
                         : s === "held"
                         ? "bg-yellow-100 border-yellow-300 text-yellow-800"
                         : "bg-red-100 border-red-300 text-red-800"
-                      : "bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
                   }`}
                 >
                   {s.charAt(0).toUpperCase() + s.slice(1)}

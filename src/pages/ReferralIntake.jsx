@@ -44,6 +44,7 @@ import {
   Trash2,
   UserCheck
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -998,9 +999,9 @@ Actions available:
       case 'processing': return 'bg-yellow-500';
       case 'awaiting_info': return 'bg-orange-500';
       case 'ready_for_admission': return 'bg-green-500';
-      case 'archived': return 'bg-gray-500';
+      case 'archived': return 'bg-slate-500';
       case 'declined': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -1009,8 +1010,8 @@ Actions available:
       case 'urgent': return 'bg-red-600';
       case 'high': return 'bg-orange-600';
       case 'normal': return 'bg-blue-600';
-      case 'low': return 'bg-gray-600';
-      default: return 'bg-gray-600';
+      case 'low': return 'bg-slate-600';
+      default: return 'bg-slate-600';
     }
   };
 
@@ -1023,20 +1024,21 @@ Actions available:
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Referral Intake</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Streamlined workflow for processing incoming referrals</p>
-        </div>
-        <Button
-          onClick={() => setUploadDialogOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">New Referral</span>
-          <span className="sm:hidden">New</span>
-        </Button>
-      </div>
+      <PageHeader
+        icon={FileText}
+        title="Referral Intake"
+        description="Streamlined workflow for processing incoming referrals"
+        actions={
+          <Button
+            onClick={() => setUploadDialogOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">New Referral</span>
+            <span className="sm:hidden">New</span>
+          </Button>
+        }
+      />
 
       {/* Status Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -1112,11 +1114,11 @@ Actions available:
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="text-center py-12 text-gray-500">Loading referrals...</div>
+            <div className="text-center py-12 text-slate-500">Loading referrals...</div>
           ) : filteredReferrals.length === 0 ? (
             <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600">No referrals found</p>
+              <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-slate-600">No referrals found</p>
               <Button
                 onClick={() => setUploadDialogOpen(true)}
                 variant="outline"
@@ -1151,12 +1153,12 @@ Actions available:
                           <span>{referral.patient_name || 'Unknown'}</span>
                         )}
                         {referral.patient_dob && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             DOB: {referral.patient_dob ? format(new Date(referral.patient_dob), 'MM/dd/yyyy') : 'N/A'}
                           </p>
                         )}
                         {referral.extracted_data?.demographics?.referring_physician && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             Dr. {referral.extracted_data.demographics.referring_physician}
                           </p>
                         )}
@@ -1164,7 +1166,7 @@ Actions available:
                           <Badge className={
                             referral.match_confidence >= 90 ? "bg-green-600 text-xs mt-1" :
                             referral.match_confidence >= 75 ? "bg-blue-600 text-xs mt-1" :
-                            "bg-gray-600 text-xs mt-1"
+                            "bg-slate-600 text-xs mt-1"
                           }>
                             {referral.match_confidence >= 90 ? "✓ " : ""}
                             Matched ({Math.round(referral.match_confidence)}%)
@@ -1211,7 +1213,7 @@ Actions available:
                             {referral.status.replace(/_/g, ' ')}
                           </Badge>
                           {referral.analysis_results?.intake_analysis?.risk_assessment?.clinical_complexity && (
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-slate-600">
                               Complexity: {referral.analysis_results.intake_analysis.risk_assessment.clinical_complexity}
                             </div>
                           )}
@@ -1279,7 +1281,7 @@ Actions available:
                                </Link>
                              )}
                               {referral.analysis_results?.intake_analysis && (
-                                <div className="text-xs text-gray-600 space-y-0.5">
+                                <div className="text-xs text-slate-600 space-y-0.5">
                                   {referral.analysis_results.intake_analysis.missing_critical_info?.high_priority?.length > 0 && (
                                     <div className="flex items-center gap-1 text-red-600">
                                       <AlertCircle className="w-3 h-3" />
@@ -1326,7 +1328,7 @@ Actions available:
           )}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-slate-500">
                 Showing {(currentPage - 1) * REFERRALS_PER_PAGE + 1}-{Math.min(currentPage * REFERRALS_PER_PAGE, filteredReferrals.length)} of {filteredReferrals.length}
               </span>
               <div className="flex gap-1">
@@ -1343,7 +1345,7 @@ Actions available:
         <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-xl sm:text-2xl">Upload New Referral</DialogTitle>
-            <p className="text-sm text-gray-600">Upload a referral document (PDF, fax, or image). AI will automatically extract and populate patient information.</p>
+            <p className="text-sm text-slate-600">Upload a referral document (PDF, fax, or image). AI will automatically extract and populate patient information.</p>
           </DialogHeader>
           <div className="space-y-5">
 
@@ -1399,7 +1401,7 @@ Actions available:
                           </div>
                         ))}
                         {extractedFormData.suggested_initial_tasks.length > 3 && (
-                          <div className="text-xs text-gray-600">+ {extractedFormData.suggested_initial_tasks.length - 3} more tasks</div>
+                          <div className="text-xs text-slate-600">+ {extractedFormData.suggested_initial_tasks.length - 3} more tasks</div>
                         )}
                       </div>
                     </AlertDescription>
@@ -1416,11 +1418,11 @@ Actions available:
                         {extractedFormData.suggested_care_plans.slice(0, 2).map((plan, idx) => (
                           <div key={idx} className="bg-white p-2 rounded border border-indigo-200">
                             <div className="font-semibold">{plan.problem}</div>
-                            <div className="text-gray-700">Goal: {plan.goal}</div>
+                            <div className="text-slate-700">Goal: {plan.goal}</div>
                           </div>
                         ))}
                         {extractedFormData.suggested_care_plans.length > 2 && (
-                          <div className="text-xs text-gray-600">+ {extractedFormData.suggested_care_plans.length - 2} more care plans</div>
+                          <div className="text-xs text-slate-600">+ {extractedFormData.suggested_care_plans.length - 2} more care plans</div>
                         )}
                       </div>
                     </AlertDescription>
@@ -1429,8 +1431,8 @@ Actions available:
               </div>
             )}
 
-            <div className="space-y-4 border-t border-gray-200 pt-5">
-              <h3 className="font-semibold text-gray-900">Referral Information</h3>
+            <div className="space-y-4 border-t border-slate-200 pt-5">
+              <h3 className="font-semibold text-slate-900">Referral Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="patient-name" className="flex items-center gap-2 mb-1.5">
@@ -1522,9 +1524,9 @@ Actions available:
               </div>
             </div>
 
-            <div className="space-y-3 border-t border-gray-200 pt-5">
-              <Label htmlFor="file-upload" className="font-semibold text-gray-900">Upload Document</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer">
+            <div className="space-y-3 border-t border-slate-200 pt-5">
+              <Label htmlFor="file-upload" className="font-semibold text-slate-900">Upload Document</Label>
+              <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer">
                 <input
                   type="file"
                   id="file-upload"
@@ -1538,7 +1540,7 @@ Actions available:
                     <div className="space-y-2">
                       <Sparkles className="w-12 h-12 text-blue-500 mx-auto animate-pulse" />
                       <p className="text-blue-600 font-medium">Analyzing document with AI...</p>
-                      <p className="text-xs text-gray-500">Extracting patient information</p>
+                      <p className="text-xs text-slate-500">Extracting patient information</p>
                     </div>
                   ) : uploadedFile ? (
                     <div className="flex items-center justify-center gap-2 text-green-600">
@@ -1547,11 +1549,11 @@ Actions available:
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-                      <p className="text-gray-600">
+                      <Upload className="w-12 h-12 text-slate-400 mx-auto" />
+                      <p className="text-slate-600">
                         {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
                       </p>
-                      <p className="text-xs text-gray-500">PDF, PNG, JPG, or TIFF</p>
+                      <p className="text-xs text-slate-500">PDF, PNG, JPG, or TIFF</p>
                     </div>
                   )}
                 </label>
@@ -1559,7 +1561,7 @@ Actions available:
             </div>
           </div>
           
-          <DialogFooter className="flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">
+          <DialogFooter className="flex-col sm:flex-row gap-3 pt-5 border-t border-slate-200">
             <Button variant="outline" onClick={() => setUploadDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto order-2 sm:order-1">
               Cancel
             </Button>

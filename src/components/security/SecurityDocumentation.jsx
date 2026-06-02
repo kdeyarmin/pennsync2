@@ -229,7 +229,7 @@ export default function SecurityDocumentation() {
           <div>
             <h3 className="font-semibold text-lg mb-3">Data Retention & Backup</h3>
             <Alert>
-              <AlertDescription className="text-gray-700">
+              <AlertDescription className="text-slate-700">
                 <p className="mb-2">Penn Sync maintains secure backups and follows healthcare data retention requirements:</p>
                 <ul className="list-disc ml-5 space-y-1">
                   <li>Automated encrypted backups</li>

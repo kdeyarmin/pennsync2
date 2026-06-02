@@ -155,7 +155,7 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
       case 'critical': return 'bg-red-100 border-red-400 text-red-900';
       case 'high': return 'bg-orange-100 border-orange-400 text-orange-900';
       case 'medium': return 'bg-yellow-100 border-yellow-400 text-yellow-900';
-      default: return 'bg-gray-100 border-gray-400 text-gray-900';
+      default: return 'bg-slate-100 border-slate-400 text-slate-900';
     }
   };
 
@@ -173,8 +173,8 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
       <Card className="border-2 border-blue-200">
         <CardContent className="p-6 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-600 font-semibold">Analyzing against latest 2025 Medicare requirements...</p>
-          <p className="text-xs text-gray-500 mt-2">🌐 Using live internet data from CMS.gov</p>
+          <p className="text-sm text-slate-600 font-semibold">Analyzing against latest 2025 Medicare requirements...</p>
+          <p className="text-xs text-slate-500 mt-2">🌐 Using live internet data from CMS.gov</p>
         </CardContent>
       </Card>
     );
@@ -241,11 +241,11 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white p-3 rounded border">
               <p className="text-2xl font-bold text-red-600">{criticalViolations.length}</p>
-              <p className="text-xs text-gray-600">Critical Issues</p>
+              <p className="text-xs text-slate-600">Critical Issues</p>
             </div>
             <div className="bg-white p-3 rounded border">
               <p className="text-2xl font-bold text-orange-600">{highViolations.length}</p>
-              <p className="text-xs text-gray-600">High Priority</p>
+              <p className="text-xs text-slate-600">High Priority</p>
             </div>
           </div>
 
@@ -282,7 +282,7 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
                         {getStatusIcon(violation.status)}
                         <div>
                           <p className="font-semibold text-sm">{violation.rule_name}</p>
-                          <p className="text-xs text-gray-600">{violation.cop_reference}</p>
+                          <p className="text-xs text-slate-600">{violation.cop_reference}</p>
                         </div>
                       </div>
                       <Badge className={violation.status === 'fully_met' ? 'bg-green-600' : 'bg-red-600'}>
@@ -295,8 +295,8 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
                     {/* Evidence Found */}
                     {violation.evidence_found && (
                       <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-gray-700 mb-1">✓ Evidence Found:</p>
-                        <p className="text-xs text-gray-600 italic">"{violation.evidence_found}"</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">✓ Evidence Found:</p>
+                        <p className="text-xs text-slate-600 italic">"{violation.evidence_found}"</p>
                       </div>
                     )}
 
@@ -386,7 +386,7 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
           <CardContent>
             <ul className="space-y-2">
               {complianceResults.recommendations.map((rec, idx) => (
-                <li key={idx} className="text-xs text-gray-700 flex items-start gap-2">
+                <li key={idx} className="text-xs text-slate-700 flex items-start gap-2">
                   <span className="text-blue-600">•</span>
                   {rec}
                 </li>

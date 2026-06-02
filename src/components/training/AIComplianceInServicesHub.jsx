@@ -211,57 +211,57 @@ export default function AIComplianceInServicesHub() {
             <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-indigo-50"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Sparkles className="w-5 h-5 text-purple-600" />AI In-Service Generator</CardTitle></CardHeader>
             <CardContent className="space-y-4 p-4 sm:p-6">
               <div>
-                <label className="text-sm font-semibold mb-2 block text-gray-700">Topic *</label>
+                <label className="text-sm font-semibold mb-2 block text-slate-700">Topic *</label>
                 <Input placeholder="e.g., HIPAA Privacy Updates 2026" value={generator.topic} onChange={(e) => setGenerator({ ...generator, topic: e.target.value })} className="h-11" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Category</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Category</label>
                   <Select value={generator.training_category} onValueChange={(value) => setGenerator({ ...generator, training_category: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compliance">Compliance</SelectItem><SelectItem value="clinical">Clinical</SelectItem><SelectItem value="safety">Safety</SelectItem><SelectItem value="documentation">Documentation</SelectItem><SelectItem value="hospice">Hospice</SelectItem><SelectItem value="home_health">Home Health</SelectItem></SelectContent></Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Business Line</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Business Line</label>
                   <Select value={generator.business_line} onValueChange={(value) => setGenerator({ ...generator, business_line: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="home_health">Home Health</SelectItem><SelectItem value="hospice">Hospice</SelectItem></SelectContent></Select>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold mb-2 block text-gray-700">Purpose of Training</label>
+                <label className="text-sm font-semibold mb-2 block text-slate-700">Purpose of Training</label>
                 <Textarea placeholder="What is the goal of this training?" value={generator.purpose_of_training} onChange={(e) => setGenerator({ ...generator, purpose_of_training: e.target.value })} rows={3} />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Duration (min)</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Duration (min)</label>
                   <Input type="number" min="10" max="120" placeholder="30" value={generator.lesson_length} onChange={(e) => setGenerator({ ...generator, lesson_length: Number(e.target.value) })} className="h-11" />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Questions</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Questions</label>
                   <Input type="number" min="5" max="30" placeholder="10" value={generator.question_count} onChange={(e) => setGenerator({ ...generator, question_count: Number(e.target.value) })} className="h-11" />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Audience</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Audience</label>
                   <Input placeholder="RN, LPN, office" value={generator.audience_roles.join(', ')} onChange={(e) => setGenerator({ ...generator, audience_roles: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="h-11" />
                 </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Skill Level</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Skill Level</label>
                   <Select value={generator.skill_level} onValueChange={(value) => setGenerator({ ...generator, skill_level: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="beginner">Beginner — New to topic</SelectItem><SelectItem value="intermediate">Intermediate — Some familiarity</SelectItem><SelectItem value="advanced">Advanced — Experienced staff</SelectItem></SelectContent></Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Modules</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Modules</label>
                   <Select value={String(generator.num_modules)} onValueChange={(value) => setGenerator({ ...generator, num_modules: Number(value) })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="0">Auto (based on duration)</SelectItem><SelectItem value="1">1 Module</SelectItem><SelectItem value="2">2 Modules</SelectItem><SelectItem value="3">3 Modules</SelectItem><SelectItem value="4">4 Modules</SelectItem></SelectContent></Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Reading Level</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Reading Level</label>
                   <Select value={generator.reading_level} onValueChange={(value) => setGenerator({ ...generator, reading_level: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="plain professional">Plain Professional (8th-10th grade)</SelectItem><SelectItem value="simple">Simple (6th-8th grade)</SelectItem><SelectItem value="clinical professional">Clinical Professional</SelectItem></SelectContent></Select>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold mb-2 block text-gray-700">Custom Instructions (Optional)</label>
+                <label className="text-sm font-semibold mb-2 block text-slate-700">Custom Instructions (Optional)</label>
                 <Textarea placeholder="Any specific requirements or focus areas..." value={generator.custom_instructions} onChange={(e) => setGenerator({ ...generator, custom_instructions: e.target.value })} rows={3} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Question Types</label>
+                <label className="text-sm font-semibold text-slate-700">Question Types</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
                   {[
                     ['mcq', 'Multiple Choice'],
@@ -271,7 +271,7 @@ export default function AIComplianceInServicesHub() {
                     ['short_answer', 'Short Answer'],
                     ['matching', 'Matching'],
                   ].map(([type, label]) => (
-                    <label key={type} className="flex items-center gap-2 rounded-xl border p-2.5 hover:bg-gray-50 cursor-pointer">
+                    <label key={type} className="flex items-center gap-2 rounded-xl border p-2.5 hover:bg-slate-50 cursor-pointer">
                       <Checkbox
                         checked={generator.question_types.includes(type)}
                         onCheckedChange={(checked) => {
@@ -288,7 +288,7 @@ export default function AIComplianceInServicesHub() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Content Options</label>
+                <label className="text-sm font-semibold text-slate-700">Content Options</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                   {[
                     ['include_case_scenarios', 'Case scenarios with discussion questions'],
@@ -297,7 +297,7 @@ export default function AIComplianceInServicesHub() {
                     ['include_references', 'Source references & citations'],
                     ['include_acknowledgement', 'Attestation & acknowledgement'],
                   ].map(([key, label]) => (
-                    <label key={key} className="flex items-center gap-2 rounded-xl border p-3 hover:bg-gray-50 cursor-pointer min-h-[48px]">
+                    <label key={key} className="flex items-center gap-2 rounded-xl border p-3 hover:bg-slate-50 cursor-pointer min-h-[48px]">
                       <Checkbox checked={generator[key]} onCheckedChange={(checked) => setGenerator({ ...generator, [key]: !!checked })} className="w-5 h-5" />
                       <span className="font-medium">{label}</span>
                     </label>
@@ -381,24 +381,24 @@ export default function AIComplianceInServicesHub() {
             <CardHeader className="border-b bg-gradient-to-r from-indigo-50 to-blue-50"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><PlusCircle className="w-5 h-5 text-indigo-600" />Manual In-Service Draft</CardTitle></CardHeader>
             <CardContent className="space-y-4 p-4 sm:p-6">
               <div>
-                <label className="text-sm font-semibold mb-2 block text-gray-700">Title *</label>
+                <label className="text-sm font-semibold mb-2 block text-slate-700">Title *</label>
                 <Input placeholder="In-service title" value={manualDraft.title} onChange={(e) => setManualDraft({ ...manualDraft, title: e.target.value })} className="h-11" />
               </div>
               <div>
-                <label className="text-sm font-semibold mb-2 block text-gray-700">Description</label>
+                <label className="text-sm font-semibold mb-2 block text-slate-700">Description</label>
                 <Textarea placeholder="Brief description of the in-service" value={manualDraft.description} onChange={(e) => setManualDraft({ ...manualDraft, description: e.target.value })} rows={3} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Category</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Category</label>
                   <Select value={manualDraft.category} onValueChange={(value) => setManualDraft({ ...manualDraft, category: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compliance">Compliance</SelectItem><SelectItem value="clinical">Clinical</SelectItem><SelectItem value="safety">Safety</SelectItem><SelectItem value="documentation">Documentation</SelectItem></SelectContent></Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Business Line</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Business Line</label>
                   <Select value={manualDraft.business_line_scope} onValueChange={(value) => setManualDraft({ ...manualDraft, business_line_scope: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="home_health">Home Health</SelectItem><SelectItem value="hospice">Hospice</SelectItem></SelectContent></Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Passing %</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Passing %</label>
                   <Input type="number" placeholder="80" value={manualDraft.passing_score} onChange={(e) => setManualDraft({ ...manualDraft, passing_score: Number(e.target.value) })} className="h-11" />
                 </div>
               </div>
@@ -474,11 +474,11 @@ export default function AIComplianceInServicesHub() {
               <CardHeader className="border-b"><CardTitle className="text-base sm:text-lg">Course & Due Date</CardTitle></CardHeader>
               <CardContent className="space-y-4 p-4 sm:p-6">
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Select In-Service *</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Select In-Service *</label>
                   <Select value={selectedCourseId} onValueChange={setSelectedCourseId}><SelectTrigger className="h-11"><SelectValue placeholder="Select in-service" /></SelectTrigger><SelectContent>{inServices.filter(c => c.status === 'published').map((course) => <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>)}</SelectContent></Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Due Date *</label>
+                  <label className="text-sm font-semibold mb-2 block text-slate-700">Due Date *</label>
                   <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-11" />
                 </div>
               </CardContent>
@@ -508,7 +508,7 @@ export default function AIComplianceInServicesHub() {
             <CardHeader className="border-b"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><BarChart3 className="w-5 h-5 text-indigo-600" />Assignment Compliance Snapshot</CardTitle></CardHeader>
             <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6">
               {assignments.slice(0, 25).map((assignment) => (
-                <div key={assignment.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-xl border p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div key={assignment.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-xl border p-3 sm:p-4 bg-slate-50 hover:bg-slate-100 transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm sm:text-base text-slate-900 truncate">{assignment.course_title}</p>
                     <p className="text-xs sm:text-sm text-slate-500 truncate">{assignment.assigned_to_user_id} • Due {formatDate(assignment.due_date)}</p>

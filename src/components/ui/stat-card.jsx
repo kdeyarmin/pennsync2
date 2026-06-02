@@ -42,15 +42,15 @@ export default function StatCard({
   const config = variants[variant];
 
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
-  const trendColor = trend === "up" ? "text-green-600" : trend === "down" ? "text-red-600" : "text-gray-600";
+  const trendColor = trend === "up" ? "text-green-600" : trend === "down" ? "text-red-600" : "text-slate-600";
 
   return (
     <div className={cn("modern-card overflow-hidden", className)}>
       <div className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            <p className="text-sm font-medium text-slate-600 mb-1">{title}</p>
+            <p className="text-3xl font-bold text-slate-900">{value}</p>
             
             {(trend || description) && (
               <div className="mt-2 flex items-center gap-2">
@@ -61,7 +61,7 @@ export default function StatCard({
                   </div>
                 )}
                 {description && (
-                  <p className="text-sm text-gray-500">{description}</p>
+                  <p className="text-sm text-slate-500">{description}</p>
                 )}
               </div>
             )}

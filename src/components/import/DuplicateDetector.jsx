@@ -169,7 +169,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
       <Card>
         <CardContent className="p-8 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Checking for duplicate patients...</p>
+          <p className="text-sm text-slate-600">Checking for duplicate patients...</p>
         </CardContent>
       </Card>
     );
@@ -348,7 +348,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                   Loose
                 </Button>
               </div>
-              <div className="text-xs text-gray-600 space-y-1 bg-white p-3 rounded-lg border">
+              <div className="text-xs text-slate-600 space-y-1 bg-white p-3 rounded-lg border">
                <p><strong>MRN-Only Matching:</strong> Duplicates are detected ONLY by matching Medical Record Number (MRN)</p>
                <p><strong>Auto-Update:</strong> When MRN matches, the existing patient record will be updated with new information from the upload</p>
                <p>Sensitivity settings do not affect MRN matching - exact match required</p>
@@ -367,7 +367,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                 step={5}
                 className="mb-2"
               />
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-slate-600">
                 Matches scoring {customThreshold}% or higher will be flagged as potential duplicates
               </p>
             </div>
@@ -392,7 +392,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                   />
                   <div>
                     <span className="text-sm font-medium">Auto-Update (Recommended)</span>
-                    <p className="text-xs text-gray-600">Automatically update existing records when MRN matches</p>
+                    <p className="text-xs text-slate-600">Automatically update existing records when MRN matches</p>
                   </div>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -405,7 +405,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                   />
                   <div>
                     <span className="text-sm font-medium">Manual Review</span>
-                    <p className="text-xs text-gray-600">Review each MRN match manually before updating</p>
+                    <p className="text-xs text-slate-600">Review each MRN match manually before updating</p>
                   </div>
                 </label>
               </div>
@@ -469,10 +469,10 @@ export default function DuplicateDetector({ patients, onResolve }) {
                     <Card key={index} className="border-2 border-orange-200">
                       <CardContent className="p-4">
                         <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <h4 className="font-semibold text-gray-900 mb-2">
+                          <h4 className="font-semibold text-slate-900 mb-2">
                             Import Row {index + 1}: {patient.first_name} {patient.last_name}
                           </h4>
-                          <div className="text-sm text-gray-700 space-y-1">
+                          <div className="text-sm text-slate-700 space-y-1">
                             <div>DOB: {patient.date_of_birth || 'N/A'} | MRN: {patient.medical_record_number || 'N/A'}</div>
                             {patient.phone && <div>Phone: {patient.phone}</div>}
                             {patient.address && <div>Address: {patient.address}</div>}
@@ -486,17 +486,17 @@ export default function DuplicateDetector({ patients, onResolve }) {
                           </p>
                           
                           {duplicates.map((dup, dupIdx) => (
-                            <Card key={dupIdx} className="bg-gray-50">
+                            <Card key={dupIdx} className="bg-slate-50">
                               <CardContent className="p-3">
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                      <p className="font-medium text-gray-900">
+                                      <p className="font-medium text-slate-900">
                                         Existing: {dup.patient.first_name} {dup.patient.last_name}
                                       </p>
                                       <Badge variant="outline" className={
                                         dup.patient.status === 'active' ? 'bg-green-100 text-green-800 text-xs' :
-                                        dup.patient.status === 'discharged' ? 'bg-gray-100 text-gray-800 text-xs' :
+                                        dup.patient.status === 'discharged' ? 'bg-slate-100 text-slate-800 text-xs' :
                                         'bg-orange-100 text-orange-800 text-xs'
                                       }>
                                         {dup.patient.status || 'unknown'}
@@ -548,11 +548,11 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                     <div className="space-y-2 max-h-48 overflow-y-auto">
                                       {dup.differences.map((diff, diffIdx) => (
                                         <div key={diffIdx} className="text-xs p-2 bg-blue-50 rounded border border-blue-200">
-                                          <div className="font-semibold text-gray-800 mb-1 capitalize">
+                                          <div className="font-semibold text-slate-800 mb-1 capitalize">
                                             {diff.field.replace(/_/g, ' ')}
                                           </div>
                                           <div className="flex items-center gap-2">
-                                            <span className={`flex-1 ${diff.isNew ? 'text-gray-500 italic' : 'text-red-700'}`}>
+                                            <span className={`flex-1 ${diff.isNew ? 'text-slate-500 italic' : 'text-red-700'}`}>
                                               Current: {diff.existingValue}
                                             </span>
                                             <ArrowRight className="w-3 h-3 text-blue-600 flex-shrink-0" />

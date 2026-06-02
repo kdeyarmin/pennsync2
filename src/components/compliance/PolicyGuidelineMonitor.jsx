@@ -177,7 +177,7 @@ Return JSON:
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -217,7 +217,7 @@ Return JSON:
         <CardContent className="p-4 space-y-4">
           {/* Last Checked */}
           {lastChecked && (
-            <p className="text-xs text-gray-500 flex items-center gap-1">
+            <p className="text-xs text-slate-500 flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               Last checked: {format(lastChecked, 'MMM d, yyyy h:mm a')}
             </p>
@@ -226,7 +226,7 @@ Return JSON:
           {!updates ? (
             <div className="text-center py-4">
               <Bell className="w-12 h-12 mx-auto mb-3 text-indigo-300" />
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Stay updated on Medicare/CMS guideline changes
               </p>
               <Button
@@ -252,14 +252,14 @@ Return JSON:
               {/* Regulatory Updates */}
               {updates.regulatory_updates?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-700">Recent Regulatory Updates:</p>
+                  <p className="text-sm font-semibold text-slate-700">Recent Regulatory Updates:</p>
                   {updates.regulatory_updates.slice(0, 5).map((update) => (
                     <div 
                       key={update.id}
                       className={`p-3 rounded-lg border ${
                         update.priority === 'critical' ? 'bg-red-50 border-red-200' :
                         update.priority === 'high' ? 'bg-orange-50 border-orange-200' :
-                        'bg-white border-gray-200'
+                        'bg-white border-slate-200'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -267,14 +267,14 @@ Return JSON:
                           {getCategoryIcon(update.category)}
                           <div>
                             <p className="font-medium text-sm">{update.title}</p>
-                            <p className="text-xs text-gray-500">{update.source} • Effective: {update.effective_date}</p>
+                            <p className="text-xs text-slate-500">{update.source} • Effective: {update.effective_date}</p>
                           </div>
                         </div>
                         <Badge className={getPriorityColor(update.priority)}>
                           {update.priority}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-700 mt-2">{update.summary}</p>
+                      <p className="text-xs text-slate-700 mt-2">{update.summary}</p>
                       <p className="text-xs text-indigo-700 mt-1">
                         <strong>Action:</strong> {update.action_required}
                       </p>

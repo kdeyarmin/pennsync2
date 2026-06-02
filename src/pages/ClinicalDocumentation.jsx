@@ -50,22 +50,22 @@ export default function ClinicalDocumentation() {
               <CardContent className="p-8">
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-indigo-600" />
                       Smart Notes
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-slate-600">
                       Write rough bullet points or free-text notes. AI analyzes for Medicare compliance,
                       suggests additions, and generates a polished clinical narrative.
                     </p>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                       <Mic className="w-5 h-5 text-purple-600" />
                       Live Dictation
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-slate-600">
                       Dictate directly into a structured form with real-time transcription.
                       Perfect for clinicians who prefer speaking their documentation.
                     </p>

@@ -56,7 +56,7 @@ export default function PDGMReimbursementReport({ dateRange }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-900">PDGM Reimbursement Analysis</h3>
+        <h3 className="text-xl font-semibold text-slate-900">PDGM Reimbursement Analysis</h3>
         <Button onClick={handleExport} className="bg-emerald-600 hover:bg-emerald-700">
           <Download className="w-4 h-4 mr-2" />
           Export PDF
@@ -66,22 +66,22 @@ export default function PDGMReimbursementReport({ dateRange }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Total Episodes</p>
-            <p className="text-3xl font-bold text-gray-900">{filteredOASIS.length}</p>
+            <p className="text-sm text-slate-600 mb-1">Total Episodes</p>
+            <p className="text-3xl font-bold text-slate-900">{filteredOASIS.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="w-5 h-5 text-emerald-600" />
-              <p className="text-sm text-gray-600">Estimated Revenue</p>
+              <p className="text-sm text-slate-600">Estimated Revenue</p>
             </div>
             <p className="text-3xl font-bold text-emerald-600">${totalReimbursement.toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Avg per Episode</p>
+            <p className="text-sm text-slate-600 mb-1">Avg per Episode</p>
             <p className="text-3xl font-bold text-blue-600">${avgReimbursement}</p>
           </CardContent>
         </Card>

@@ -92,8 +92,8 @@ export default function NursePerformanceReport({ dateRange }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">Nurse Performance Analysis</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-xl font-semibold text-slate-900">Nurse Performance Analysis</h3>
+          <p className="text-sm text-slate-600">
             {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end), 'MMM d, yyyy')}
           </p>
         </div>
@@ -110,24 +110,24 @@ export default function NursePerformanceReport({ dateRange }) {
             <div className="flex items-center gap-3 mb-2">
               <Award className="w-8 h-8 text-orange-600" />
               <div>
-                <p className="text-sm text-gray-600">Top Performer</p>
-                <p className="text-lg font-bold text-gray-900">{topPerformer?.name || 'N/A'}</p>
-                <p className="text-xs text-gray-500">{topPerformer?.completedVisits} visits</p>
+                <p className="text-sm text-slate-600">Top Performer</p>
+                <p className="text-lg font-bold text-slate-900">{topPerformer?.name || 'N/A'}</p>
+                <p className="text-xs text-slate-500">{topPerformer?.completedVisits} visits</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Total Visits</p>
-            <p className="text-3xl font-bold text-gray-900">{totalVisits}</p>
+            <p className="text-sm text-slate-600 mb-1">Total Visits</p>
+            <p className="text-3xl font-bold text-slate-900">{totalVisits}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Total Time Saved</p>
-            <p className="text-3xl font-bold text-gray-900">{timeSavedDisplay}</p>
-            <p className="text-xs text-gray-500 mt-1">{totalVisits} visits × 20 min</p>
+            <p className="text-sm text-slate-600 mb-1">Total Time Saved</p>
+            <p className="text-3xl font-bold text-slate-900">{timeSavedDisplay}</p>
+            <p className="text-xs text-slate-500 mt-1">{totalVisits} visits × 20 min</p>
           </CardContent>
         </Card>
       </div>
@@ -158,27 +158,27 @@ export default function NursePerformanceReport({ dateRange }) {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rank</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nurse</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Visits</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Compliance</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Pass Rate</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Performance</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Rank</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Nurse</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Visits</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Compliance</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Pass Rate</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Performance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-slate-200">
                 {nurseMetrics.map((nurse, index) => (
-                  <tr key={nurse.email} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                  <tr key={nurse.email} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm font-semibold text-slate-900">
                       {index === 0 && <Award className="w-4 h-4 text-yellow-500 inline mr-1" />}
                       #{index + 1}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{nurse.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{nurse.completedVisits}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{nurse.avgComplianceScore}%</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{nurse.auditPassRate}%</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.name}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.completedVisits}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.avgComplianceScore}%</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.auditPassRate}%</td>
                     <td className="px-4 py-3 text-sm">
                       <Badge className={
                         parseFloat(nurse.avgComplianceScore) >= 90 ? 'bg-green-100 text-green-800' :

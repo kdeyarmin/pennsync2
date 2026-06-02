@@ -98,14 +98,14 @@ export default function SwipeablePatientCard({
               <User className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-bold text-gray-900 truncate">
+              <h3 className="text-lg font-bold text-slate-900 truncate">
                 {getPatientDisplayName(patient)}
               </h3>
               <div className="flex items-center gap-2 flex-wrap">
                 {age && <Badge variant="outline" className="text-xs">{age} yrs</Badge>}
                 {patient.status && (
                   <Badge className={`text-xs ${
-                    patient.status === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                    patient.status === 'active' ? 'bg-green-500' : 'bg-slate-500'
                   }`}>
                     {patient.status}
                   </Badge>
@@ -122,14 +122,14 @@ export default function SwipeablePatientCard({
           )}
 
           <div className="space-y-1 mb-3 text-sm">
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-slate-600">
               <Phone className="w-4 h-4 flex-shrink-0" />
               <a href={`tel:${patient.phone}`} className="hover:text-blue-600 truncate">
                 {patient.phone || 'No phone'}
               </a>
             </div>
             {patient.address && (
-              <div className="flex items-start gap-2 text-gray-600">
+              <div className="flex items-start gap-2 text-slate-600">
                 <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span className="text-xs truncate">{patient.address}</span>
               </div>

@@ -298,7 +298,7 @@ ${response}`,
                       : 'bg-purple-50 mr-8'
                   }`}
                 >
-                  <div className="font-semibold mb-1 text-xs text-gray-600">
+                  <div className="font-semibold mb-1 text-xs text-slate-600">
                     {msg.role === 'user' ? 'You' : 'AI Assistant'}
                   </div>
                   <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -317,7 +317,7 @@ ${response}`,
                       <p><strong>Category:</strong> {generatedTemplate.category}</p>
                       <p><strong>Type:</strong> {generatedTemplate.template_type}</p>
                       {generatedTemplate.expanded_text && (
-                        <p className="mt-2 text-xs text-gray-600">{generatedTemplate.expanded_text}</p>
+                        <p className="mt-2 text-xs text-slate-600">{generatedTemplate.expanded_text}</p>
                       )}
                     </div>
                     <Button
@@ -358,7 +358,7 @@ ${response}`,
             )}
 
             {isProcessing && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 AI is thinking...
               </div>

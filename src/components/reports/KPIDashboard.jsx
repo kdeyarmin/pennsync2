@@ -166,8 +166,8 @@ export default function KPIDashboard({ dateRange }) {
                   {kpi.trend}%
                 </Badge>
               </div>
-              <p className="text-3xl font-bold text-gray-900 mb-1">{kpi.value}</p>
-              <p className="text-sm text-gray-600">{kpi.title}</p>
+              <p className="text-3xl font-bold text-slate-900 mb-1">{kpi.value}</p>
+              <p className="text-sm text-slate-600">{kpi.title}</p>
             </CardContent>
           </Card>
         ))}

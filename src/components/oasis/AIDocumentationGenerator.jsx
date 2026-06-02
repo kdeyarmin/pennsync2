@@ -151,7 +151,7 @@ Return JSON:
       diagnosis: 'bg-blue-100 text-blue-800',
       comorbidity: 'bg-green-100 text-green-800',
       compliance: 'bg-orange-100 text-orange-800',
-      other: 'bg-gray-100 text-gray-800'
+      other: 'bg-slate-100 text-slate-800'
     };
     return colors[category] || colors.other;
   };
@@ -176,7 +176,7 @@ Return JSON:
       <CardContent className="space-y-4 pt-4">
         {!suggestions ? (
           <>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Generate AI-powered documentation snippets to address identified issues and improve OASIS scoring.
             </p>
             <Button
@@ -234,7 +234,7 @@ Return JSON:
                             {suggestion.m_item}
                           </Badge>
                         )}
-                        <span className="text-sm font-medium text-gray-900">{suggestion.title}</span>
+                        <span className="text-sm font-medium text-slate-900">{suggestion.title}</span>
                         <Badge className={`ml-auto ${getPriorityColor(suggestion.priority)}`}>
                           {suggestion.priority}
                         </Badge>
@@ -320,7 +320,7 @@ Return JSON:
                                 </div>
                               </>
                             ) : (
-                              <p className="text-sm text-gray-800 leading-relaxed">
+                              <p className="text-sm text-slate-800 leading-relaxed">
                                 {currentText}
                               </p>
                             )}
@@ -329,12 +329,12 @@ Return JSON:
 
                         {/* Alternative Text */}
                         {suggestion.alternative_text && (
-                          <details className="bg-gray-50 p-3 rounded border">
-                            <summary className="text-xs font-medium text-gray-700 cursor-pointer flex items-center gap-1">
+                          <details className="bg-slate-50 p-3 rounded border">
+                            <summary className="text-xs font-medium text-slate-700 cursor-pointer flex items-center gap-1">
                               <ChevronDown className="w-3 h-3" />
                               Alternative Phrasing
                             </summary>
-                            <p className="text-sm text-gray-600 mt-2 pl-4">
+                            <p className="text-sm text-slate-600 mt-2 pl-4">
                               {suggestion.alternative_text}
                             </p>
                           </details>

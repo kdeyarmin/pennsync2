@@ -185,12 +185,12 @@ export default function EnhancedVoiceVitalsEntry({
                   isUpdated 
                     ? 'bg-green-100 border-green-400 ring-2 ring-green-300' 
                     : value 
-                      ? 'bg-gray-50 border-gray-200' 
-                      : 'bg-gray-50 border-dashed border-gray-300'
+                      ? 'bg-slate-50 border-slate-200' 
+                      : 'bg-slate-50 border-dashed border-slate-300'
                 }`}
               >
                 <vital.icon className={`w-4 h-4 mx-auto mb-1 ${vital.color}`} />
-                <p className="text-xs text-gray-500">{vital.label}</p>
+                <p className="text-xs text-slate-500">{vital.label}</p>
                 <div className="flex items-center justify-center gap-1">
                   {value ? (
                     <>
@@ -200,10 +200,10 @@ export default function EnhancedVoiceVitalsEntry({
                       )}
                     </>
                   ) : (
-                    <span className="text-xs text-gray-400">--</span>
+                    <span className="text-xs text-slate-400">--</span>
                   )}
                 </div>
-                <p className="text-xs text-gray-400">{vital.unit}</p>
+                <p className="text-xs text-slate-400">{vital.unit}</p>
               </motion.div>
             );
           })}
@@ -229,7 +229,7 @@ export default function EnhancedVoiceVitalsEntry({
         </AnimatePresence>
 
         {/* Usage Hint */}
-        <p className="text-xs text-gray-500 mt-2 text-center">
+        <p className="text-xs text-slate-500 mt-2 text-center">
           Say: "Blood pressure 120 over 80" or "Heart rate 72" or "O2 sat 98 percent"
         </p>
       </CardContent>

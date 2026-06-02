@@ -127,23 +127,23 @@ export default function CallHistoryList() {
       </CardHeader>
       <CardContent className="space-y-2">
         {isLoading ? (
-          <p className="text-sm text-gray-500 text-center py-4">Loading…</p>
+          <p className="text-sm text-slate-500 text-center py-4">Loading…</p>
         ) : sorted.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">No calls yet.</p>
+          <p className="text-sm text-slate-500 text-center py-4">No calls yet.</p>
         ) : (
           sorted.map((call) => {
             const active = call.status === "ringing" || call.status === "initiated";
             return (
               <div
                 key={call.id}
-                className={`p-3 rounded-lg border ${active ? "bg-blue-50 border-blue-300 animate-pulse" : "bg-gray-50 border-gray-200"}`}
+                className={`p-3 rounded-lg border ${active ? "bg-blue-50 border-blue-300 animate-pulse" : "bg-slate-50 border-slate-200"}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0">
                     <CallIcon call={call} />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{labelFor(call)}</p>
-                      <p className="text-xs text-gray-500">{MODE_LABEL[call.call_mode] || call.call_mode}</p>
+                      <p className="text-sm font-medium text-slate-900 truncate">{labelFor(call)}</p>
+                      <p className="text-xs text-slate-500">{MODE_LABEL[call.call_mode] || call.call_mode}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -152,14 +152,14 @@ export default function CallHistoryList() {
                         <Voicemail className="w-3 h-3 mr-1" /> VM
                       </Badge>
                     )}
-                    <span className="text-xs text-gray-500 hidden sm:flex items-center gap-1">
+                    <span className="text-xs text-slate-500 hidden sm:flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatDuration(call.duration_seconds)}
                     </span>
-                    <Badge className={`text-xs ${STATUS_STYLES[call.status] || "bg-gray-100 text-gray-700"}`}>
+                    <Badge className={`text-xs ${STATUS_STYLES[call.status] || "bg-slate-100 text-slate-700"}`}>
                       {(call.status || "").replace(/_/g, " ")}
                     </Badge>
-                    <span className="text-xs text-gray-400 hidden md:inline">
+                    <span className="text-xs text-slate-400 hidden md:inline">
                       {format(new Date(call.created_date), "MMM d, h:mm a")}
                     </span>
                     <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => openEditor(call)} title="Add note / disposition">
@@ -171,11 +171,11 @@ export default function CallHistoryList() {
                   <audio controls preload="none" src={call.voicemail_url} className="w-full h-8 mt-2" />
                 )}
                 {(call.disposition || call.note) && (
-                  <div className="mt-2 pt-2 border-t border-gray-200 flex items-start gap-2">
+                  <div className="mt-2 pt-2 border-t border-slate-200 flex items-start gap-2">
                     {call.disposition && (
                       <Badge variant="outline" className="text-[11px]">{DISPOSITION_LABEL[call.disposition] || call.disposition}</Badge>
                     )}
-                    {call.note && <p className="text-xs text-gray-600">{call.note}</p>}
+                    {call.note && <p className="text-xs text-slate-600">{call.note}</p>}
                   </div>
                 )}
               </div>
@@ -191,7 +191,7 @@ export default function CallHistoryList() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Disposition</p>
+              <p className="text-xs font-medium text-slate-600 mb-1.5">Disposition</p>
               <div className="flex flex-wrap gap-1.5">
                 {DISPOSITIONS.map((d) => (
                   <button
@@ -201,7 +201,7 @@ export default function CallHistoryList() {
                     className={`text-xs px-2 py-1 rounded-full border transition-colors ${
                       disposition === d.value
                         ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-gray-50 text-gray-700 border-gray-200 hover:border-blue-300"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-blue-300"
                     }`}
                   >
                     {d.label}
@@ -210,7 +210,7 @@ export default function CallHistoryList() {
               </div>
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Note (avoid clinical detail / PHI)</p>
+              <p className="text-xs font-medium text-slate-600 mb-1.5">Note (avoid clinical detail / PHI)</p>
               <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} className="resize-none" />
             </div>
           </div>

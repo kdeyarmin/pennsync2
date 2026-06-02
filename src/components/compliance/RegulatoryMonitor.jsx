@@ -238,7 +238,7 @@ Return JSON:
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -248,8 +248,8 @@ Return JSON:
       case 'under_review': return 'bg-blue-100 text-blue-800';
       case 'approved': return 'bg-green-100 text-green-800';
       case 'implemented': return 'bg-purple-100 text-purple-800';
-      case 'dismissed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'dismissed': return 'bg-slate-100 text-slate-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -274,7 +274,7 @@ Return JSON:
             </CardTitle>
             <div className="flex items-center gap-2">
               {lastScanDate && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-500">
                   Last scan: {format(lastScanDate, 'MMM d, h:mm a')}
                 </span>
               )}
@@ -305,21 +305,21 @@ Return JSON:
           <div className="grid grid-cols-4 gap-3 mb-4">
             <div className="text-center p-3 bg-yellow-50 rounded-lg">
               <p className="text-2xl font-bold text-yellow-600">{pendingUpdates.length}</p>
-              <p className="text-xs text-gray-600">Pending Review</p>
+              <p className="text-xs text-slate-600">Pending Review</p>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">{approvedUpdates.length}</p>
-              <p className="text-xs text-gray-600">Approved</p>
+              <p className="text-xs text-slate-600">Approved</p>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
               <p className="text-2xl font-bold text-purple-600">{implementedUpdates.length}</p>
-              <p className="text-xs text-gray-600">Implemented</p>
+              <p className="text-xs text-slate-600">Implemented</p>
             </div>
             <div className="text-center p-3 bg-red-50 rounded-lg">
               <p className="text-2xl font-bold text-red-600">
                 {updates.filter(u => u.impact_level === 'critical' && u.status === 'pending_review').length}
               </p>
-              <p className="text-xs text-gray-600">Critical Pending</p>
+              <p className="text-xs text-slate-600">Critical Pending</p>
             </div>
           </div>
 
@@ -366,7 +366,7 @@ Return JSON:
               <Card>
                 <CardContent className="p-8 text-center">
                   <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-300" />
-                  <p className="text-gray-500">No updates in this category</p>
+                  <p className="text-slate-500">No updates in this category</p>
                 </CardContent>
               </Card>
             ) : (
@@ -414,27 +414,27 @@ Return JSON:
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-700">{selectedUpdate.summary}</p>
+              <div className="bg-slate-50 p-3 rounded-lg">
+                <p className="text-sm text-slate-700">{selectedUpdate.summary}</p>
               </div>
 
               <div>
                 <p className="text-sm font-medium mb-1">Effective Date:</p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-slate-700">
                   {selectedUpdate.effective_date ? format(new Date(selectedUpdate.effective_date), 'MMMM d, yyyy') : 'TBD'}
                 </p>
               </div>
 
               <div>
                 <p className="text-sm font-medium mb-1">Full Details:</p>
-                <p className="text-sm text-gray-700">{selectedUpdate.full_details}</p>
+                <p className="text-sm text-slate-700">{selectedUpdate.full_details}</p>
               </div>
 
               {/* Required Actions */}
               {selectedUpdate.required_actions?.length > 0 && (
                 <div>
                   <p className="text-sm font-medium mb-1">Required Actions:</p>
-                  <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
+                  <ul className="text-sm text-slate-700 list-disc list-inside space-y-1">
                     {selectedUpdate.required_actions.map((action, idx) => (
                       <li key={idx}>{action}</li>
                     ))}
@@ -452,7 +452,7 @@ Return JSON:
                   {selectedUpdate.compliance_check_updates.map((check, idx) => (
                     <div key={idx} className="text-xs bg-white p-2 rounded mb-1 last:mb-0">
                       <p className="font-medium text-blue-900">{check.check_name}</p>
-                      <p className="text-gray-500">Old: {check.old_requirement}</p>
+                      <p className="text-slate-500">Old: {check.old_requirement}</p>
                       <p className="text-green-700">New: {check.new_requirement}</p>
                     </div>
                   ))}
@@ -547,17 +547,17 @@ function RegulatoryUpdateCard({ update, isAdmin, onReview, getImpactColor, getSt
                 {update.status.replace('_', ' ')}
               </Badge>
               {update.effective_date && (
-                <span className="text-xs text-gray-500 flex items-center gap-1">
+                <span className="text-xs text-slate-500 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   Effective: {format(new Date(update.effective_date), 'MMM d, yyyy')}
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-700">{update.summary}</p>
+            <p className="text-sm text-slate-700">{update.summary}</p>
 
             {expanded && (
               <div className="mt-3 space-y-2 text-sm">
-                <p className="text-gray-600">{update.full_details}</p>
+                <p className="text-slate-600">{update.full_details}</p>
                 {update.suggested_training?.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <GraduationCap className="w-4 h-4 text-purple-600" />

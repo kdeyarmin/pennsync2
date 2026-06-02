@@ -163,7 +163,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
       <Card className="border-2 border-blue-300">
         <CardContent className="p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Analyzing referral with AI...</p>
+          <p className="text-slate-600">Analyzing referral with AI...</p>
         </CardContent>
       </Card>
     );
@@ -175,7 +175,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
       case "High": return "bg-orange-500 text-white";
       case "Medium": return "bg-yellow-500 text-white";
       case "Low": return "bg-green-500 text-white";
-      default: return "bg-gray-500 text-white";
+      default: return "bg-slate-500 text-white";
     }
   };
 
@@ -184,7 +184,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
       case "High": return "border-red-500 bg-red-50";
       case "Medium": return "border-yellow-500 bg-yellow-50";
       case "Low": return "border-blue-500 bg-blue-50";
-      default: return "border-gray-500 bg-gray-50";
+      default: return "border-slate-500 bg-slate-50";
     }
   };
 
@@ -204,8 +204,8 @@ Referral Data: ${JSON.stringify(referralData)}`,
               <p className="text-sm">Urgency Score: {analysis.urgency_analysis.overall_urgency_score}/100</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-gray-600">Clinical: {analysis.urgency_analysis.clinical_urgency_score}</p>
-              <p className="text-xs text-gray-600">Administrative: {analysis.urgency_analysis.administrative_urgency_score}</p>
+              <p className="text-xs text-slate-600">Clinical: {analysis.urgency_analysis.clinical_urgency_score}</p>
+              <p className="text-xs text-slate-600">Administrative: {analysis.urgency_analysis.administrative_urgency_score}</p>
             </div>
           </div>
         </AlertDescription>
@@ -234,8 +234,8 @@ Referral Data: ${JSON.stringify(referralData)}`,
                 {analysis.missing_information.critical_missing.map((item, idx) => (
                   <div key={idx} className="bg-red-50 p-2 rounded border border-red-200 text-xs">
                     <p className="font-semibold text-red-900">{item.field_name}</p>
-                    <p className="text-gray-700">{item.why_critical}</p>
-                    <p className="text-gray-600 mt-1"><strong>How to obtain:</strong> {item.how_to_obtain}</p>
+                    <p className="text-slate-700">{item.why_critical}</p>
+                    <p className="text-slate-600 mt-1"><strong>How to obtain:</strong> {item.how_to_obtain}</p>
                   </div>
                 ))}
               </div>
@@ -249,7 +249,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
                 {analysis.missing_information.recommended_missing.map((item, idx) => (
                   <div key={idx} className="bg-yellow-50 p-2 rounded border border-yellow-200 text-xs">
                     <p className="font-semibold text-yellow-900">{item.field_name}</p>
-                    <p className="text-gray-700">{item.why_helpful}</p>
+                    <p className="text-slate-700">{item.why_helpful}</p>
                   </div>
                 ))}
               </div>
@@ -268,41 +268,41 @@ Referral Data: ${JSON.stringify(referralData)}`,
           <CardContent className="space-y-3">
             <div className="bg-green-50 p-3 rounded border border-green-200">
               <p className="text-xs font-semibold text-green-900 mb-2">⏰ First Visit Timeframe</p>
-              <p className="text-sm font-bold text-gray-900">{analysis.scheduling_recommendations.ideal_first_visit_timeframe}</p>
+              <p className="text-sm font-bold text-slate-900">{analysis.scheduling_recommendations.ideal_first_visit_timeframe}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-blue-50 p-2 rounded border border-blue-200">
                 <p className="font-semibold text-blue-900">Frequency</p>
-                <p className="text-gray-900">{analysis.scheduling_recommendations.recommended_visit_frequency}</p>
+                <p className="text-slate-900">{analysis.scheduling_recommendations.recommended_visit_frequency}</p>
               </div>
               <div className="bg-purple-50 p-2 rounded border border-purple-200">
                 <p className="font-semibold text-purple-900">Duration</p>
-                <p className="text-gray-900">{analysis.scheduling_recommendations.estimated_visit_duration_minutes} min</p>
+                <p className="text-slate-900">{analysis.scheduling_recommendations.estimated_visit_duration_minutes} min</p>
               </div>
             </div>
 
             {analysis.scheduling_recommendations.preferred_time_of_day && (
               <div className="bg-indigo-50 p-2 rounded border border-indigo-200 text-xs">
                 <p className="font-semibold text-indigo-900">Preferred Time</p>
-                <p className="text-gray-900">{analysis.scheduling_recommendations.preferred_time_of_day}</p>
+                <p className="text-slate-900">{analysis.scheduling_recommendations.preferred_time_of_day}</p>
               </div>
             )}
 
             {analysis.scheduling_recommendations.location_notes && (
-              <div className="bg-gray-50 p-2 rounded border border-gray-200 text-xs">
-                <p className="font-semibold text-gray-900 flex items-center gap-1">
+              <div className="bg-slate-50 p-2 rounded border border-slate-200 text-xs">
+                <p className="font-semibold text-slate-900 flex items-center gap-1">
                   <MapPin className="w-3 h-3" /> Location Notes
                 </p>
-                <p className="text-gray-700">{analysis.scheduling_recommendations.location_notes}</p>
+                <p className="text-slate-700">{analysis.scheduling_recommendations.location_notes}</p>
               </div>
             )}
 
             {analysis.scheduling_recommendations.special_considerations?.length > 0 && (
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-gray-900">Special Considerations:</p>
+                <p className="text-xs font-semibold text-slate-900">Special Considerations:</p>
                 {analysis.scheduling_recommendations.special_considerations.map((item, idx) => (
-                  <p key={idx} className="text-xs text-gray-700">• {item}</p>
+                  <p key={idx} className="text-xs text-slate-700">• {item}</p>
                 ))}
               </div>
             )}
@@ -329,10 +329,10 @@ Referral Data: ${JSON.stringify(referralData)}`,
                       {risk.severity}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-700 mb-2">{risk.description}</p>
+                  <p className="text-xs text-slate-700 mb-2">{risk.description}</p>
                   <div className="bg-white p-2 rounded border text-xs">
-                    <p className="font-semibold text-gray-900">Mitigation:</p>
-                    <p className="text-gray-700">{risk.mitigation_strategy}</p>
+                    <p className="font-semibold text-slate-900">Mitigation:</p>
+                    <p className="text-slate-700">{risk.mitigation_strategy}</p>
                   </div>
                 </div>
               ))}
@@ -352,13 +352,13 @@ Referral Data: ${JSON.stringify(referralData)}`,
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-semibold text-gray-900 mb-2">Experience Level Required:</p>
+              <p className="text-sm font-semibold text-slate-900 mb-2">Experience Level Required:</p>
               <Badge className="bg-purple-600 text-white">{analysis.nurse_requirements.experience_level}</Badge>
             </div>
 
             {analysis.nurse_requirements.required_certifications?.length > 0 && (
               <div>
-                <p className="text-sm font-semibold text-gray-900 mb-2">Required Certifications:</p>
+                <p className="text-sm font-semibold text-slate-900 mb-2">Required Certifications:</p>
                 <div className="flex flex-wrap gap-1">
                   {analysis.nurse_requirements.required_certifications.map((cert, idx) => (
                     <Badge key={idx} variant="outline">{cert}</Badge>
@@ -369,7 +369,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
 
             {analysis.nurse_requirements.special_skills?.length > 0 && (
               <div className="md:col-span-2">
-                <p className="text-sm font-semibold text-gray-900 mb-2">Special Skills:</p>
+                <p className="text-sm font-semibold text-slate-900 mb-2">Special Skills:</p>
                 <div className="flex flex-wrap gap-1">
                   {analysis.nurse_requirements.special_skills.map((skill, idx) => (
                     <Badge key={idx} className="bg-blue-100 text-blue-800">{skill}</Badge>
@@ -380,7 +380,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
 
             {analysis.nurse_requirements.language_requirements?.length > 0 && (
               <div>
-                <p className="text-sm font-semibold text-gray-900 mb-2">Language Requirements:</p>
+                <p className="text-sm font-semibold text-slate-900 mb-2">Language Requirements:</p>
                 <div className="flex flex-wrap gap-1">
                   {analysis.nurse_requirements.language_requirements.map((lang, idx) => (
                     <Badge key={idx} className="bg-green-100 text-green-800">{lang}</Badge>
@@ -402,15 +402,15 @@ Referral Data: ${JSON.stringify(referralData)}`,
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="bg-blue-50 p-3 rounded border border-blue-200">
-            <p className="text-sm text-gray-900">{analysis.urgency_analysis.reasoning}</p>
+            <p className="text-sm text-slate-900">{analysis.urgency_analysis.reasoning}</p>
           </div>
 
           {analysis.urgency_analysis.urgency_factors?.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-gray-900 mb-2">Key Urgency Factors:</p>
+              <p className="text-sm font-semibold text-slate-900 mb-2">Key Urgency Factors:</p>
               <ul className="space-y-1">
                 {analysis.urgency_analysis.urgency_factors.map((factor, idx) => (
-                  <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                  <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5">•</span>
                     <span>{factor}</span>
                   </li>

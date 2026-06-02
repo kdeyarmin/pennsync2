@@ -148,7 +148,7 @@ Return JSON with specific suggestions that include before/after examples:
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -159,7 +159,7 @@ Return JSON with specific suggestions that include before/after examples:
       case 'generic_description': return <Sparkles className="w-4 h-4 text-blue-600" />;
       case 'lay_terminology': return <Sparkles className="w-4 h-4 text-purple-600" />;
       case 'unclear_outcome': return <ArrowRight className="w-4 h-4 text-red-600" />;
-      default: return <Lightbulb className="w-4 h-4 text-gray-600" />;
+      default: return <Lightbulb className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -216,7 +216,7 @@ Return JSON with specific suggestions that include before/after examples:
                 <div
                   key={idx}
                   className={`rounded border p-2 transition-all ${
-                    isApplied ? 'bg-gray-50 opacity-50' : 'bg-purple-50 border-purple-200'
+                    isApplied ? 'bg-slate-50 opacity-50' : 'bg-purple-50 border-purple-200'
                   }`}
                 >
                   <div className="flex items-start gap-2">

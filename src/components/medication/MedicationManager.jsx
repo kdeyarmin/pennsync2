@@ -118,13 +118,13 @@ export default function MedicationManager({ patientId }) {
       case 'active':
         return 'bg-green-100 text-green-800';
       case 'discontinued':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'on_hold':
         return 'bg-orange-100 text-orange-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -137,7 +137,7 @@ export default function MedicationManager({ patientId }) {
             <CardTitle className="flex items-center gap-2">
               Current Prescriptions
             </CardTitle>
-            <p className="text-xs text-gray-500 mt-1">{activeMeds.length} active medication(s)</p>
+            <p className="text-xs text-slate-500 mt-1">{activeMeds.length} active medication(s)</p>
           </div>
           <Dialog open={showAddForm && !editingId} onOpenChange={(open) => {
             setShowAddForm(open);
@@ -281,8 +281,8 @@ export default function MedicationManager({ patientId }) {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{med.name}</h4>
-                      <p className="text-sm text-gray-600">
+                      <h4 className="font-semibold text-slate-900">{med.name}</h4>
+                      <p className="text-sm text-slate-600">
                         <span className="font-medium">{med.dosage}</span> - {med.frequency}
                       </p>
                     </div>
@@ -423,31 +423,31 @@ export default function MedicationManager({ patientId }) {
 
                   <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                     <div>
-                      <p className="text-gray-500">Route</p>
-                      <p className="text-gray-900 font-medium capitalize">{med.route}</p>
+                      <p className="text-slate-500">Route</p>
+                      <p className="text-slate-900 font-medium capitalize">{med.route}</p>
                     </div>
                     {med.indication && (
                       <div>
-                        <p className="text-gray-500">Indication</p>
-                        <p className="text-gray-900 font-medium">{med.indication}</p>
+                        <p className="text-slate-500">Indication</p>
+                        <p className="text-slate-900 font-medium">{med.indication}</p>
                       </div>
                     )}
                   </div>
 
                   {med.refills_remaining !== undefined && med.refills_remaining !== null && (
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-xs text-slate-500 mb-2">
                       Refills remaining: <span className="font-medium">{med.refills_remaining}</span>
                     </p>
                   )}
 
                   {med.notes && (
-                    <p className="text-sm text-gray-600 italic border-t pt-2">{med.notes}</p>
+                    <p className="text-sm text-slate-600 italic border-t pt-2">{med.notes}</p>
                   )}
                 </CardContent>
               </Card>
             ))
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-500">
               <p>No active medications</p>
             </div>
           )}
@@ -462,10 +462,10 @@ export default function MedicationManager({ patientId }) {
           </CardHeader>
           <CardContent className="space-y-2">
             {discontinuedMeds.map((med) => (
-              <div key={med.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg text-sm">
+              <div key={med.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg text-sm">
                 <div>
-                  <p className="text-gray-700 line-through">{med.name} - {med.dosage}</p>
-                  <p className="text-xs text-gray-500">Discontinued {med.end_date}</p>
+                  <p className="text-slate-700 line-through">{med.name} - {med.dosage}</p>
+                  <p className="text-xs text-slate-500">Discontinued {med.end_date}</p>
                 </div>
                 <Button
                   size="sm"

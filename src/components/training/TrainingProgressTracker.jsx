@@ -89,7 +89,7 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
           {/* Completed Tutorials with Certificates */}
           {trainingProgress.filter(t => t.status === 'completed').length > 0 && (
             <div className="pt-3 border-t">
-              <p className="text-xs font-semibold text-gray-600 mb-2">Completed Modules:</p>
+              <p className="text-xs font-semibold text-slate-600 mb-2">Completed Modules:</p>
               <div className="space-y-2">
                 {trainingProgress.filter(t => t.status === 'completed').map((completion) => (
                   <div key={completion.id} className="flex items-center justify-between p-2 bg-white rounded border">
@@ -133,13 +133,13 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
           <div className="grid grid-cols-2 gap-4 pt-4 border-t">
             <div className="text-center">
               <p className="text-3xl font-bold text-indigo-900">{Math.round(averagePracticeScore)}%</p>
-              <p className="text-xs text-gray-600">Average Score</p>
+              <p className="text-xs text-slate-600">Average Score</p>
             </div>
             <div className="text-center">
               <p className={`text-3xl font-bold ${improvementTrend >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
                 {improvementTrend >= 0 ? '+' : ''}{Math.round(improvementTrend)}%
               </p>
-              <p className="text-xs text-gray-600">Improvement Trend</p>
+              <p className="text-xs text-slate-600">Improvement Trend</p>
             </div>
           </div>
         </CardContent>
@@ -160,10 +160,10 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
                 <h4 className="text-sm font-semibold mb-3">Recent Practice Scores</h4>
                 <div className="space-y-2">
                   {recentPractice.map((submission, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded">
                       <div className="flex-1">
                         <p className="text-sm font-medium">{submission.skill_area}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {new Date(submission.created_date).toLocaleDateString()}
                         </p>
                       </div>
@@ -184,7 +184,7 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
               </div>
             </>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-500">
               <p className="text-sm">No practice submissions yet</p>
               <p className="text-xs mt-1">Complete practice exercises to see your progress</p>
             </div>
@@ -206,12 +206,12 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
               {weakAreas.map((area, idx) => (
                 <div key={idx} className="bg-white p-4 rounded border border-orange-200">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-900">{area.area}</p>
+                    <p className="text-sm font-medium text-slate-900">{area.area}</p>
                     <Badge variant="outline" className="bg-orange-100 text-orange-800">
                       {Math.round(area.score)}%
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-slate-600">
                     Focus on improving this area through additional practice exercises
                   </p>
                 </div>
@@ -233,7 +233,7 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
           </h3>
           <p className="text-sm text-purple-700">Current Documentation Skill Level</p>
           {averagePracticeScore < 90 && (
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-slate-600 mt-2">
               {90 - Math.round(averagePracticeScore)}% more to reach Expert level
             </p>
           )}

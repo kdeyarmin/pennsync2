@@ -168,8 +168,8 @@ export default function PDFTemplateManager() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">PDF Template Library</h2>
-          <p className="text-gray-600">Manage reusable PDF templates with custom field mappings</p>
+          <h2 className="text-2xl font-bold text-slate-900">PDF Template Library</h2>
+          <p className="text-slate-600">Manage reusable PDF templates with custom field mappings</p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -202,21 +202,21 @@ export default function PDFTemplateManager() {
                 {categoryTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                    className="flex items-center gap-3 p-3 border rounded-lg hover:bg-slate-50"
                   >
                     <FileText className="w-5 h-5 text-blue-600 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-gray-900">
+                        <h4 className="font-medium text-slate-900">
                           {template.template_name}
                         </h4>
                         <Badge variant="outline">v{template.version}</Badge>
                         {!template.is_active && (
-                          <Badge className="bg-gray-100 text-gray-600">Inactive</Badge>
+                          <Badge className="bg-slate-100 text-slate-600">Inactive</Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">{template.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-sm text-slate-600">{template.description}</p>
+                      <p className="text-xs text-slate-500 mt-1">
                         {template.field_mappings?.length || 0} field mappings • 
                         Used {template.usage_count || 0} times
                       </p>
@@ -264,7 +264,7 @@ export default function PDFTemplateManager() {
               <h3 className="text-lg font-semibold">Version History</h3>
               <button 
                 onClick={() => setShowVersionHistory(null)}
-                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                className="text-slate-500 hover:text-slate-700 text-2xl leading-none"
               >
                 ×
               </button>

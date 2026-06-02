@@ -81,7 +81,7 @@ Document URL: ${file_url}`,
         )}
       </Button>
       {!isAnalyzing && (
-        <p className="text-xs text-gray-400 text-center mt-1">
+        <p className="text-xs text-slate-400 text-center mt-1">
           Upload a referral, prescription, or any document to auto-fill fields
         </p>
       )}

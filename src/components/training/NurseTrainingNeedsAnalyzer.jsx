@@ -160,7 +160,7 @@ export default function NurseTrainingNeedsAnalyzer() {
       medium: "bg-yellow-600 text-white",
       low: "bg-blue-600 text-white"
     };
-    return colors[severity] || "bg-gray-600 text-white";
+    return colors[severity] || "bg-slate-600 text-white";
   };
 
   const getTypeColor = (type) => {
@@ -172,7 +172,7 @@ export default function NurseTrainingNeedsAnalyzer() {
       communication: "bg-indigo-100 text-indigo-800",
       technology: "bg-teal-100 text-teal-800"
     };
-    return colors[type] || "bg-gray-100 text-gray-800";
+    return colors[type] || "bg-slate-100 text-slate-800";
   };
 
   const getSourceLabel = (source) => {
@@ -222,7 +222,7 @@ export default function NurseTrainingNeedsAnalyzer() {
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-8 h-8 text-red-600" />
               <div>
-                <p className="text-sm text-gray-500">Critical</p>
+                <p className="text-sm text-slate-500">Critical</p>
                 <p className="text-2xl font-bold">{trainingRecommendations.filter(r => r.severity === 'critical').length}</p>
               </div>
             </div>
@@ -233,7 +233,7 @@ export default function NurseTrainingNeedsAnalyzer() {
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-8 h-8 text-orange-600" />
               <div>
-                <p className="text-sm text-gray-500">High Priority</p>
+                <p className="text-sm text-slate-500">High Priority</p>
                 <p className="text-2xl font-bold">{trainingRecommendations.filter(r => r.severity === 'high').length}</p>
               </div>
             </div>
@@ -242,9 +242,9 @@ export default function NurseTrainingNeedsAnalyzer() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-8 h-8 text-gray-400" />
+              <CheckCircle2 className="w-8 h-8 text-slate-400" />
               <div>
-                <p className="text-sm text-gray-500">Unaddressed</p>
+                <p className="text-sm text-slate-500">Unaddressed</p>
                 <p className="text-2xl font-bold">{trainingRecommendations.filter(r => !r.addressed).length}</p>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function NurseTrainingNeedsAnalyzer() {
             <div className="flex items-center gap-3">
               <Users className="w-8 h-8 text-blue-600" />
               <div>
-                <p className="text-sm text-gray-500">Nurses Tracked</p>
+                <p className="text-sm text-slate-500">Nurses Tracked</p>
                 <p className="text-2xl font-bold">{Object.keys(nurseProfiles).length}</p>
               </div>
             </div>
@@ -319,12 +319,12 @@ export default function NurseTrainingNeedsAnalyzer() {
                         {profile.nurse.full_name?.charAt(0) || 'U'}
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900">{profile.nurse.full_name}</p>
-                        <p className="text-sm text-gray-500">{profile.nurse.email}</p>
+                        <p className="font-bold text-slate-900">{profile.nurse.full_name}</p>
+                        <p className="text-sm text-slate-500">{profile.nurse.email}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-500 mb-1">Risk Score</p>
+                      <p className="text-sm text-slate-500 mb-1">Risk Score</p>
                       <p className={`text-2xl font-bold ${
                         profile.riskScore >= 50 ? 'text-red-600' :
                         profile.riskScore >= 25 ? 'text-orange-600' :
@@ -337,8 +337,8 @@ export default function NurseTrainingNeedsAnalyzer() {
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="text-xs text-gray-500">Total</p>
+                    <div className="text-center p-2 bg-slate-50 rounded">
+                      <p className="text-xs text-slate-500">Total</p>
                       <p className="text-lg font-bold">{profile.total}</p>
                     </div>
                     <div className="text-center p-2 bg-purple-50 rounded">
@@ -365,7 +365,7 @@ export default function NurseTrainingNeedsAnalyzer() {
 
                   {profile.topNeeds.length > 0 && (
                     <div className="mb-3">
-                      <p className="text-sm font-semibold text-gray-700 mb-2">Top Training Needs:</p>
+                      <p className="text-sm font-semibold text-slate-700 mb-2">Top Training Needs:</p>
                       <div className="flex flex-wrap gap-2">
                         {profile.topNeeds.map((need, idx) => (
                           <Badge key={idx} className={getTypeColor(need.type)}>
@@ -377,7 +377,7 @@ export default function NurseTrainingNeedsAnalyzer() {
                   )}
 
                   <div className="mb-3">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Recommendation Sources:</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Recommendation Sources:</p>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(profile.bySource).map(([source, count]) => (
                         <Badge key={source} variant="outline" className="text-xs">
@@ -389,7 +389,7 @@ export default function NurseTrainingNeedsAnalyzer() {
 
                   {/* Progress Over Time */}
                   <div className="mb-3">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Progress Over Time:</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Progress Over Time:</p>
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
                         <div className="flex justify-between text-xs mb-1">
@@ -399,9 +399,9 @@ export default function NurseTrainingNeedsAnalyzer() {
                         <Progress value={profile.progressRate} className="h-2" />
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">30-day trend</p>
+                        <p className="text-xs text-slate-500">30-day trend</p>
                         <p className={`text-sm font-bold ${
-                          profile.trend < 0 ? 'text-green-600' : profile.trend > 0 ? 'text-red-600' : 'text-gray-600'
+                          profile.trend < 0 ? 'text-green-600' : profile.trend > 0 ? 'text-red-600' : 'text-slate-600'
                         }`}>
                           {profile.trend < 0 ? '↓' : profile.trend > 0 ? '↑' : '→'} 
                           {Math.abs(profile.trend)}% issues
@@ -413,9 +413,9 @@ export default function NurseTrainingNeedsAnalyzer() {
                         <p className="text-xs text-blue-600">Last 30 days</p>
                         <p className="text-lg font-bold text-blue-900">{profile.recentRecs} issues</p>
                       </div>
-                      <div className="p-2 bg-gray-50 rounded border border-gray-200">
-                        <p className="text-xs text-gray-600">Previous 30 days</p>
-                        <p className="text-lg font-bold text-gray-900">{profile.previousRecs} issues</p>
+                      <div className="p-2 bg-slate-50 rounded border border-slate-200">
+                        <p className="text-xs text-slate-600">Previous 30 days</p>
+                        <p className="text-lg font-bold text-slate-900">{profile.previousRecs} issues</p>
                       </div>
                     </div>
                   </div>
@@ -477,13 +477,13 @@ export default function NurseTrainingNeedsAnalyzer() {
                       <TableCell className="max-w-xs">
                         <p className="text-sm truncate">{rec.recommendation_text}</p>
                         {rec.context_data?.element && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-slate-500 mt-1">
                             Context: {rec.context_data.element}
                           </p>
                         )}
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-slate-600">
                           {getSourceLabel(rec.source)}
                         </span>
                       </TableCell>
@@ -494,7 +494,7 @@ export default function NurseTrainingNeedsAnalyzer() {
                           <Badge variant="outline">Pending</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs text-gray-500">
+                      <TableCell className="text-xs text-slate-500">
                         {new Date(rec.created_date).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
@@ -526,7 +526,7 @@ function getTypeColor(type) {
     communication: "bg-indigo-100 text-indigo-800",
     technology: "bg-teal-100 text-teal-800"
   };
-  return colors[type] || "bg-gray-100 text-gray-800";
+  return colors[type] || "bg-slate-100 text-slate-800";
 }
 
 function getSourceLabel(source) {

@@ -170,7 +170,7 @@ Make the content specific to Medicare home health compliance requirements.`,
         )}
 
         {weakAreas.length === 0 && !trainingPlan && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-slate-500">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-500" />
             <p>No significant weak areas identified from recent audits.</p>
             <p className="text-sm">Keep up the great work!</p>
@@ -180,7 +180,7 @@ Make the content specific to Medicare home health compliance requirements.`,
         {isGenerating && (
           <div className="text-center py-8">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">Analyzing your performance and creating a personalized plan...</p>
+            <p className="text-sm text-slate-600">Analyzing your performance and creating a personalized plan...</p>
           </div>
         )}
 
@@ -210,7 +210,7 @@ Make the content specific to Medicare home health compliance requirements.`,
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium text-sm">{module.title}</p>
-                        <p className="text-xs text-gray-500">{module.weak_area_addressed}</p>
+                        <p className="text-xs text-slate-500">{module.weak_area_addressed}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={getPriorityColor(module.priority)}>
@@ -227,10 +227,10 @@ Make the content specific to Medicare home health compliance requirements.`,
                     <div className="pl-11 space-y-4">
                       {/* Objectives */}
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Learning Objectives:</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Learning Objectives:</p>
                         <ul className="space-y-1">
                           {module.objectives?.map((obj, i) => (
-                            <li key={i} className="text-xs text-gray-600 flex items-start gap-2">
+                            <li key={i} className="text-xs text-slate-600 flex items-start gap-2">
                               <CheckCircle2 className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
                               {obj}
                             </li>
@@ -240,7 +240,7 @@ Make the content specific to Medicare home health compliance requirements.`,
 
                       {/* Topics */}
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Key Topics:</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Key Topics:</p>
                         <div className="flex flex-wrap gap-1">
                           {module.topics?.map((topic, i) => (
                             <Badge key={i} variant="outline" className="text-xs">
@@ -252,10 +252,10 @@ Make the content specific to Medicare home health compliance requirements.`,
 
                       {/* Practice Exercises */}
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Practice Exercises:</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Practice Exercises:</p>
                         <ul className="space-y-1">
                           {module.practice_exercises?.map((ex, i) => (
-                            <li key={i} className="text-xs text-gray-600">• {ex}</li>
+                            <li key={i} className="text-xs text-slate-600">• {ex}</li>
                           ))}
                         </ul>
                       </div>

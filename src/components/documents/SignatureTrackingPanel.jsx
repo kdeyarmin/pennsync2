@@ -73,7 +73,7 @@ export default function SignatureTrackingPanel({ documentSignature, onRefresh })
             </Badge>
           )}
         </div>
-        <p className="text-xs text-gray-600 mt-1">
+        <p className="text-xs text-slate-600 mt-1">
           Due: {format(new Date(documentSignature.expires_at), 'MMMM d, yyyy')}
         </p>
       </CardHeader>
@@ -84,14 +84,14 @@ export default function SignatureTrackingPanel({ documentSignature, onRefresh })
             const StatusIcon = status.icon;
             
             return (
-              <div key={signer.id} className={`flex items-center justify-between p-3 rounded-lg border border-gray-200 ${status.bg}`}>
+              <div key={signer.id} className={`flex items-center justify-between p-3 rounded-lg border border-slate-200 ${status.bg}`}>
                 <div className="flex items-center gap-3">
                   <StatusIcon className="w-4 h-4" />
                   <div>
                     <p className="text-sm font-medium">{signer.name}</p>
-                    <p className="text-xs text-gray-600">{signer.email} • {signer.role}</p>
+                    <p className="text-xs text-slate-600">{signer.email} • {signer.role}</p>
                     {signer.signed_date && (
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         Signed: {format(new Date(signer.signed_date), 'MMM d, yyyy h:mm a')}
                       </p>
                     )}

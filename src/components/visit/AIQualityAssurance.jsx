@@ -127,7 +127,7 @@ Return a JSON object with this structure:
       case 'good': return 'bg-blue-50 border-blue-300';
       case 'needs_improvement': return 'bg-yellow-50 border-yellow-300';
       case 'critical_issues': return 'bg-red-50 border-red-300';
-      default: return 'bg-gray-50 border-gray-300';
+      default: return 'bg-slate-50 border-slate-300';
     }
   };
 
@@ -137,7 +137,7 @@ Return a JSON object with this structure:
       case 'good': return <CheckCircle2 className="w-6 h-6 text-blue-600" />;
       case 'needs_improvement': return <AlertCircle className="w-6 h-6 text-yellow-600" />;
       case 'critical_issues': return <XCircle className="w-6 h-6 text-red-600" />;
-      default: return <ShieldCheck className="w-6 h-6 text-gray-600" />;
+      default: return <ShieldCheck className="w-6 h-6 text-slate-600" />;
     }
   };
 
@@ -168,10 +168,10 @@ Return a JSON object with this structure:
                 <div className="flex items-center gap-3">
                   {getStatusIcon(qaResults.status)}
                   <div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-slate-900">
                       Quality Score: {qaResults.score}/100
                     </p>
-                    <p className="text-sm text-gray-600 capitalize">
+                    <p className="text-sm text-slate-600 capitalize">
                       {qaResults.status.replace('_', ' ')}
                     </p>
                   </div>

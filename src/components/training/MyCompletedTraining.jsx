@@ -54,7 +54,7 @@ export default function MyCompletedTraining({ nurseEmail }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <Award className="w-6 h-6 text-yellow-500" />
           My Certificates
         </h2>
@@ -65,7 +65,7 @@ export default function MyCompletedTraining({ nurseEmail }) {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           placeholder="Search completed training..."
           value={searchTerm}
@@ -79,8 +79,8 @@ export default function MyCompletedTraining({ nurseEmail }) {
         {filteredCompletions.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-600">
+              <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-600">
                 {searchTerm ? 'No matching certificates found' : 'No completed training yet'}
               </p>
             </CardContent>
@@ -114,12 +114,12 @@ export default function MyCompletedTraining({ nurseEmail }) {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-slate-600">
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(completion.completion_date).toLocaleDateString()}</span>
                     </div>
                     {completion.effectiveness_rating && (
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-slate-600">
                         <Star className="w-4 h-4" />
                         <span>{completion.effectiveness_rating}/5 stars</span>
                       </div>

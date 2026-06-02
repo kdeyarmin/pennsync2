@@ -55,12 +55,12 @@ export default function DocumentReminderToggle({ packageId, initialData }) {
       <CardContent className="space-y-4">
         <div className="space-y-3">
           {/* Enable/Disable Toggle */}
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
             <div className="flex-1">
               <Label className="text-sm font-medium cursor-pointer">
                 Send Automated Reminders
               </Label>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 Email reminders will be automatically sent to the signer
               </p>
             </div>
@@ -88,9 +88,9 @@ export default function DocumentReminderToggle({ packageId, initialData }) {
                   disabled={updateMutation.isPending}
                   className="w-20"
                 />
-                <span className="text-sm text-gray-600">days before due date</span>
+                <span className="text-sm text-slate-600">days before due date</span>
               </div>
-              <p className="text-xs text-gray-600 mt-2">
+              <p className="text-xs text-slate-600 mt-2">
                 Example: Set to 3 to send a reminder 3 days before the due date
               </p>
             </div>
@@ -112,7 +112,7 @@ export default function DocumentReminderToggle({ packageId, initialData }) {
 
           {/* Last Reminder Info */}
           {initialData?.last_reminder_sent_at && (
-            <div className="text-xs text-gray-600 p-2 bg-gray-50 rounded">
+            <div className="text-xs text-slate-600 p-2 bg-slate-50 rounded">
               Last reminder sent:{' '}
               {new Date(initialData.last_reminder_sent_at).toLocaleString()}
             </div>

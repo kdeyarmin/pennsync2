@@ -213,7 +213,7 @@ Example: 'Patient has CHF with reduced ejection fraction of 35%. Needs to unders
         {explanation && (
           <div className="space-y-4 pt-4 border-t">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">{explanation.title}</h3>
+              <h3 className="text-lg font-bold text-slate-900">{explanation.title}</h3>
               <Button
                 variant="outline"
                 size="sm"
@@ -234,7 +234,7 @@ Example: 'Patient has CHF with reduced ejection fraction of 35%. Needs to unders
                 <BookOpen className="w-4 h-4 text-blue-600" />
                 Simple Explanation
               </h4>
-              <p className="text-gray-700 whitespace-pre-line">{explanation.simplified_explanation}</p>
+              <p className="text-slate-700 whitespace-pre-line">{explanation.simplified_explanation}</p>
             </div>
 
             {/* Analogies */}
@@ -245,7 +245,7 @@ Example: 'Patient has CHF with reduced ejection fraction of 35%. Needs to unders
                   {explanation.key_analogies.map((analogy, idx) => (
                     <div key={idx} className="bg-white p-3 rounded border border-yellow-200">
                       <p className="text-sm">
-                        <span className="font-medium text-gray-700">{analogy.medical_concept}:</span>
+                        <span className="font-medium text-slate-700">{analogy.medical_concept}:</span>
                       </p>
                       <p className="text-yellow-800 mt-1">"{analogy.simple_analogy}"</p>
                     </div>

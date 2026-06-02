@@ -167,7 +167,7 @@ Return JSON:
             <Progress value={auditResults.quality_score || 0} className="h-2" />
             
             {averageScore && (
-              <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+              <div className="flex items-center justify-between mt-2 text-xs text-slate-600">
                 <span>Your Average: {averageScore}/100</span>
                 <span>{historicalScores.length} notes tracked</span>
               </div>
@@ -194,7 +194,7 @@ Return JSON:
                 {getTrendIcon(feedback.score_trend)}
                 <span className="text-sm font-medium capitalize">{feedback.score_trend}</span>
               </div>
-              <p className="text-xs text-gray-700">{feedback.overall_assessment}</p>
+              <p className="text-xs text-slate-700">{feedback.overall_assessment}</p>
 
               {/* Strengths */}
               {feedback.strengths?.length > 0 && (
@@ -205,7 +205,7 @@ Return JSON:
                   {feedback.strengths.map((s, idx) => (
                     <div key={idx} className="bg-green-50 p-2 rounded text-xs mb-1">
                       <strong>{s.area}</strong>
-                      <p className="text-gray-600">{s.tip}</p>
+                      <p className="text-slate-600">{s.tip}</p>
                     </div>
                   ))}
                 </div>
@@ -220,10 +220,10 @@ Return JSON:
                   {feedback.improvement_areas.map((area, idx) => (
                     <div key={idx} className="bg-orange-50 p-2 rounded text-xs mb-1 border border-orange-200">
                       <strong>{area.area}</strong>
-                      <p className="text-gray-600 mb-1">{area.current_issue}</p>
+                      <p className="text-slate-600 mb-1">{area.current_issue}</p>
                       <p className="text-orange-800"><strong>Tip:</strong> {area.action_tip}</p>
                       {area.example && (
-                        <p className="text-gray-500 italic mt-1 text-xs">Example: "{area.example}"</p>
+                        <p className="text-slate-500 italic mt-1 text-xs">Example: "{area.example}"</p>
                       )}
                     </div>
                   ))}
@@ -239,7 +239,7 @@ Return JSON:
                   {feedback.skill_exercises.map((ex, idx) => (
                     <div key={idx} className="bg-blue-50 p-2 rounded text-xs mb-1">
                       <strong>{ex.exercise}</strong>
-                      <p className="text-gray-600">{ex.description}</p>
+                      <p className="text-slate-600">{ex.description}</p>
                     </div>
                   ))}
                 </div>
@@ -249,7 +249,7 @@ Return JSON:
               {feedback.next_goal && (
                 <div className="bg-purple-50 p-2 rounded border border-purple-200">
                   <p className="text-xs font-semibold text-purple-700">🎯 Your Next Goal</p>
-                  <p className="text-xs text-gray-700">{feedback.next_goal}</p>
+                  <p className="text-xs text-slate-700">{feedback.next_goal}</p>
                 </div>
               )}
 

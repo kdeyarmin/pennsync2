@@ -291,7 +291,7 @@ The enhanced note should be a polished, complete clinical note, not bullet point
       billing: 'text-green-600',
       clinical: 'text-purple-600'
     };
-    return colors[category] || 'text-gray-600';
+    return colors[category] || 'text-slate-600';
   };
 
   const getSeverityBadge = (severity) => {
@@ -309,8 +309,8 @@ The enhanced note should be a polished, complete clinical note, not bullet point
       <Card className="border-2 border-purple-300">
         <CardContent className="p-8 text-center">
           <Loader2 className="w-16 h-16 text-purple-600 mx-auto mb-4 animate-spin" />
-          <p className="text-lg font-medium text-gray-900 mb-2">Running Comprehensive Analysis...</p>
-          <p className="text-sm text-gray-600">Checking compliance, quality, billing optimization & clinical decision support</p>
+          <p className="text-lg font-medium text-slate-900 mb-2">Running Comprehensive Analysis...</p>
+          <p className="text-sm text-slate-600">Checking compliance, quality, billing optimization & clinical decision support</p>
         </CardContent>
       </Card>
     );
@@ -326,7 +326,7 @@ The enhanced note should be a polished, complete clinical note, not bullet point
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-slate-700">
             Run one comprehensive analysis that checks all aspects of your documentation:
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -334,28 +334,28 @@ The enhanced note should be a polished, complete clinical note, not bullet point
               <Shield className="w-5 h-5 text-orange-600" />
               <div>
                 <p className="text-xs font-semibold">Compliance</p>
-                <p className="text-xs text-gray-600">42 CFR 484</p>
+                <p className="text-xs text-slate-600">42 CFR 484</p>
               </div>
             </div>
             <div className="bg-white p-3 rounded border flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-blue-600" />
               <div>
                 <p className="text-xs font-semibold">Quality</p>
-                <p className="text-xs text-gray-600">Clinical excellence</p>
+                <p className="text-xs text-slate-600">Clinical excellence</p>
               </div>
             </div>
             <div className="bg-white p-3 rounded border flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-green-600" />
               <div>
                 <p className="text-xs font-semibold">Billing</p>
-                <p className="text-xs text-gray-600">PDGM optimization</p>
+                <p className="text-xs text-slate-600">PDGM optimization</p>
               </div>
             </div>
             <div className="bg-white p-3 rounded border flex items-center gap-2">
               <Target className="w-5 h-5 text-purple-600" />
               <div>
                 <p className="text-xs font-semibold">Clinical</p>
-                <p className="text-xs text-gray-600">Decision support</p>
+                <p className="text-xs text-slate-600">Decision support</p>
               </div>
             </div>
           </div>
@@ -394,23 +394,23 @@ The enhanced note should be a polished, complete clinical note, not bullet point
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-700">{analysis.summary}</p>
+          <p className="text-sm text-slate-700">{analysis.summary}</p>
           
           {/* Score Grid */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white p-3 rounded border text-center">
               <Shield className="w-5 h-5 mx-auto mb-1 text-orange-600" />
-              <p className="text-xs text-gray-600 mb-1">Compliance</p>
+              <p className="text-xs text-slate-600 mb-1">Compliance</p>
               <p className="text-2xl font-bold text-orange-600">{analysis.compliance_score}%</p>
             </div>
             <div className="bg-white p-3 rounded border text-center">
               <Lightbulb className="w-5 h-5 mx-auto mb-1 text-blue-600" />
-              <p className="text-xs text-gray-600 mb-1">Quality</p>
+              <p className="text-xs text-slate-600 mb-1">Quality</p>
               <p className="text-2xl font-bold text-blue-600">{analysis.quality_score}%</p>
             </div>
             <div className="bg-white p-3 rounded border text-center">
               <DollarSign className="w-5 h-5 mx-auto mb-1 text-green-600" />
-              <p className="text-xs text-gray-600 mb-1">Billing</p>
+              <p className="text-xs text-slate-600 mb-1">Billing</p>
               <p className="text-2xl font-bold text-green-600">{analysis.billing_score}%</p>
             </div>
           </div>
@@ -493,7 +493,7 @@ The enhanced note should be a polished, complete clinical note, not bullet point
           
           return (
             <AccordionItem key={category} value={category}>
-              <AccordionTrigger className="bg-gray-50 px-4 py-3 rounded-t-lg">
+              <AccordionTrigger className="bg-slate-50 px-4 py-3 rounded-t-lg">
                 <div className="flex items-center gap-2">
                   <Icon className={`w-5 h-5 ${colorClass}`} />
                   <span className="font-semibold capitalize">{category} ({findings.length})</span>
@@ -524,7 +524,7 @@ The enhanced note should be a polished, complete clinical note, not bullet point
                         />
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
-                            <p className="font-semibold text-gray-900 flex-1">{finding.issue}</p>
+                            <p className="font-semibold text-slate-900 flex-1">{finding.issue}</p>
                             <Badge className={getSeverityBadge(finding.severity)}>
                               {finding.severity}
                             </Badge>
@@ -536,11 +536,11 @@ The enhanced note should be a polished, complete clinical note, not bullet point
                           
                           <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
                             <p className="text-xs font-semibold text-blue-900 mb-1">Suggested Documentation:</p>
-                            <p className="text-sm text-gray-900 italic">"{finding.suggestion}"</p>
+                            <p className="text-sm text-slate-900 italic">"{finding.suggestion}"</p>
                           </div>
                           
-                          <div className="bg-gray-50 p-2 rounded">
-                            <p className="text-xs text-gray-700">{finding.rationale}</p>
+                          <div className="bg-slate-50 p-2 rounded">
+                            <p className="text-xs text-slate-700">{finding.rationale}</p>
                             {finding.revenue_impact && (
                               <p className="text-xs text-green-700 font-bold mt-1">💰 {finding.revenue_impact}</p>
                             )}
@@ -571,11 +571,11 @@ The enhanced note should be a polished, complete clinical note, not bullet point
                 {analysis.follow_up_tasks.map((task, idx) => (
                   <div key={idx} className="bg-blue-50 p-3 rounded border border-blue-200">
                     <div className="flex items-start justify-between mb-1">
-                      <p className="text-sm font-semibold text-gray-900">{task.title}</p>
+                      <p className="text-sm font-semibold text-slate-900">{task.title}</p>
                       <Badge className="text-xs">{task.priority}</Badge>
                     </div>
-                    <p className="text-xs text-gray-600 mb-1">Due: {task.due_timeframe}</p>
-                    <p className="text-xs text-gray-700">{task.reason}</p>
+                    <p className="text-xs text-slate-600 mb-1">Due: {task.due_timeframe}</p>
+                    <p className="text-xs text-slate-700">{task.reason}</p>
                   </div>
                 ))}
               </AccordionContent>
@@ -593,9 +593,9 @@ The enhanced note should be a polished, complete clinical note, not bullet point
               <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg space-y-2">
                 {analysis.care_plan_suggestions.map((cp, idx) => (
                   <div key={idx} className="bg-green-50 p-3 rounded border border-green-200">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Problem: {cp.problem}</p>
+                    <p className="text-sm font-semibold text-slate-900 mb-1">Problem: {cp.problem}</p>
                     <p className="text-sm text-green-800 mb-2">Goal: {cp.goal}</p>
-                    <div className="text-xs text-gray-700">
+                    <div className="text-xs text-slate-700">
                       <p className="font-semibold mb-1">Interventions:</p>
                       <ul className="list-disc list-inside space-y-1">
                         {cp.interventions.map((int, i) => (

@@ -163,7 +163,7 @@ Return JSON:
       case 'abnormal': return 'bg-red-100 text-red-800';
       case 'improved': return 'bg-blue-100 text-blue-800';
       case 'worsened': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -193,7 +193,7 @@ Return JSON:
       {isExpanded && (
         <CardContent className="p-3 space-y-3 max-h-80 overflow-y-auto">
           {!hasData ? (
-            <p className="text-xs text-gray-500 text-center py-2">
+            <p className="text-xs text-slate-500 text-center py-2">
               {isExtracting ? 'Extracting data...' : 'Type clinical data to see auto-extraction'}
             </p>
           ) : (
@@ -202,7 +202,7 @@ Return JSON:
               {Object.values(extractedData.vital_signs || {}).some(v => v !== null) && (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                    <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                       <Heart className="w-3 h-3 text-red-500" /> Vital Signs
                     </p>
                     {onVitalsExtracted && (
@@ -222,32 +222,32 @@ Return JSON:
                   <div className="grid grid-cols-2 gap-1">
                     {extractedData.vital_signs.blood_pressure && (
                       <div className="bg-red-50 p-1.5 rounded text-xs">
-                        <span className="text-gray-600">BP:</span> {extractedData.vital_signs.blood_pressure}
+                        <span className="text-slate-600">BP:</span> {extractedData.vital_signs.blood_pressure}
                       </div>
                     )}
                     {extractedData.vital_signs.heart_rate && (
                       <div className="bg-red-50 p-1.5 rounded text-xs">
-                        <span className="text-gray-600">HR:</span> {extractedData.vital_signs.heart_rate}
+                        <span className="text-slate-600">HR:</span> {extractedData.vital_signs.heart_rate}
                       </div>
                     )}
                     {extractedData.vital_signs.temperature && (
                       <div className="bg-orange-50 p-1.5 rounded text-xs">
-                        <span className="text-gray-600">Temp:</span> {extractedData.vital_signs.temperature}
+                        <span className="text-slate-600">Temp:</span> {extractedData.vital_signs.temperature}
                       </div>
                     )}
                     {extractedData.vital_signs.oxygen_saturation && (
                       <div className="bg-blue-50 p-1.5 rounded text-xs">
-                        <span className="text-gray-600">O2:</span> {extractedData.vital_signs.oxygen_saturation}%
+                        <span className="text-slate-600">O2:</span> {extractedData.vital_signs.oxygen_saturation}%
                       </div>
                     )}
                     {extractedData.vital_signs.pain_level && (
                       <div className="bg-purple-50 p-1.5 rounded text-xs">
-                        <span className="text-gray-600">Pain:</span> {extractedData.vital_signs.pain_level}/10
+                        <span className="text-slate-600">Pain:</span> {extractedData.vital_signs.pain_level}/10
                       </div>
                     )}
                     {extractedData.vital_signs.weight && (
-                      <div className="bg-gray-50 p-1.5 rounded text-xs">
-                        <span className="text-gray-600">Wt:</span> {extractedData.vital_signs.weight}
+                      <div className="bg-slate-50 p-1.5 rounded text-xs">
+                        <span className="text-slate-600">Wt:</span> {extractedData.vital_signs.weight}
                       </div>
                     )}
                   </div>
@@ -257,7 +257,7 @@ Return JSON:
               {/* Symptoms */}
               {extractedData.symptoms?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3 text-yellow-500" /> Symptoms ({extractedData.symptoms.length})
                   </p>
                   <div className="flex flex-wrap gap-1">
@@ -274,12 +274,12 @@ Return JSON:
               {/* Assessments */}
               {extractedData.assessments?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                     <Stethoscope className="w-3 h-3 text-blue-500" /> Assessments
                   </p>
                   <div className="space-y-1">
                     {extractedData.assessments.slice(0, 4).map((a, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs bg-gray-50 p-1.5 rounded">
+                      <div key={idx} className="flex items-center gap-2 text-xs bg-slate-50 p-1.5 rounded">
                         <Badge className={`${getStatusColor(a.status)} text-xs py-0`}>{a.status}</Badge>
                         <span className="truncate">{a.finding}</span>
                       </div>
@@ -291,7 +291,7 @@ Return JSON:
               {/* Interventions */}
               {extractedData.interventions?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-green-500" /> Interventions ({extractedData.interventions.length})
                   </p>
                   <div className="space-y-1">
@@ -299,7 +299,7 @@ Return JSON:
                       <div key={idx} className="text-xs bg-green-50 p-1.5 rounded">
                         {i.intervention}
                         {i.patient_response && (
-                          <span className="text-gray-500 ml-1">→ {i.patient_response}</span>
+                          <span className="text-slate-500 ml-1">→ {i.patient_response}</span>
                         )}
                       </div>
                     ))}
@@ -310,7 +310,7 @@ Return JSON:
               {/* Medications */}
               {extractedData.medications?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                     <Pill className="w-3 h-3 text-purple-500" /> Medications
                   </p>
                   <div className="flex flex-wrap gap-1">
@@ -326,8 +326,8 @@ Return JSON:
               {/* Confidence */}
               {extractedData.confidence && (
                 <div className="flex items-center gap-2 pt-2 border-t">
-                  <span className="text-xs text-gray-500">Extraction confidence:</span>
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <span className="text-xs text-slate-500">Extraction confidence:</span>
+                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full ${
                         extractedData.confidence > 0.8 ? 'bg-green-500' : 

@@ -214,7 +214,7 @@ Return JSON:
       case 'low': return 'bg-green-500 text-white';
       case 'moderate': return 'bg-yellow-500 text-black';
       case 'high': return 'bg-red-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -274,25 +274,25 @@ Return JSON:
                   <p className={`text-2xl font-bold ${getScoreColor(auditResult.overall_score)}`}>
                     {auditResult.overall_score}%
                   </p>
-                  <p className="text-xs text-gray-500">Overall</p>
+                  <p className="text-xs text-slate-500">Overall</p>
                 </div>
                 <div className="text-center p-2 bg-white rounded-lg">
                   <p className={`text-xl font-bold ${getScoreColor(auditResult.compliance_score)}`}>
                     {auditResult.compliance_score}%
                   </p>
-                  <p className="text-xs text-gray-500">Compliance</p>
+                  <p className="text-xs text-slate-500">Compliance</p>
                 </div>
                 <div className="text-center p-2 bg-white rounded-lg">
                   <p className={`text-xl font-bold ${getScoreColor(auditResult.accuracy_score)}`}>
                     {auditResult.accuracy_score}%
                   </p>
-                  <p className="text-xs text-gray-500">Accuracy</p>
+                  <p className="text-xs text-slate-500">Accuracy</p>
                 </div>
                 <div className="text-center p-2 bg-white rounded-lg">
                   <p className={`text-xl font-bold ${getScoreColor(auditResult.completeness_score)}`}>
                     {auditResult.completeness_score}%
                   </p>
-                  <p className="text-xs text-gray-500">Complete</p>
+                  <p className="text-xs text-slate-500">Complete</p>
                 </div>
               </div>
 
@@ -365,7 +365,7 @@ Return JSON:
                           <div>
                             <span className="text-sm font-medium text-orange-900">{element.element}</span>
                             <Badge variant="outline" className={`ml-2 text-xs ${
-                              element.importance === 'required' ? 'border-red-300 text-red-700' : 'border-gray-300'
+                              element.importance === 'required' ? 'border-red-300 text-red-700' : 'border-slate-300'
                             }`}>
                               {element.importance}
                             </Badge>

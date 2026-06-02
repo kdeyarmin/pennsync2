@@ -238,10 +238,10 @@ Provide specific, actionable insights with confidence levels.`;
         {!predictions && !isAnalyzing && (
           <div className="text-center py-8">
             <Brain className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Generate Predictive Insights
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-slate-600 mb-6">
               AI-powered analysis of patient risks, outcomes, and proactive interventions
             </p>
             <Button
@@ -257,7 +257,7 @@ Provide specific, actionable insights with confidence levels.`;
         {isAnalyzing && (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-            <p className="text-gray-600">Analyzing patient data and generating predictions...</p>
+            <p className="text-slate-600">Analyzing patient data and generating predictions...</p>
           </div>
         )}
 
@@ -352,9 +352,9 @@ Provide specific, actionable insights with confidence levels.`;
                             {risk.probability}%
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-1">Warning Signs:</p>
+                        <p className="text-xs text-slate-600 mb-1">Warning Signs:</p>
                         {risk.warning_signs?.map((sign, sIdx) => (
-                          <p key={sIdx} className="text-xs text-gray-700">• {sign}</p>
+                          <p key={sIdx} className="text-xs text-slate-700">• {sign}</p>
                         ))}
                       </div>
                     ))}
@@ -386,13 +386,13 @@ Provide specific, actionable insights with confidence levels.`;
                       <div key={idx} className={`p-2 rounded border ${
                         gap.impact === 'high' ? 'bg-red-50 border-red-200' :
                         gap.impact === 'medium' ? 'bg-yellow-50 border-yellow-200' :
-                        'bg-gray-50 border-gray-200'
+                        'bg-slate-50 border-slate-200'
                       }`}>
                         <div className="flex items-center justify-between mb-1">
                           <p className="font-semibold text-sm">{gap.gap_type}</p>
                           <Badge variant="outline">{gap.impact} impact</Badge>
                         </div>
-                        <p className="text-xs text-gray-700 mb-1">{gap.description}</p>
+                        <p className="text-xs text-slate-700 mb-1">{gap.description}</p>
                         <p className="text-xs text-blue-700">
                           <strong>Recommendation:</strong> {gap.recommendation}
                         </p>
@@ -419,10 +419,10 @@ Provide specific, actionable insights with confidence levels.`;
                           {intervention.priority}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-700 mb-1">
+                      <p className="text-xs text-slate-700 mb-1">
                         <strong>Rationale:</strong> {intervention.rationale}
                       </p>
-                      <p className="text-xs text-gray-700 mb-1">
+                      <p className="text-xs text-slate-700 mb-1">
                         <strong>Timing:</strong> {intervention.timing}
                       </p>
                       <p className="text-xs text-green-700">
@@ -445,7 +445,7 @@ Provide specific, actionable insights with confidence levels.`;
                   <div className="space-y-2 text-sm">
                     <p><strong>Visit Frequency:</strong> {predictions.resource_forecast.predicted_visit_frequency}</p>
                     <p><strong>Service Intensity:</strong> {predictions.resource_forecast.service_intensity_trend}</p>
-                    <p className="text-gray-700">{predictions.resource_forecast.cost_considerations}</p>
+                    <p className="text-slate-700">{predictions.resource_forecast.cost_considerations}</p>
                   </div>
                 </CardContent>
               </Card>

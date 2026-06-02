@@ -141,7 +141,7 @@ export default function LearningPlanForm({ plan, onSuccess }) {
           value={formData.global_due_date}
           onChange={(e) => setFormData({ ...formData, global_due_date: e.target.value })}
         />
-        <p className="text-xs text-gray-500 mt-1">Default due date for all courses in this plan</p>
+        <p className="text-xs text-slate-500 mt-1">Default due date for all courses in this plan</p>
       </div>
 
       <div className="flex gap-2 pt-4">

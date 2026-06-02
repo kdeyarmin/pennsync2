@@ -236,7 +236,7 @@ export default function CameraFaxSender() {
         {capturedImages.length > 0 && !stream && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-gray-900">{capturedImages.length} page(s) captured</p>
+              <p className="font-medium text-slate-900">{capturedImages.length} page(s) captured</p>
               <Button onClick={startCamera} variant="outline" size="sm">
                 <Camera className="w-4 h-4 mr-2" />
                 Add More Pages
@@ -244,7 +244,7 @@ export default function CameraFaxSender() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {capturedImages.map((img, index) => (
-                <div key={index} className="relative rounded-lg overflow-hidden border-2 border-gray-200 group">
+                <div key={index} className="relative rounded-lg overflow-hidden border-2 border-slate-200 group">
                   <img src={img} alt={`Page ${index + 1}`} className="w-full" />
                   <div className="absolute top-2 right-2">
                     <Button

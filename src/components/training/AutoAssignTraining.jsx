@@ -209,7 +209,7 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
                 </Label>
                 <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2">
                   {autoSuggestions.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">
+                    <p className="text-sm text-slate-500 text-center py-4">
                       No nurses currently need assigned training
                     </p>
                   ) : (
@@ -217,7 +217,7 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
                       <div 
                         key={nurse.email}
                         className={`flex items-center gap-3 p-2 rounded-lg ${
-                          selectedNurses.includes(nurse.email) ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50'
+                          selectedNurses.includes(nurse.email) ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50'
                         }`}
                       >
                         <Checkbox
@@ -231,7 +231,7 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
                               {nurse.priority}
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {nurse.total} recommendations • {nurse.unaddressed} unaddressed
                           </p>
                         </div>
@@ -276,7 +276,7 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
                     <div 
                       key={module.title}
                       className={`flex items-center gap-3 p-2 rounded-lg ${
-                        selectedModules.includes(module.title) ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
+                        selectedModules.includes(module.title) ? 'bg-green-50 border border-green-200' : 'bg-slate-50'
                       }`}
                     >
                       <Checkbox
@@ -288,7 +288,7 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
                         <span className="text-sm font-medium">{module.title}</span>
                         <div className="flex gap-2 mt-0.5">
                           <Badge variant="outline" className="text-xs capitalize">{module.category}</Badge>
-                          <span className="text-xs text-gray-500">{module.duration} min</span>
+                          <span className="text-xs text-slate-500">{module.duration} min</span>
                         </div>
                       </div>
                     </div>
@@ -310,7 +310,7 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
                     <SelectItem value="60">In 60 days</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Due: {format(addDays(new Date(), parseInt(dueInDays)), 'MMMM d, yyyy')}
                 </p>
               </div>

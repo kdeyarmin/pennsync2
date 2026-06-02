@@ -292,7 +292,7 @@ export default function ClinicalDecisionSupport({
       case 'low':
         return <ClipboardCheck className="w-5 h-5 text-blue-600" />;
       default:
-        return <Lightbulb className="w-5 h-5 text-gray-600" />;
+        return <Lightbulb className="w-5 h-5 text-slate-600" />;
     }
   };
 
@@ -306,7 +306,7 @@ export default function ClinicalDecisionSupport({
       case 'low':
         return 'border-blue-300 bg-blue-50';
       default:
-        return 'border-gray-300 bg-gray-50';
+        return 'border-slate-300 bg-slate-50';
     }
   };
 
@@ -335,21 +335,21 @@ export default function ClinicalDecisionSupport({
               {getPriorityIcon(suggestion.priority)}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <AlertDescription className="font-semibold text-gray-900 mb-0">
+                  <AlertDescription className="font-semibold text-slate-900 mb-0">
                     {suggestion.title}
                   </AlertDescription>
                   <Badge variant="outline" className="text-xs">
                     {getTypeLabel(suggestion.type)}
                   </Badge>
                 </div>
-                <AlertDescription className="text-sm text-gray-700 mb-3">
+                <AlertDescription className="text-sm text-slate-700 mb-3">
                   {suggestion.message}
                 </AlertDescription>
 
                 {suggestion.suggestions && (
                   <div className="mb-3">
-                    <p className="text-xs font-medium text-gray-600 mb-1">Consider documenting:</p>
-                    <ul className="list-disc ml-5 text-xs text-gray-600 space-y-0.5">
+                    <p className="text-xs font-medium text-slate-600 mb-1">Consider documenting:</p>
+                    <ul className="list-disc ml-5 text-xs text-slate-600 space-y-0.5">
                       {suggestion.suggestions.map((item, index) => (
                         <li key={index}>{item}</li>
                       ))}

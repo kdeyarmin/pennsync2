@@ -404,8 +404,8 @@ Return JSON:
     switch (priority) {
       case 'urgent': return 'bg-red-500 text-white';
       case 'routine': return 'bg-blue-500 text-white';
-      case 'optional': return 'bg-gray-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'optional': return 'bg-slate-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -414,7 +414,7 @@ Return JSON:
       case 'high': return 'bg-red-100 border-red-300 text-red-900';
       case 'medium': return 'bg-yellow-100 border-yellow-300 text-yellow-900';
       case 'low': return 'bg-blue-100 border-blue-300 text-blue-900';
-      default: return 'bg-gray-100 border-gray-300 text-gray-900';
+      default: return 'bg-slate-100 border-slate-300 text-slate-900';
     }
   };
 
@@ -462,7 +462,7 @@ Return JSON:
             {/* Auto-Populate Assessments Tab */}
             <TabsContent value="assessments" className="space-y-3">
               <div className="flex justify-between items-center">
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-slate-600">
                   Based on: {patient.primary_diagnosis || 'Patient diagnosis'}
                 </p>
                 <Button
@@ -515,7 +515,7 @@ Return JSON:
                             )}
                           </Button>
                         </div>
-                        <p className="text-xs text-gray-500 mb-2">{assessment.relevance}</p>
+                        <p className="text-xs text-slate-500 mb-2">{assessment.relevance}</p>
                         {assessment.key_findings?.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-2">
                             {assessment.key_findings.map((finding, i) => (
@@ -535,7 +535,7 @@ Return JSON:
                     const isInserted = insertedAssessments.includes(id);
                     
                     return (
-                      <div key={idx} className="p-2 bg-white rounded-lg border border-gray-100">
+                      <div key={idx} className="p-2 bg-white rounded-lg border border-slate-100">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getIconComponent(assessment.icon)}
@@ -606,7 +606,7 @@ Return JSON:
                   {/* Identified Risks */}
                   {followUpActions.identified_risks?.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-700">⚠️ Identified Risks</p>
+                      <p className="text-xs font-semibold text-slate-700">⚠️ Identified Risks</p>
                       {followUpActions.identified_risks.map((risk, idx) => (
                         <Alert key={idx} className={getSeverityColor(risk.severity)}>
                           <AlertTriangle className="w-4 h-4" />
@@ -622,7 +622,7 @@ Return JSON:
                   {/* Follow-up Actions */}
                   {followUpActions.follow_up_actions?.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-700">📋 Follow-Up Actions</p>
+                      <p className="text-xs font-semibold text-slate-700">📋 Follow-Up Actions</p>
                       {followUpActions.follow_up_actions.map((action, idx) => {
                         const id = `action-${idx}`;
                         const isCompleted = completedActions.includes(id);
@@ -634,7 +634,7 @@ Return JSON:
                                 <Badge className={getPriorityColor(action.priority)} variant="secondary">
                                   {action.priority}
                                 </Badge>
-                                <span className="text-xs text-gray-500">{action.timeframe}</span>
+                                <span className="text-xs text-slate-500">{action.timeframe}</span>
                               </div>
                               <p className="text-sm">{action.action}</p>
                             </div>
@@ -655,7 +655,7 @@ Return JSON:
                   {/* Education Materials */}
                   {followUpActions.education_materials?.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-700">📚 Patient Education</p>
+                      <p className="text-xs font-semibold text-slate-700">📚 Patient Education</p>
                       {followUpActions.education_materials.map((edu, idx) => {
                         const id = `edu-${idx}`;
                         const isCompleted = completedActions.includes(id);
@@ -691,7 +691,7 @@ Return JSON:
                   {/* Quality Interventions */}
                   {followUpActions.quality_interventions?.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-700">⭐ Quality Measure Interventions</p>
+                      <p className="text-xs font-semibold text-slate-700">⭐ Quality Measure Interventions</p>
                       {followUpActions.quality_interventions.map((qi, idx) => {
                         const id = `qi-${idx}`;
                         const isCompleted = completedActions.includes(id);
@@ -770,7 +770,7 @@ Return JSON:
                   )}
 
                   {/* Common Queries */}
-                  <p className="text-xs font-semibold text-gray-700">💬 Common Patient Questions</p>
+                  <p className="text-xs font-semibold text-slate-700">💬 Common Patient Questions</p>
                   {queryResponses.common_queries?.map((query, idx) => {
                     const id = `query-${idx}`;
                     const isCopied = copiedResponses.includes(id);
@@ -790,10 +790,10 @@ Return JSON:
                             {isCopied ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : 'Copy'}
                           </Button>
                         </div>
-                        <p className="text-sm font-medium text-gray-900 mb-1">"{query.question}"</p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{query.response}</p>
+                        <p className="text-sm font-medium text-slate-900 mb-1">"{query.question}"</p>
+                        <p className="text-sm text-slate-700 bg-slate-50 p-2 rounded">{query.response}</p>
                         {query.follow_up_tip && (
-                          <p className="text-xs text-gray-500 mt-2 italic">
+                          <p className="text-xs text-slate-500 mt-2 italic">
                             💡 Tip: {query.follow_up_tip}
                           </p>
                         )}

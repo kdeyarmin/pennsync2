@@ -181,7 +181,7 @@ Use professional medical terminology. Be detailed and specific. Include all rele
               <div>
                 <Label>Context from Smart Notes</Label>
                 <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-sm">
-                  <p className="text-gray-700 whitespace-pre-wrap">{additionalContext}</p>
+                  <p className="text-slate-700 whitespace-pre-wrap">{additionalContext}</p>
                   <Button
                     size="sm"
                     variant="ghost"

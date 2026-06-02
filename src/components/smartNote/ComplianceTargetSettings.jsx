@@ -116,7 +116,7 @@ export default function ComplianceTargetSettings({
                   step={5}
                   className="mb-2"
                 />
-                <div className="flex justify-between text-xs text-gray-500">
+                <div className="flex justify-between text-xs text-slate-500">
                   <span>70%</span>
                   <span>85%</span>
                   <span>100%</span>

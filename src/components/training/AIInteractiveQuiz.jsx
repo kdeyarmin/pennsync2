@@ -145,7 +145,7 @@ Focus on real-world application, not just memorization.`,
         <CardContent className="p-6 text-center">
           <Brain className="w-12 h-12 text-purple-600 mx-auto mb-3" />
           <h3 className="font-semibold text-lg mb-2">AI-Generated Quiz</h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Test your knowledge on: <strong>{topic}</strong>
           </p>
           <div className="flex justify-center gap-2 mb-4">
@@ -165,7 +165,7 @@ Focus on real-world application, not just memorization.`,
       <Card className="border-2 border-purple-200">
         <CardContent className="p-8 text-center">
           <Loader2 className="w-10 h-10 animate-spin text-purple-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Creating your personalized quiz...</p>
+          <p className="text-sm text-slate-600">Creating your personalized quiz...</p>
         </CardContent>
       </Card>
     );
@@ -177,13 +177,13 @@ Focus on real-world application, not just memorization.`,
       <Card className="border-2 border-purple-200">
         <CardContent className="p-6">
           <div className="text-center mb-6">
-            <Trophy className={`w-16 h-16 mx-auto mb-3 ${percentage >= 80 ? 'text-yellow-500' : percentage >= 60 ? 'text-gray-400' : 'text-orange-400'}`} />
+            <Trophy className={`w-16 h-16 mx-auto mb-3 ${percentage >= 80 ? 'text-yellow-500' : percentage >= 60 ? 'text-slate-400' : 'text-orange-400'}`} />
             <h3 className="text-2xl font-bold mb-1">Quiz Complete!</h3>
-            <p className="text-gray-600">You scored</p>
+            <p className="text-slate-600">You scored</p>
             <p className={`text-4xl font-bold ${percentage >= 80 ? 'text-green-600' : percentage >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
               {score}/{quiz.questions.length}
             </p>
-            <p className="text-lg text-gray-500">{percentage}%</p>
+            <p className="text-lg text-slate-500">{percentage}%</p>
           </div>
 
           <div className="space-y-2 mb-6">
@@ -196,7 +196,7 @@ Focus on real-world application, not just memorization.`,
                 )}
                 <span className="text-sm">Question {idx + 1}</span>
                 {!ans.isCorrect && (
-                  <span className="text-xs text-gray-500 ml-auto">
+                  <span className="text-xs text-slate-500 ml-auto">
                     Correct: {ans.correct}
                   </span>
                 )}
@@ -245,7 +245,7 @@ Focus on real-world application, not just memorization.`,
 
         {/* Question */}
         <div>
-          <p className="font-medium text-gray-900 mb-4">{question.question}</p>
+          <p className="font-medium text-slate-900 mb-4">{question.question}</p>
 
           <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} disabled={showExplanation}>
             <div className="space-y-2">
@@ -258,10 +258,10 @@ Focus on real-world application, not just memorization.`,
                         ? 'bg-green-50 border-green-300'
                         : selectedAnswer === option.letter
                         ? 'bg-red-50 border-red-300'
-                        : 'bg-gray-50 border-gray-200'
+                        : 'bg-slate-50 border-slate-200'
                       : selectedAnswer === option.letter
                       ? 'bg-purple-50 border-purple-300'
-                      : 'hover:bg-gray-50 border-gray-200'
+                      : 'hover:bg-slate-50 border-slate-200'
                   }`}
                 >
                   <RadioGroupItem value={option.letter} id={option.letter} />

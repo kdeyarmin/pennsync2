@@ -292,7 +292,7 @@ Return JSON:
       case 'non_compliant':
         return <Badge className="bg-red-100 text-red-800">Non-Compliant</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
+        return <Badge className="bg-slate-100 text-slate-800">Unknown</Badge>;
     }
   };
 
@@ -342,10 +342,10 @@ Return JSON:
           {!analysis ? (
             <div className="text-center py-4">
               <FileCheck className="w-12 h-12 text-indigo-300 mx-auto mb-3" />
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-slate-600 mb-2">
                 Analyze your note for Medicare compliance
               </p>
-              <p className="text-xs text-gray-500 mb-4">
+              <p className="text-xs text-slate-500 mb-4">
                 Get specific suggestions for skilled need, homebound status, patient response, goal progress, and safety
               </p>
               <Button
@@ -363,7 +363,7 @@ Return JSON:
           ) : (
             <div className="space-y-4">
               {/* Overall Score */}
-              <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="p-3 bg-slate-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Overall Compliance</span>
                   <span className={`text-2xl font-bold ${getScoreColor(analysis.overall_score)}`}>
@@ -371,7 +371,7 @@ Return JSON:
                   </span>
                 </div>
                 <Progress value={analysis.overall_score} className="h-2 mb-2" />
-                <p className="text-xs text-gray-600">{analysis.summary}</p>
+                <p className="text-xs text-slate-600">{analysis.summary}</p>
               </div>
 
               {/* Critical Fixes Alert */}
@@ -399,7 +399,7 @@ Return JSON:
                     {analysis.quick_wins.map((win, idx) => (
                       <div key={idx} className="flex items-start justify-between gap-2 p-2 bg-white rounded border border-green-100">
                         <div className="flex-1">
-                          <p className="text-xs text-gray-700">{win.suggestion}</p>
+                          <p className="text-xs text-slate-700">{win.suggestion}</p>
                           <p className="text-xs text-green-700 font-mono mt-1">"{win.text_to_add}"</p>
                         </div>
                         <div className="flex gap-1">
@@ -456,7 +456,7 @@ Return JSON:
                         {categoryData.found_elements?.length > 0 && (
                           <div className="mb-3">
                             <p className="text-xs font-semibold text-green-700 mb-1">✓ Found in Note:</p>
-                            <ul className="text-xs text-gray-600 list-disc list-inside">
+                            <ul className="text-xs text-slate-600 list-disc list-inside">
                               {categoryData.found_elements.map((el, idx) => (
                                 <li key={idx}>{el}</li>
                               ))}
@@ -468,7 +468,7 @@ Return JSON:
                         {categoryData.deficiencies?.length > 0 && (
                           <div className="mb-3">
                             <p className="text-xs font-semibold text-red-700 mb-1">✗ Missing or Incomplete:</p>
-                            <ul className="text-xs text-gray-600 list-disc list-inside">
+                            <ul className="text-xs text-slate-600 list-disc list-inside">
                               {categoryData.deficiencies.map((def, idx) => (
                                 <li key={idx}>{def}</li>
                               ))}
@@ -498,14 +498,14 @@ Return JSON:
                                       {suggestion.type === 'add' ? 'Add' : 'Rephrase'}
                                     </Badge>
                                     {suggestion.original_text && (
-                                      <p className="text-xs text-gray-500 mt-1 line-through">
+                                      <p className="text-xs text-slate-500 mt-1 line-through">
                                         Original: "{suggestion.original_text}"
                                       </p>
                                     )}
                                     <p className="text-xs text-indigo-800 font-medium mt-1">
                                       "{suggestion.suggested_text}"
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-1">{suggestion.rationale}</p>
+                                    <p className="text-xs text-slate-500 mt-1">{suggestion.rationale}</p>
                                     {suggestion.clinical_reasoning_example && (
                                       <div className="mt-1 p-1.5 bg-purple-50 rounded border border-purple-100">
                                         <p className="text-xs text-purple-700">
@@ -515,7 +515,7 @@ Return JSON:
                                       </div>
                                     )}
                                     {suggestion.example_placement && (
-                                      <p className="text-xs text-gray-400 italic">→ {suggestion.example_placement}</p>
+                                      <p className="text-xs text-slate-400 italic">→ {suggestion.example_placement}</p>
                                     )}
                                   </div>
                                   <div className="flex gap-1">
@@ -544,19 +544,19 @@ Return JSON:
 
                         {/* Model Phrases */}
                         {analysis.model_phrases?.[category.id]?.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <p className="text-xs font-semibold text-gray-700 mb-1">📝 Model Phrases for {diagnosis || 'General'}:</p>
+                          <div className="mt-3 pt-3 border-t border-slate-200">
+                            <p className="text-xs font-semibold text-slate-700 mb-1">📝 Model Phrases for {diagnosis || 'General'}:</p>
                             <div className="space-y-1">
                               {analysis.model_phrases[category.id].map((phrase, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-1.5 bg-gray-50 rounded text-xs">
-                                  <span className="text-gray-700">"{phrase}"</span>
+                                <div key={idx} className="flex items-center justify-between p-1.5 bg-slate-50 rounded text-xs">
+                                  <span className="text-slate-700">"{phrase}"</span>
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     className="h-5 px-1"
                                     onClick={() => handleInsertSuggestion(phrase)}
                                   >
-                                    <Plus className="w-3 h-3 text-gray-500" />
+                                    <Plus className="w-3 h-3 text-slate-500" />
                                   </Button>
                                 </div>
                               ))}
@@ -632,7 +632,7 @@ Return JSON:
                           {copiedIndex === 'primary-icd' ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-700 mt-1">{analysis.coding_suggestions.primary_icd10.description}</p>
+                      <p className="text-xs text-slate-700 mt-1">{analysis.coding_suggestions.primary_icd10.description}</p>
                       <p className="text-xs text-blue-600 mt-1">{analysis.coding_suggestions.primary_icd10.rationale}</p>
                     </div>
                   )}
@@ -640,12 +640,12 @@ Return JSON:
                   {/* Secondary ICD-10 */}
                   {analysis.coding_suggestions.secondary_icd10?.length > 0 && (
                     <div className="mb-2">
-                      <p className="text-xs text-gray-600 mb-1">Secondary Diagnoses:</p>
+                      <p className="text-xs text-slate-600 mb-1">Secondary Diagnoses:</p>
                       <div className="flex flex-wrap gap-1">
                         {analysis.coding_suggestions.secondary_icd10.map((code, idx) => (
                           <div key={idx} className="p-1.5 bg-white rounded border border-blue-100 text-xs">
                             <Badge variant="outline" className="font-mono mr-1">{code.code}</Badge>
-                            <span className="text-gray-600">{code.description}</span>
+                            <span className="text-slate-600">{code.description}</span>
                           </div>
                         ))}
                       </div>
@@ -655,7 +655,7 @@ Return JSON:
                   {/* CPT Codes */}
                   {analysis.coding_suggestions.cpt_codes?.length > 0 && (
                     <div className="mb-2">
-                      <p className="text-xs text-gray-600 mb-1">CPT Codes:</p>
+                      <p className="text-xs text-slate-600 mb-1">CPT Codes:</p>
                       {analysis.coding_suggestions.cpt_codes.map((cpt, idx) => (
                         <div key={idx} className={`p-2 rounded border text-xs mb-1 ${cpt.documentation_present ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
                           <div className="flex items-center justify-between">

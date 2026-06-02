@@ -61,9 +61,9 @@ export default function UserActivityLog() {
       'update': 'bg-yellow-100 text-yellow-800',
       'delete': 'bg-red-100 text-red-800',
       'login': 'bg-purple-100 text-purple-800',
-      'page_visit': 'bg-gray-100 text-gray-800'
+      'page_visit': 'bg-slate-100 text-slate-800'
     };
-    return colors[action] || 'bg-gray-100 text-gray-800';
+    return colors[action] || 'bg-slate-100 text-slate-800';
   };
 
   const filteredActivities = activities.filter(activity => {
@@ -96,7 +96,7 @@ export default function UserActivityLog() {
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-3 mb-4">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search activities..."
               value={searchTerm}
@@ -134,10 +134,10 @@ export default function UserActivityLog() {
 
         {/* Activity List */}
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">Loading activities...</div>
+          <div className="text-center py-8 text-slate-500">Loading activities...</div>
         ) : filteredActivities.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <div className="text-center py-8 text-slate-500">
+            <Activity className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p>No activities found</p>
           </div>
         ) : (
@@ -145,14 +145,14 @@ export default function UserActivityLog() {
             {filteredActivities.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <div className={`p-2 rounded-full ${getActionColor(activity.action)}`}>
                   {getActionIcon(activity.action)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-slate-900">
                       {activity.user_name || activity.user_email}
                     </span>
                     <Badge className={getActionColor(activity.action)}>
@@ -162,13 +162,13 @@ export default function UserActivityLog() {
                       <Badge variant="outline">{activity.entity_type}</Badge>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-slate-600 mt-1">
                     {activity.page && <span>Page: {activity.page}</span>}
                     {activity.details?.description && (
                       <span className="ml-2">• {activity.details.description}</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
                     <Calendar className="w-3 h-3" />
                     {formatEastern(activity.created_date, 'MMM d, yyyy h:mm a')} ET
                   </div>
@@ -178,7 +178,7 @@ export default function UserActivityLog() {
           </div>
         )}
 
-        <div className="mt-4 text-xs text-gray-500 text-center">
+        <div className="mt-4 text-xs text-slate-500 text-center">
           Showing {filteredActivities.length} of {activities.length} activities
         </div>
       </CardContent>

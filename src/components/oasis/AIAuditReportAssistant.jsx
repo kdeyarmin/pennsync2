@@ -126,7 +126,7 @@ Return JSON:
       <CardContent className="pt-3 space-y-3">
         {!aiFindings ? (
           <div className="text-center py-4">
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-slate-600 mb-3">
               Generate AI-powered audit findings and recommendations
             </p>
             <Button onClick={generateAuditFindings} disabled={isGenerating}>
@@ -157,7 +157,7 @@ Return JSON:
                   {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                 </Button>
               </div>
-              <div className="bg-gray-50 p-2 rounded border text-sm max-h-32 overflow-y-auto">
+              <div className="bg-slate-50 p-2 rounded border text-sm max-h-32 overflow-y-auto">
                 {aiFindings.findings_narrative}
               </div>
             </div>
@@ -190,7 +190,7 @@ Return JSON:
             )}
 
             {/* Follow-up */}
-            <p className="text-xs text-gray-600 italic">
+            <p className="text-xs text-slate-600 italic">
               <Scale className="w-3 h-3 inline mr-1" />
               {aiFindings.follow_up_audit_recommendation}
             </p>

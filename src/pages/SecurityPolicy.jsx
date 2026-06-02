@@ -21,11 +21,11 @@ export default function SecurityPolicy() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 mb-2">
           <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
           <span className="truncate">Security & Compliance</span>
         </h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">
+        <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">
           HIPAA security measures, audit trails, and compliance documentation
         </p>
       </div>
@@ -82,8 +82,8 @@ export default function SecurityPolicy() {
           ) : (
             <Card>
               <CardContent className="p-12 text-center">
-                <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600">Admin access required</p>
+                <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600">Admin access required</p>
               </CardContent>
             </Card>
           )}
@@ -95,8 +95,8 @@ export default function SecurityPolicy() {
           ) : (
             <Card>
               <CardContent className="p-12 text-center">
-                <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600">Admin access required</p>
+                <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600">Admin access required</p>
               </CardContent>
             </Card>
           )}
@@ -108,8 +108,8 @@ export default function SecurityPolicy() {
           ) : (
             <Card>
               <CardContent className="p-12 text-center">
-                <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600">Admin access required</p>
+                <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600">Admin access required</p>
               </CardContent>
             </Card>
           )}
@@ -121,8 +121,8 @@ export default function SecurityPolicy() {
           ) : (
             <Card>
               <CardContent className="p-12 text-center">
-                <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600">Admin access required</p>
+                <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600">Admin access required</p>
               </CardContent>
             </Card>
           )}

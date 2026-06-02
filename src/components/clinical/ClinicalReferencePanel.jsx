@@ -74,7 +74,7 @@ const SCALES = [
     category: "neurological",
     description: "Measures the degree of disability or dependence in daily activities after stroke.",
     scores: [
-      { label: "Dead", range: "6", color: "bg-gray-200 text-gray-700" },
+      { label: "Dead", range: "6", color: "bg-slate-200 text-slate-700" },
       { label: "Severe Disability", range: "5", color: "bg-red-100 text-red-800" },
       { label: "Moderately Severe", range: "4", color: "bg-orange-100 text-orange-800" },
       { label: "Moderate", range: "3", color: "bg-yellow-100 text-yellow-800" },
@@ -207,7 +207,7 @@ export default function ClinicalReferencePanel() {
     <div className="space-y-5">
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           placeholder="Search clinical references..."
           value={search}
@@ -229,18 +229,18 @@ export default function ClinicalReferencePanel() {
             <Card key={scale.name} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base font-semibold text-gray-900">{scale.name}</CardTitle>
-                  <Badge className={`text-xs flex-shrink-0 ${categoryColors[scale.category] || "bg-gray-100 text-gray-700"}`}>
+                  <CardTitle className="text-base font-semibold text-slate-900">{scale.name}</CardTitle>
+                  <Badge className={`text-xs flex-shrink-0 ${categoryColors[scale.category] || "bg-slate-100 text-slate-700"}`}>
                     {scale.category}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600">{scale.description}</p>
+                <p className="text-sm text-slate-600">{scale.description}</p>
               </CardHeader>
               <CardContent className="pt-0 space-y-3">
                 <div className="space-y-1">
                   {scale.scores.map((s) => (
                     <div key={s.label} className="flex items-center justify-between text-xs">
-                      <span className="text-gray-700">{s.label}</span>
+                      <span className="text-slate-700">{s.label}</span>
                       <Badge className={`text-xs ${s.color}`}>{s.range}</Badge>
                     </div>
                   ))}
@@ -261,8 +261,8 @@ export default function ClinicalReferencePanel() {
             <Card key={protocol.name} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base font-semibold text-gray-900">{protocol.name}</CardTitle>
-                  <Badge className={`text-xs flex-shrink-0 ${categoryColors[protocol.category] || "bg-gray-100 text-gray-700"}`}>
+                  <CardTitle className="text-base font-semibold text-slate-900">{protocol.name}</CardTitle>
+                  <Badge className={`text-xs flex-shrink-0 ${categoryColors[protocol.category] || "bg-slate-100 text-slate-700"}`}>
                     {protocol.category}
                   </Badge>
                 </div>
@@ -270,7 +270,7 @@ export default function ClinicalReferencePanel() {
               <CardContent className="pt-0 space-y-3">
                 <ol className="space-y-1.5">
                   {protocol.steps.map((step, i) => (
-                    <li key={i} className="flex gap-2 text-sm text-gray-700">
+                    <li key={i} className="flex gap-2 text-sm text-slate-700">
                       <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">{i + 1}</span>
                       {step}
                     </li>
@@ -293,14 +293,14 @@ export default function ClinicalReferencePanel() {
                 <Activity className="w-5 h-5 text-blue-600" />
                 Vital Signs Quick Reference
               </CardTitle>
-              <p className="text-sm text-gray-600">Normal ranges, concerning values, and critical thresholds for home health documentation.</p>
+              <p className="text-sm text-slate-600">Normal ranges, concerning values, and critical thresholds for home health documentation.</p>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 pr-4 font-semibold text-gray-700">Parameter</th>
+                      <th className="text-left py-2 pr-4 font-semibold text-slate-700">Parameter</th>
                       <th className="text-left py-2 pr-4 font-semibold text-green-700">Normal</th>
                       <th className="text-left py-2 pr-4 font-semibold text-yellow-700">Concern</th>
                       <th className="text-left py-2 font-semibold text-red-700">Critical</th>
@@ -308,8 +308,8 @@ export default function ClinicalReferencePanel() {
                   </thead>
                   <tbody>
                     {VITALS_REFERENCE.map((row) => (
-                      <tr key={row.parameter} className="border-b hover:bg-gray-50">
-                        <td className="py-2 pr-4 font-medium text-gray-900">{row.parameter}</td>
+                      <tr key={row.parameter} className="border-b hover:bg-slate-50">
+                        <td className="py-2 pr-4 font-medium text-slate-900">{row.parameter}</td>
                         <td className="py-2 pr-4 text-green-700">{row.normal}</td>
                         <td className="py-2 pr-4 text-yellow-700">{row.concern}</td>
                         <td className="py-2 text-red-700">{row.critical}</td>
@@ -318,7 +318,7 @@ export default function ClinicalReferencePanel() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-gray-500 mt-3">* Values are general guidelines. Always follow physician-specific orders and patient baseline values.</p>
+              <p className="text-xs text-slate-500 mt-3">* Values are general guidelines. Always follow physician-specific orders and patient baseline values.</p>
             </CardContent>
           </Card>
         </TabsContent>

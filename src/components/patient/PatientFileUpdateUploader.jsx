@@ -136,7 +136,7 @@ export default function PatientFileUpdateUploader() {
         </Alert>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Report type</p>
+          <p className="text-sm font-medium text-slate-700">Report type</p>
           <Select value={reportType} onValueChange={setReportType} disabled={isProcessing}>
             <SelectTrigger>
               <SelectValue />
@@ -146,10 +146,10 @@ export default function PatientFileUpdateUploader() {
               <SelectItem value="discharge_report">{REPORT_OPTIONS.discharge_report.label}</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-gray-500">{REPORT_OPTIONS[reportType].helper}</p>
+          <p className="text-xs text-slate-500">{REPORT_OPTIONS[reportType].helper}</p>
         </div>
 
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
           <input
             type="file"
             accept=".csv"
@@ -159,17 +159,17 @@ export default function PatientFileUpdateUploader() {
             disabled={isProcessing}
           />
           <label htmlFor="patient-file-upload" className="cursor-pointer block">
-            <Upload className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-            <p className="text-sm font-medium text-gray-700 mb-1">
+            <Upload className="w-10 h-10 mx-auto mb-3 text-slate-400" />
+            <p className="text-sm font-medium text-slate-700 mb-1">
               {fileName || "Click to upload CSV file"}
             </p>
-            <p className="text-xs text-gray-500">CSV only • several hundred rows supported</p>
+            <p className="text-xs text-slate-500">CSV only • several hundred rows supported</p>
           </label>
         </div>
 
         {isProcessing && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-slate-600">
               <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
               Carefully verifying uploaded patients...
             </div>

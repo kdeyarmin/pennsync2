@@ -24,7 +24,7 @@ export default function FaxActivityFeed() {
       case 'sent':
         return <Send className="w-5 h-5 text-blue-600" />;
       default:
-        return <Clock className="w-5 h-5 text-gray-600" />;
+        return <Clock className="w-5 h-5 text-slate-600" />;
     }
   };
 
@@ -39,7 +39,7 @@ export default function FaxActivityFeed() {
       case 'sent':
         return 'bg-blue-100 text-blue-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -51,26 +51,26 @@ export default function FaxActivityFeed() {
       <CardContent>
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {recentFaxes.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">No recent activity</p>
+            <p className="text-sm text-slate-500 text-center py-8">No recent activity</p>
           ) : (
             recentFaxes.map((fax) => (
-              <div key={fax.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div key={fax.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
                 <div className="flex-shrink-0 mt-1">
                   {getActivityIcon(fax.status)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium text-sm text-gray-900 truncate">
+                    <p className="font-medium text-sm text-slate-900 truncate">
                       {fax.document_name || 'Untitled Fax'}
                     </p>
                     <Badge className={`${getStatusColor(fax.status)} text-xs`}>
                       {fax.status}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-slate-600">
                     To: {fax.to_name || fax.to_number}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     {formatDistanceToNow(new Date(fax.created_date), { addSuffix: true })}
                   </p>
                   {fax.failure_reason && (

@@ -148,9 +148,9 @@ Return as JSON:
 
   if (!noteContent || noteContent.length < 50) {
     return (
-      <Alert className="border-gray-200">
-        <Brain className="w-4 h-4 text-gray-400" />
-        <AlertDescription className="text-gray-600">
+      <Alert className="border-slate-200">
+        <Brain className="w-4 h-4 text-slate-400" />
+        <AlertDescription className="text-slate-600">
           Start typing your note to receive real-time compliance suggestions...
         </AlertDescription>
       </Alert>
@@ -191,7 +191,7 @@ Return as JSON:
               <div className="bg-white rounded-lg p-3 border border-blue-200">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-orange-600" />
-                  <span className="font-semibold text-sm text-gray-900">
+                  <span className="font-semibold text-sm text-slate-900">
                     {suggestions.length} Suggestion{suggestions.length > 1 ? 's' : ''} for Improvement
                   </span>
                 </div>
@@ -221,10 +221,10 @@ Return as JSON:
                         </div>
 
                         <div className="bg-white/50 rounded p-2 mb-2 text-xs">
-                          <p className="text-gray-600 italic mb-1">
+                          <p className="text-slate-600 italic mb-1">
                             💡 {suggestion.rationale}
                           </p>
-                          <p className="text-gray-700">
+                          <p className="text-slate-700">
                             <strong>Suggestion:</strong> {suggestion.suggestion}
                           </p>
                         </div>

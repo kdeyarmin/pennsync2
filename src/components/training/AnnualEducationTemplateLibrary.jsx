@@ -365,8 +365,8 @@ const REGULATORY_CATEGORIES = [
     id: "tb_awareness",
     name: "Tuberculosis Screening & Awareness",
     icon: Stethoscope,
-    color: "bg-gray-100 text-gray-800 border-gray-200",
-    iconColor: "text-gray-600",
+    color: "bg-slate-100 text-slate-800 border-slate-200",
+    iconColor: "text-slate-600",
     templates: [
       {
         name: "Tuberculosis (TB) Screening & Infection Control",

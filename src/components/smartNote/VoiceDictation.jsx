@@ -235,7 +235,7 @@ Return JSON:
   };
 
   return (
-    <Card className={`border-2 transition-all ${isRecording ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+    <Card className={`border-2 transition-all ${isRecording ? 'border-red-400 bg-red-50' : 'border-slate-200'}`}>
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           {/* Recording Button */}
@@ -269,15 +269,15 @@ Return JSON:
               ) : isProcessing ? (
                 <Badge className="bg-yellow-600">Transcribing...</Badge>
               ) : (
-                <span className="text-gray-600">Click to start voice dictation</span>
+                <span className="text-slate-600">Click to start voice dictation</span>
               )}
             </div>
 
             {/* Audio Level Indicator */}
             {isRecording && (
               <div className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4 text-gray-500" />
-                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <Volume2 className="w-4 h-4 text-slate-500" />
+                <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-75"
                     style={{ width: `${audioLevel * 100}%` }}
@@ -287,13 +287,13 @@ Return JSON:
             )}
 
             {currentTranscript && (
-              <p className="text-sm text-gray-700 mt-2 p-2 bg-white rounded border">
+              <p className="text-sm text-slate-700 mt-2 p-2 bg-white rounded border">
                 {currentTranscript}
               </p>
             )}
 
             {!isRecording && !isProcessing && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500">
                 Speak your clinical notes naturally. They will be transcribed in real-time.
               </p>
             )}

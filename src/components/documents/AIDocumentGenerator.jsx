@@ -248,7 +248,7 @@ Generate the complete document now with all available fields pre-filled:`;
                       <SelectItem key={type.value} value={type.value}>
                         <div className="flex flex-col">
                           <span className="font-medium">{type.label}</span>
-                          <span className="text-xs text-gray-500">{type.description}</span>
+                          <span className="text-xs text-slate-500">{type.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -265,7 +265,7 @@ Generate the complete document now with all available fields pre-filled:`;
                   rows={4}
                   className="resize-none"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   e.g., "Include recent blood pressure readings" or "Focus on wound care instructions"
                 </p>
               </div>
@@ -300,23 +300,23 @@ Generate the complete document now with all available fields pre-filled:`;
               {patient ? (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-600">Patient Name</p>
+                    <p className="text-sm text-slate-600">Patient Name</p>
                     <p className="font-semibold">{patient.first_name} {patient.last_name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Date of Birth</p>
+                    <p className="text-sm text-slate-600">Date of Birth</p>
                     <p className="font-semibold">{patient.date_of_birth}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Primary Diagnosis</p>
+                    <p className="text-sm text-slate-600">Primary Diagnosis</p>
                     <p className="font-semibold">{patient.primary_diagnosis || 'Not specified'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Recent Visits</p>
+                    <p className="text-sm text-slate-600">Recent Visits</p>
                     <p className="font-semibold">{recentVisits.length} visits in records</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Active Care Plans</p>
+                    <p className="text-sm text-slate-600">Active Care Plans</p>
                     <p className="font-semibold">{carePlans.length} active plans</p>
                   </div>
                   
@@ -330,8 +330,8 @@ Generate the complete document now with all available fields pre-filled:`;
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                <div className="text-center py-8 text-slate-500">
+                  <FileText className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                   <p>Select a patient to see details</p>
                 </div>
               )}
@@ -353,10 +353,10 @@ Generate the complete document now with all available fields pre-filled:`;
                 </CardDescription>
               </div>
               <div className="flex gap-1.5">
-                <Button onClick={handleReset} size="sm" className="text-xs px-2 py-0.5 h-auto border border-gray-300 hover:bg-gray-50">
+                <Button onClick={handleReset} size="sm" className="text-xs px-2 py-0.5 h-auto border border-slate-300 hover:bg-slate-50">
                   Generate New
                 </Button>
-                <Button onClick={handleDownload} size="sm" className="text-xs px-2 py-0.5 h-auto border border-gray-300 hover:bg-gray-50">
+                <Button onClick={handleDownload} size="sm" className="text-xs px-2 py-0.5 h-auto border border-slate-300 hover:bg-slate-50">
                   <Download className="w-2.5 h-2.5 mr-1" />
                   Download
                 </Button>
@@ -368,7 +368,7 @@ Generate the complete document now with all available fields pre-filled:`;
             </div>
           </CardHeader>
           <CardContent>
-            <div className="bg-white border border-gray-300 rounded-lg p-6 min-h-[600px] max-h-[800px] overflow-y-auto">
+            <div className="bg-white border border-slate-300 rounded-lg p-6 min-h-[600px] max-h-[800px] overflow-y-auto">
               <pre className="whitespace-pre-wrap font-serif text-sm leading-relaxed">
                 {generatedDocument}
               </pre>

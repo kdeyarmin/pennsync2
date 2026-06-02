@@ -60,10 +60,10 @@ const WINDOWS = [
 
 function Stat({ label, value, sub }) {
   return (
-    <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-xs text-gray-600">{label}</p>
-      {sub && <p className="text-[11px] text-gray-400 mt-0.5">{sub}</p>}
+    <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+      <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <p className="text-xs text-slate-600">{label}</p>
+      {sub && <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -152,7 +152,7 @@ export default function PhoneAnalyticsPanel() {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-gray-500 mr-1">Export current window (metadata only — no message content):</span>
+          <span className="text-xs text-slate-500 mr-1">Export current window (metadata only — no message content):</span>
           <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={exportSms}>
             <Download className="w-3.5 h-3.5 mr-1.5" /> Texts CSV
           </Button>
@@ -161,7 +161,7 @@ export default function PhoneAnalyticsPanel() {
           </Button>
         </div>
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" /> Text messages
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -173,7 +173,7 @@ export default function PhoneAnalyticsPanel() {
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
             <PhoneCall className="w-3.5 h-3.5" /> Calls
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -186,7 +186,7 @@ export default function PhoneAnalyticsPanel() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5" /> Consent (TCPA)
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -195,7 +195,7 @@ export default function PhoneAnalyticsPanel() {
             </div>
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" /> Nurse coverage
             </p>
             <div className="grid grid-cols-2 gap-2">

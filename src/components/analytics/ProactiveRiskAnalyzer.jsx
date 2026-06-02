@@ -266,7 +266,7 @@ Return JSON:
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -343,7 +343,7 @@ Return JSON:
         {isAnalyzing && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Analyzing patient data...</span>
+              <span className="text-sm text-slate-600">Analyzing patient data...</span>
               <span className="text-sm font-medium">{analysisProgress}%</span>
             </div>
             <Progress value={analysisProgress} className="h-2" />
@@ -384,7 +384,7 @@ Return JSON:
         {/* Active Alerts List */}
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {existingAlerts.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-500">
               <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-400" />
               <p>No active alerts. Run analysis to check for risks.</p>
             </div>
@@ -414,11 +414,11 @@ Return JSON:
                             <Badge className="bg-red-600 text-white text-xs">URGENT</Badge>
                           )}
                         </div>
-                        <p className="text-xs text-gray-700 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-slate-700 mt-1 flex items-center gap-1">
                           <User className="w-3 h-3" />
                           {patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient'}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{alert.message}</p>
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">{alert.message}</p>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <Badge className={`${
@@ -428,7 +428,7 @@ Return JSON:
                         } text-white text-xs`}>
                           {alert.risk_score || 'N/A'}
                         </Badge>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-slate-400 mt-1">
                           {format(new Date(alert.created_date), 'MMM d')}
                         </p>
                       </div>
@@ -463,14 +463,14 @@ Return JSON:
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Details</p>
-                  <p className="text-sm text-gray-600">{selectedAlert.message}</p>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">Details</p>
+                  <p className="text-sm text-slate-600">{selectedAlert.message}</p>
                 </div>
 
                 {selectedAlert.contributing_factors?.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Contributing Factors</p>
-                    <ul className="list-disc list-inside text-sm text-gray-600">
+                    <p className="text-sm font-semibold text-slate-700 mb-1">Contributing Factors</p>
+                    <ul className="list-disc list-inside text-sm text-slate-600">
                       {selectedAlert.contributing_factors.map((factor, idx) => (
                         <li key={idx}>{factor}</li>
                       ))}
@@ -480,10 +480,10 @@ Return JSON:
 
                 {selectedAlert.recommended_actions?.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Recommended Actions</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-1">Recommended Actions</p>
                     <ul className="space-y-1">
                       {selectedAlert.recommended_actions.map((action, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
                           <ChevronRight className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                           {action}
                         </li>

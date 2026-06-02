@@ -233,7 +233,7 @@ export default function PDGMAnalyticsDashboard() {
       <Card>
         <CardContent className="p-8 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Loading analytics data...</p>
+          <p className="text-sm text-slate-600">Loading analytics data...</p>
         </CardContent>
       </Card>
     );
@@ -289,9 +289,9 @@ export default function PDGMAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <Activity className="w-4 h-4 text-blue-600" />
-              <span className="text-xs text-gray-500">Episodes</span>
+              <span className="text-xs text-slate-500">Episodes</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{summaryStats.totalEpisodes}</p>
+            <p className="text-2xl font-bold text-slate-900">{summaryStats.totalEpisodes}</p>
           </CardContent>
         </Card>
 
@@ -299,7 +299,7 @@ export default function PDGMAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="w-4 h-4 text-green-600" />
-              <span className="text-xs text-gray-500">Avg Payment</span>
+              <span className="text-xs text-slate-500">Avg Payment</span>
             </div>
             <p className="text-2xl font-bold text-green-700">${summaryStats.avgPayment.toLocaleString()}</p>
           </CardContent>
@@ -309,7 +309,7 @@ export default function PDGMAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle2 className="w-4 h-4 text-indigo-600" />
-              <span className="text-xs text-gray-500">Avg Accuracy</span>
+              <span className="text-xs text-slate-500">Avg Accuracy</span>
             </div>
             <p className="text-2xl font-bold text-indigo-700">{summaryStats.avgAccuracy}%</p>
           </CardContent>
@@ -319,7 +319,7 @@ export default function PDGMAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="w-4 h-4 text-orange-600" />
-              <span className="text-xs text-gray-500">Discrepancies</span>
+              <span className="text-xs text-slate-500">Discrepancies</span>
             </div>
             <p className="text-2xl font-bold text-orange-700">{summaryStats.totalDiscrepancies}</p>
           </CardContent>
@@ -329,7 +329,7 @@ export default function PDGMAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-purple-600" />
-              <span className="text-xs text-gray-500">Opportunity</span>
+              <span className="text-xs text-slate-500">Opportunity</span>
             </div>
             <p className="text-2xl font-bold text-purple-700">${summaryStats.totalOpportunityValue.toLocaleString()}</p>
           </CardContent>
@@ -339,7 +339,7 @@ export default function PDGMAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-teal-600" />
-              <span className="text-xs text-gray-500">Adoption</span>
+              <span className="text-xs text-slate-500">Adoption</span>
             </div>
             <p className="text-2xl font-bold text-teal-700">{summaryStats.adoptionRate}%</p>
           </CardContent>
@@ -491,8 +491,8 @@ export default function PDGMAnalyticsDashboard() {
             <div className="space-y-3">
               <div className="text-center mb-4">
                 <p className="text-4xl font-bold text-teal-700">{optimizationAdoption.adoptionRate}%</p>
-                <p className="text-sm text-gray-600">Overall Adoption Rate</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-sm text-slate-600">Overall Adoption Rate</p>
+                <p className="text-xs text-slate-500 mt-1">
                   {optimizationAdoption.adopted} of {optimizationAdoption.total} opportunities adopted
                 </p>
               </div>

@@ -291,7 +291,7 @@ export default function EducationLibrary({ patient, onSelectMaterial }) {
         <CardContent className="p-4">
           <div className="flex gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search education topics..."
                 value={searchTerm}
@@ -342,7 +342,7 @@ export default function EducationLibrary({ patient, onSelectMaterial }) {
                       {getCategoryIcon(topic.category)}
                       <div>
                         <h4 className="font-medium text-sm">{topic.title}</h4>
-                        <p className="text-xs text-gray-600 mt-1">{topic.description}</p>
+                        <p className="text-xs text-slate-600 mt-1">{topic.description}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -374,8 +374,8 @@ export default function EducationLibrary({ patient, onSelectMaterial }) {
                 </Badge>
               </div>
               
-              <h3 className="font-semibold text-gray-900 mb-2">{topic.title}</h3>
-              <p className="text-sm text-gray-600 mb-3">{topic.description}</p>
+              <h3 className="font-semibold text-slate-900 mb-2">{topic.title}</h3>
+              <p className="text-sm text-slate-600 mb-3">{topic.description}</p>
               
               <div className="flex flex-wrap gap-1">
                 {topic.topics.slice(0, 3).map((t, idx) => (
@@ -400,8 +400,8 @@ export default function EducationLibrary({ patient, onSelectMaterial }) {
 
       {filteredTopics.length === 0 && (
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
-            <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <CardContent className="p-12 text-center text-slate-500">
+            <BookOpen className="w-12 h-12 mx-auto mb-4 text-slate-300" />
             <p>No topics found matching your search.</p>
             <p className="text-sm">Try a different search term or category.</p>
           </CardContent>

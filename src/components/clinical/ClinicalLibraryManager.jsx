@@ -317,7 +317,7 @@ export default function ClinicalLibraryManager() {
                 </>
               )}
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-slate-600 mt-1">
               {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -376,8 +376,8 @@ export default function ClinicalLibraryManager() {
 
           <div className="space-y-3">
             {filteredTemplates.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <div className="text-center py-8 text-slate-500">
+                <BookOpen className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                 <p>No templates in this {selectedFolderId ? 'folder' : 'view'}. Create your first one!</p>
               </div>
             ) : (
@@ -393,7 +393,7 @@ export default function ClinicalLibraryManager() {
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
+                          <code className="bg-slate-100 px-2 py-1 rounded text-sm font-mono">
                             {template.phrase}
                           </code>
                           <Badge variant="outline">{template.category}</Badge>
@@ -410,10 +410,10 @@ export default function ClinicalLibraryManager() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                        <p className="text-sm text-slate-600 line-clamp-2">
                           {template.expanded_text || template.ai_prompt_instructions}
                         </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <TrendingUp className="w-3 h-3" />
                             Used {template.usage_count || 0} times
@@ -423,7 +423,7 @@ export default function ClinicalLibraryManager() {
                               value={template.folder_id || 'none'}
                               onValueChange={(value) => handleMoveTemplate(template.id, value === 'none' ? null : value)}
                             >
-                              <SelectTrigger className="h-6 text-xs w-auto border-0 bg-transparent hover:bg-gray-100">
+                              <SelectTrigger className="h-6 text-xs w-auto border-0 bg-transparent hover:bg-slate-100">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -545,7 +545,7 @@ export default function ClinicalLibraryManager() {
                 className="text-base"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 This is what you'll type to trigger the expansion
               </p>
             </div>
@@ -587,7 +587,7 @@ export default function ClinicalLibraryManager() {
                   <SelectItem value="patient_specific">Patient-Specific</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 {formData.template_type === 'generic' 
                   ? 'Same text for all patients' 
                   : 'Uses patient-specific data to generate personalized text'}
@@ -630,7 +630,7 @@ export default function ClinicalLibraryManager() {
                     placeholder="wounds, medications"
                     className="text-base"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Comma-separated field names
                   </p>
                 </div>

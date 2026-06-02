@@ -309,7 +309,7 @@ Return JSON:
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-blue-100 text-blue-800 border-blue-300"
     };
-    return colors[priority] || "bg-gray-100 text-gray-800";
+    return colors[priority] || "bg-slate-100 text-slate-800";
   };
 
   const selectedCount = Object.values(selectedPlans).filter(Boolean).length;
@@ -332,7 +332,7 @@ Return JSON:
       <CardContent className="p-4">
         {generatedPlans.length === 0 ? (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Generate Medicare-compliant care plans based on the patient's diagnosis and clinical data.
               The AI will create SMART goals, evidence-based interventions, and measurable outcomes.
             </p>
@@ -383,7 +383,7 @@ Return JSON:
                   className={`border transition-all ${
                     selectedPlans[idx] 
                       ? 'border-green-400 bg-green-50' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <CardContent className="p-4">
@@ -391,7 +391,7 @@ Return JSON:
                       /* Edit Mode */
                       <div className="space-y-3">
                         <div>
-                          <label className="text-xs font-medium text-gray-600">Problem/Nursing Diagnosis</label>
+                          <label className="text-xs font-medium text-slate-600">Problem/Nursing Diagnosis</label>
                           <Textarea
                             value={editingPlan.problem}
                             onChange={(e) => setEditingPlan({...editingPlan, problem: e.target.value})}
@@ -400,7 +400,7 @@ Return JSON:
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-gray-600">SMART Goal</label>
+                          <label className="text-xs font-medium text-slate-600">SMART Goal</label>
                           <Textarea
                             value={editingPlan.goal}
                             onChange={(e) => setEditingPlan({...editingPlan, goal: e.target.value})}
@@ -409,7 +409,7 @@ Return JSON:
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-gray-600 flex items-center justify-between">
+                          <label className="text-xs font-medium text-slate-600 flex items-center justify-between">
                             Interventions
                             <Button size="sm" variant="ghost" className="h-6" onClick={handleAddIntervention}>
                               <Plus className="w-3 h-3 mr-1" /> Add
@@ -438,7 +438,7 @@ Return JSON:
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-xs font-medium text-gray-600">Baseline Measurement</label>
+                            <label className="text-xs font-medium text-slate-600">Baseline Measurement</label>
                             <Input
                               value={editingPlan.baseline_measurement}
                               onChange={(e) => setEditingPlan({...editingPlan, baseline_measurement: e.target.value})}
@@ -446,7 +446,7 @@ Return JSON:
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-gray-600">Frequency</label>
+                            <label className="text-xs font-medium text-slate-600">Frequency</label>
                             <Input
                               value={editingPlan.frequency}
                               onChange={(e) => setEditingPlan({...editingPlan, frequency: e.target.value})}
@@ -456,7 +456,7 @@ Return JSON:
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-xs font-medium text-gray-600">Target Days</label>
+                            <label className="text-xs font-medium text-slate-600">Target Days</label>
                             <Input
                               type="number"
                               value={editingPlan.target_days}
@@ -465,7 +465,7 @@ Return JSON:
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-gray-600">Priority</label>
+                            <label className="text-xs font-medium text-slate-600">Priority</label>
                             <Select 
                               value={editingPlan.priority} 
                               onValueChange={(v) => setEditingPlan({...editingPlan, priority: v})}
@@ -509,7 +509,7 @@ Return JSON:
                                 {plan.target_days} days
                               </Badge>
                             </div>
-                            <h4 className="font-semibold text-gray-900">{plan.problem}</h4>
+                            <h4 className="font-semibold text-slate-900">{plan.problem}</h4>
                           </div>
                           <Button
                             size="sm"
@@ -523,20 +523,20 @@ Return JSON:
 
                         <div className="pl-7 space-y-2">
                           <div>
-                            <p className="text-xs font-medium text-gray-500">SMART Goal:</p>
-                            <p className="text-sm text-gray-700">{plan.goal}</p>
+                            <p className="text-xs font-medium text-slate-500">SMART Goal:</p>
+                            <p className="text-sm text-slate-700">{plan.goal}</p>
                           </div>
 
                           <div>
-                            <p className="text-xs font-medium text-gray-500">Interventions:</p>
-                            <ul className="text-sm text-gray-700 list-disc list-inside">
+                            <p className="text-xs font-medium text-slate-500">Interventions:</p>
+                            <ul className="text-sm text-slate-700 list-disc list-inside">
                               {plan.interventions.map((int, iIdx) => (
                                 <li key={iIdx}>{int}</li>
                               ))}
                             </ul>
                           </div>
 
-                          <div className="flex gap-4 text-xs text-gray-500">
+                          <div className="flex gap-4 text-xs text-slate-500">
                             <span><strong>Baseline:</strong> {plan.baseline_measurement}</span>
                             <span><strong>Frequency:</strong> {plan.frequency}</span>
                           </div>
@@ -548,7 +548,7 @@ Return JSON:
                           )}
 
                           {plan.rationale && (
-                            <p className="text-xs text-gray-500 italic">
+                            <p className="text-xs text-slate-500 italic">
                               💡 {plan.rationale}
                             </p>
                           )}
