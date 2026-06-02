@@ -109,10 +109,17 @@ export default function PhoneAnalyticsPanel() {
     [smsMessages, callLogs, consents, users, windowDays]
   );
 
-  const inWindow = (rows) =>
-    windowDays > 0
-      ? rows.filter((r) => new Date(r.created_date).getTime() >= Date.now() - windowDays * 86400000)
-      : rows;
+  // Match summarizePhoneActivity's window semantics: keep rows whose date is
+  // within the window, and keep (rather than drop) rows with an unparseable
+  // date, so the exported CSV row count agrees with the on-screen totals.
+  const inWindow = (rows) => {
+    if (windowDays <= 0) return rows;
+    const cutoff = Date.now() - windowDays * 86400000;
+    return rows.filter((r) => {
+      const t = new Date(r.created_date).getTime();
+      return Number.isNaN(t) ? true : t >= cutoff;
+    });
+  };
   const exportSms = () => downloadCsv(`sms-export_${exportTimestamp()}.csv`, toCsv(SMS_COLUMNS, inWindow(smsMessages)));
   const exportCalls = () => downloadCsv(`calls-export_${exportTimestamp()}.csv`, toCsv(CALL_COLUMNS, inWindow(callLogs)));
 

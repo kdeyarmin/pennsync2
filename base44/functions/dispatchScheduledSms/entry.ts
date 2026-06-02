@@ -122,13 +122,17 @@ Deno.serve(async (req) => {
         client_message_id: clientMessageId,
         is_read: true,
         sent_by: row.nurse_email,
-      }).catch(() => null);
+      }).catch((err) => { console.error('scheduled SmsMessage record failed:', err); return null; });
 
+      // The text WAS delivered, so the row is 'sent' regardless; but if we
+      // couldn't write the inbox copy, note it so the gap is visible rather than
+      // silently losing the conversation record.
       await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
         status: 'sent',
         provider_message_id: providerMessageId,
         sent_at: new Date().toISOString(),
         sms_message_id: smsRow?.id || null,
+        failure_reason: smsRow ? null : 'Sent to patient, but failed to record a copy in the nurse inbox',
         attempts: (row.attempts || 0) + 1,
       }).catch(() => {});
 

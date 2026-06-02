@@ -81,6 +81,9 @@ export default function PhoneProvisioningPanel() {
     queryKey: ["agency-settings"],
     queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
     enabled: isAdmin,
+    // Don't refetch on window focus: it would re-run the form-init effect below
+    // and overwrite the admin's unsaved edits.
+    refetchOnWindowFocus: false,
     initialData: [],
   });
   const settings = settingsArr[0];
@@ -405,7 +408,7 @@ export default function PhoneProvisioningPanel() {
             <Textarea
               rows={4}
               placeholder={"One per line, e.g.\nRunning about 15 minutes late.\nI'm on my way now."}
-              value={(agency.sms_quick_replies || []).join("\n")}
+              value={(agency.sms_quick_replies || []).map((q) => (typeof q === "string" ? q : q?.text || "")).filter(Boolean).join("\n")}
               onChange={(e) =>
                 setAgency((a) => ({
                   ...a,
