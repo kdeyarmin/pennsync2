@@ -62,6 +62,7 @@ suggested URL. Point these 8x8 callbacks at the deployed Base44 function URLs:
 | SMS delivery receipt (DLR) | `handleEightXEightSmsStatus` | SMS sub-account |
 | Voice Call Action (VCA) | `handleEightXEightVoiceCall` | Voice sub-account / virtual numbers |
 | Call status / CDR | `handleEightXEightCallStatus` | Voice sub-account |
+| Voicemail recording (optional) | `handleEightXEightVoicemail` | Voice sub-account (only if voicemail capture is enabled) |
 
 > Record the exact deployed URLs here once known: `__________`.
 

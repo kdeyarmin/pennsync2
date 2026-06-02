@@ -95,6 +95,8 @@ export default function PhoneProvisioningPanel() {
     sms_messaging_enabled: true,
     sms_quick_replies: [],
     sms_templates: [],
+    voicemail_enabled: false,
+    voicemail_greeting: "",
   });
   const [inputs, setInputs] = useState({}); // email -> { work, cell }
 
@@ -110,6 +112,8 @@ export default function PhoneProvisioningPanel() {
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
         sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
         sms_templates: Array.isArray(settings.sms_templates) ? settings.sms_templates : [],
+        voicemail_enabled: settings.voicemail_enabled === true,
+        voicemail_greeting: settings.voicemail_greeting || "",
       });
     }
   }, [settings]);
@@ -458,6 +462,34 @@ export default function PhoneProvisioningPanel() {
               checked={agency.sms_messaging_enabled}
               onCheckedChange={(v) => setAgency((a) => ({ ...a, sms_messaging_enabled: v }))}
             />
+          </div>
+          <div className="p-3 bg-gray-50 rounded-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-semibold">Voicemail capture</Label>
+                <p className="text-xs text-gray-600">
+                  Record a voicemail when a patient's masked call to an on-duty nurse goes unanswered.
+                  Requires the recording action in your 8x8 callflow and the voicemail webhook.
+                </p>
+              </div>
+              <Switch
+                checked={agency.voicemail_enabled}
+                onCheckedChange={(v) => setAgency((a) => ({ ...a, voicemail_enabled: v }))}
+              />
+            </div>
+            {agency.voicemail_enabled && (
+              <div>
+                <Label className="text-xs font-medium text-gray-600">Voicemail greeting</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="You've reached your care team. Please leave a message after the tone and we'll call you back. Call {office} for urgent needs."
+                  value={agency.voicemail_greeting}
+                  onChange={(e) => setAgency((a) => ({ ...a, voicemail_greeting: e.target.value }))}
+                  className="mt-1 resize-none"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">{"{office}"} inserts the main office number. Keep it PHI-free.</p>
+              </div>
+            )}
           </div>
           <div className="flex justify-end">
             <Button onClick={() => saveAgency.mutate()} disabled={saveAgency.isPending} className="bg-indigo-600 hover:bg-indigo-700">

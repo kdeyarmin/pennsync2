@@ -33,6 +33,9 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `default_off_duty_template` | text | Default off-duty message when a nurse hasn't set one. |
 | `sms_messaging_enabled` | boolean | Agency-wide kill switch (default true). |
 | `sms_quick_replies` | array (string) | Optional one-tap PHI-safe text snippets for the compose box. Falls back to built-in defaults when empty. |
+| `sms_templates` | array (object) | Optional reusable templates `{ label, body }` with merge fields (`{first_name}`, `{last_name}`, `{nurse_name}`, `{office}`). Falls back to built-in defaults when empty. |
+| `voicemail_enabled` | boolean | Optional (default false). When true, an unanswered on-duty masked call captures a voicemail (requires the recording action in the 8x8 callflow + the voicemail webhook). |
+| `voicemail_greeting` | text | Optional voicemail prompt; `{office}` inserts the main office number. |
 
 ## New `SmsMessage`
 
@@ -69,6 +72,11 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `duration_seconds` | number | Nullable |
 | `failure_reason` | string | Nullable |
 | `sent_by` | string | Initiating nurse (outbound) |
+| `note` | text | Nullable. Nurse's free-text call note (keep PHI-free). |
+| `disposition` | string enum | Nullable. `resolved` \| `follow_up_needed` \| `callback_requested` \| `left_voicemail` \| `no_action` |
+| `has_voicemail` | boolean | Set by the voicemail webhook when a recording is attached. |
+| `voicemail_url` | string | Nullable. Recording URL from 8x8. |
+| `voicemail_duration_seconds` | number | Nullable. |
 
 ## New `SmsConsent` (append-only TCPA ledger)
 
