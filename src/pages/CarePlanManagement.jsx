@@ -357,7 +357,7 @@ export default function CarePlanManagement() {
         setPlanItems([]);
         setLinkedPathways({});
       }, 2000);
-    } catch (e) {
+    } catch {
       toast.error("Failed to save care plan.");
     }
     setSaving(false);
@@ -475,7 +475,7 @@ export default function CarePlanManagement() {
               patientName={builderPatient ? `${builderPatient.first_name} ${builderPatient.last_name}` : ""}
               diagnosis={builderPatient?.primary_diagnosis}
               careType={careType}
-              onInterventionsGenerated={(interventions, schedule) => {
+              onInterventionsGenerated={(interventions, _schedule) => {
                 toast.success(`Generated ${interventions.length} interventions`);
               }}
             />
@@ -912,6 +912,29 @@ export default function CarePlanManagement() {
           <BuilderTab />
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={!!planToDelete} onOpenChange={(open) => { if (!open) setPlanToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Care Plan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this care plan? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                deleteCarePlanMutation.mutate(planToDelete);
+                setPlanToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
