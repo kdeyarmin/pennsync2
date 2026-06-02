@@ -88,6 +88,10 @@ export default function ReferralIntake() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
   const [processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const REFERRALS_PER_PAGE = 15;
+  const [referralToDelete, setReferralToDelete] = useState(null);
+  const [referralToReject, setReferralToReject] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -112,7 +116,7 @@ export default function ReferralIntake() {
 
     const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff'];
     if (!validTypes.includes(file.type)) {
-      alert('Please upload a PDF, PNG, JPG, or TIFF file');
+      toast.error('Please upload a PDF, PNG, JPG, or TIFF file');
       return;
     }
 
@@ -252,7 +256,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload file. Please try again.');
+      toast.error('Failed to upload file. Please try again.');
     }
     setIsUploading(false);
   };
@@ -292,10 +296,10 @@ Return comprehensive structured data for intelligent form pre-population and car
       setUploadDialogOpen(false);
 
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
+      toast.success(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
     } catch (error) {
       console.error('Error processing multiple referrals:', error);
-      alert('Failed to create referrals. Please try again.');
+      toast.error('Failed to create referrals. Please try again.');
     } finally {
       setProcessingMultipleReferrals(false);
     }
@@ -303,7 +307,7 @@ Return comprehensive structured data for intelligent form pre-population and car
 
   const handleCreateReferral = async () => {
     if (!uploadedFile) {
-      alert('Please upload a referral document first');
+      toast.error('Please upload a referral document first');
       return;
     }
 
@@ -365,7 +369,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error creating referral:', error);
-      alert('Failed to create referral. Please try again.');
+      toast.error('Failed to create referral. Please try again.');
     }
     setIsUploading(false);
   };
@@ -376,7 +380,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Failed to update status');
+      toast.error('Failed to update status');
     }
   };
 
@@ -432,10 +436,10 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       
-      alert(`Referral assigned to ${nurse?.full_name || nurseEmail}. Secure message sent.`);
+      toast.success(`Referral assigned to ${nurse?.full_name || nurseEmail}. Secure message sent.`);
     } catch (error) {
       console.error('Error assigning nurse:', error);
-      alert('Failed to assign nurse');
+      toast.error('Failed to assign nurse');
     }
   };
 
@@ -596,10 +600,6 @@ Actions available:
         // Match threshold: 60+ points = high confidence match
         if (bestMatch && bestMatch.score >= 60) {
           existingPatient = bestMatch.patient;
-          console.log(`Patient match found: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score}, Reasons: ${bestMatch.reasons.join(', ')})`);
-        } else if (bestMatch && bestMatch.score >= 40) {
-          // Possible match but not certain - log for review
-          console.warn(`Possible patient match: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score})`);
         }
       }
 
@@ -624,7 +624,6 @@ Actions available:
             // High confidence (90%+) - auto-match but allow review
             if (!existingPatient) {
               existingPatient = allPatients.find(p => p.id === matchAnalysis.best_match_id);
-              console.log(`🎯 High-confidence AI match: ${existingPatient.first_name} ${existingPatient.last_name} (${matchAnalysis.confidence_score}% confidence)`);
             }
           } else if (matchAnalysis.confidence_level === 'high' && matchAnalysis.best_match_id) {
             // Medium-high confidence (70-89%) - flag for quick review

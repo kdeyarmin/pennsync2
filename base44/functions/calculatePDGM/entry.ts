@@ -6,53 +6,53 @@ const BASE_PAYMENT_RATE_2024 = 2031.64; // 2024 national standardized 30-day pay
 // Clinical Group Weights by Admission Source and Episode Timing (CMS PDGM model)
 // Format: { [clinicalGroup]: { community_early, community_late, institutional_early, institutional_late } }
 const CLINICAL_GROUP_WEIGHTS = {
-  'MMTA_Surgical_Aftercare': { 
-    community_early: 0.9234, community_late: 0.8512, 
-    institutional_early: 1.1456, institutional_late: 1.0534 
+  'MMTA_Surgical_Aftercare': {
+    community_early: 0.9234, community_late: 0.8512,
+    institutional_early: 1.1456, institutional_late: 1.0534
   },
-  'MMTA_Cardiac_Circulatory': { 
-    community_early: 0.9456, community_late: 0.8698, 
-    institutional_early: 1.0876, institutional_late: 1.0006 
+  'MMTA_Cardiac_Circulatory': {
+    community_early: 0.9456, community_late: 0.8698,
+    institutional_early: 1.0876, institutional_late: 1.0006
   },
-  'MMTA_Endocrine': { 
-    community_early: 0.8234, community_late: 0.7575, 
-    institutional_early: 0.9934, institutional_late: 0.9139 
+  'MMTA_Endocrine': {
+    community_early: 0.8234, community_late: 0.7575,
+    institutional_early: 0.9934, institutional_late: 0.9139
   },
-  'MMTA_GI_GU': { 
-    community_early: 0.8823, community_late: 0.8117, 
-    institutional_early: 1.0123, institutional_late: 0.9313 
+  'MMTA_GI_GU': {
+    community_early: 0.8823, community_late: 0.8117,
+    institutional_early: 1.0123, institutional_late: 0.9313
   },
-  'MMTA_Infectious_Disease': { 
-    community_early: 1.0534, community_late: 0.9691, 
-    institutional_early: 1.2234, institutional_late: 1.1255 
+  'MMTA_Infectious_Disease': {
+    community_early: 1.0534, community_late: 0.9691,
+    institutional_early: 1.2234, institutional_late: 1.1255
   },
-  'MMTA_Other': { 
-    community_early: 0.8756, community_late: 0.8055, 
-    institutional_early: 1.0456, institutional_late: 0.9619 
+  'MMTA_Other': {
+    community_early: 0.8756, community_late: 0.8055,
+    institutional_early: 1.0456, institutional_late: 0.9619
   },
-  'MMTA_Respiratory': { 
-    community_early: 1.0067, community_late: 0.9262, 
-    institutional_early: 1.1567, institutional_late: 1.0641 
+  'MMTA_Respiratory': {
+    community_early: 1.0067, community_late: 0.9262,
+    institutional_early: 1.1567, institutional_late: 1.0641
   },
-  'MMTA_Neuro_Rehab': { 
-    community_early: 1.1290, community_late: 1.0387, 
-    institutional_early: 1.2890, institutional_late: 1.1859 
+  'MMTA_Neuro_Rehab': {
+    community_early: 1.1290, community_late: 1.0387,
+    institutional_early: 1.2890, institutional_late: 1.1859
   },
-  'MMTA_Wounds': { 
-    community_early: 1.1845, community_late: 1.0897, 
-    institutional_early: 1.3345, institutional_late: 1.2277 
+  'MMTA_Wounds': {
+    community_early: 1.1845, community_late: 1.0897,
+    institutional_early: 1.3345, institutional_late: 1.2277
   },
-  'MMTA_Complex_Nursing': { 
-    community_early: 1.2956, community_late: 1.1919, 
-    institutional_early: 1.4456, institutional_late: 1.3299 
+  'MMTA_Complex_Nursing': {
+    community_early: 1.2956, community_late: 1.1919,
+    institutional_early: 1.4456, institutional_late: 1.3299
   },
-  'MMTA_Behavioral_Health': { 
-    community_early: 0.8165, community_late: 0.7512, 
-    institutional_early: 0.9665, institutional_late: 0.8892 
+  'MMTA_Behavioral_Health': {
+    community_early: 0.8165, community_late: 0.7512,
+    institutional_early: 0.9665, institutional_late: 0.8892
   },
-  'MMTA_Medication_Management': { 
-    community_early: 0.7834, community_late: 0.7207, 
-    institutional_early: 0.9234, institutional_late: 0.8495 
+  'MMTA_Medication_Management': {
+    community_early: 0.7834, community_late: 0.7207,
+    institutional_early: 0.9234, institutional_late: 0.8495
   },
   'MMTA_Musculoskeletal': {
     community_early: 0.9678, community_late: 0.8904,
@@ -103,8 +103,10 @@ const HIGH_VALUE_COMORBIDITIES = [
   'i63', 'i64', 'stroke', 'cva', 'cerebrovascular',
   // Dementia
   'f01', 'f02', 'f03', 'g30', 'dementia', 'alzheimer',
-  // Cancer (active treatment)
-  'c', 'cancer', 'malignant', 'neoplasm',
+  // Cancer (active treatment). NOTE: no bare 'c' — substring matching would
+  // flag any diagnosis containing the letter "c" (scoliosis, fracture, …),
+  // falsely inflating comorbidity level and PDGM payment.
+  'cancer', 'malignant', 'neoplasm',
   // Wound infection
   'l89', 'pressure ulcer', 'wound infection',
   // Peripheral vascular disease
@@ -116,7 +118,8 @@ const HIGH_VALUE_COMORBIDITIES = [
 // Medium-value comorbidities
 const MEDIUM_VALUE_COMORBIDITIES = [
   'hypertension', 'i10', 'htn',
-  'diabetes', 'e11', 'dm',
+  // No bare 'dm' — it substring-matches "edema", "abdominal", etc.
+  'diabetes', 'e11',
   'atrial fibrillation', 'i48', 'afib',
   'obesity', 'e66',
   'depression', 'f32', 'f33',
@@ -132,48 +135,48 @@ const ICD10_CLINICAL_GROUPS = {
   'G': 'MMTA_Neuro_Rehab',
   'I63': 'MMTA_Neuro_Rehab', // Cerebral infarction
   'I64': 'MMTA_Neuro_Rehab', // Stroke
-  
+
   // Cardiac/Circulatory (I codes except stroke)
   'I': 'MMTA_Cardiac_Circulatory',
   'I50': 'MMTA_Cardiac_Circulatory', // Heart failure
   'I10': 'MMTA_Cardiac_Circulatory', // Hypertension
   'I25': 'MMTA_Cardiac_Circulatory', // Chronic ischemic heart
-  
+
   // Respiratory (J codes)
   'J': 'MMTA_Respiratory',
   'J44': 'MMTA_Respiratory', // COPD
   'J18': 'MMTA_Respiratory', // Pneumonia
-  
+
   // Endocrine (E codes)
   'E': 'MMTA_Endocrine',
   'E11': 'MMTA_Endocrine', // Type 2 diabetes
   'E10': 'MMTA_Endocrine', // Type 1 diabetes
-  
+
   // GI/GU (K and N codes)
   'K': 'MMTA_GI_GU',
   'N': 'MMTA_GI_GU',
   'N18': 'MMTA_GI_GU', // CKD
-  
+
   // Wounds (L codes, pressure ulcers)
   'L': 'MMTA_Wounds',
   'L89': 'MMTA_Wounds', // Pressure ulcer
-  
+
   // Musculoskeletal (M codes)
   'M': 'MMTA_Musculoskeletal',
   'M79': 'MMTA_Musculoskeletal', // Soft tissue disorders
-  
+
   // Infectious Disease (A, B codes, some specific)
   'A': 'MMTA_Infectious_Disease',
   'B': 'MMTA_Infectious_Disease',
-  
+
   // Surgical aftercare (Z codes)
   'Z96': 'MMTA_Surgical_Aftercare', // Joint replacement
   'Z47': 'MMTA_Surgical_Aftercare', // Orthopedic aftercare
   'Z48': 'MMTA_Surgical_Aftercare', // Surgical aftercare
-  
+
   // Behavioral (F codes)
   'F': 'MMTA_Behavioral_Health',
-  
+
   // Skin non-surgical
   'S': 'MMTA_Skin_Non_Surgical'
 };
@@ -183,9 +186,12 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code) {
   // First try ICD-10 code mapping (most accurate)
   if (icd10Code) {
     const code = icd10Code.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    
-    // Check specific codes first (more specific = higher priority)
-    for (const [prefix, group] of Object.entries(ICD10_CLINICAL_GROUPS)) {
+
+    // Check specific codes first: sort prefixes longest-first so a specific
+    // code (e.g. 'I63') wins over a generic one (e.g. 'I') regardless of the
+    // object's declaration order.
+    const orderedGroups = Object.entries(ICD10_CLINICAL_GROUPS).sort((a, b) => b[0].length - a[0].length);
+    for (const [prefix, group] of orderedGroups) {
       if (code.startsWith(prefix)) {
         // Handle stroke specially - it's neuro even though it starts with I
         if (code.startsWith('I63') || code.startsWith('I64')) {
@@ -195,114 +201,114 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code) {
       }
     }
   }
-  
+
   // Fall back to text-based diagnosis mapping
   const diagnosis = (primaryDiagnosis || '').toLowerCase();
-  
+
   // Wounds and ulcers
-  if (diagnosis.includes('wound') || diagnosis.includes('ulcer') || diagnosis.includes('surgical site') || 
+  if (diagnosis.includes('wound') || diagnosis.includes('ulcer') || diagnosis.includes('surgical site') ||
       diagnosis.includes('pressure injury') || diagnosis.includes('skin breakdown')) {
     return 'MMTA_Wounds';
   }
-  
+
   // Cardiac/Circulatory
-  if (diagnosis.includes('chf') || diagnosis.includes('heart failure') || diagnosis.includes('cardiac') || 
+  if (diagnosis.includes('chf') || diagnosis.includes('heart failure') || diagnosis.includes('cardiac') ||
       diagnosis.includes('hypertension') || diagnosis.includes('atrial fibrillation') || diagnosis.includes('coronary')) {
     return 'MMTA_Cardiac_Circulatory';
   }
-  
+
   // Respiratory
-  if (diagnosis.includes('copd') || diagnosis.includes('respiratory') || diagnosis.includes('pneumonia') || 
+  if (diagnosis.includes('copd') || diagnosis.includes('respiratory') || diagnosis.includes('pneumonia') ||
       diagnosis.includes('lung') || diagnosis.includes('bronchitis') || diagnosis.includes('asthma')) {
     return 'MMTA_Respiratory';
   }
-  
+
   // Endocrine
   if (diagnosis.includes('diabetes') || diagnosis.includes('thyroid') || diagnosis.includes('endocrine') ||
       diagnosis.includes('metabolic')) {
     return 'MMTA_Endocrine';
   }
-  
+
   // Neuro/Rehab
-  if (diagnosis.includes('stroke') || diagnosis.includes('cva') || diagnosis.includes('parkinson') || 
+  if (diagnosis.includes('stroke') || diagnosis.includes('cva') || diagnosis.includes('parkinson') ||
       diagnosis.includes('neuro') || diagnosis.includes('alzheimer') || diagnosis.includes('dementia') ||
       diagnosis.includes('multiple sclerosis') || diagnosis.includes('paralysis') || diagnosis.includes('brain')) {
     return 'MMTA_Neuro_Rehab';
   }
-  
+
   // Surgical Aftercare
-  if (diagnosis.includes('surgery') || diagnosis.includes('post-op') || diagnosis.includes('arthroplasty') || 
+  if (diagnosis.includes('surgery') || diagnosis.includes('post-op') || diagnosis.includes('arthroplasty') ||
       diagnosis.includes('replacement') || diagnosis.includes('fracture') || diagnosis.includes('fusion') ||
       diagnosis.includes('amputation')) {
     return 'MMTA_Surgical_Aftercare';
   }
-  
+
   // Musculoskeletal
   if (diagnosis.includes('arthritis') || diagnosis.includes('joint') || diagnosis.includes('back pain') ||
       diagnosis.includes('musculoskeletal') || diagnosis.includes('osteo')) {
     return 'MMTA_Musculoskeletal';
   }
-  
+
   // Infectious Disease
   if (diagnosis.includes('infection') || diagnosis.includes('sepsis') || diagnosis.includes('uti') ||
       diagnosis.includes('cellulitis') || diagnosis.includes('osteomyelitis')) {
     return 'MMTA_Infectious_Disease';
   }
-  
+
   // GI/GU
-  if (diagnosis.includes('gi') || diagnosis.includes('bowel') || diagnosis.includes('kidney') || 
+  if (diagnosis.includes('gi') || diagnosis.includes('bowel') || diagnosis.includes('kidney') ||
       diagnosis.includes('renal') || diagnosis.includes('bladder') || diagnosis.includes('gastrointestinal')) {
     return 'MMTA_GI_GU';
   }
-  
+
   // Behavioral Health
-  if (diagnosis.includes('depression') || diagnosis.includes('anxiety') || diagnosis.includes('behavioral') || 
+  if (diagnosis.includes('depression') || diagnosis.includes('anxiety') || diagnosis.includes('behavioral') ||
       diagnosis.includes('psychiatric') || diagnosis.includes('mental')) {
     return 'MMTA_Behavioral_Health';
   }
-  
+
   // Complex Nursing
-  if (diagnosis.includes('complex') || diagnosis.includes('iv') || diagnosis.includes('infusion') || 
+  if (diagnosis.includes('complex') || diagnosis.includes('iv') || diagnosis.includes('infusion') ||
       diagnosis.includes('trach') || diagnosis.includes('ventilator') || diagnosis.includes('tube feeding')) {
     return 'MMTA_Complex_Nursing';
   }
-  
+
   // Medication Management
   if (diagnosis.includes('medication') || diagnosis.includes('polypharmacy')) {
     return 'MMTA_Medication_Management';
   }
-  
+
   return 'MMTA_Other';
 }
 
 // Calculate functional impairment level with source/timing consideration
 function calculateFunctionalLevel(functionalData, sourceTimingKey) {
   let totalPoints = 0;
-  
+
   // M1800 - Grooming (0-3)
   totalPoints += parseInt(functionalData.m1800_grooming) || 0;
-  
+
   // M1810 - Dress Upper (0-3)
   totalPoints += parseInt(functionalData.m1810_dress_upper) || 0;
-  
+
   // M1820 - Dress Lower (0-3)
   totalPoints += parseInt(functionalData.m1820_dress_lower) || 0;
-  
+
   // M1830 - Bathing (0-6)
   totalPoints += parseInt(functionalData.m1830_bathing) || 0;
-  
+
   // M1840 - Toilet Transfer (0-4)
   totalPoints += parseInt(functionalData.m1840_toilet_transfer) || 0;
-  
+
   // M1850 - Transferring (0-5)
   totalPoints += parseInt(functionalData.m1850_transferring) || 0;
-  
+
   // M1860 - Ambulation (0-6)
   totalPoints += parseInt(functionalData.m1860_ambulation) || 0;
-  
+
   // Get thresholds based on admission source and timing
   const thresholds = FUNCTIONAL_THRESHOLDS[sourceTimingKey] || FUNCTIONAL_THRESHOLDS.community_early;
-  
+
   // Determine level
   if (totalPoints >= thresholds.high) return { level: 'high', points: totalPoints };
   if (totalPoints >= thresholds.low) return { level: 'medium', points: totalPoints };
@@ -314,27 +320,27 @@ function calculateComorbidityAdjustment(comorbidities, sourceTimingKey) {
   if (!comorbidities || comorbidities.length === 0) {
     return { level: 'none', count: 0, highValueCount: 0, mediumValueCount: 0 };
   }
-  
+
   let highValueCount = 0;
   let mediumValueCount = 0;
-  
+
   for (const comorbidity of comorbidities) {
     const cLower = (comorbidity || '').toLowerCase();
-    
+
     // Check high-value comorbidities
     const isHighValue = HIGH_VALUE_COMORBIDITIES.some(hc => cLower.includes(hc));
     if (isHighValue) {
       highValueCount++;
       continue;
     }
-    
+
     // Check medium-value comorbidities
     const isMediumValue = MEDIUM_VALUE_COMORBIDITIES.some(mc => cLower.includes(mc));
     if (isMediumValue) {
       mediumValueCount++;
     }
   }
-  
+
   // Determine level based on high-value and total count
   let level = 'none';
   if (highValueCount >= 2 || (highValueCount >= 1 && mediumValueCount >= 2)) {
@@ -342,12 +348,12 @@ function calculateComorbidityAdjustment(comorbidities, sourceTimingKey) {
   } else if (highValueCount >= 1 || mediumValueCount >= 2) {
     level = 'low';
   }
-  
-  return { 
-    level, 
-    count: comorbidities.length, 
-    highValueCount, 
-    mediumValueCount 
+
+  return {
+    level,
+    count: comorbidities.length,
+    highValueCount,
+    mediumValueCount
   };
 }
 
@@ -356,24 +362,24 @@ function validateAdmissionSource(data) {
   const discrepancies = [];
   const m1000 = data.m1000_from_where_admitted || data.admission_info?.m1000_from_where_admitted;
   const declaredSource = (data.admission_source || 'community').toLowerCase();
-  
-  // M1000 values: 1=Community, 2=Short-term acute hospital, 3=Long-term hospital, 
+
+  // M1000 values: 1=Community, 2=Short-term acute hospital, 3=Long-term hospital,
   // 4=SNF, 5=SNF transition, 6=Psychiatric, 7=Other
   const m1000Val = String(m1000 || '').trim();
-  
+
   let expectedSource = 'community';
-  if (['2', '3', '4'].includes(m1000Val) || 
-      m1000Val.toLowerCase().includes('hospital') || 
+  if (['2', '3', '4'].includes(m1000Val) ||
+      m1000Val.toLowerCase().includes('hospital') ||
       m1000Val.toLowerCase().includes('snf') ||
       m1000Val.toLowerCase().includes('skilled nursing') ||
       m1000Val.toLowerCase().includes('acute')) {
     expectedSource = 'institutional';
   }
-  
+
   // Check for inpatient discharge date (indicates institutional)
-  const inpatientDischargeDate = data.m1005_inpatient_discharge_date || 
+  const inpatientDischargeDate = data.m1005_inpatient_discharge_date ||
     data.admission_info?.m1005_inpatient_discharge_date;
-  
+
   if (inpatientDischargeDate && declaredSource === 'community') {
     discrepancies.push({
       type: 'admission_source_conflict',
@@ -385,7 +391,7 @@ function validateAdmissionSource(data) {
       revenueImpact: 'Institutional admission typically increases payment by 5-10%'
     });
   }
-  
+
   if (expectedSource !== declaredSource && m1000Val) {
     discrepancies.push({
       type: 'admission_source_mismatch',
@@ -394,23 +400,23 @@ function validateAdmissionSource(data) {
       expected: expectedSource,
       actual: declaredSource,
       evidence: `M1000 value: ${m1000Val}`,
-      revenueImpact: expectedSource === 'institutional' ? 
+      revenueImpact: expectedSource === 'institutional' ?
         'May be underreporting - institutional admission increases payment' :
         'May be overreporting - community admission has lower payment'
     });
   }
-  
+
   return { validatedSource: expectedSource, discrepancies, m1000Value: m1000Val };
 }
 
 // Validate primary diagnosis code
 function validatePrimaryDiagnosis(data) {
   const discrepancies = [];
-  
+
   // Try to find diagnosis code from multiple possible fields
   let diagnosisCode = data.primary_diagnosis_code || '';
   const diagnosisDescription = data.primary_diagnosis || data.primary_diagnosis_description || '';
-  
+
   // If no explicit code, try to extract from description
   if (!diagnosisCode && diagnosisDescription) {
     const codeMatch = diagnosisDescription.match(/\b([A-Z]\d{2}\.?\d{0,2})\b/i);
@@ -418,17 +424,17 @@ function validatePrimaryDiagnosis(data) {
       diagnosisCode = codeMatch[1].toUpperCase();
     }
   }
-  
+
   // Check M1021 fields as well
   if (!diagnosisCode) {
     diagnosisCode = data.m1021_primary_diagnosis_code || '';
   }
-  
+
   // Validate the code format if we have one
   if (diagnosisCode) {
     const cleanCode = diagnosisCode.toUpperCase().replace(/[^A-Z0-9.]/g, '');
     const validFormat = /^[A-Z]\d{2}\.?\d{0,4}$/.test(cleanCode);
-    
+
     if (!validFormat) {
       discrepancies.push({
         type: 'invalid_diagnosis_code_format',
@@ -450,7 +456,7 @@ function validatePrimaryDiagnosis(data) {
       revenueImpact: 'Required for PDGM grouping - using default clinical group.'
     });
   }
-  
+
   return {
     validatedCode: diagnosisCode,
     validatedDescription: diagnosisDescription,
@@ -462,30 +468,33 @@ function validatePrimaryDiagnosis(data) {
 function validateEpisodeTiming(data) {
   const discrepancies = [];
   const declaredTiming = (data.episode_timing || 'early').toLowerCase();
-  
+
   // Try to determine timing from dates
   const socDate = data.soc_date || data.patient_info?.soc_date || data.m0102_soc_roc_date;
   const assessmentDate = data.assessment_date || data.patient_info?.assessment_date;
   const m0110 = data.m0110_episode_timing || data.admission_info?.m0110_episode_timing;
-  
+
   let expectedTiming = 'early';
   let daysSinceSoc = null;
-  
+
   // Check M0110 first (most reliable)
   if (m0110) {
     const m0110Val = String(m0110).toLowerCase();
-    if (m0110Val.includes('2') || m0110Val.includes('late')) {
+    // M0110: response 01 = early, 02 = late. Match the exact code, not any
+    // string containing the digit "2" (which would misread "2024", "12", …).
+    const m0110Digits = m0110Val.replace(/[^0-9]/g, '');
+    if (m0110Digits === '02' || m0110Digits === '2' || m0110Val.includes('late')) {
       expectedTiming = 'late';
     }
   }
-  
+
   // Calculate from dates if available
   if (socDate && assessmentDate) {
     try {
       const soc = new Date(socDate);
       const assessment = new Date(assessmentDate);
       daysSinceSoc = Math.floor((assessment - soc) / (1000 * 60 * 60 * 24));
-      
+
       if (daysSinceSoc > 30) {
         expectedTiming = 'late';
       }
@@ -493,7 +502,7 @@ function validateEpisodeTiming(data) {
       // Date parsing failed, ignore
     }
   }
-  
+
   if (expectedTiming !== declaredTiming) {
     discrepancies.push({
       type: 'episode_timing_mismatch',
@@ -501,20 +510,20 @@ function validateEpisodeTiming(data) {
       message: `Episode timing appears to be ${expectedTiming} but ${declaredTiming} was used`,
       expected: expectedTiming,
       actual: declaredTiming,
-      evidence: daysSinceSoc !== null ? 
-        `Days since SOC: ${daysSinceSoc}` : 
+      evidence: daysSinceSoc !== null ?
+        `Days since SOC: ${daysSinceSoc}` :
         (m0110 ? `M0110 value: ${m0110}` : 'Based on available date data'),
-      revenueImpact: expectedTiming === 'early' ? 
+      revenueImpact: expectedTiming === 'early' ?
         'Early episodes have higher payment rates' :
         'Late episodes have ~8% lower payment rates'
     });
   }
-  
-  return { 
-    validatedTiming: expectedTiming, 
-    discrepancies, 
+
+  return {
+    validatedTiming: expectedTiming,
+    discrepancies,
     daysSinceSoc,
-    m0110Value: m0110 
+    m0110Value: m0110
   };
 }
 
@@ -547,11 +556,11 @@ Deno.serve(async (req) => {
 
     // Validate primary diagnosis code
     const diagnosisValidation = validatePrimaryDiagnosis(pdgmData);
-    
+
     // Validate admission source and timing
     const sourceValidation = validateAdmissionSource(pdgmData);
     const timingValidation = validateEpisodeTiming(pdgmData);
-    
+
     // Combine all discrepancies
     const allDiscrepancies = [
       ...diagnosisValidation.discrepancies,
@@ -567,7 +576,7 @@ Deno.serve(async (req) => {
       discrepancies: allDiscrepancies,
       hasDiscrepancies: allDiscrepancies.length > 0
     };
-    
+
     // Calculate corrected PDGM revenue if provided
     let correctedRevenue = null;
     let revenueDifference = null;
@@ -581,13 +590,16 @@ Deno.serve(async (req) => {
         admission_source: correctedPdgmData.admission_source || sourceValidation.validatedSource,
         episode_timing: correctedPdgmData.episode_timing || timingValidation.validatedTiming
       };
-      
+
       correctedRevenue = calculatePDGMRevenue(correctedWithValidation, appliedWageIndex);
       correctedRevenue._appliedCorrections = correctedPdgmData._appliedCorrections || [];
       correctedRevenue._correctionCount = correctedPdgmData._correctionCount || 0;
-      
+
       revenueDifference = correctedRevenue.totalPayment - originalRevenue.totalPayment;
-      percentageIncrease = ((revenueDifference / originalRevenue.totalPayment) * 100).toFixed(2);
+      // Guard against divide-by-zero (Infinity/NaN) if base payment is 0.
+      percentageIncrease = originalRevenue.totalPayment > 0
+        ? ((revenueDifference / originalRevenue.totalPayment) * 100).toFixed(2)
+        : '0.00';
     }
 
     // Calculate alternative scenarios for comparison
@@ -631,7 +643,7 @@ function calculateAlternativeScenarios(data, wageIndex = 1.0) {
     { admission_source: 'institutional', episode_timing: 'early', key: 'institutional_early' },
     { admission_source: 'institutional', episode_timing: 'late', key: 'institutional_late' }
   ];
-  
+
   for (const combo of combinations) {
     const scenarioData = {
       ...data,
@@ -649,12 +661,12 @@ function calculateAlternativeScenarios(data, wageIndex = 1.0) {
       comorbidityMultiplier: result.comorbidityMultiplier
     };
   }
-  
+
   // Find highest and lowest
   const payments = Object.values(scenarios).map(s => s.totalPayment);
   const maxPayment = Math.max(...payments);
   const minPayment = Math.min(...payments);
-  
+
   return {
     scenarios,
     maxPayment,
@@ -668,10 +680,10 @@ function calculateAlternativeScenarios(data, wageIndex = 1.0) {
 function calculatePDGMRevenue(data, wageIndex = 1.0) {
   // Extract data - try multiple fields for primary diagnosis
   const primaryDiagnosis = data.primary_diagnosis || data.primary_diagnosis_description || '';
-  
+
   // Try multiple fields for ICD-10 code
   let icd10Code = data.primary_diagnosis_code || '';
-  
+
   // If no code found, try to extract from primary_diagnosis text (e.g., "I50.9 - Heart Failure")
   if (!icd10Code && primaryDiagnosis) {
     const codeMatch = primaryDiagnosis.match(/\b([A-Z]\d{2}\.?\d{0,2})\b/i);
@@ -679,7 +691,7 @@ function calculatePDGMRevenue(data, wageIndex = 1.0) {
       icd10Code = codeMatch[1].toUpperCase();
     }
   }
-  
+
   const comorbidities = data.comorbidities || [];
   const admissionSource = (data.admission_source || 'community').toLowerCase();
   const episodeTiming = (data.episode_timing || 'early').toLowerCase();
@@ -690,7 +702,7 @@ function calculatePDGMRevenue(data, wageIndex = 1.0) {
 
   // Determine clinical group from diagnosis
   const clinicalGroup = mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code);
-  
+
   // Get clinical weight based on source and timing
   const groupWeights = CLINICAL_GROUP_WEIGHTS[clinicalGroup] || CLINICAL_GROUP_WEIGHTS['MMTA_Other'];
   const clinicalWeight = groupWeights[sourceTimingKey] || groupWeights.community_early || 1.0;
@@ -735,7 +747,7 @@ function calculatePDGMRevenue(data, wageIndex = 1.0) {
     caseMixWeight: Math.round(caseMixWeight * 10000) / 10000,
     totalPayment,
     calculationBreakdown: {
-      formula: wageIndex !== 1.0 
+      formula: wageIndex !== 1.0
         ? 'Base Payment × Wage Index × Clinical Weight × Functional Multiplier × Comorbidity Multiplier'
         : 'Base Payment × Clinical Weight × Functional Multiplier × Comorbidity Multiplier',
       values: wageIndex !== 1.0
