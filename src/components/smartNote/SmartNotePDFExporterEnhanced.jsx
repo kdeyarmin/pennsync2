@@ -26,14 +26,20 @@ function addWrappedText(doc, text, x, y, maxWidth, lineHeight, pageHeight, margi
   return y;
 }
 
+<<<<<<< HEAD
 import { toast } from "sonner";
 
+=======
+>>>>>>> origin/main
 export default function SmartNotePDFExporterEnhanced({
   finalNote,
   patient,
   visitType,
   analysisScore,
+<<<<<<< HEAD
   analysis,
+=======
+>>>>>>> origin/main
   currentUser,
   signatureImage,
 }) {
@@ -212,6 +218,7 @@ export default function SmartNotePDFExporterEnhanced({
         y += 4;
       }
 
+<<<<<<< HEAD
       // ─── COMPLIANCE REPORT SECTION ────────────────────────────────────────
       if (analysis && analysis.findings && analysis.findings.length > 0) {
         if (y > pageHeight - margin - 40) {
@@ -253,6 +260,8 @@ export default function SmartNotePDFExporterEnhanced({
         y += 4;
       }
 
+=======
+>>>>>>> origin/main
       // ─── SIGNATURE SECTION ────────────────────────────────────────────────
       if (y > pageHeight - margin - 45) {
         doc.addPage();
@@ -340,7 +349,11 @@ export default function SmartNotePDFExporterEnhanced({
       doc.save(filename);
     } catch (err) {
       console.error("PDF export error:", err);
+<<<<<<< HEAD
       toast.error("Failed to export PDF. Please try again.");
+=======
+      alert("Failed to export PDF. Please try again.");
+>>>>>>> origin/main
     } finally {
       setExporting(false);
     }

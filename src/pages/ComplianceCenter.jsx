@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+<<<<<<< HEAD
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+=======
+import { useQuery, useMutation } from "@tanstack/react-query";
+>>>>>>> origin/main
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +31,10 @@ export default function ComplianceCenter() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState(new Set());
+<<<<<<< HEAD
   const queryClient = useQueryClient();
+=======
+>>>>>>> origin/main
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -52,28 +59,44 @@ export default function ComplianceCenter() {
     initialData: [],
   });
 
+<<<<<<< HEAD
   const { data: allUsers = [], refetch: refetchUsers } = useQuery({
+=======
+  const { data: allUsers = [] } = useQuery({
+>>>>>>> origin/main
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
     refetchInterval: 30000,
   });
 
+<<<<<<< HEAD
   const { data: trainingAssignments = [], refetch: refetchAssignments } = useQuery({
+=======
+  const { data: trainingAssignments = [] } = useQuery({
+>>>>>>> origin/main
     queryKey: ['allTrainingAssignments'],
     queryFn: () => base44.entities.TrainingAssignment.list('-updated_date', 500),
     initialData: [],
     refetchInterval: 30000,
   });
 
+<<<<<<< HEAD
   const { data: personnelCredentials = [], refetch: refetchCredentials } = useQuery({
+=======
+  const { data: personnelCredentials = [] } = useQuery({
+>>>>>>> origin/main
     queryKey: ['allPersonnelCredentials'],
     queryFn: () => base44.entities.PersonnelCredential.list('-updated_date', 500),
     initialData: [],
     refetchInterval: 30000,
   });
 
+<<<<<<< HEAD
   const { data: visits = [], refetch: refetchVisits } = useQuery({
+=======
+  const { data: visits = [] } = useQuery({
+>>>>>>> origin/main
     queryKey: ['allVisits'],
     queryFn: () => base44.entities.Visit.filter({}, '-visit_date', 500),
     initialData: [],
@@ -313,6 +336,7 @@ export default function ComplianceCenter() {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
   return (
+<<<<<<< HEAD
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -322,6 +346,19 @@ export default function ComplianceCenter() {
         <p className="text-sm sm:text-base text-gray-600 mt-2">
           Medicare compliance monitoring, real-time alerts, and regulatory tracking
         </p>
+=======
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+      <div className="page-header-gradient bg-gradient-to-r from-emerald-700 via-teal-700 to-slate-800 mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Compliance Center</h1>
+            <p className="text-emerald-200 mt-1">Medicare compliance monitoring, real-time alerts, and regulatory tracking</p>
+          </div>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <Tabs defaultValue="medicare" className="space-y-6">
@@ -344,10 +381,17 @@ export default function ComplianceCenter() {
 
         {/* Medicare Compliance Dashboard */}
         <TabsContent value="medicare" className="space-y-6">
+<<<<<<< HEAD
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex flex-col sm:flex-row gap-3 flex-1">
               <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(parseInt(v))}>
                 <SelectTrigger className="w-full sm:w-48">
+=======
+          <div className="flex justify-between items-center">
+            <div className="flex gap-3">
+              <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(parseInt(v))}>
+                <SelectTrigger className="w-48">
+>>>>>>> origin/main
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -359,7 +403,11 @@ export default function ComplianceCenter() {
               </Select>
               {isAdmin && (
                 <Select value={selectedNurse} onValueChange={setSelectedNurse}>
+<<<<<<< HEAD
                   <SelectTrigger className="w-full sm:w-64">
+=======
+                  <SelectTrigger className="w-64">
+>>>>>>> origin/main
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -371,7 +419,11 @@ export default function ComplianceCenter() {
                 </Select>
               )}
             </div>
+<<<<<<< HEAD
             <Button className="w-full sm:w-auto" onClick={async () => {
+=======
+            <Button onClick={async () => {
+>>>>>>> origin/main
               setIsGeneratingInsights(true);
               try {
                 const result = await base44.integrations.Core.InvokeLLM({
@@ -391,7 +443,11 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                   }
                 });
                 setAIInsights(result);
+<<<<<<< HEAD
               } catch (error) {
+=======
+              } catch {
+>>>>>>> origin/main
                 toast.error('Failed to generate insights');
               }
               setIsGeneratingInsights(false);

@@ -53,6 +53,10 @@ import CarePlanManagement from './pages/CarePlanManagement';
 import ClinicalChart from './pages/ClinicalChart';
 import ClinicalDocumentation from './pages/ClinicalDocumentation';
 import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
+<<<<<<< HEAD
+=======
+import ClinicalSkillsChecklist from './pages/ClinicalSkillsChecklist';
+>>>>>>> origin/main
 import ComplianceCenter from './pages/ComplianceCenter';
 import Dashboard from './pages/Dashboard';
 import DocumentHub from './pages/DocumentHub';
@@ -91,6 +95,10 @@ export const PAGES = {
     "ClinicalChart": ClinicalChart,
     "ClinicalDocumentation": ClinicalDocumentation,
     "ClinicalPathwayManager": ClinicalPathwayManager,
+<<<<<<< HEAD
+=======
+    "ClinicalSkillsChecklist": ClinicalSkillsChecklist,
+>>>>>>> origin/main
     "ComplianceCenter": ComplianceCenter,
     "Dashboard": Dashboard,
     "DocumentHub": DocumentHub,

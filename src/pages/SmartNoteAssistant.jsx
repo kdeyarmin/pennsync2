@@ -3,9 +3,17 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+<<<<<<< HEAD
 import {
   Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
   Mic, Square
+=======
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Sparkles, CheckCircle2, Loader2,
+  Shield, ArrowRight, Pill,
+  TrendingUp, ClipboardList, User, FileText
+>>>>>>> origin/main
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -16,18 +24,26 @@ import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
+<<<<<<< HEAD
 import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
+=======
+>>>>>>> origin/main
 import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import AlertsPanel from "../components/smartNote/AlertsPanel";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
 import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNoteRecorder";
+<<<<<<< HEAD
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
 import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
+=======
+import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
+import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
+>>>>>>> origin/main
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },
@@ -52,8 +68,50 @@ const getVisitTypes = (careScope) => {
   return HOME_HEALTH_VISIT_TYPES;
 };
 
+<<<<<<< HEAD
 import StepIndicator from "../components/smartNote/StepIndicator";
 import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
+=======
+const TABS = [
+  { id: "builder", label: "Note Builder", icon: Sparkles, color: "indigo" },
+  { id: "medications", label: "Medications", icon: Pill, color: "emerald" },
+  { id: "drafter", label: "Draft from Vitals", icon: ClipboardList, color: "violet" },
+  { id: "summary", label: "Visit Summary", icon: FileText, color: "purple" },
+  { id: "trends", label: "Vital Trends", icon: TrendingUp, color: "cyan" },
+];
+
+const STEPS = [
+  { label: "Write", icon: FileText },
+  { label: "Generate", icon: Sparkles },
+];
+
+function StepIndicator({ step }) {
+  return (
+    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
+      {STEPS.map((s, i) => {
+        const n = i + 1;
+        const active = step === n;
+        const done = step > n;
+        return (
+          <div key={n} className="flex items-center">
+            <div className={`flex items-center gap-1.5 text-xs font-semibold ${active ? "text-indigo-700" : done ? "text-green-600" : "text-gray-400"}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${active ? "bg-indigo-600 text-white" : done ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}>
+                {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : n}
+              </div>
+              <span className="hidden sm:inline">{s.label}</span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className="flex-1 h-0.5 bg-gray-200 mx-1">
+                <div className={`h-full ${step > n ? "bg-green-400 w-full" : "w-0"} transition-all duration-500`} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+>>>>>>> origin/main
 
 export default function SmartNoteAssistant() {
   const [patientId, setPatientId] = useState("");
@@ -90,6 +148,7 @@ export default function SmartNoteAssistant() {
   const isHospice = careScope === "hospice";
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
+<<<<<<< HEAD
     queryFn: async () => {
         try {
             return await base44.entities.Patient.filter({ status: "active" }, "first_name", 200);
@@ -102,6 +161,9 @@ export default function SmartNoteAssistant() {
             throw e;
         }
     }
+=======
+    queryFn: () => base44.entities.Patient.filter({ status: "active" }, "first_name", 200),
+>>>>>>> origin/main
   });
   const patient = patients.find(p => p.id === patientId);
 
@@ -139,9 +201,12 @@ export default function SmartNoteAssistant() {
   useEffect(() => {
     if (note.trim()) {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId }));
+<<<<<<< HEAD
       import('@/lib/indexedDB').then(({ saveDraftNoteLocally }) => {
           saveDraftNoteLocally({ id: 'current_draft', note, visitType, patientId });
       }).catch(console.error);
+=======
+>>>>>>> origin/main
     }
   }, [note, visitType, patientId]);
 
@@ -161,6 +226,7 @@ export default function SmartNoteAssistant() {
 
   useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
 
+<<<<<<< HEAD
   useEffect(() => {
     return () => {
       if (recRef.current) {
@@ -169,6 +235,8 @@ export default function SmartNoteAssistant() {
     };
   }, []);
 
+=======
+>>>>>>> origin/main
   const restoreDraft = () => {
     const saved = sessionStorage.getItem(DRAFT_KEY);
     if (!saved) return;
@@ -183,7 +251,11 @@ export default function SmartNoteAssistant() {
 
   const startDictation = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+<<<<<<< HEAD
     if (!SR) { toast.error("Speech recognition not supported in this browser."); return; }
+=======
+    if (!SR) { alert("Speech recognition not supported in this browser."); return; }
+>>>>>>> origin/main
     const rec = new SR();
     rec.continuous = true;
     rec.interimResults = false;
@@ -334,13 +406,22 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         const errorMsg = promiseErr?.status === 402 || promiseErr?.data?.extra_data?.reason === 'integration_credits_limit_reached'
           ? "Monthly integration limit reached. Please upgrade your plan to continue."
           : "Analysis failed. Please try again.";
+<<<<<<< HEAD
         toast.error(errorMsg);
+=======
+        alert(errorMsg);
+>>>>>>> origin/main
         setStep(1);
         setAnalyzing(false);
         return;
       }
+<<<<<<< HEAD
     } catch (err) {
       toast.error("Analysis failed. Please try again.");
+=======
+    } catch {
+      alert("Analysis failed. Please try again.");
+>>>>>>> origin/main
       setStep(1);
     } finally {
       setAnalyzing(false);
@@ -368,6 +449,7 @@ Return ONLY the final note text.`
       setNoteSections(parseNoteSections(result));
       setStep(2);
       if (patientId && currentUser?.email) {
+<<<<<<< HEAD
         const noteText = typeof result === "string" ? result : JSON.stringify(result);
         
         if (navigator.onLine) {
@@ -402,6 +484,35 @@ Return ONLY the final note text.`
             await addToSyncQueue('CREATE_VISIT', { patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
             toast.success("Saved offline. Will sync when reconnected.");
         }
+=======
+        const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
+        const noteText = typeof result === "string" ? result : JSON.stringify(result);
+        
+        // Update patient chart with enhanced notes
+        const currentPatient = await base44.entities.Patient.get(patientId);
+        const enhancedHistory = currentPatient.enhanced_notes_history || [];
+        enhancedHistory.push({
+          date: visitDate,
+          visit_type: visitType,
+          note: noteText,
+          compliance_score: analysisData.compliance_score,
+          created_by: currentUser.email,
+          created_at: new Date().toISOString()
+        });
+        
+        await Promise.all([
+          base44.entities.Patient.update(patientId, {
+            enhanced_notes_history: enhancedHistory,
+            clinical_notes: noteText
+          }),
+          base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: noteText.length, quality_score: analysisData.overall_score, rough_note_compliance: Math.max(0, analysisData.compliance_score - 20), enhanced_note_compliance: analysisData.compliance_score, compliance_improvement: 20 }),
+          base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysisData.compliance_score, status: analysisData.compliance_score >= 90 ? "passed" : analysisData.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
+        ]);
+        // Auto-generate follow-up tasks from the finalized note
+        await generateTasksFromNote(noteText, visit.id);
+        // Auto-analyze supply usage from visit notes
+        await analyzeSupplyUsage(noteText, visit.id);
+>>>>>>> origin/main
         logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysisData.overall_score });
       }
     } catch (err) {
@@ -426,7 +537,11 @@ Return ONLY the final note text.`
 
   const proceedToBuild = () => {
     if (analysis) {
+<<<<<<< HEAD
       const updatedFindings = analysis.findings.map(f => {
+=======
+      const updatedFindings = (analysis.findings || []).map(f => {
+>>>>>>> origin/main
         if (f.needs_clarification && answers[f.id]) {
           return { ...f, needs_clarification: false, suggestion: answers[f.id] };
         }
@@ -441,13 +556,21 @@ Return ONLY the final note text.`
 
   const selectBySeverity = (severity) => {
     if (!analysis) return;
+<<<<<<< HEAD
     const filtered = analysis.findings.filter(f => f.severity === severity).map(f => f.id);
+=======
+    const filtered = (analysis.findings || []).filter(f => f.severity === severity).map(f => f.id);
+>>>>>>> origin/main
     setSelected(new Set([...selected, ...filtered]));
   };
 
   const calculateTotalRevenueImpact = () => {
     if (!analysis) return 0;
+<<<<<<< HEAD
     const selected_findings = analysis.findings.filter(f => selected.has(f.id));
+=======
+    const selected_findings = (analysis.findings || []).filter(f => selected.has(f.id));
+>>>>>>> origin/main
     const impacts = selected_findings
       .map(f => {
         const match = f.revenue_impact?.match(/\$?([\d,]+)/);
@@ -529,12 +652,39 @@ Return ONLY the final note text.`
   const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
   const ready = note.trim().length >= 20;
 
+<<<<<<< HEAD
+=======
+  const tabColorMap = { indigo: "bg-indigo-600", violet: "bg-violet-600", purple: "bg-purple-600", emerald: "bg-emerald-600" };
+  const tabHoverMap = { indigo: "hover:bg-indigo-50 hover:text-indigo-700", violet: "hover:bg-violet-50 hover:text-violet-700", purple: "hover:bg-purple-50 hover:text-purple-700", emerald: "hover:bg-emerald-50 hover:text-emerald-700" };
+
+>>>>>>> origin/main
   return (
     <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3 sm:space-y-4">
 
       <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
 
+<<<<<<< HEAD
       <SmartNoteTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+=======
+      {/* Tabs */}
+      <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm gap-1 overflow-x-auto">
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[44px] whitespace-nowrap px-2 ${isActive ? `${tabColorMap[tab.color]} text-white shadow-sm` : `text-gray-500 ${tabHoverMap[tab.color]}`}`}
+            >
+              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
+            </button>
+          );
+        })}
+      </div>
+>>>>>>> origin/main
 
       {/* ── TAB: MEDICATIONS ── */}
       {activeTab === "medications" && (
@@ -610,12 +760,30 @@ Return ONLY the final note text.`
                     <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Patient</label>
                     <span className="text-xs text-gray-400 font-normal normal-case ml-1">optional</span>
                   </div>
+<<<<<<< HEAD
                   <SearchablePatientSelect 
                     patients={patients} 
                     value={patientId} 
                     onValueChange={setPatientId} 
                     className="bg-gray-50 border-gray-200 h-12 sm:h-11 text-sm rounded-xl"
                   />
+=======
+                  <Select value={patientId} onValueChange={setPatientId}>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12 sm:h-11 text-sm rounded-xl">
+                      <SelectValue placeholder={<span className="flex items-center gap-2 text-gray-400"><User className="w-4 h-4" /> Search for a patient…</span>} />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl shadow-xl max-h-[50vh] bg-white">
+                      {patients.map(p => (
+                        <SelectItem key={p.id} value={p.id} className="py-3 sm:py-2.5 px-3 min-h-[52px] sm:min-h-0 bg-white hover:bg-indigo-50">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900">{p.first_name} {p.last_name}</span>
+                            {p.primary_diagnosis && <span className="text-xs text-gray-500 mt-0.5">{p.primary_diagnosis}</span>}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+>>>>>>> origin/main
                 </div>
                 <div className="border-t border-gray-100" />
                 <div>
@@ -659,7 +827,49 @@ Return ONLY the final note text.`
                 }}
               />
 
+<<<<<<< HEAD
               <ComplianceChecklist isHospice={isHospice} />
+=======
+              {/* Regulatory checks transparency - scope-specific */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                <p className="text-xs font-semibold text-indigo-700 mb-1.5 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5" /> Medicare compliance checks performed:
+                </p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-indigo-600">
+                  {(isHospice ? [
+                    "42 CFR §418 Hospice CoPs",
+                    "Terminal prognosis documentation",
+                    "Comfort-focused goals",
+                    "Symptom management (pain/dyspnea)",
+                    "IDG/IDT interdisciplinary notes",
+                    "Benefit period documentation",
+                    "Patient/family education",
+                    "Medication management",
+                    "Spiritual/psychosocial assessment",
+                    "Bereavement support",
+                    "Advance directives reviewed",
+                    "State hospice survey standards"
+                  ] : [
+                    "Medicare 42 CFR Part 484",
+                    "Homebound status",
+                    "Skilled need justification",
+                    "Vitals + interpretation",
+                    "Patient response",
+                    "Education with teach-back",
+                    "Safety / fall risk",
+
+                    "Care plan progress",
+                    "Pain assessment",
+                    "Medication adherence",
+                    "State survey standards"
+                  ]).map((item, i) => (
+                    <span key={i} className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-indigo-400 shrink-0" />{item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+>>>>>>> origin/main
 
               <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
@@ -670,6 +880,7 @@ Return ONLY the final note text.`
                   </Button>
                 </div>
                 {/* Enhanced Audio Recorder */}
+<<<<<<< HEAD
                 <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex flex-wrap gap-2 items-center">
                   <Button 
                     variant={listening ? "destructive" : "default"} 
@@ -678,14 +889,20 @@ Return ONLY the final note text.`
                   >
                     {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
                   </Button>
+=======
+                <div className="px-4 py-2 bg-blue-50 border-b border-blue-100">
+>>>>>>> origin/main
                   <EnhancedAudioRecorder
                     onTranscribed={(transcribed) => setNote(prev => prev ? prev + " " + transcribed : transcribed)}
                     disabled={false}
                   />
+<<<<<<< HEAD
                   <SOAPAudioRecorder 
                     onSOAPGenerated={(soapText) => setNote(prev => prev ? prev + "\n\n" + soapText : soapText)} 
                     disabled={false} 
                   />
+=======
+>>>>>>> origin/main
                 </div>
                 <textarea ref={textareaRef} value={note} onChange={e => setNote(e.target.value)}
                   placeholder={"Enter bullet points or rough draft — AI will NOT invent information.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• homebound: unable to leave without considerable effort\n• skilled need: wound assessment and dressing change\n• wound R heel 2×3 cm granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter noted, discussed w/ family"}
@@ -835,7 +1052,10 @@ Return ONLY the final note text.`
                 patient={patient}
                 visitType={visitType}
                 analysisScore={analysis?.overall_score}
+<<<<<<< HEAD
                 analysis={analysis}
+=======
+>>>>>>> origin/main
                 currentUser={currentUser}
                 signatureImage={signatureImage}
                 setSignatureImage={setSignatureImage}

@@ -4,7 +4,11 @@ import { CheckCircle2, Copy, RotateCcw } from "lucide-react";
 import SmartNotePDFExporterEnhanced from "./SmartNotePDFExporterEnhanced";
 import NoteDiffView from "./NoteDiffView";
 
+<<<<<<< HEAD
 export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copied, patient, visitType, analysisScore, currentUser, signatureImage, onReset, originalNote, analysis }) {
+=======
+export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copied, patient, visitType, analysisScore, currentUser, signatureImage, onReset, originalNote }) {
+>>>>>>> origin/main
 
   return (
     <div className="space-y-4">
@@ -36,7 +40,11 @@ export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copi
           <Button onClick={onCopy} className="flex-1 bg-green-600 hover:bg-green-700 h-12 sm:h-10 gap-2 font-semibold">
             {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy All</>}
           </Button>
+<<<<<<< HEAD
           <SmartNotePDFExporterEnhanced finalNote={finalNote} patient={patient} visitType={visitType} analysisScore={analysisScore} currentUser={currentUser} signatureImage={signatureImage} analysis={analysis} />
+=======
+          <SmartNotePDFExporterEnhanced finalNote={finalNote} patient={patient} visitType={visitType} analysisScore={analysisScore} currentUser={currentUser} signatureImage={signatureImage} />
+>>>>>>> origin/main
           <Button variant="outline" className="h-12 sm:h-10 px-4 text-sm">Save</Button>
           <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={onReset}><RotateCcw className="w-4 h-4" /></Button>
         </div>

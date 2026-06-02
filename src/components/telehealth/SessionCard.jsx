@@ -1,7 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
 import { Video, Calendar, User, Clock, Copy } from "lucide-react";
+=======
+import { Video, Calendar, User, Clock, Copy, MessageSquare } from "lucide-react";
+>>>>>>> origin/main
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -21,7 +25,11 @@ const visitLabels = {
   discharge_planning: "Discharge Planning"
 };
 
+<<<<<<< HEAD
 export default function SessionCard({ session, onJoin, onCancel }) {
+=======
+export default function SessionCard({ session, onJoin, onCancel, onTextPatient }) {
+>>>>>>> origin/main
   const copyLink = () => {
     if (session.invite_link) {
       navigator.clipboard.writeText(session.invite_link);
@@ -75,6 +83,15 @@ export default function SessionCard({ session, onJoin, onCancel }) {
                 Copy Link
               </Button>
             )}
+<<<<<<< HEAD
+=======
+            {onTextPatient && session.invite_link && session.status !== "completed" && session.status !== "cancelled" && (
+              <Button size="sm" variant="outline" onClick={() => onTextPatient(session)} className="gap-1.5">
+                <MessageSquare className="w-3 h-3" />
+                Text link
+              </Button>
+            )}
+>>>>>>> origin/main
             {session.status === "scheduled" && (
               <Button size="sm" variant="ghost" onClick={() => onCancel(session)} className="text-red-600 hover:bg-red-50 text-xs">
                 Cancel

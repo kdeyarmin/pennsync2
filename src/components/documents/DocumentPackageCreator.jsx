@@ -22,6 +22,10 @@ import {
   Mail
 } from "lucide-react";
 import { toast } from "sonner";
+<<<<<<< HEAD
+=======
+import { createPageUrl } from "@/utils";
+>>>>>>> origin/main
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -58,6 +62,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
     queryKey: ['patients-for-select'],
     queryFn: () => base44.entities.Patient.list('-created_date', 500),
     initialData: [],
+<<<<<<< HEAD
     enabled: open,
     refetchOnMount: 'stale',
     staleTime: 0
@@ -107,6 +112,87 @@ export default function DocumentPackageCreator({ open, onClose }) {
       }
 
       // Create document signatures for uploaded files
+=======
+    enabled: open
+  });
+
+  const createPackageMutation = useMutation({
+    mutationFn: async () => {
+      const patientId = selectedPatient;
+      const patientData = useExistingPatient ? null : manualPatientInfo;
+      const selectedPatientRecord = patients.find((patient) => patient.id === selectedPatient);
+      const patientDisplayName = useExistingPatient && selectedPatientRecord
+        ? `${selectedPatientRecord.first_name} ${selectedPatientRecord.last_name}`
+        : `${manualPatientInfo.first_name} ${manualPatientInfo.last_name}`.trim();
+      const signaturePromises = [];
+
+      for (const templateId of selectedDocuments) {
+        const template = templates.find((item) => item.id === templateId);
+        if (!template) {
+          continue;
+        }
+
+        const packetDocuments = template.packet_documents?.length > 0
+          ? template.packet_documents
+          : [{
+              document_name: template.template_name,
+              template_file_url: template.template_file_url,
+              signature_fields: template.signature_fields || [],
+              field_mappings: template.field_mappings || [],
+              carry_forward_fields: template.carry_forward_fields || [],
+            }];
+
+        for (const [index, packetDocument] of packetDocuments.entries()) {
+          let pdfUrl = packetDocument.template_file_url;
+
+          if (!useExistingPatient) {
+            const result = await base44.functions.invoke('preparePDFWithPatientInfo', {
+              template_url: packetDocument.template_file_url,
+              patient_info: patientData,
+            });
+            pdfUrl = result.pdf_url;
+          }
+
+          signaturePromises.push(
+            base44.entities.DocumentSignature.create({
+              patient_id: patientId,
+              template_id: template.id,
+              template_document_id: packetDocument.document_id || `${template.id}-${index + 1}`,
+              document_type: template.template_category,
+              document_name: packetDocuments.length > 1
+                ? `${template.template_name} - ${packetDocument.document_name || `Document ${index + 1}`}`
+                : template.template_name,
+              original_pdf_url: pdfUrl,
+              status: 'pending',
+              signers: (packetDocument.signature_fields || template.signature_fields || []).map((signer, signerIndex) => ({
+                id: signer.signer_id || signer.id || `${template.id}-${index + 1}-${signerIndex + 1}`,
+                name: signer.role === 'patient' ? (signerName || patientDisplayName || signer.label || `Signer ${signerIndex + 1}`) : (signer.label || signer.role || `Signer ${signerIndex + 1}`),
+                email: signerEmail || '',
+                role: signer.role || 'patient',
+                required: signer.required !== false,
+                signed_date: null,
+                signature: null,
+                signature_method: null,
+                order: signer.order || signerIndex + 1,
+              })),
+              required_signatures: (packetDocument.signature_fields || template.signature_fields || []).map((signer, signerIndex) => ({
+                signer_id: signer.signer_id || signer.id || `${template.id}-${index + 1}-${signerIndex + 1}`,
+                name: signer.role === 'patient' ? (signerName || patientDisplayName || signer.label || `Signer ${signerIndex + 1}`) : (signer.label || signer.role || `Signer ${signerIndex + 1}`),
+                role: signer.role || 'patient',
+                is_required: signer.required !== false,
+                is_signed: false,
+                order: signer.order || signerIndex + 1,
+              })),
+              field_mappings: packetDocument.field_mappings || template.field_mappings || [],
+              carry_forward_fields: packetDocument.carry_forward_fields || template.carry_forward_fields || [],
+              due_date: dueDate || null,
+              form_data: useExistingPatient ? null : patientData,
+            })
+          );
+        }
+      }
+
+>>>>>>> origin/main
       for (const file of uploadedFiles) {
         const { file_url } = await base44.integrations.Core.UploadFile({ file: file.file });
         signaturePromises.push(
@@ -117,22 +203,35 @@ export default function DocumentPackageCreator({ open, onClose }) {
             original_pdf_url: file_url,
             status: 'pending',
             required_signatures: [],
+<<<<<<< HEAD
             due_date: dueDate || null,
             form_data: useExistingPatient ? null : patientData
+=======
+            field_mappings: [],
+            carry_forward_fields: [],
+            due_date: dueDate || null,
+            form_data: useExistingPatient ? null : patientData,
+>>>>>>> origin/main
           })
         );
       }
 
       const signatures = await Promise.all(signaturePromises);
+<<<<<<< HEAD
       const signatureIds = signatures.map(s => s.id);
 
       // Create the package
+=======
+      const signatureIds = signatures.map((signature) => signature.id);
+
+>>>>>>> origin/main
       const pkg = await base44.entities.DocumentPackage.create({
         package_name: packageName,
         patient_id: patientId,
         document_signatures: signatureIds,
         status: 'pending',
         due_date: dueDate || null,
+<<<<<<< HEAD
         sent_to_patient_at: new Date().toISOString()
       });
 
@@ -167,17 +266,51 @@ export default function DocumentPackageCreator({ open, onClose }) {
           body: `Hello ${signerName},\n\nYou have been requested to sign the following documents: ${packageName}\n\nPatient: ${patient ? `${patient.first_name} ${patient.last_name}` : 'See package details'}\n\n${signatureMessage ? `Message: ${signatureMessage}\n\n` : ''}Please click the link below to review and sign:\n${signatureUrl}\n\n${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}\n\n` : ''}Thank you!`
         });
         
+=======
+        sent_to_patient_at: new Date().toISOString(),
+      });
+
+      if (sendForSignature && signerEmail && signerName && signatures.length > 0) {
+        const params = new URLSearchParams({ signature_id: signatures[0].id, patient_id: patientId || '' });
+        const signatureUrl = `${window.location.origin}${createPageUrl(`SignDocument?${params.toString()}`)}`;
+
+        await base44.integrations.Core.SendEmail({
+          to: signerEmail,
+          subject: `Signature Requested: ${packageName}`,
+          body: `Hello ${signerName}
+
+You have been requested to sign the following documents: ${packageName}
+
+Patient: ${patientDisplayName || 'See package details'}
+
+${signatureMessage ? `Message: ${signatureMessage}
+
+` : ''}Please click the link below to review and sign:
+${signatureUrl}
+
+${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
+
+` : ''}Thank you!`,
+        });
+
+>>>>>>> origin/main
         toast.success("Package created and signature request sent!");
       }
 
       return pkg;
+<<<<<<< HEAD
       },
       onSuccess: () => {
+=======
+    },
+    onSuccess: () => {
+>>>>>>> origin/main
       queryClient.invalidateQueries({ queryKey: ['document-packages'] });
       queryClient.invalidateQueries({ queryKey: ['document-signatures-dashboard'] });
       toast.success("Document package created successfully!");
       resetForm();
       onClose();
+<<<<<<< HEAD
       },
       onError: (error) => {
       toast.error(`Failed to create package: ${error.message}`);
@@ -185,6 +318,15 @@ export default function DocumentPackageCreator({ open, onClose }) {
       });
 
       const resetForm = () => {
+=======
+    },
+    onError: (error) => {
+      toast.error(`Failed to create package: ${error.message}`);
+    }
+  });
+
+  const resetForm = () => {
+>>>>>>> origin/main
     setUseExistingPatient(true);
     setSelectedPatient(null);
     setManualPatientInfo({
@@ -334,6 +476,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 value={selectedPatient}
                 onValueChange={setSelectedPatient}
               />
+<<<<<<< HEAD
               {patients.length === 0 && <p className="text-xs text-amber-600 mt-2">No patients found. Create one or check access permissions.</p>}
               <p className="text-xs text-gray-500 mt-1">
                 Patient data will auto-populate in documents
@@ -343,6 +486,16 @@ export default function DocumentPackageCreator({ open, onClose }) {
               )}
 
               {/* Manual Patient Information */}
+=======
+              <p className="text-xs text-gray-500 mt-1">
+                Patient data will auto-populate in documents 
+                {patients.length > 0 && ` (${patients.length} patients available)`}
+              </p>
+            </div>
+          )}
+
+          {/* Manual Patient Information */}
+>>>>>>> origin/main
           {!useExistingPatient && (
             <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

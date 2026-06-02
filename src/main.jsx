@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 
+<<<<<<< HEAD
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(
@@ -16,6 +17,8 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+=======
+>>>>>>> origin/main
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
@@ -29,4 +32,11 @@ if (import.meta.hot) {
   import.meta.hot.on('vite:afterUpdate', () => {
     window.parent?.postMessage({ type: 'sandbox:afterUpdate' }, '*');
   });
+<<<<<<< HEAD
 }
+=======
+}
+
+
+
+>>>>>>> origin/main

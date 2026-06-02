@@ -81,6 +81,7 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
   }
 
   return (
+<<<<<<< HEAD
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <div className="mb-6">
         <div>
@@ -91,6 +92,18 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
           <p className="text-sm sm:text-base text-gray-600 mt-2">
             KPIs, outcomes, performance metrics, and AI-powered population health insights
           </p>
+=======
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="page-header-gradient bg-gradient-to-r from-indigo-700 via-blue-700 to-slate-800 mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <BarChart3 className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Reports & Analytics</h1>
+            <p className="text-blue-200 mt-1">KPIs, outcomes, performance metrics, and AI-powered population health insights</p>
+          </div>
+>>>>>>> origin/main
         </div>
       </div>
 
@@ -180,8 +193,13 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
           {populationData && (
             <div className="space-y-6">
+<<<<<<< HEAD
               <Card className="modern-card border-l-4 border-l-blue-600 bg-white shadow-md">
                 <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
+=======
+              <Card className="border-2 border-blue-300 bg-blue-50">
+                <CardHeader>
+>>>>>>> origin/main
                   <CardTitle>Executive Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -215,8 +233,13 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
               </Card>
 
               {populationData.urgent_actions?.length > 0 && (
+<<<<<<< HEAD
                 <Card className="modern-card border-l-4 border-l-red-500 bg-white shadow-md">
                   <CardHeader className="bg-red-50/50 border-b border-red-100 pb-4">
+=======
+                <Card className="border-red-300 bg-red-50">
+                  <CardHeader>
+>>>>>>> origin/main
                     <CardTitle className="text-red-900">Urgent Actions Required</CardTitle>
                   </CardHeader>
                   <CardContent>

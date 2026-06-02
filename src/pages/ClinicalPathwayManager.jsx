@@ -37,7 +37,12 @@ import {
   ClipboardList,
   X,
   Sparkles,
+<<<<<<< HEAD
   Brain
+=======
+  Brain,
+  ShieldAlert
+>>>>>>> origin/main
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIAssessmentDrafter from "../components/clinical/AIAssessmentDrafter";
@@ -65,6 +70,14 @@ export default function ClinicalPathwayManager() {
   const [selectedPathwayForUpdate, setSelectedPathwayForUpdate] = useState(null);
   const [pathwayToDelete, setPathwayToDelete] = useState(null);
 
+<<<<<<< HEAD
+=======
+  const { data: currentUser, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+>>>>>>> origin/main
   const { data: pathways = [], isLoading } = useQuery({
     queryKey: ['clinicalPathways'],
     queryFn: () => base44.entities.ClinicalPathway.list('-created_date')
@@ -338,7 +351,11 @@ export default function ClinicalPathwayManager() {
     }
   };
 
+<<<<<<< HEAD
   if (isLoading) {
+=======
+  if (isLoading || isLoadingUser) {
+>>>>>>> origin/main
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
@@ -346,6 +363,24 @@ export default function ClinicalPathwayManager() {
     );
   }
 
+<<<<<<< HEAD
+=======
+  // Admin-only surface: block non-admins (server-side authz remains the real gate).
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div className="p-8 max-w-2xl mx-auto">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-12 text-center">
+            <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
+            <p className="text-gray-600">Only administrators can manage clinical pathways.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+>>>>>>> origin/main
   return (
     <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">

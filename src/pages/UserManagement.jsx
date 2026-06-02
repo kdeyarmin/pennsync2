@@ -335,9 +335,15 @@ export default function UserManagement() {
 
   const getRoleBadge = (role) => {
     const colors = {
+<<<<<<< HEAD
       admin: 'bg-slate-800 text-white border-slate-700 font-medium',
       user: 'bg-slate-100 text-slate-700 border-slate-200',
       manager: 'bg-slate-200 text-slate-800 border-slate-300 font-medium'
+=======
+      admin: 'bg-purple-100 text-purple-800 border-purple-300',
+      user: 'bg-blue-100 text-blue-800 border-blue-300',
+      manager: 'bg-green-100 text-green-800 border-green-300'
+>>>>>>> origin/main
     };
     const labels = {
       admin: 'Admin',
@@ -368,6 +374,7 @@ export default function UserManagement() {
   }
 
   return (
+<<<<<<< HEAD
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-2">
@@ -377,13 +384,28 @@ export default function UserManagement() {
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">User Management</h1>
             <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Manage user accounts, roles, and permissions</p>
+=======
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="page-header-gradient bg-gradient-to-r from-purple-700 via-indigo-700 to-slate-800 mb-4 sm:mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <Users className="w-8 h-8 text-white" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white truncate">User Management</h1>
+            <p className="text-purple-200 mt-1 hidden sm:block">Manage user accounts, roles, and permissions</p>
+>>>>>>> origin/main
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
+<<<<<<< HEAD
         <Card className="modern-card">
+=======
+        <Card>
+>>>>>>> origin/main
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
@@ -394,7 +416,11 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
+<<<<<<< HEAD
         <Card className="modern-card border-purple-200">
+=======
+        <Card className="border-purple-200">
+>>>>>>> origin/main
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0" />
@@ -405,7 +431,11 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
+<<<<<<< HEAD
         <Card className="modern-card border-blue-200">
+=======
+        <Card className="border-blue-200">
+>>>>>>> origin/main
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
@@ -416,7 +446,11 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
+<<<<<<< HEAD
         <Card className="modern-card border-green-200">
+=======
+        <Card className="border-green-200">
+>>>>>>> origin/main
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
@@ -427,7 +461,11 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
+<<<<<<< HEAD
         <Card className="modern-card border-red-200">
+=======
+        <Card className="border-red-200">
+>>>>>>> origin/main
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <UserX className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
@@ -441,7 +479,11 @@ export default function UserManagement() {
       </div>
 
       {/* Filters & Add User Button */}
+<<<<<<< HEAD
       <Card className="mb-4 sm:mb-6 modern-card">
+=======
+      <Card className="mb-4 sm:mb-6">
+>>>>>>> origin/main
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center flex-1">
@@ -482,7 +524,11 @@ export default function UserManagement() {
             </div>
             <Button
               onClick={() => setShowUserSetupDialog(true)}
+<<<<<<< HEAD
               className="btn-primary w-full sm:w-auto"
+=======
+              className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto min-h-[44px]"
+>>>>>>> origin/main
             >
               <Users className="w-4 h-4 mr-2" />
               Add New User
@@ -493,24 +539,40 @@ export default function UserManagement() {
 
       {/* Pending Invitations */}
       {pendingInvitations.length > 0 && (
+<<<<<<< HEAD
         <Card className="mb-4 sm:mb-6 modern-card border-slate-200 bg-white">
           <CardHeader className="p-3 sm:p-4 md:p-6 border-b border-slate-100 bg-slate-50 rounded-t-xl">
             <CardTitle className="flex items-center justify-between text-base sm:text-lg text-slate-800">
               <div className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-slate-500" />
+=======
+        <Card className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center justify-between text-base sm:text-lg">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-blue-600" />
+>>>>>>> origin/main
                 <span>Pending Invitations ({pendingInvitations.length})</span>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6">
+<<<<<<< HEAD
             <div className="space-y-3">
+=======
+            <div className="space-y-2">
+>>>>>>> origin/main
               {pendingInvitations.map((invitation) => {
                 const expiresAt = new Date(invitation.expires_at);
                 const hoursUntilExpiry = (expiresAt - now) / (1000 * 60 * 60);
                 const isExpiringSoon = hoursUntilExpiry > 0 && hoursUntilExpiry <= 24;
                 
                 return (
+<<<<<<< HEAD
                   <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
+=======
+                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border border-blue-100">
+>>>>>>> origin/main
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-gray-900">{invitation.full_name}</p>
@@ -568,20 +630,35 @@ export default function UserManagement() {
 
       {/* Expired Invitations */}
       {expiredInvitations.length > 0 && (
+<<<<<<< HEAD
         <Card className="mb-4 sm:mb-6 modern-card border-red-200 bg-white">
           <CardHeader className="p-3 sm:p-4 md:p-6 border-b border-red-100 bg-red-50/50 rounded-t-xl">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-red-800">
               <AlertTriangle className="w-5 h-5 text-red-500" />
+=======
+        <Card className="mb-4 sm:mb-6 border-red-200 bg-red-50">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+>>>>>>> origin/main
               <span>Expired Invitations ({expiredInvitations.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6">
+<<<<<<< HEAD
             <div className="space-y-3">
+=======
+            <div className="space-y-2">
+>>>>>>> origin/main
               {expiredInvitations.map((invitation) => {
                 const expiresAt = new Date(invitation.expires_at);
                 
                 return (
+<<<<<<< HEAD
                   <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-red-200 transition-colors">
+=======
+                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border border-red-100">
+>>>>>>> origin/main
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-gray-900">{invitation.full_name}</p>
@@ -632,7 +709,11 @@ export default function UserManagement() {
       )}
 
       {/* Users Table */}
+<<<<<<< HEAD
       <Card className="modern-card">
+=======
+      <Card>
+>>>>>>> origin/main
         <CardHeader className="p-3 sm:p-4 md:p-6">
           <CardTitle className="flex items-center justify-between text-base sm:text-lg">
             <span>Users ({filteredUsers.length})</span>
@@ -801,7 +882,11 @@ export default function UserManagement() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
+<<<<<<< HEAD
                   <SelectContent style={{ zIndex: 9999 }}>
+=======
+                  <SelectContent>
+>>>>>>> origin/main
                     <SelectItem value="user">Nurse</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
@@ -1066,7 +1151,11 @@ export default function UserManagement() {
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
+<<<<<<< HEAD
                 <SelectContent style={{ zIndex: 9999 }}>
+=======
+                <SelectContent>
+>>>>>>> origin/main
                   <SelectItem value="user">Nurse</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
@@ -1079,7 +1168,11 @@ export default function UserManagement() {
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select staff type" />
                 </SelectTrigger>
+<<<<<<< HEAD
                 <SelectContent style={{ zIndex: 9999 }}>
+=======
+                <SelectContent>
+>>>>>>> origin/main
                   <SelectItem value={null}>None</SelectItem>
                   <SelectItem value="RN">RN</SelectItem>
                   <SelectItem value="LPN">LPN</SelectItem>
