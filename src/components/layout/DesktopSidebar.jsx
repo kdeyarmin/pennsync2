@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, ChevronLeft, ChevronRight, Sparkles, Users, LogOut } from "lucide-react";
+import { Shield, ChevronLeft, ChevronRight, Sparkles, Users, LogOut, Search } from "lucide-react";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 
 export default function DesktopSidebar({
@@ -34,6 +34,21 @@ export default function DesktopSidebar({
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto scrollbar-hide">
+        {/* Quick search — opens the command palette (also Ctrl/Cmd+K) */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+          className={`flex items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors mb-2 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'w-full px-3 py-2'}`}
+          title="Search pages (Ctrl/Cmd+K)"
+        >
+          <Search className="w-4 h-4 flex-shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="text-sm flex-1 text-left">Search…</span>
+              <kbd className="text-[10px] font-mono bg-slate-700/70 text-slate-300 rounded px-1.5 py-0.5 border border-slate-600/60">⌘K</kbd>
+            </>
+          )}
+        </button>
         {!collapsed && (
           <div className="flex items-center gap-2 px-3 py-1.5 mb-2 bg-emerald-900/40 border border-emerald-700/40 rounded-lg">
             <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
