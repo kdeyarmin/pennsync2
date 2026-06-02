@@ -133,7 +133,7 @@ export default function CarePlanTimeline({ carePlans = [], patient }) {
 
           {/* Care Plans List with Timeline Context */}
           <div className="space-y-3">
-            {sortedPlans.map((plan, idx) => {
+            {sortedPlans.map((plan, _idx) => {
               const daysInfo = getDaysRemaining(plan.target_date);
               const isOverdue = plan.target_date && isAfter(today, parseISO(plan.target_date)) && plan.status === 'active';
               
