@@ -44,6 +44,7 @@ import {
   Trash2,
   UserCheck
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -1023,20 +1024,21 @@ Actions available:
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Referral Intake</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Streamlined workflow for processing incoming referrals</p>
-        </div>
-        <Button
-          onClick={() => setUploadDialogOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">New Referral</span>
-          <span className="sm:hidden">New</span>
-        </Button>
-      </div>
+      <PageHeader
+        icon={FileText}
+        title="Referral Intake"
+        description="Streamlined workflow for processing incoming referrals"
+        actions={
+          <Button
+            onClick={() => setUploadDialogOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">New Referral</span>
+            <span className="sm:hidden">New</span>
+          </Button>
+        }
+      />
 
       {/* Status Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
