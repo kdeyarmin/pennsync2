@@ -44,7 +44,11 @@ export function parseISODate(value) {
   const [y, m, d] = parts;
   if (!y || !m || !d || parts.length !== 3) return null;
   const date = new Date(y, m - 1, d);
-  return isNaN(date.getTime()) ? null : date;
+  if (isNaN(date.getTime())) return null;
+  // Reject impossible dates like 2026-02-31: JS rolls the overflow into the
+  // next month, which would silently shift a stored/requested date.
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null;
+  return date;
 }
 
 /** Format a Date (or date string) back to a `YYYY-MM-DD` string. */
@@ -148,6 +152,20 @@ export function validateRequestDates(start, end) {
   if (!s) return "Please choose a start date.";
   if (!e) return "Please choose an end date.";
   if (e < s) return "The end date can't be before the start date.";
+  return null;
+}
+
+/**
+ * Full submission validation: valid ordered dates *and* at least a partial
+ * working day. A weekend-only range yields 0 business days, which we reject so
+ * empty requests never enter the approval queue. Returns an error string or null.
+ */
+export function getRequestValidationError(start, end, halfDay = false) {
+  const dateError = validateRequestDates(start, end);
+  if (dateError) return dateError;
+  if (totalRequestedDays(start, end, halfDay) <= 0) {
+    return "Your selected range has no working days (weekends are excluded).";
+  }
   return null;
 }
 

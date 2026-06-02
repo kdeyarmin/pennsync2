@@ -43,7 +43,7 @@ export default function TimeOff() {
   // Candidate approvers for the request form. User listing is admin-oriented;
   // if it's not permitted for this user we fall back gracefully to "route to admins".
   const { data: approvers = [] } = useQuery({
-    queryKey: ["timeoff", "approvers"],
+    queryKey: ["timeoff", "approvers", currentUser?.email],
     queryFn: async () => {
       try {
         const users = await base44.entities.User.list("full_name", 500);
@@ -69,7 +69,9 @@ export default function TimeOff() {
     [teamRequests, isAdmin, currentUser?.email]
   );
 
-  const pendingCount = teamRequests.filter((r) => r.status === "pending").length;
+  // Count only requests this user can actually act on (their reports / all for
+  // admins) — never their own — so the badge matches the Approvals queue.
+  const pendingCount = teamForViews.filter((r) => r.status === "pending").length;
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -126,9 +128,8 @@ export default function TimeOff() {
           <>
             <TabsContent value="approvals">
               <PendingApprovalsQueue
-                requests={teamRequests}
+                requests={teamForViews}
                 allRequests={teamRequests}
-                currentUser={currentUser}
               />
             </TabsContent>
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { reviewTimeOffRequest } from "@/functions/reviewTimeOffRequest";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +22,7 @@ import {
   rangesOverlap,
 } from "./timeOffUtils";
 
-export default function PendingApprovalsQueue({ requests = [], allRequests = [], currentUser }) {
+export default function PendingApprovalsQueue({ requests = [], allRequests = [] }) {
   const queryClient = useQueryClient();
   // { request, decision: 'approved' | 'denied' }
   const [review, setReview] = useState(null);
@@ -48,31 +48,15 @@ export default function PendingApprovalsQueue({ requests = [], allRequests = [],
 
   const decide = useMutation({
     mutationFn: async ({ request, decision }) => {
-      await base44.entities.TimeOffRequest.update(request.id, {
-        status: decision,
-        reviewed_by: currentUser?.email,
-        reviewer_name: currentUser?.full_name || currentUser?.email,
-        reviewed_at: new Date().toISOString(),
-        review_notes: note.trim(),
+      // Authorization (admin or the assigned manager, never the employee) and
+      // the employee notification are enforced server-side.
+      const result = await reviewTimeOffRequest({
+        request_id: request.id,
+        decision,
+        note: note.trim(),
       });
-      // Best-effort notification to the employee (succeeds when reviewer is an admin).
-      try {
-        await base44.entities.Notification.create({
-          user_email: request.employee_email,
-          title: decision === "approved" ? "Time off approved" : "Time off denied",
-          message: `Your ${typeLabel(request.request_type)} request for ${formatDateRange(
-            request.start_date,
-            request.end_date
-          )} was ${decision}${note.trim() ? `: ${note.trim()}` : "."}`,
-          type: decision === "approved" ? "info" : "compliance_alert",
-          priority: "medium",
-          action_url: "/TimeOff",
-          action_label: "View request",
-          metadata: { time_off_request_id: request.id },
-        });
-      } catch {
-        /* RLS may block non-admin reviewers; dashboard remains source of truth */
-      }
+      if (result?.error) throw new Error(result.error);
+      return result;
     },
     onSuccess: (_data, variables) => {
       toast.success(`Request ${variables.decision === "approved" ? "approved" : "denied"}.`);
@@ -80,7 +64,8 @@ export default function PendingApprovalsQueue({ requests = [], allRequests = [],
       setNote("");
       queryClient.invalidateQueries({ queryKey: ["timeoff"] });
     },
-    onError: () => toast.error("Could not update the request."),
+    onError: (err) =>
+      toast.error(err?.response?.data?.error || err?.message || "Could not update the request."),
   });
 
   const openReview = (request, decision) => {

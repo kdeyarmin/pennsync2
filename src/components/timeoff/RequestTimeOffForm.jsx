@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { submitTimeOffRequest } from "@/functions/submitTimeOffRequest";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { CalendarPlus, Send, Info } from "lucide-react";
 import { toast } from "sonner";
-import { REQUEST_TYPES, totalRequestedDays, validateRequestDates, typeLabel } from "./timeOffUtils";
+import { REQUEST_TYPES, totalRequestedDays, getRequestValidationError } from "./timeOffUtils";
 
 function todayISO() {
   const d = new Date();
@@ -56,48 +56,23 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
 
   const submit = useMutation({
     mutationFn: async () => {
-      const dateError = validateRequestDates(form.start_date, form.end_date);
-      if (dateError) throw new Error(dateError);
+      const validationError = getRequestValidationError(form.start_date, form.end_date, form.half_day);
+      if (validationError) throw new Error(validationError);
 
-      const manager = approvers.find((a) => a.email === form.manager_email);
-      const payload = {
-        employee_email: currentUser?.email,
-        employee_name: currentUser?.full_name || currentUser?.email,
-        manager_email: form.manager_email || "",
-        manager_name: manager?.name || "",
+      // Identity, day totals, approver validation, and notifications are all
+      // handled server-side by the function (the entity is admin-write-only),
+      // which prevents filing on behalf of others or self-approval.
+      const result = await submitTimeOffRequest({
         request_type: form.request_type,
         start_date: form.start_date,
         end_date: form.end_date,
         half_day: form.half_day,
-        total_days: totalDays,
+        manager_email: form.manager_email || "",
         reason: form.reason?.trim() || "",
         coverage: form.coverage?.trim() || "",
-        status: "pending",
-      };
-
-      const created = await base44.entities.TimeOffRequest.create(payload);
-
-      // Best-effort: notify the chosen manager. Creating a Notification is
-      // restricted to admins by RLS, so this silently no-ops for non-admin
-      // requesters — the manager's dashboard + nav badge remain the source of
-      // truth either way.
-      if (form.manager_email) {
-        try {
-          await base44.entities.Notification.create({
-            user_email: form.manager_email,
-            title: "New time-off request",
-            message: `${payload.employee_name} requested ${typeLabel(form.request_type)} (${totalDays} day${totalDays === 1 ? "" : "s"}).`,
-            type: "info",
-            priority: "medium",
-            action_url: "/TimeOff",
-            action_label: "Review request",
-            metadata: { time_off_request_id: created?.id },
-          });
-        } catch {
-          /* expected for non-admin requesters */
-        }
-      }
-      return created;
+      });
+      if (result?.error) throw new Error(result.error);
+      return result;
     },
     onSuccess: () => {
       toast.success("Time-off request submitted for approval.");
@@ -106,11 +81,11 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
       queryClient.invalidateQueries({ queryKey: ["timeoff"] });
     },
     onError: (err) => {
-      setError(err?.message || "Something went wrong submitting your request.");
+      setError(err?.response?.data?.error || err?.message || "Something went wrong submitting your request.");
     },
   });
 
-  const canSubmit = form.start_date && form.end_date && !submit.isPending && !!currentUser?.email;
+  const canSubmit = form.start_date && form.end_date && totalDays > 0 && !submit.isPending && !!currentUser?.email;
 
   return (
     <Card className="shadow-sm">
@@ -252,6 +227,8 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
                   Requesting <span className="font-semibold text-slate-900">{totalDays}</span> business day
                   {totalDays === 1 ? "" : "s"}
                 </>
+              ) : form.start_date && form.end_date ? (
+                <span className="text-amber-600">No working days in range (weekends excluded)</span>
               ) : (
                 "Select a date range"
               )}

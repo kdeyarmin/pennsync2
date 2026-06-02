@@ -93,6 +93,8 @@ export default function Layout({ children, currentPageName }) {
       : base44.entities.TimeOffRequest.filter({ manager_email: currentUser.email, status: 'pending' }, '-created_date', 100),
     initialData: [], refetchInterval: 120000, enabled: !!currentUser?.email && isTimeOffApprover,
   });
+  // Exclude the reviewer's own requests — they can't approve those.
+  const pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
 
   // Fetch charted visits to filter alerts
   const { data: chartedVisits = [] } = useQuery({
@@ -190,7 +192,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Workplace",
       items: [
-        { name: "Time Off", icon: CalendarDays, page: "TimeOff", badge: pendingTimeOff.length },
+        { name: "Time Off", icon: CalendarDays, page: "TimeOff", badge: pendingTimeOffCount },
       ],
     },
     {
@@ -200,7 +202,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Help", icon: HelpCircle, page: "Help" },
       ],
     },
-  ], [unreadMessageCount, unreadSmsCount, pendingTimeOff.length]);
+  ], [unreadMessageCount, unreadSmsCount, pendingTimeOffCount]);
 
   const adminItems = useMemo(() => [
     { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },

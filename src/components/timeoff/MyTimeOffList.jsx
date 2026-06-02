@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { cancelTimeOffRequest } from "@/functions/cancelTimeOffRequest";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,14 +23,18 @@ export default function MyTimeOffList({ requests = [] }) {
   const [toCancel, setToCancel] = useState(null);
 
   const cancel = useMutation({
-    mutationFn: (request) =>
-      base44.entities.TimeOffRequest.update(request.id, { status: "cancelled" }),
+    mutationFn: async (request) => {
+      const result = await cancelTimeOffRequest({ request_id: request.id });
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
     onSuccess: () => {
       toast.success("Request cancelled.");
       setToCancel(null);
       queryClient.invalidateQueries({ queryKey: ["timeoff"] });
     },
-    onError: () => toast.error("Could not cancel the request."),
+    onError: (err) =>
+      toast.error(err?.response?.data?.error || err?.message || "Could not cancel the request."),
   });
 
   const sorted = [...requests].sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));

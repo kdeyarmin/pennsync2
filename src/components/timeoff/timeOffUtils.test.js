@@ -12,6 +12,7 @@ import {
   isActiveOnDate,
   approvedDaysInYear,
   validateRequestDates,
+  getRequestValidationError,
   typeLabel,
   statusLabel,
 } from "./timeOffUtils.js";
@@ -30,6 +31,14 @@ test("parseISODate accepts full ISO timestamps and rejects junk", () => {
   assert.equal(parseISODate(null), null);
   assert.equal(parseISODate("not-a-date"), null);
   assert.equal(parseISODate("2026-13"), null);
+});
+
+test("parseISODate rejects impossible calendar dates instead of rolling them over", () => {
+  assert.equal(parseISODate("2026-02-31"), null); // Feb has no 31st
+  assert.equal(parseISODate("2026-04-31"), null); // April has 30 days
+  assert.equal(parseISODate("2026-13-01"), null); // no 13th month
+  assert.equal(parseISODate("2025-02-29"), null); // 2025 is not a leap year
+  assert.equal(toISODate(parseISODate("2024-02-29")), "2024-02-29"); // valid leap day
 });
 
 test("toISODate round-trips and pads single digits", () => {
@@ -121,6 +130,14 @@ test("validateRequestDates returns a message for invalid ranges", () => {
   assert.match(validateRequestDates("", "2026-03-06"), /start date/i);
   assert.match(validateRequestDates("2026-03-02", ""), /end date/i);
   assert.match(validateRequestDates("2026-03-10", "2026-03-02"), /before/i);
+});
+
+test("getRequestValidationError rejects weekend-only (zero working day) ranges", () => {
+  assert.equal(getRequestValidationError("2026-03-02", "2026-03-06"), null); // Mon-Fri
+  assert.equal(getRequestValidationError("2026-03-04", "2026-03-04", true), null); // valid half day
+  assert.match(getRequestValidationError("2026-03-07", "2026-03-08"), /no working days/i); // Sat-Sun
+  assert.match(getRequestValidationError("2026-03-10", "2026-03-02"), /before/i); // reversed
+  assert.match(getRequestValidationError("", "2026-03-06"), /start date/i);
 });
 
 test("typeLabel and statusLabel resolve known values with safe fallbacks", () => {
