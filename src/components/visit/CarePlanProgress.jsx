@@ -129,7 +129,7 @@ Example: "Goal progress: Improved. Blood pressure decreased to 132/78 from basel
   };
 
   const getProgressIcon = (progress) => {
-    if (!progress) return <Minus className="w-4 h-4 text-gray-400" />;
+    if (!progress) return <Minus className="w-4 h-4 text-slate-400" />;
     
     const lowerProgress = progress.toLowerCase();
     if (lowerProgress.includes('improved') || lowerProgress.includes('met')) {
@@ -189,23 +189,23 @@ Example: "Goal progress: Improved. Blood pressure decreased to 132/78 from basel
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {getProgressIcon(progressNotes[plan.id])}
-                      <h4 className="font-semibold text-gray-900">{plan.problem}</h4>
+                      <h4 className="font-semibold text-slate-900">{plan.problem}</h4>
                       <Badge variant="outline" className="text-xs">
                         {plan.frequency || 'Each visit'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{plan.goal}</p>
+                    <p className="text-sm text-slate-600 mb-2">{plan.goal}</p>
                     {plan.baseline_measurement && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         Baseline: {plan.baseline_measurement}
                       </p>
                     )}
                   </div>
-                  <button className="p-1 hover:bg-gray-100 rounded">
+                  <button className="p-1 hover:bg-slate-100 rounded">
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-gray-500" />
+                      <ChevronUp className="w-4 h-4 text-slate-500" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                      <ChevronDown className="w-4 h-4 text-slate-500" />
                     )}
                   </button>
                 </div>
@@ -214,8 +214,8 @@ Example: "Goal progress: Improved. Blood pressure decreased to 132/78 from basel
                   <div className="mt-4 pt-4 border-t space-y-3">
                     {plan.interventions && plan.interventions.length > 0 && (
                       <div>
-                        <p className="text-xs font-medium text-gray-600 mb-1">Interventions:</p>
-                        <ul className="list-disc ml-5 text-xs text-gray-600">
+                        <p className="text-xs font-medium text-slate-600 mb-1">Interventions:</p>
+                        <ul className="list-disc ml-5 text-xs text-slate-600">
                           {plan.interventions.map((intervention, index) => (
                             <li key={index}>{intervention}</li>
                           ))}
@@ -225,7 +225,7 @@ Example: "Goal progress: Improved. Blood pressure decreased to 132/78 from basel
 
                     {hasProgress ? (
                       <div>
-                        <p className="text-xs font-medium text-gray-600 mb-1">AI-Generated Progress:</p>
+                        <p className="text-xs font-medium text-slate-600 mb-1">AI-Generated Progress:</p>
                         <Textarea
                           value={progressNotes[plan.id]}
                           onChange={(e) => setProgressNotes({

@@ -339,7 +339,7 @@ export default function ComplianceDashboard() {
       case 'critical': return 'bg-red-50 border-l-4 border-l-red-500';
       case 'warning': return 'bg-orange-50 border-l-4 border-l-orange-500';
       case 'info': return 'bg-blue-50 border-l-4 border-l-blue-500';
-      default: return 'bg-gray-50 border-l-4 border-l-gray-500';
+      default: return 'bg-slate-50 border-l-4 border-l-slate-500';
     }
   };
 
@@ -393,8 +393,8 @@ export default function ComplianceDashboard() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Compliance Dashboard</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Aggregated alerts and compliance tracking</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Compliance Dashboard</h1>
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-1 hidden sm:block">Aggregated alerts and compliance tracking</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={exportComplianceReport} className="min-h-[44px] w-full sm:w-auto">
@@ -515,7 +515,7 @@ export default function ComplianceDashboard() {
                     {complianceAudits.slice(0, 10).map((audit, idx) => (
                       <div 
                         key={idx} 
-                        className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+                        className="p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100"
                         onClick={() => setSelectedAudit(audit)}
                       >
                         <div className="flex items-center justify-between">
@@ -528,7 +528,7 @@ export default function ComplianceDashboard() {
                             {audit.compliance_score}%
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           {audit.issues?.length || 0} issues • {audit.audit_date?.split('T')[0]}
                         </p>
                       </div>
@@ -551,7 +551,7 @@ export default function ComplianceDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-slate-600 mb-4">
                     Create customized compliance reports with flexible filtering options. 
                     Export to CSV or JSON for further analysis.
                   </p>
@@ -559,7 +559,7 @@ export default function ComplianceDashboard() {
                     <Card className="bg-blue-50">
                       <CardContent className="p-3 text-center">
                         <p className="text-2xl font-bold text-blue-600">{complianceAudits.length}</p>
-                        <p className="text-xs text-gray-500">Total Audits</p>
+                        <p className="text-xs text-slate-500">Total Audits</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-green-50">
@@ -567,7 +567,7 @@ export default function ComplianceDashboard() {
                         <p className="text-2xl font-bold text-green-600">
                           {new Set(complianceAudits.map(a => a.nurse_email)).size}
                         </p>
-                        <p className="text-xs text-gray-500">Nurses</p>
+                        <p className="text-xs text-slate-500">Nurses</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-purple-50">
@@ -575,7 +575,7 @@ export default function ComplianceDashboard() {
                         <p className="text-2xl font-bold text-purple-600">
                           {complianceAudits.reduce((sum, a) => sum + (a.issues?.length || 0), 0)}
                         </p>
-                        <p className="text-xs text-gray-500">Total Issues</p>
+                        <p className="text-xs text-slate-500">Total Issues</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-orange-50">
@@ -585,7 +585,7 @@ export default function ComplianceDashboard() {
                             ? Math.round(complianceAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / complianceAudits.length)
                             : 0}%
                         </p>
-                        <p className="text-xs text-gray-500">Avg Score</p>
+                        <p className="text-xs text-slate-500">Avg Score</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -621,7 +621,7 @@ export default function ComplianceDashboard() {
                       <div className={`w-8 h-8 md:w-10 md:h-10 ${link.color} rounded-lg flex items-center justify-center mx-auto mb-1 md:mb-2`}>
                         <link.icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
                       </div>
-                      <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">{link.name}</p>
+                      <p className="text-[10px] md:text-xs font-medium text-slate-700 truncate">{link.name}</p>
                     </div>
                   </Link>
                 ))}
@@ -638,7 +638,7 @@ export default function ComplianceDashboard() {
                   <div className="flex flex-wrap gap-3">
                     <div className="flex-1 min-w-[200px]">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <Input
                           placeholder="Search alerts..."
                           value={searchTerm}
@@ -683,8 +683,8 @@ export default function ComplianceDashboard() {
                   <Card>
                     <CardContent className="p-12 text-center">
                       <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">All Clear!</h3>
-                      <p className="text-gray-500">No compliance alerts match your current filters.</p>
+                      <h3 className="text-xl font-semibold text-slate-900 mb-2">All Clear!</h3>
+                      <p className="text-slate-500">No compliance alerts match your current filters.</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -697,13 +697,13 @@ export default function ComplianceDashboard() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900">{alert.title}</h4>
+                              <h4 className="font-semibold text-slate-900">{alert.title}</h4>
                               <Badge variant="outline" className="text-xs">
                                 {getCategoryIcon(alert.category)}
                                 <span className="ml-1">{alert.category}</span>
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-700 mb-3">{alert.message}</p>
+                            <p className="text-sm text-slate-700 mb-3">{alert.message}</p>
                             <div className="flex items-center gap-3">
                               <Link to={alert.link}>
                                 <Button size="sm" className="gap-1">
@@ -715,12 +715,12 @@ export default function ComplianceDashboard() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleDismiss(alert.id)}
-                                className="text-gray-500"
+                                className="text-slate-500"
                               >
                                 Dismiss
                               </Button>
                               {alert.timestamp && (
-                                <span className="text-xs text-gray-400 ml-auto">
+                                <span className="text-xs text-slate-400 ml-auto">
                                   <Clock className="w-3 h-3 inline mr-1" />
                                   {format(new Date(alert.timestamp), 'MMM d, yyyy')}
                                 </span>
@@ -747,7 +747,7 @@ export default function ComplianceDashboard() {
                     {Object.entries(categoryBreakdown).map(([category, count]) => (
                       <div 
                         key={category} 
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
                         onClick={() => setFilterCategory(category)}
                       >
                         <div className="flex items-center gap-2">

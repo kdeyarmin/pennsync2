@@ -101,7 +101,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
         {!riskData ? (
           <div className="text-center py-8">
             <Activity className="w-12 h-12 mx-auto mb-3 text-purple-300" />
-            <p className="text-gray-600 mb-4">Run AI analysis to predict patient risks</p>
+            <p className="text-slate-600 mb-4">Run AI analysis to predict patient risks</p>
             <Button
               onClick={() => analyzeMutation.mutate()}
               disabled={analyzeMutation.isLoading}
@@ -171,7 +171,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
 
             {/* Risk Assessments */}
             <div className="space-y-2">
-              <h3 className="font-semibold text-gray-900 mb-3">Detailed Risk Analysis</h3>
+              <h3 className="font-semibold text-slate-900 mb-3">Detailed Risk Analysis</h3>
               <ScrollArea className={compact ? 'h-64' : 'h-96'}>
                 <div className="space-y-2 pr-4">
                   {riskData.risk_assessments
@@ -181,44 +181,44 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
                         <div className="border rounded-lg overflow-hidden">
                           <CollapsibleTrigger
                             onClick={() => toggleRisk(idx)}
-                            className="w-full p-4 hover:bg-gray-50 transition-colors"
+                            className="w-full p-4 hover:bg-slate-50 transition-colors"
                           >
                             <div className="flex items-center gap-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="font-semibold text-gray-900">{risk.risk_type}</span>
+                                  <span className="font-semibold text-slate-900">{risk.risk_type}</span>
                                   <Badge className={getRiskBadgeColor(risk.urgency)}>
                                     {risk.urgency}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-3">
                                   <Progress value={risk.risk_score} className="flex-1 h-2" />
-                                  <span className="text-sm font-semibold text-gray-700">{risk.risk_score}/100</span>
+                                  <span className="text-sm font-semibold text-slate-700">{risk.risk_score}/100</span>
                                 </div>
                               </div>
                               {expandedRisks[idx] ? (
-                                <ChevronUp className="w-5 h-5 text-gray-400" />
+                                <ChevronUp className="w-5 h-5 text-slate-400" />
                               ) : (
-                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                                <ChevronDown className="w-5 h-5 text-slate-400" />
                               )}
                             </div>
                           </CollapsibleTrigger>
 
                           <CollapsibleContent>
-                            <div className="p-4 bg-gray-50 border-t space-y-3">
+                            <div className="p-4 bg-slate-50 border-t space-y-3">
                               {/* Evidence */}
                               <div>
-                                <p className="text-xs font-semibold text-gray-600 mb-1">Evidence:</p>
-                                <p className="text-sm text-gray-700">{risk.evidence}</p>
+                                <p className="text-xs font-semibold text-slate-600 mb-1">Evidence:</p>
+                                <p className="text-sm text-slate-700">{risk.evidence}</p>
                               </div>
 
                               {/* Contributing Factors */}
                               {risk.contributing_factors?.length > 0 && (
                                 <div>
-                                  <p className="text-xs font-semibold text-gray-600 mb-1">Contributing Factors:</p>
+                                  <p className="text-xs font-semibold text-slate-600 mb-1">Contributing Factors:</p>
                                   <ul className="space-y-1">
                                     {risk.contributing_factors.map((factor, fIdx) => (
-                                      <li key={fIdx} className="text-sm text-gray-700 flex items-start gap-1">
+                                      <li key={fIdx} className="text-sm text-slate-700 flex items-start gap-1">
                                         <span className="text-orange-500">•</span>
                                         <span>{factor}</span>
                                       </li>

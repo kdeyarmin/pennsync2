@@ -91,9 +91,9 @@ export default function OCRReviewPanel({ faxLog, onClose }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Original OCR (Read-only reference) */}
           <div className="space-y-2">
-            <Label className="text-xs text-gray-500">Original OCR Text (Reference)</Label>
-            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+            <Label className="text-xs text-slate-500">Original OCR Text (Reference)</Label>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 max-h-40 overflow-y-auto">
+              <p className="text-sm text-slate-700 whitespace-pre-wrap font-mono">
                 {faxLog.ocr_text || 'No OCR text available'}
               </p>
             </div>
@@ -109,7 +109,7 @@ export default function OCRReviewPanel({ faxLog, onClose }) {
               className="min-h-64 font-mono text-sm"
               required
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               Edit the text above to correct any OCR errors. Your corrections help improve future extractions.
             </p>
           </div>

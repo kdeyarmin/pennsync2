@@ -116,7 +116,7 @@ Format the response professionally for OASIS documentation. Be specific and use 
         </CardHeader>
         <CardContent className="p-4 space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
+            <label className="text-sm font-medium text-slate-700 mb-2 block">
               Visit Notes / Clinical Information
             </label>
             <Textarea
@@ -170,8 +170,8 @@ Format the response professionally for OASIS documentation. Be specific and use 
                 </Button>
               </div>
               <Badge className="mb-2">{draftedAssessment.homebound_status.status}</Badge>
-              <p className="text-sm text-gray-700 mb-2">{draftedAssessment.homebound_status.justification}</p>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <p className="text-sm text-slate-700 mb-2">{draftedAssessment.homebound_status.justification}</p>
+              <ul className="text-sm text-slate-600 space-y-1">
                 {draftedAssessment.homebound_status.supporting_details?.map((detail, idx) => (
                   <li key={idx}>• {detail}</li>
                 ))}
@@ -179,13 +179,13 @@ Format the response professionally for OASIS documentation. Be specific and use 
             </div>
 
             {/* Clinical Findings */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Clinical Findings</h3>
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-slate-900 mb-2">Clinical Findings</h3>
               <div className="space-y-2">
                 {draftedAssessment.clinical_findings?.map((finding, idx) => (
                   <div key={idx} className="bg-white p-2 rounded border">
                     <Badge className="text-xs mb-1">{finding.category}</Badge>
-                    <p className="text-sm text-gray-700">{finding.finding}</p>
+                    <p className="text-sm text-slate-700">{finding.finding}</p>
                   </div>
                 ))}
               </div>
@@ -197,19 +197,19 @@ Format the response professionally for OASIS documentation. Be specific and use 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="font-medium text-purple-800">Ambulation:</p>
-                  <p className="text-gray-700">{draftedAssessment.functional_status.ambulation}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status.ambulation}</p>
                 </div>
                 <div>
                   <p className="font-medium text-purple-800">Transfers:</p>
-                  <p className="text-gray-700">{draftedAssessment.functional_status.transfers}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status.transfers}</p>
                 </div>
                 <div>
                   <p className="font-medium text-purple-800">ADL Independence:</p>
-                  <p className="text-gray-700">{draftedAssessment.functional_status.adl_independence}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status.adl_independence}</p>
                 </div>
                 <div>
                   <p className="font-medium text-purple-800">Assistive Devices:</p>
-                  <p className="text-gray-700">{draftedAssessment.functional_status.assistive_devices}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status.assistive_devices}</p>
                 </div>
               </div>
             </div>
@@ -219,13 +219,13 @@ Format the response professionally for OASIS documentation. Be specific and use 
               <h3 className="font-semibold text-orange-900 mb-2">Skilled Need Justification</h3>
               <ul className="mb-2 space-y-1">
                 {draftedAssessment.skilled_need?.primary_reasons?.map((reason, idx) => (
-                  <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                  <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                     {reason}
                   </li>
                 ))}
               </ul>
-              <p className="text-sm text-gray-700">{draftedAssessment.skilled_need?.justification}</p>
+              <p className="text-sm text-slate-700">{draftedAssessment.skilled_need?.justification}</p>
             </div>
 
             {/* Suggested M-Items */}
@@ -239,7 +239,7 @@ Format the response professionally for OASIS documentation. Be specific and use 
                         <Badge className="text-xs">{item.m_item}</Badge>
                         <span className="text-sm font-medium">{item.suggested_value}</span>
                       </div>
-                      <p className="text-xs text-gray-600">{item.rationale}</p>
+                      <p className="text-xs text-slate-600">{item.rationale}</p>
                     </div>
                   ))}
                 </div>
@@ -263,7 +263,7 @@ Format the response professionally for OASIS documentation. Be specific and use 
             {/* Care Recommendations */}
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="font-semibold text-green-900 mb-2">Care Recommendations</h3>
-              <ul className="text-sm text-gray-700 space-y-1">
+              <ul className="text-sm text-slate-700 space-y-1">
                 {draftedAssessment.care_recommendations?.map((rec, idx) => (
                   <li key={idx}>• {rec}</li>
                 ))}

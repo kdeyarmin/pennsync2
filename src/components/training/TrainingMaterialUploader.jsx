@@ -46,7 +46,7 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
   const getFileIcon = (type) => {
     if (type === 'video') return <Video className="w-5 h-5 text-purple-600" />;
     if (type === 'document') return <FileText className="w-5 h-5 text-blue-600" />;
-    return <File className="w-5 h-5 text-gray-600" />;
+    return <File className="w-5 h-5 text-slate-600" />;
   };
 
   return (
@@ -81,8 +81,8 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
             />
             <label htmlFor="video-upload" className="cursor-pointer">
               <Video className="w-10 h-10 text-purple-500 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-900">Upload Video</p>
-              <p className="text-xs text-gray-500 mt-1">MP4, WebM, etc.</p>
+              <p className="text-sm font-medium text-slate-900">Upload Video</p>
+              <p className="text-xs text-slate-500 mt-1">MP4, WebM, etc.</p>
             </label>
           </div>
 
@@ -101,8 +101,8 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
             />
             <label htmlFor="document-upload" className="cursor-pointer">
               <FileText className="w-10 h-10 text-blue-500 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-900">Upload Document</p>
-              <p className="text-xs text-gray-500 mt-1">PDF, DOC, PPT, etc.</p>
+              <p className="text-sm font-medium text-slate-900">Upload Document</p>
+              <p className="text-xs text-slate-500 mt-1">PDF, DOC, PPT, etc.</p>
             </label>
           </div>
         </div>
@@ -110,21 +110,21 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
         {uploading && (
           <div className="text-center py-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Uploading...</p>
+            <p className="text-sm text-slate-600">Uploading...</p>
           </div>
         )}
 
         {/* Uploaded Files List */}
         {uploadedFiles.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-xs text-gray-500">Uploaded Materials ({uploadedFiles.length})</Label>
+            <Label className="text-xs text-slate-500">Uploaded Materials ({uploadedFiles.length})</Label>
             {uploadedFiles.map((file, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {getFileIcon(file.type)}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                    <p className="text-xs text-slate-500">
                       {file.type} • {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>

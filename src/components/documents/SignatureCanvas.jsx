@@ -135,7 +135,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
               ref={canvasRef}
               width={500}
               height={200}
-              className="border-2 border-gray-300 rounded-lg w-full cursor-crosshair touch-none"
+              className="border-2 border-slate-300 rounded-lg w-full cursor-crosshair touch-none"
               style={{ maxWidth: '100%', height: 'auto', aspectRatio: '500/200' }}
               onMouseDown={startDrawing}
               onMouseMove={draw}
@@ -145,7 +145,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
               onTouchMove={draw}
               onTouchEnd={stopDrawing}
             />
-            <p className="text-xs text-gray-500 mt-2 text-center">
+            <p className="text-xs text-slate-500 mt-2 text-center">
               {isInitials ? "Draw your initials" : "Sign your name"} in the box above
             </p>
           </Card>
@@ -196,10 +196,10 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
               ref={canvasRef}
               width={500}
               height={200}
-              className="border-2 border-gray-300 rounded-lg w-full"
+              className="border-2 border-slate-300 rounded-lg w-full"
               style={{ maxWidth: '100%', height: 'auto', aspectRatio: '500/200' }}
             />
-            <p className="text-xs text-gray-500 mt-2 text-center">Preview</p>
+            <p className="text-xs text-slate-500 mt-2 text-center">Preview</p>
           </Card>
         </TabsContent>
       </Tabs>

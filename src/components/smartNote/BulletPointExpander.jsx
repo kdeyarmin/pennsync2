@@ -68,7 +68,7 @@ Return ONLY the expanded narrative text.`
       <CardContent className="space-y-3">
         <Alert className="bg-white border-indigo-200">
           <Sparkles className="w-4 h-4 text-indigo-600" />
-          <AlertDescription className="text-xs text-gray-700">
+          <AlertDescription className="text-xs text-slate-700">
             Type quick bullet points or keywords, and AI will expand them into a comprehensive narrative.
           </AlertDescription>
         </Alert>
@@ -109,7 +109,7 @@ Return ONLY the expanded narrative text.`
           <div className="space-y-2">
             <div className="bg-white border border-indigo-300 rounded-lg p-3">
               <p className="text-xs font-semibold text-indigo-900 mb-2">Expanded Narrative:</p>
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">{expandedText}</p>
+              <p className="text-sm text-slate-800 whitespace-pre-wrap">{expandedText}</p>
             </div>
             <Button
               onClick={handleUseExpanded}

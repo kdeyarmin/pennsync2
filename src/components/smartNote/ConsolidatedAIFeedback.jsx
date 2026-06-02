@@ -305,7 +305,7 @@ Return as JSON:
       <Card className="border-2 border-purple-200">
         <CardContent className="p-8 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Analyzing note quality...</p>
+          <p className="text-sm text-slate-600">Analyzing note quality...</p>
         </CardContent>
       </Card>
     );
@@ -420,7 +420,7 @@ Return as JSON:
                       <div className="flex-1 space-y-2">
                         <div>
                           <Badge variant="outline" className="text-xs mb-1">{issue.category}</Badge>
-                          <p className="font-semibold text-sm text-gray-900">{issue.issue}</p>
+                          <p className="font-semibold text-sm text-slate-900">{issue.issue}</p>
                         </div>
                         
                         {issue.why_compliance_issue && (
@@ -437,7 +437,7 @@ Return as JSON:
                           </div>
                         )}
                         
-                        <p className="text-xs text-gray-600">💡 {issue.recommendation}</p>
+                        <p className="text-xs text-slate-600">💡 {issue.recommendation}</p>
                         
                         {issue.follow_up_actions && issue.follow_up_actions.length > 0 && (
                           <div className="bg-blue-50 rounded p-2 border border-blue-200">
@@ -452,8 +452,8 @@ Return as JSON:
                         
                         {issue.insert_text && (
                           <div className="mt-2 p-2 bg-white/60 rounded border border-red-200">
-                            <p className="text-xs font-medium text-gray-500 mb-1">AI Suggestion:</p>
-                            <p className="text-xs text-gray-700">{issue.insert_text}</p>
+                            <p className="text-xs font-medium text-slate-500 mb-1">AI Suggestion:</p>
+                            <p className="text-xs text-slate-700">{issue.insert_text}</p>
                           </div>
                         )}
                       </div>
@@ -510,14 +510,14 @@ Return as JSON:
                         <Badge variant="outline" className="text-xs mb-2">{improvement.category}</Badge>
                         <div className="space-y-2 text-sm">
                           <div>
-                            <p className="text-xs text-gray-500">Current:</p>
-                            <p className="text-gray-700 line-through">{improvement.current}</p>
+                            <p className="text-xs text-slate-500">Current:</p>
+                            <p className="text-slate-700 line-through">{improvement.current}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Improved:</p>
-                            <p className="text-gray-900 font-medium">{improvement.improved}</p>
+                            <p className="text-xs text-slate-500">Improved:</p>
+                            <p className="text-slate-900 font-medium">{improvement.improved}</p>
                           </div>
-                          <p className="text-xs text-gray-600 italic">{improvement.rationale}</p>
+                          <p className="text-xs text-slate-600 italic">{improvement.rationale}</p>
                         </div>
                       </div>
                     </div>
@@ -588,7 +588,7 @@ Return as JSON:
                           </div>
                         )}
                         
-                        <p className="text-xs text-gray-600">{risk.mitigation}</p>
+                        <p className="text-xs text-slate-600">{risk.mitigation}</p>
                         
                         {risk.recommended_assessments && risk.recommended_assessments.length > 0 && (
                           <div className="bg-blue-50 rounded p-2 border border-blue-200">
@@ -602,9 +602,9 @@ Return as JSON:
                         )}
                         
                         {risk.insert_text && (
-                          <div className="mt-2 p-2 bg-white/60 rounded border border-gray-200">
-                            <p className="text-xs font-medium text-gray-500 mb-1">AI Suggestion:</p>
-                            <p className="text-xs text-gray-700">{risk.insert_text}</p>
+                          <div className="mt-2 p-2 bg-white/60 rounded border border-slate-200">
+                            <p className="text-xs font-medium text-slate-500 mb-1">AI Suggestion:</p>
+                            <p className="text-xs text-slate-700">{risk.insert_text}</p>
                           </div>
                         )}
                       </div>
@@ -674,7 +674,7 @@ Return as JSON:
                             <Badge className="text-xs">{opp.area}</Badge>
                             <Badge variant="outline" className="text-xs">{opp.impact}</Badge>
                           </div>
-                          <p className="text-xs text-gray-700 mb-1">{opp.suggestion}</p>
+                          <p className="text-xs text-slate-700 mb-1">{opp.suggestion}</p>
                           
                           {opp.why_important && (
                             <div className="bg-indigo-50 rounded p-2 border border-indigo-200">
@@ -696,8 +696,8 @@ Return as JSON:
                           
                           {opp.insert_text && (
                             <div className="mt-1 p-2 bg-blue-50/50 rounded border border-blue-100">
-                              <p className="text-xs font-medium text-gray-500 mb-1">AI Suggestion:</p>
-                              <p className="text-xs text-gray-700">{opp.insert_text}</p>
+                              <p className="text-xs font-medium text-slate-500 mb-1">AI Suggestion:</p>
+                              <p className="text-xs text-slate-700">{opp.insert_text}</p>
                             </div>
                           )}
                         </div>

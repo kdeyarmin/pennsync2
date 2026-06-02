@@ -59,7 +59,7 @@ export default function ClinicalLibraryAnalytics() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-600 mb-1">Total Usage</p>
+                <p className="text-xs text-slate-600 mb-1">Total Usage</p>
                 <p className="text-2xl font-bold text-indigo-600">{analytics.totalUsage}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-indigo-500" />
@@ -71,7 +71,7 @@ export default function ClinicalLibraryAnalytics() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-600 mb-1">Active Templates</p>
+                <p className="text-xs text-slate-600 mb-1">Active Templates</p>
                 <p className="text-2xl font-bold text-green-600">{analytics.activeTemplates}</p>
               </div>
               <BarChart3 className="w-8 h-8 text-green-500" />
@@ -83,7 +83,7 @@ export default function ClinicalLibraryAnalytics() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-600 mb-1">Total Templates</p>
+                <p className="text-xs text-slate-600 mb-1">Total Templates</p>
                 <p className="text-2xl font-bold text-purple-600">{analytics.totalTemplates}</p>
               </div>
               <Calendar className="w-8 h-8 text-purple-500" />
@@ -103,11 +103,11 @@ export default function ClinicalLibraryAnalytics() {
         <CardContent>
           <div className="space-y-2">
             {analytics.topTemplates.map((template, idx) => (
-              <div key={template.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={template.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <Badge className="bg-indigo-600 text-white shrink-0">#{idx + 1}</Badge>
                   <div className="min-w-0 flex-1">
-                    <code className="text-sm font-mono text-gray-900 truncate block">
+                    <code className="text-sm font-mono text-slate-900 truncate block">
                       {template.phrase}
                     </code>
                     <div className="flex gap-2 mt-1">
@@ -118,12 +118,12 @@ export default function ClinicalLibraryAnalytics() {
                 </div>
                 <div className="text-right shrink-0 ml-3">
                   <p className="text-lg font-bold text-indigo-600">{template.usage_count}</p>
-                  <p className="text-xs text-gray-500">uses</p>
+                  <p className="text-xs text-slate-500">uses</p>
                 </div>
               </div>
             ))}
             {analytics.topTemplates.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">No usage data yet</p>
+              <p className="text-sm text-slate-500 text-center py-4">No usage data yet</p>
             )}
           </div>
         </CardContent>
@@ -142,7 +142,7 @@ export default function ClinicalLibraryAnalytics() {
             {analytics.byCategory.map(([category, count]) => (
               <div key={category} className="flex items-center gap-3">
                 <p className="text-sm font-medium w-32 capitalize">{category.replace('_', ' ')}</p>
-                <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                <div className="flex-1 bg-slate-200 rounded-full h-6 relative">
                   <div
                     className="bg-indigo-600 h-6 rounded-full flex items-center justify-end pr-2"
                     style={{ width: `${(count / analytics.totalUsage) * 100}%` }}
@@ -167,14 +167,14 @@ export default function ClinicalLibraryAnalytics() {
         <CardContent>
           <div className="space-y-2">
             {analytics.byCreator.map(([email, data]) => (
-              <div key={email} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={email} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{email}</p>
-                  <p className="text-xs text-gray-600">{data.count} templates created</p>
+                  <p className="text-sm font-medium text-slate-900">{email}</p>
+                  <p className="text-xs text-slate-600">{data.count} templates created</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-purple-600">{data.usage}</p>
-                  <p className="text-xs text-gray-500">total uses</p>
+                  <p className="text-xs text-slate-500">total uses</p>
                 </div>
               </div>
             ))}

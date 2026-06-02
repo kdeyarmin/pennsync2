@@ -398,7 +398,7 @@ Return JSON with SPECIFIC, ACTIONABLE tasks:
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-blue-100 text-blue-800 border-blue-300"
     };
-    return colors[priority] || "bg-gray-100 text-gray-800";
+    return colors[priority] || "bg-slate-100 text-slate-800";
   };
 
   const getTimeframeLabel = (timeframe) => {
@@ -512,8 +512,8 @@ Return JSON with SPECIFIC, ACTIONABLE tasks:
         ) : (
           <div className="space-y-2">
             {/* Task Destination Selection */}
-            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
-              <span className="text-xs font-medium text-gray-600">Add to:</span>
+            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded border">
+              <span className="text-xs font-medium text-slate-600">Add to:</span>
               <Button
                 size="sm"
                 variant={taskDestination === 'patient' ? 'default' : 'outline'}
@@ -541,7 +541,7 @@ Return JSON with SPECIFIC, ACTIONABLE tasks:
 
             {/* Select All */}
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600">{tasks.length} task(s) suggested</span>
+              <span className="text-xs text-slate-600">{tasks.length} task(s) suggested</span>
               <Button size="sm" variant="ghost" className="h-5 text-xs px-1" onClick={selectAllTasks}>
                 Select All
               </Button>
@@ -552,7 +552,7 @@ Return JSON with SPECIFIC, ACTIONABLE tasks:
               {tasks.map((task, idx) => (
                 <div
                   key={idx}
-                  className={`p-2 rounded border transition-colors ${selectedTasks[idx] ? 'bg-orange-50 border-orange-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                  className={`p-2 rounded border transition-colors ${selectedTasks[idx] ? 'bg-orange-50 border-orange-300' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
                 >
                   {editingTask?.idx === idx ? (
                     // Edit Mode
@@ -618,21 +618,21 @@ Return JSON with SPECIFIC, ACTIONABLE tasks:
                                 {getSourceBadge(task.source)}
                               </div>
                               <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => handleEditTask(idx)}>
-                                <Edit2 className="w-3 h-3 text-gray-400" />
+                                <Edit2 className="w-3 h-3 text-slate-400" />
                               </Button>
                             </div>
-                        <p className="text-xs text-gray-600 mb-1">{task.description}</p>
+                        <p className="text-xs text-slate-600 mb-1">{task.description}</p>
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge className={`${getPriorityColor(task.priority)} text-xs`}>
                             {task.priority}
                           </Badge>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <div className="flex items-center gap-1 text-xs text-slate-500">
                             <Clock className="w-3 h-3" />
                             {getTimeframeLabel(task.due_timeframe)}
                           </div>
                         </div>
                         {task.auto_generated_reason && (
-                          <p className="text-xs text-gray-400 italic mt-1">💡 {task.auto_generated_reason}</p>
+                          <p className="text-xs text-slate-400 italic mt-1">💡 {task.auto_generated_reason}</p>
                         )}
                         {task.clinical_context && (
                           <p className="text-xs text-indigo-600 mt-1">📋 From note: "{task.clinical_context}"</p>

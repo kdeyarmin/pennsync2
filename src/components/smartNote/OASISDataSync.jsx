@@ -134,7 +134,7 @@ export default function OASISDataSync({
         <CardContent className="space-y-3 pt-3">
           {/* OASIS Selection */}
           <div>
-            <label className="text-xs font-medium text-gray-700 mb-1 block">Select OASIS Assessment</label>
+            <label className="text-xs font-medium text-slate-700 mb-1 block">Select OASIS Assessment</label>
             <Select 
               value={selectedOASIS?.id || ''} 
               onValueChange={(id) => setSelectedOASIS(patientOASIS.find(o => o.id === id))}
@@ -163,21 +163,21 @@ export default function OASISDataSync({
           {selectedOASIS?.pdgm_data && (
             <>
               {/* Preview Data */}
-              <div className="bg-gray-50 p-3 rounded-lg border space-y-2">
+              <div className="bg-slate-50 p-3 rounded-lg border space-y-2">
                 <div className="flex items-center gap-2">
                   <Stethoscope className="w-3 h-3 text-blue-600" />
                   <span className="text-xs font-medium">Primary Diagnosis:</span>
-                  <span className="text-xs text-gray-700">
+                  <span className="text-xs text-slate-700">
                     {selectedOASIS.pdgm_data.primary_diagnosis || 'Not specified'}
                     {selectedOASIS.pdgm_data.primary_diagnosis_code && (
-                      <span className="ml-1 text-gray-500">({selectedOASIS.pdgm_data.primary_diagnosis_code})</span>
+                      <span className="ml-1 text-slate-500">({selectedOASIS.pdgm_data.primary_diagnosis_code})</span>
                     )}
                   </span>
                 </div>
 
                 {selectedOASIS.pdgm_data.comorbidities?.length > 0 && (
                   <div className="flex items-start gap-2">
-                    <span className="text-xs font-medium text-gray-600">Comorbidities:</span>
+                    <span className="text-xs font-medium text-slate-600">Comorbidities:</span>
                     <div className="flex flex-wrap gap-1">
                       {selectedOASIS.pdgm_data.comorbidities.slice(0, 4).map((c, i) => (
                         <Badge key={i} variant="outline" className="text-xs py-0">{c}</Badge>
@@ -203,7 +203,7 @@ export default function OASISDataSync({
                     const { label, color } = getFunctionalLabel(val, max);
                     return (
                       <div key={key} className="flex items-center justify-between bg-white p-1 rounded">
-                        <span className="text-gray-600">{key.replace('m18', 'M18').replace(/_/g, ' ')}</span>
+                        <span className="text-slate-600">{key.replace('m18', 'M18').replace(/_/g, ' ')}</span>
                         <span className={`font-medium ${color}`}>{val} ({label})</span>
                       </div>
                     );

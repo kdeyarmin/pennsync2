@@ -243,7 +243,7 @@ Generate the family update now:`;
         <CardContent>
           <Alert className="bg-white border-cyan-200">
             <Users className="w-4 h-4 text-cyan-600" />
-            <AlertDescription className="text-gray-700">
+            <AlertDescription className="text-slate-700">
               Automatically generate and send a warm, family-friendly visit summary to caregivers and loved ones.
             </AlertDescription>
           </Alert>
@@ -270,10 +270,10 @@ Generate the family update now:`;
               {recipients.length > 0 && (
                 <div className="space-y-2 mb-3">
                   {recipients.map((recipient) => (
-                    <div key={recipient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div key={recipient.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{recipient.name}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="font-medium text-slate-900">{recipient.name}</p>
+                        <p className="text-sm text-slate-600">
                           {recipient.relation && `${recipient.relation} • `}
                           {recipient.email || recipient.phone}
                         </p>
@@ -337,14 +337,14 @@ Generate the family update now:`;
                   { key: 'concerns', label: 'Areas of Concern', icon: AlertTriangle },
                   { key: 'nextSteps', label: 'Next Steps', icon: Calendar },
                 ].map(({ key, label, icon: Icon }) => (
-                  <div key={key} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
+                  <div key={key} className="flex items-center space-x-2 p-2 bg-slate-50 rounded border">
                     <Checkbox
                       id={key}
                       checked={includeOptions[key]}
                       onCheckedChange={(checked) => setIncludeOptions({ ...includeOptions, [key]: checked })}
                     />
                     <Label htmlFor={key} className="flex items-center gap-2 cursor-pointer text-sm">
-                      <Icon className="w-4 h-4 text-gray-600" />
+                      <Icon className="w-4 h-4 text-slate-600" />
                       {label}
                     </Label>
                   </div>

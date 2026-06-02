@@ -68,12 +68,12 @@ export default function SignatureCapture({ onSignatureCapture, disabled = false 
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
       <div>
-        <label className="text-sm font-semibold text-gray-700 block mb-2">
+        <label className="text-sm font-semibold text-slate-700 block mb-2">
           Clinician Signature
         </label>
-        <p className="text-xs text-gray-500 mb-3">
+        <p className="text-xs text-slate-500 mb-3">
           Sign below to digitally sign the finalized note.
         </p>
       </div>
@@ -86,7 +86,7 @@ export default function SignatureCapture({ onSignatureCapture, disabled = false 
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            className={`w-full border-2 border-dashed border-gray-300 rounded-lg cursor-crosshair bg-white ${
+            className={`w-full border-2 border-dashed border-slate-300 rounded-lg cursor-crosshair bg-white ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
             }`}
           />

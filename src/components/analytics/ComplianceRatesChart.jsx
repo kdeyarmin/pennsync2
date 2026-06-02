@@ -104,7 +104,7 @@ export default function ComplianceRatesChart({ data = [], notes = [], compact = 
       </CardHeader>
       <CardContent>
         {data.length === 0 && notes.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No compliance data available</p>
+          <p className="text-center text-slate-500 py-8">No compliance data available</p>
         ) : (
           <div className={compact ? "" : "grid grid-cols-1 lg:grid-cols-3 gap-6"}>
             {/* Trend chart */}
@@ -125,7 +125,7 @@ export default function ComplianceRatesChart({ data = [], notes = [], compact = 
             {/* Status pie chart */}
             {!compact && statusDistribution.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Audit Status Distribution</p>
+                <p className="text-sm font-medium text-slate-700 mb-2">Audit Status Distribution</p>
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
@@ -157,12 +157,12 @@ export default function ComplianceRatesChart({ data = [], notes = [], compact = 
         {/* Note quality summary */}
         {!compact && notes.length > 0 && (
           <div className="mt-6 pt-4 border-t">
-            <p className="text-sm font-medium text-gray-700 mb-3">Note Quality Distribution</p>
+            <p className="text-sm font-medium text-slate-700 mb-3">Note Quality Distribution</p>
             <div className="grid grid-cols-4 gap-3">
               {noteCompliance.map((item, idx) => (
-                <div key={idx} className="text-center p-3 bg-gray-50 rounded-lg">
-                  <p className="text-2xl font-bold text-gray-900">{item.value}</p>
-                  <p className="text-xs text-gray-600">{item.name}</p>
+                <div key={idx} className="text-center p-3 bg-slate-50 rounded-lg">
+                  <p className="text-2xl font-bold text-slate-900">{item.value}</p>
+                  <p className="text-xs text-slate-600">{item.name}</p>
                 </div>
               ))}
             </div>

@@ -79,7 +79,7 @@ export default function PendingReferralsWidget() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-gray-900 text-sm truncate">
+                    <p className="font-semibold text-slate-900 text-sm truncate">
                       {referral.patient_name || 'Unknown Patient'}
                     </p>
                     {referral.priority === 'urgent' || referral.priority === 'high' ? (
@@ -88,7 +88,7 @@ export default function PendingReferralsWidget() {
                       </Badge>
                     ) : null}
                   </div>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-slate-600">
                     {referral.referral_source || 'No source'} • {' '}
                     {referral.referral_date ? format(new Date(referral.referral_date), 'MMM d') : 'N/A'}
                   </p>

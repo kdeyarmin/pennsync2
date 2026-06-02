@@ -276,7 +276,7 @@ Provide analysis:
 
                     {contextData.medicalHistorySummary.key_diagnoses?.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
                           <Activity className="w-4 h-4" />
                           Key Diagnoses
                         </h4>
@@ -327,7 +327,7 @@ Provide analysis:
 
                     {contextData.clinicalDocumentsSummary.clinical_patterns?.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
                           <TrendingUp className="w-4 h-4" />
                           Clinical Patterns
                         </h4>
@@ -378,13 +378,13 @@ Provide analysis:
 
                     {contextData.carePlanProgress.plan_progress?.length > 0 && (
                       <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900">Individual Care Plan Progress</h4>
+                        <h4 className="font-semibold text-slate-900">Individual Care Plan Progress</h4>
                         {contextData.carePlanProgress.plan_progress.map((plan, idx) => (
                           <Card key={idx} className="border-2 border-green-300">
                             <CardContent className="p-3">
                               <h5 className="font-bold text-green-900 mb-1">{plan.problem}</h5>
                               <Badge className="mb-2 bg-green-600 text-white">{plan.progress_status}</Badge>
-                              <p className="text-sm text-gray-700">{plan.recommendations}</p>
+                              <p className="text-sm text-slate-700">{plan.recommendations}</p>
                             </CardContent>
                           </Card>
                         ))}
@@ -420,8 +420,8 @@ Provide analysis:
             </Tabs>
           )}
 
-          <div className="mt-4 pt-3 border-t border-gray-200">
-            <div className="flex items-center justify-between text-xs text-gray-600">
+          <div className="mt-4 pt-3 border-t border-slate-200">
+            <div className="flex items-center justify-between text-xs text-slate-600">
               <span>
                 <strong>{allVisits.length}</strong> total visits • <strong>{carePlans.length}</strong> care plans
               </span>

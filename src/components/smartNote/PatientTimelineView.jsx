@@ -496,12 +496,12 @@ Be specific and reference actual events by date and type.`,
           <CardContent className="pt-0 space-y-3">
             <div className="bg-white border-l-4 border-indigo-500 p-3 rounded">
               <h4 className="font-bold text-indigo-900 mb-1">Clinical Trajectory</h4>
-              <p className="text-sm text-gray-700">{aiSummary.overall_trajectory}</p>
+              <p className="text-sm text-slate-700">{aiSummary.overall_trajectory}</p>
             </div>
 
             {aiSummary.key_milestones?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-indigo-600" />
                   Key Milestones
                 </h4>
@@ -554,7 +554,7 @@ Be specific and reference actual events by date and type.`,
 
             {correlations.causal_links?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Potential Causal Links</h4>
+                <h4 className="font-semibold text-slate-900 mb-2">Potential Causal Links</h4>
                 <div className="space-y-2">
                   {correlations.causal_links.map((link, idx) => (
                     <Alert key={idx} className="bg-blue-50 border-blue-300">
@@ -595,7 +595,7 @@ Be specific and reference actual events by date and type.`,
 
             {correlations.patterns?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Patterns Detected</h4>
+                <h4 className="font-semibold text-slate-900 mb-2">Patterns Detected</h4>
                 <div className="space-y-1">
                   {correlations.patterns.map((pattern, idx) => (
                     <div key={idx} className="text-sm bg-purple-50 p-2 rounded border border-purple-200 text-purple-900">
@@ -608,7 +608,7 @@ Be specific and reference actual events by date and type.`,
 
             {correlations.risk_triggers?.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Risk Triggers</h4>
+                <h4 className="font-semibold text-slate-900 mb-2">Risk Triggers</h4>
                 <div className="space-y-1">
                   {correlations.risk_triggers.map((trigger, idx) => (
                     <div key={idx} className="text-sm bg-red-50 p-2 rounded border border-red-200 text-red-900">
@@ -667,7 +667,7 @@ Be specific and reference actual events by date and type.`,
         <Card>
           <CardContent className="p-8 text-center">
             <Sparkles className="w-6 h-6 animate-spin mx-auto text-indigo-600 mb-2" />
-            <p className="text-gray-600">Loading timeline...</p>
+            <p className="text-slate-600">Loading timeline...</p>
           </CardContent>
         </Card>
       ) : filteredEvents.length === 0 ? (
@@ -695,7 +695,7 @@ Be specific and reference actual events by date and type.`,
                     <Badge className="bg-indigo-600 text-white">{events.length} events</Badge>
                   </div>
                   {periodSummaries[periodKey] && (
-                    <div className="mt-2 bg-white border border-indigo-200 rounded p-2 text-sm text-gray-700">
+                    <div className="mt-2 bg-white border border-indigo-200 rounded p-2 text-sm text-slate-700">
                       <strong className="text-indigo-900">Period Summary:</strong> {periodSummaries[periodKey]}
                     </div>
                   )}
@@ -711,27 +711,27 @@ Be specific and reference actual events by date and type.`,
                         <div
                           key={event.id}
                           className={`border-l-4 rounded-r p-3 hover:shadow-md transition-shadow cursor-pointer ${
-                            {blue: 'border-blue-400 bg-blue-50', green: 'border-green-400 bg-green-50', red: 'border-red-400 bg-red-50', purple: 'border-purple-400 bg-purple-50', indigo: 'border-indigo-400 bg-indigo-50', orange: 'border-orange-400 bg-orange-50', teal: 'border-teal-400 bg-teal-50', pink: 'border-pink-400 bg-pink-50'}[eventConfig.color] || 'border-gray-400 bg-gray-50'
+                            {blue: 'border-blue-400 bg-blue-50', green: 'border-green-400 bg-green-50', red: 'border-red-400 bg-red-50', purple: 'border-purple-400 bg-purple-50', indigo: 'border-indigo-400 bg-indigo-50', orange: 'border-orange-400 bg-orange-50', teal: 'border-teal-400 bg-teal-50', pink: 'border-pink-400 bg-pink-50'}[eventConfig.color] || 'border-slate-400 bg-slate-50'
                           }`}
                           onClick={() => toggleEventExpand(event.id)}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-start gap-3 flex-1 min-w-0">
                               <div className={`p-2 rounded-full flex-shrink-0 ${
-                                {blue: 'bg-blue-100', green: 'bg-green-100', red: 'bg-red-100', purple: 'bg-purple-100', indigo: 'bg-indigo-100', orange: 'bg-orange-100', teal: 'bg-teal-100', pink: 'bg-pink-100'}[eventConfig.color] || 'bg-gray-100'
+                                {blue: 'bg-blue-100', green: 'bg-green-100', red: 'bg-red-100', purple: 'bg-purple-100', indigo: 'bg-indigo-100', orange: 'bg-orange-100', teal: 'bg-teal-100', pink: 'bg-pink-100'}[eventConfig.color] || 'bg-slate-100'
                               }`}>
                                 <Icon className={`w-4 h-4 ${
-                                  {blue: 'text-blue-700', green: 'text-green-700', red: 'text-red-700', purple: 'text-purple-700', indigo: 'text-indigo-700', orange: 'text-orange-700', teal: 'text-teal-700', pink: 'text-pink-700'}[eventConfig.color] || 'text-gray-700'
+                                  {blue: 'text-blue-700', green: 'text-green-700', red: 'text-red-700', purple: 'text-purple-700', indigo: 'text-indigo-700', orange: 'text-orange-700', teal: 'text-teal-700', pink: 'text-pink-700'}[eventConfig.color] || 'text-slate-700'
                                 }`} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-semibold text-gray-900">{event.title}</h4>
+                                  <h4 className="font-semibold text-slate-900">{event.title}</h4>
                                   {event.status && (
                                     <Badge className={`text-xs ${
                                       event.status === 'active' ? 'bg-green-600' :
                                       event.status === 'met' ? 'bg-blue-600' :
-                                      'bg-gray-500'
+                                      'bg-slate-500'
                                     } text-white`}>
                                       {event.status}
                                     </Badge>
@@ -746,11 +746,11 @@ Be specific and reference actual events by date and type.`,
                                     </Badge>
                                   )}
                                 </div>
-                                <p className="text-xs text-gray-600 mb-1">
+                                <p className="text-xs text-slate-600 mb-1">
                                   {format(new Date(event.date), 'MMM d, yyyy')}
                                 </p>
                                 {event.description && (
-                                  <p className="text-sm text-gray-700">
+                                  <p className="text-sm text-slate-700">
                                     {isExpanded ? event.description : `${event.description.substring(0, 100)}...`}
                                   </p>
                                 )}
@@ -781,10 +781,10 @@ Be specific and reference actual events by date and type.`,
                           </div>
 
                           {isExpanded && event.fullData && (
-                           <div className="mt-3 pt-3 border-t border-gray-200 text-sm space-y-2">
+                           <div className="mt-3 pt-3 border-t border-slate-200 text-sm space-y-2">
                              {event.type === 'visit' && event.fullData.vital_signs && (
                                <div className="bg-white p-2 rounded">
-                                 <strong className="text-gray-900">Vitals:</strong>
+                                 <strong className="text-slate-900">Vitals:</strong>
                                  <div className="flex flex-wrap gap-3 mt-1 text-xs">
                                    {event.fullData.vital_signs.blood_pressure_systolic && (
                                      <span>BP: {event.fullData.vital_signs.blood_pressure_systolic}/{event.fullData.vital_signs.blood_pressure_diastolic}</span>
@@ -803,7 +803,7 @@ Be specific and reference actual events by date and type.`,
                              )}
                              {event.type === 'care_plan' && event.fullData.interventions && (
                                <div className="bg-white p-2 rounded">
-                                 <strong className="text-gray-900">Interventions:</strong>
+                                 <strong className="text-slate-900">Interventions:</strong>
                                  <ul className="mt-1 space-y-1">
                                    {event.fullData.interventions.map((intervention, idx) => (
                                      <li key={idx} className="text-xs">• {intervention}</li>
@@ -821,14 +821,14 @@ Be specific and reference actual events by date and type.`,
                              )}
                              {event.type === 'incident' && event.fullData.resolution_notes && (
                                <div className="bg-white p-2 rounded">
-                                 <strong className="text-gray-900">Resolution:</strong>
-                                 <p className="text-xs mt-1 text-gray-700">{event.fullData.resolution_notes}</p>
+                                 <strong className="text-slate-900">Resolution:</strong>
+                                 <p className="text-xs mt-1 text-slate-700">{event.fullData.resolution_notes}</p>
                                </div>
                              )}
                              {event.fullData.nurse_notes && (
                                <div className="bg-white p-2 rounded">
-                                 <strong className="text-gray-900">Full Note:</strong>
-                                 <p className="text-xs mt-1 text-gray-700">{event.fullData.nurse_notes}</p>
+                                 <strong className="text-slate-900">Full Note:</strong>
+                                 <p className="text-xs mt-1 text-slate-700">{event.fullData.nurse_notes}</p>
                                </div>
                              )}
                            </div>
@@ -845,32 +845,32 @@ Be specific and reference actual events by date and type.`,
       )}
 
       {/* Summary Stats */}
-      <Card className="bg-gradient-to-r from-gray-50 to-gray-100">
+      <Card className="bg-gradient-to-r from-slate-50 to-slate-100">
         <CardContent className="p-4">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-blue-600">{timelineEvents.filter(e => e.type === 'visit').length}</p>
-              <p className="text-xs text-gray-600">Visits</p>
+              <p className="text-xs text-slate-600">Visits</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-green-600">{timelineEvents.filter(e => e.type === 'care_plan').length}</p>
-              <p className="text-xs text-gray-600">Care Plans</p>
+              <p className="text-xs text-slate-600">Care Plans</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-red-600">{timelineEvents.filter(e => e.type === 'incident').length}</p>
-              <p className="text-xs text-gray-600">Incidents</p>
+              <p className="text-xs text-slate-600">Incidents</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-purple-600">{timelineEvents.filter(e => e.type === 'hospitalization').length}</p>
-              <p className="text-xs text-gray-600">Hospitalizations</p>
+              <p className="text-xs text-slate-600">Hospitalizations</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-teal-600">{timelineEvents.filter(e => e.type === 'lab_result').length}</p>
-              <p className="text-xs text-gray-600">Lab Results</p>
+              <p className="text-xs text-slate-600">Lab Results</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-pink-600">{timelineEvents.filter(e => e.type === 'symptom').length}</p>
-              <p className="text-xs text-gray-600">Symptoms</p>
+              <p className="text-xs text-slate-600">Symptoms</p>
             </div>
           </div>
         </CardContent>

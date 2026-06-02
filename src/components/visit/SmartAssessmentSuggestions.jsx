@@ -128,8 +128,8 @@ Generate the suggestions now:`;
     switch (priority) {
       case 'high': return 'border-orange-300 bg-orange-50';
       case 'medium': return 'border-blue-300 bg-blue-50';
-      case 'low': return 'border-gray-300 bg-gray-50';
-      default: return 'border-gray-300 bg-gray-50';
+      case 'low': return 'border-slate-300 bg-slate-50';
+      default: return 'border-slate-300 bg-slate-50';
     }
   };
 
@@ -137,8 +137,8 @@ Generate the suggestions now:`;
     switch (priority) {
       case 'high': return 'bg-orange-500';
       case 'medium': return 'bg-blue-500';
-      case 'low': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+      case 'low': return 'bg-slate-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -149,8 +149,8 @@ Generate the suggestions now:`;
           <div className="flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
             <div>
-              <p className="font-semibold text-gray-900">Analyzing your documentation...</p>
-              <p className="text-sm text-gray-600">AI is identifying missing assessments</p>
+              <p className="font-semibold text-slate-900">Analyzing your documentation...</p>
+              <p className="text-sm text-slate-600">AI is identifying missing assessments</p>
             </div>
           </div>
         </CardContent>
@@ -169,7 +169,7 @@ Generate the suggestions now:`;
           <Lightbulb className="w-5 h-5 text-purple-600" />
           Smart Assessment Suggestions ({suggestions.length})
         </CardTitle>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           AI detected these assessments might be missing from your note
         </p>
       </CardHeader>
@@ -180,15 +180,15 @@ Generate the suggestions now:`;
               <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-gray-900">{suggestion.category}</p>
+                  <p className="font-semibold text-slate-900">{suggestion.category}</p>
                   <Badge className={`${getPriorityBadgeColor(suggestion.priority)} text-white text-xs`}>
                     {suggestion.priority}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-700 mb-2 italic">
+                <p className="text-sm text-slate-700 mb-2 italic">
                   "{suggestion.suggestion}"
                 </p>
-                <p className="text-xs text-gray-500 mb-3">
+                <p className="text-xs text-slate-500 mb-3">
                   💡 {suggestion.reasoning}
                 </p>
                 <div className="flex gap-2">

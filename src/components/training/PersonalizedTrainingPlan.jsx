@@ -276,7 +276,7 @@ export default function PersonalizedTrainingPlan({
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'medium': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'low': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -332,7 +332,7 @@ export default function PersonalizedTrainingPlan({
           </div>
         </CardTitle>
         <div className="mt-2">
-          <div className="flex justify-between text-xs text-gray-600 mb-1">
+          <div className="flex justify-between text-xs text-slate-600 mb-1">
             <span>Overall Progress</span>
             <span>{completedModules}/{trainingPlan.modules.length} modules</span>
           </div>
@@ -350,10 +350,10 @@ export default function PersonalizedTrainingPlan({
               <div className={`rounded-lg border ${
                 module.status === 'completed' ? 'border-green-300 bg-green-50' :
                 module.severity === 'high' ? 'border-red-200 bg-red-50' :
-                'border-gray-200'
+                'border-slate-200'
               }`}>
                 <CollapsibleTrigger asChild>
-                  <div className="p-3 cursor-pointer hover:bg-gray-50/50 transition-colors">
+                  <div className="p-3 cursor-pointer hover:bg-slate-50/50 transition-colors">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -367,9 +367,9 @@ export default function PersonalizedTrainingPlan({
                             </Badge>
                           )}
                         </div>
-                        <h4 className="text-sm font-semibold text-gray-900">{module.title}</h4>
-                        <p className="text-xs text-gray-600 mt-0.5">{module.description}</p>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                        <h4 className="text-sm font-semibold text-slate-900">{module.title}</h4>
+                        <p className="text-xs text-slate-600 mt-0.5">{module.description}</p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" /> {module.duration} min
                           </span>
@@ -417,12 +417,12 @@ export default function PersonalizedTrainingPlan({
 
                     {/* Lessons */}
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-2">Module Content:</p>
+                      <p className="text-xs font-semibold text-slate-700 mb-2">Module Content:</p>
                       <div className="space-y-1">
                         {module.lessons.map((lesson, lidx) => (
                           <div
                             key={lidx}
-                            className="flex items-center justify-between p-2 bg-white rounded border hover:bg-gray-50 cursor-pointer"
+                            className="flex items-center justify-between p-2 bg-white rounded border hover:bg-slate-50 cursor-pointer"
                             onClick={() => onStartModule?.({ ...module, startLesson: lidx })}
                           >
                             <div className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export default function PersonalizedTrainingPlan({
                               }`}>
                                 {getLessonIcon(lesson.type)}
                               </div>
-                              <span className="text-xs text-gray-700">{lesson.title}</span>
+                              <span className="text-xs text-slate-700">{lesson.title}</span>
                             </div>
                             <Badge variant="outline" className="text-[10px]">
                               {lesson.duration} min

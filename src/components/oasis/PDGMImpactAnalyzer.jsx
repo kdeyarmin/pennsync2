@@ -270,7 +270,7 @@ Return detailed JSON analysis:`,
       medium: 'bg-yellow-100 text-yellow-800',
       high: 'bg-orange-100 text-orange-800'
     };
-    return colors[effort] || 'bg-gray-100 text-gray-800';
+    return colors[effort] || 'bg-slate-100 text-slate-800';
   };
 
   const getRiskColor = (risk) => {
@@ -279,7 +279,7 @@ Return detailed JSON analysis:`,
       medium: 'bg-yellow-100 text-yellow-800',
       high: 'bg-red-100 text-red-800'
     };
-    return colors[risk] || 'bg-gray-100 text-gray-800';
+    return colors[risk] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -293,7 +293,7 @@ Return detailed JSON analysis:`,
       <CardContent className="space-y-4 pt-4">
         {!impactAnalysis ? (
           <div className="text-center py-6">
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-slate-600 mb-4">
               Analyze the precise PDGM payment impact of suggested documentation improvements
             </p>
             <Button
@@ -314,8 +314,8 @@ Return detailed JSON analysis:`,
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border-2 border-green-300">
               <div className="grid grid-cols-3 gap-3 mb-3">
                 <div className="text-center">
-                  <p className="text-xs text-gray-600 mb-1">Current Payment</p>
-                  <p className="text-xl font-bold text-gray-700">
+                  <p className="text-xs text-slate-600 mb-1">Current Payment</p>
+                  <p className="text-xl font-bold text-slate-700">
                     {formatCurrency(impactAnalysis.aiAnalysis.payment_summary?.original_payment)}
                   </p>
                 </div>
@@ -323,14 +323,14 @@ Return detailed JSON analysis:`,
                   <ArrowRight className="w-6 h-6 text-green-600" />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-600 mb-1">Optimized Payment</p>
+                  <p className="text-xs text-slate-600 mb-1">Optimized Payment</p>
                   <p className="text-xl font-bold text-green-700">
                     {formatCurrency(impactAnalysis.aiAnalysis.payment_summary?.optimized_payment)}
                   </p>
                 </div>
               </div>
               <div className="text-center bg-white p-3 rounded border border-green-200">
-                <p className="text-sm text-gray-600">Total Increase</p>
+                <p className="text-sm text-slate-600">Total Increase</p>
                 <p className="text-2xl font-bold text-green-700">
                   +{formatCurrency(impactAnalysis.aiAnalysis.payment_summary?.total_increase)}
                   <span className="text-sm ml-2">
@@ -338,7 +338,7 @@ Return detailed JSON analysis:`,
                   </span>
                 </p>
                 {impactAnalysis.aiAnalysis.payment_summary?.annual_impact && (
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-slate-600 mt-1">
                     Annual Impact: {formatCurrency(impactAnalysis.aiAnalysis.payment_summary.annual_impact)}
                   </p>
                 )}
@@ -347,7 +347,7 @@ Return detailed JSON analysis:`,
 
             {/* Case-Mix Component Breakdown */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                 <Activity className="w-4 h-4" />
                 Case-Mix Component Breakdown
               </h3>
@@ -467,7 +467,7 @@ Return detailed JSON analysis:`,
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <Badge className="bg-indigo-600 text-white">#{change.priority_rank}</Badge>
-                            <span className="text-sm font-medium text-gray-900">{change.change}</span>
+                            <span className="text-sm font-medium text-slate-900">{change.change}</span>
                           </div>
                           <Badge className="bg-green-600 text-white">
                             +{formatCurrency(change.payment_impact)}
@@ -477,7 +477,7 @@ Return detailed JSON analysis:`,
                           <Badge className={getEffortColor(change.implementation_effort)}>
                             {change.implementation_effort} effort
                           </Badge>
-                          <span className="text-xs text-gray-600">
+                          <span className="text-xs text-slate-600">
                             ROI Score: <strong>{change.roi_score}/10</strong>
                           </span>
                         </div>
@@ -555,14 +555,14 @@ Return detailed JSON analysis:`,
                     <div key={idx} className="bg-white p-3 rounded border">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{phase.phase}</p>
-                          <p className="text-xs text-gray-600">{phase.timeline}</p>
+                          <p className="text-sm font-semibold text-slate-900">{phase.phase}</p>
+                          <p className="text-xs text-slate-600">{phase.timeline}</p>
                         </div>
                         <Badge className="bg-cyan-600 text-white">
                           +{formatCurrency(phase.expected_payment_gain)}
                         </Badge>
                       </div>
-                      <ul className="text-xs text-gray-700 space-y-1">
+                      <ul className="text-xs text-slate-700 space-y-1">
                         {phase.actions?.map((action, aIdx) => (
                           <li key={aIdx} className="flex items-start gap-1">
                             <CheckCircle2 className="w-3 h-3 mt-0.5 flex-shrink-0 text-cyan-600" />

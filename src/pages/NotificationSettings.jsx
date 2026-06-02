@@ -15,7 +15,7 @@ export default function NotificationSettings() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
@@ -23,8 +23,8 @@ export default function NotificationSettings() {
               <Bell className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Notification Settings</h1>
-              <p className="text-gray-600">Manage your notification preferences</p>
+              <h1 className="text-3xl font-bold text-slate-900">Notification Settings</h1>
+              <p className="text-slate-600">Manage your notification preferences</p>
             </div>
           </div>
         </div>

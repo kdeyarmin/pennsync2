@@ -18,7 +18,7 @@ export default function OASISRevenueAnalysis() {
       <div className="p-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-600">No analysis data available. Please analyze an OASIS document first.</p>
+            <p className="text-slate-600">No analysis data available. Please analyze an OASIS document first.</p>
             <Link to={createPageUrl("OASISAnalyzer")}>
               <Button className="mt-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -45,11 +45,11 @@ export default function OASISRevenueAnalysis() {
               <span className="sm:hidden">Back</span>
             </Button>
           </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-2 truncate">PDGM Revenue Analysis</h1>
-          {patientName && <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">Patient: {patientName}</p>}
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mt-2 truncate">PDGM Revenue Analysis</h1>
+          {patientName && <p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">Patient: {patientName}</p>}
         </div>
         <div className="text-center sm:text-right">
-          <p className="text-sm text-gray-600">Revenue Optimization Score</p>
+          <p className="text-sm text-slate-600">Revenue Optimization Score</p>
           <div className="flex items-center gap-2 mt-1">
             <div className="text-3xl font-bold text-green-600">{revenueScore}%</div>
             <Badge className={`${
@@ -107,8 +107,8 @@ export default function OASISRevenueAnalysis() {
                         <Badge variant="outline">{tip.potential_impact}</Badge>
                       </div>
                     </div>
-                    <p className="font-medium text-gray-900 mb-2">{tip.opportunity}</p>
-                    <p className="text-sm text-gray-700 mb-3">{tip.specific_action}</p>
+                    <p className="font-medium text-slate-900 mb-2">{tip.opportunity}</p>
+                    <p className="text-sm text-slate-700 mb-3">{tip.specific_action}</p>
                     {tip.supporting_documentation && (
                       <div className="bg-blue-50 p-2 rounded text-xs text-blue-900">
                         <strong>Documentation:</strong> {tip.supporting_documentation}

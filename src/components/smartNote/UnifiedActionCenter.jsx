@@ -89,7 +89,7 @@ export default function UnifiedActionCenter({
       case 'critical': return <AlertTriangle className="w-4 h-4 text-red-600" />;
       case 'compliance': return <Shield className="w-4 h-4 text-orange-600" />;
       case 'suggestion': return <Lightbulb className="w-4 h-4 text-blue-600" />;
-      default: return <Zap className="w-4 h-4 text-gray-600" />;
+      default: return <Zap className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -98,7 +98,7 @@ export default function UnifiedActionCenter({
       case 'critical': return 'bg-red-50 border-l-red-500';
       case 'compliance': return 'bg-orange-50 border-l-orange-500';
       case 'suggestion': return 'bg-blue-50 border-l-blue-500';
-      default: return 'bg-gray-50 border-l-gray-500';
+      default: return 'bg-slate-50 border-l-slate-500';
     }
   };
 
@@ -153,8 +153,8 @@ export default function UnifiedActionCenter({
                     <div className="flex items-start gap-2 flex-1 min-w-0">
                       {getTypeIcon(item.type)}
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 truncate">{item.title}</p>
-                        <p className="text-xs text-gray-600 line-clamp-2">{item.description}</p>
+                        <p className="text-xs font-semibold text-slate-900 truncate">{item.title}</p>
+                        <p className="text-xs text-slate-600 line-clamp-2">{item.description}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -172,7 +172,7 @@ export default function UnifiedActionCenter({
                         size="sm"
                         variant="ghost"
                         onClick={() => handleDismissItem(item.id)}
-                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                        className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
                       >
                         <X className="w-3 h-3" />
                       </Button>
@@ -184,7 +184,7 @@ export default function UnifiedActionCenter({
           </ScrollArea>
           
           {allItems.length > 8 && (
-            <p className="text-xs text-center text-gray-500 mt-2">
+            <p className="text-xs text-center text-slate-500 mt-2">
               +{allItems.length - 8} more actions
             </p>
           )}

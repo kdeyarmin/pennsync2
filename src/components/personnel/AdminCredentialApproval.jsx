@@ -168,7 +168,7 @@ Credential Management System`
       </CardHeader>
       <CardContent>
         {pendingCredentials.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-slate-500">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-500" />
             <p>No pending approvals</p>
           </div>
@@ -179,21 +179,21 @@ Credential Management System`
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <User className="w-4 h-4 text-gray-600" />
-                      <h4 className="font-semibold text-gray-900">{cred.user_name}</h4>
+                      <User className="w-4 h-4 text-slate-600" />
+                      <h4 className="font-semibold text-slate-900">{cred.user_name}</h4>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
                       <Award className="w-4 h-4 text-indigo-600" />
-                      <p className="text-sm font-medium text-gray-700">{cred.title}</p>
+                      <p className="text-sm font-medium text-slate-700">{cred.title}</p>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       {cred.issuing_organization} • {cred.item_type}
                     </p>
                     <div className="mt-2 text-sm">
-                      <p className="text-gray-600">
+                      <p className="text-slate-600">
                         New Expiration: <span className="font-medium">{format(parseISO(cred.expiration_date), 'MMM d, yyyy')}</span>
                       </p>
-                      <p className="text-gray-600">
+                      <p className="text-slate-600">
                         Submitted: {format(parseISO(cred.created_date), 'MMM d, yyyy')}
                       </p>
                     </div>

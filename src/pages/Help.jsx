@@ -185,13 +185,13 @@ export default function Help() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-slate-700 leading-relaxed">
                   PennSync was designed and built by <strong className="text-[#0F204A]">Kevin Deyarmin</strong> specifically 
                   for the Penn Home Health team. This system combines cutting-edge AI technology with Medicare-compliant 
                   workflows to help you provide the highest quality patient care while reducing administrative burden.
                 </p>
                 <div className="bg-[#FFC107]/10 border-l-4 border-[#FFC107] p-4 rounded">
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-slate-700">
                     <strong>Our Mission:</strong> Empower Penn clinicians to focus on exceptional patient care by 
                     automating documentation, ensuring compliance, and providing intelligent clinical insights.
                   </p>
@@ -209,35 +209,35 @@ export default function Help() {
                     <div className="w-8 h-8 bg-[#0F204A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">1</div>
                     <div>
                       <p className="font-semibold">Check Your Dashboard</p>
-                      <p className="text-gray-600">Review today's visits, alerts, and pending tasks</p>
+                      <p className="text-slate-600">Review today's visits, alerts, and pending tasks</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <div className="w-8 h-8 bg-[#0F204A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">2</div>
                     <div>
                       <p className="font-semibold">Add or Find Patient</p>
-                      <p className="text-gray-600">Use Patients page to add new or search existing</p>
+                      <p className="text-slate-600">Use Patients page to add new or search existing</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <div className="w-8 h-8 bg-[#0F204A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">3</div>
                     <div>
                       <p className="font-semibold">Document a Visit</p>
-                      <p className="text-gray-600">Use Smart Notes or Visit Scribe (voice recording)</p>
+                      <p className="text-slate-600">Use Smart Notes or Visit Scribe (voice recording)</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <div className="w-8 h-8 bg-[#0F204A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">4</div>
                     <div>
                       <p className="font-semibold">Let AI Enhance</p>
-                      <p className="text-gray-600">Review AI-generated compliant documentation</p>
+                      <p className="text-slate-600">Review AI-generated compliant documentation</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <div className="w-8 h-8 bg-[#FFC107] text-[#0F204A] rounded-full flex items-center justify-center font-bold flex-shrink-0">5</div>
                     <div>
                       <p className="font-semibold">Save & Complete</p>
-                      <p className="text-gray-600">Save note, check compliance score, done!</p>
+                      <p className="text-slate-600">Save note, check compliance score, done!</p>
                     </div>
                   </div>
                 </CardContent>
@@ -253,23 +253,23 @@ export default function Help() {
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex items-start gap-2">
                     <Badge className="bg-[#0F204A] flex-shrink-0">TIP</Badge>
-                    <p className="text-gray-700">Always select your patient in Smart Notes - AI personalizes everything based on their history</p>
+                    <p className="text-slate-700">Always select your patient in Smart Notes - AI personalizes everything based on their history</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-[#0F204A] flex-shrink-0">TIP</Badge>
-                    <p className="text-gray-700">Use voice recording in Visit Scribe to save 10-15 minutes per visit</p>
+                    <p className="text-slate-700">Use voice recording in Visit Scribe to save 10-15 minutes per visit</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-[#0F204A] flex-shrink-0">TIP</Badge>
-                    <p className="text-gray-700">Favorite frequently seen patients using the star icon for instant access</p>
+                    <p className="text-slate-700">Favorite frequently seen patients using the star icon for instant access</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-[#0F204A] flex-shrink-0">TIP</Badge>
-                    <p className="text-gray-700">Create Clinical Library templates for common documentation (wound care, diabetic education)</p>
+                    <p className="text-slate-700">Create Clinical Library templates for common documentation (wound care, diabetic education)</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className="bg-[#0F204A] flex-shrink-0">TIP</Badge>
-                    <p className="text-gray-700">Check Compliance Dashboard weekly to maintain 95%+ compliance rate</p>
+                    <p className="text-slate-700">Check Compliance Dashboard weekly to maintain 95%+ compliance rate</p>
                   </div>
                 </CardContent>
               </Card>
@@ -290,13 +290,13 @@ export default function Help() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-600 mb-4">{feature.description}</p>
+                    <p className="text-sm text-slate-600 mb-4">{feature.description}</p>
                     <div className="space-y-1">
-                      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Covered Topics:</p>
+                      <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Covered Topics:</p>
                       {feature.topics.map((topic, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm">
                           <div className="w-1.5 h-1.5 bg-[#FFC107] rounded-full"></div>
-                          <span className="text-gray-700">{topic}</span>
+                          <span className="text-slate-700">{topic}</span>
                         </div>
                       ))}
                     </div>
@@ -335,7 +335,7 @@ export default function Help() {
               <CardHeader>
                 <CardTitle className="text-lg">Frequently Asked Questions</CardTitle>
                 <div className="relative mt-4">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     placeholder="Search FAQ..."
                     value={searchQuery}
@@ -346,12 +346,12 @@ export default function Help() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {filteredFAQs.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">No FAQs match your search</p>
+                  <p className="text-center text-slate-500 py-8">No FAQs match your search</p>
                 ) : (
                   filteredFAQs.map((faq, idx) => (
                     <div key={idx} className="border-l-4 border-[#FFC107] bg-slate-50 p-4 rounded-r-lg">
                       <p className="font-semibold text-[#0F204A] mb-2">{faq.q}</p>
-                      <p className="text-sm text-gray-700">{faq.a}</p>
+                      <p className="text-sm text-slate-700">{faq.a}</p>
                     </div>
                   ))
                 )}
@@ -370,7 +370,7 @@ export default function Help() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <p className="text-gray-700 mb-4">
+                  <p className="text-slate-700 mb-4">
                     For technical issues, feature requests, or questions about PennSync:
                   </p>
                   <div className="space-y-3">
@@ -378,12 +378,12 @@ export default function Help() {
                       <Users className="w-5 h-5 text-[#0F204A]" />
                       <div>
                         <p className="font-semibold text-[#0F204A]">Kevin Deyarmin</p>
-                        <p className="text-sm text-gray-600">System Developer</p>
+                        <p className="text-sm text-slate-600">System Developer</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                       <Mail className="w-5 h-5 text-[#0F204A]" />
-                      <p className="text-sm text-gray-700">kdeyarmin@comcast.net</p>
+                      <p className="text-sm text-slate-700">kdeyarmin@comcast.net</p>
                     </div>
                   </div>
                 </CardContent>
@@ -406,7 +406,7 @@ export default function Help() {
                     <Download className="w-4 h-4 mr-2" />
                     {downloading ? 'Generating...' : 'User Manual PDF'}
                   </Button>
-                  <div className="text-sm text-gray-600 space-y-2">
+                  <div className="text-sm text-slate-600 space-y-2">
                     <p>📘 Comprehensive feature documentation</p>
                     <p>🎯 Step-by-step workflows</p>
                     <p>💡 Best practices & pro tips</p>
@@ -422,7 +422,7 @@ export default function Help() {
                   <Lightbulb className="w-8 h-8 text-[#FFC107] flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-[#0F204A] mb-2">System Updates & New Features</h3>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-slate-700">
                       Watch for in-app announcements on your Dashboard. New features are continuously added 
                       based on Penn team feedback. Check the Announcements widget regularly for training materials 
                       and feature highlights.
@@ -442,7 +442,7 @@ export default function Help() {
                 <Download className="w-6 h-6 text-[#FFC107]" />
               </div>
               <h3 className="font-semibold mb-1">User Manual</h3>
-              <p className="text-xs text-gray-600">Complete PDF guide</p>
+              <p className="text-xs text-slate-600">Complete PDF guide</p>
             </CardContent>
           </Card>
 
@@ -452,7 +452,7 @@ export default function Help() {
                 <MessageCircle className="w-6 h-6 text-[#0F204A]" />
               </div>
               <h3 className="font-semibold mb-1">In-App Messaging</h3>
-              <p className="text-xs text-gray-600">Contact team members</p>
+              <p className="text-xs text-slate-600">Contact team members</p>
             </CardContent>
           </Card>
 
@@ -462,7 +462,7 @@ export default function Help() {
                 <Award className="w-6 h-6 text-[#FFC107]" />
               </div>
               <h3 className="font-semibold mb-1">Best Practices</h3>
-              <p className="text-xs text-gray-600">Clinical excellence tips</p>
+              <p className="text-xs text-slate-600">Clinical excellence tips</p>
             </CardContent>
           </Card>
         </div>

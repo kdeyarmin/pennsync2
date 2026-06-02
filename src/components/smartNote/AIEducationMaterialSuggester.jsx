@@ -205,7 +205,7 @@ Format as plain text, ready to print.`,
         {analyzing && (
           <div className="text-center py-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">Analyzing education needs...</p>
+            <p className="text-sm text-slate-600">Analyzing education needs...</p>
           </div>
         )}
 
@@ -223,7 +223,7 @@ Format as plain text, ready to print.`,
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">{topic.topic}</h4>
+                          <h4 className="font-semibold text-slate-900">{topic.topic}</h4>
                           <Badge className={`text-xs ${
                             topic.priority === 'high' ? 'bg-red-600' :
                             topic.priority === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
@@ -232,7 +232,7 @@ Format as plain text, ready to print.`,
                           </Badge>
                           <Badge variant="outline" className="text-xs">{topic.category}</Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-2">
+                        <p className="text-xs text-slate-600 mb-2">
                           Target: {topic.target_audience}
                         </p>
                       </div>
@@ -257,9 +257,9 @@ Format as plain text, ready to print.`,
                         ))}
                       </div>
 
-                      <div className="bg-gray-50 border border-gray-200 rounded p-2">
-                        <p className="font-semibold text-gray-900 mb-1">Evidence from Note:</p>
-                        <p className="text-gray-700 italic">"{topic.evidence_from_note}"</p>
+                      <div className="bg-slate-50 border border-slate-200 rounded p-2">
+                        <p className="font-semibold text-slate-900 mb-1">Evidence from Note:</p>
+                        <p className="text-slate-700 italic">"{topic.evidence_from_note}"</p>
                       </div>
 
                       <div className="flex gap-2">

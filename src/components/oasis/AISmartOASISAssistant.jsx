@@ -506,7 +506,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
       case "MEDIUM": return "bg-yellow-100 text-yellow-800 border-yellow-300";
       case "LOW": return "bg-orange-100 text-orange-800 border-orange-300";
       case "NEEDS_MANUAL_ASSESSMENT": return "bg-red-100 text-red-800 border-red-300";
-      default: return "bg-gray-100 text-gray-800 border-gray-300";
+      default: return "bg-slate-100 text-slate-800 border-slate-300";
     }
   };
 
@@ -565,7 +565,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                   </>
                 )}
               </Button>
-              <p className="text-sm text-gray-600 mt-3">
+              <p className="text-sm text-slate-600 mt-3">
                 AI will analyze patient records, referral data, and clinical history to pre-populate OASIS items
               </p>
             </div>
@@ -574,23 +574,23 @@ Patient Data: ${JSON.stringify(contextData)}`,
               {/* Summary Stats */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <div className="bg-white p-3 rounded-lg border-2 border-purple-200">
-                  <p className="text-xs text-gray-600">Items Analyzed</p>
+                  <p className="text-xs text-slate-600">Items Analyzed</p>
                   <p className="text-2xl font-bold text-purple-600">{suggestions.summary?.total_items_analyzed || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-green-200">
-                  <p className="text-xs text-gray-600">High Confidence</p>
+                  <p className="text-xs text-slate-600">High Confidence</p>
                   <p className="text-2xl font-bold text-green-600">{suggestions.summary?.high_confidence_items || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-yellow-200">
-                  <p className="text-xs text-gray-600">Needs Verification</p>
+                  <p className="text-xs text-slate-600">Needs Verification</p>
                   <p className="text-2xl font-bold text-yellow-600">{suggestions.summary?.needs_verification || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-blue-200">
-                  <p className="text-xs text-gray-600">Compliance Score</p>
+                  <p className="text-xs text-slate-600">Compliance Score</p>
                   <p className="text-2xl font-bold text-blue-600">{suggestions.summary?.compliance_score || 0}%</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-green-200">
-                  <p className="text-xs text-gray-600">Est. Case-Mix</p>
+                  <p className="text-xs text-slate-600">Est. Case-Mix</p>
                   <p className="text-2xl font-bold text-green-600">{suggestions.summary?.estimated_case_mix_weight?.toFixed(2) || 'N/A'}</p>
                 </div>
               </div>
@@ -666,7 +666,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                         }>
                           {finding.severity}
                         </Badge>
-                        <span className="font-semibold text-gray-900">{finding.category}</span>
+                        <span className="font-semibold text-slate-900">{finding.category}</span>
                       </div>
                       {finding.oasis_items_affected?.length > 0 && (
                         <div className="flex gap-1 flex-wrap">
@@ -677,16 +677,16 @@ Patient Data: ${JSON.stringify(contextData)}`,
                       )}
                     </div>
 
-                    <p className="text-sm text-gray-900 font-medium mb-3">{finding.discrepancy_description}</p>
+                    <p className="text-sm text-slate-900 font-medium mb-3">{finding.discrepancy_description}</p>
 
                     <div className="grid md:grid-cols-2 gap-3 mb-3">
                       <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-gray-600 mb-1">{finding.data_source_1}</p>
-                        <p className="text-sm text-gray-900">{finding.data_source_1_value}</p>
+                        <p className="text-xs font-semibold text-slate-600 mb-1">{finding.data_source_1}</p>
+                        <p className="text-sm text-slate-900">{finding.data_source_1_value}</p>
                       </div>
                       <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-gray-600 mb-1">{finding.data_source_2}</p>
-                        <p className="text-sm text-gray-900">{finding.data_source_2_value}</p>
+                        <p className="text-xs font-semibold text-slate-600 mb-1">{finding.data_source_2}</p>
+                        <p className="text-sm text-slate-900">{finding.data_source_2_value}</p>
                       </div>
                     </div>
 
@@ -707,7 +707,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
                     <div className="bg-white p-3 rounded border border-blue-300">
                       <p className="text-xs font-semibold text-blue-900 mb-2">✓ Resolution Steps:</p>
-                      <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                      <ol className="text-sm text-slate-700 space-y-1 list-decimal list-inside">
                         {finding.resolution_steps?.map((step, i) => (
                           <li key={i}>{step}</li>
                         ))}
@@ -744,15 +744,15 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex-1">
                         <Badge className="bg-red-500 mb-2">Current</Badge>
-                        <p className="text-sm text-gray-700">{diag.current_primary}</p>
-                        <p className="text-xs text-gray-500">{diag.clinical_group_current}</p>
+                        <p className="text-sm text-slate-700">{diag.current_primary}</p>
+                        <p className="text-xs text-slate-500">{diag.clinical_group_current}</p>
                       </div>
                       <ArrowRight className="w-8 h-8 text-purple-600 mx-4" />
                       <div className="flex-1">
                         <Badge className="bg-green-500 mb-2">Recommended</Badge>
-                        <p className="text-sm font-semibold text-gray-900">{diag.recommended_primary}</p>
+                        <p className="text-sm font-semibold text-slate-900">{diag.recommended_primary}</p>
                         <p className="text-xs text-blue-600 font-mono">{diag.recommended_icd10}</p>
-                        <p className="text-xs text-gray-500">{diag.clinical_group_recommended}</p>
+                        <p className="text-xs text-slate-500">{diag.clinical_group_recommended}</p>
                       </div>
                       <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
                         <p className="text-xs text-green-700">Revenue Impact</p>
@@ -763,21 +763,21 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <div className="mt-4 space-y-3">
                       <div className="bg-blue-50 p-3 rounded border border-blue-200">
                         <p className="text-xs font-semibold text-blue-900 mb-2">📝 Documentation Template:</p>
-                        <p className="text-sm text-gray-800 font-mono whitespace-pre-wrap">{diag.documentation_template}</p>
+                        <p className="text-sm text-slate-800 font-mono whitespace-pre-wrap">{diag.documentation_template}</p>
                       </div>
 
                       <div className="bg-orange-50 p-3 rounded border border-orange-200">
                         <p className="text-xs font-semibold text-orange-900 mb-2">🔍 Required Clinical Observations:</p>
-                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                        <ul className="text-sm text-slate-800 space-y-1 list-disc list-inside">
                           {diag.required_clinical_observations?.map((obs, oIdx) => (
                             <li key={oIdx}>{obs}</li>
                           ))}
                         </ul>
                       </div>
 
-                      <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                        <p className="text-xs font-semibold text-gray-900 mb-1">💡 Clinical Rationale:</p>
-                        <p className="text-sm text-gray-700">{diag.justification_rationale}</p>
+                      <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                        <p className="text-xs font-semibold text-slate-900 mb-1">💡 Clinical Rationale:</p>
+                        <p className="text-sm text-slate-700">{diag.justification_rationale}</p>
                       </div>
                     </div>
                   </div>
@@ -811,11 +811,11 @@ Patient Data: ${JSON.stringify(contextData)}`,
                         </div>
                         <div className="grid grid-cols-2 gap-4 mt-3">
                           <div>
-                            <p className="text-xs text-gray-600">Current Score</p>
-                            <p className="text-lg font-bold text-gray-900">{func.current_score}</p>
+                            <p className="text-xs text-slate-600">Current Score</p>
+                            <p className="text-lg font-bold text-slate-900">{func.current_score}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-600">Recommended Score</p>
+                            <p className="text-xs text-slate-600">Recommended Score</p>
                             <p className="text-lg font-bold text-green-600">{func.recommended_score}</p>
                           </div>
                         </div>
@@ -829,7 +829,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <div className="mt-4 space-y-3">
                       <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
                         <p className="text-xs font-semibold text-yellow-900 mb-2">👀 Specific Observational Points:</p>
-                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                        <ul className="text-sm text-slate-800 space-y-1 list-disc list-inside">
                           {func.observational_points?.map((point, pIdx) => (
                             <li key={pIdx}>{point}</li>
                           ))}
@@ -838,12 +838,12 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
                       <div className="bg-green-50 p-3 rounded border border-green-200">
                         <p className="text-xs font-semibold text-green-900 mb-2">📝 Documentation Example:</p>
-                        <p className="text-sm text-gray-800 font-mono whitespace-pre-wrap">{func.documentation_example}</p>
+                        <p className="text-sm text-slate-800 font-mono whitespace-pre-wrap">{func.documentation_example}</p>
                       </div>
 
                       <div className="bg-purple-50 p-3 rounded border border-purple-200">
                         <p className="text-xs font-semibold text-purple-900 mb-2">🔬 Clinical Indicators to Assess:</p>
-                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                        <ul className="text-sm text-slate-800 space-y-1 list-disc list-inside">
                           {func.clinical_indicators?.map((ind, iIdx) => (
                             <li key={iIdx}>{ind}</li>
                           ))}
@@ -893,9 +893,9 @@ Patient Data: ${JSON.stringify(contextData)}`,
                             missing.priority === 'MEDIUM' ? 'bg-yellow-600' :
                             'bg-blue-600'
                           }>{missing.priority}</Badge>
-                          <p className="font-semibold text-gray-900">{missing.data_element}</p>
+                          <p className="font-semibold text-slate-900">{missing.data_element}</p>
                         </div>
-                        <p className="text-xs text-gray-600">Affects: {missing.pdgm_component_affected}</p>
+                        <p className="text-xs text-slate-600">Affects: {missing.pdgm_component_affected}</p>
                       </div>
                       <div className="ml-4 bg-red-100 px-3 py-2 rounded-lg text-right">
                         <p className="text-xs text-red-700">Revenue at Risk</p>
@@ -906,7 +906,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <div className="mt-3 space-y-2">
                       <div className="bg-orange-50 p-3 rounded border border-orange-200">
                         <p className="text-xs font-semibold text-orange-900 mb-2">❓ Specific Questions to Ask:</p>
-                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                        <ul className="text-sm text-slate-800 space-y-1 list-disc list-inside">
                           {missing.specific_questions?.map((q, qIdx) => (
                             <li key={qIdx}>{q}</li>
                           ))}
@@ -915,7 +915,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
                       <div className="bg-blue-50 p-3 rounded border border-blue-200">
                         <p className="text-xs font-semibold text-blue-900 mb-1">🔍 Assessment Method:</p>
-                        <p className="text-sm text-gray-800">{missing.assessment_method}</p>
+                        <p className="text-sm text-slate-800">{missing.assessment_method}</p>
                       </div>
                     </div>
                   </div>
@@ -939,8 +939,8 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <Badge variant="outline" className="mb-2">{mapping.oasis_item}</Badge>
-                        <p className="font-semibold text-lg text-gray-900 mb-2">{mapping.recommended_selection}</p>
-                        <p className="text-sm text-gray-700 mb-3">{mapping.clinical_reasoning}</p>
+                        <p className="font-semibold text-lg text-slate-900 mb-2">{mapping.recommended_selection}</p>
+                        <p className="text-sm text-slate-700 mb-3">{mapping.clinical_reasoning}</p>
                       </div>
                       {mapping.payment_impact > 0 && (
                         <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
@@ -953,12 +953,12 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <div className="space-y-2">
                       <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
                         <p className="text-xs font-semibold text-yellow-900 mb-1">📋 Decision Criteria:</p>
-                        <p className="text-sm text-gray-800">{mapping.decision_criteria}</p>
+                        <p className="text-sm text-slate-800">{mapping.decision_criteria}</p>
                       </div>
 
                       <div className="bg-blue-50 p-3 rounded border border-blue-200">
                         <p className="text-xs font-semibold text-blue-900 mb-1">📝 Documentation Needed:</p>
-                        <p className="text-sm text-gray-800">{mapping.documentation_needed}</p>
+                        <p className="text-sm text-slate-800">{mapping.documentation_needed}</p>
                       </div>
                     </div>
                   </div>
@@ -978,7 +978,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <li key={idx} className="bg-white p-2 rounded border border-red-200">
                       <p className="font-medium text-red-900">{gap.item_code} - {gap.item_name}</p>
                       <p className="text-red-700 text-xs mt-1">{gap.why_critical}</p>
-                      <p className="text-gray-600 text-xs mt-1"><strong>Assessment tip:</strong> {gap.how_to_assess}</p>
+                      <p className="text-slate-600 text-xs mt-1"><strong>Assessment tip:</strong> {gap.how_to_assess}</p>
                     </li>
                   ))}
                 </ul>
@@ -998,12 +998,12 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 {/* Current PDGM Status */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-white p-4 rounded-lg border-2 border-green-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">Current Clinical Group</p>
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Current Clinical Group</p>
                     <p className="text-xl font-bold text-green-700">{suggestions.pdgm_analysis.current_clinical_group}</p>
-                    <p className="text-sm text-gray-600 mt-1">Case-Mix Weight: <span className="font-semibold">{suggestions.pdgm_analysis.current_case_mix_weight?.toFixed(3)}</span></p>
+                    <p className="text-sm text-slate-600 mt-1">Case-Mix Weight: <span className="font-semibold">{suggestions.pdgm_analysis.current_case_mix_weight?.toFixed(3)}</span></p>
                   </div>
                   <div className="bg-white p-4 rounded-lg border-2 border-blue-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">Payment Factors</p>
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Payment Factors</p>
                     <div className="space-y-1 text-sm">
                       <p><strong>Functional Level:</strong> {suggestions.pdgm_analysis.functional_impairment_level}</p>
                       <p><strong>Comorbidity Tier:</strong> {suggestions.pdgm_analysis.comorbidity_tier}</p>
@@ -1022,18 +1022,18 @@ Patient Data: ${JSON.stringify(contextData)}`,
                       {suggestions.pdgm_analysis.optimization_opportunities.map((opp, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-yellow-200">
                           <div className="flex items-start justify-between mb-2">
-                            <p className="font-semibold text-gray-900">{opp.opportunity_type}</p>
+                            <p className="font-semibold text-slate-900">{opp.opportunity_type}</p>
                             {opp.revenue_increase_estimate && (
                               <Badge className="bg-green-600">{opp.revenue_increase_estimate}</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2"><strong>Current:</strong> {opp.current_status}</p>
+                          <p className="text-sm text-slate-600 mb-2"><strong>Current:</strong> {opp.current_status}</p>
                           <p className="text-sm text-green-700 font-medium mb-2">{opp.recommendation}</p>
-                          <p className="text-xs text-gray-500 mb-2"><strong>Impact:</strong> {opp.potential_impact}</p>
+                          <p className="text-xs text-slate-500 mb-2"><strong>Impact:</strong> {opp.potential_impact}</p>
                           {opp.specific_actions?.length > 0 && (
                             <div className="mt-2 pl-3 border-l-2 border-green-500">
-                              <p className="text-xs font-semibold text-gray-700 mb-1">Action Steps:</p>
-                              <ul className="text-xs text-gray-600 space-y-1">
+                              <p className="text-xs font-semibold text-slate-700 mb-1">Action Steps:</p>
+                              <ul className="text-xs text-slate-600 space-y-1">
                                 {opp.specific_actions.map((action, i) => (
                                   <li key={i}>• {action}</li>
                                 ))}
@@ -1054,16 +1054,16 @@ Patient Data: ${JSON.stringify(contextData)}`,
                       {suggestions.pdgm_analysis.alternative_clinical_groups.map((alt, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-purple-200">
                           <div className="flex items-start justify-between mb-1">
-                            <p className="font-semibold text-gray-900">{alt.clinical_group}</p>
+                            <p className="font-semibold text-slate-900">{alt.clinical_group}</p>
                             <div className="flex items-center gap-2">
-                              <Badge className={alt.feasibility === 'High' ? 'bg-green-600' : alt.feasibility === 'Medium' ? 'bg-yellow-600' : 'bg-gray-600'}>
+                              <Badge className={alt.feasibility === 'High' ? 'bg-green-600' : alt.feasibility === 'Medium' ? 'bg-yellow-600' : 'bg-slate-600'}>
                                 {alt.feasibility} Feasibility
                               </Badge>
                               <Badge variant="outline">CMW: {alt.case_mix_weight?.toFixed(3)}</Badge>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-600 mb-1"><strong>Required Diagnosis:</strong> {alt.required_primary_diagnosis}</p>
-                          <p className="text-xs text-gray-600"><strong>Documentation:</strong> {alt.documentation_needed}</p>
+                          <p className="text-xs text-slate-600 mb-1"><strong>Required Diagnosis:</strong> {alt.required_primary_diagnosis}</p>
+                          <p className="text-xs text-slate-600"><strong>Documentation:</strong> {alt.documentation_needed}</p>
                         </div>
                       ))}
                     </div>
@@ -1080,8 +1080,8 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <div className="space-y-2">
                       {suggestions.pdgm_analysis.missing_high_value_data.map((missing, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-red-200">
-                          <p className="font-semibold text-gray-900 text-sm mb-1">{missing.data_element}</p>
-                          <p className="text-xs text-gray-600 mb-1"><strong>Why Important:</strong> {missing.why_important}</p>
+                          <p className="font-semibold text-slate-900 text-sm mb-1">{missing.data_element}</p>
+                          <p className="text-xs text-slate-600 mb-1"><strong>Why Important:</strong> {missing.why_important}</p>
                           <p className="text-xs text-blue-700 mb-1"><strong>How to Obtain:</strong> {missing.how_to_obtain}</p>
                           <p className="text-xs text-green-700 font-medium">💰 {missing.potential_value_add}</p>
                         </div>
@@ -1101,7 +1101,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     {suggestions.pdgm_analysis.functional_score_optimization.assessment_focus_areas?.length > 0 && (
                       <div className="bg-white p-3 rounded-lg border border-blue-200">
                         <p className="text-xs font-semibold text-blue-900 mb-2">Priority Assessment Areas:</p>
-                        <ul className="text-sm text-gray-700 space-y-1">
+                        <ul className="text-sm text-slate-700 space-y-1">
                           {suggestions.pdgm_analysis.functional_score_optimization.assessment_focus_areas.map((area, i) => (
                             <li key={i} className="flex items-start gap-2">
                               <span className="text-blue-600">→</span>
@@ -1157,12 +1157,12 @@ Patient Data: ${JSON.stringify(contextData)}`,
                   }, {})
                 ).map(([category, items]) => (
                   <AccordionItem key={category} value={category} className="border rounded-lg">
-                    <AccordionTrigger className="px-4 hover:bg-gray-50">
+                    <AccordionTrigger className="px-4 hover:bg-slate-50">
                       <div className="flex items-center gap-2 text-left">
                         <span className="text-xl">{getCategoryIcon(category)}</span>
                         <div>
                           <p className="font-semibold">{category}</p>
-                          <p className="text-xs text-gray-500">{items.length} items</p>
+                          <p className="text-xs text-slate-500">{items.length} items</p>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -1170,7 +1170,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                       <div className="space-y-3 mt-2">
                         {items.map((item) => (
                           <div key={item.item_code} className={`p-4 rounded-lg border-2 ${
-                            appliedItems.has(item.item_code) ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                            appliedItems.has(item.item_code) ? 'bg-green-50 border-green-300' : 'bg-white border-slate-200'
                           }`}>
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1">
@@ -1185,19 +1185,19 @@ Patient Data: ${JSON.stringify(contextData)}`,
                                     <Badge className="bg-green-600">Applied</Badge>
                                   )}
                                 </div>
-                                <p className="font-semibold text-gray-900">{item.item_name}</p>
+                                <p className="font-semibold text-slate-900">{item.item_name}</p>
                               </div>
                             </div>
 
                             <div className="bg-blue-50 p-3 rounded-lg mb-2 border border-blue-200">
                               <p className="text-sm font-semibold text-blue-900 mb-1">Suggested Value:</p>
-                              <p className="text-sm text-gray-900">{item.suggested_value}</p>
+                              <p className="text-sm text-slate-900">{item.suggested_value}</p>
                             </div>
 
                             {item.pdgm_impact && (
                               <div className="bg-green-50 p-3 rounded-lg mb-2 border-l-4 border-green-500">
                                 <p className="text-sm font-semibold text-green-900 mb-1">💰 PDGM Impact:</p>
-                                <p className="text-sm text-gray-900">{item.pdgm_impact}</p>
+                                <p className="text-sm text-slate-900">{item.pdgm_impact}</p>
                                 {item.revenue_impact && (
                                   <p className="text-xs text-green-700 mt-1 font-semibold">Revenue: {item.revenue_impact}</p>
                                 )}
@@ -1205,20 +1205,20 @@ Patient Data: ${JSON.stringify(contextData)}`,
                             )}
 
                             <div className="grid md:grid-cols-2 gap-3 text-xs">
-                              <div className="bg-gray-50 p-2 rounded">
-                                <p className="font-semibold text-gray-700 mb-1">Data Source:</p>
-                                <p className="text-gray-600">{item.data_source}</p>
+                              <div className="bg-slate-50 p-2 rounded">
+                                <p className="font-semibold text-slate-700 mb-1">Data Source:</p>
+                                <p className="text-slate-600">{item.data_source}</p>
                               </div>
                               <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
                                 <p className="font-semibold text-yellow-900 mb-1">⚠️ Verify:</p>
-                                <p className="text-gray-700">{item.verification_notes}</p>
+                                <p className="text-slate-700">{item.verification_notes}</p>
                               </div>
                             </div>
 
                             {item.documentation_needed && (
                               <div className="bg-purple-50 p-2 rounded text-xs mt-2 border border-purple-200">
                                 <p className="font-semibold text-purple-900 mb-1">📋 Documentation Required:</p>
-                                <p className="text-gray-700">{item.documentation_needed}</p>
+                                <p className="text-slate-700">{item.documentation_needed}</p>
                               </div>
                             )}
 
@@ -1237,16 +1237,16 @@ Patient Data: ${JSON.stringify(contextData)}`,
                             {item.clinical_considerations && (
                               <div className="mt-2 bg-purple-50 p-2 rounded text-xs border border-purple-200">
                                 <p className="font-semibold text-purple-900 mb-1">Clinical Considerations:</p>
-                                <p className="text-gray-700">{item.clinical_considerations}</p>
+                                <p className="text-slate-700">{item.clinical_considerations}</p>
                               </div>
                             )}
 
                             {item.reasoning && (
                               <details className="mt-2 text-xs">
-                                <summary className="cursor-pointer text-gray-600 hover:text-gray-900 font-medium">
+                                <summary className="cursor-pointer text-slate-600 hover:text-slate-900 font-medium">
                                   Show AI Reasoning
                                 </summary>
-                                <p className="mt-2 text-gray-600 bg-gray-50 p-2 rounded">{item.reasoning}</p>
+                                <p className="mt-2 text-slate-600 bg-slate-50 p-2 rounded">{item.reasoning}</p>
                               </details>
                             )}
 

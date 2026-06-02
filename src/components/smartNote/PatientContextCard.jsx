@@ -41,7 +41,7 @@ export default function PatientContextCard({
                 {patient.first_name?.charAt(0)}{patient.last_name?.charAt(0)}
               </div>
               <div>
-                <h3 className="font-bold text-gray-900 text-lg">
+                <h3 className="font-bold text-slate-900 text-lg">
                   {patient.first_name} {patient.last_name}
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -81,7 +81,7 @@ export default function PatientContextCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600"
                 onClick={onClear}
               >
                 <X className="w-4 h-4" />
@@ -106,7 +106,7 @@ export default function PatientContextCard({
                   <p className="text-xs font-semibold text-blue-800 mb-1 flex items-center gap-1">
                     <Target className="w-3 h-3" /> Active Care Plans ({activeCarePlans.length})
                   </p>
-                  <ul className="text-xs text-gray-600 space-y-0.5">
+                  <ul className="text-xs text-slate-600 space-y-0.5">
                     {activeCarePlans.slice(0, 3).map((cp, idx) => (
                       <li key={idx} className="truncate">• {cp.problem}</li>
                     ))}
@@ -121,7 +121,7 @@ export default function PatientContextCard({
               {recentVisit && (
                 <div className="bg-white p-2 rounded-lg border border-blue-200">
                   <p className="text-xs font-semibold text-blue-800 mb-1">📋 Last Visit</p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-slate-600">
                     {recentVisit.visit_date} - {recentVisit.visit_type?.replace(/_/g, ' ')}
                   </p>
                 </div>
@@ -133,7 +133,7 @@ export default function PatientContextCard({
                   <p className="text-xs font-semibold text-blue-800 mb-1">Other Diagnoses</p>
                   <div className="flex flex-wrap gap-1">
                     {patient.secondary_diagnoses.map((dx, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs bg-gray-50">
+                      <Badge key={idx} variant="outline" className="text-xs bg-slate-50">
                         {dx}
                       </Badge>
                     ))}

@@ -77,7 +77,7 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
     switch (status) {
       case 'delivered': return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'failed': return <XCircle className="w-4 h-4 text-red-600" />;
-      default: return <FileText className="w-4 h-4 text-gray-600" />;
+      default: return <FileText className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -142,7 +142,7 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-600">
               Found <strong>{filteredLogs.length}</strong> fax{filteredLogs.length !== 1 ? 'es' : ''}
             </div>
             <Button variant="outline" size="sm" onClick={() => { setSearchQuery(""); setSearchType("all"); setStatusFilter("all"); setStartDate(""); setEndDate(""); }}>
@@ -154,9 +154,9 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
 
       <div className="space-y-3">
         {isLoading ? (
-          <Card><CardContent className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600 mb-2" /><p className="text-gray-500">Loading faxes...</p></CardContent></Card>
+          <Card><CardContent className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600 mb-2" /><p className="text-slate-500">Loading faxes...</p></CardContent></Card>
         ) : filteredLogs.length === 0 ? (
-          <Card><CardContent className="p-12 text-center"><Search className="w-12 h-12 mx-auto text-gray-300 mb-3" /><p className="text-gray-500">{searchQuery ? "No faxes found matching your search" : "No faxes available"}</p></CardContent></Card>
+          <Card><CardContent className="p-12 text-center"><Search className="w-12 h-12 mx-auto text-slate-300 mb-3" /><p className="text-slate-500">{searchQuery ? "No faxes found matching your search" : "No faxes available"}</p></CardContent></Card>
         ) : (
           filteredLogs.map((log) => (
             <Card key={log.id} className="hover:shadow-md transition-shadow">
@@ -166,20 +166,20 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h4 className="font-semibold text-gray-900">{highlightText(log.document_name || 'Untitled Fax', searchQuery)}</h4>
+                        <h4 className="font-semibold text-slate-900">{highlightText(log.document_name || 'Untitled Fax', searchQuery)}</h4>
                         <Badge variant="outline" className="text-xs mt-1">{log.status}</Badge>
                       </div>
-                      <span className="text-xs text-gray-500 whitespace-nowrap">{format(new Date(log.created_date), 'MMM d, h:mm a')}</span>
+                      <span className="text-xs text-slate-500 whitespace-nowrap">{format(new Date(log.created_date), 'MMM d, h:mm a')}</span>
                     </div>
-                    <div className="space-y-1 text-sm text-gray-600 mb-3">
+                    <div className="space-y-1 text-sm text-slate-600 mb-3">
                       <p><strong>To:</strong> {highlightText(log.to_name || log.to_number, searchQuery)}</p>
                       <p><strong>From:</strong> {highlightText(log.from_number, searchQuery)}</p>
                       {log.sent_by && <p><strong>Sent by:</strong> {highlightText(log.sent_by, searchQuery)}</p>}
                     </div>
                     {log.ocr_text && searchQuery && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Content Match:</p>
-                        <p className="text-sm text-gray-800 line-clamp-3">{highlightText(log.ocr_text.substring(0, 300), searchQuery)}{log.ocr_text.length > 300 && '...'}</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Content Match:</p>
+                        <p className="text-sm text-slate-800 line-clamp-3">{highlightText(log.ocr_text.substring(0, 300), searchQuery)}{log.ocr_text.length > 300 && '...'}</p>
                       </div>
                     )}
                     <div className="flex gap-2">

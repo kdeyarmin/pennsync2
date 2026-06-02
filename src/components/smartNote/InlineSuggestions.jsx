@@ -117,9 +117,9 @@ Return JSON:
                 <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-300">
                   {suggestion.type}
                 </Badge>
-                <span className="text-xs text-gray-500">{suggestion.rationale}</span>
+                <span className="text-xs text-slate-500">{suggestion.rationale}</span>
               </div>
-              <p className="text-sm text-gray-800 italic">
+              <p className="text-sm text-slate-800 italic">
                 "{suggestion.suggestion}"
               </p>
             </div>

@@ -49,7 +49,7 @@ export default function OCRTrainingMonitor() {
       case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'failed': return <XCircle className="w-4 h-4 text-red-600" />;
       case 'in_progress': return <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />;
-      default: return <Clock className="w-4 h-4 text-gray-600" />;
+      default: return <Clock className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -58,7 +58,7 @@ export default function OCRTrainingMonitor() {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'failed': return 'bg-red-100 text-red-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -88,9 +88,9 @@ export default function OCRTrainingMonitor() {
         {/* Status Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <p className="text-sm text-gray-600 mb-1">Available Feedback</p>
+            <p className="text-sm text-slate-600 mb-1">Available Feedback</p>
             <p className="text-3xl font-bold text-purple-600">{unappliedFeedback.length}</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               {unappliedFeedback.length >= 5 ? 'Ready for training' : 'Need 5+ for training'}
             </p>
           </div>
@@ -98,22 +98,22 @@ export default function OCRTrainingMonitor() {
           {latestSession && (
             <>
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-gray-600 mb-1">Current Accuracy</p>
+                <p className="text-sm text-slate-600 mb-1">Current Accuracy</p>
                 <p className="text-3xl font-bold text-blue-600">
                   {latestSession.accuracy_after?.toFixed(1)}%
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   From latest training
                 </p>
               </div>
 
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <p className="text-sm text-gray-600 mb-1">Last Improvement</p>
+                <p className="text-sm text-slate-600 mb-1">Last Improvement</p>
                 <p className="text-3xl font-bold text-green-600 flex items-center gap-1">
                   <TrendingUp className="w-6 h-6" />
                   +{latestSession.improvement_percentage?.toFixed(1)}%
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   {format(new Date(latestSession.created_date), 'MMM d, yyyy')}
                 </p>
               </div>
@@ -136,13 +136,13 @@ export default function OCRTrainingMonitor() {
 
         {/* Training History */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="font-semibold text-slate-900 flex items-center gap-2">
             <Clock className="w-4 h-4" />
             Training History
           </h3>
 
           {trainingSessions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+            <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg">
               <Brain className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="text-sm">No training sessions yet</p>
               <p className="text-xs mt-1">Collect feedback and start your first training</p>
@@ -155,8 +155,8 @@ export default function OCRTrainingMonitor() {
                     <div className="flex items-center gap-3">
                       {getStatusIcon(session.status)}
                       <div>
-                        <h4 className="font-semibold text-gray-900">{session.session_name}</h4>
-                        <p className="text-xs text-gray-500">
+                        <h4 className="font-semibold text-slate-900">{session.session_name}</h4>
+                        <p className="text-xs text-slate-500">
                           {format(new Date(session.created_date), 'MMM d, yyyy h:mm a')}
                         </p>
                       </div>
@@ -168,18 +168,18 @@ export default function OCRTrainingMonitor() {
 
                   {session.status === 'completed' && (
                     <div className="grid grid-cols-3 gap-3 mb-3">
-                      <div className="text-center p-2 bg-gray-50 rounded">
-                        <p className="text-xs text-gray-600">Feedback Used</p>
-                        <p className="font-bold text-gray-900">{session.feedback_count}</p>
+                      <div className="text-center p-2 bg-slate-50 rounded">
+                        <p className="text-xs text-slate-600">Feedback Used</p>
+                        <p className="font-bold text-slate-900">{session.feedback_count}</p>
                       </div>
                       <div className="text-center p-2 bg-blue-50 rounded">
-                        <p className="text-xs text-gray-600">Accuracy</p>
+                        <p className="text-xs text-slate-600">Accuracy</p>
                         <p className="font-bold text-blue-600">
                           {session.accuracy_before?.toFixed(1)}% → {session.accuracy_after?.toFixed(1)}%
                         </p>
                       </div>
                       <div className="text-center p-2 bg-green-50 rounded">
-                        <p className="text-xs text-gray-600">Improvement</p>
+                        <p className="text-xs text-slate-600">Improvement</p>
                         <p className="font-bold text-green-600">
                           +{session.improvement_percentage?.toFixed(1)}%
                         </p>
@@ -201,24 +201,24 @@ export default function OCRTrainingMonitor() {
                   )}
 
                   {expandedSession === session.id && session.training_metrics && (
-                    <div className="mt-3 p-3 bg-gray-50 rounded-lg border space-y-2">
+                    <div className="mt-3 p-3 bg-slate-50 rounded-lg border space-y-2">
                       <div className="grid grid-cols-3 gap-2 text-xs">
                         <div>
-                          <span className="text-gray-600">Minor: </span>
+                          <span className="text-slate-600">Minor: </span>
                           <span className="font-semibold">{session.training_metrics.minor_corrections}</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Moderate: </span>
+                          <span className="text-slate-600">Moderate: </span>
                           <span className="font-semibold">{session.training_metrics.moderate_corrections}</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Major: </span>
+                          <span className="text-slate-600">Major: </span>
                           <span className="font-semibold">{session.training_metrics.major_corrections}</span>
                         </div>
                       </div>
                       {session.document_types_trained?.length > 0 && (
                         <div className="text-xs">
-                          <span className="text-gray-600">Document Types: </span>
+                          <span className="text-slate-600">Document Types: </span>
                           <span className="font-semibold">
                             {session.document_types_trained.join(', ')}
                           </span>

@@ -267,28 +267,28 @@ Use professional medical terminology. Write in complete sentences. Avoid vague s
 
             {patient && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                <div className="p-2 bg-gray-50 rounded">
-                  <p className="text-xs text-gray-600">Recent Visits</p>
+                <div className="p-2 bg-slate-50 rounded">
+                  <p className="text-xs text-slate-600">Recent Visits</p>
                   <p className="font-semibold">{recentVisits.length}</p>
                 </div>
                 <div className="p-2 bg-red-50 rounded">
-                  <p className="text-xs text-gray-600">Active Alerts</p>
+                  <p className="text-xs text-slate-600">Active Alerts</p>
                   <p className="font-semibold text-red-700">{activeAlerts.length}</p>
                 </div>
                 <div className="p-2 bg-purple-50 rounded">
-                  <p className="text-xs text-gray-600">Clinical Events</p>
+                  <p className="text-xs text-slate-600">Clinical Events</p>
                   <p className="font-semibold text-purple-700">{clinicalEvents.length}</p>
                 </div>
                 <div className="p-2 bg-blue-50 rounded">
-                  <p className="text-xs text-gray-600">Care Plans</p>
+                  <p className="text-xs text-slate-600">Care Plans</p>
                   <p className="font-semibold text-blue-700">{carePlans.length}</p>
                 </div>
                 <div className="p-2 bg-green-50 rounded">
-                  <p className="text-xs text-gray-600">Recent Tasks</p>
+                  <p className="text-xs text-slate-600">Recent Tasks</p>
                   <p className="font-semibold text-green-700">{recentTasks.filter(t => t.status === 'completed').length}</p>
                 </div>
                 <div className="p-2 bg-yellow-50 rounded">
-                  <p className="text-xs text-gray-600">Medications</p>
+                  <p className="text-xs text-slate-600">Medications</p>
                   <p className="font-semibold text-yellow-700">{patient.current_medications?.length || 0}</p>
                 </div>
               </div>

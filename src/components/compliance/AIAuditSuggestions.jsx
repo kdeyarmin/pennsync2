@@ -160,7 +160,7 @@ Be specific to home health/hospice Medicare documentation requirements.`,
         {isGenerating ? (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Analyzing audit findings...</p>
+            <p className="text-sm text-slate-600">Analyzing audit findings...</p>
           </div>
         ) : suggestions ? (
           <>
@@ -183,12 +183,12 @@ Be specific to home health/hospice Medicare documentation requirements.`,
                   <Collapsible key={idx} open={isExpanded} onOpenChange={() => toggleIssue(idx)}>
                     <div className="border rounded-lg overflow-hidden">
                       <CollapsibleTrigger asChild>
-                        <div className="p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center justify-between">
+                        <div className="p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Badge className={`text-[10px] ${getSeverityColor(issue.severity)}`}>
                               {issue.severity || 'medium'}
                             </Badge>
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-medium text-slate-900">
                               {issue.element || 'Documentation Issue'}
                             </span>
                             {suggestion?.category && (
@@ -281,7 +281,7 @@ Be specific to home health/hospice Medicare documentation requirements.`,
                               {suggestion.training_area && (
                                 <div className="flex items-center gap-2 text-xs">
                                   <BookOpen className="w-3 h-3 text-indigo-600" />
-                                  <span className="text-gray-600">Recommended Training:</span>
+                                  <span className="text-slate-600">Recommended Training:</span>
                                   <Badge variant="outline" className="text-indigo-700">
                                     {suggestion.training_area}
                                   </Badge>
@@ -307,8 +307,8 @@ Be specific to home health/hospice Medicare documentation requirements.`,
                   {suggestions.recommended_training_modules.map((module, idx) => (
                     <div key={idx} className="bg-white p-2 rounded flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-medium text-gray-900">{module.module_name}</p>
-                        <p className="text-[10px] text-gray-600">{module.reason}</p>
+                        <p className="text-xs font-medium text-slate-900">{module.module_name}</p>
+                        <p className="text-[10px] text-slate-600">{module.reason}</p>
                       </div>
                       <Badge className={`text-[10px] ${
                         module.priority === 'high' ? 'bg-red-100 text-red-800' :
@@ -325,7 +325,7 @@ Be specific to home health/hospice Medicare documentation requirements.`,
           </>
         ) : (
           <div className="text-center py-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               Click "Generate Suggestions" to get AI-powered improvement recommendations for each flagged issue.
             </p>
           </div>

@@ -139,11 +139,11 @@ Return JSON:
 
   if (!patient) {
     return (
-      <Card className="bg-gray-50 border-dashed border-2">
+      <Card className="bg-slate-50 border-dashed border-2">
         <CardContent className="p-4 text-center">
-          <User className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-          <p className="text-gray-500 font-medium">Select a patient to see smart context</p>
-          <p className="text-xs text-gray-400 mt-1">AI will suggest documentation based on their history</p>
+          <User className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+          <p className="text-slate-500 font-medium">Select a patient to see smart context</p>
+          <p className="text-xs text-slate-400 mt-1">AI will suggest documentation based on their history</p>
         </CardContent>
       </Card>
     );
@@ -189,7 +189,7 @@ Return JSON:
               </div>
             )}
             {lastVisit && (
-              <div className="flex items-center gap-1 text-gray-600">
+              <div className="flex items-center gap-1 text-slate-600">
                 <Clock className="w-3 h-3" />
                 <span>Last visit: {daysSinceLastVisit} days ago</span>
               </div>
@@ -238,7 +238,7 @@ Return JSON:
           {/* Key Assessments for Today */}
           {aiSuggestions?.key_assessments?.length > 0 && (
             <div className="bg-white rounded-lg p-2 border">
-              <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                 <Activity className="w-3 h-3 text-blue-600" />
                 Key Assessments for Today
               </p>
@@ -260,7 +260,7 @@ Return JSON:
           {/* Vitals Baseline */}
           {aiSuggestions?.vitals_baseline && (
             <div className="bg-white rounded-lg p-2 border">
-              <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                 <History className="w-3 h-3 text-purple-600" />
                 Last Visit Baselines
               </p>
@@ -295,7 +295,7 @@ Return JSON:
           {/* Recommended Phrases */}
           {aiSuggestions?.recommended_phrases?.length > 0 && (
             <div className="bg-white rounded-lg p-2 border">
-              <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                 <FileText className="w-3 h-3 text-indigo-600" />
                 Quick Insert Phrases
               </p>
@@ -303,12 +303,12 @@ Return JSON:
                 {aiSuggestions.recommended_phrases.slice(0, 4).map((item, idx) => (
                   <div 
                     key={idx} 
-                    className="flex items-center justify-between text-xs bg-gray-50 p-1 rounded hover:bg-indigo-50 cursor-pointer"
+                    className="flex items-center justify-between text-xs bg-slate-50 p-1 rounded hover:bg-indigo-50 cursor-pointer"
                     onClick={() => handleInsert(item.phrase + ' ')}
                   >
                     <div className="flex items-center gap-1">
                       <Badge variant="outline" className="text-xs capitalize">{item.category}</Badge>
-                      <span className="text-gray-600 truncate max-w-[200px]">{item.phrase}</span>
+                      <span className="text-slate-600 truncate max-w-[200px]">{item.phrase}</span>
                     </div>
                     <Button size="sm" variant="ghost" className="h-5 w-5 p-0">
                       <Copy className="w-3 h-3" />
@@ -334,7 +334,7 @@ Return JSON:
                     onClick={() => handleInsert(`${cp.goal}: ${cp.suggested_update} `)}
                   >
                     <strong className="text-purple-700">{cp.goal}</strong>
-                    <p className="text-gray-600">{cp.suggested_update}</p>
+                    <p className="text-slate-600">{cp.suggested_update}</p>
                   </div>
                 ))}
               </div>

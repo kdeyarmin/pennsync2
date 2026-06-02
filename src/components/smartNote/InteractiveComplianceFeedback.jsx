@@ -98,7 +98,7 @@ export default function InteractiveComplianceFeedback({
               <span className={`text-2xl font-bold ${getScoreColor(score)}`}>
                 {score || '--'}
               </span>
-              <p className="text-xs text-gray-500">Compliance</p>
+              <p className="text-xs text-slate-500">Compliance</p>
             </div>
             <div className="flex-1 max-w-32">
               <Progress 
@@ -128,7 +128,7 @@ export default function InteractiveComplianceFeedback({
                     type="checkbox"
                     checked={selectedFixes.size === allIssues.length}
                     onChange={handleSelectAll}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-slate-300"
                   />
                   <span className="text-xs font-medium text-green-800">
                     Select all ({allIssues.length} issues)
@@ -176,7 +176,7 @@ export default function InteractiveComplianceFeedback({
                         }
                         setSelectedFixes(newSet);
                       }}
-                      className="mt-1 h-4 w-4 rounded border-gray-300"
+                      className="mt-1 h-4 w-4 rounded border-slate-300"
                     />
                     
                     {issue.type === 'missing' ? (
@@ -197,14 +197,14 @@ export default function InteractiveComplianceFeedback({
                       </div>
                       
                       {issue.why_needed && (
-                        <p className="text-[10px] text-gray-600 mt-1">
+                        <p className="text-[10px] text-slate-600 mt-1">
                           <Lightbulb className="w-3 h-3 inline mr-1" />
                           {issue.why_needed}
                         </p>
                       )}
                       
                       {issue.problem && (
-                        <p className="text-[10px] text-gray-600 mt-1">{issue.problem}</p>
+                        <p className="text-[10px] text-slate-600 mt-1">{issue.problem}</p>
                       )}
                     </div>
                     
@@ -268,8 +268,8 @@ export default function InteractiveComplianceFeedback({
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <div className="bg-gray-50 p-3 rounded-lg border">
-                <p className="text-xs font-medium text-gray-500 mb-1">Suggested Text:</p>
+              <div className="bg-slate-50 p-3 rounded-lg border">
+                <p className="text-xs font-medium text-slate-500 mb-1">Suggested Text:</p>
                 <p className="text-sm whitespace-pre-wrap">{previewDialog?.suggestion}</p>
               </div>
               <div className="flex gap-2">

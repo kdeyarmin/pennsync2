@@ -157,7 +157,7 @@ export default function NursePerformanceDashboard() {
     return (
       <div className="p-8 max-w-7xl mx-auto">
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-12 text-center text-slate-500">
             Loading performance data...
           </CardContent>
         </Card>
@@ -171,8 +171,8 @@ export default function NursePerformanceDashboard() {
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 sm:mb-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Nurse Performance Dashboard</h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">AI-powered insights and personalized recommendations</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Nurse Performance Dashboard</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 hidden sm:block">AI-powered insights and personalized recommendations</p>
           </div>
           {currentUser?.role === 'admin' && (
             <Select value={selectedNurse} onValueChange={setSelectedNurse}>
@@ -210,7 +210,7 @@ export default function NursePerformanceDashboard() {
 
       {!performanceData ? (
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-12 text-center text-slate-500">
             Select a nurse to view performance data
           </CardContent>
         </Card>
@@ -225,8 +225,8 @@ export default function NursePerformanceDashboard() {
                     <span className="text-3xl font-bold text-white">{insights?.performance_grade || 'B'}</span>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Overall Performance</h2>
-                    <p className="text-gray-700">{insights?.overall_summary}</p>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-1">Overall Performance</h2>
+                    <p className="text-slate-700">{insights?.overall_summary}</p>
                   </div>
                 </div>
                 <Award className="w-16 h-16 text-blue-300" />
@@ -240,7 +240,7 @@ export default function NursePerformanceDashboard() {
               <CardContent className="p-3 sm:p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Compliance Score</p>
+                    <p className="text-xs sm:text-sm text-slate-600 mb-1 truncate">Compliance Score</p>
                     <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${getScoreColor(metrics?.avg_compliance_score)}`}>
                       {metrics?.avg_compliance_score || 0}%
                     </p>
@@ -254,8 +254,8 @@ export default function NursePerformanceDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Enhancements Completed</p>
-                    <p className="text-3xl font-bold text-gray-900">{metrics?.completed_visits || 0}</p>
+                    <p className="text-sm text-slate-600 mb-1">Enhancements Completed</p>
+                    <p className="text-3xl font-bold text-slate-900">{metrics?.completed_visits || 0}</p>
                   </div>
                   <FileText className="w-8 h-8 text-green-400" />
                 </div>
@@ -266,7 +266,7 @@ export default function NursePerformanceDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">AI Adoption</p>
+                    <p className="text-sm text-slate-600 mb-1">AI Adoption</p>
                     <p className="text-3xl font-bold text-purple-600">
                       {metrics?.suggestion_acceptance_rate || 0}%
                     </p>
@@ -280,7 +280,7 @@ export default function NursePerformanceDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Avg Doc Time</p>
+                    <p className="text-sm text-slate-600 mb-1">Avg Doc Time</p>
                     <p className="text-3xl font-bold text-orange-600">
                       {metrics?.avg_documentation_time || 0}m
                     </p>
@@ -310,26 +310,26 @@ export default function NursePerformanceDashboard() {
               <div className="grid md:grid-cols-3 gap-6">
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Total Notes</p>
+                    <p className="text-sm text-slate-600 mb-2">Total Notes</p>
                     <p className="text-3xl font-bold text-blue-600">{docQuality?.total_notes || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Avg Note Length</p>
+                    <p className="text-sm text-slate-600 mb-2">Avg Note Length</p>
                     <p className="text-3xl font-bold text-green-600">{docQuality?.avg_note_length || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">characters</p>
+                    <p className="text-xs text-slate-500 mt-1">characters</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Completeness</p>
+                    <p className="text-sm text-slate-600 mb-2">Completeness</p>
                     <p className="text-3xl font-bold text-purple-600">
                       {docQuality?.total_notes > 0 
                         ? Math.round((docQuality.notes_with_vitals / docQuality.total_notes) * 100)
                         : 0}%
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">notes with vitals</p>
+                    <p className="text-xs text-slate-500 mt-1">notes with vitals</p>
                   </CardContent>
                 </Card>
               </div>
@@ -377,25 +377,25 @@ export default function NursePerformanceDashboard() {
               <div className="grid md:grid-cols-4 gap-6">
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Patients Managed</p>
+                    <p className="text-sm text-slate-600 mb-2">Patients Managed</p>
                     <p className="text-3xl font-bold text-blue-600">{patientOutcomes?.total_patients || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Care Plans</p>
+                    <p className="text-sm text-slate-600 mb-2">Care Plans</p>
                     <p className="text-3xl font-bold text-green-600">{patientOutcomes?.care_plans_managed || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Goals Met</p>
+                    <p className="text-sm text-slate-600 mb-2">Goals Met</p>
                     <p className="text-3xl font-bold text-purple-600">{patientOutcomes?.goals_met || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Achievement Rate</p>
+                    <p className="text-sm text-slate-600 mb-2">Achievement Rate</p>
                     <p className="text-3xl font-bold text-teal-600">{patientOutcomes?.goal_achievement_rate || 0}%</p>
                   </CardContent>
                 </Card>
@@ -436,7 +436,7 @@ export default function NursePerformanceDashboard() {
                     <CardTitle className="text-lg">Incident Management</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                       <span className="text-sm">Total Incidents</span>
                       <span className="text-2xl font-bold">{patientOutcomes?.incidents_reported || 0}</span>
                     </div>
@@ -454,25 +454,25 @@ export default function NursePerformanceDashboard() {
               <div className="grid md:grid-cols-4 gap-6">
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Visits (30d)</p>
+                    <p className="text-sm text-slate-600 mb-2">Visits (30d)</p>
                     <p className="text-3xl font-bold text-blue-600">{utilization?.visits_last_30_days || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Avg Visits/Day</p>
+                    <p className="text-sm text-slate-600 mb-2">Avg Visits/Day</p>
                     <p className="text-3xl font-bold text-green-600">{utilization?.avg_visits_per_day || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Productive Hours</p>
+                    <p className="text-sm text-slate-600 mb-2">Productive Hours</p>
                     <p className="text-3xl font-bold text-purple-600">{utilization?.productive_hours || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Utilization Rate</p>
+                    <p className="text-sm text-slate-600 mb-2">Utilization Rate</p>
                     <p className="text-3xl font-bold text-orange-600">{utilization?.utilization_rate || 0}%</p>
                   </CardContent>
                 </Card>
@@ -487,14 +487,14 @@ export default function NursePerformanceDashboard() {
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-sm font-medium">Daily Visit Load</span>
-                        <span className="text-sm text-gray-600">{utilization?.avg_visits_per_day || 0} / 6 optimal</span>
+                        <span className="text-sm text-slate-600">{utilization?.avg_visits_per_day || 0} / 6 optimal</span>
                       </div>
                       <Progress value={(utilization?.avg_visits_per_day / 6) * 100 || 0} />
                     </div>
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-sm font-medium">Utilization Rate</span>
-                        <span className="text-sm text-gray-600">{utilization?.utilization_rate || 0}%</span>
+                        <span className="text-sm text-slate-600">{utilization?.utilization_rate || 0}%</span>
                       </div>
                       <Progress value={utilization?.utilization_rate || 0} />
                     </div>
@@ -572,7 +572,7 @@ export default function NursePerformanceDashboard() {
                   <CardContent>
                     <ul className="space-y-2">
                       {burnoutRisk.contributing_factors.map((factor, idx) => (
-                        <li key={idx} className="p-3 bg-gray-50 rounded-lg text-sm">{factor}</li>
+                        <li key={idx} className="p-3 bg-slate-50 rounded-lg text-sm">{factor}</li>
                       ))}
                     </ul>
                   </CardContent>
@@ -606,7 +606,7 @@ export default function NursePerformanceDashboard() {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-semibold">My Performance Goals</h3>
-                  <p className="text-sm text-gray-600">Track your professional development objectives</p>
+                  <p className="text-sm text-slate-600">Track your professional development objectives</p>
                 </div>
                 <Button onClick={() => { setEditingGoal(null); setShowGoalDialog(true); }}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -616,8 +616,8 @@ export default function NursePerformanceDashboard() {
 
               {nurseGoals.length === 0 ? (
                 <Card>
-                  <CardContent className="p-12 text-center text-gray-500">
-                    <Target className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <CardContent className="p-12 text-center text-slate-500">
+                    <Target className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                     <p>No goals set yet. Create your first performance goal!</p>
                   </CardContent>
                 </Card>
@@ -638,7 +638,7 @@ export default function NursePerformanceDashboard() {
                           <div className="flex justify-between items-start">
                             <div>
                               <CardTitle className="text-lg">{goal.title}</CardTitle>
-                              <p className="text-sm text-gray-600 mt-1">{goal.description}</p>
+                              <p className="text-sm text-slate-600 mt-1">{goal.description}</p>
                             </div>
                             <div className="flex gap-2">
                               <Button variant="ghost" size="icon" onClick={() => { setEditingGoal(goal); setShowGoalDialog(true); }}>
@@ -657,7 +657,7 @@ export default function NursePerformanceDashboard() {
                               <span className="font-semibold">{goal.current_value} / {goal.target_value} {goal.unit}</span>
                             </div>
                             <Progress value={progress} className="h-2" />
-                            <div className="flex justify-between text-xs text-gray-600">
+                            <div className="flex justify-between text-xs text-slate-600">
                               <span>Target: {format(new Date(goal.target_date), 'MMM d, yyyy')}</span>
                               <Badge variant={
                                 goal.status === 'achieved' ? 'default' :
@@ -692,7 +692,7 @@ export default function NursePerformanceDashboard() {
                       {insights?.strengths?.map((strength, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{strength}</span>
+                          <span className="text-slate-700">{strength}</span>
                         </li>
                       ))}
                     </ul>
@@ -711,8 +711,8 @@ export default function NursePerformanceDashboard() {
                     <ul className="space-y-4">
                       {insights?.areas_for_improvement?.map((area, idx) => (
                         <li key={idx} className="border-l-4 border-amber-400 pl-3">
-                          <p className="font-semibold text-gray-900 mb-1">{area.area}</p>
-                          <p className="text-sm text-gray-600">{area.suggestion}</p>
+                          <p className="font-semibold text-slate-900 mb-1">{area.area}</p>
+                          <p className="text-sm text-slate-600">{area.suggestion}</p>
                           <Badge className="mt-2 text-xs" variant={area.priority === 'high' ? 'destructive' : 'secondary'}>
                             {area.priority} priority
                           </Badge>
@@ -737,8 +737,8 @@ export default function NursePerformanceDashboard() {
                       <div key={idx} className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{rec.topic}</p>
-                          <p className="text-sm text-gray-600 mt-1">{rec.reason}</p>
+                          <p className="font-semibold text-slate-900">{rec.topic}</p>
+                          <p className="text-sm text-slate-600 mt-1">{rec.reason}</p>
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant={rec.urgency === 'high' ? 'destructive' : rec.urgency === 'medium' ? 'default' : 'secondary'}>
                               {rec.urgency} urgency
@@ -867,7 +867,7 @@ export default function NursePerformanceDashboard() {
               <div className="grid md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Template Usage Rate</p>
+                    <p className="text-sm text-slate-600 mb-2">Template Usage Rate</p>
                     <div className="flex items-center gap-3">
                       <Progress 
                         value={(metrics?.template_usage / (metrics?.completed_visits || 1) * 100) || 0} 
@@ -882,7 +882,7 @@ export default function NursePerformanceDashboard() {
 
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">AI Scribe Adoption</p>
+                    <p className="text-sm text-slate-600 mb-2">AI Scribe Adoption</p>
                     <div className="flex items-center gap-3">
                       <Progress 
                         value={(metrics?.ai_scribe_usage / (metrics?.completed_visits || 1) * 100) || 0} 
@@ -897,7 +897,7 @@ export default function NursePerformanceDashboard() {
 
                 <Card>
                   <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Voice Commands</p>
+                    <p className="text-sm text-slate-600 mb-2">Voice Commands</p>
                     <div className="flex items-center gap-3">
                       <Progress 
                         value={Math.min((metrics?.voice_command_usage / 20) * 100, 100)} 
@@ -920,15 +920,15 @@ export default function NursePerformanceDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                      <span className="text-gray-700">Total Suggestions Received</span>
+                      <span className="text-slate-700">Total Suggestions Received</span>
                       <span className="text-2xl font-bold text-blue-600">{metrics?.total_suggestions_received}</span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                      <span className="text-gray-700">Suggestions Applied</span>
+                      <span className="text-slate-700">Suggestions Applied</span>
                       <span className="text-2xl font-bold text-green-600">{metrics?.suggestions_applied}</span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-                      <span className="text-gray-700">Acceptance Rate</span>
+                      <span className="text-slate-700">Acceptance Rate</span>
                       <span className="text-2xl font-bold text-purple-600">{metrics?.suggestion_acceptance_rate}%</span>
                     </div>
                   </CardContent>
@@ -968,7 +968,7 @@ export default function NursePerformanceDashboard() {
                   <ScrollArea className="h-96">
                     <div className="space-y-3">
                       {performanceData?.recent_recommendations?.map((rec, idx) => (
-                        <div key={idx} className="p-4 border rounded-lg hover:bg-gray-50">
+                        <div key={idx} className="p-4 border rounded-lg hover:bg-slate-50">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
@@ -976,11 +976,11 @@ export default function NursePerformanceDashboard() {
                                   {rec.severity}
                                 </Badge>
                                 <Badge variant="outline">{rec.recommendation_type}</Badge>
-                                <span className="text-xs text-gray-500">{rec.source.replace(/_/g, ' ')}</span>
+                                <span className="text-xs text-slate-500">{rec.source.replace(/_/g, ' ')}</span>
                               </div>
-                              <p className="text-sm text-gray-900">{rec.recommendation_text}</p>
+                              <p className="text-sm text-slate-900">{rec.recommendation_text}</p>
                               {rec.context_data?.element && (
-                                <p className="text-xs text-gray-500 mt-1">Context: {rec.context_data.element}</p>
+                                <p className="text-xs text-slate-500 mt-1">Context: {rec.context_data.element}</p>
                               )}
                             </div>
                             <Button size="sm" variant="outline">Review</Button>
@@ -1004,7 +1004,7 @@ export default function NursePerformanceDashboard() {
                 </CardHeader>
                 <CardContent className="p-6">
                   {skillGaps.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-slate-500">
                       <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-500" />
                       <p>No significant skill gaps identified. Great work!</p>
                     </div>
@@ -1015,12 +1015,12 @@ export default function NursePerformanceDashboard() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold text-gray-900">{gap.skill}</h3>
+                                <h3 className="font-semibold text-slate-900">{gap.skill}</h3>
                                 <Badge variant="destructive">{gap.gap_severity} priority</Badge>
                               </div>
-                              <p className="text-sm text-gray-600 mb-3">{gap.recommendation}</p>
+                              <p className="text-sm text-slate-600 mb-3">{gap.recommendation}</p>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Current level:</span>
+                                <span className="text-xs text-slate-500">Current level:</span>
                                 <Badge variant="outline">{gap.current_level.replace(/_/g, ' ')}</Badge>
                               </div>
                             </div>

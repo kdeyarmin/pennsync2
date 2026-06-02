@@ -817,7 +817,7 @@ Return JSON:
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -826,7 +826,7 @@ Return JSON:
       case 'high': return 'bg-red-600';
       case 'moderate': return 'bg-yellow-500';
       case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -867,7 +867,7 @@ Return JSON:
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-green-100 text-green-800 border-green-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -1041,7 +1041,7 @@ Return JSON:
                     }`}>
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between mb-1">
-                          <p className="text-sm font-bold text-gray-900">{action.action}</p>
+                          <p className="text-sm font-bold text-slate-900">{action.action}</p>
                           <Badge className={action.priority === 'critical' ? 'bg-red-600' : action.priority === 'high' ? 'bg-orange-500' : 'bg-yellow-500'}>
                             {action.priority}
                           </Badge>
@@ -1052,12 +1052,12 @@ Return JSON:
                           </Badge>
                         )}
                         <div className="bg-white p-2 rounded border mb-2">
-                          <p className="text-xs font-semibold text-gray-700 mb-1">Why:</p>
-                          <p className="text-xs text-gray-600">{action.rationale}</p>
+                          <p className="text-xs font-semibold text-slate-700 mb-1">Why:</p>
+                          <p className="text-xs text-slate-600">{action.rationale}</p>
                         </div>
                         <div className="bg-blue-50 p-2 rounded border border-blue-200">
                           <p className="text-xs font-semibold text-blue-900 mb-1">How to Perform:</p>
-                          <p className="text-xs text-gray-700">{action.how_to}</p>
+                          <p className="text-xs text-slate-700">{action.how_to}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -1104,7 +1104,7 @@ Return JSON:
                     <Card key={idx} className="border-l-4 border-l-blue-500 mb-2">
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between mb-1">
-                          <p className="text-sm font-semibold text-gray-900">{assessment.assessment}</p>
+                          <p className="text-sm font-semibold text-slate-900">{assessment.assessment}</p>
                           <Badge className={getPriorityColor(assessment.priority)}>
                             {assessment.priority}
                           </Badge>
@@ -1112,16 +1112,16 @@ Return JSON:
                         <div className="space-y-2">
                           <div className="bg-blue-50 p-2 rounded border border-blue-200">
                             <p className="text-xs font-semibold text-blue-900 mb-1">What to Look For:</p>
-                            <p className="text-xs text-gray-700">{assessment.what_to_look_for}</p>
+                            <p className="text-xs text-slate-700">{assessment.what_to_look_for}</p>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div className="bg-green-50 p-2 rounded border border-green-200">
                               <p className="text-xs font-semibold text-green-900">Normal:</p>
-                              <p className="text-xs text-gray-700">{assessment.normal_findings}</p>
+                              <p className="text-xs text-slate-700">{assessment.normal_findings}</p>
                             </div>
                             <div className="bg-red-50 p-2 rounded border border-red-200">
                               <p className="text-xs font-semibold text-red-900">Red Flags:</p>
-                              <p className="text-xs text-gray-700">{assessment.abnormal_findings}</p>
+                              <p className="text-xs text-slate-700">{assessment.abnormal_findings}</p>
                             </div>
                           </div>
                           {assessment.documentation_template && (
@@ -1161,10 +1161,10 @@ Return JSON:
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-gray-700 mb-1">{vc.concern}</p>
+                        <p className="text-xs text-slate-700 mb-1">{vc.concern}</p>
                         <div className="bg-white p-2 rounded border">
                           <p className="text-xs font-semibold mb-1">Immediate Action:</p>
-                          <p className="text-xs text-gray-700">{vc.immediate_action}</p>
+                          <p className="text-xs text-slate-700">{vc.immediate_action}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -1181,10 +1181,10 @@ Return JSON:
                   {proactiveAlerts.patient_education_now.map((ed, idx) => (
                     <Card key={idx} className="border-l-4 border-l-green-500 mb-2">
                       <CardContent className="p-3">
-                        <p className="text-sm font-semibold text-gray-900 mb-2">{ed.topic}</p>
+                        <p className="text-sm font-semibold text-slate-900 mb-2">{ed.topic}</p>
                         <div className="bg-green-50 p-2 rounded border border-green-200 mb-2">
                           <p className="text-xs font-semibold text-green-900 mb-1">Key Teaching Points:</p>
-                          <ul className="text-xs text-gray-700 space-y-0.5">
+                          <ul className="text-xs text-slate-700 space-y-0.5">
                             {ed.specific_teaching_points?.map((point, i) => (
                               <li key={i}>• {point}</li>
                             ))}
@@ -1200,7 +1200,7 @@ Return JSON:
                           <p className="text-xs italic text-purple-800">"{ed.teach_back_question}"</p>
                         </div>
                         {ed.handout_recommendation && (
-                          <p className="text-xs text-gray-600">💡 Handout: {ed.handout_recommendation}</p>
+                          <p className="text-xs text-slate-600">💡 Handout: {ed.handout_recommendation}</p>
                         )}
                         <Button
                           size="sm"
@@ -1227,22 +1227,22 @@ Return JSON:
                     <Card key={idx} className="border-l-4 border-l-indigo-500 mb-2">
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between mb-1">
-                          <p className="text-sm font-semibold text-gray-900">{intervention.intervention}</p>
+                          <p className="text-sm font-semibold text-slate-900">{intervention.intervention}</p>
                           <Badge className={getPriorityColor(intervention.priority)}>
                             {intervention.priority}
                           </Badge>
                         </div>
                         <div className="bg-indigo-50 p-2 rounded border border-indigo-200 mb-2">
                           <p className="text-xs font-semibold text-indigo-900 mb-1">Clinical Indication:</p>
-                          <p className="text-xs text-gray-700">{intervention.clinical_indication}</p>
+                          <p className="text-xs text-slate-700">{intervention.clinical_indication}</p>
                         </div>
                         <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-2">
                           <p className="text-xs font-semibold text-blue-900 mb-1">How to Perform:</p>
-                          <p className="text-xs text-gray-700">{intervention.how_to_perform}</p>
+                          <p className="text-xs text-slate-700">{intervention.how_to_perform}</p>
                         </div>
                         <div className="flex items-start gap-2">
-                          <BookOpen className="w-3 h-3 text-gray-500 mt-0.5 flex-shrink-0" />
-                          <p className="text-xs text-gray-600 italic">{intervention.evidence_source}</p>
+                          <BookOpen className="w-3 h-3 text-slate-500 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-slate-600 italic">{intervention.evidence_source}</p>
                         </div>
                         <p className="text-xs text-green-700 mt-1">Expected: {intervention.expected_outcome}</p>
                       </CardContent>
@@ -1258,13 +1258,13 @@ Return JSON:
                     <Calendar className="w-3 h-3" /> Plan for Next Visit
                   </p>
                   <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                    <ul className="text-xs text-gray-700 space-y-1">
+                    <ul className="text-xs text-slate-700 space-y-1">
                       {proactiveAlerts.next_visit_planning.map((item, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <span className="font-semibold text-purple-800">•</span>
                           <div>
                             <p className="font-medium">{item.item_to_monitor}</p>
-                            <p className="text-gray-600">{item.why} - Check {item.timeframe}</p>
+                            <p className="text-slate-600">{item.why} - Check {item.timeframe}</p>
                           </div>
                         </li>
                       ))}
@@ -1289,8 +1289,8 @@ Return JSON:
           )}
 
           {!enhancedNote && !proactiveAlerts && !isProactiveAnalyzing && (
-            <div className="text-center py-3 text-gray-500">
-              <Lightbulb className="w-6 h-6 mx-auto mb-1 text-gray-300" />
+            <div className="text-center py-3 text-slate-500">
+              <Lightbulb className="w-6 h-6 mx-auto mb-1 text-slate-300" />
               <p className="text-xs">Enter vitals, diagnosis, or notes to get proactive clinical suggestions</p>
             </div>
           )}
@@ -1315,7 +1315,7 @@ Return JSON:
                       <AlertTriangle className="w-3 h-3" />
                       <AlertDescription className="text-xs">
                         <strong>{di.drugs.join(' + ')}</strong>: {di.interaction}
-                        <p className="mt-1 text-gray-700">→ {di.recommendation}</p>
+                        <p className="mt-1 text-slate-700">→ {di.recommendation}</p>
                       </AlertDescription>
                     </Alert>
                   ))}
@@ -1347,7 +1347,7 @@ Return JSON:
                   {cdsAlerts.vital_sign_alerts.map((va, idx) => (
                     <div key={idx} className="bg-red-50 p-2 rounded border border-red-200 mb-1">
                       <p className="text-xs font-medium">{va.vital}: {va.value}</p>
-                      <p className="text-xs text-gray-600">{va.concern}</p>
+                      <p className="text-xs text-slate-600">{va.concern}</p>
                       <p className="text-xs text-red-700 font-medium">→ {va.action}</p>
                     </div>
                   ))}
@@ -1363,7 +1363,7 @@ Return JSON:
                   {cdsAlerts.best_practice_alerts.map((bp, idx) => (
                     <div key={idx} className="bg-yellow-50 p-2 rounded border border-yellow-200 mb-1">
                       <p className="text-xs font-medium">{bp.issue}</p>
-                      <p className="text-xs text-gray-600 italic">Guideline: {bp.guideline}</p>
+                      <p className="text-xs text-slate-600 italic">Guideline: {bp.guideline}</p>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -1388,7 +1388,7 @@ Return JSON:
                       <div key={idx} className="bg-blue-50 p-2 rounded border border-blue-200 flex items-start justify-between">
                         <div>
                           <p className="text-xs font-medium">{sd.test}</p>
-                          <p className="text-xs text-gray-600">{sd.rationale}</p>
+                          <p className="text-xs text-slate-600">{sd.rationale}</p>
                         </div>
                         <Badge className={getSeverityColor(sd.priority)} variant="outline">
                           {sd.priority}
@@ -1414,7 +1414,7 @@ Return JSON:
                             {ir.priority}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600 italic">{ir.evidence}</p>
+                        <p className="text-xs text-slate-600 italic">{ir.evidence}</p>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -1441,7 +1441,7 @@ Return JSON:
 
               {/* Summary */}
               {cdsAlerts.summary && (
-                <div className="bg-gray-50 p-2 rounded border text-xs text-gray-700">
+                <div className="bg-slate-50 p-2 rounded border text-xs text-slate-700">
                   <strong>Summary:</strong> {cdsAlerts.summary}
                 </div>
               )}

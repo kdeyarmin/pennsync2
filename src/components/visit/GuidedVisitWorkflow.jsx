@@ -288,7 +288,7 @@ Provide specific suggestions that would help the nurse complete this step effici
             <CardTitle className="text-xl font-bold text-blue-900">
               Step {currentStepIndex + 1} of {workflow.length}: {currentStep.title}
             </CardTitle>
-            <Badge className={isStepComplete() ? 'bg-green-600 text-white text-sm px-3 py-1' : 'bg-gray-500 text-white text-sm px-3 py-1'}>
+            <Badge className={isStepComplete() ? 'bg-green-600 text-white text-sm px-3 py-1' : 'bg-slate-500 text-white text-sm px-3 py-1'}>
               {completedSteps.length}/{workflow.length} Complete
             </Badge>
           </div>
@@ -311,7 +311,7 @@ Provide specific suggestions that would help the nurse complete this step effici
               onClick={() => setCurrentStepIndex(idx)}
               className={`flex-shrink-0 min-h-[44px] font-semibold ${
                 isCompleted ? 'border-2 border-green-500 bg-green-50' : ''
-              } ${isCurrent ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'hover:bg-gray-100'}`}
+              } ${isCurrent ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'hover:bg-slate-100'}`}
             >
               <StepIcon className="w-5 h-5 mr-2" />
               {step.title}
@@ -381,7 +381,7 @@ Provide specific suggestions that would help the nurse complete this step effici
               {isGeneratingSuggestions ? (
                 <div className="text-center py-4">
                   <Sparkles className="w-6 h-6 animate-spin mx-auto text-indigo-600" />
-                  <p className="text-sm text-gray-600 mt-2">Generating suggestions...</p>
+                  <p className="text-sm text-slate-600 mt-2">Generating suggestions...</p>
                 </div>
               ) : smartSuggestions.length > 0 ? (
                 smartSuggestions.map((suggestion, idx) => (
@@ -394,7 +394,7 @@ Provide specific suggestions that would help the nurse complete this step effici
                   </Alert>
                 ))
               ) : (
-                <p className="text-sm text-gray-500">No suggestions available</p>
+                <p className="text-sm text-slate-500">No suggestions available</p>
               )}
             </CardContent>
           </Card>
@@ -430,7 +430,7 @@ function renderStepContent(stepId, { _formData, updateField, getValue, _patientD
                 onChange={(e) => updateField('bp', e.target.value)}
               />
               {getValue('previous_bp') && (
-                <p className="text-xs text-gray-500 mt-1">Previous: {getValue('previous_bp')}</p>
+                <p className="text-xs text-slate-500 mt-1">Previous: {getValue('previous_bp')}</p>
               )}
             </div>
             <div>
@@ -442,7 +442,7 @@ function renderStepContent(stepId, { _formData, updateField, getValue, _patientD
                 onChange={(e) => updateField('hr', e.target.value)}
               />
               {getValue('previous_hr') && (
-                <p className="text-xs text-gray-500 mt-1">Previous: {getValue('previous_hr')}</p>
+                <p className="text-xs text-slate-500 mt-1">Previous: {getValue('previous_hr')}</p>
               )}
             </div>
             <div>

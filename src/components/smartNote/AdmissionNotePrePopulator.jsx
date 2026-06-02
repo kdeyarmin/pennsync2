@@ -110,7 +110,7 @@ export default function AdmissionNotePrePopulator({
           </Alert>
           
           <div className="bg-white rounded border border-green-300 p-3 max-h-[300px] overflow-y-auto">
-            <pre className="text-xs whitespace-pre-wrap font-sans text-gray-700">
+            <pre className="text-xs whitespace-pre-wrap font-sans text-slate-700">
               {generatedNote}
             </pre>
           </div>
@@ -147,7 +147,7 @@ export default function AdmissionNotePrePopulator({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           Generate a comprehensive admission note pre-populated with data from the referral analysis.
         </p>
         <Button

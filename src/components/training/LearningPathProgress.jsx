@@ -130,7 +130,7 @@ export default function LearningPathProgress({ planId, userId }) {
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-500">Completed</p>
+                                <p className="text-sm text-slate-500">Completed</p>
                                 <p className="text-2xl font-bold text-green-600">{completedCount}</p>
                             </div>
                             <CheckCircle2 className="h-8 w-8 text-green-500" />
@@ -141,7 +141,7 @@ export default function LearningPathProgress({ planId, userId }) {
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-500">In Progress</p>
+                                <p className="text-sm text-slate-500">In Progress</p>
                                 <p className="text-2xl font-bold text-blue-600">
                                     {assignments.filter(a => a.status === 'in_progress').length}
                                 </p>
@@ -154,7 +154,7 @@ export default function LearningPathProgress({ planId, userId }) {
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-500">Overdue</p>
+                                <p className="text-sm text-slate-500">Overdue</p>
                                 <p className="text-2xl font-bold text-red-600">{overdue.length}</p>
                             </div>
                             <AlertCircle className="h-8 w-8 text-red-500" />
@@ -165,7 +165,7 @@ export default function LearningPathProgress({ planId, userId }) {
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-500">Certificates</p>
+                                <p className="text-sm text-slate-500">Certificates</p>
                                 <p className="text-2xl font-bold text-amber-600">{certificates.length}</p>
                             </div>
                             <Award className="h-8 w-8 text-amber-500" />
@@ -182,26 +182,26 @@ export default function LearningPathProgress({ planId, userId }) {
                 <CardContent>
                     <div className="space-y-3">
                         {assignments.length === 0 ? (
-                            <p className="text-center text-gray-500 py-8">No courses assigned yet</p>
+                            <p className="text-center text-slate-500 py-8">No courses assigned yet</p>
                         ) : (
                             assignments.map((assignment) => {
                                 const daysUntil = getDaysUntil(assignment.due_date);
                                 return (
-                                    <div key={assignment.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                    <div key={assignment.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <h3 className="font-semibold text-gray-900 truncate">
+                                                    <h3 className="font-semibold text-slate-900 truncate">
                                                         {assignment.course_title}
                                                     </h3>
                                                     {getStatusBadge(assignment)}
                                                 </div>
-                                                <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                                                <div className="flex flex-wrap gap-3 text-sm text-slate-600">
                                                     <div className="flex items-center gap-1">
                                                         <Calendar className="h-4 w-4" />
                                                         <span>Due {formatDate(assignment.due_date)}</span>
                                                         {daysUntil !== null && daysUntil > 0 && (
-                                                            <span className="text-gray-500">({daysUntil}d)</span>
+                                                            <span className="text-slate-500">({daysUntil}d)</span>
                                                         )}
                                                     </div>
                                                     {assignment.score_percentage !== null && (

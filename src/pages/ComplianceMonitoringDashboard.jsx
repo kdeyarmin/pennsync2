@@ -301,7 +301,7 @@ Compliance Management System`;
       case 'critical': return 'bg-red-600 text-white';
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -328,7 +328,7 @@ Compliance Management System`;
       <div className="p-8 max-w-2xl mx-auto text-center">
         <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-2">Admin Access Required</h2>
-        <p className="text-gray-600">This dashboard is only accessible to administrators.</p>
+        <p className="text-slate-600">This dashboard is only accessible to administrators.</p>
       </div>
     );
   }
@@ -342,8 +342,8 @@ Compliance Management System`;
             <AlertTriangle className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Compliance Monitoring</h1>
-            <p className="text-sm text-gray-600">Real-time compliance tracking and alerts</p>
+            <h1 className="text-3xl font-bold text-slate-900">Compliance Monitoring</h1>
+            <p className="text-sm text-slate-600">Real-time compliance tracking and alerts</p>
           </div>
           <Button
             variant="outline"
@@ -425,7 +425,7 @@ Compliance Management System`;
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search by employee or issue..."
                 value={searchTerm}
@@ -481,8 +481,8 @@ Compliance Management System`;
         <Card>
           <CardContent className="py-12 text-center">
             <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">All Clear!</h3>
-            <p className="text-gray-600">No compliance issues found matching your filters.</p>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">All Clear!</h3>
+            <p className="text-slate-600">No compliance issues found matching your filters.</p>
           </CardContent>
         </Card>
       ) : (
@@ -493,7 +493,7 @@ Compliance Management System`;
             const highIssues = userData.issues.filter(i => i.severity === 'high').length;
 
             return (
-              <Card key={userId} className={`border-l-4 ${isSelected ? 'border-l-orange-500 bg-orange-50' : criticalIssues > 0 ? 'border-l-red-500' : 'border-l-gray-300'}`}>
+              <Card key={userId} className={`border-l-4 ${isSelected ? 'border-l-orange-500 bg-orange-50' : criticalIssues > 0 ? 'border-l-red-500' : 'border-l-slate-300'}`}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -501,11 +501,11 @@ Compliance Management System`;
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggleUser(userId)}
-                        className="w-5 h-5 rounded border-gray-300"
+                        className="w-5 h-5 rounded border-slate-300"
                       />
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900">{userData.userName}</h3>
-                        <p className="text-sm text-gray-600">{userData.userRole} • {userId}</p>
+                        <h3 className="text-lg font-bold text-slate-900">{userData.userName}</h3>
+                        <p className="text-sm text-slate-600">{userData.userRole} • {userId}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -534,7 +534,7 @@ Compliance Management System`;
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900">{issue.title}</h4>
+                            <h4 className="font-semibold text-slate-900">{issue.title}</h4>
                             <Badge className={getSeverityColor(issue.severity)}>
                               {issue.severity}
                             </Badge>
@@ -542,14 +542,14 @@ Compliance Management System`;
                               {getTypeLabel(issue.type)}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-700">{issue.details}</p>
+                          <p className="text-sm text-slate-700">{issue.details}</p>
                           {issue.dueDate && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-slate-500 mt-1">
                               Due: {format(parseISO(issue.dueDate), 'MMM d, yyyy')}
                             </p>
                           )}
                           {issue.expirationDate && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-slate-500 mt-1">
                               Expires: {format(parseISO(issue.expirationDate), 'MMM d, yyyy')}
                             </p>
                           )}

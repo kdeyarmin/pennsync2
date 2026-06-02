@@ -15,7 +15,7 @@ const STATUS_STYLES = {
   sending: "bg-amber-100 text-amber-800",
   sent: "bg-green-100 text-green-800",
   failed: "bg-red-100 text-red-800",
-  canceled: "bg-gray-200 text-gray-600",
+  canceled: "bg-slate-200 text-slate-600",
 };
 
 /**
@@ -79,17 +79,17 @@ export default function ScheduledSmsList() {
       </CardHeader>
       <CardContent className="space-y-2">
         {isLoading ? (
-          <p className="text-sm text-gray-500 text-center py-4">Loading…</p>
+          <p className="text-sm text-slate-500 text-center py-4">Loading…</p>
         ) : sorted.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">No scheduled texts. Use “Schedule” when composing a message.</p>
+          <p className="text-sm text-slate-500 text-center py-4">No scheduled texts. Use “Schedule” when composing a message.</p>
         ) : (
           sorted.map((row) => (
-            <div key={row.id} className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+            <div key={row.id} className="p-3 rounded-lg bg-slate-50 border border-slate-200">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{labelFor(row)}</p>
-                  <p className="text-xs text-gray-600 line-clamp-2">{row.body}</p>
-                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <p className="text-sm font-medium text-slate-900 truncate">{labelFor(row)}</p>
+                  <p className="text-xs text-slate-600 line-clamp-2">{row.body}</p>
+                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                     <CalendarClock className="w-3 h-3" />
                     {format(new Date(row.send_at), "EEE MMM d, h:mm a")}
                     {row.status === "sent" && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
@@ -100,7 +100,7 @@ export default function ScheduledSmsList() {
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <Badge className={`text-xs ${STATUS_STYLES[row.status] || "bg-gray-100 text-gray-700"}`}>
+                  <Badge className={`text-xs ${STATUS_STYLES[row.status] || "bg-slate-100 text-slate-700"}`}>
                     {row.status}
                   </Badge>
                   {canCancel(row) && (

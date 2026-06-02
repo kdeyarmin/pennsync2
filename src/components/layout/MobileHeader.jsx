@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Shield, Bell, Menu, X, ChevronLeft } from "lucide-react";
+import { Shield, Bell, Menu, X, ChevronLeft, Search } from "lucide-react";
 
 const BACK_PAGES = ['PatientDetails', 'DocumentSignatures', 'DocumentVisit', 'ReferralAdmissionNote', 'DocumentHub', 'VisitScribe', 'ReferralIntake', 'TrainingCoursePlayer', 'ClinicalChart', 'EventReport'];
 
@@ -23,6 +23,9 @@ export default function MobileHeader({ currentPageName, totalNotificationCount, 
         </div>
       </div>
       <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800 h-10 w-10" onClick={() => window.dispatchEvent(new Event('open-command-palette'))} title="Search pages">
+          <Search className="w-5 h-5" />
+        </Button>
         <Button variant="ghost" size="icon" className="relative text-slate-300 hover:text-white hover:bg-slate-800 h-10 w-10" onClick={onOpenNotificationCenter}>
           <Bell className="w-5 h-5" />
           {totalNotificationCount > 0 && (

@@ -191,7 +191,7 @@ Return JSON:
       case 'high': return 'bg-orange-500 text-white';
       case 'medium': return 'bg-yellow-500 text-white';
       case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -200,7 +200,7 @@ Return JSON:
       case 'overdue': return <AlertTriangle className="w-3 h-3 text-red-600" />;
       case 'urgent': return <Zap className="w-3 h-3 text-orange-600" />;
       case 'today': return <Clock className="w-3 h-3 text-yellow-600" />;
-      default: return <Clock className="w-3 h-3 text-gray-400" />;
+      default: return <Clock className="w-3 h-3 text-slate-400" />;
     }
   };
 
@@ -209,7 +209,7 @@ Return JSON:
       <Card className="border-green-200">
         <CardContent className="p-4 text-center">
           <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
-          <p className="text-sm text-gray-600">No pending tasks - great job!</p>
+          <p className="text-sm text-slate-600">No pending tasks - great job!</p>
         </CardContent>
       </Card>
     );
@@ -238,7 +238,7 @@ Return JSON:
           {!prioritizedTasks ? (
             <div className="text-center py-4">
               <ListTodo className="w-12 h-12 mx-auto mb-3 text-purple-300" />
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Let AI prioritize your {tasks.length} tasks for maximum efficiency
               </p>
               <Button
@@ -265,19 +265,19 @@ Return JSON:
               <div className="grid grid-cols-4 gap-2">
                 <div className="text-center p-2 bg-red-50 rounded">
                   <p className="text-xl font-bold text-red-600">{prioritizedTasks.summary?.critical_count || 0}</p>
-                  <p className="text-xs text-gray-600">Critical</p>
+                  <p className="text-xs text-slate-600">Critical</p>
                 </div>
                 <div className="text-center p-2 bg-orange-50 rounded">
                   <p className="text-xl font-bold text-orange-600">{prioritizedTasks.summary?.high_count || 0}</p>
-                  <p className="text-xs text-gray-600">High</p>
+                  <p className="text-xs text-slate-600">High</p>
                 </div>
                 <div className="text-center p-2 bg-yellow-50 rounded">
                   <p className="text-xl font-bold text-yellow-600">{prioritizedTasks.summary?.overdue_count || 0}</p>
-                  <p className="text-xs text-gray-600">Overdue</p>
+                  <p className="text-xs text-slate-600">Overdue</p>
                 </div>
                 <div className="text-center p-2 bg-blue-50 rounded">
                   <p className="text-xl font-bold text-blue-600">{prioritizedTasks.summary?.delegatable_count || 0}</p>
-                  <p className="text-xs text-gray-600">Delegatable</p>
+                  <p className="text-xs text-slate-600">Delegatable</p>
                 </div>
               </div>
 
@@ -304,7 +304,7 @@ Return JSON:
                     className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
                       task.ai_priority_level === 'critical' ? 'bg-red-50 border-red-200' :
                       task.ai_priority_level === 'high' ? 'bg-orange-50 border-orange-200' :
-                      'bg-white border-gray-200'
+                      'bg-white border-slate-200'
                     }`}
                   >
                     <Checkbox
@@ -313,7 +313,7 @@ Return JSON:
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs text-gray-500 font-mono">#{idx + 1}</span>
+                        <span className="text-xs text-slate-500 font-mono">#{idx + 1}</span>
                         <Badge className={getPriorityColor(task.ai_priority_level)}>
                           {task.ai_priority_level}
                         </Badge>
@@ -327,12 +327,12 @@ Return JSON:
                       </div>
                       <p className="font-medium text-sm mt-1">{task.title}</p>
                       {task.patient_name && (
-                        <p className="text-xs text-gray-600 flex items-center gap-1 mt-0.5">
+                        <p className="text-xs text-slate-600 flex items-center gap-1 mt-0.5">
                           <User className="w-3 h-3" />
                           {task.patient_name}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1 italic">{task.priority_reason}</p>
+                      <p className="text-xs text-slate-500 mt-1 italic">{task.priority_reason}</p>
                       <p className="text-xs text-purple-700 mt-1">
                         💡 {task.suggested_action}
                       </p>

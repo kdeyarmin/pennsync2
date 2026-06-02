@@ -104,7 +104,7 @@ export default function InteractiveWorkflowGuide({
             purple: { active: 'bg-purple-100 ring-2 ring-purple-400', circle: 'bg-purple-500 text-white', text: 'text-purple-700' },
             indigo: { active: 'bg-indigo-100 ring-2 ring-indigo-400', circle: 'bg-indigo-500 text-white', text: 'text-indigo-700' },
             green: { active: 'bg-green-100 ring-2 ring-green-400', circle: 'bg-green-500 text-white', text: 'text-green-700' },
-            gray: { active: 'bg-gray-100 ring-2 ring-gray-400', circle: 'bg-gray-500 text-white', text: 'text-gray-700' },
+            gray: { active: 'bg-slate-100 ring-2 ring-slate-400', circle: 'bg-slate-500 text-white', text: 'text-slate-700' },
           };
           return steps.map((step, idx) => {
           const isActive = idx === currentStepIdx;
@@ -121,7 +121,7 @@ export default function InteractiveWorkflowGuide({
                     ? sc.active
                     : isComplete || isPast
                       ? 'bg-green-50 hover:bg-green-100'
-                      : 'bg-gray-50 hover:bg-gray-100'
+                      : 'bg-slate-50 hover:bg-slate-100'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -131,7 +131,7 @@ export default function InteractiveWorkflowGuide({
                     ? 'bg-green-500 text-white'
                     : isActive
                       ? sc.circle
-                      : 'bg-gray-200 text-gray-500'
+                      : 'bg-slate-200 text-slate-500'
                 }`}>
                   {isComplete ? (
                     <CheckCircle2 className="w-4 h-4" />
@@ -140,7 +140,7 @@ export default function InteractiveWorkflowGuide({
                   )}
                 </div>
                 <span className={`text-xs font-medium ${
-                  isActive ? sc.text : isComplete ? 'text-green-700' : 'text-gray-600'
+                  isActive ? sc.text : isComplete ? 'text-green-700' : 'text-slate-600'
                 }`}>
                   {step.label}
                 </span>
@@ -148,7 +148,7 @@ export default function InteractiveWorkflowGuide({
 
               {idx < steps.length - 1 && (
                 <ArrowRight className={`w-4 h-4 flex-shrink-0 ${
-                  idx < currentStepIdx ? 'text-green-400' : 'text-gray-300'
+                  idx < currentStepIdx ? 'text-green-400' : 'text-slate-300'
                 }`} />
               )}
             </React.Fragment>
@@ -168,7 +168,7 @@ export default function InteractiveWorkflowGuide({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Lightbulb className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm font-semibold text-gray-800">
+              <span className="text-sm font-semibold text-slate-800">
                 {steps[currentStepIdx]?.description}
               </span>
             </div>

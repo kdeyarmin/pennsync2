@@ -57,11 +57,11 @@ export default function PatientEducation() {
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
           <BookOpen className="w-8 h-8 text-blue-600" />
           Patient Education Center
         </h1>
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           Generate patient-friendly educational materials and document understanding
         </p>
       </div>
@@ -71,7 +71,7 @@ export default function PatientEducation() {
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-slate-700 mb-1 block">
                 Select Patient (Optional)
               </label>
               <Select value={selectedPatientId || "none"} onValueChange={(val) => setSelectedPatientId(val === "none" ? "" : val)}>
@@ -262,8 +262,8 @@ export default function PatientEducation() {
             </CardHeader>
             <CardContent>
               {teachBackRecords.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <div className="text-center py-12 text-slate-500">
+                  <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-slate-300" />
                   <p>No teach-back records yet.</p>
                   <p className="text-sm">Generate educational materials and document patient understanding.</p>
                 </div>
@@ -275,7 +275,7 @@ export default function PatientEducation() {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h4 className="font-semibold">{record.topic}</h4>
-                            <p className="text-sm text-gray-600">{record.patientName}</p>
+                            <p className="text-sm text-slate-600">{record.patientName}</p>
                           </div>
                           <Badge className={
                             record.understandingLevel === 'good' ? 'bg-green-100 text-green-800' :
@@ -285,8 +285,8 @@ export default function PatientEducation() {
                             {record.understandingLevel} understanding
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">{record.response}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-slate-700 mb-2">{record.response}</p>
+                        <p className="text-xs text-slate-500">
                           Recorded: {new Date(record.timestamp).toLocaleString()}
                         </p>
                       </CardContent>

@@ -140,7 +140,7 @@ For each issue found, provide:
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-600">
               Analyzing {activities.length} activities, {securityLogs.length} security logs, and {visits.length} visits
             </div>
             <Button
@@ -172,7 +172,7 @@ For each issue found, provide:
                       <div className="text-3xl font-bold text-blue-600">
                         {analysisResults.overall_risk_score || 0}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">Overall Risk Score</div>
+                      <div className="text-sm text-slate-600 mt-1">Overall Risk Score</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -182,7 +182,7 @@ For each issue found, provide:
                       <div className="text-3xl font-bold text-red-600">
                         {analysisResults.issues?.filter(i => i.severity === 'critical').length || 0}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">Critical Issues</div>
+                      <div className="text-sm text-slate-600 mt-1">Critical Issues</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -192,17 +192,17 @@ For each issue found, provide:
                       <div className="text-3xl font-bold text-orange-600">
                         {analysisResults.issues?.filter(i => i.severity === 'high').length || 0}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">High Priority</div>
+                      <div className="text-sm text-slate-600 mt-1">High Priority</div>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-sm">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-gray-600">
+                      <div className="text-3xl font-bold text-slate-600">
                         {analysisResults.issues?.length || 0}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">Total Issues</div>
+                      <div className="text-sm text-slate-600 mt-1">Total Issues</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -231,7 +231,7 @@ For each issue found, provide:
                       {analysisResults.trends.map((trend, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
-                          <span className="text-sm text-gray-700">{trend}</span>
+                          <span className="text-sm text-slate-700">{trend}</span>
                         </li>
                       ))}
                     </ul>
@@ -261,13 +261,13 @@ For each issue found, provide:
                                   {typeLabels[issue.type] || issue.type}
                                 </Badge>
                               </div>
-                              <p className="text-sm font-medium text-gray-900 mb-2">
+                              <p className="text-sm font-medium text-slate-900 mb-2">
                                 {issue.description}
                               </p>
                               
                               {issue.affected_items && issue.affected_items.length > 0 && (
                                 <div className="mb-3">
-                                  <div className="text-xs font-semibold text-gray-600 mb-1">
+                                  <div className="text-xs font-semibold text-slate-600 mb-1">
                                     Affected Items:
                                   </div>
                                   <div className="flex flex-wrap gap-1">
@@ -281,13 +281,13 @@ For each issue found, provide:
                               )}
 
                               {issue.recommended_actions && issue.recommended_actions.length > 0 && (
-                                <div className="bg-gray-50 rounded-lg p-3 mt-3">
-                                  <div className="text-xs font-semibold text-gray-600 mb-2">
+                                <div className="bg-slate-50 rounded-lg p-3 mt-3">
+                                  <div className="text-xs font-semibold text-slate-600 mb-2">
                                     Recommended Actions:
                                   </div>
                                   <ul className="space-y-1">
                                     {issue.recommended_actions.map((action, i) => (
-                                      <li key={i} className="text-xs text-gray-700 flex items-start gap-2">
+                                      <li key={i} className="text-xs text-slate-700 flex items-start gap-2">
                                         <CheckCircle className="w-3 h-3 mt-0.5 text-green-600" />
                                         {action}
                                       </li>

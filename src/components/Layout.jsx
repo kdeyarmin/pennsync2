@@ -4,14 +4,9 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
 import { clearCachedPHI } from "@/lib/phiStorage";
-import {
-  Home, Users, FileText, ClipboardList, Shield, GraduationCap,
-  BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Phone
-} from "lucide-react";
+import { Bell, LogOut, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 
@@ -25,19 +20,31 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 import CommandPalette from "@/components/navigation/CommandPalette";
+import { getPageMeta } from "@/components/navigation/navConfig";
+
+// Build a sidebar item from the shared navConfig manifest so label + icon stay
+// in sync with the command palette and breadcrumbs. `extra` carries the
+// sidebar-only bits (dynamic unread badges, etc.).
+const navItem = (page, extra = {}) => {
+  const meta = getPageMeta(page);
+  return { name: meta.label, icon: meta.icon, page, ...extra };
+};
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
 
+  // PennSync ships a single, fully-designed light theme: every page and
+  // component uses explicit light styles and none provide `dark:` variants.
+  // Previously this effect mirrored the OS `prefers-color-scheme`, toggling the
+  // `dark` class on <html>. That flipped only the CSS-variable tokens (popovers,
+  // dropdown menus, charts, `muted` text) to dark while the hardcoded
+  // `bg-white` / `text-slate-900` surfaces stayed light — producing an
+  // inconsistent, partially-unreadable UI for anyone on a dark-mode device.
+  // Keep the app in its intended light theme so every screen renders the same.
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const update = (isDark) => document.documentElement.classList.toggle('dark', isDark);
-    const handler = (e) => update(e.matches);
-    update(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    document.documentElement.classList.remove('dark');
   }, []);
 
   const { data: currentUser } = useQuery({
@@ -135,81 +142,79 @@ export default function Layout({ children, currentPageName }) {
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
   const navCategories = useMemo(() => [
-    { category: "Overview", items: [{ name: "Dashboard", icon: Home, page: "Dashboard" }] },
+    { category: "Overview", items: [navItem("Dashboard")] },
     {
       category: "Patient Care",
       items: [
-        { name: "Patients", icon: Users, page: "Patients" },
-        { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
-        { name: "OASIS Assessment", icon: Brain, page: "SmartOASISAssessment" },
-        { name: "Incidents", icon: AlertTriangle, page: "Incidents" },
+        navItem("Patients"),
+        navItem("CarePlanManagement"),
+        navItem("SmartOASISAssessment"),
+        navItem("Incidents"),
       ],
     },
     {
       category: "Documentation",
       items: [
-        { name: "Clinical Notes", icon: Brain, page: "ClinicalDocumentation" },
-        { name: "Documents", icon: FileText, page: "DocumentHub" },
-        { name: "Referrals", icon: FileText, page: "ReferralIntake" },
+        navItem("ClinicalDocumentation"),
+        navItem("DocumentHub"),
+        navItem("ReferralIntake"),
       ],
     },
     {
       category: "Communication",
       items: [
-        { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
-        { name: "Phone Center", icon: Phone, page: "PhoneCenter", badge: unreadSmsCount },
-        { name: "Fax", icon: BookUser, page: "SendFax" },
-        { name: "Providers", icon: Users, page: "PhysicianDirectory" },
-        { name: "Telehealth", icon: Video, page: "Telehealth" },
+        navItem("Messages", { badge: unreadMessageCount }),
+        navItem("PhoneCenter", { badge: unreadSmsCount }),
+        navItem("SendFax"),
+        navItem("PhysicianDirectory"),
+        navItem("Telehealth"),
       ],
     },
     {
       category: "Resources",
-      items: [
-        { name: "Library", icon: BookOpen, page: "ResourceLibrary" },
-      ],
+      items: [navItem("ResourceLibrary")],
     },
     {
       category: "My Learning",
       items: [
-        { name: "Learning Center", icon: GraduationCap, page: "LearningCenter" },
-        { name: "My Courses", icon: BookOpen, page: "MyLearning" },
-        { name: "Skills Checklists", icon: CheckCircle2, page: "ClinicalSkillsChecklist" },
+        navItem("LearningCenter"),
+        navItem("MyLearning"),
+        navItem("ClinicalSkillsChecklist"),
       ],
     },
     {
       category: "Tools",
       items: [
-        { name: "Settings", icon: Settings, page: "UserSettings" },
-        { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
-        { name: "Help", icon: HelpCircle, page: "Help" },
+        navItem("UserSettings"),
+        navItem("OfflineMode"),
+        navItem("Help"),
       ],
     },
   ], [unreadMessageCount, unreadSmsCount]);
 
   const adminItems = useMemo(() => [
-    { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },
-    { 
-      category: "Manage", 
+    { category: "Admin", items: [navItem("AdminOperations")] },
+    {
+      category: "Manage",
       items: [
-        { name: "Users", icon: Users, page: "UserManagement" },
-        { name: "Training Manager", icon: GraduationCap, page: "AdminTraining" },
-        { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
-      ] 
+        navItem("UserManagement"),
+        navItem("AdminTraining"),
+        navItem("ClinicalPathwayManager"),
+      ]
     },
     { 
       category: "Analytics", 
       items: [
-        { name: "Reports & Analytics", icon: BarChart3, page: "ReportsAnalytics" },
-        { name: "Compliance Center", icon: Shield, page: "ComplianceCenter" },
+        navItem("ReportsAnalytics"),
+        navItem("ComplianceCenter"),
         { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
       ] 
     },
     {
       category: "Configuration",
       items: [
-        { name: "Data Management", icon: Users, page: "PatientDataManagement" },
-        { name: "Security", icon: Shield, page: "SecurityCompliance" },
+        navItem("PatientDataManagement"),
+        navItem("SecurityCompliance"),
       ]
     },
 
@@ -243,12 +248,12 @@ export default function Layout({ children, currentPageName }) {
               <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Clock className="w-10 h-10 text-yellow-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-3">Account Pending Approval</h1>
-              <p className="text-gray-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
+              <h1 className="text-2xl font-bold text-slate-900 mb-3">Account Pending Approval</h1>
+              <p className="text-slate-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-900"><strong>Account Details:</strong><br />{currentUser.full_name}<br />{currentUser.email}</p>
               </div>
-              <p className="text-sm text-gray-500 mb-6">You will receive an email notification once your account is approved.</p>
+              <p className="text-sm text-slate-500 mb-6">You will receive an email notification once your account is approved.</p>
               <Button onClick={handleLogout} variant="outline" className="w-full">
                 <LogOut className="w-4 h-4 mr-2" /> Sign Out
               </Button>
@@ -261,7 +266,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <>
-      <Toaster position="top-right" richColors closeButton />
+      <Toaster position="top-right" richColors closeButton theme="light" />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>
@@ -297,7 +302,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-gray-50/80 to-slate-100 w-0 md:w-auto">
+        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-slate-100 w-0 md:w-auto">
           <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 animate-fade-in">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}

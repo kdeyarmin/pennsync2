@@ -104,7 +104,7 @@ const educationTopics = [
     id: 'osteoporosis',
     title: 'Osteoporosis & Bone Health',
     icon: Shield,
-    color: 'from-slate-500 to-gray-500',
+    color: 'from-slate-500 to-slate-500',
     description: 'Building strong bones, fall prevention, and osteoporosis management.'
   },
   {
@@ -364,9 +364,9 @@ export default function PatientEducationHub() {
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-2">
           <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Patient Education Hub</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Patient Education Hub</h1>
         </div>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600">
+        <p className="text-xs sm:text-sm md:text-base text-slate-600">
           Generate personalized, AI-powered educational materials for your patients
         </p>
       </div>
@@ -420,7 +420,7 @@ export default function PatientEducationHub() {
             <div>
               <Label className="text-xs sm:text-sm mb-2 block">Search Topics</Label>
               <div className="relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                 <Input
                   placeholder="Search education topics..."
                   value={searchQuery}
@@ -436,7 +436,7 @@ export default function PatientEducationHub() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Topics Grid */}
         <div className="lg:col-span-2">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Standard Education Templates</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Standard Education Templates</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {filteredTopics.map((topic) => {
               const Icon = topic.icon;
@@ -478,8 +478,8 @@ export default function PatientEducationHub() {
             </CardHeader>
             <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
               {!selectedTopic ? (
-                <div className="text-center py-8 text-gray-500">
-                  <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-slate-500">
+                  <BookOpen className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                   <p>Select a topic to generate a handout</p>
                 </div>
               ) : (
@@ -587,7 +587,7 @@ export default function PatientEducationHub() {
                           onChange={(e) => setCustomNotes(e.target.value)}
                           className="mt-2 min-h-[100px]"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           These notes will appear at the end of the handout.
                         </p>
                       </div>
@@ -642,7 +642,7 @@ export default function PatientEducationHub() {
                     </Button>
                   </div>
 
-                  <div className="pt-4 border-t text-xs text-gray-500">
+                  <div className="pt-4 border-t text-xs text-slate-500">
                     <p>📄 Generated handouts include the Penn Home Health logo and are printer-friendly.</p>
                   </div>
                 </>

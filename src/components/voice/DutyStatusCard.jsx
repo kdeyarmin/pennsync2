@@ -169,7 +169,7 @@ export default function DutyStatusCard() {
         )}
 
         {/* 1. On / Off duty */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
           <div className="flex-1 pr-3">
             <Label className="text-base font-semibold flex items-center gap-2">
               {onDuty ? "On Duty" : "Off Duty"}
@@ -177,7 +177,7 @@ export default function DutyStatusCard() {
                 {onDuty ? "Available" : "Unavailable"}
               </Badge>
             </Label>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-slate-600 mt-1">
               {onDuty
                 ? "Patient calls ring your phone (caller ID shows your work number) and texts reach your inbox."
                 : "Patient calls hear your off-duty greeting and transfer to the main office; texts get an auto-reply."}
@@ -206,7 +206,7 @@ export default function DutyStatusCard() {
                 <CalendarClock className="w-4 h-4 text-indigo-600" />
                 Schedule time off
               </Label>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 Be off duty for a set window (like the weekend). You'll be back on duty automatically when it ends.
               </p>
             </div>
@@ -223,7 +223,7 @@ export default function DutyStatusCard() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="off-start" className="text-xs font-medium text-gray-600">Start</Label>
+                  <Label htmlFor="off-start" className="text-xs font-medium text-slate-600">Start</Label>
                   <Input
                     id="off-start"
                     type="datetime-local"
@@ -233,7 +233,7 @@ export default function DutyStatusCard() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="off-end" className="text-xs font-medium text-gray-600">End</Label>
+                  <Label htmlFor="off-end" className="text-xs font-medium text-slate-600">End</Label>
                   <Input
                     id="off-end"
                     type="datetime-local"
@@ -244,13 +244,13 @@ export default function DutyStatusCard() {
                 </div>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="off-recurring" className="text-xs text-gray-600">
+                <Label htmlFor="off-recurring" className="text-xs text-slate-600">
                   Repeat every week (e.g. every weekend)
                 </Label>
                 <Switch id="off-recurring" checked={recurring} onCheckedChange={setRecurring} disabled={mutation.isPending} />
               </div>
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-500">
                   {savedState === "active" && (
                     <Badge className="bg-amber-600">
                       {savedRecurring ? "Active now · weekly" : `Active now · ends ${format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}`}
@@ -279,9 +279,9 @@ export default function DutyStatusCard() {
           <Label htmlFor="off-duty-message" className="text-sm font-medium">
             Off-duty message
           </Label>
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="text-xs text-slate-500 mb-2">
             Played to callers and sent as a text auto-reply while you're off duty. Avoid clinical details
-            (no diagnoses). Use <code className="bg-gray-100 px-1 rounded">{"{office}"}</code> to insert the main office number.
+            (no diagnoses). Use <code className="bg-slate-100 px-1 rounded">{"{office}"}</code> to insert the main office number.
           </p>
           <Textarea
             id="off-duty-message"

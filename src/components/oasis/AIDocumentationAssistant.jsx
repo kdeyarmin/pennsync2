@@ -212,7 +212,7 @@ Return JSON:
             {!suggestions ? (
               <div className="text-center py-6">
                 <Lightbulb className="w-12 h-12 text-purple-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Generate AI-powered documentation text to address identified issues
                 </p>
                 <Button onClick={generateSuggestions} disabled={isGenerating}>
@@ -236,7 +236,7 @@ Return JSON:
                         <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">{fix.item}</Badge>
-                            <span className="text-sm text-gray-600">{fix.current_issue}</span>
+                            <span className="text-sm text-slate-600">{fix.current_issue}</span>
                           </div>
                           <Button 
                             size="sm" 
@@ -318,16 +318,16 @@ Return JSON:
                             <p className="text-sm text-purple-900 italic">"{suggestion.suggested_text}"</p>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-gray-50 p-2 rounded">
-                              <p className="font-semibold text-gray-600">Scoring Impact:</p>
-                              <p className="text-gray-800">{suggestion.scoring_impact}</p>
+                            <div className="bg-slate-50 p-2 rounded">
+                              <p className="font-semibold text-slate-600">Scoring Impact:</p>
+                              <p className="text-slate-800">{suggestion.scoring_impact}</p>
                             </div>
-                            <div className="bg-gray-50 p-2 rounded">
-                              <p className="font-semibold text-gray-600">Compliance Benefit:</p>
-                              <p className="text-gray-800">{suggestion.compliance_benefit}</p>
+                            <div className="bg-slate-50 p-2 rounded">
+                              <p className="font-semibold text-slate-600">Compliance Benefit:</p>
+                              <p className="text-slate-800">{suggestion.compliance_benefit}</p>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-600">{suggestion.rationale}</p>
+                          <p className="text-xs text-slate-600">{suggestion.rationale}</p>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -345,7 +345,7 @@ Return JSON:
             {!cmsExplanations ? (
               <div className="text-center py-6">
                 <BookOpen className="w-12 h-12 text-indigo-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Get AI-powered explanations of CMS regulations for flagged items
                 </p>
                 <Button onClick={generateCMSExplanations} disabled={isGenerating}>
@@ -391,8 +391,8 @@ Return JSON:
                           </div>
                           
                           <div>
-                            <p className="text-xs font-semibold text-gray-600">Plain Language Explanation:</p>
-                            <p className="text-sm text-gray-800 bg-white p-2 rounded border">{exp.plain_language}</p>
+                            <p className="text-xs font-semibold text-slate-600">Plain Language Explanation:</p>
+                            <p className="text-sm text-slate-800 bg-white p-2 rounded border">{exp.plain_language}</p>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
@@ -408,7 +408,7 @@ Return JSON:
 
                           {exp.common_mistakes?.length > 0 && (
                             <div>
-                              <p className="text-xs font-semibold text-gray-600">Common Mistakes:</p>
+                              <p className="text-xs font-semibold text-slate-600">Common Mistakes:</p>
                               <ul className="text-xs text-red-700 list-disc list-inside">
                                 {exp.common_mistakes.map((mistake, i) => (
                                   <li key={i}>{mistake}</li>
@@ -419,7 +419,7 @@ Return JSON:
 
                           {exp.best_practices?.length > 0 && (
                             <div>
-                              <p className="text-xs font-semibold text-gray-600">Best Practices:</p>
+                              <p className="text-xs font-semibold text-slate-600">Best Practices:</p>
                               <ul className="text-xs text-green-700 list-disc list-inside">
                                 {exp.best_practices.map((practice, i) => (
                                   <li key={i}>{practice}</li>

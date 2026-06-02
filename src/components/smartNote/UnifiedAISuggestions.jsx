@@ -223,7 +223,7 @@ Return JSON with COMBINED suggestions:
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -373,7 +373,7 @@ Return JSON with COMBINED suggestions:
 function SuggestionCard({ suggestion, isApplied, getPriorityColor, getTypeIcon, onApply }) {
   return (
     <div className={`rounded border p-3 ${
-      isApplied ? 'bg-gray-50 opacity-50' : getPriorityColor(suggestion.priority)
+      isApplied ? 'bg-slate-50 opacity-50' : getPriorityColor(suggestion.priority)
     }`}>
       <div className="flex items-start gap-2">
         {isApplied ? (
@@ -396,7 +396,7 @@ function SuggestionCard({ suggestion, isApplied, getPriorityColor, getTypeIcon, 
             {isApplied && <Badge className="text-[10px] bg-green-600 text-white">Applied</Badge>}
           </div>
           
-          <p className="text-xs font-medium text-gray-900 mb-1">{suggestion.issue}</p>
+          <p className="text-xs font-medium text-slate-900 mb-1">{suggestion.issue}</p>
           
           {suggestion.current_text && (
             <p className="text-xs text-red-800 line-through mb-1">
@@ -404,14 +404,14 @@ function SuggestionCard({ suggestion, isApplied, getPriorityColor, getTypeIcon, 
             </p>
           )}
           
-          <div className="bg-white/70 p-2 rounded border border-gray-200 mb-1">
+          <div className="bg-white/70 p-2 rounded border border-slate-200 mb-1">
             <p className="text-xs text-green-900 font-medium">
               {suggestion.type === 'quality_issue' ? 'Improved: ' : 'Add: '}
               "{suggestion.suggested_fix}"
             </p>
           </div>
           
-          <p className="text-[10px] text-gray-600 italic">{suggestion.rationale}</p>
+          <p className="text-[10px] text-slate-600 italic">{suggestion.rationale}</p>
         </div>
         
         {!isApplied && (

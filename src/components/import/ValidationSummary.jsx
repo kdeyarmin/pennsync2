@@ -55,25 +55,25 @@ export default function ValidationSummary({ validationErrors, validRecords, tota
           <div className="p-4 bg-white rounded-lg border-2 border-green-200">
             <CheckCircle2 className="w-6 h-6 text-green-600 mb-2" />
             <p className="text-2xl font-bold text-green-700">{validRecords.length}</p>
-            <p className="text-xs text-gray-600">Valid</p>
+            <p className="text-xs text-slate-600">Valid</p>
           </div>
 
           <div className="p-4 bg-white rounded-lg border-2 border-red-200">
             <XCircle className="w-6 h-6 text-red-600 mb-2" />
             <p className="text-2xl font-bold text-red-700">{criticalErrors}</p>
-            <p className="text-xs text-gray-600">Critical</p>
+            <p className="text-xs text-slate-600">Critical</p>
           </div>
 
           <div className="p-4 bg-white rounded-lg border-2 border-yellow-200">
             <AlertTriangle className="w-6 h-6 text-yellow-600 mb-2" />
             <p className="text-2xl font-bold text-yellow-700">{warnings}</p>
-            <p className="text-xs text-gray-600">Warnings</p>
+            <p className="text-xs text-slate-600">Warnings</p>
           </div>
 
           <div className="p-4 bg-white rounded-lg border-2 border-blue-200">
             <Info className="w-6 h-6 text-blue-600 mb-2" />
             <p className="text-2xl font-bold text-blue-700">{infoMessages}</p>
-            <p className="text-xs text-gray-600">Info</p>
+            <p className="text-xs text-slate-600">Info</p>
           </div>
         </div>
 
@@ -84,7 +84,7 @@ export default function ValidationSummary({ validationErrors, validRecords, tota
             <span className="text-lg font-bold text-green-600">{validationRate}%</span>
           </div>
           <Progress value={validationRate} className="h-3" />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {validRecords.length} of {totalRows} rows passed validation
           </p>
         </div>
@@ -99,7 +99,7 @@ export default function ValidationSummary({ validationErrors, validRecords, tota
             <div className="space-y-2">
               {topErrorFields.map(([field, count]) => (
                 <div key={field} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 capitalize">
+                  <span className="text-sm text-slate-700 capitalize">
                     {field.replace(/_/g, ' ')}
                   </span>
                   <Badge variant="outline" className="bg-red-50">

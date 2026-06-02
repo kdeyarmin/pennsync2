@@ -156,7 +156,7 @@ export default function OASISComparisonView({
               <CardTitle className="text-lg">
                 OASIS Review: {patient?.first_name} {patient?.last_name}
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 {pendingSuggestions.length} pending • {reviewedSuggestions.length} reviewed
               </p>
             </div>
@@ -171,7 +171,7 @@ export default function OASISComparisonView({
       {/* Pending Suggestions */}
       {pendingSuggestions.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-orange-500" />
             Pending Review ({pendingSuggestions.length})
           </h3>
@@ -220,22 +220,22 @@ export default function OASISComparisonView({
                             {data.confidence}% confidence
                           </Badge>
                         </div>
-                        <p className="text-sm font-semibold text-gray-800">AI Suggested Value:</p>
-                        <p className="text-lg font-bold text-gray-900">{data.value}</p>
+                        <p className="text-sm font-semibold text-slate-800">AI Suggested Value:</p>
+                        <p className="text-lg font-bold text-slate-900">{data.value}</p>
                         {data.label && (
-                          <p className="text-sm text-gray-600 italic">{data.label}</p>
+                          <p className="text-sm text-slate-600 italic">{data.label}</p>
                         )}
                       </div>
                     </div>
 
                     {/* Supporting Evidence */}
                     {data.supporting_text && (
-                      <div className="bg-white p-3 rounded border border-gray-200">
-                        <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      <div className="bg-white p-3 rounded border border-slate-200">
+                        <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                           <FileText className="w-3 h-3" />
                           Supporting Evidence:
                         </p>
-                        <p className="text-xs text-gray-700 italic">"{data.supporting_text}"</p>
+                        <p className="text-xs text-slate-700 italic">"{data.supporting_text}"</p>
                       </div>
                     )}
 
@@ -289,7 +289,7 @@ export default function OASISComparisonView({
       {/* Reviewed Suggestions */}
       {reviewedSuggestions.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-green-500" />
             Reviewed ({reviewedSuggestions.length})
           </h3>
@@ -315,11 +315,11 @@ export default function OASISComparisonView({
                       )}
                     </div>
                     <p className="text-sm font-semibold">Value: {data.value}</p>
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-slate-600 mt-1">
                       Reviewed by {data.reviewed_by} on {new Date(data.reviewed_at).toLocaleDateString()}
                     </p>
                     {(data.review_notes || data.rejection_reason || data.edit_notes) && (
-                      <p className="text-xs text-gray-700 mt-2 italic">
+                      <p className="text-xs text-slate-700 mt-2 italic">
                         Note: {data.review_notes || data.rejection_reason || data.edit_notes}
                       </p>
                     )}

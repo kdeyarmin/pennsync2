@@ -184,13 +184,13 @@ export default function StaffEducationComplianceReport() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-sm text-gray-600">Compliance Rate</p>
+                <p className="text-sm text-slate-600">Compliance Rate</p>
                 <p className="text-3xl font-bold text-green-600">{complianceData.complianceRate}%</p>
               </div>
               <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
             <Progress value={parseFloat(complianceData.complianceRate)} className="h-2" />
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-slate-600 mt-2">
               {complianceData.completedRequired} of {complianceData.totalRequired} required
             </p>
           </CardContent>
@@ -200,12 +200,12 @@ export default function StaffEducationComplianceReport() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Completions</p>
+                <p className="text-sm text-slate-600">Total Completions</p>
                 <p className="text-3xl font-bold text-blue-600">{complianceData.totalCompletions}</p>
               </div>
               <Award className="w-10 h-10 text-blue-600" />
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-slate-600 mt-2">
               Avg Score: {complianceData.avgScore}%
             </p>
           </CardContent>
@@ -215,12 +215,12 @@ export default function StaffEducationComplianceReport() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">At-Risk Staff</p>
+                <p className="text-sm text-slate-600">At-Risk Staff</p>
                 <p className="text-3xl font-bold text-orange-600">{complianceData.atRiskStaff}</p>
               </div>
               <AlertTriangle className="w-10 h-10 text-orange-600" />
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-slate-600 mt-2">
               {complianceData.totalOverdue} overdue trainings
             </p>
           </CardContent>
@@ -230,12 +230,12 @@ export default function StaffEducationComplianceReport() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Staff</p>
+                <p className="text-sm text-slate-600">Active Staff</p>
                 <p className="text-3xl font-bold text-purple-600">{complianceData.totalStaff}</p>
               </div>
               <Users className="w-10 h-10 text-purple-600" />
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-slate-600 mt-2">
               Enrolled in training
             </p>
           </CardContent>
@@ -265,11 +265,11 @@ export default function StaffEducationComplianceReport() {
                   const isExcellent = staff.avgScore >= 90 && staff.overdue === 0;
 
                   return (
-                    <tr key={idx} className="border-b hover:bg-gray-50">
+                    <tr key={idx} className="border-b hover:bg-slate-50">
                       <td className="p-2">
                         <div>
                           <p className="font-medium">{staff.name}</p>
-                          <p className="text-xs text-gray-500">{staff.email}</p>
+                          <p className="text-xs text-slate-500">{staff.email}</p>
                         </div>
                       </td>
                       <td className="text-center p-2">
@@ -289,7 +289,7 @@ export default function StaffEducationComplianceReport() {
                         {staff.overdue > 0 ? (
                           <Badge className="bg-red-600">{staff.overdue}</Badge>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-slate-400">-</span>
                         )}
                       </td>
                       <td className="text-center p-2">

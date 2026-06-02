@@ -247,8 +247,8 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
       )}
 
       {/* ── Add Medication ──────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-        <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <p className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
           <Plus className="w-4 h-4 text-indigo-600" /> Add Medication
         </p>
         <div className="space-y-2">
@@ -256,20 +256,20 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
             placeholder="Medication name (e.g., Lisinopril)"
             value={newMed.name}
             onChange={e => setNewMed({ ...newMed, name: e.target.value })}
-            className="h-10 bg-gray-50"
+            className="h-10 bg-slate-50"
           />
           <div className="grid grid-cols-2 gap-2">
             <Input
               placeholder="Dosage (e.g., 10mg)"
               value={newMed.dosage}
               onChange={e => setNewMed({ ...newMed, dosage: e.target.value })}
-              className="h-10 bg-gray-50"
+              className="h-10 bg-slate-50"
             />
             <Input
               placeholder="Frequency (e.g., twice daily)"
               value={newMed.frequency}
               onChange={e => setNewMed({ ...newMed, frequency: e.target.value })}
-              className="h-10 bg-gray-50"
+              className="h-10 bg-slate-50"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -277,7 +277,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
               placeholder="Prescriber (optional)"
               value={newMed.prescriber}
               onChange={e => setNewMed({ ...newMed, prescriber: e.target.value })}
-              className="h-10 bg-gray-50"
+              className="h-10 bg-slate-50"
             />
             {/* Status selector */}
             <div className="flex gap-1">
@@ -288,7 +288,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
                   className={`flex-1 text-xs font-semibold rounded-lg border px-1 py-2 transition-all ${
                     newMed.status === s.value
                       ? s.color + " border-2"
-                      : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-400"
+                      : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-400"
                   }`}
                 >
                   {s.label}
@@ -307,8 +307,8 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
 
       {/* ── Medication List ─────────────────────────────────────────────── */}
       {medications.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <p className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
             <Pill className="w-4 h-4 text-indigo-600" /> All Medications ({medications.length})
           </p>
           <div className="space-y-2">
@@ -320,19 +320,19 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
                       ? "bg-red-50 border-red-200 opacity-75"
                       : med.status === "held"
                       ? "bg-yellow-50 border-yellow-200"
-                      : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                      : "bg-slate-50 border-slate-200 hover:bg-slate-100"
                   }`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className={`text-sm font-medium text-gray-900 ${med.status === "discontinued" ? "line-through text-gray-400" : ""}`}>
+                      <p className={`text-sm font-medium text-slate-900 ${med.status === "discontinued" ? "line-through text-slate-400" : ""}`}>
                         {med.name}
                       </p>
                       <Badge className={`text-xs px-2 py-0.5 border ${statusBadgeClass(med.status)}`}>
                         {STATUS_OPTIONS.find(s => s.value === med.status)?.label || "Active"}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {med.dosage && <span>{med.dosage}</span>}
                       {med.frequency && <span> · {med.frequency}</span>}
                       {med.prescriber && <span> · Rx: {med.prescriber}</span>}
@@ -395,7 +395,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
                     ))}
                     <button
                       onClick={() => removeMedication(med._id)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -418,7 +418,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
           </Alert>
 
           <div className="bg-white border border-orange-200 rounded-xl p-4 shadow-sm space-y-2">
-            <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-orange-600" /> Drug Interactions
             </p>
             {interactions.map((interaction, idx) => (
@@ -433,7 +433,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
                     : <ChevronDown className="w-4 h-4 text-orange-600 shrink-0" />}
                 </button>
                 {expandedInteraction === idx && (
-                  <div className="border-t border-orange-200 p-3 bg-white text-sm text-gray-700">
+                  <div className="border-t border-orange-200 p-3 bg-white text-sm text-slate-700">
                     <p className="font-medium mb-1">Recommendation:</p>
                     <p>{interaction.recommendation}</p>
                   </div>
@@ -445,9 +445,9 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
       )}
 
       {/* ── Reconciliation Note ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+          <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
             <PenLine className="w-4 h-4 text-indigo-600" /> Reconciliation Note
           </p>
           <Button
@@ -495,7 +495,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
             </div>
           </div>
         ) : (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             {medications.length === 0
               ? "Add medications above to generate a reconciliation note."
               : "Click \"Generate Note\" to create a clinical medication reconciliation summary including all status changes."}

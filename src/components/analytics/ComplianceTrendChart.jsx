@@ -71,8 +71,8 @@ export default function ComplianceTrendChart({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Current Compliance Score</p>
-                <p className="text-3xl font-bold text-gray-900">{currentAvg}%</p>
+                <p className="text-sm text-slate-600 mb-1">Current Compliance Score</p>
+                <p className="text-3xl font-bold text-slate-900">{currentAvg}%</p>
                 {trend !== 0 && (
                   <div className={`flex items-center gap-1 mt-1 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
                     <TrendingUp className={`w-4 h-4 ${trend < 0 ? 'rotate-180' : ''}`} />

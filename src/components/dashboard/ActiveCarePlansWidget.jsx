@@ -18,7 +18,7 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
       case 'active': return 'bg-blue-500';
       case 'revised': return 'bg-yellow-500';
       case 'not_met': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -45,7 +45,7 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
         {totalGoals > 0 && (
           <div className="mb-4 p-3 bg-purple-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-700">Overall Progress</p>
+              <p className="text-sm font-medium text-slate-700">Overall Progress</p>
               <span className="text-sm font-semibold text-purple-700">
                 {metGoals}/{totalGoals} goals met
               </span>
@@ -56,8 +56,8 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
 
         {displayPlans.length === 0 ? (
           <div className="text-center py-8">
-            <Target className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-500 text-sm">No active care plans</p>
+            <Target className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+            <p className="text-slate-500 text-sm">No active care plans</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -65,11 +65,11 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
               const isOverdue = plan.target_date && new Date(plan.target_date) < new Date();
               
               return (
-                <div key={plan.id} className="p-3 bg-white rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                <div key={plan.id} className="p-3 bg-white rounded-lg border border-slate-200 hover:border-purple-300 transition-colors">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <p className="font-semibold text-sm text-gray-900 mb-1">{plan.problem}</p>
-                      <p className="text-xs text-gray-600 mb-2">{plan.goal}</p>
+                      <p className="font-semibold text-sm text-slate-900 mb-1">{plan.problem}</p>
+                      <p className="text-xs text-slate-600 mb-2">{plan.goal}</p>
                       {plan.interventions?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           {plan.interventions.slice(0, 2).map((intervention, idx) => (
@@ -90,7 +90,7 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
                     </Badge>
                   </div>
                   {plan.target_date && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-slate-500">
                       {isOverdue ? (
                         <AlertTriangle className="w-3 h-3 text-orange-500" />
                       ) : (

@@ -29,7 +29,7 @@ export default function HealthTrendsChart({ visits, _patient }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center py-8">
-          <p className="text-gray-500">No vital signs data available</p>
+          <p className="text-slate-500">No vital signs data available</p>
         </CardContent>
       </Card>
     );

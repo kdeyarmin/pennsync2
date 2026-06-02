@@ -227,15 +227,15 @@ Provide:
           <div className="grid grid-cols-3 gap-2">
             <div className="text-center p-2 bg-white rounded border">
               <p className="text-lg font-bold text-emerald-600">{avgQualityScore}%</p>
-              <p className="text-xs text-gray-500">Quality</p>
+              <p className="text-xs text-slate-500">Quality</p>
             </div>
             <div className="text-center p-2 bg-white rounded border">
               <p className="text-lg font-bold text-blue-600">{avgComplianceScore}%</p>
-              <p className="text-xs text-gray-500">Compliance</p>
+              <p className="text-xs text-slate-500">Compliance</p>
             </div>
             <div className="text-center p-2 bg-white rounded border">
               <p className="text-lg font-bold text-purple-600">{practiceCompleted}</p>
-              <p className="text-xs text-gray-500">Practices</p>
+              <p className="text-xs text-slate-500">Practices</p>
             </div>
           </div>
 
@@ -344,7 +344,7 @@ Provide:
           </CardHeader>
           <CardContent className="p-3 space-y-2">
             {weakAreas.map((area, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{area.area}</span>
                   {area.trend < 0 && <TrendingDown className="w-3 h-3 text-red-500" />}
@@ -352,7 +352,7 @@ Provide:
                 </div>
                 <div className="flex items-center gap-2">
                   <Progress value={area.score} className="w-16 h-2" />
-                  <span className="text-xs text-gray-600">{Math.round(area.score)}%</span>
+                  <span className="text-xs text-slate-600">{Math.round(area.score)}%</span>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -377,7 +377,7 @@ Provide:
           </CardHeader>
           <CardContent className="p-3 space-y-2">
             {strongAreas.map((area, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
                   <span className="text-sm font-medium">{area.area}</span>
@@ -416,19 +416,19 @@ Provide:
         </CardHeader>
         <CardContent className="p-3">
           {!insights && !isAnalyzing && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-slate-500 text-center py-4">
               Click "Analyze" to get personalized AI insights based on your documentation patterns
             </p>
           )}
           {isAnalyzing && (
             <div className="text-center py-4">
               <Loader2 className="w-6 h-6 animate-spin text-indigo-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-500">Analyzing your learning patterns...</p>
+              <p className="text-xs text-slate-500">Analyzing your learning patterns...</p>
             </div>
           )}
           {insights && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-700">{insights.overall_assessment}</p>
+              <p className="text-sm text-slate-700">{insights.overall_assessment}</p>
               
               <div className="bg-blue-50 p-3 rounded">
                 <p className="text-xs font-semibold text-blue-800 mb-2">Recommendations:</p>

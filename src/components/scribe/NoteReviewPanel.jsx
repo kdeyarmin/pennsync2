@@ -55,8 +55,8 @@ ${editedNote}`,
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Review Clinical Note</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Review Clinical Note</h2>
+        <p className="text-slate-600">
           Review and edit the AI-generated note before saving to patient record
         </p>
       </div>
@@ -151,7 +151,7 @@ ${editedNote}`,
                   </div>
                 </div>
               ) : (
-                <div className="bg-gray-50 p-4 rounded-lg border whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800">
+                <div className="bg-slate-50 p-4 rounded-lg border whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">
                   {editedNote}
                 </div>
               )}
@@ -173,7 +173,7 @@ ${editedNote}`,
               <CardTitle>Audio Transcription</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-gray-50 p-4 rounded-lg border text-sm leading-relaxed text-gray-800 max-h-96 overflow-y-auto">
+              <div className="bg-slate-50 p-4 rounded-lg border text-sm leading-relaxed text-slate-800 max-h-96 overflow-y-auto">
                 {transcription}
               </div>
             </CardContent>
@@ -190,9 +190,9 @@ ${editedNote}`,
               {treatmentSuggestions.length > 0 ? (
                 <div className="space-y-3">
                   {treatmentSuggestions.map((treatment, idx) => (
-                    <div key={idx} className="border rounded-lg p-4 hover:bg-gray-50 transition">
+                    <div key={idx} className="border rounded-lg p-4 hover:bg-slate-50 transition">
                       <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">{treatment.treatment}</h4>
+                        <h4 className="font-semibold text-slate-900">{treatment.treatment}</h4>
                         <Badge 
                           variant="outline"
                           className={
@@ -205,15 +205,15 @@ ${editedNote}`,
                           {treatment.category}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{treatment.rationale}</p>
+                      <p className="text-sm text-slate-600 mb-2">{treatment.rationale}</p>
                       <div className="flex items-center gap-2">
-                        <div className="h-2 bg-gray-200 rounded-full flex-1">
+                        <div className="h-2 bg-slate-200 rounded-full flex-1">
                           <div
                             className="h-2 bg-indigo-600 rounded-full"
                             style={{ width: `${treatment.confidence}%` }}
                           />
                         </div>
-                        <span className="text-xs font-medium text-gray-500">
+                        <span className="text-xs font-medium text-slate-500">
                           {treatment.confidence}%
                         </span>
                       </div>

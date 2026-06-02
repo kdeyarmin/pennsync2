@@ -204,7 +204,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
       case 'moderate': return 'text-yellow-600 bg-yellow-100';
       case 'high': return 'text-orange-600 bg-orange-100';
       case 'critical': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-slate-600 bg-slate-100';
     }
   };
 
@@ -212,7 +212,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
     switch(trend) {
       case 'increasing': return <ArrowUp className="w-4 h-4 text-red-500" />;
       case 'decreasing': return <ArrowDown className="w-4 h-4 text-green-500" />;
-      case 'stable': return <Minus className="w-4 h-4 text-gray-500" />;
+      case 'stable': return <Minus className="w-4 h-4 text-slate-500" />;
       default: return null;
     }
   };
@@ -222,7 +222,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
       case 'immediate': return 'bg-red-500 text-white';
       case 'urgent': return 'bg-orange-500 text-white';
       case 'routine': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -231,7 +231,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
       <Card className="border-2 border-purple-200">
         <CardContent className="p-8 text-center">
           <Brain className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-600">Analyzing patient data and predicting risks...</p>
+          <p className="text-slate-600">Analyzing patient data and predicting risks...</p>
         </CardContent>
       </Card>
     );
@@ -280,7 +280,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Activity className="w-5 h-5 text-blue-600" />
-                <p className="text-sm font-medium text-gray-600">Risk Trajectory</p>
+                <p className="text-sm font-medium text-slate-600">Risk Trajectory</p>
               </div>
               <div className="flex items-center gap-2">
                 {getTrendIcon(analysis.risk_trajectory)}
@@ -313,7 +313,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
         {/* Primary Risk Factors */}
         {analysis.primary_risk_factors?.length > 0 && (
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-orange-600" />
               Primary Risk Factors
             </h3>
@@ -328,13 +328,13 @@ Return detailed clinical analysis with specific evidence from the data.`,
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-gray-900">{factor.factor}</p>
+                          <p className="font-semibold text-slate-900">{factor.factor}</p>
                           <Badge className={getRiskColor(factor.severity)}>
                             {factor.severity}
                           </Badge>
                           {getTrendIcon(factor.trend)}
                         </div>
-                        <p className="text-sm text-gray-600">{factor.evidence}</p>
+                        <p className="text-sm text-slate-600">{factor.evidence}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -359,13 +359,13 @@ Return detailed clinical analysis with specific evidence from the data.`,
             {/* Specific Health Risks */}
             {analysis.specific_health_risks?.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Specific Health Risks</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Specific Health Risks</h3>
                 <div className="grid gap-3">
                   {analysis.specific_health_risks.map((risk, idx) => (
                     <Card key={idx} className="border-orange-200 bg-orange-50">
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-gray-900">{risk.risk_type}</p>
+                          <p className="font-semibold text-slate-900">{risk.risk_type}</p>
                           <div className="flex items-center gap-2">
                             <Badge className={`${
                               risk.probability === 'high' ? 'bg-red-500' :
@@ -377,7 +377,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
                           </div>
                         </div>
                         {risk.clinical_indicators?.length > 0 && (
-                          <ul className="text-sm text-gray-600 space-y-1">
+                          <ul className="text-sm text-slate-600 space-y-1">
                             {risk.clinical_indicators.map((indicator, i) => (
                               <li key={i}>• {indicator}</li>
                             ))}
@@ -393,12 +393,12 @@ Return detailed clinical analysis with specific evidence from the data.`,
             {/* Early Warning Signs */}
             {analysis.early_warning_signs?.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Early Warning Signs to Monitor</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Early Warning Signs to Monitor</h3>
                 <Card className="border-yellow-200 bg-yellow-50">
                   <CardContent className="p-3">
                     <ul className="space-y-2">
                       {analysis.early_warning_signs.map((sign, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
                           <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
                           <span>{sign}</span>
                         </li>
@@ -412,7 +412,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
             {/* Preventive Interventions */}
             {analysis.preventive_interventions?.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Recommended Preventive Actions</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Recommended Preventive Actions</h3>
                 <div className="grid gap-3">
                   {analysis.preventive_interventions.map((intervention, idx) => (
                     <Card key={idx} className="border-blue-200 bg-blue-50">
@@ -424,10 +424,10 @@ Return detailed clinical analysis with specific evidence from the data.`,
                             </Badge>
                           </div>
                           <div className="flex-1">
-                            <p className="font-semibold text-gray-900 mb-1">{intervention.intervention}</p>
+                            <p className="font-semibold text-slate-900 mb-1">{intervention.intervention}</p>
                             <div className="flex flex-wrap items-center gap-2 text-sm">
                               <Badge variant="outline">{intervention.category}</Badge>
-                              <span className="text-gray-600">{intervention.expected_impact}</span>
+                              <span className="text-slate-600">{intervention.expected_impact}</span>
                             </div>
                           </div>
                         </div>

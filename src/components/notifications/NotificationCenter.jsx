@@ -167,7 +167,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
       case 'training_due':
         return <GraduationCap className="w-5 h-5 text-indigo-600" />;
       default:
-        return <Info className="w-5 h-5 text-gray-600" />;
+        return <Info className="w-5 h-5 text-slate-600" />;
     }
   };
 
@@ -180,7 +180,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
       case 'medium':
         return 'bg-blue-100 text-blue-800 border-blue-300';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+        return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -194,7 +194,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
   const NotificationItem = ({ notification }) => (
     <div
       onClick={() => handleNotificationClick(notification)}
-      className={`p-4 border-b hover:bg-gray-50 cursor-pointer transition-colors ${
+      className={`p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors ${
         !notification.is_read ? 'bg-blue-50' : ''
       }`}
     >
@@ -204,18 +204,18 @@ export default function NotificationCenter({ currentUser, onClose }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <p className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900' : 'text-gray-600'}`}>
+            <p className={`text-sm font-medium ${!notification.is_read ? 'text-slate-900' : 'text-slate-600'}`}>
               {notification.title}
             </p>
             {!notification.is_read && (
               <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1.5"></div>
             )}
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+          <p className="text-sm text-slate-600 line-clamp-2 mb-2">
             {notification.message}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-slate-500">
               {formatRelativeEastern(notification.created_date)}
             </span>
             {notification.priority !== 'low' && notification.priority !== 'medium' && (
@@ -282,8 +282,8 @@ export default function NotificationCenter({ currentUser, onClose }) {
                     <NotificationItem key={notification.id} notification={notification} />
                   ))
                 ) : (
-                  <div className="p-12 text-center text-gray-500">
-                    <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <div className="p-12 text-center text-slate-500">
+                    <Bell className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p>No unread notifications</p>
                   </div>
                 )}
@@ -295,8 +295,8 @@ export default function NotificationCenter({ currentUser, onClose }) {
                     <NotificationItem key={notification.id} notification={notification} />
                   ))
                 ) : (
-                  <div className="p-12 text-center text-gray-500">
-                    <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <div className="p-12 text-center text-slate-500">
+                    <Bell className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p>No notifications</p>
                   </div>
                 )}
@@ -318,7 +318,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-slate-600 mb-2">
                   {formatEastern(selectedNotification.created_date, 'PPpp')}
                 </p>
                 {selectedNotification.priority !== 'low' && selectedNotification.priority !== 'medium' && (
@@ -327,7 +327,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
                   </Badge>
                 )}
               </div>
-              <p className="text-gray-900">{selectedNotification.message}</p>
+              <p className="text-slate-900">{selectedNotification.message}</p>
               <div className="flex gap-2 pt-4 border-t">
                 {selectedNotification.action_url && (
                   <Link to={selectedNotification.action_url} onClick={() => setSelectedNotification(null)}>

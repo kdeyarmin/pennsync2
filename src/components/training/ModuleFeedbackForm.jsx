@@ -29,12 +29,12 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
     <Card className="border-2 border-blue-200">
       <CardHeader>
         <CardTitle className="text-lg">How was this module?</CardTitle>
-        <p className="text-sm text-gray-600">Your feedback helps us improve</p>
+        <p className="text-sm text-slate-600">Your feedback helps us improve</p>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Effectiveness Rating */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
+          <label className="text-sm font-medium text-slate-700 mb-2 block">
             How effective was this module? *
           </label>
           <div className="flex gap-2">
@@ -48,7 +48,7 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
                   className={`w-8 h-8 ${
                     num <= rating.effectiveness
                       ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
+                      : 'text-slate-300'
                   }`}
                 />
               </button>
@@ -58,7 +58,7 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Difficulty */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
+          <label className="text-sm font-medium text-slate-700 mb-2 block">
             Was the difficulty level appropriate? *
           </label>
           <div className="flex gap-2">
@@ -81,7 +81,7 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Relevance */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
+          <label className="text-sm font-medium text-slate-700 mb-2 block">
             How relevant was this to your work? *
           </label>
           <div className="flex gap-2">
@@ -95,7 +95,7 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
                   className={`w-8 h-8 ${
                     num <= rating.relevance
                       ? 'fill-blue-400 text-blue-400'
-                      : 'text-gray-300'
+                      : 'text-slate-300'
                   }`}
                 />
               </button>
@@ -105,7 +105,7 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Would Recommend */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
+          <label className="text-sm font-medium text-slate-700 mb-2 block">
             Would you recommend this module to colleagues?
           </label>
           <div className="flex gap-2">
@@ -128,7 +128,7 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Feedback */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
+          <label className="text-sm font-medium text-slate-700 mb-2 block">
             Additional feedback
           </label>
           <Textarea
@@ -141,7 +141,7 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Suggestions */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
+          <label className="text-sm font-medium text-slate-700 mb-2 block">
             Suggestions for improvement
           </label>
           <Textarea

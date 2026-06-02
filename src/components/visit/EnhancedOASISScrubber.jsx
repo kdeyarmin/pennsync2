@@ -274,7 +274,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
       case 'good': return 'text-blue-700 bg-blue-50 border-blue-300';
       case 'needs_work': return 'text-orange-700 bg-orange-50 border-orange-300';
       case 'insufficient': return 'text-red-700 bg-red-50 border-red-300';
-      default: return 'text-gray-700 bg-gray-50 border-gray-300';
+      default: return 'text-slate-700 bg-slate-50 border-slate-300';
     }
   };
 
@@ -283,7 +283,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
       case 'significant': return 'bg-red-500';
       case 'moderate': return 'bg-orange-500';
       case 'minor': return 'bg-yellow-500';
-      case 'none': return 'bg-gray-400';
+      case 'none': return 'bg-slate-400';
       default: return 'bg-blue-500';
     }
   };
@@ -293,7 +293,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
       case 'critical': return 'bg-red-500';
       case 'important': return 'bg-orange-500';
       case 'minor': return 'bg-yellow-500';
-      default: return 'bg-gray-400';
+      default: return 'bg-slate-400';
     }
   };
 
@@ -334,7 +334,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
           </Button>
 
           {!narrativeText && (
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-slate-500 text-center">
               Add documentation to enable OASIS analysis
             </p>
           )}
@@ -394,13 +394,13 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-sm text-gray-600">Current Likely Score</p>
-                          <p className="text-2xl font-bold text-gray-900">
+                          <p className="text-sm text-slate-600">Current Likely Score</p>
+                          <p className="text-2xl font-bold text-slate-900">
                             {analysis.estimated_case_mix_impact.current_likely_score}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Potential Optimized</p>
+                          <p className="text-sm text-slate-600">Potential Optimized</p>
                           <p className="text-2xl font-bold text-green-700">
                             {analysis.estimated_case_mix_impact.potential_optimized_score}
                           </p>
@@ -408,7 +408,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                       </div>
                       <Alert className="bg-white border-green-300">
                         <TrendingUp className="w-4 h-4 text-green-600" />
-                        <AlertDescription className="text-sm text-gray-900">
+                        <AlertDescription className="text-sm text-slate-900">
                           {analysis.estimated_case_mix_impact.reimbursement_impact}
                         </AlertDescription>
                       </Alert>
@@ -429,7 +429,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                       {analysis.strengths.map((strength, idx) => (
                         <div key={idx} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                           <p className="font-semibold text-blue-900">{strength.area}</p>
-                          <p className="text-sm text-gray-700 mt-1">{strength.benefit}</p>
+                          <p className="text-sm text-slate-700 mt-1">{strength.benefit}</p>
                         </div>
                       ))}
                     </CardContent>
@@ -451,15 +451,15 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                           <p className="font-semibold text-yellow-900 mb-2">{check.issue}</p>
                           <div className="space-y-2 text-sm">
                             <div>
-                              <p className="text-gray-600">Narrative states:</p>
-                              <p className="text-gray-900 italic">"{check.narrative_states}"</p>
+                              <p className="text-slate-600">Narrative states:</p>
+                              <p className="text-slate-900 italic">"{check.narrative_states}"</p>
                             </div>
                             <div>
-                              <p className="text-gray-600">Suggested OASIS:</p>
-                              <p className="text-gray-900 font-medium">{check.suggested_oasis}</p>
+                              <p className="text-slate-600">Suggested OASIS:</p>
+                              <p className="text-slate-900 font-medium">{check.suggested_oasis}</p>
                             </div>
                             <Alert className="bg-white border-yellow-300">
-                              <AlertDescription className="text-xs text-gray-700">
+                              <AlertDescription className="text-xs text-slate-700">
                                 <strong>Resolution:</strong> {check.resolution}
                               </AlertDescription>
                             </Alert>
@@ -483,7 +483,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                               <Badge variant="outline" className="font-mono">
                                 {item.item_number}
                               </Badge>
-                              <h4 className="font-semibold text-gray-900">{item.item_name}</h4>
+                              <h4 className="font-semibold text-slate-900">{item.item_name}</h4>
                             </div>
                             <Badge className={getImpactColor(item.reimbursement_impact)}>
                               {item.reimbursement_impact} impact
@@ -491,7 +491,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                           </div>
                           <Badge className={
                             item.confidence === 'high' ? 'bg-green-500' :
-                            item.confidence === 'medium' ? 'bg-yellow-500' : 'bg-gray-500'
+                            item.confidence === 'medium' ? 'bg-yellow-500' : 'bg-slate-500'
                           }>
                             {item.confidence} confidence
                           </Badge>
@@ -499,28 +499,28 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
 
                         <div className="space-y-2 text-sm">
                           <div className="p-2 bg-blue-50 rounded border border-blue-200">
-                            <p className="text-gray-600 text-xs mb-1">Suggested Response:</p>
+                            <p className="text-slate-600 text-xs mb-1">Suggested Response:</p>
                             <p className="font-semibold text-blue-900">{item.suggested_response}</p>
                           </div>
 
                           {item.supporting_evidence && (
                             <div className="p-2 bg-green-50 rounded border border-green-200">
-                              <p className="text-gray-600 text-xs mb-1">Supporting Evidence:</p>
-                              <p className="text-gray-900 italic">"{item.supporting_evidence}"</p>
+                              <p className="text-slate-600 text-xs mb-1">Supporting Evidence:</p>
+                              <p className="text-slate-900 italic">"{item.supporting_evidence}"</p>
                             </div>
                           )}
 
                           {item.documentation_needed && (
                             <div className="p-2 bg-orange-50 rounded border border-orange-200">
-                              <p className="text-gray-600 text-xs mb-1">Documentation Needed:</p>
-                              <p className="text-gray-900">{item.documentation_needed}</p>
+                              <p className="text-slate-600 text-xs mb-1">Documentation Needed:</p>
+                              <p className="text-slate-900">{item.documentation_needed}</p>
                             </div>
                           )}
 
                           {item.narrative_snippet && (
                             <div className="p-2 bg-purple-50 rounded border border-purple-200">
                               <div className="flex items-start justify-between mb-1">
-                                <p className="text-gray-600 text-xs">Suggested Narrative Text:</p>
+                                <p className="text-slate-600 text-xs">Suggested Narrative Text:</p>
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -534,7 +534,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                                   Add to Note
                                 </Button>
                               </div>
-                              <p className="text-gray-900">{item.narrative_snippet}</p>
+                              <p className="text-slate-900">{item.narrative_snippet}</p>
                             </div>
                           )}
                         </div>
@@ -563,17 +563,17 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
 
                         <div className="space-y-3 text-sm">
                           <div>
-                            <p className="text-gray-600 font-medium mb-1">Current Documentation:</p>
-                            <p className="text-gray-900 p-2 bg-white rounded border">{opp.current_documentation}</p>
+                            <p className="text-slate-600 font-medium mb-1">Current Documentation:</p>
+                            <p className="text-slate-900 p-2 bg-white rounded border">{opp.current_documentation}</p>
                           </div>
 
                           <div>
                             <p className="text-green-700 font-medium mb-1">💡 Opportunity:</p>
-                            <p className="text-gray-900 p-2 bg-white rounded border border-green-300">{opp.opportunity}</p>
+                            <p className="text-slate-900 p-2 bg-white rounded border border-green-300">{opp.opportunity}</p>
                           </div>
 
                           <div>
-                            <p className="text-gray-600 font-medium mb-1">OASIS Items Affected:</p>
+                            <p className="text-slate-600 font-medium mb-1">OASIS Items Affected:</p>
                             <div className="flex flex-wrap gap-1">
                               {opp.oasis_items_affected.map((item, i) => (
                                 <Badge key={i} variant="outline" className="font-mono">
@@ -591,14 +591,14 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                           </Alert>
 
                           <div>
-                            <p className="text-gray-600 font-medium mb-1">Action Required:</p>
-                            <p className="text-gray-900 p-2 bg-orange-50 rounded border border-orange-200">{opp.action_required}</p>
+                            <p className="text-slate-600 font-medium mb-1">Action Required:</p>
+                            <p className="text-slate-900 p-2 bg-orange-50 rounded border border-orange-200">{opp.action_required}</p>
                           </div>
 
                           {opp.suggested_text && (
                             <div className="p-3 bg-white rounded border-2 border-green-400">
                               <div className="flex items-start justify-between mb-2">
-                                <p className="text-gray-700 font-semibold text-xs">✨ Suggested Text to Add:</p>
+                                <p className="text-slate-700 font-semibold text-xs">✨ Suggested Text to Add:</p>
                                 <Button
                                   size="sm"
                                   onClick={() => {
@@ -611,7 +611,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                                   Add to Note
                                 </Button>
                               </div>
-                              <p className="text-gray-900">{opp.suggested_text}</p>
+                              <p className="text-slate-900">{opp.suggested_text}</p>
                             </div>
                           )}
                         </div>
@@ -643,25 +643,25 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                             <Badge className={getSeverityColor(gap.severity)}>
                               {gap.severity}
                             </Badge>
-                            <h4 className="font-semibold text-gray-900">{gap.gap_type}</h4>
+                            <h4 className="font-semibold text-slate-900">{gap.gap_type}</h4>
                           </div>
                         </div>
 
                         <div className="space-y-2 text-sm">
                           <div>
-                            <p className="text-gray-600 mb-1">OASIS Impact:</p>
-                            <p className="text-gray-900 font-medium">{gap.oasis_impact}</p>
+                            <p className="text-slate-600 mb-1">OASIS Impact:</p>
+                            <p className="text-slate-900 font-medium">{gap.oasis_impact}</p>
                           </div>
 
                           <div>
-                            <p className="text-gray-600 mb-1">Description:</p>
-                            <p className="text-gray-900">{gap.description}</p>
+                            <p className="text-slate-600 mb-1">Description:</p>
+                            <p className="text-slate-900">{gap.description}</p>
                           </div>
 
                           {gap.suggested_text && (
-                            <div className="p-3 bg-white rounded border-2 border-gray-300">
+                            <div className="p-3 bg-white rounded border-2 border-slate-300">
                               <div className="flex items-start justify-between mb-2">
-                                <p className="text-gray-700 font-semibold text-xs">Suggested Text to Add:</p>
+                                <p className="text-slate-700 font-semibold text-xs">Suggested Text to Add:</p>
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -675,7 +675,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                                   Add to Note
                                 </Button>
                               </div>
-                              <p className="text-gray-900">{gap.suggested_text}</p>
+                              <p className="text-slate-900">{gap.suggested_text}</p>
                             </div>
                           )}
                         </div>
@@ -711,7 +711,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                             <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
                               {idx + 1}
                             </div>
-                            <p className="text-gray-900 flex-1">{action}</p>
+                            <p className="text-slate-900 flex-1">{action}</p>
                           </div>
                         </CardContent>
                       </Card>

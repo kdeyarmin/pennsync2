@@ -141,7 +141,7 @@ export default function UserActivityLog() {
       'delete': 'bg-red-100 text-red-800',
       'export': 'bg-purple-100 text-purple-800',
       'error': 'bg-red-600 text-white',
-      'view': 'bg-gray-100 text-gray-800',
+      'view': 'bg-slate-100 text-slate-800',
       'generate': 'bg-indigo-100 text-indigo-800',
       'page_visit': 'bg-slate-100 text-slate-800',
       'login': 'bg-purple-100 text-purple-800',
@@ -179,14 +179,14 @@ export default function UserActivityLog() {
       'settings_updated': 'bg-blue-100 text-blue-800',
       'role_permission_changed': 'bg-blue-100 text-blue-800'
     };
-    return colors[action] || 'bg-gray-100 text-gray-800';
+    return colors[action] || 'bg-slate-100 text-slate-800';
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">User Activity Log</h1>
-        <p className="text-sm text-gray-600">Monitor all user actions across the system</p>
+        <h1 className="text-2xl font-bold text-slate-900">User Activity Log</h1>
+        <p className="text-sm text-slate-600">Monitor all user actions across the system</p>
       </div>
 
       {/* Stats Overview */}
@@ -196,7 +196,7 @@ export default function UserActivityLog() {
             <div className="flex items-center gap-3">
               <Activity className="w-8 h-8 text-blue-600" />
               <div>
-                <p className="text-xs text-gray-500">Total Activities</p>
+                <p className="text-xs text-slate-500">Total Activities</p>
                 <p className="text-2xl font-bold">{filteredActivities.length}</p>
               </div>
             </div>
@@ -207,7 +207,7 @@ export default function UserActivityLog() {
             <div className="flex items-center gap-3">
               <User className="w-8 h-8 text-purple-600" />
               <div>
-                <p className="text-xs text-gray-500">Active Users</p>
+                <p className="text-xs text-slate-500">Active Users</p>
                 <p className="text-2xl font-bold">{new Set(filteredActivities.map(a => a.user_email)).size}</p>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function UserActivityLog() {
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-green-600" />
               <div>
-                <p className="text-xs text-gray-500">Created</p>
+                <p className="text-xs text-slate-500">Created</p>
                 <p className="text-2xl font-bold">{filteredActivities.filter(a => a.action === 'create').length}</p>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function UserActivityLog() {
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-8 h-8 text-red-600" />
               <div>
-                <p className="text-xs text-gray-500">Errors</p>
+                <p className="text-xs text-slate-500">Errors</p>
                 <p className="text-2xl font-bold">{filteredActivities.filter(a => a.action === 'error').length}</p>
               </div>
             </div>
@@ -292,14 +292,14 @@ export default function UserActivityLog() {
                   <div key={user.id} className="bg-white p-3 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-                        <p className="text-xs text-gray-500">{user.role}</p>
+                        <p className="text-sm font-medium text-slate-900">{user.full_name}</p>
+                        <p className="text-xs text-slate-500">{user.role}</p>
                       </div>
                       <Badge className="bg-indigo-600 text-white text-lg">
                         {userEnhancements.length}
                       </Badge>
                     </div>
-                    <div className="text-xs text-gray-600 space-y-0.5">
+                    <div className="text-xs text-slate-600 space-y-0.5">
                       <p>Enhanced: {userEnhancements.length}</p>
                       <p>Patients: {uniquePatients}</p>
                       <p>Compliance Checks: {activities.filter(a => a.user_email === user.email && a.action === 'note_compliance_check').length}</p>
@@ -336,16 +336,16 @@ export default function UserActivityLog() {
                   <div key={user.id} className="bg-white p-3 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-                        <p className="text-xs text-gray-500">{user.role}</p>
+                        <p className="text-sm font-medium text-slate-900">{user.full_name}</p>
+                        <p className="text-xs text-slate-500">{user.role}</p>
                       </div>
                       <Badge className="bg-purple-600 text-white">
                         {userLogins.length} logins
                       </Badge>
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-slate-600">
                       <p>Last login: {formatEastern(lastLogin.created_date, 'MMM d, yyyy HH:mm')}</p>
-                      <p className="text-[10px] text-gray-500 mt-1">Total sessions: {userLogins.length}</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Total sessions: {userLogins.length}</p>
                     </div>
                   </div>
                 );
@@ -366,7 +366,7 @@ export default function UserActivityLog() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Search..."
                 value={searchQuery}
@@ -426,15 +426,15 @@ export default function UserActivityLog() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-center text-gray-500 py-8">Loading activities...</p>
+            <p className="text-center text-slate-500 py-8">Loading activities...</p>
           ) : filteredActivities.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No activities found</p>
+            <p className="text-center text-slate-500 py-8">No activities found</p>
           ) : (
             <div className="space-y-3">
               {filteredActivities.map((activity) => (
                 <div 
                   key={activity.id} 
-                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className="p-4 border rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
@@ -446,22 +446,22 @@ export default function UserActivityLog() {
                           <Badge className={getActionColor(activity.action)}>
                             {activity.action}
                           </Badge>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-slate-900">
                             {activity.user_name}
                           </p>
-                          <span className="text-xs text-gray-400">({activity.user_email})</span>
+                          <span className="text-xs text-slate-400">({activity.user_email})</span>
                         </div>
                         
                         {activity.page && (
-                          <p className="text-xs text-gray-600 mb-1">
-                            Page: <span className="font-mono bg-gray-100 px-1 rounded">{activity.page}</span>
+                          <p className="text-xs text-slate-600 mb-1">
+                            Page: <span className="font-mono bg-slate-100 px-1 rounded">{activity.page}</span>
                           </p>
                         )}
                         
                         {activity.entity_type && (
-                          <p className="text-xs text-gray-600 mb-1">
+                          <p className="text-xs text-slate-600 mb-1">
                             Entity: <span className="font-medium">{activity.entity_type}</span>
-                            {activity.entity_id && <span className="text-gray-400"> (ID: {activity.entity_id.substring(0, 8)}...)</span>}
+                            {activity.entity_id && <span className="text-slate-400"> (ID: {activity.entity_id.substring(0, 8)}...)</span>}
                           </p>
                         )}
                         
@@ -473,12 +473,12 @@ export default function UserActivityLog() {
                         )}
                         
                         {activity.action === 'note_enhanced' && activity.details && (
-                          <div className="mt-1 text-xs text-gray-600 space-y-0.5">
+                          <div className="mt-1 text-xs text-slate-600 space-y-0.5">
                             {activity.details.quality_score && (
                               <p>Quality Score: <Badge className="bg-green-600 text-white text-xs">{activity.details.quality_score}%</Badge></p>
                             )}
                             {activity.details.rough_note_length && activity.details.enhanced_note_length && (
-                              <p className="text-[10px] text-gray-500">
+                              <p className="text-[10px] text-slate-500">
                                 {activity.details.rough_note_length} → {activity.details.enhanced_note_length} characters
                               </p>
                             )}
@@ -491,7 +491,7 @@ export default function UserActivityLog() {
                             <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-700">
                               View Details
                             </summary>
-                            <div className="mt-2 p-2 bg-gray-50 rounded text-xs font-mono text-gray-700 overflow-x-auto max-h-40">
+                            <div className="mt-2 p-2 bg-slate-50 rounded text-xs font-mono text-slate-700 overflow-x-auto max-h-40">
                               {JSON.stringify(activity.details, null, 2)}
                             </div>
                           </details>
@@ -499,7 +499,7 @@ export default function UserActivityLog() {
                       </div>
                     </div>
                     
-                    <div className="text-right text-xs text-gray-500 ml-4">
+                    <div className="text-right text-xs text-slate-500 ml-4">
                       <p className="flex items-center gap-1 whitespace-nowrap">
                         <Clock className="w-3 h-3" />
                         {formatEastern(activity.created_date, 'MMM d, HH:mm')}

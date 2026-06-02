@@ -98,7 +98,7 @@ export default function FaxSignaturePanel({ onSignatureReady }) {
             {/* Saved profile signature */}
             {savedSignature && !appliedSignature && (
               <div className="space-y-2">
-                <p className="text-xs text-gray-500 font-medium">Saved signature</p>
+                <p className="text-xs text-slate-500 font-medium">Saved signature</p>
                 <img src={savedSignature} alt="Saved signature" className="border rounded h-16 bg-white object-contain px-2 w-full" />
                 <Button variant="outline" size="sm" className="w-full" onClick={useSaved}>
                   <CheckCircle2 className="w-4 h-4 mr-1 text-green-500" /> Use Saved Signature
@@ -127,7 +127,7 @@ export default function FaxSignaturePanel({ onSignatureReady }) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full text-xs text-gray-500"
+                  className="w-full text-xs text-slate-500"
                   onClick={async () => {
                     // We need the drawn sig — prompt user to use it first then save
                     toast.info("Draw your signature, click 'Use Signature', then save to profile below.");

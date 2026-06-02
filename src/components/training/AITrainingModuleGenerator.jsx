@@ -269,7 +269,7 @@ Return structured JSON training module.`,
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Select compliance gaps and exemplary documentation to automatically generate comprehensive training modules.
           </p>
 
@@ -301,10 +301,10 @@ Return structured JSON training module.`,
 
           {/* Select Compliance Gaps */}
           <div>
-            <p className="font-medium text-gray-900 mb-2">Compliance Gaps to Address</p>
-            <div className="max-h-48 overflow-y-auto space-y-2 bg-gray-50 p-3 rounded border">
+            <p className="font-medium text-slate-900 mb-2">Compliance Gaps to Address</p>
+            <div className="max-h-48 overflow-y-auto space-y-2 bg-slate-50 p-3 rounded border">
               {trainingRecommendations.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No unaddressed recommendations</p>
+                <p className="text-sm text-slate-500 text-center py-4">No unaddressed recommendations</p>
               ) : (
                 trainingRecommendations.map(rec => (
                   <div key={rec.id} className="flex items-start gap-2 bg-white p-2 rounded border">
@@ -318,7 +318,7 @@ Return structured JSON training module.`,
                       }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">{rec.recommendation_text}</p>
+                      <p className="text-sm text-slate-900">{rec.recommendation_text}</p>
                       <div className="flex gap-2 mt-1">
                         <Badge className={
                           rec.severity === 'critical' ? 'bg-red-600' :
@@ -333,17 +333,17 @@ Return structured JSON training module.`,
                 ))
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Selected: {selectedRecommendations.size}
             </p>
           </div>
 
           {/* Select Exemplary Documentation */}
           <div>
-            <p className="font-medium text-gray-900 mb-2">Exemplary Documentation Examples</p>
+            <p className="font-medium text-slate-900 mb-2">Exemplary Documentation Examples</p>
             <div className="max-h-48 overflow-y-auto space-y-2 bg-green-50 p-3 rounded border border-green-200">
               {exemplaryDocs.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No exemplary documentation flagged yet</p>
+                <p className="text-sm text-slate-500 text-center py-4">No exemplary documentation flagged yet</p>
               ) : (
                 exemplaryDocs.map(doc => (
                   <div key={doc.id} className="flex items-start gap-2 bg-white p-2 rounded border">
@@ -363,7 +363,7 @@ Return structured JSON training module.`,
                           Score: {doc.context_data?.overall_score || 'N/A'}
                         </p>
                       </div>
-                      <p className="text-xs text-gray-700 italic">
+                      <p className="text-xs text-slate-700 italic">
                         "{doc.context_data?.note_snippet?.substring(0, 100) || doc.recommendation_text}..."
                       </p>
                     </div>
@@ -371,7 +371,7 @@ Return structured JSON training module.`,
                 ))
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Selected: {selectedExemplars.size}
             </p>
           </div>
@@ -413,7 +413,7 @@ Return structured JSON training module.`,
           <CardContent className="space-y-4">
             {/* Module Header */}
             <div className="bg-white p-4 rounded border">
-              <p className="text-sm text-gray-700 mb-3">{generatedModule.description}</p>
+              <p className="text-sm text-slate-700 mb-3">{generatedModule.description}</p>
               <div className="flex gap-2">
                 <Badge variant="outline">{generatedModule.category}</Badge>
                 <Badge variant="outline">{generatedModule.difficulty_level}</Badge>
@@ -440,7 +440,7 @@ Return structured JSON training module.`,
                   <span className="font-medium">Introduction & Medicare Requirements</span>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
-                  <p className="text-sm text-gray-700 mb-3">{generatedModule.content?.introduction}</p>
+                  <p className="text-sm text-slate-700 mb-3">{generatedModule.content?.introduction}</p>
                   {generatedModule.content?.medicare_requirements?.length > 0 && (
                     <div className="bg-purple-50 p-3 rounded border border-purple-200">
                       <p className="font-semibold text-purple-900 text-sm mb-2">42 CFR 484 Requirements:</p>
@@ -461,7 +461,7 @@ Return structured JSON training module.`,
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <div className="prose prose-sm max-w-none">
-                    <div className="text-sm text-gray-700 whitespace-pre-line">
+                    <div className="text-sm text-slate-700 whitespace-pre-line">
                       {generatedModule.content?.main_content}
                     </div>
                   </div>
@@ -484,7 +484,7 @@ Return structured JSON training module.`,
                         <div className="bg-green-50 p-3 rounded mb-2">
                           <p className="text-sm text-green-900 italic">"{ex.example_text}"</p>
                         </div>
-                        <p className="text-xs text-gray-700">{ex.analysis}</p>
+                        <p className="text-xs text-slate-700">{ex.analysis}</p>
                       </div>
                     ))}
                   </AccordionContent>
@@ -504,7 +504,7 @@ Return structured JSON training module.`,
                     {generatedModule.content.common_errors.map((err, idx) => (
                       <div key={idx} className="bg-white p-3 rounded border">
                         <p className="font-semibold text-red-900 mb-1">❌ {err.error}</p>
-                        <p className="text-xs text-gray-600 mb-2">{err.why_problematic}</p>
+                        <p className="text-xs text-slate-600 mb-2">{err.why_problematic}</p>
                         <div className="bg-green-50 p-2 rounded border border-green-200">
                           <p className="text-xs font-semibold text-green-900 mb-1">✓ Correct Approach:</p>
                           <p className="text-xs text-green-800">{err.correct_approach}</p>
@@ -524,7 +524,7 @@ Return structured JSON training module.`,
                   <AccordionContent className="px-4 pb-4 space-y-3">
                     {generatedModule.content.quiz_questions.map((q, idx) => (
                       <div key={idx} className="bg-white p-3 rounded border">
-                        <p className="font-medium text-gray-900 mb-2">
+                        <p className="font-medium text-slate-900 mb-2">
                           {idx + 1}. {q.question}
                         </p>
                         <div className="space-y-1 mb-2">
@@ -534,7 +534,7 @@ Return structured JSON training module.`,
                               className={`p-2 rounded text-sm ${
                                 optIdx === q.correct_answer
                                   ? 'bg-green-100 border-2 border-green-500 font-medium'
-                                  : 'bg-gray-50 border'
+                                  : 'bg-slate-50 border'
                               }`}
                             >
                               {String.fromCharCode(65 + optIdx)}. {opt}
@@ -568,9 +568,9 @@ Return structured JSON training module.`,
                   <AccordionContent className="px-4 pb-4 space-y-4">
                     {generatedModule.content.scenarios.map((scenario, idx) => (
                       <div key={idx} className="bg-white p-4 rounded border">
-                        <p className="font-bold text-gray-900 mb-2">{scenario.scenario_title}</p>
-                        <div className="bg-gray-50 p-3 rounded mb-3">
-                          <p className="text-sm text-gray-700">{scenario.patient_context}</p>
+                        <p className="font-bold text-slate-900 mb-2">{scenario.scenario_title}</p>
+                        <div className="bg-slate-50 p-3 rounded mb-3">
+                          <p className="text-sm text-slate-700">{scenario.patient_context}</p>
                         </div>
                         <p className="text-sm font-medium text-orange-600 mb-2">
                           Challenge: {scenario.challenge}
@@ -606,10 +606,10 @@ Return structured JSON training module.`,
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4 space-y-3">
                   <div className="bg-white p-3 rounded border">
-                    <p className="font-semibold text-gray-900 mb-2">Key Takeaways:</p>
+                    <p className="font-semibold text-slate-900 mb-2">Key Takeaways:</p>
                     <ul className="space-y-1">
                       {generatedModule.content?.key_takeaways?.map((takeaway, idx) => (
-                        <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                        <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                           <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                           {takeaway}
                         </li>

@@ -331,7 +331,7 @@ export default function InteractivePDFSigner({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Toolbar */}
-        <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border">
+        <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg border">
           <div className="flex gap-1">
             <Button
               variant={mode === 'view' ? 'default' : 'outline'}
@@ -367,7 +367,7 @@ export default function InteractivePDFSigner({
             </Button>
           </div>
           
-          <div className="h-6 w-px bg-gray-300" />
+          <div className="h-6 w-px bg-slate-300" />
           
           <div className="flex gap-1">
             <Button
@@ -388,7 +388,7 @@ export default function InteractivePDFSigner({
             </Button>
           </div>
           
-          <div className="h-6 w-px bg-gray-300" />
+          <div className="h-6 w-px bg-slate-300" />
           
           <Button
             variant="outline"
@@ -430,7 +430,7 @@ export default function InteractivePDFSigner({
         {/* PDF Canvas */}
         <div 
           ref={containerRef}
-          className="border rounded-lg overflow-auto bg-gray-100 max-h-[600px]"
+          className="border rounded-lg overflow-auto bg-slate-100 max-h-[600px]"
           style={{ cursor: mode !== 'view' ? 'crosshair' : 'default' }}
         >
           <canvas 
@@ -454,10 +454,10 @@ export default function InteractivePDFSigner({
             </Button>
             
             <div className="text-center">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-slate-600">
                 Page {currentPage} of {numPages}
               </span>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-slate-500 mt-1">
                 {(annotations[currentPage] || []).length} annotation{(annotations[currentPage] || []).length !== 1 ? 's' : ''} on this page
               </div>
             </div>
@@ -474,7 +474,7 @@ export default function InteractivePDFSigner({
           </div>
           
           {/* Total Annotations Summary */}
-          <div className="flex justify-center gap-4 text-xs text-gray-600 p-2 bg-gray-50 rounded">
+          <div className="flex justify-center gap-4 text-xs text-slate-600 p-2 bg-slate-50 rounded">
             <span>
               Total Signatures: {Object.values(annotations).flat().filter(a => a.type === 'signature').length}
             </span>
@@ -493,7 +493,7 @@ export default function InteractivePDFSigner({
                 <CardTitle>Draw Your Signature</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="border-2 border-gray-300 rounded-lg bg-white">
+                <div className="border-2 border-slate-300 rounded-lg bg-white">
                   <SignatureCanvas
                     ref={sigCanvasRef}
                     canvasProps={{
@@ -554,7 +554,7 @@ export default function InteractivePDFSigner({
           )}
         </Button>
         
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-slate-500 text-center">
           By signing, you acknowledge that you have read and agree to the terms outlined in this document.
         </p>
       </CardContent>

@@ -258,7 +258,7 @@ Return JSON:
       critical: 'bg-red-600 text-white',
       high: 'bg-orange-500 text-white',
       medium: 'bg-blue-500 text-white',
-      low: 'bg-gray-400 text-white'
+      low: 'bg-slate-400 text-white'
     };
     return colors[priority] || colors.medium;
   };
@@ -292,8 +292,8 @@ Return JSON:
         {isAnalyzing ? (
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">Analyzing clinical pathways and interventions...</p>
-            <p className="text-xs text-gray-400 mt-1">Evaluating diagnosis, functional status, and PDGM optimization</p>
+            <p className="text-sm text-slate-600">Analyzing clinical pathways and interventions...</p>
+            <p className="text-xs text-slate-400 mt-1">Evaluating diagnosis, functional status, and PDGM optimization</p>
           </div>
         ) : !recommendations ? (
           <Button
@@ -325,8 +325,8 @@ Return JSON:
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div className="bg-white p-2 rounded text-center">
-                    <p className="text-xs text-gray-500">Current Estimate</p>
-                    <p className="text-lg font-bold text-gray-700">
+                    <p className="text-xs text-slate-500">Current Estimate</p>
+                    <p className="text-lg font-bold text-slate-700">
                       {formatCurrency(recommendations.revenue_optimization_summary.current_estimated_payment)}
                     </p>
                   </div>
@@ -338,7 +338,7 @@ Return JSON:
                   </div>
                 </div>
                 <div className="bg-white p-2 rounded border">
-                  <p className="text-xs font-medium text-gray-700 mb-1">Key Drivers:</p>
+                  <p className="text-xs font-medium text-slate-700 mb-1">Key Drivers:</p>
                   <div className="flex flex-wrap gap-1">
                     {recommendations.revenue_optimization_summary.key_drivers?.map((driver, idx) => (
                       <Badge key={idx} variant="outline" className="text-xs">{driver}</Badge>
@@ -358,8 +358,8 @@ Return JSON:
                 <div className="space-y-2">
                   {recommendations.quick_wins.map((win, idx) => (
                     <div key={idx} className="bg-white p-2 rounded border text-xs">
-                      <p className="font-medium text-gray-800 mb-1">{win.action}</p>
-                      <p className="text-gray-600">Pathway: <span className="font-semibold">{win.pathway}</span></p>
+                      <p className="font-medium text-slate-800 mb-1">{win.action}</p>
+                      <p className="text-slate-600">Pathway: <span className="font-semibold">{win.pathway}</span></p>
                       <p className="text-green-700">Impact: {win.impact}</p>
                     </div>
                   ))}
@@ -370,8 +370,8 @@ Return JSON:
             {/* Pathway Recommendations */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-700">Recommended Pathways</p>
-                <p className="text-xs text-gray-500">{selectedPathways.length} selected</p>
+                <p className="text-sm font-semibold text-slate-700">Recommended Pathways</p>
+                <p className="text-xs text-slate-500">{selectedPathways.length} selected</p>
               </div>
 
               {recommendations.recommended_pathways?.map((pathway, idx) => {
@@ -382,11 +382,11 @@ Return JSON:
                   <div 
                     key={idx}
                     className={`rounded-lg border-2 overflow-hidden ${
-                      isSelected ? 'border-purple-400 ring-2 ring-purple-200' : 'border-gray-200'
+                      isSelected ? 'border-purple-400 ring-2 ring-purple-200' : 'border-slate-200'
                     }`}
                   >
                     {/* Pathway Header */}
-                    <div className={`p-3 ${isSelected ? 'bg-purple-50' : 'bg-gray-50'}`}>
+                    <div className={`p-3 ${isSelected ? 'bg-purple-50' : 'bg-slate-50'}`}>
                       <div className="flex items-start gap-3">
                         <Checkbox
                           checked={isSelected}
@@ -402,7 +402,7 @@ Return JSON:
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-semibold text-gray-900">{pathway.pathway_name}</h4>
+                              <h4 className="font-semibold text-slate-900">{pathway.pathway_name}</h4>
                               <Badge className={getPriorityColor(pathway.priority)}>
                                 {pathway.priority}
                               </Badge>
@@ -417,14 +417,14 @@ Return JSON:
                             </Badge>
                           </div>
 
-                          <p className="text-sm text-gray-700 mb-2">{pathway.clinical_rationale}</p>
+                          <p className="text-sm text-slate-700 mb-2">{pathway.clinical_rationale}</p>
 
                           <div className="flex flex-wrap gap-2 mb-2">
                             <Badge className="bg-blue-100 text-blue-800 text-xs">
                               <Stethoscope className="w-3 h-3 mr-1" />
                               {pathway.primary_trigger}
                             </Badge>
-                            <span className="text-xs text-gray-600">{pathway.trigger_details}</span>
+                            <span className="text-xs text-slate-600">{pathway.trigger_details}</span>
                           </div>
 
                           {/* PDGM Impact Summary */}
@@ -441,7 +441,7 @@ Return JSON:
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-700">{pathway.pdgm_impact.payment_impact_explanation}</p>
+                              <p className="text-xs text-slate-700">{pathway.pdgm_impact.payment_impact_explanation}</p>
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {pathway.pdgm_impact.affects_functional_level && (
                                   <Badge variant="outline" className="text-xs">
@@ -485,10 +485,10 @@ Return JSON:
                         {/* Expected Outcomes */}
                         {pathway.expected_outcomes?.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-700 mb-1">Expected Outcomes:</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Expected Outcomes:</p>
                             <ul className="space-y-1">
                               {pathway.expected_outcomes.map((outcome, oIdx) => (
-                                <li key={oIdx} className="text-xs text-gray-700 flex items-start gap-1">
+                                <li key={oIdx} className="text-xs text-slate-700 flex items-start gap-1">
                                   <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
                                   {outcome}
                                 </li>
@@ -504,7 +504,7 @@ Return JSON:
                             {pathway.documentation_requirements.map((req, rIdx) => (
                               <div key={rIdx} className="bg-white p-2 rounded border mb-2 last:mb-0">
                                 <div className="flex items-center justify-between mb-1">
-                                  <p className="text-xs font-medium text-gray-800">{req.area}</p>
+                                  <p className="text-xs font-medium text-slate-800">{req.area}</p>
                                   <Badge variant="outline" className="text-xs">{req.frequency}</Badge>
                                 </div>
                                 {req.m_items_affected?.length > 0 && (
@@ -529,10 +529,10 @@ Return JSON:
                             {pathway.recommended_interventions.map((intervention, iIdx) => (
                               <div key={iIdx} className="bg-white p-2 rounded border mb-2 last:mb-0">
                                 <div className="flex items-center justify-between mb-1">
-                                  <p className="text-xs font-medium text-gray-800">{intervention.intervention}</p>
+                                  <p className="text-xs font-medium text-slate-800">{intervention.intervention}</p>
                                   <Badge variant="outline" className="text-xs">{intervention.frequency}</Badge>
                                 </div>
-                                <p className="text-xs text-gray-600 mb-1">
+                                <p className="text-xs text-slate-600 mb-1">
                                   <strong>Skilled Rationale:</strong> {intervention.skilled_rationale}
                                 </p>
                                 <p className="text-xs text-green-700">
@@ -550,17 +550,17 @@ Return JSON:
                             <div className="space-y-2 text-xs">
                               {pathway.pdgm_impact.clinical_group_change && (
                                 <div className="bg-white p-2 rounded">
-                                  <p className="text-gray-600">Clinical Group: {pathway.pdgm_impact.clinical_group_change}</p>
+                                  <p className="text-slate-600">Clinical Group: {pathway.pdgm_impact.clinical_group_change}</p>
                                 </div>
                               )}
                               {pathway.pdgm_impact.functional_improvement_potential && (
                                 <div className="bg-white p-2 rounded">
-                                  <p className="text-gray-600">Functional: {pathway.pdgm_impact.functional_improvement_potential}</p>
+                                  <p className="text-slate-600">Functional: {pathway.pdgm_impact.functional_improvement_potential}</p>
                                 </div>
                               )}
                               {pathway.pdgm_impact.comorbidity_opportunities && (
                                 <div className="bg-white p-2 rounded">
-                                  <p className="text-gray-600">Comorbidity: {pathway.pdgm_impact.comorbidity_opportunities}</p>
+                                  <p className="text-slate-600">Comorbidity: {pathway.pdgm_impact.comorbidity_opportunities}</p>
                                 </div>
                               )}
                             </div>
@@ -569,19 +569,19 @@ Return JSON:
 
                         {/* Tasks Preview */}
                         {pathway.tasks_to_generate?.length > 0 && (
-                          <div className="bg-gray-50 p-2 rounded border">
-                            <p className="text-xs font-medium text-gray-700 mb-1">
+                          <div className="bg-slate-50 p-2 rounded border">
+                            <p className="text-xs font-medium text-slate-700 mb-1">
                               {pathway.tasks_to_generate.length} tasks will be created
                             </p>
                             <div className="space-y-1">
                               {pathway.tasks_to_generate.slice(0, 3).map((task, tIdx) => (
-                                <div key={tIdx} className="text-xs text-gray-600 flex items-center gap-1">
-                                  <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <div key={tIdx} className="text-xs text-slate-600 flex items-center gap-1">
+                                  <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
                                   {task.title}
                                 </div>
                               ))}
                               {pathway.tasks_to_generate.length > 3 && (
-                                <p className="text-xs text-gray-500">+{pathway.tasks_to_generate.length - 3} more</p>
+                                <p className="text-xs text-slate-500">+{pathway.tasks_to_generate.length - 3} more</p>
                               )}
                             </div>
                           </div>

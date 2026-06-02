@@ -129,7 +129,7 @@ export default function OASISItemLinker({
       medication: 'bg-red-100 text-red-800',
       care: 'bg-orange-100 text-orange-800'
     };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+    return colors[category] || 'bg-slate-100 text-slate-800';
   };
 
   return (
@@ -216,7 +216,7 @@ export default function OASISItemLinker({
                     </SelectContent>
                   </Select>
                   {selectedItem && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       {OASIS_ITEMS[selectedCategory]?.find(i => i.code === selectedItem)?.description}
                     </p>
                   )}
@@ -226,7 +226,7 @@ export default function OASISItemLinker({
                 <div>
                   <label className="text-sm font-medium mb-1 block">
                     Supporting Documentation
-                    <span className="text-gray-400 font-normal ml-1">(from note)</span>
+                    <span className="text-slate-400 font-normal ml-1">(from note)</span>
                   </label>
                   <Textarea
                     value={justification || selectedText}
@@ -234,7 +234,7 @@ export default function OASISItemLinker({
                     placeholder="Enter or paste the note text that supports this OASIS item..."
                     className="h-24 text-sm"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     This text will be saved as justification for the OASIS scoring.
                   </p>
                 </div>
@@ -254,7 +254,7 @@ export default function OASISItemLinker({
 
       <CardContent className="pt-3">
         {linkedItems.length === 0 ? (
-          <p className="text-xs text-gray-500 text-center py-3">
+          <p className="text-xs text-slate-500 text-center py-3">
             No OASIS items linked yet. Link note sections to support OASIS scoring.
           </p>
         ) : (
@@ -264,9 +264,9 @@ export default function OASISItemLinker({
               return (
                 <div 
                   key={idx} 
-                  className="p-2 bg-gray-50 rounded-lg border flex items-start gap-2"
+                  className="p-2 bg-slate-50 rounded-lg border flex items-start gap-2"
                 >
-                  <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${CATEGORY_TEXT_COLORS[link.category] || 'text-gray-600'}`} />
+                  <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${CATEGORY_TEXT_COLORS[link.category] || 'text-slate-600'}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge variant="outline" className="text-xs font-mono">{link.code}</Badge>
@@ -275,14 +275,14 @@ export default function OASISItemLinker({
                         {link.category}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-600 line-clamp-2">
+                    <p className="text-xs text-slate-600 line-clamp-2">
                       "{link.justification}"
                     </p>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-red-600"
                     onClick={() => onRemoveLink?.(idx)}
                   >
                     <X className="w-3 h-3" />

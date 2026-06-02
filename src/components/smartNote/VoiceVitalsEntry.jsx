@@ -161,7 +161,7 @@ Return JSON:
                isProcessing ? 'Processing...' : 
                'Quick Voice Entry'}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               "BP 120 over 80" • "lungs clear" • "pain 3 out of 10"
             </p>
           </div>
@@ -177,7 +177,7 @@ Return JSON:
           {/* Recent entries history */}
           {recentEntries.length > 0 && (
           <div className="mt-2 pt-2 border-t border-indigo-200">
-            <p className="text-xs text-gray-500 mb-1">Recent voice entries:</p>
+            <p className="text-xs text-slate-500 mb-1">Recent voice entries:</p>
             <div className="flex flex-wrap gap-1">
               {recentEntries.map((entry, idx) => (
                 <Badge key={idx} variant="outline" className="text-xs bg-white">

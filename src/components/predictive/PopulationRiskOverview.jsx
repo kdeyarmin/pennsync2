@@ -264,13 +264,13 @@ export default function PopulationRiskOverview({
               .map(patient => (
                 <div 
                   key={patient.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: RISK_COLORS[patient.riskLevel] }} />
                     <div>
                       <p className="text-sm font-medium">{patient.first_name} {patient.last_name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         {patient.riskFactors.slice(0, 2).join(' • ')}
                       </p>
                     </div>

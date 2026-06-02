@@ -65,8 +65,8 @@ export default function VitalsTrendAnalysis({ patientId }) {
           </AlertDescription>
         </Alert>
       ) : isLoading ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
-          <div className="animate-pulse text-gray-400">Loading vital signs history…</div>
+        <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
+          <div className="animate-pulse text-slate-400">Loading vital signs history…</div>
         </div>
       ) : chartData.length === 0 ? (
         <Alert className="border-amber-300 bg-amber-50">
@@ -93,17 +93,17 @@ export default function VitalsTrendAnalysis({ patientId }) {
                 : data.trend > 0 ? "text-red-600" : "text-green-600";
 
               return (
-                <Card key={metric.key} className="bg-white border border-gray-200 shadow-sm">
+                <Card key={metric.key} className="bg-white border border-slate-200 shadow-sm">
                   <CardContent className="p-3">
-                    <p className="text-xs text-gray-500 font-semibold uppercase mb-1">{metric.label}</p>
+                    <p className="text-xs text-slate-500 font-semibold uppercase mb-1">{metric.label}</p>
                     <div className="flex items-baseline justify-between">
-                      <span className="text-2xl font-bold text-gray-900">
+                      <span className="text-2xl font-bold text-slate-900">
                         {data.latest || "—"}
-                        <span className="text-xs text-gray-400 ml-1">{metric.unit}</span>
+                        <span className="text-xs text-slate-400 ml-1">{metric.unit}</span>
                       </span>
                       <span className={`text-sm font-semibold ${trendColor}`}>{trendIcon}</span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-xs text-slate-500 mt-2">
                       <span>Avg: <strong>{data.avg}</strong> | Normal: {metric.normal}</span>
                     </div>
                   </CardContent>
@@ -113,7 +113,7 @@ export default function VitalsTrendAnalysis({ patientId }) {
           </div>
 
           {/* Blood Pressure Chart */}
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Activity className="w-4 h-4 text-blue-500" /> Blood Pressure Trend
@@ -152,7 +152,7 @@ export default function VitalsTrendAnalysis({ patientId }) {
           </Card>
 
           {/* Heart Rate Chart */}
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-purple-500" /> Heart Rate Trend
@@ -183,7 +183,7 @@ export default function VitalsTrendAnalysis({ patientId }) {
           </Card>
 
           {/* Oxygen Saturation Chart */}
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Activity className="w-4 h-4 text-green-500" /> Oxygen Saturation (SpO2) Trend
@@ -213,7 +213,7 @@ export default function VitalsTrendAnalysis({ patientId }) {
             </CardContent>
           </Card>
 
-          <div className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-3">
             📊 Showing {chartData.length} visits with vital signs data. Charts update as new visit records are added.
           </div>
         </>

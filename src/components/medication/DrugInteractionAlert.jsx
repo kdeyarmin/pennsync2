@@ -175,7 +175,7 @@ export default function DrugInteractionAlert({ medications, _patientId, autoChec
             <Badge className={`${riskConfig.color} text-white px-3 py-1 text-sm`}>
               {riskConfig.label}
             </Badge>
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-slate-700">
               {interactionResults.total_interactions} interaction{interactionResults.total_interactions !== 1 ? 's' : ''} found
             </div>
           </div>
@@ -183,19 +183,19 @@ export default function DrugInteractionAlert({ medications, _patientId, autoChec
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-white rounded-lg p-3 border border-red-200">
               <p className="text-2xl font-bold text-red-600">{interactionResults.critical_count}</p>
-              <p className="text-xs text-gray-600">Critical</p>
+              <p className="text-xs text-slate-600">Critical</p>
             </div>
             <div className="bg-white rounded-lg p-3 border border-orange-200">
               <p className="text-2xl font-bold text-orange-600">{interactionResults.major_count}</p>
-              <p className="text-xs text-gray-600">Major</p>
+              <p className="text-xs text-slate-600">Major</p>
             </div>
-            <div className="bg-white rounded-lg p-3 border border-gray-200">
-              <p className="text-2xl font-bold text-gray-600">{interactionResults.medications_analyzed}</p>
-              <p className="text-xs text-gray-600">Meds Checked</p>
+            <div className="bg-white rounded-lg p-3 border border-slate-200">
+              <p className="text-2xl font-bold text-slate-600">{interactionResults.medications_analyzed}</p>
+              <p className="text-xs text-slate-600">Meds Checked</p>
             </div>
           </div>
 
-          <Alert className="bg-white border-gray-300">
+          <Alert className="bg-white border-slate-300">
             <Info className="w-4 h-4" />
             <AlertDescription>
               <strong>Summary:</strong> {interactionResults.summary}
@@ -221,7 +221,7 @@ export default function DrugInteractionAlert({ medications, _patientId, autoChec
       {/* Detailed Interactions */}
       {interactionResults.interactions?.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900">Detailed Interactions</h3>
+          <h3 className="font-semibold text-slate-900">Detailed Interactions</h3>
           {interactionResults.interactions.map((interaction, idx) => {
             const config = getSeverityConfig(interaction.severity);
             const Icon = config.icon;
@@ -250,7 +250,7 @@ export default function DrugInteractionAlert({ medications, _patientId, autoChec
                         <h4 className={`font-semibold ${config.textColor} mb-1`}>
                           {interaction.drug_a} ↔️ {interaction.drug_b}
                         </h4>
-                        <p className="text-sm text-gray-700">{interaction.description}</p>
+                        <p className="text-sm text-slate-700">{interaction.description}</p>
                       </div>
                       <Button
                         size="sm"
@@ -262,15 +262,15 @@ export default function DrugInteractionAlert({ medications, _patientId, autoChec
                     </div>
 
                     {isExpanded && (
-                      <div className="space-y-3 pt-3 border-t border-gray-300">
+                      <div className="space-y-3 pt-3 border-t border-slate-300">
                         <div className="bg-white rounded-lg p-3 border">
-                          <p className="text-xs font-semibold text-gray-600 mb-1">Clinical Significance</p>
-                          <p className="text-sm text-gray-900">{interaction.clinical_significance}</p>
+                          <p className="text-xs font-semibold text-slate-600 mb-1">Clinical Significance</p>
+                          <p className="text-sm text-slate-900">{interaction.clinical_significance}</p>
                         </div>
 
                         <div className="bg-white rounded-lg p-3 border">
-                          <p className="text-xs font-semibold text-gray-600 mb-1">Recommendation</p>
-                          <p className="text-sm text-gray-900">{interaction.recommendation}</p>
+                          <p className="text-xs font-semibold text-slate-600 mb-1">Recommendation</p>
+                          <p className="text-sm text-slate-900">{interaction.recommendation}</p>
                         </div>
 
                         {interaction.monitoring_required && (
@@ -282,7 +282,7 @@ export default function DrugInteractionAlert({ medications, _patientId, autoChec
                           </Alert>
                         )}
 
-                        <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center justify-between text-xs text-slate-500">
                           <span>Source: {interaction.source}</span>
                           {interaction.verified && (
                             <Badge className="bg-green-100 text-green-800 text-xs">

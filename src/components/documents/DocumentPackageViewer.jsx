@@ -52,9 +52,9 @@ export default function DocumentPackageViewer({ packageId }) {
       case 'declined':
         return 'bg-red-100 text-red-800';
       case 'expired':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -76,7 +76,7 @@ export default function DocumentPackageViewer({ packageId }) {
                         {sig.status}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       Type: {sig.document_type}
                     </p>
                   </div>
@@ -131,7 +131,7 @@ export default function DocumentPackageViewer({ packageId }) {
         </div>
 
         {signatures.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-slate-500">
             No documents in this package
           </div>
         )}

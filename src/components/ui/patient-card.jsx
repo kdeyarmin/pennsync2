@@ -29,13 +29,13 @@ export default function PatientCard({ patient, showRisk = true, onClick }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="font-semibold text-gray-900 truncate">{fullName}</h3>
+                <h3 className="font-semibold text-slate-900 truncate">{fullName}</h3>
                 <div className="flex items-center gap-2 mt-1">
                   {age && (
-                    <span className="text-sm text-gray-500">{age} years</span>
+                    <span className="text-sm text-slate-500">{age} years</span>
                   )}
                   {patient.medical_record_number && (
-                    <span className="text-xs text-gray-400">MRN: {patient.medical_record_number}</span>
+                    <span className="text-xs text-slate-400">MRN: {patient.medical_record_number}</span>
                   )}
                 </div>
               </div>
@@ -52,22 +52,22 @@ export default function PatientCard({ patient, showRisk = true, onClick }) {
             <div className="mt-3 space-y-1.5">
               {patient.primary_diagnosis && (
                 <div className="flex items-start gap-2 text-sm">
-                  <AlertCircle className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-600 line-clamp-1">{patient.primary_diagnosis}</span>
+                  <AlertCircle className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-600 line-clamp-1">{patient.primary_diagnosis}</span>
                 </div>
               )}
               
               {patient.phone && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-600">{patient.phone}</span>
+                  <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="text-slate-600">{patient.phone}</span>
                 </div>
               )}
               
               {patient.address && (
                 <div className="flex items-start gap-2 text-sm">
-                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-600 line-clamp-1">{patient.address}</span>
+                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-600 line-clamp-1">{patient.address}</span>
                 </div>
               )}
             </div>

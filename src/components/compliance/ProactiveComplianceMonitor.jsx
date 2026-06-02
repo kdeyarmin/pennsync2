@@ -196,7 +196,7 @@ Return JSON with: critical_patterns array (with pattern, frequency, cop_referenc
       <Card className="border-2 border-blue-200">
         <CardContent className="p-6 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-600">Analyzing compliance patterns...</p>
+          <p className="text-sm text-slate-600">Analyzing compliance patterns...</p>
         </CardContent>
       </Card>
     );
@@ -241,8 +241,8 @@ Return JSON with: critical_patterns array (with pattern, frequency, cop_referenc
                   )}
                 </div>
                 <div className="bg-white p-2 rounded border">
-                  <p className="text-xs font-semibold text-gray-700">Recommended Action:</p>
-                  <p className="text-xs text-gray-600">{alert.action}</p>
+                  <p className="text-xs font-semibold text-slate-700">Recommended Action:</p>
+                  <p className="text-xs text-slate-600">{alert.action}</p>
                 </div>
               </div>
             </AlertDescription>

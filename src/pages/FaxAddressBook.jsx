@@ -7,11 +7,11 @@ export default function FaxAddressBookPage() {
     <div className="min-h-screen p-4 md:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
             <BookUser className="w-8 h-8" />
             Fax Address Book
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-slate-600 mt-2">
             Manage shared fax contacts for quick access when sending faxes
           </p>
         </div>

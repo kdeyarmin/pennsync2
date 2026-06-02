@@ -30,7 +30,7 @@ export default function SystemHealthMonitor() {
       <div className="max-w-2xl mx-auto mt-8">
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-gray-500">This page is only accessible to administrators.</p>
+            <p className="text-slate-500">This page is only accessible to administrators.</p>
           </CardContent>
         </Card>
       </div>
@@ -43,8 +43,8 @@ export default function SystemHealthMonitor() {
       
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">System Health Monitor</h1>
-          <p className="text-gray-500">Test automations and monitor system functions</p>
+          <h1 className="text-3xl font-bold text-slate-900">System Health Monitor</h1>
+          <p className="text-slate-500">Test automations and monitor system functions</p>
         </div>
         <Button onClick={() => refetch()} disabled={isLoading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -99,7 +99,7 @@ export default function SystemHealthMonitor() {
             <CardContent>
               <div className="space-y-3">
                 {automationTest.details.map((test, index) => (
-                  <div key={index} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={index} className="flex items-start justify-between p-4 bg-slate-50 rounded-lg">
                     <div className="flex items-start gap-3">
                       {test.status === 'success' ? (
                         <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
@@ -112,7 +112,7 @@ export default function SystemHealthMonitor() {
                           <p className="text-xs text-red-600 mt-1">{test.error}</p>
                         )}
                         {test.result && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-slate-500 mt-1">
                             {JSON.stringify(test.result).substring(0, 200)}...
                           </p>
                         )}
@@ -132,8 +132,8 @@ export default function SystemHealthMonitor() {
       {!automationTest && !isLoading && (
         <Card>
           <CardContent className="p-12 text-center">
-            <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Click "Test All Functions" to run system health checks</p>
+            <Activity className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-500">Click "Test All Functions" to run system health checks</p>
           </CardContent>
         </Card>
       )}

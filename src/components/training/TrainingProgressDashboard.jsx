@@ -83,7 +83,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-sm text-slate-600">Completed</p>
                 <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
               </div>
               <CheckCircle2 className="w-10 h-10 text-green-600" />
@@ -95,7 +95,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Avg Score</p>
+                <p className="text-sm text-slate-600">Avg Score</p>
                 <p className="text-3xl font-bold text-blue-600">{stats.avgScore}%</p>
               </div>
               <Award className="w-10 h-10 text-blue-600" />
@@ -107,7 +107,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">In Progress</p>
+                <p className="text-sm text-slate-600">In Progress</p>
                 <p className="text-3xl font-bold text-orange-600">{stats.inProgress}</p>
               </div>
               <BookOpen className="w-10 h-10 text-orange-600" />
@@ -119,7 +119,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Hours</p>
+                <p className="text-sm text-slate-600">Total Hours</p>
                 <p className="text-3xl font-bold text-purple-600">{Math.round(stats.totalTime / 60)}</p>
               </div>
               <Clock className="w-10 h-10 text-purple-600" />
@@ -144,15 +144,15 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
-              <p className="text-xs text-gray-600">Completed</p>
+              <p className="text-xs text-slate-600">Completed</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-orange-600">{stats.inProgress}</p>
-              <p className="text-xs text-gray-600">In Progress</p>
+              <p className="text-xs text-slate-600">In Progress</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-blue-600">{stats.assigned}</p>
-              <p className="text-xs text-gray-600">Assigned</p>
+              <p className="text-xs text-slate-600">Assigned</p>
             </div>
           </div>
         </CardContent>
@@ -171,7 +171,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
             <ScrollArea className="h-[300px]">
               <div className="space-y-3">
                 {recentCompletions.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">No completed modules yet</p>
+                  <p className="text-sm text-slate-500 text-center py-8">No completed modules yet</p>
                 ) : (
                   recentCompletions.map((completion) => (
                     <div key={completion.id} className="border rounded-lg p-3 bg-green-50">
@@ -183,7 +183,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-slate-600">
                         Completed {formatEastern(completion.completion_date, 'MMM d, yyyy')}
                       </p>
                       {completion.certificate_url && (
@@ -212,7 +212,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
             <ScrollArea className="h-[300px]">
               <div className="space-y-3">
                 {upcomingDeadlines.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">No upcoming deadlines</p>
+                  <p className="text-sm text-slate-500 text-center py-8">No upcoming deadlines</p>
                 ) : (
                   upcomingDeadlines.map((completion) => {
                     const daysUntilDue = Math.ceil((new Date(completion.due_date) - new Date()) / (1000 * 60 * 60 * 24));
@@ -227,7 +227,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
                             {isOverdue ? 'Overdue' : isUrgent ? 'Urgent' : `${daysUntilDue}d`}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-slate-600">
                           Due {formatEastern(completion.due_date, 'MMM d, yyyy')}
                         </p>
                         <Progress 
@@ -263,7 +263,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
                     </Badge>
                     <Badge variant="outline" className="text-xs">{rec.severity}</Badge>
                   </div>
-                  <p className="text-sm text-gray-700">{rec.recommendation_text}</p>
+                  <p className="text-sm text-slate-700">{rec.recommendation_text}</p>
                 </div>
               ))}
             </div>

@@ -40,11 +40,11 @@ export default function DocumentManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
             <FolderOpen className="w-8 h-8" />
             Document Management
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-slate-600 mt-1">
             Upload, organize, and manage patient documents
           </p>
         </div>
@@ -59,8 +59,8 @@ export default function DocumentManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Documents</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm text-slate-600">Total Documents</p>
+                <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
               </div>
               <FileText className="w-8 h-8 text-indigo-600" />
             </div>
@@ -70,8 +70,8 @@ export default function DocumentManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">With Patient</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.withPatient}</p>
+                <p className="text-sm text-slate-600">With Patient</p>
+                <p className="text-3xl font-bold text-slate-900">{stats.withPatient}</p>
               </div>
               <Users className="w-8 h-8 text-green-600" />
             </div>
@@ -81,8 +81,8 @@ export default function DocumentManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Unassigned</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.withoutPatient}</p>
+                <p className="text-sm text-slate-600">Unassigned</p>
+                <p className="text-3xl font-bold text-slate-900">{stats.withoutPatient}</p>
               </div>
               <FolderOpen className="w-8 h-8 text-amber-600" />
             </div>
@@ -92,8 +92,8 @@ export default function DocumentManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Sensitive</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.sensitive}</p>
+                <p className="text-sm text-slate-600">Sensitive</p>
+                <p className="text-3xl font-bold text-slate-900">{stats.sensitive}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-red-600" />
             </div>
@@ -108,9 +108,9 @@ export default function DocumentManagement() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {Object.entries(categoryCounts).map(([category, count]) => (
-              <div key={category} className="text-center p-3 bg-gray-50 rounded-lg">
+              <div key={category} className="text-center p-3 bg-slate-50 rounded-lg">
                 <p className="text-2xl font-bold text-indigo-600">{count}</p>
-                <p className="text-xs text-gray-600 mt-1 capitalize">{category.replace(/_/g, ' ')}</p>
+                <p className="text-xs text-slate-600 mt-1 capitalize">{category.replace(/_/g, ' ')}</p>
               </div>
             ))}
           </div>

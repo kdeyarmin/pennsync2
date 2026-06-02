@@ -76,7 +76,7 @@ export default function VitalSignValidator({ noteText }) {
         <span className="text-sm font-semibold text-red-700">Vital Sign Alerts Detected</span>
         <span className="text-xs text-red-400">review before submitting</span>
       </div>
-      <div className="divide-y divide-gray-100 bg-white">
+      <div className="divide-y divide-slate-100 bg-white">
         {critical.map((f, i) => (
           <div key={i} className="flex items-start gap-2.5 px-3 py-2">
             <div className="mt-0.5 w-2 h-2 rounded-full bg-red-500 shrink-0" />

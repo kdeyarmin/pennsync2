@@ -299,11 +299,11 @@ export default function CustomizableDashboard() {
                       <AlertTriangle className="w-4 h-4 text-red-600" />
                       <span className="text-sm font-medium">{alert.title}</span>
                     </div>
-                    <span className="text-xs text-gray-600">{alert.severity}</span>
+                    <span className="text-xs text-slate-600">{alert.severity}</span>
                   </div>
                 ))}
                 {alerts.length === 0 && (
-                  <p className="text-sm text-gray-500 text-center py-4">No active alerts</p>
+                  <p className="text-sm text-slate-500 text-center py-4">No active alerts</p>
                 )}
               </div>
             </CardContent>
@@ -314,7 +314,7 @@ export default function CustomizableDashboard() {
         return (
           <Card>
             <CardContent className="p-6">
-              <p className="text-gray-500">Widget: {widget.title}</p>
+              <p className="text-slate-500">Widget: {widget.title}</p>
             </CardContent>
           </Card>
         );
@@ -325,10 +325,10 @@ export default function CustomizableDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-slate-900">
             {isAdmin ? 'Admin Dashboard' : 'My Dashboard'}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-slate-600 mt-1">
             {isAdmin ? 'Agency overview and analytics' : 'Your personalized workflow hub'}
           </p>
         </div>
@@ -358,8 +358,8 @@ function StatCard({ title, value, icon: Icon, trend, trendUp }) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            <p className="text-sm text-slate-600 mb-1">{title}</p>
+            <p className="text-3xl font-bold text-slate-900">{value}</p>
             {trend && (
               <p className={`text-xs mt-1 ${trendUp ? 'text-green-600' : 'text-red-600'}`}>
                 {trend} vs last period

@@ -175,7 +175,7 @@ Return comprehensive risk assessment with actionable recommendations.`,
       case 'high': return 'bg-orange-600';
       case 'moderate': return 'bg-yellow-500';
       case 'low': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -184,7 +184,7 @@ Return comprehensive risk assessment with actionable recommendations.`,
       <Card className="border-2 border-orange-300 bg-orange-50">
         <CardContent className="p-6 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Analyzing patient deterioration risk...</p>
+          <p className="text-sm text-slate-600">Analyzing patient deterioration risk...</p>
         </CardContent>
       </Card>
     );
@@ -200,7 +200,7 @@ Return comprehensive risk assessment with actionable recommendations.`,
         <CardTitle className="flex items-center gap-2">
           <TrendingDown className="w-5 h-5" />
           AI Deterioration Risk Analysis
-          <Badge className="ml-auto bg-white text-gray-900 text-lg px-3 py-1">
+          <Badge className="ml-auto bg-white text-slate-900 text-lg px-3 py-1">
             {prediction.overall_risk_score}% Risk
           </Badge>
         </CardTitle>
@@ -240,7 +240,7 @@ Return comprehensive risk assessment with actionable recommendations.`,
         {/* Key Concerns */}
         {prediction.key_concerns?.length > 0 && (
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-2">Key Concerns:</p>
+            <p className="text-sm font-semibold text-slate-700 mb-2">Key Concerns:</p>
             <div className="space-y-2">
               {prediction.key_concerns.map((concern, idx) => (
                 <Card key={idx} className={`border-l-4 ${
@@ -257,9 +257,9 @@ Return comprehensive risk assessment with actionable recommendations.`,
                         {concern.severity}
                       </Badge>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{concern.category}</p>
-                        <p className="text-xs text-gray-700 mt-1">{concern.concern}</p>
-                        <p className="text-xs text-gray-600 italic mt-1">Evidence: {concern.evidence}</p>
+                        <p className="text-sm font-medium text-slate-900">{concern.category}</p>
+                        <p className="text-xs text-slate-700 mt-1">{concern.concern}</p>
+                        <p className="text-xs text-slate-600 italic mt-1">Evidence: {concern.evidence}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -302,10 +302,10 @@ Return comprehensive risk assessment with actionable recommendations.`,
         {/* Immediate Actions */}
         {prediction.immediate_actions_required?.length > 0 && (
           <div className="bg-white border-2 border-orange-400 rounded p-3">
-            <p className="text-sm font-semibold text-gray-900 mb-2">Immediate Actions Required:</p>
+            <p className="text-sm font-semibold text-slate-900 mb-2">Immediate Actions Required:</p>
             <ul className="space-y-1">
               {prediction.immediate_actions_required.map((action, idx) => (
-                <li key={idx} className="text-sm text-gray-800 flex items-start gap-2">
+                <li key={idx} className="text-sm text-slate-800 flex items-start gap-2">
                   <span className="text-orange-600 font-bold">•</span>
                   {action}
                 </li>

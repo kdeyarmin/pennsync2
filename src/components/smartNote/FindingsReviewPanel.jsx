@@ -34,19 +34,19 @@ function FindingCard({ finding, selected, onToggle, answers, onAnswerChange }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-1.5">
-              <Icon className={`w-3.5 h-3.5 shrink-0 ${CAT_COLOR[finding.category] || "text-gray-500"}`} />
-              <span className="text-sm font-semibold text-gray-900">{finding.issue}</span>
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${CAT_COLOR[finding.category] || "text-slate-500"}`} />
+              <span className="text-sm font-semibold text-slate-900">{finding.issue}</span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <Badge className={`text-xs ${SEV_BADGE[finding.severity] || SEV_BADGE.medium}`}>{finding.severity}</Badge>
-              <button onClick={() => setOpen(!open)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setOpen(!open)} className="text-slate-400 hover:text-slate-600">
                 {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
 
           {finding.suggestion && (
-            <p className="text-sm text-gray-800 bg-white/80 border border-gray-200 rounded px-2 py-1.5 italic mt-1">
+            <p className="text-sm text-slate-800 bg-white/80 border border-slate-200 rounded px-2 py-1.5 italic mt-1">
               "{finding.suggestion}"
             </p>
           )}
@@ -68,7 +68,7 @@ function FindingCard({ finding, selected, onToggle, answers, onAnswerChange }) {
           )}
 
           {open && (
-            <div className="mt-2 space-y-1 text-xs text-gray-500">
+            <div className="mt-2 space-y-1 text-xs text-slate-500">
               {finding.rationale && <p>{finding.rationale}</p>}
               {finding.revenue_impact && <p className="text-green-700 font-medium">💰 {finding.revenue_impact}</p>}
             </div>
@@ -103,11 +103,11 @@ export default function FindingsReviewPanel({ analysis, selected, onToggle, answ
         </Alert>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-sm font-bold text-gray-900">Review Suggested Additions</p>
-            <p className="text-xs text-gray-500 mt-0.5">Only checked items will be included in the final note</p>
+            <p className="text-sm font-bold text-slate-900">Review Suggested Additions</p>
+            <p className="text-xs text-slate-500 mt-0.5">Only checked items will be included in the final note</p>
           </div>
         </div>
 

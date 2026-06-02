@@ -268,7 +268,7 @@ Return JSON:
       medium: 'bg-yellow-500 text-white',
       low: 'bg-green-600 text-white'
     };
-    return styles[level] || 'bg-gray-500 text-white';
+    return styles[level] || 'bg-slate-500 text-white';
   };
 
   const getSeverityColor = (severity) => {
@@ -278,7 +278,7 @@ Return JSON:
       medium: 'border-yellow-400 bg-yellow-50',
       low: 'border-blue-400 bg-blue-50'
     };
-    return colors[severity] || 'border-gray-300 bg-gray-50';
+    return colors[severity] || 'border-slate-300 bg-slate-50';
   };
 
   const getPriorityBadge = (priority) => {
@@ -290,7 +290,7 @@ Return JSON:
       high: 'bg-orange-100 text-orange-800',
       routine: 'bg-green-100 text-green-800'
     };
-    return styles[priority] || 'bg-gray-100 text-gray-800';
+    return styles[priority] || 'bg-slate-100 text-slate-800';
   };
 
   if (!patientId || !oasisPdgmData) {
@@ -339,13 +339,13 @@ Return JSON:
       {isExpanded && (
         <CardContent className="pt-3 space-y-3">
           {isAnalyzing ? (
-            <div className="flex items-center justify-center gap-2 py-6 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-6 text-sm text-slate-500">
               <Loader2 className="w-4 h-4 animate-spin" />
               Analyzing note against OASIS data...
             </div>
           ) : !analysis ? (
             <div className="text-center py-4">
-              <p className="text-sm text-gray-500 mb-3">
+              <p className="text-sm text-slate-500 mb-3">
                 {noteContent && noteContent.length >= 50 
                   ? "Ready to analyze your note against OASIS data"
                   : "Add more content to your note to enable OASIS comparison"}
@@ -444,16 +444,16 @@ Return JSON:
                         
                         <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
                           <div className="bg-white p-2 rounded border">
-                            <p className="text-gray-500 mb-1">OASIS Shows:</p>
-                            <p className="text-gray-800 font-medium">{disc.oasis_value}</p>
+                            <p className="text-slate-500 mb-1">OASIS Shows:</p>
+                            <p className="text-slate-800 font-medium">{disc.oasis_value}</p>
                           </div>
                           <div className="bg-white p-2 rounded border">
-                            <p className="text-gray-500 mb-1">Note Says:</p>
-                            <p className="text-gray-800 font-medium">{disc.note_observation}</p>
+                            <p className="text-slate-500 mb-1">Note Says:</p>
+                            <p className="text-slate-800 font-medium">{disc.note_observation}</p>
                           </div>
                         </div>
 
-                        <p className="text-xs text-gray-700 mb-2">{disc.explanation}</p>
+                        <p className="text-xs text-slate-700 mb-2">{disc.explanation}</p>
                         
                         {disc.pdgm_impact && (
                           <p className="text-xs text-green-700 mb-2">
@@ -497,7 +497,7 @@ Return JSON:
                 <TabsContent value="missing" className="mt-3 space-y-2">
                   {analysis.missing_documentation?.length > 0 ? (
                     analysis.missing_documentation.map((doc) => (
-                      <div key={doc.id} className="p-3 bg-gray-50 rounded-lg border">
+                      <div key={doc.id} className="p-3 bg-slate-50 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs capitalize">{(doc.category || '').replace(/_/g, ' ')}</Badge>
@@ -510,8 +510,8 @@ Return JSON:
                           )}
                         </div>
                         
-                        <p className="text-sm font-medium text-gray-800 mb-1">{doc.what_to_document}</p>
-                        <p className="text-xs text-gray-600 mb-2">{doc.rationale}</p>
+                        <p className="text-sm font-medium text-slate-800 mb-1">{doc.what_to_document}</p>
+                        <p className="text-xs text-slate-600 mb-2">{doc.rationale}</p>
                         
                         {doc.suggested_text && (
                           <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-2">
@@ -549,7 +549,7 @@ Return JSON:
                 <TabsContent value="interventions" className="mt-3 space-y-2">
                   {analysis.interventions?.length > 0 ? (
                     analysis.interventions.map((int) => (
-                      <div key={int.id} className="p-3 bg-gray-50 rounded-lg border">
+                      <div key={int.id} className="p-3 bg-slate-50 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             {int.type === 'clinical' && <Stethoscope className="w-4 h-4 text-blue-600" />}
@@ -562,7 +562,7 @@ Return JSON:
                           <Badge className={getPriorityBadge(int.priority)}>{int.priority}</Badge>
                         </div>
                         
-                        <p className="text-xs text-gray-600 mb-2">{int.rationale}</p>
+                        <p className="text-xs text-slate-600 mb-2">{int.rationale}</p>
                         {int.frequency && (
                           <p className="text-xs text-purple-700 mb-2">
                             <span className="font-medium">Frequency:</span> {int.frequency}
@@ -611,7 +611,7 @@ Return JSON:
                 <TabsContent value="careplan" className="mt-3 space-y-2">
                   {analysis.care_plan_recommendations?.length > 0 ? (
                     analysis.care_plan_recommendations.map((rec) => (
-                      <div key={rec.id} className="p-3 bg-gray-50 rounded-lg border">
+                      <div key={rec.id} className="p-3 bg-slate-50 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <Badge className={
                             rec.action === 'add' ? 'bg-green-100 text-green-800' :
@@ -630,7 +630,7 @@ Return JSON:
                           )}
                         </div>
                         
-                        <p className="text-sm font-medium text-gray-800 mb-1">
+                        <p className="text-sm font-medium text-slate-800 mb-1">
                           Problem: {rec.problem}
                         </p>
                         <p className="text-xs text-green-700 mb-2">
@@ -639,8 +639,8 @@ Return JSON:
                         
                         {rec.interventions?.length > 0 && (
                           <div className="mb-2">
-                            <p className="text-xs font-medium text-gray-600 mb-1">Interventions:</p>
-                            <ul className="text-xs text-gray-700 list-disc list-inside">
+                            <p className="text-xs font-medium text-slate-600 mb-1">Interventions:</p>
+                            <ul className="text-xs text-slate-700 list-disc list-inside">
                               {rec.interventions.slice(0, 3).map((int, i) => (
                                 <li key={i}>{int}</li>
                               ))}
@@ -648,7 +648,7 @@ Return JSON:
                           </div>
                         )}
 
-                        <p className="text-xs text-gray-500 italic mb-2">{rec.rationale}</p>
+                        <p className="text-xs text-slate-500 italic mb-2">{rec.rationale}</p>
 
                         {!appliedSuggestions.includes(rec.id + '_careplan') && (
                           <Button 

@@ -35,7 +35,7 @@ export default function SignatureTracker({ patientId = null }) {
       case "rejected":
         return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-800";
     }
   };
 
@@ -110,7 +110,7 @@ export default function SignatureTracker({ patientId = null }) {
     return (
       <Card>
         <CardContent className="p-8">
-          <p className="text-center text-gray-500">Loading documents...</p>
+          <p className="text-center text-slate-500">Loading documents...</p>
         </CardContent>
       </Card>
     );
@@ -121,8 +121,8 @@ export default function SignatureTracker({ patientId = null }) {
       <Card>
         <CardContent className="p-8">
           <div className="text-center">
-            <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-            <p className="text-gray-600">No documents with signature workflows yet.</p>
+            <FileText className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+            <p className="text-slate-600">No documents with signature workflows yet.</p>
           </div>
         </CardContent>
       </Card>
@@ -143,7 +143,7 @@ export default function SignatureTracker({ patientId = null }) {
                       {doc.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     {doc.document_type} • Created {new Date(doc.created_date).toLocaleDateString()}
                   </p>
                 </div>
@@ -184,19 +184,19 @@ export default function SignatureTracker({ patientId = null }) {
                 </p>
                 <div className="space-y-2">
                   {doc.signers.map((signer) => (
-                    <div key={signer.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    <div key={signer.id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200">
                       <div className="flex items-center gap-3">
                         {getSignerStatusIcon(signer)}
                         <div>
                           <p className="font-medium text-sm">{signer.name}</p>
-                          <p className="text-xs text-gray-600">{signer.email}</p>
+                          <p className="text-xs text-slate-600">{signer.email}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-medium text-gray-700">
+                        <p className="text-xs font-medium text-slate-700">
                           {signer.role}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-slate-600">
                           {getSignerStatusText(signer)}
                         </p>
                       </div>

@@ -147,7 +147,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+            <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
           </div>
         </CardContent>
       </Card>
@@ -182,7 +182,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Clock className="w-8 h-8 text-green-600" />
             </div>
-            <p className="text-sm text-gray-600">No upcoming expirations in the next 30 days</p>
+            <p className="text-sm text-slate-600">No upcoming expirations in the next 30 days</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -215,7 +215,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
                   );
                 })}
                 {adminExpirations.length > 5 && (
-                  <p className="text-xs text-center text-gray-500 pt-2">
+                  <p className="text-xs text-center text-slate-500 pt-2">
                     +{adminExpirations.length - 5} more expiring soon
                   </p>
                 )}

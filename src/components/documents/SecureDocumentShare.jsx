@@ -158,7 +158,7 @@ export default function SecureDocumentShare({ documentName, _documentData }) {
               <select
                 value={expiresIn}
                 onChange={(e) => setExpiresIn(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
               >
                 <option value="1">1 day</option>
                 <option value="3">3 days</option>

@@ -322,21 +322,21 @@ ${report.next_steps?.map((s, i) => `${i + 1}. ${s}`).join('\n')}
 
               {/* Key Metrics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <div className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-lg font-bold text-gray-900">{report.metrics?.documentation_rate}%</p>
-                  <p className="text-xs text-gray-600">Doc Rate</p>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <p className="text-lg font-bold text-slate-900">{report.metrics?.documentation_rate}%</p>
+                  <p className="text-xs text-slate-600">Doc Rate</p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-lg font-bold text-gray-900">{report.metrics?.on_time_documentation}%</p>
-                  <p className="text-xs text-gray-600">On-Time</p>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <p className="text-lg font-bold text-slate-900">{report.metrics?.on_time_documentation}%</p>
+                  <p className="text-xs text-slate-600">On-Time</p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-lg font-bold text-gray-900">{report.metrics?.incident_rate}</p>
-                  <p className="text-xs text-gray-600">Incident Rate</p>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <p className="text-lg font-bold text-slate-900">{report.metrics?.incident_rate}</p>
+                  <p className="text-xs text-slate-600">Incident Rate</p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-lg font-bold text-gray-900">{report.metrics?.high_severity_incidents}</p>
-                  <p className="text-xs text-gray-600">High Severity</p>
+                <div className="text-center p-2 bg-slate-50 rounded">
+                  <p className="text-lg font-bold text-slate-900">{report.metrics?.high_severity_incidents}</p>
+                  <p className="text-xs text-slate-600">High Severity</p>
                 </div>
               </div>
 
@@ -364,10 +364,10 @@ ${report.next_steps?.map((s, i) => `${i + 1}. ${s}`).join('\n')}
                     <div key={idx} className={`p-2 rounded text-xs ${
                       concern.severity === 'high' ? 'bg-red-50 border-l-2 border-red-500' :
                       concern.severity === 'medium' ? 'bg-yellow-50 border-l-2 border-yellow-500' :
-                      'bg-gray-50 border-l-2 border-gray-300'
+                      'bg-slate-50 border-l-2 border-slate-300'
                     }`}>
                       <p className="font-medium">{concern.concern}</p>
-                      <p className="text-gray-600 mt-0.5">→ {concern.recommendation}</p>
+                      <p className="text-slate-600 mt-0.5">→ {concern.recommendation}</p>
                     </div>
                   ))}
                 </div>

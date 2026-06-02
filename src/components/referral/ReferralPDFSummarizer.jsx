@@ -753,7 +753,7 @@ HANDWRITTEN NOTES HANDLING:
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Upload a patient referral PDF to automatically extract all relevant information for admission assessment and OASIS completion.
           </p>
 
@@ -774,7 +774,7 @@ HANDWRITTEN NOTES HANDLING:
               Upload
             </Button>
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             Supports PDFs, faxed images (PNG, JPG, TIFF), and scanned documents
           </p>
 
@@ -840,9 +840,9 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="grid md:grid-cols-2 gap-3">
                   {Object.entries(extractedData.demographics || {}).map(([key, value]) => (
                     value && value !== "Not documented in referral." && (
-                      <div key={key} className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs font-semibold text-gray-600 capitalize">{key.replace(/_/g, ' ')}</p>
-                        <p className="text-sm text-gray-900">{value}</p>
+                      <div key={key} className="bg-slate-50 p-2 rounded">
+                        <p className="text-xs font-semibold text-slate-600 capitalize">{key.replace(/_/g, ' ')}</p>
+                        <p className="text-sm text-slate-900">{value}</p>
                       </div>
                     )
                   ))}
@@ -868,7 +868,7 @@ HANDWRITTEN NOTES HANDLING:
                     value && value !== "Not documented in referral." && (
                       <div key={key} className="bg-purple-50 p-2 rounded">
                         <p className="text-xs font-semibold text-purple-900 capitalize">{key.replace(/_/g, ' ')}</p>
-                        <p className="text-sm text-gray-900">{value}</p>
+                        <p className="text-sm text-slate-900">{value}</p>
                       </div>
                     )
                   ))}
@@ -896,7 +896,7 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="space-y-3">
                   <div className="bg-red-50 p-3 rounded border-l-4 border-red-500">
                     <p className="text-xs font-semibold text-red-900">Primary Diagnosis</p>
-                    <p className="text-sm font-bold text-gray-900">{extractedData.diagnoses?.primary_diagnosis}</p>
+                    <p className="text-sm font-bold text-slate-900">{extractedData.diagnoses?.primary_diagnosis}</p>
                     {extractedData.diagnoses?.primary_icd10 && (
                       <Badge className="mt-1">{extractedData.diagnoses.primary_icd10}</Badge>
                     )}
@@ -908,14 +908,14 @@ HANDWRITTEN NOTES HANDLING:
                   {isAdmin && extractedData.diagnoses?.pdgm_optimization_notes && (
                     <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
                       <p className="text-xs font-semibold text-green-900 mb-1">💰 PDGM Optimization Notes</p>
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.diagnoses.pdgm_optimization_notes}</p>
+                      <p className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.diagnoses.pdgm_optimization_notes}</p>
                     </div>
                   )}
                   
                   {extractedData.diagnoses?.secondary_diagnoses?.length > 0 && (
                     <div className="bg-orange-50 p-3 rounded">
                       <p className="text-xs font-semibold text-orange-900 mb-1">Secondary Diagnoses</p>
-                      <ul className="list-disc list-inside text-sm text-gray-900">
+                      <ul className="list-disc list-inside text-sm text-slate-900">
                         {extractedData.diagnoses.secondary_diagnoses.map((dx, i) => (
                           <li key={i}>{dx}</li>
                         ))}
@@ -927,7 +927,7 @@ HANDWRITTEN NOTES HANDLING:
                     <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
                       <p className="text-xs font-semibold text-blue-900 mb-1">💵 Case-Mix Comorbidities</p>
                       <p className="text-xs text-blue-800 mb-2">These comorbidities increase PDGM reimbursement:</p>
-                      <ul className="list-disc list-inside text-sm text-gray-900">
+                      <ul className="list-disc list-inside text-sm text-slate-900">
                         {extractedData.diagnoses.comorbidity_adjustments.map((comorb, i) => (
                           <li key={i}>{comorb}</li>
                         ))}
@@ -963,14 +963,14 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="space-y-2">
                   {extractedData.medications?.map((med, i) => (
                     <div key={i} className="bg-green-50 p-3 rounded border-l-2 border-green-500">
-                      <p className="font-semibold text-sm text-gray-900">{med.name}</p>
-                      <div className="grid grid-cols-2 gap-2 mt-1 text-xs text-gray-700">
+                      <p className="font-semibold text-sm text-slate-900">{med.name}</p>
+                      <div className="grid grid-cols-2 gap-2 mt-1 text-xs text-slate-700">
                         {med.dosage && <p><strong>Dosage:</strong> {med.dosage}</p>}
                         {med.frequency && <p><strong>Frequency:</strong> {med.frequency}</p>}
                         {med.route && <p><strong>Route:</strong> {med.route}</p>}
                         {med.prescriber && <p><strong>Prescriber:</strong> {med.prescriber}</p>}
                       </div>
-                      {med.notes && <p className="text-xs text-gray-600 mt-1 italic">{med.notes}</p>}
+                      {med.notes && <p className="text-xs text-slate-600 mt-1 italic">{med.notes}</p>}
                     </div>
                   ))}
                 </div>
@@ -1000,10 +1000,10 @@ HANDWRITTEN NOTES HANDLING:
                         <div className="space-y-2">
                           {extractedData.diagnoses.past_medical_history.map((item, i) => (
                             <div key={i} className="bg-white p-2 rounded border border-rose-200">
-                              <p className="text-sm font-semibold text-gray-900">{item.condition || item}</p>
-                              {item.onset_date && <p className="text-xs text-gray-600">Onset: {item.onset_date}</p>}
-                              {item.current_status && <p className="text-xs text-gray-600">Status: {item.current_status}</p>}
-                              {item.management && <p className="text-xs text-gray-600">Management: {item.management}</p>}
+                              <p className="text-sm font-semibold text-slate-900">{item.condition || item}</p>
+                              {item.onset_date && <p className="text-xs text-slate-600">Onset: {item.onset_date}</p>}
+                              {item.current_status && <p className="text-xs text-slate-600">Status: {item.current_status}</p>}
+                              {item.management && <p className="text-xs text-slate-600">Management: {item.management}</p>}
                             </div>
                           ))}
                         </div>
@@ -1016,10 +1016,10 @@ HANDWRITTEN NOTES HANDLING:
                         <div className="space-y-2">
                           {extractedData.diagnoses.surgical_history.map((item, i) => (
                             <div key={i} className="bg-white p-2 rounded border border-blue-200">
-                              <p className="text-sm font-semibold text-gray-900">{item.procedure || item}</p>
-                              {item.date && <p className="text-xs text-gray-600">Date: {item.date}</p>}
-                              {item.complications && <p className="text-xs text-gray-600">Complications: {item.complications}</p>}
-                              {item.surgeon && <p className="text-xs text-gray-600">Surgeon: {item.surgeon}</p>}
+                              <p className="text-sm font-semibold text-slate-900">{item.procedure || item}</p>
+                              {item.date && <p className="text-xs text-slate-600">Date: {item.date}</p>}
+                              {item.complications && <p className="text-xs text-slate-600">Complications: {item.complications}</p>}
+                              {item.surgeon && <p className="text-xs text-slate-600">Surgeon: {item.surgeon}</p>}
                             </div>
                           ))}
                         </div>
@@ -1032,11 +1032,11 @@ HANDWRITTEN NOTES HANDLING:
                         <div className="space-y-2">
                           {extractedData.diagnoses.recent_hospitalizations.map((item, i) => (
                             <div key={i} className="bg-white p-2 rounded border border-purple-200">
-                              <p className="text-sm font-semibold text-gray-900">{item.reason || item}</p>
-                              {item.date && <p className="text-xs text-gray-600">Date: {item.date}</p>}
-                              {item.hospital && <p className="text-xs text-gray-600">Hospital: {item.hospital}</p>}
-                              {item.length_of_stay && <p className="text-xs text-gray-600">Length of Stay: {item.length_of_stay}</p>}
-                              {item.outcome && <p className="text-xs text-gray-600">Outcome: {item.outcome}</p>}
+                              <p className="text-sm font-semibold text-slate-900">{item.reason || item}</p>
+                              {item.date && <p className="text-xs text-slate-600">Date: {item.date}</p>}
+                              {item.hospital && <p className="text-xs text-slate-600">Hospital: {item.hospital}</p>}
+                              {item.length_of_stay && <p className="text-xs text-slate-600">Length of Stay: {item.length_of_stay}</p>}
+                              {item.outcome && <p className="text-xs text-slate-600">Outcome: {item.outcome}</p>}
                             </div>
                           ))}
                         </div>
@@ -1049,7 +1049,7 @@ HANDWRITTEN NOTES HANDLING:
                         {extractedData.diagnoses.family_medical_history.hereditary_conditions?.length > 0 && (
                           <div className="mb-2">
                             <p className="text-xs text-amber-800 font-medium">Hereditary Conditions:</p>
-                            <ul className="list-disc list-inside text-sm text-gray-900 ml-2">
+                            <ul className="list-disc list-inside text-sm text-slate-900 ml-2">
                               {extractedData.diagnoses.family_medical_history.hereditary_conditions.map((cond, i) => (
                                 <li key={i}>{cond}</li>
                               ))}
@@ -1057,12 +1057,12 @@ HANDWRITTEN NOTES HANDLING:
                           </div>
                         )}
                         {extractedData.diagnoses.family_medical_history.genetic_predispositions && (
-                          <p className="text-sm text-gray-900 mb-1">
+                          <p className="text-sm text-slate-900 mb-1">
                             <strong>Genetic Predispositions:</strong> {extractedData.diagnoses.family_medical_history.genetic_predispositions}
                           </p>
                         )}
                         {extractedData.diagnoses.family_medical_history.family_mental_health && (
-                          <p className="text-sm text-gray-900">
+                          <p className="text-sm text-slate-900">
                             <strong>Family Mental Health:</strong> {extractedData.diagnoses.family_medical_history.family_mental_health}
                           </p>
                         )}
@@ -1097,25 +1097,25 @@ HANDWRITTEN NOTES HANDLING:
                     {extractedData.nutritional_status.current_weight && (
                       <div className="bg-green-50 p-2 rounded">
                         <p className="text-xs font-semibold text-green-900">Current Weight</p>
-                        <p className="text-sm text-gray-900">{extractedData.nutritional_status.current_weight}</p>
+                        <p className="text-sm text-slate-900">{extractedData.nutritional_status.current_weight}</p>
                       </div>
                     )}
                     {extractedData.nutritional_status.height && (
                       <div className="bg-green-50 p-2 rounded">
                         <p className="text-xs font-semibold text-green-900">Height</p>
-                        <p className="text-sm text-gray-900">{extractedData.nutritional_status.height}</p>
+                        <p className="text-sm text-slate-900">{extractedData.nutritional_status.height}</p>
                       </div>
                     )}
                     {extractedData.nutritional_status.bmi && (
                       <div className="bg-green-50 p-2 rounded">
                         <p className="text-xs font-semibold text-green-900">BMI</p>
-                        <p className="text-sm text-gray-900">{extractedData.nutritional_status.bmi}</p>
+                        <p className="text-sm text-slate-900">{extractedData.nutritional_status.bmi}</p>
                       </div>
                     )}
                     {extractedData.nutritional_status.recent_weight_changes && (
                       <div className="bg-yellow-50 p-2 rounded border-l-2 border-yellow-500">
                         <p className="text-xs font-semibold text-yellow-900">Recent Weight Changes</p>
-                        <p className="text-sm text-gray-900">{extractedData.nutritional_status.recent_weight_changes}</p>
+                        <p className="text-sm text-slate-900">{extractedData.nutritional_status.recent_weight_changes}</p>
                       </div>
                     )}
                   </div>
@@ -1144,7 +1144,7 @@ HANDWRITTEN NOTES HANDLING:
                   {extractedData.nutritional_status.nutritional_risk_factors?.length > 0 && (
                     <div className="bg-red-50 p-3 rounded mt-3 border-l-4 border-red-500">
                       <p className="text-xs font-semibold text-red-900 mb-1">Nutritional Risk Factors</p>
-                      <ul className="list-disc list-inside text-sm text-gray-900">
+                      <ul className="list-disc list-inside text-sm text-slate-900">
                         {extractedData.nutritional_status.nutritional_risk_factors.map((factor, i) => (
                           <li key={i}>{factor}</li>
                         ))}
@@ -1183,13 +1183,13 @@ HANDWRITTEN NOTES HANDLING:
                           {wound.location && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-orange-900">Location</p>
-                              <p className="text-sm text-gray-900">{wound.location}</p>
+                              <p className="text-sm text-slate-900">{wound.location}</p>
                             </div>
                           )}
                           {(wound.size_length_cm || wound.size_width_cm || wound.size_depth_cm) && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-orange-900">Size (L × W × D)</p>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-sm text-slate-900">
                                 {wound.size_length_cm || '?'} × {wound.size_width_cm || '?'} × {wound.size_depth_cm || '?'} cm
                               </p>
                             </div>
@@ -1197,7 +1197,7 @@ HANDWRITTEN NOTES HANDLING:
                           {wound.exudate_type && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-orange-900">Exudate</p>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-sm text-slate-900">
                                 {wound.exudate_type} {wound.exudate_amount && `(${wound.exudate_amount})`}
                               </p>
                             </div>
@@ -1205,19 +1205,19 @@ HANDWRITTEN NOTES HANDLING:
                           {wound.wound_bed_appearance && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-orange-900">Wound Bed</p>
-                              <p className="text-sm text-gray-900">{wound.wound_bed_appearance}</p>
+                              <p className="text-sm text-slate-900">{wound.wound_bed_appearance}</p>
                             </div>
                           )}
                           {wound.surrounding_skin && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-orange-900">Surrounding Skin</p>
-                              <p className="text-sm text-gray-900">{wound.surrounding_skin}</p>
+                              <p className="text-sm text-slate-900">{wound.surrounding_skin}</p>
                             </div>
                           )}
                           {wound.pain_level && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-orange-900">Pain Level</p>
-                              <p className="text-sm text-gray-900">{wound.pain_level}</p>
+                              <p className="text-sm text-slate-900">{wound.pain_level}</p>
                             </div>
                           )}
                         </div>
@@ -1225,7 +1225,7 @@ HANDWRITTEN NOTES HANDLING:
                         {(wound.undermining_cm || wound.tunneling_cm) && (
                           <div className="bg-red-50 p-2 rounded mt-2">
                             <p className="text-xs font-semibold text-red-900">⚠️ Undermining/Tunneling</p>
-                            <p className="text-sm text-gray-900">
+                            <p className="text-sm text-slate-900">
                               {wound.undermining_cm && `Undermining: ${wound.undermining_cm}`}
                               {wound.undermining_cm && wound.tunneling_cm && ' | '}
                               {wound.tunneling_cm && `Tunneling: ${wound.tunneling_cm}`}
@@ -1236,14 +1236,14 @@ HANDWRITTEN NOTES HANDLING:
                         {wound.current_treatment && (
                           <div className="bg-blue-50 p-2 rounded mt-2">
                             <p className="text-xs font-semibold text-blue-900">Current Treatment</p>
-                            <p className="text-sm text-gray-900">{wound.current_treatment}</p>
+                            <p className="text-sm text-slate-900">{wound.current_treatment}</p>
                           </div>
                         )}
                         
                         {wound.odor_present && (
                           <div className="bg-yellow-50 p-2 rounded mt-2">
                             <p className="text-xs font-semibold text-yellow-900">Odor Present</p>
-                            <p className="text-sm text-gray-900">{wound.odor_character || 'Yes'}</p>
+                            <p className="text-sm text-slate-900">{wound.odor_character || 'Yes'}</p>
                           </div>
                         )}
                       </div>
@@ -1286,25 +1286,25 @@ HANDWRITTEN NOTES HANDLING:
                         )}
                         
                         {extractedData.psychosocial.mental_health_assessment.current_symptoms && (
-                          <p className="text-sm text-gray-900 mb-1">
+                          <p className="text-sm text-slate-900 mb-1">
                             <strong>Current Symptoms:</strong> {extractedData.psychosocial.mental_health_assessment.current_symptoms}
                           </p>
                         )}
                         
                         {extractedData.psychosocial.mental_health_assessment.symptom_severity && (
-                          <p className="text-sm text-gray-900 mb-1">
+                          <p className="text-sm text-slate-900 mb-1">
                             <strong>Severity:</strong> {extractedData.psychosocial.mental_health_assessment.symptom_severity}
                           </p>
                         )}
                         
                         {extractedData.psychosocial.mental_health_assessment.coping_mechanisms && (
-                          <p className="text-sm text-gray-900 mb-1">
+                          <p className="text-sm text-slate-900 mb-1">
                             <strong>Coping Mechanisms:</strong> {extractedData.psychosocial.mental_health_assessment.coping_mechanisms}
                           </p>
                         )}
                         
                         {extractedData.psychosocial.mental_health_assessment.substance_use_history && (
-                          <p className="text-sm text-gray-900">
+                          <p className="text-sm text-slate-900">
                             <strong>Substance Use:</strong> {extractedData.psychosocial.mental_health_assessment.substance_use_history}
                           </p>
                         )}
@@ -1320,56 +1320,56 @@ HANDWRITTEN NOTES HANDLING:
                           {extractedData.psychosocial.social_determinants.living_situation && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Living Situation</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.living_situation}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.living_situation}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.caregiver_availability && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Caregiver Availability</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.caregiver_availability}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.caregiver_availability}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.financial_concerns && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Financial Concerns</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.financial_concerns}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.financial_concerns}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.transportation_barriers && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Transportation Barriers</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.transportation_barriers}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.transportation_barriers}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.food_insecurity && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Food Insecurity</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.food_insecurity}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.food_insecurity}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.social_isolation && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Social Isolation</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.social_isolation}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.social_isolation}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.housing_stability && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Housing Stability</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.housing_stability}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.housing_stability}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.health_literacy && (
                             <div className="bg-white p-2 rounded">
                               <p className="text-xs font-semibold text-teal-900">Health Literacy</p>
-                              <p className="text-sm text-gray-900">{extractedData.psychosocial.social_determinants.health_literacy}</p>
+                              <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.health_literacy}</p>
                             </div>
                           )}
                         </div>
@@ -1407,7 +1407,7 @@ HANDWRITTEN NOTES HANDLING:
                     value && value !== "Not documented in referral." && (
                       <div key={key} className="bg-indigo-50 p-2 rounded">
                         <p className="text-xs font-semibold text-indigo-900 capitalize">{key.replace(/_/g, ' ')}</p>
-                        <p className="text-sm text-gray-900">{value}</p>
+                        <p className="text-sm text-slate-900">{value}</p>
                       </div>
                     )
                   ))}
@@ -1442,7 +1442,7 @@ HANDWRITTEN NOTES HANDLING:
                   {extractedData.skilled_needs?.specific_interventions?.length > 0 && (
                     <div className="bg-blue-50 p-3 rounded">
                       <p className="text-xs font-semibold text-blue-900 mb-1">Specific Interventions</p>
-                      <ul className="list-disc list-inside text-sm text-gray-900">
+                      <ul className="list-disc list-inside text-sm text-slate-900">
                         {extractedData.skilled_needs.specific_interventions.map((int, i) => (
                           <li key={i}>{int}</li>
                         ))}
@@ -1472,31 +1472,31 @@ HANDWRITTEN NOTES HANDLING:
                     {extractedData.handwritten_notes.clinical_notes && (
                       <div className="bg-amber-50 p-3 rounded border-l-4 border-amber-500">
                         <p className="text-xs font-semibold text-amber-900 mb-1">Clinical Notes (Handwritten)</p>
-                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.clinical_notes}</p>
+                        <p className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.handwritten_notes.clinical_notes}</p>
                       </div>
                     )}
                     {extractedData.handwritten_notes.physician_instructions && (
                       <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
                         <p className="text-xs font-semibold text-blue-900 mb-1">Physician Instructions (Handwritten)</p>
-                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.physician_instructions}</p>
+                        <p className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.handwritten_notes.physician_instructions}</p>
                       </div>
                     )}
                     {extractedData.handwritten_notes.margin_annotations && (
                       <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-500">
                         <p className="text-xs font-semibold text-purple-900 mb-1">Margin Annotations</p>
-                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.margin_annotations}</p>
+                        <p className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.handwritten_notes.margin_annotations}</p>
                       </div>
                     )}
                     {extractedData.handwritten_notes.priority_indicators && (
                       <div className="bg-red-50 p-3 rounded border-l-4 border-red-500">
                         <p className="text-xs font-semibold text-red-900 mb-1">Priority Indicators</p>
-                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.priority_indicators}</p>
+                        <p className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.handwritten_notes.priority_indicators}</p>
                       </div>
                     )}
                     {extractedData.handwritten_notes.other_handwritten && (
-                      <div className="bg-gray-50 p-3 rounded border-l-4 border-gray-500">
-                        <p className="text-xs font-semibold text-gray-900 mb-1">Other Handwritten Content</p>
-                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.other_handwritten}</p>
+                      <div className="bg-slate-50 p-3 rounded border-l-4 border-slate-500">
+                        <p className="text-xs font-semibold text-slate-900 mb-1">Other Handwritten Content</p>
+                        <p className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.handwritten_notes.other_handwritten}</p>
                       </div>
                     )}
                   </div>
@@ -1511,9 +1511,9 @@ HANDWRITTEN NOTES HANDLING:
             {/* Document Quality Notes */}
             {extractedData.document_quality_notes && (
               <AccordionItem value="quality">
-                <AccordionTrigger className="bg-gray-50 px-4 py-3 rounded-t-lg">
+                <AccordionTrigger className="bg-slate-50 px-4 py-3 rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-gray-600" />
+                    <AlertCircle className="w-4 h-4 text-slate-600" />
                     <span className="font-semibold">Document Quality Assessment</span>
                   </div>
                 </AccordionTrigger>
@@ -1522,13 +1522,13 @@ HANDWRITTEN NOTES HANDLING:
                     {extractedData.document_quality_notes.legibility_assessment && (
                       <div className="bg-blue-50 p-2 rounded">
                         <p className="text-xs font-semibold text-blue-900">Legibility Assessment</p>
-                        <p className="text-sm text-gray-900">{extractedData.document_quality_notes.legibility_assessment}</p>
+                        <p className="text-sm text-slate-900">{extractedData.document_quality_notes.legibility_assessment}</p>
                       </div>
                     )}
                     {extractedData.document_quality_notes.unclear_sections?.length > 0 && (
                       <div className="bg-yellow-50 p-2 rounded">
                         <p className="text-xs font-semibold text-yellow-900 mb-1">Unclear Sections</p>
-                        <ul className="text-sm text-gray-900 list-disc list-inside">
+                        <ul className="text-sm text-slate-900 list-disc list-inside">
                           {extractedData.document_quality_notes.unclear_sections.map((section, i) => (
                             <li key={i}>{section}</li>
                           ))}
@@ -1551,7 +1551,7 @@ HANDWRITTEN NOTES HANDLING:
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
                   <div className="bg-purple-50 p-4 rounded border">
-                    <pre className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.admission_note_template}</pre>
+                    <pre className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.admission_note_template}</pre>
                   </div>
                   <Button size="sm" variant="ghost" className="mt-2" onClick={() => copySection(extractedData.admission_note_template)}>
                     <Copy className="w-3 h-3 mr-1" />
@@ -1580,7 +1580,7 @@ HANDWRITTEN NOTES HANDLING:
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-slate-600 mb-4">
                 Based on the extracted referral data, our AI has analyzed and pre-populated relevant OASIS items with confidence scores and verification flags.
               </p>
               <AISmartOASISAssistant

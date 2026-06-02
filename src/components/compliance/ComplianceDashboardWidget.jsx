@@ -77,8 +77,8 @@ export default function ComplianceDashboardWidget() {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-8 h-8 text-green-600" />
             <div>
-              <h3 className="font-semibold text-gray-900">All Clear!</h3>
-              <p className="text-sm text-gray-600">No urgent compliance items</p>
+              <h3 className="font-semibold text-slate-900">All Clear!</h3>
+              <p className="text-sm text-slate-600">No urgent compliance items</p>
             </div>
           </div>
         </CardContent>
@@ -110,10 +110,10 @@ export default function ComplianceDashboardWidget() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-slate-900">
                     {item.patient.first_name} {item.patient.last_name}
                   </p>
-                  <p className="text-sm text-gray-600">{item.type} due</p>
+                  <p className="text-sm text-slate-600">{item.type} due</p>
                 </div>
                 <Badge className={
                   item.daysRemaining < 0 ? 'bg-red-600' :

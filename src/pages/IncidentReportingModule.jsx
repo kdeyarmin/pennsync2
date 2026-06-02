@@ -250,7 +250,7 @@ Please review this incident in the Incident Reporting Dashboard.`
       case 'reported': return 'bg-yellow-500';
       case 'under_review': return 'bg-blue-500';
       case 'resolved': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -259,7 +259,7 @@ Please review this incident in the Incident Reporting Dashboard.`
       case 'high': return 'bg-red-600 text-white';
       case 'medium': return 'bg-orange-500 text-white';
       case 'low': return 'bg-yellow-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -273,8 +273,8 @@ Please review this incident in the Incident Reporting Dashboard.`
               <AlertTriangle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Incident Reporting</h1>
-              <p className="text-sm text-gray-600">Document and track safety incidents</p>
+              <h1 className="text-3xl font-bold text-slate-900">Incident Reporting</h1>
+              <p className="text-sm text-slate-600">Document and track safety incidents</p>
             </div>
           </div>
           <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
@@ -451,10 +451,10 @@ Please review this incident in the Incident Reporting Dashboard.`
                   <div className="col-span-2">
                     <Label>Upload Photos (Optional)</Label>
                     <div className="mt-2">
-                      <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-slate-400 transition-colors">
                         <div className="text-center">
-                          <Camera className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <span className="text-sm text-gray-600">
+                          <Camera className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                          <span className="text-sm text-slate-600">
                             {uploading ? "Uploading..." : "Click to upload photos"}
                           </span>
                         </div>
@@ -591,9 +591,9 @@ Please review this incident in the Incident Reporting Dashboard.`
                     <span className="text-sm font-medium capitalize">
                       {type.replace(/_/g, ' ')}
                     </span>
-                    <span className="text-sm text-gray-600">{count}</span>
+                    <span className="text-sm text-slate-600">{count}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-slate-200 rounded-full h-2">
                     <div
                       className="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full"
                       style={{ width: `${(count / incidents.length) * 100}%` }}
@@ -618,7 +618,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{incident.patient_name}</h4>
+                      <h4 className="font-semibold text-slate-900">{incident.patient_name}</h4>
                       <Badge className={getSeverityColor(incident.severity)}>
                         {incident.severity}
                       </Badge>
@@ -626,11 +626,11 @@ Please review this incident in the Incident Reporting Dashboard.`
                         {incident.status.replace(/_/g, ' ')}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-slate-600 mb-1">
                       {incident.incident_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </p>
-                    <p className="text-sm text-gray-700">{incident.report}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                    <p className="text-sm text-slate-700">{incident.report}</p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
                         <CalendarIcon className="w-3 h-3" />
                         {format(parseISO(incident.incident_date), 'MMM d, yyyy')} at {incident.incident_time}
@@ -673,8 +673,8 @@ Please review this incident in the Incident Reporting Dashboard.`
               </div>
             ))}
             {recentIncidents.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <FileText className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <div className="text-center py-8 text-slate-500">
+                <FileText className="w-12 h-12 mx-auto mb-2 text-slate-300" />
                 <p>No incidents reported yet</p>
               </div>
             )}

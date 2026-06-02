@@ -259,13 +259,13 @@ export default function SmartNoteVoiceListener({
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <Card className={`shadow-lg transition-all ${isListening ? 'border-green-400 bg-green-50' : 'border-gray-200'}`}>
+      <Card className={`shadow-lg transition-all ${isListening ? 'border-green-400 bg-green-50' : 'border-slate-200'}`}>
         <CardContent className="p-3">
           <div className="flex items-center gap-3">
             <Button
               size="sm"
               onClick={toggleListening}
-              className={`rounded-full w-10 h-10 ${isListening ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'}`}
+              className={`rounded-full w-10 h-10 ${isListening ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-600 hover:bg-slate-700'}`}
             >
               {isListening ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             </Button>
@@ -285,12 +285,12 @@ export default function SmartNoteVoiceListener({
                       ))}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600">Say vitals or commands</p>
+                  <p className="text-xs text-slate-600">Say vitals or commands</p>
                 </>
               ) : (
                 <>
-                  <p className="text-xs font-medium text-gray-700">Voice Commands</p>
-                  <p className="text-xs text-gray-500">Click to activate</p>
+                  <p className="text-xs font-medium text-slate-700">Voice Commands</p>
+                  <p className="text-xs text-slate-500">Click to activate</p>
                 </>
               )}
             </div>

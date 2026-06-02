@@ -103,7 +103,7 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
+    <div className="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded p-2">
           <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
@@ -159,8 +159,8 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
 
           {/* Section Mapper - shown after transcription */}
           {transcript && showMapper && (
-            <div className="border-t border-gray-200 pt-3 mt-3">
-              <p className="text-xs font-semibold text-gray-600 mb-2">📍 Auto-map transcription into note sections</p>
+            <div className="border-t border-slate-200 pt-3 mt-3">
+              <p className="text-xs font-semibold text-slate-600 mb-2">📍 Auto-map transcription into note sections</p>
               <DictationSectionMapper
                 transcript={transcript}
                 onSectionsMapped={(sections) => {

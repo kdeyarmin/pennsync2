@@ -122,7 +122,7 @@ const CONDITION_TEMPLATES = [
     name: 'Orthopedic / Joint Replacement',
     icon: Bone,
     description: 'Post-surgical orthopedic care',
-    color: 'bg-gray-500',
+    color: 'bg-slate-500',
     focusAreas: ['incision_assessment', 'pain_management', 'mobility', 'pt_exercises', 'dvt_prevention', 'weight_bearing']
   },
   {
@@ -193,7 +193,7 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
             </div>
             <div>
               <CardTitle>Clinical Template Library</CardTitle>
-              <p className="text-sm text-gray-600">AI-powered documentation templates</p>
+              <p className="text-sm text-slate-600">AI-powered documentation templates</p>
             </div>
           </div>
           {onClose && (
@@ -204,7 +204,7 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
       <CardContent className="p-4">
         {/* Search */}
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search templates..."
             value={searchTerm}
@@ -218,8 +218,8 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
           <div className="flex items-center justify-center py-8 gap-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             <div className="text-center">
-              <p className="text-gray-900 font-semibold">Generating Template...</p>
-              <p className="text-sm text-gray-600">AI is creating your documentation template</p>
+              <p className="text-slate-900 font-semibold">Generating Template...</p>
+              <p className="text-sm text-slate-600">AI is creating your documentation template</p>
             </div>
           </div>
         )}
@@ -264,14 +264,14 @@ function TemplateCard({ template, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-all"
+      className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-all"
     >
       <div className={`w-12 h-12 ${template.color} rounded-lg flex items-center justify-center shadow-md`}>
         <Icon className="w-6 h-6 text-white" />
       </div>
       <div className="flex-1">
-        <h3 className="font-semibold text-gray-900">{template.name}</h3>
-        <p className="text-sm text-gray-600">{template.description}</p>
+        <h3 className="font-semibold text-slate-900">{template.name}</h3>
+        <p className="text-sm text-slate-600">{template.description}</p>
         <div className="flex flex-wrap gap-1 mt-2">
           {(template.sections || template.focusAreas)?.slice(0, 4).map((item, idx) => (
             <Badge key={idx} variant="outline" className="text-xs capitalize">
@@ -285,7 +285,7 @@ function TemplateCard({ template, onClick }) {
           )}
         </div>
       </div>
-      <FileText className="w-5 h-5 text-gray-400" />
+      <FileText className="w-5 h-5 text-slate-400" />
     </div>
   );
 }

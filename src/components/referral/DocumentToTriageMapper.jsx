@@ -131,16 +131,16 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
 
   if (result?.success) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex items-start gap-3">
           <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-bold text-green-800 text-lg">{result.message}</h3>
             <div className="mt-3 space-y-1 text-sm">
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 Patient ID: <span className="font-mono font-semibold">{result.patientId.substring(0, 8)}...</span>
               </p>
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 Referral ID: <span className="font-mono font-semibold">{result.referralId.substring(0, 8)}...</span>
               </p>
             </div>
@@ -184,12 +184,12 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
       <DocumentIngestionUploader onDataExtracted={handleDataExtracted} />
 
       {extractedData && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4">
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">Map to Patient & Workflow</h3>
+            <h3 className="font-semibold text-slate-900 mb-3">Map to Patient & Workflow</h3>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
                 <input
                   type="radio"
                   name="action"
@@ -205,14 +205,14 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
                   className="w-4 h-4"
                 />
                 <div>
-                  <p className="font-medium text-gray-900">Create New Patient</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-medium text-slate-900">Create New Patient</p>
+                  <p className="text-xs text-slate-500">
                     {extractedData.patient?.first_name} {extractedData.patient?.last_name}
                   </p>
                 </div>
               </label>
 
-              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
                 <input
                   type="radio"
                   name="action"
@@ -227,8 +227,8 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
                   className="w-4 h-4"
                 />
                 <div>
-                  <p className="font-medium text-gray-900">Update Existing Patient</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-medium text-slate-900">Update Existing Patient</p>
+                  <p className="text-xs text-slate-500">
                     (Select patient from dropdown)
                   </p>
                 </div>
@@ -237,15 +237,15 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
 
             {mapping.updatePatient && (
               <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-gray-600 mb-2">Patient Selection Coming Soon</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-600 mb-2">Patient Selection Coming Soon</p>
+                <p className="text-xs text-slate-500">
                   Select an existing patient to map clinical data
                 </p>
               </div>
             )}
 
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-700 mb-2">Workflow Actions</p>
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <p className="text-xs font-semibold text-slate-700 mb-2">Workflow Actions</p>
               <label className="flex items-center gap-3 p-2">
                 <input
                   type="checkbox"
@@ -255,7 +255,7 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
                   }
                   className="w-4 h-4"
                 />
-                <span className="text-sm text-gray-900">Create Triage/Referral</span>
+                <span className="text-sm text-slate-900">Create Triage/Referral</span>
               </label>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
             </Alert>
           )}
 
-          <div className="flex gap-2 pt-2 border-t border-gray-200">
+          <div className="flex gap-2 pt-2 border-t border-slate-200">
             <Button
               onClick={handleProcessMapping}
               disabled={

@@ -280,8 +280,8 @@ export default function PDFTemplateBuilder({ open, onClose }) {
               const currentIndex = allItems.findIndex((stepItem) => stepItem.id === step);
               return (
                 <div key={item.id} className="flex-1">
-                  <div className={`h-1 rounded-full ${index <= currentIndex ? 'bg-blue-600' : 'bg-gray-200'}`} />
-                  <p className="mt-1 text-xs text-gray-600">{item.label}</p>
+                  <div className={`h-1 rounded-full ${index <= currentIndex ? 'bg-blue-600' : 'bg-slate-200'}`} />
+                  <p className="mt-1 text-xs text-slate-600">{item.label}</p>
                 </div>
               );
             })}
@@ -315,7 +315,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
               </div>
               <div className="space-y-2">
                 <Label>Packet Type</Label>
-                <div className="rounded-md border p-3 text-sm text-gray-700 bg-slate-50">
+                <div className="rounded-md border p-3 text-sm text-slate-700 bg-slate-50">
                   {documents.length > 1 ? 'Multi-document packet' : 'Single document template'}
                 </div>
               </div>
@@ -334,20 +334,20 @@ export default function PDFTemplateBuilder({ open, onClose }) {
           {step === 'upload' && (
             <div className="space-y-4">
               <div
-                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-slate-50 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <div className="space-y-2">
                   {uploading ? (
                     <>
                       <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
-                      <p className="text-sm text-gray-600">Uploading PDF files...</p>
+                      <p className="text-sm text-slate-600">Uploading PDF files...</p>
                     </>
                   ) : (
                     <>
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-                      <p className="text-sm font-medium text-gray-700">Upload a document or packet of documents</p>
-                      <p className="text-xs text-gray-500">Select one PDF or multiple PDFs for a packet</p>
+                      <Upload className="w-12 h-12 text-slate-400 mx-auto" />
+                      <p className="text-sm font-medium text-slate-700">Upload a document or packet of documents</p>
+                      <p className="text-xs text-slate-500">Select one PDF or multiple PDFs for a packet</p>
                     </>
                   )}
                 </div>
@@ -370,8 +370,8 @@ export default function PDFTemplateBuilder({ open, onClose }) {
                         <div className="flex items-center gap-3 min-w-0">
                           {documents.length > 1 ? <FileStack className="w-5 h-5 text-indigo-600 shrink-0" /> : <FileText className="w-5 h-5 text-blue-600 shrink-0" />}
                           <div className="min-w-0">
-                            <p className="font-medium text-gray-900 truncate">{document.name}</p>
-                            <p className="text-xs text-gray-500">Document {index + 1} of {documents.length}</p>
+                            <p className="font-medium text-slate-900 truncate">{document.name}</p>
+                            <p className="text-xs text-slate-500">Document {index + 1} of {documents.length}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -392,8 +392,8 @@ export default function PDFTemplateBuilder({ open, onClose }) {
             <div className="space-y-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Place signature and carry-forward fields</h3>
-                  <p className="text-sm text-gray-600">Choose a document, then add signature fields and any patient data that should carry forward automatically.</p>
+                  <h3 className="text-lg font-semibold text-slate-900">Place signature and carry-forward fields</h3>
+                  <p className="text-sm text-slate-600">Choose a document, then add signature fields and any patient data that should carry forward automatically.</p>
                 </div>
                 {documents.length > 0 && (
                   <Tabs value={activeDocument?.id} onValueChange={setActiveDocumentId} className="w-full lg:w-auto">
@@ -412,8 +412,8 @@ export default function PDFTemplateBuilder({ open, onClose }) {
                 <Card className="md:col-span-1">
                   <CardContent className="p-4 space-y-3">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Current document</p>
-                      <p className="text-sm text-gray-600">{activeDocument?.name || 'None selected'}</p>
+                      <p className="text-sm font-medium text-slate-900">Current document</p>
+                      <p className="text-sm text-slate-600">{activeDocument?.name || 'None selected'}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="rounded-md border p-3">
@@ -448,7 +448,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
                     />
                   ) : (
                     <Card>
-                      <CardContent className="p-10 text-center text-gray-500">
+                      <CardContent className="p-10 text-center text-slate-500">
                         Upload at least one PDF to start placing fields.
                       </CardContent>
                     </Card>
@@ -465,8 +465,8 @@ export default function PDFTemplateBuilder({ open, onClose }) {
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                     <div>
-                      <p className="font-medium text-gray-900">{formData.template_name}</p>
-                      <p className="text-sm text-gray-600">{documents.length > 1 ? 'Packet template' : 'Single document template'} • {documents.length} PDF(s)</p>
+                      <p className="font-medium text-slate-900">{formData.template_name}</p>
+                      <p className="text-sm text-slate-600">{documents.length > 1 ? 'Packet template' : 'Single document template'} • {documents.length} PDF(s)</p>
                       <div className="mt-2 inline-block">
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                           {TEMPLATE_CATEGORIES.find(c => c.value === formData.template_category)?.label}
@@ -475,22 +475,22 @@ export default function PDFTemplateBuilder({ open, onClose }) {
                     </div>
                   </div>
                   {formData.description && (
-                    <p className="text-sm text-gray-700 p-3 bg-white rounded border">
+                    <p className="text-sm text-slate-700 p-3 bg-white rounded border">
                       {formData.description}
                     </p>
                   )}
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="rounded-md border bg-white p-3">
-                      <p className="text-xs text-gray-500">Documents</p>
-                      <p className="text-lg font-semibold text-gray-900">{documents.length}</p>
+                      <p className="text-xs text-slate-500">Documents</p>
+                      <p className="text-lg font-semibold text-slate-900">{documents.length}</p>
                     </div>
                     <div className="rounded-md border bg-white p-3">
-                      <p className="text-xs text-gray-500">Signature fields</p>
-                      <p className="text-lg font-semibold text-gray-900">{totalSignatureFields}</p>
+                      <p className="text-xs text-slate-500">Signature fields</p>
+                      <p className="text-lg font-semibold text-slate-900">{totalSignatureFields}</p>
                     </div>
                     <div className="rounded-md border bg-white p-3">
-                      <p className="text-xs text-gray-500">Patient carry-forward fields</p>
-                      <p className="text-lg font-semibold text-gray-900">{totalCarryForwardFields}</p>
+                      <p className="text-xs text-slate-500">Patient carry-forward fields</p>
+                      <p className="text-lg font-semibold text-slate-900">{totalCarryForwardFields}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -502,12 +502,12 @@ export default function PDFTemplateBuilder({ open, onClose }) {
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="font-medium text-gray-900">{document.name}</p>
-                          <p className="text-xs text-gray-500">{document.fileName}</p>
+                          <p className="font-medium text-slate-900">{document.name}</p>
+                          <p className="text-xs text-slate-500">{document.fileName}</p>
                         </div>
                         <Badge variant="outline">{document.order}</Badge>
                       </div>
-                      <div className="text-sm text-gray-600 flex flex-wrap gap-4">
+                      <div className="text-sm text-slate-600 flex flex-wrap gap-4">
                         <span>{document.signatureFields.length} signature field(s)</span>
                         <span>{document.fieldMappings.length} mapped field(s)</span>
                         <span>{document.carryForwardFields.length} patient carry-forward field(s)</span>

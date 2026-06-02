@@ -70,7 +70,7 @@ export default function PatientVerificationStep({
     if (confidence >= 90) return "bg-green-600";
     if (confidence >= 75) return "bg-blue-600";
     if (confidence >= 60) return "bg-yellow-600";
-    return "bg-gray-600";
+    return "bg-slate-600";
   };
 
   const getConfidenceBadgeText = (confidence) => {
@@ -105,36 +105,36 @@ export default function PatientVerificationStep({
         <CardContent className="pt-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Full Name</p>
+              <p className="text-xs text-slate-500">Full Name</p>
               <p className="font-semibold text-lg">{extractedData?.demographics?.full_name || 'Not extracted'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Date of Birth</p>
+              <p className="text-xs text-slate-500">Date of Birth</p>
               <p className="font-semibold flex items-center gap-1">
-                <Calendar className="w-4 h-4 text-gray-400" />
+                <Calendar className="w-4 h-4 text-slate-400" />
                 {extractedData?.demographics?.date_of_birth || 'Not extracted'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Phone</p>
+              <p className="text-xs text-slate-500">Phone</p>
               <p className="font-semibold flex items-center gap-1">
-                <Phone className="w-4 h-4 text-gray-400" />
+                <Phone className="w-4 h-4 text-slate-400" />
                 {extractedData?.demographics?.phone || 'Not extracted'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Address</p>
+              <p className="text-xs text-slate-500">Address</p>
               <p className="font-semibold flex items-center gap-1">
-                <MapPin className="w-4 h-4 text-gray-400" />
+                <MapPin className="w-4 h-4 text-slate-400" />
                 {extractedData?.demographics?.address || 'Not extracted'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Primary Diagnosis</p>
+              <p className="text-xs text-slate-500">Primary Diagnosis</p>
               <p className="font-semibold">{extractedData?.diagnoses?.primary_diagnosis || 'Not extracted'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Referring Physician</p>
+              <p className="text-xs text-slate-500">Referring Physician</p>
               <p className="font-semibold">{extractedData?.demographics?.referring_physician || 'Not extracted'}</p>
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function PatientVerificationStep({
                 className={`cursor-pointer transition-all ${
                   selectedPatientId === patient.id
                     ? 'border-2 border-green-500 bg-green-50'
-                    : 'border hover:border-gray-400 hover:shadow-md'
+                    : 'border hover:border-slate-400 hover:shadow-md'
                 }`}
                 onClick={() => setSelectedPatientId(patient.id)}
               >
@@ -199,15 +199,15 @@ export default function PatientVerificationStep({
 
                       {/* Patient Details */}
                       <div className="grid md:grid-cols-3 gap-3 text-sm">
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-slate-600">
                           <Calendar className="w-4 h-4" />
                           <span>DOB: {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-slate-600">
                           <Phone className="w-4 h-4" />
                           <span>{patient.phone || 'No phone'}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-slate-600">
                           <MapPin className="w-4 h-4" />
                           <span>{patient.address?.substring(0, 30) || 'No address'}</span>
                         </div>
@@ -293,7 +293,7 @@ export default function PatientVerificationStep({
           <Button
             onClick={onSkip}
             variant="ghost"
-            className="text-gray-600 hover:bg-gray-100"
+            className="text-slate-600 hover:bg-slate-100"
           >
             Skip for Now
           </Button>
@@ -301,8 +301,8 @@ export default function PatientVerificationStep({
       </div>
 
       {/* Help Text */}
-      <div className="bg-gray-50 p-4 rounded-lg border">
-        <p className="text-sm text-gray-700">
+      <div className="bg-slate-50 p-4 rounded-lg border">
+        <p className="text-sm text-slate-700">
           <strong>💡 Tip:</strong> Review the match confidence scores and discrepancies carefully. 
           High confidence matches (90%+) are typically accurate, but always verify critical information like DOB and name spelling.
         </p>

@@ -128,7 +128,7 @@ Return JSON:
       <Card className="border-2 border-purple-200">
         <CardContent className="p-6 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">Analyzing for {visitType}...</p>
+          <p className="text-sm text-slate-600">Analyzing for {visitType}...</p>
         </CardContent>
       </Card>
     );
@@ -158,8 +158,8 @@ Return JSON:
               <div className="space-y-2">
                 {missingCritical.map((req, idx) => (
                   <div key={idx} className="bg-white rounded p-2 border border-red-200">
-                    <p className="text-xs font-semibold text-gray-900">{req.element}</p>
-                    <p className="text-xs text-gray-600 mt-1">{req.suggestion}</p>
+                    <p className="text-xs font-semibold text-slate-900">{req.element}</p>
+                    <p className="text-xs text-slate-600 mt-1">{req.suggestion}</p>
                     <Button
                       size="sm"
                       variant="outline"
@@ -178,15 +178,15 @@ Return JSON:
         {/* Missing Diagnosis Elements */}
         {missingDiagnosis.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-700 mb-2">
+            <p className="text-xs font-semibold text-slate-700 mb-2">
               {diagnosis?.split(' ')[0]} Assessment Gaps:
             </p>
             <div className="space-y-2">
               {missingDiagnosis.map((elem, idx) => (
                 <div key={idx} className="bg-white rounded p-2 border border-orange-200">
-                  <p className="text-xs font-semibold text-gray-900">{elem.element}</p>
-                  <p className="text-xs text-gray-600 italic mb-1">{elem.clinical_importance}</p>
-                  <p className="text-xs text-gray-700">{elem.suggestion}</p>
+                  <p className="text-xs font-semibold text-slate-900">{elem.element}</p>
+                  <p className="text-xs text-slate-600 italic mb-1">{elem.clinical_importance}</p>
+                  <p className="text-xs text-slate-700">{elem.suggestion}</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -210,10 +210,10 @@ Return JSON:
             <div className="space-y-2">
               {undocumentedOASIS.slice(0, 5).map((oasis, idx) => (
                 <div key={idx} className="bg-white rounded p-2 text-xs">
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-slate-900">
                     {oasis.item_number}: {oasis.item_name}
                   </p>
-                  <p className="text-gray-600 mt-1">{oasis.suggestion}</p>
+                  <p className="text-slate-600 mt-1">{oasis.suggestion}</p>
                 </div>
               ))}
             </div>

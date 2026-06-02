@@ -79,18 +79,18 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
 
   if (!item) {
     return (
-      <div className="w-72 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col items-center justify-center p-6 text-center">
+      <div className="w-72 flex-shrink-0 bg-white border-l border-slate-200 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center mb-3">
           <BookOpen className="w-7 h-7 text-indigo-400" />
         </div>
-        <p className="text-sm font-semibold text-gray-400">Select an intervention</p>
-        <p className="text-xs text-gray-300 mt-1">Click any card in the plan to view details, link pathways, and review compliance</p>
+        <p className="text-sm font-semibold text-slate-400">Select an intervention</p>
+        <p className="text-xs text-slate-300 mt-1">Click any card in the plan to view details, link pathways, and review compliance</p>
       </div>
     );
   }
 
   return (
-    <div className="w-72 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col overflow-hidden">
+    <div className="w-72 flex-shrink-0 bg-white border-l border-slate-200 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 p-4 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white">
         <div className="flex items-start justify-between">
@@ -110,16 +110,16 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
 
       <div className="flex-1 overflow-y-auto">
         {/* Pathway Linking */}
-        <div className="border-b border-gray-100">
+        <div className="border-b border-slate-100">
           <button
             onClick={() => toggle("pathway")}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
           >
             <div className="flex items-center gap-2">
               <Link className="w-4 h-4 text-indigo-500" />
-              <span className="text-sm font-semibold text-gray-700">Link Clinical Pathway</span>
+              <span className="text-sm font-semibold text-slate-700">Link Clinical Pathway</span>
             </div>
-            {expanded.pathway ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            {expanded.pathway ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </button>
 
           {expanded.pathway && (
@@ -127,7 +127,7 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
               <select
                 value={selectedPathway}
                 onChange={(e) => setSelectedPathway(e.target.value)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none"
               >
                 <option value="">Select a pathway...</option>
                 {CLINICAL_PATHWAYS.map(p => (
@@ -154,16 +154,16 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
         </div>
 
         {/* Medicare Guideline */}
-        <div className="border-b border-gray-100">
+        <div className="border-b border-slate-100">
           <button
             onClick={() => toggle("guideline")}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
           >
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-emerald-500" />
-              <span className="text-sm font-semibold text-gray-700">Medicare Compliance</span>
+              <span className="text-sm font-semibold text-slate-700">Medicare Compliance</span>
             </div>
-            {expanded.guideline ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            {expanded.guideline ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </button>
 
           {expanded.guideline && (
@@ -172,14 +172,14 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-2 py-0.5">{guideline.rule}</span>
-                    <span className="text-xs text-gray-400">{guideline.link}</span>
+                    <span className="text-xs text-slate-400">{guideline.link}</span>
                   </div>
-                  <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 rounded-lg p-2.5 border border-gray-100">
+                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                     {guideline.text}
                   </p>
                 </div>
               ) : (
-                <div className="flex items-start gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-2.5">
+                <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 rounded-lg p-2.5">
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
                   <span>Document skilled need and clinical response at each visit per standard home health CoP requirements.</span>
                 </div>
@@ -189,17 +189,17 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
         </div>
 
         {/* AI Compliance Insight */}
-        <div className="border-b border-gray-100">
+        <div className="border-b border-slate-100">
           <button
             onClick={() => { toggle("ai"); if (!aiInsight && !loadingAI) fetchAIInsight(); }}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-semibold text-gray-700">AI Documentation Guide</span>
+              <span className="text-sm font-semibold text-slate-700">AI Documentation Guide</span>
               <span className="text-[10px] text-purple-600 bg-purple-50 border border-purple-200 rounded-full px-1.5 py-0.5 font-medium">AI</span>
             </div>
-            {expanded.ai ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            {expanded.ai ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </button>
 
           {expanded.ai && (

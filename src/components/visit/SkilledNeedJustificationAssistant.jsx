@@ -203,7 +203,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
       case 'adequate': return 'bg-blue-500';
       case 'needs_improvement': return 'bg-yellow-500';
       case 'insufficient': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -213,7 +213,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
       case 'adequate': return 'text-blue-700 bg-blue-50 border-blue-300';
       case 'weak': return 'text-yellow-700 bg-yellow-50 border-yellow-300';
       case 'missing': return 'text-red-700 bg-red-50 border-red-300';
-      default: return 'text-gray-700 bg-gray-50 border-gray-300';
+      default: return 'text-slate-700 bg-slate-50 border-slate-300';
     }
   };
 
@@ -222,7 +222,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
       case 'critical': return 'bg-red-100 text-red-900 border-red-300';
       case 'important': return 'bg-yellow-100 text-yellow-900 border-yellow-300';
       case 'recommended': return 'bg-blue-100 text-blue-900 border-blue-300';
-      default: return 'bg-gray-100 text-gray-900 border-gray-300';
+      default: return 'bg-slate-100 text-slate-900 border-slate-300';
     }
   };
 
@@ -236,8 +236,8 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
                 <ShieldCheck className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Skilled Need Justification Assistant</h3>
-                <p className="text-sm text-gray-600">Ensure robust Medicare skilled nursing justification</p>
+                <h3 className="text-lg font-bold text-slate-900">Skilled Need Justification Assistant</h3>
+                <p className="text-sm text-slate-600">Ensure robust Medicare skilled nursing justification</p>
               </div>
             </div>
             <Button
@@ -279,8 +279,8 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
             <div className="py-12 text-center space-y-4">
               <Sparkles className="w-16 h-16 mx-auto text-purple-600 animate-pulse" />
               <div>
-                <p className="text-lg font-semibold text-gray-900">Analyzing Documentation...</p>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-lg font-semibold text-slate-900">Analyzing Documentation...</p>
+                <p className="text-sm text-slate-600 mt-2">
                   Evaluating skilled interventions and Medicare justification
                 </p>
               </div>
@@ -288,13 +288,13 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
           ) : analysis ? (
             <div className="space-y-6 py-4">
               {/* Overall Score */}
-              <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+              <div className="bg-white rounded-lg border-2 border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">
+                    <h3 className="text-2xl font-bold text-slate-900">
                       Skilled Need Score: {analysis.overall_skilled_need_score}/100
                     </h3>
-                    <p className="text-gray-600 capitalize mt-1">
+                    <p className="text-slate-600 capitalize mt-1">
                       {analysis.compliance_status?.replace('_', ' ')}
                     </p>
                   </div>
@@ -337,7 +337,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <h5 className="font-bold text-gray-900">{intervention.intervention}</h5>
+                              <h5 className="font-bold text-slate-900">{intervention.intervention}</h5>
                               <Badge variant="outline" className="capitalize">
                                 {intervention.category}
                               </Badge>
@@ -345,23 +345,23 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
                                 {intervention.justification_quality}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-700">
                               <strong>Why Skilled:</strong> {intervention.why_skilled}
                             </p>
                           </div>
                           {expandedItems.includes(index) ? (
-                            <ChevronUp className="w-5 h-5 text-gray-400" />
+                            <ChevronUp className="w-5 h-5 text-slate-400" />
                           ) : (
-                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                            <ChevronDown className="w-5 h-5 text-slate-400" />
                           )}
                         </div>
 
                         {expandedItems.includes(index) && (
                           <div className="space-y-3 pt-3 border-t">
                             {intervention.current_justification && (
-                              <div className="bg-gray-50 p-3 rounded border">
-                                <p className="text-xs font-semibold text-gray-700 mb-1">Current Documentation:</p>
-                                <p className="text-sm text-gray-900 italic">"{intervention.current_justification}"</p>
+                              <div className="bg-slate-50 p-3 rounded border">
+                                <p className="text-xs font-semibold text-slate-700 mb-1">Current Documentation:</p>
+                                <p className="text-sm text-slate-900 italic">"{intervention.current_justification}"</p>
                               </div>
                             )}
 
@@ -429,8 +429,8 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
 
                         {element.suggested_text && (
                           <div className="bg-white p-3 rounded border border-red-200">
-                            <p className="text-xs font-semibold text-gray-700 mb-2">Suggested Text:</p>
-                            <p className="text-sm text-gray-900 mb-3">{element.suggested_text}</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-2">Suggested Text:</p>
+                            <p className="text-sm text-slate-900 mb-3">{element.suggested_text}</p>
                             <Button
                               size="sm"
                               onClick={() => handleAddText(element.suggested_text)}

@@ -74,7 +74,7 @@ export default function OCRDocumentExtractor({ onDataExtracted }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-slate-700">
           Upload a referral form, patient record, or insurance card to automatically extract patient information.
         </p>
 
@@ -106,7 +106,7 @@ export default function OCRDocumentExtractor({ onDataExtracted }) {
               />
             </label>
           </Button>
-          <span className="text-xs text-gray-500">PDF, JPG, or PNG</span>
+          <span className="text-xs text-slate-500">PDF, JPG, or PNG</span>
         </div>
 
         {error && (
@@ -128,10 +128,10 @@ export default function OCRDocumentExtractor({ onDataExtracted }) {
         )}
 
         {extractedData && (
-          <div className="bg-white rounded-lg border border-gray-200 p-3">
+          <div className="bg-white rounded-lg border border-slate-200 p-3">
             <div className="flex items-start gap-2 mb-2">
-              <FileText className="w-4 h-4 text-gray-600 mt-0.5" />
-              <div className="text-xs text-gray-700 space-y-1">
+              <FileText className="w-4 h-4 text-slate-600 mt-0.5" />
+              <div className="text-xs text-slate-700 space-y-1">
                 <p><strong>Extracted:</strong></p>
                 <ul className="list-disc list-inside space-y-0.5 ml-2">
                   {extractedData.first_name && <li>Name: {extractedData.first_name} {extractedData.last_name}</li>}

@@ -137,7 +137,7 @@ Analyze all risk factors and provide:
   const getTrendIcon = (trend) => {
     if (trend === 'improving') return <TrendingDown className="w-3 h-3 text-green-600" />;
     if (trend === 'worsening') return <TrendingUp className="w-3 h-3 text-red-600" />;
-    return <Activity className="w-3 h-3 text-gray-500" />;
+    return <Activity className="w-3 h-3 text-slate-500" />;
   };
 
   return (
@@ -170,7 +170,7 @@ Analyze all risk factors and provide:
           <div>
             <div className="text-center mb-2">
               <p className={`text-4xl font-bold ${getRiskColor(overallRisk)}`}>{overallRisk}</p>
-              <p className="text-sm text-gray-600">Overall Risk Score</p>
+              <p className="text-sm text-slate-600">Overall Risk Score</p>
             </div>
             <ResponsiveContainer width="100%" height={250}>
               <RadarChart data={riskDimensions}>
@@ -187,7 +187,7 @@ Analyze all risk factors and provide:
             <p className="text-sm font-medium">Risk Dimensions</p>
             {riskDimensions.map((dim) => (
               <div key={dim.subject} className="flex items-center gap-3">
-                <span className="text-xs text-gray-600 w-28">{dim.subject}</span>
+                <span className="text-xs text-slate-600 w-28">{dim.subject}</span>
                 <div className="flex-1">
                   <Progress value={dim.value} className="h-2" />
                 </div>
@@ -211,12 +211,12 @@ Analyze all risk factors and provide:
               <Badge variant="outline">Confidence: {aiAnalysis.confidence}%</Badge>
             </div>
 
-            <p className="text-sm text-gray-700">{aiAnalysis.summary}</p>
+            <p className="text-sm text-slate-700">{aiAnalysis.summary}</p>
 
             {/* Risk Areas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {aiAnalysis.risk_areas?.slice(0, 4).map((area, idx) => (
-                <div key={idx} className="p-2 bg-gray-50 rounded-lg border flex items-center justify-between">
+                <div key={idx} className="p-2 bg-slate-50 rounded-lg border flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {getTrendIcon(area.trend)}
                     <span className="text-sm">{area.area}</span>

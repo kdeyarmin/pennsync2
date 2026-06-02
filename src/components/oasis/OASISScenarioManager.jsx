@@ -278,9 +278,9 @@ export default function OASISScenarioManager({
       <CardContent className="space-y-4 pt-4">
         {/* Payment Comparison */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="p-3 bg-gray-50 rounded-lg border text-center">
-            <p className="text-xs text-gray-500 mb-1">Original Payment</p>
-            <p className="text-lg font-bold text-gray-700">{formatCurrency(originalPayment)}</p>
+          <div className="p-3 bg-slate-50 rounded-lg border text-center">
+            <p className="text-xs text-slate-500 mb-1">Original Payment</p>
+            <p className="text-lg font-bold text-slate-700">{formatCurrency(originalPayment)}</p>
           </div>
           <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 text-center">
             <p className="text-xs text-purple-600 mb-1">Scenario Payment</p>
@@ -294,11 +294,11 @@ export default function OASISScenarioManager({
           </div>
           <div className={`p-3 rounded-lg border text-center ${
             paymentDiff > 0 ? 'bg-green-50 border-green-200' : 
-            paymentDiff < 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50'
+            paymentDiff < 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50'
           }`}>
-            <p className="text-xs text-gray-500 mb-1">Difference</p>
+            <p className="text-xs text-slate-500 mb-1">Difference</p>
             <p className={`text-lg font-bold flex items-center justify-center gap-1 ${
-              paymentDiff > 0 ? 'text-green-700' : paymentDiff < 0 ? 'text-red-700' : 'text-gray-500'
+              paymentDiff > 0 ? 'text-green-700' : paymentDiff < 0 ? 'text-red-700' : 'text-slate-500'
             }`}>
               {paymentDiff > 0 ? <TrendingUp className="w-4 h-4" /> : 
                paymentDiff < 0 ? <TrendingDown className="w-4 h-4" /> : null}
@@ -312,7 +312,7 @@ export default function OASISScenarioManager({
           {/* Admission & Timing */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">Admission Source</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">Admission Source</label>
               <Select 
                 value={currentScenario?.admission_source || 'community'} 
                 onValueChange={(v) => updateScenario('admission_source', v)}
@@ -327,7 +327,7 @@ export default function OASISScenarioManager({
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">Episode Timing</label>
+              <label className="text-xs font-medium text-slate-700 mb-1 block">Episode Timing</label>
               <Select 
                 value={currentScenario?.episode_timing || 'early'} 
                 onValueChange={(v) => updateScenario('episode_timing', v)}
@@ -345,7 +345,7 @@ export default function OASISScenarioManager({
 
           {/* Functional Scores */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-700">Functional Scores</p>
+            <p className="text-sm font-medium text-slate-700">Functional Scores</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {FUNCTIONAL_ITEMS.map(item => {
                 const origVal = originalPdgmData.functional_scores?.[item.key] || 0;
@@ -353,7 +353,7 @@ export default function OASISScenarioManager({
                 const isChanged = origVal !== currVal;
 
                 return (
-                  <div key={item.key} className={`p-3 rounded-lg border ${isChanged ? 'bg-purple-50 border-purple-200' : 'bg-gray-50'}`}>
+                  <div key={item.key} className={`p-3 rounded-lg border ${isChanged ? 'bg-purple-50 border-purple-200' : 'bg-slate-50'}`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium">{item.label}</span>
                       <div className="flex items-center gap-2">
@@ -372,7 +372,7 @@ export default function OASISScenarioManager({
                       step={1}
                       className="w-full"
                     />
-                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <div className="flex justify-between text-xs text-slate-400 mt-1">
                       <span>0 (Indep)</span>
                       <span>{item.max} (Dep)</span>
                     </div>
@@ -387,7 +387,7 @@ export default function OASISScenarioManager({
         {savedScenarios.length > 0 && (
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <p className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Saved Scenarios ({savedScenarios.length})
               </p>
@@ -409,7 +409,7 @@ export default function OASISScenarioManager({
                   className={`p-3 rounded-lg border flex items-center justify-between ${
                     selectedScenarios.includes(scenario.id) 
                       ? 'bg-green-50 border-green-300' 
-                      : 'bg-white hover:bg-gray-50'
+                      : 'bg-white hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -421,7 +421,7 @@ export default function OASISScenarioManager({
                     />
                     <div>
                       <p className="text-sm font-medium">{scenario.scenario_name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         {scenario.changes_made?.length || 0} changes • 
                         <span className={scenario.payment_difference > 0 ? 'text-green-600' : 'text-red-600'}>
                           {' '}{scenario.payment_difference > 0 ? '+' : ''}{formatCurrency(scenario.payment_difference)}

@@ -222,8 +222,8 @@ Return JSON:
         {isGenerating ? (
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">AI is analyzing your documentation and generating improvement suggestions...</p>
-            <p className="text-xs text-gray-400 mt-1">Creating specific examples and templates</p>
+            <p className="text-sm text-slate-600">AI is analyzing your documentation and generating improvement suggestions...</p>
+            <p className="text-xs text-slate-400 mt-1">Creating specific examples and templates</p>
           </div>
         ) : !suggestions ? (
           <Button
@@ -270,8 +270,8 @@ Return JSON:
                   {suggestions.quick_wins.map((win, idx) => (
                     <div key={idx} className="bg-white p-3 rounded border flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-800 mb-1">{win.item}</p>
-                        <p className="text-xs text-gray-600 mb-2">{win.action}</p>
+                        <p className="text-sm font-medium text-slate-800 mb-1">{win.item}</p>
+                        <p className="text-xs text-slate-600 mb-2">{win.action}</p>
                         <div className="bg-blue-50 p-2 rounded border border-blue-200">
                           <p className="text-xs text-blue-600 font-medium mb-0.5">📝 Add this:</p>
                           <p className="text-sm text-blue-900 italic">"{win.example_text}"</p>
@@ -311,7 +311,7 @@ Return JSON:
                         <div className="flex items-center justify-between w-full pr-4">
                           <div className="flex items-center gap-2">
                             <CategoryIcon className="w-4 h-4 text-purple-600" />
-                            <span className="font-medium text-gray-800">{suggestion.oasis_item}</span>
+                            <span className="font-medium text-slate-800">{suggestion.oasis_item}</span>
                             <Badge className={getPriorityBadge(suggestion.priority)}>
                               {suggestion.priority}
                             </Badge>
@@ -328,7 +328,7 @@ Return JSON:
                           {/* Problem & Impact */}
                           <div className="bg-red-50 p-3 rounded border border-red-200">
                             <p className="text-xs font-semibold text-red-700 mb-1">Problem Identified</p>
-                            <p className="text-sm text-gray-800">{suggestion.problem_identified}</p>
+                            <p className="text-sm text-slate-800">{suggestion.problem_identified}</p>
                             <p className="text-xs text-orange-700 mt-2 bg-orange-50 p-1.5 rounded">
                               <strong>Impact:</strong> {suggestion.why_it_matters}
                             </p>
@@ -337,14 +337,14 @@ Return JSON:
                           {/* Before/After Examples */}
                           {suggestion.before_after && (
                             <div className="space-y-2">
-                              <p className="text-xs font-semibold text-gray-700">Documentation Examples</p>
+                              <p className="text-xs font-semibold text-slate-700">Documentation Examples</p>
                               
                               {/* Before */}
                               <div className="bg-red-50 p-3 rounded border border-red-200">
                                 <div className="flex items-center justify-between mb-1">
                                   <p className="text-xs font-semibold text-red-700">❌ Weak Documentation</p>
                                 </div>
-                                <p className="text-sm text-gray-700 italic">"{suggestion.before_after.before}"</p>
+                                <p className="text-sm text-slate-700 italic">"{suggestion.before_after.before}"</p>
                               </div>
 
                               {/* After */}
@@ -364,7 +364,7 @@ Return JSON:
                                     )}
                                   </Button>
                                 </div>
-                                <p className="text-sm text-gray-800 italic font-medium">"{suggestion.before_after.after}"</p>
+                                <p className="text-sm text-slate-800 italic font-medium">"{suggestion.before_after.after}"</p>
                               </div>
 
                               {/* Key Improvements */}
@@ -399,7 +399,7 @@ Return JSON:
                                   )}
                                 </Button>
                               </div>
-                              <p className="text-sm text-gray-800 italic">"{suggestion.improved_documentation_example}"</p>
+                              <p className="text-sm text-slate-800 italic">"{suggestion.improved_documentation_example}"</p>
                             </div>
                           )}
 
@@ -412,7 +412,7 @@ Return JSON:
 
                           {/* CMS Reference */}
                           {suggestion.cms_reference && (
-                            <div className="bg-gray-50 p-2 rounded border text-xs text-gray-600">
+                            <div className="bg-slate-50 p-2 rounded border text-xs text-slate-600">
                               <strong>CMS Guideline:</strong> {suggestion.cms_reference}
                             </div>
                           )}
@@ -444,10 +444,10 @@ Return JSON:
                 <div className="space-y-3">
                   {suggestions.documentation_templates.map((template, idx) => (
                     <div key={idx} className="bg-white p-3 rounded border">
-                      <p className="text-xs font-semibold text-gray-700 mb-1">{template.use_case}</p>
-                      <div className="bg-gray-50 p-2 rounded border mb-2">
-                        <p className="text-xs text-gray-500 mb-1">Template:</p>
-                        <p className="text-sm text-gray-800 font-mono">{template.template_text}</p>
+                      <p className="text-xs font-semibold text-slate-700 mb-1">{template.use_case}</p>
+                      <div className="bg-slate-50 p-2 rounded border mb-2">
+                        <p className="text-xs text-slate-500 mb-1">Template:</p>
+                        <p className="text-sm text-slate-800 font-mono">{template.template_text}</p>
                       </div>
                       <div className="bg-blue-50 p-2 rounded border border-blue-200">
                         <div className="flex items-center justify-between mb-1">

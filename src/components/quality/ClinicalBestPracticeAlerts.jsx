@@ -211,7 +211,7 @@ export default function ClinicalBestPracticeAlerts({ patient, vitalSigns, narrat
       case 'low':
         return 'bg-blue-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-slate-500';
     }
   };
 
@@ -231,7 +231,7 @@ export default function ClinicalBestPracticeAlerts({ patient, vitalSigns, narrat
       <CardContent className="space-y-3">
         {notImplemented.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+            <h4 className="font-semibold text-sm text-slate-700 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-orange-600" />
               Recommended Actions
             </h4>
@@ -264,7 +264,7 @@ export default function ClinicalBestPracticeAlerts({ patient, vitalSigns, narrat
 
         {implemented.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+            <h4 className="font-semibold text-sm text-slate-700 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
               Documented Best Practices
             </h4>

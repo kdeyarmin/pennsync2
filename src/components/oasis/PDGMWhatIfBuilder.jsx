@@ -174,21 +174,21 @@ export default function PDGMWhatIfBuilder({
         <div className={`p-4 rounded-lg border-2 ${
           revenueDiff > 0 ? 'bg-green-50 border-green-300' :
           revenueDiff < 0 ? 'bg-red-50 border-red-300' :
-          'bg-gray-50 border-gray-300'
+          'bg-slate-50 border-slate-300'
         }`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600">Scenario Revenue Impact</p>
+              <p className="text-xs text-slate-600">Scenario Revenue Impact</p>
               <p className={`text-2xl font-bold ${
                 revenueDiff > 0 ? 'text-green-700' :
                 revenueDiff < 0 ? 'text-red-700' :
-                'text-gray-700'
+                'text-slate-700'
               }`}>
                 {revenueDiff > 0 ? '+' : ''}{formatCurrency(revenueDiff)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-gray-500">Per Episode</p>
+              <p className="text-xs text-slate-500">Per Episode</p>
               <p className="text-lg font-semibold text-purple-700">
                 {formatCurrency(scenarioRevenue)}
               </p>
@@ -197,8 +197,8 @@ export default function PDGMWhatIfBuilder({
         </div>
 
         {/* Revenue Comparison Chart */}
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs font-medium text-gray-600 mb-2">Revenue Comparison</p>
+        <div className="bg-slate-50 rounded-lg p-3">
+          <p className="text-xs font-medium text-slate-600 mb-2">Revenue Comparison</p>
           <ResponsiveContainer width="100%" height={120}>
             <BarChart data={comparisonChartData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -220,7 +220,7 @@ export default function PDGMWhatIfBuilder({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-blue-600" />
-                <h3 className="font-semibold text-sm text-gray-800">Functional Scores</h3>
+                <h3 className="font-semibold text-sm text-slate-800">Functional Scores</h3>
               </div>
               <div className="space-y-4 bg-blue-50 p-3 rounded-lg">
                 {FUNCTIONAL_ITEMS.map(item => {
@@ -233,11 +233,11 @@ export default function PDGMWhatIfBuilder({
                       <div className="flex items-center justify-between">
                         <Label className="text-xs">{item.label}</Label>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">Orig: {originalVal}</span>
+                          <span className="text-xs text-slate-500">Orig: {originalVal}</span>
                           <Badge className={`text-xs py-0 ${
                             diff > 0 ? 'bg-green-100 text-green-700' :
                             diff < 0 ? 'bg-red-100 text-red-700' :
-                            'bg-gray-100 text-gray-600'
+                            'bg-slate-100 text-slate-600'
                           }`}>
                             {currentVal} {diff !== 0 && `(${diff > 0 ? '+' : ''}${diff})`}
                           </Badge>
@@ -251,7 +251,7 @@ export default function PDGMWhatIfBuilder({
                         onValueChange={([val]) => updateFunctionalScore(item.key, val)}
                         className="cursor-pointer"
                       />
-                      <div className="flex justify-between text-xs text-gray-400">
+                      <div className="flex justify-between text-xs text-slate-400">
                         <span>0 (Independent)</span>
                         <span>{item.max} (Dependent)</span>
                       </div>
@@ -262,7 +262,7 @@ export default function PDGMWhatIfBuilder({
 
               {/* Functional Score Impact Chart */}
               <div className="bg-white rounded-lg p-3 border">
-                <p className="text-xs font-medium text-gray-600 mb-2">Functional Score Changes</p>
+                <p className="text-xs font-medium text-slate-600 mb-2">Functional Score Changes</p>
                 <ResponsiveContainer width="100%" height={150}>
                   <BarChart data={functionalImpactData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -281,7 +281,7 @@ export default function PDGMWhatIfBuilder({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Stethoscope className="w-4 h-4 text-green-600" />
-                <h3 className="font-semibold text-sm text-gray-800">
+                <h3 className="font-semibold text-sm text-slate-800">
                   Comorbidities ({scenarioData.comorbidities.length})
                 </h3>
               </div>
@@ -289,7 +289,7 @@ export default function PDGMWhatIfBuilder({
                 {/* Current comorbidities */}
                 <div className="flex flex-wrap gap-1">
                   {scenarioData.comorbidities.length === 0 ? (
-                    <p className="text-xs text-gray-500 italic">No comorbidities added</p>
+                    <p className="text-xs text-slate-500 italic">No comorbidities added</p>
                   ) : (
                     scenarioData.comorbidities.map((c, idx) => (
                       <Badge key={idx} variant="outline" className="text-xs bg-white flex items-center gap-1">

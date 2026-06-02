@@ -151,7 +151,7 @@ export default function HandoutStyleCustomizer({ styleOptions, onStyleChange }) 
                 <SelectItem key={key} value={key}>
                   <div className="flex flex-col">
                     <span className="font-medium">{layout.name}</span>
-                    <span className="text-xs text-gray-500">{layout.description}</span>
+                    <span className="text-xs text-slate-500">{layout.description}</span>
                   </div>
                 </SelectItem>
               ))}

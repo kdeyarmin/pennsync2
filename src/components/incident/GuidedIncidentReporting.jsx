@@ -305,7 +305,7 @@ Return the report text only, no JSON.`,
             <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {currentTypeConfig.prompts.map((prompt, idx) => (
                 <div key={idx}>
-                  <label className="text-sm font-medium text-gray-700">{prompt}</label>
+                  <label className="text-sm font-medium text-slate-700">{prompt}</label>
                   <Textarea
                     value={answers[prompt] || ''}
                     onChange={(e) => handleAnswerChange(prompt, e.target.value)}

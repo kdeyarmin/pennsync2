@@ -11,7 +11,7 @@ export default function DeficitVisualization({ analysis, compact = false }) {
       <Card>
         <CardContent className="p-8 text-center">
           <Target className="w-12 h-12 text-green-500 mx-auto mb-2" />
-          <p className="text-gray-600">No deficits identified - excellent performance!</p>
+          <p className="text-slate-600">No deficits identified - excellent performance!</p>
         </CardContent>
       </Card>
     );

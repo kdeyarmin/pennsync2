@@ -59,8 +59,8 @@ export default function CareScopeSelector({ currentUser, onSaved }) {
           <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <Heart className="w-7 h-7 text-indigo-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">What type of nurse are you?</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-xl font-bold text-slate-900">What type of nurse are you?</h2>
+          <p className="text-sm text-slate-500 mt-1">
             This personalizes your documentation, compliance checks, and dashboard to your service line.
           </p>
         </div>
@@ -82,8 +82,8 @@ export default function CareScopeSelector({ currentUser, onSaved }) {
                     <Icon className={`w-4 h-4 ${isSelected ? "text-white" : opt.iconColor}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`font-semibold text-sm ${isSelected ? "text-white" : "text-gray-900"}`}>{opt.label}</p>
-                    <p className={`text-xs mt-0.5 ${isSelected ? "text-white/80" : "text-gray-500"}`}>{opt.description}</p>
+                    <p className={`font-semibold text-sm ${isSelected ? "text-white" : "text-slate-900"}`}>{opt.label}</p>
+                    <p className={`text-xs mt-0.5 ${isSelected ? "text-white/80" : "text-slate-500"}`}>{opt.description}</p>
                   </div>
                   {isSelected && <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />}
                 </div>

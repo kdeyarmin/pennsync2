@@ -335,7 +335,7 @@ Return JSON:
 
           {/* Quick Topics */}
           <div>
-            <Label className="text-xs text-gray-500">Quick Topics:</Label>
+            <Label className="text-xs text-slate-500">Quick Topics:</Label>
             <div className="flex flex-wrap gap-2 mt-1">
               {commonTopics.slice(0, 5).map((topic) => (
                 <Badge
@@ -419,19 +419,19 @@ Return JSON:
               <p className="text-sm font-semibold text-blue-900 mb-2">📊 Patient Learning Profile</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-white p-2 rounded">
-                  <span className="text-gray-600">Success Rate:</span>
+                  <span className="text-slate-600">Success Rate:</span>
                   <span className={`ml-1 font-semibold ${learningProfile.successRate >= 70 ? 'text-green-600' : learningProfile.successRate >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {learningProfile.successRate}%
                   </span>
                 </div>
                 <div className="bg-white p-2 rounded">
-                  <span className="text-gray-600">Sessions:</span>
+                  <span className="text-slate-600">Sessions:</span>
                   <span className="ml-1 font-semibold">{learningProfile.totalSessions}</span>
                 </div>
                 <div className="bg-white p-2 rounded col-span-2">
-                  <span className="text-gray-600">Recommended Level:</span>
+                  <span className="text-slate-600">Recommended Level:</span>
                   <span className="ml-1 font-semibold capitalize">{learningProfile.recommendedLevel}</span>
-                  <span className="text-gray-500 ml-1">(auto-selected)</span>
+                  <span className="text-slate-500 ml-1">(auto-selected)</span>
                 </div>
               </div>
             </div>
@@ -452,7 +452,7 @@ Return JSON:
         {generatedContent && (
           <div className="space-y-4 border-t pt-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-900">{generatedContent.title}</h3>
+              <h3 className="text-xl font-bold text-slate-900">{generatedContent.title}</h3>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleCopy}>
                   {copied ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
@@ -463,7 +463,7 @@ Return JSON:
               </div>
             </div>
 
-            <p className="text-gray-700">{generatedContent.introduction}</p>
+            <p className="text-slate-700">{generatedContent.introduction}</p>
 
             {/* Key Points */}
             <div className="bg-blue-50 p-4 rounded-lg">
@@ -472,7 +472,7 @@ Return JSON:
                 {generatedContent.key_points?.map((kp, idx) => (
                   <li key={idx} className="text-sm">
                     <strong>{kp.point}</strong>
-                    <p className="text-gray-600">{kp.explanation}</p>
+                    <p className="text-slate-600">{kp.explanation}</p>
                   </li>
                 ))}
               </ul>
@@ -485,7 +485,7 @@ Return JSON:
                 {generatedContent.warning_signs?.map((ws, idx) => (
                   <li key={idx} className="text-sm">
                     <strong className="text-yellow-800">{ws.sign}</strong>
-                    <span className="text-gray-700"> → {ws.action}</span>
+                    <span className="text-slate-700"> → {ws.action}</span>
                   </li>
                 ))}
               </ul>
@@ -508,7 +508,7 @@ Return JSON:
                 {generatedContent.self_care_tips?.map((tip, idx) => (
                   <div key={idx} className="bg-white p-2 rounded border border-green-200">
                     <strong className="text-sm">{tip.tip}</strong>
-                    <p className="text-xs text-gray-600">{tip.how_to}</p>
+                    <p className="text-xs text-slate-600">{tip.how_to}</p>
                   </div>
                 ))}
               </div>

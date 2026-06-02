@@ -151,8 +151,8 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
     return (
       <div className="space-y-4">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Interactive Knowledge Quiz</h2>
-          <p className="text-sm text-gray-600">Test your understanding with AI-generated questions</p>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Interactive Knowledge Quiz</h2>
+          <p className="text-sm text-slate-600">Test your understanding with AI-generated questions</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -166,8 +166,8 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <HelpCircle className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1">{category.label}</h3>
-                <p className="text-xs text-gray-500">{category.questions} questions</p>
+                <h3 className="font-semibold text-slate-900 mb-1">{category.label}</h3>
+                <p className="text-xs text-slate-500">{category.questions} questions</p>
               </CardContent>
             </Card>
           ))}
@@ -207,11 +207,11 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
             )}
           </div>
           
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
             {passed ? 'Congratulations!' : 'Keep Learning!'}
           </h2>
           
-          <p className="text-lg text-gray-700 mb-4">
+          <p className="text-lg text-slate-700 mb-4">
             You scored <span className="font-bold">{score}</span> out of <span className="font-bold">{questions.length}</span>
           </p>
           
@@ -226,7 +226,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
 
           {/* Answer Review */}
           <div className="text-left bg-white rounded-lg p-4 mb-6 max-h-60 overflow-auto">
-            <h3 className="font-semibold text-gray-900 mb-3">Answer Review:</h3>
+            <h3 className="font-semibold text-slate-900 mb-3">Answer Review:</h3>
             {questions.map((q, idx) => {
               const answer = answers[idx];
               return (
@@ -238,7 +238,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
                       <XCircle className="w-4 h-4 text-red-600 mt-0.5" />
                     )}
                     <div>
-                      <p className="text-xs font-medium text-gray-900">Q{idx + 1}: {q.question.substring(0, 60)}...</p>
+                      <p className="text-xs font-medium text-slate-900">Q{idx + 1}: {q.question.substring(0, 60)}...</p>
                       {!answer?.isCorrect && (
                         <p className="text-xs text-green-700 mt-1">Correct: {q.options[q.correct_index]}</p>
                       )}
@@ -304,7 +304,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
         </div>
 
         {/* Question */}
-        <h3 className="text-lg font-medium text-gray-900 mb-6">{currentQ?.question}</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-6">{currentQ?.question}</h3>
 
         {/* Options */}
         <RadioGroup
@@ -313,7 +313,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
           className="space-y-3"
         >
           {currentQ?.options.map((option, idx) => {
-            let optionClass = "border-gray-200 hover:border-blue-300";
+            let optionClass = "border-slate-200 hover:border-blue-300";
             if (showResult) {
               if (idx === currentQ.correct_index) {
                 optionClass = "border-green-500 bg-green-50";
@@ -350,10 +350,10 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
           <div className={`mt-6 p-4 rounded-lg ${
             selectedAnswer === currentQ.correct_index ? 'bg-green-100 border border-green-300' : 'bg-blue-100 border border-blue-300'
           }`}>
-            <p className="text-sm font-medium text-gray-900 mb-1">
+            <p className="text-sm font-medium text-slate-900 mb-1">
               {selectedAnswer === currentQ.correct_index ? '✓ Correct!' : '✗ Incorrect'}
             </p>
-            <p className="text-sm text-gray-700">{currentQ.explanation}</p>
+            <p className="text-sm text-slate-700">{currentQ.explanation}</p>
           </div>
         )}
 

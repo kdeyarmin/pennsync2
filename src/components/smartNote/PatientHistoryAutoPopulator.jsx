@@ -93,7 +93,7 @@ Return JSON with:
       <CardContent className="space-y-3">
         {!generatedHistory ? (
           <div className="text-center py-4">
-            <p className="text-xs text-gray-600 mb-3">
+            <p className="text-xs text-slate-600 mb-3">
               AI will analyze {recentVisits.length} previous visit{recentVisits.length !== 1 ? 's' : ''} and generate relevant history
             </p>
             <Button
@@ -119,8 +119,8 @@ Return JSON with:
           <div className="space-y-3">
             {/* Generated Narrative */}
             <div className="bg-white rounded-lg border border-green-200 p-3">
-              <p className="text-xs font-semibold text-gray-500 mb-2">Clinical History:</p>
-              <p className="text-sm text-gray-900 leading-relaxed">{generatedHistory.history_narrative}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-2">Clinical History:</p>
+              <p className="text-sm text-slate-900 leading-relaxed">{generatedHistory.history_narrative}</p>
             </div>
 
             {/* Key Trends */}

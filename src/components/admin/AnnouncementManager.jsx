@@ -239,7 +239,7 @@ export default function AnnouncementManager() {
           
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search announcements..."
                 value={searchTerm}
@@ -265,16 +265,16 @@ export default function AnnouncementManager() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-gray-500 text-center py-4">Loading...</p>
+          <p className="text-sm text-slate-500 text-center py-4">Loading...</p>
         ) : announcements.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-500">No announcements yet. Create one to get started!</p>
-            <p className="text-xs text-gray-400 mt-2">Check browser console for details</p>
+            <p className="text-sm text-slate-500">No announcements yet. Create one to get started!</p>
+            <p className="text-xs text-slate-400 mt-2">Check browser console for details</p>
           </div>
         ) : filteredAnnouncements.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-500">No announcements match your filters</p>
-            <p className="text-xs text-gray-400 mt-2">Total: {announcements.length}</p>
+            <p className="text-sm text-slate-500">No announcements match your filters</p>
+            <p className="text-xs text-slate-400 mt-2">Total: {announcements.length}</p>
           </div>
         ) : (
           <ScrollArea className="h-[300px] sm:h-[400px]">
@@ -287,14 +287,14 @@ export default function AnnouncementManager() {
                   className={`p-3 sm:p-4 rounded-lg border ${
                     status === 'active' ? 'bg-white' : 
                     status === 'scheduled' ? 'bg-blue-50 border-blue-200' :
-                    status === 'expired' ? 'bg-gray-50 opacity-60' : 
-                    'bg-gray-50 opacity-60'
+                    status === 'expired' ? 'bg-slate-50 opacity-60' : 
+                    'bg-slate-50 opacity-60'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row items-start justify-between gap-2 sm:gap-3">
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h4 className="font-semibold text-gray-900">{announcement.title}</h4>
+                        <h4 className="font-semibold text-slate-900">{announcement.title}</h4>
                         {status === 'scheduled' && (
                           <Badge className="bg-blue-500 text-white">
                             <Clock className="w-3 h-3 mr-1" />
@@ -302,19 +302,19 @@ export default function AnnouncementManager() {
                           </Badge>
                         )}
                         {status === 'expired' && (
-                          <Badge variant="outline" className="text-gray-500">
+                          <Badge variant="outline" className="text-slate-500">
                             Expired
                           </Badge>
                         )}
                         {status === 'inactive' && (
-                          <Badge variant="outline" className="text-gray-500">
+                          <Badge variant="outline" className="text-slate-500">
                             Inactive
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{announcement.content}</p>
+                      <p className="text-sm text-slate-600 mb-2">{announcement.content}</p>
                       <div className="space-y-1">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           Created {formatEastern(announcement.created_date, 'MMM d, yyyy')}
                         </p>
                         {announcement.scheduled_for && (
@@ -465,7 +465,7 @@ export default function AnnouncementManager() {
                     )}
                   </PopoverContent>
                 </Popover>
-                <p className="text-xs text-gray-500 mt-1">Leave empty to publish immediately</p>
+                <p className="text-xs text-slate-500 mt-1">Leave empty to publish immediately</p>
               </div>
 
               <div>
@@ -518,7 +518,7 @@ export default function AnnouncementManager() {
                     )}
                   </PopoverContent>
                 </Popover>
-                <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
+                <p className="text-xs text-slate-500 mt-1">Leave empty for no expiration</p>
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-4">

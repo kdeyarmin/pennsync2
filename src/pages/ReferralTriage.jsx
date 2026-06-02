@@ -82,8 +82,8 @@ export default function ReferralTriage() {
       <div className="max-w-6xl mx-auto px-4">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Referral Triage</h1>
-        <p className="text-gray-600">
+        <h1 className="text-4xl font-bold text-slate-900 mb-2">Referral Triage</h1>
+        <p className="text-slate-600">
           AI-powered analysis of incoming referrals with automatic urgency assessment and care plan generation
         </p>
       </div>
@@ -143,7 +143,7 @@ export default function ReferralTriage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-700">
+            <p className="text-slate-700">
               Triage analysis complete! Create a patient record and preliminary care plans from this analysis?
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -178,12 +178,12 @@ export default function ReferralTriage() {
               { number: '3', title: 'Assess', desc: 'Urgency level and risk assigned' },
               { number: '4', title: 'Plan', desc: 'Care plan generated automatically' },
             ].map((step, i) => (
-              <div key={i} className="p-4 border border-gray-200 rounded-lg">
+              <div key={i} className="p-4 border border-slate-200 rounded-lg">
                 <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm mb-2">
                   {step.number}
                 </div>
-                <p className="font-semibold text-gray-900 mb-1">{step.title}</p>
-                <p className="text-xs text-gray-600">{step.desc}</p>
+                <p className="font-semibold text-slate-900 mb-1">{step.title}</p>
+                <p className="text-xs text-slate-600">{step.desc}</p>
               </div>
             ))}
           </div>

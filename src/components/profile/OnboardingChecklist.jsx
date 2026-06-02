@@ -61,9 +61,9 @@ export default function OnboardingChecklist({ user, credentials = [] }) {
                 {step.completed ? (
                   <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
                 ) : (
-                  <Circle className="h-5 w-5 text-gray-300 flex-shrink-0" />
+                  <Circle className="h-5 w-5 text-slate-300 flex-shrink-0" />
                 )}
-                <span className={`text-sm font-medium ${step.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                <span className={`text-sm font-medium ${step.completed ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
                   {step.label}
                 </span>
               </div>

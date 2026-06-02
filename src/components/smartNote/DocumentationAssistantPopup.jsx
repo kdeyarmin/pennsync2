@@ -122,7 +122,7 @@ Return JSON:
       </PopoverTrigger>
       <PopoverContent className="w-80 p-2" align="start">
         <div className="space-y-1">
-          <p className="text-xs font-semibold text-gray-700 mb-2">AI Suggestions</p>
+          <p className="text-xs font-semibold text-slate-700 mb-2">AI Suggestions</p>
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
@@ -131,7 +131,7 @@ Return JSON:
             suggestions.map((sug, idx) => (
               <div
                 key={idx}
-                className="p-2 rounded border hover:bg-gray-50 cursor-pointer transition-colors"
+                className="p-2 rounded border hover:bg-slate-50 cursor-pointer transition-colors"
                 onClick={() => handleInsert(sug.text)}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -141,8 +141,8 @@ Return JSON:
                     <Badge className="bg-red-100 text-red-800 text-xs h-4">Important</Badge>
                   )}
                 </div>
-                <p className="text-xs text-gray-700 mb-1">{sug.text}</p>
-                <p className="text-xs text-gray-500 italic">{sug.reason}</p>
+                <p className="text-xs text-slate-700 mb-1">{sug.text}</p>
+                <p className="text-xs text-slate-500 italic">{sug.reason}</p>
               </div>
             ))
           )}

@@ -181,8 +181,8 @@ export default function DynamicOASISForm({ _patientId, onSave, initialData = {} 
         <CardContent className="p-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-gray-700">Assessment Progress</span>
-              <span className="text-gray-900 font-semibold">
+              <span className="font-medium text-slate-700">Assessment Progress</span>
+              <span className="text-slate-900 font-semibold">
                 {answeredQuestions} / {totalQuestions} ({Math.round(progressPercent)}%)
               </span>
             </div>
@@ -245,9 +245,9 @@ export default function DynamicOASISForm({ _patientId, onSave, initialData = {} 
         </CardHeader>
         <CardContent className="space-y-6">
           {currentQuestions.map((question) => (
-            <div key={question.id} className="space-y-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div key={question.id} className="space-y-2 p-4 bg-slate-50 rounded-lg border border-slate-200">
               <div className="flex items-start justify-between gap-4">
-                <Label className="font-semibold text-gray-900">
+                <Label className="font-semibold text-slate-900">
                   {question.id} — {question.label}
                 </Label>
                 {answers[question.id] && (
@@ -256,7 +256,7 @@ export default function DynamicOASISForm({ _patientId, onSave, initialData = {} 
               </div>
               
               {question.description && (
-                <p className="text-sm text-gray-600">{question.description}</p>
+                <p className="text-sm text-slate-600">{question.description}</p>
               )}
 
               <div className="mt-2">
@@ -285,7 +285,7 @@ export default function DynamicOASISForm({ _patientId, onSave, initialData = {} 
           Previous
         </Button>
 
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-slate-600">
           Section {currentSection + 1} of {sections.length}
         </div>
 

@@ -141,7 +141,7 @@ export default function RealTimePatientAlerts({
       case 'high': return 'bg-red-100 border-red-300 text-red-800';
       case 'medium': return 'bg-yellow-100 border-yellow-300 text-yellow-800';
       case 'low': return 'bg-blue-100 border-blue-300 text-blue-800';
-      default: return 'bg-gray-100 border-gray-300 text-gray-800';
+      default: return 'bg-slate-100 border-slate-300 text-slate-800';
     }
   };
 

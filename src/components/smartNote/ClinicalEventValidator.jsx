@@ -115,7 +115,7 @@ export default function ClinicalEventValidator({ patientId, onValidationComplete
       case 'high': return 'bg-red-600';
       case 'medium': return 'bg-orange-600';
       case 'low': return 'bg-yellow-600';
-      default: return 'bg-gray-600';
+      default: return 'bg-slate-600';
     }
   };
 
@@ -225,11 +225,11 @@ export default function ClinicalEventValidator({ patientId, onValidationComplete
                           <Badge className={`${getPriorityColor(flagged.priority)} text-white text-xs`}>
                             {flagged.priority}
                           </Badge>
-                          <span className="text-xs font-medium text-gray-500 uppercase">
+                          <span className="text-xs font-medium text-slate-500 uppercase">
                             {(flagged.issue_category || '').replace('_', ' ')}
                           </span>
                         </div>
-                        <p className="text-sm font-semibold text-gray-900">{flagged.issue_description}</p>
+                        <p className="text-sm font-semibold text-slate-900">{flagged.issue_description}</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" className="flex-shrink-0">
@@ -238,25 +238,25 @@ export default function ClinicalEventValidator({ patientId, onValidationComplete
                   </div>
 
                   {isExpanded && (
-                    <div className="pl-6 space-y-3 mt-3 border-t border-gray-200 pt-3">
+                    <div className="pl-6 space-y-3 mt-3 border-t border-slate-200 pt-3">
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Suggested Action:</p>
-                        <p className="text-xs text-gray-600">{flagged.suggested_action}</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Suggested Action:</p>
+                        <p className="text-xs text-slate-600">{flagged.suggested_action}</p>
                       </div>
 
                       {flagged.questions_for_clinician?.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-700 mb-1">Questions to Consider:</p>
+                          <p className="text-xs font-semibold text-slate-700 mb-1">Questions to Consider:</p>
                           <ul className="space-y-1">
                             {flagged.questions_for_clinician.map((question, idx) => (
-                              <li key={idx} className="text-xs text-gray-600">• {question}</li>
+                              <li key={idx} className="text-xs text-slate-600">• {question}</li>
                             ))}
                           </ul>
                         </div>
                       )}
 
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Resolution Notes (Optional):</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Resolution Notes (Optional):</p>
                         <Textarea
                           value={resolutionNotes[flagged.event_id] || ''}
                           onChange={(e) => setResolutionNotes(prev => ({

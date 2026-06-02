@@ -152,12 +152,12 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
                         <p className="text-sm">
                           <strong>Value:</strong> {data.value} {data.label && `(${data.label})`}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-slate-600 mt-1">
                           <User className="w-3 h-3 inline mr-1" />
                           Approved by {data.reviewed_by} on {new Date(data.reviewed_at).toLocaleDateString()}
                         </p>
                         {data.review_notes && (
-                          <p className="text-xs text-gray-700 mt-2 italic">Notes: {data.review_notes}</p>
+                          <p className="text-xs text-slate-700 mt-2 italic">Notes: {data.review_notes}</p>
                         )}
                       </div>
                       <Badge className="bg-green-600 text-white">Approved</Badge>
@@ -176,7 +176,7 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
                         <p className="text-sm">
                           <strong>Original AI Suggestion:</strong> {data.value}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-slate-600 mt-1">
                           <User className="w-3 h-3 inline mr-1" />
                           Rejected by {data.reviewed_by} on {new Date(data.reviewed_at).toLocaleDateString()}
                         </p>

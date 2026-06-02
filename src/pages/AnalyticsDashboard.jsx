@@ -420,8 +420,8 @@ export default function AnalyticsDashboard() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Performance Analytics</h1>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">Track metrics, trends, and outcomes</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Performance Analytics</h1>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 hidden sm:block">Track metrics, trends, and outcomes</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto">

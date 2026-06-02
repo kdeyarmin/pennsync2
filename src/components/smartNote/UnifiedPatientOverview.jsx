@@ -44,7 +44,7 @@ export default function UnifiedPatientOverview({
               <h3 className="font-bold text-lg truncate">
                 {patient.first_name} {patient.last_name}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 {patient.primary_diagnosis || 'No primary diagnosis'}
               </p>
             </div>
@@ -60,7 +60,7 @@ export default function UnifiedPatientOverview({
               variant="ghost"
               size="icon"
               onClick={onClear}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-slate-400 hover:text-slate-600"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -96,22 +96,22 @@ export default function UnifiedPatientOverview({
           <TabsContent value="info" className="space-y-2 mt-3">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <p className="text-gray-500">Status</p>
+                <p className="text-slate-500">Status</p>
                 <p className="font-medium">{patient.status || 'Active'}</p>
               </div>
               <div>
-                <p className="text-gray-500">Care Type</p>
+                <p className="text-slate-500">Care Type</p>
                 <p className="font-medium">{patient.care_type || 'Home Health'}</p>
               </div>
               {patient.date_of_birth && (
                 <div>
-                  <p className="text-gray-500">Date of Birth</p>
+                  <p className="text-slate-500">Date of Birth</p>
                   <p className="font-medium">{format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</p>
                 </div>
               )}
               {patient.admission_date && (
                 <div>
-                  <p className="text-gray-500">Admission</p>
+                  <p className="text-slate-500">Admission</p>
                   <p className="font-medium">{format(new Date(patient.admission_date), 'MM/dd/yyyy')}</p>
                 </div>
               )}
@@ -123,29 +123,29 @@ export default function UnifiedPatientOverview({
               </div>
             )}
             {patient.secondary_diagnoses?.length > 0 && (
-              <div className="p-2 bg-gray-50 rounded border">
-                <p className="text-xs font-semibold text-gray-700 mb-1">Secondary Diagnoses</p>
-                <p className="text-sm text-gray-700">{patient.secondary_diagnoses?.join(', ')}</p>
+              <div className="p-2 bg-slate-50 rounded border">
+                <p className="text-xs font-semibold text-slate-700 mb-1">Secondary Diagnoses</p>
+                <p className="text-sm text-slate-700">{patient.secondary_diagnoses?.join(', ')}</p>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="visits" className="space-y-2 mt-3">
             {recentVisits.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">No recent visits</p>
+              <p className="text-sm text-slate-500 text-center py-4">No recent visits</p>
             ) : (
               recentVisits.map((visit, _idx) => (
-                <div key={visit.id} className="p-3 bg-gray-50 rounded border">
+                <div key={visit.id} className="p-3 bg-slate-50 rounded border">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-semibold">
                       {visit.visit_type.replace(/_/g, ' ')}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {format(new Date(visit.visit_date), 'MM/dd/yyyy')}
                     </p>
                   </div>
                   {visit.nurse_notes && (
-                    <p className="text-xs text-gray-600 line-clamp-2">
+                    <p className="text-xs text-slate-600 line-clamp-2">
                       {visit.nurse_notes.substring(0, 150)}...
                     </p>
                   )}
@@ -156,7 +156,7 @@ export default function UnifiedPatientOverview({
 
           <TabsContent value="careplans" className="space-y-2 mt-3">
             {carePlans.filter(cp => cp.status === 'active').length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">No active care plans</p>
+              <p className="text-sm text-slate-500 text-center py-4">No active care plans</p>
             ) : (
               carePlans.filter(cp => cp.status === 'active').map((cp) => (
                 <div key={cp.id} className="p-3 bg-green-50 rounded border border-green-200">
@@ -169,7 +169,7 @@ export default function UnifiedPatientOverview({
 
           <TabsContent value="oasis" className="space-y-2 mt-3">
             {patientOASIS.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">No OASIS data</p>
+              <p className="text-sm text-slate-500 text-center py-4">No OASIS data</p>
             ) : (
               <>
                 <OASISDataDisplay oasisData={patientOASIS} compact={true} />
@@ -189,36 +189,36 @@ export default function UnifiedPatientOverview({
 
           <TabsContent value="vitals" className="space-y-2 mt-3">
             {!hasVitals ? (
-              <p className="text-sm text-gray-500 text-center py-4">No vitals recorded yet</p>
+              <p className="text-sm text-slate-500 text-center py-4">No vitals recorded yet</p>
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 {vitalSigns.bp && (
-                  <div className="p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Blood Pressure</p>
+                  <div className="p-2 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">Blood Pressure</p>
                     <p className="text-sm font-semibold">{vitalSigns.bp}</p>
                   </div>
                 )}
                 {vitalSigns.hr && (
-                  <div className="p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Heart Rate</p>
+                  <div className="p-2 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">Heart Rate</p>
                     <p className="text-sm font-semibold">{vitalSigns.hr} bpm</p>
                   </div>
                 )}
                 {vitalSigns.temp && (
-                  <div className="p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Temperature</p>
+                  <div className="p-2 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">Temperature</p>
                     <p className="text-sm font-semibold">{vitalSigns.temp}°F</p>
                   </div>
                 )}
                 {vitalSigns.o2 && (
-                  <div className="p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">O2 Saturation</p>
+                  <div className="p-2 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">O2 Saturation</p>
                     <p className="text-sm font-semibold">{vitalSigns.o2}%</p>
                   </div>
                 )}
                 {vitalSigns.pain && (
-                  <div className="p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Pain Level</p>
+                  <div className="p-2 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">Pain Level</p>
                     <p className="text-sm font-semibold">{vitalSigns.pain}/10</p>
                   </div>
                 )}

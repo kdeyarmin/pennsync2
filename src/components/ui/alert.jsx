@@ -8,7 +8,7 @@ const Alert = React.forwardRef((props, ref) => {
   const { className, variant = "default", ...otherProps } = props
   
   const variants = {
-    default: "bg-white border-gray-200 shadow-sm",
+    default: "bg-white border-slate-200 shadow-sm",
     destructive: "bg-red-50 border-red-300 text-red-900 shadow-sm",
   }
   

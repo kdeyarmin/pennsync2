@@ -91,7 +91,7 @@ export default function SystemJobMonitor() {
       warning: <AlertTriangle className="w-5 h-5 text-yellow-600" />,
       running: <Clock className="w-5 h-5 text-blue-600 animate-spin" />
     };
-    return icons[status] || <Activity className="w-5 h-5 text-gray-400" />;
+    return icons[status] || <Activity className="w-5 h-5 text-slate-400" />;
   };
 
   const getStatusBadge = (status) => {
@@ -102,7 +102,7 @@ export default function SystemJobMonitor() {
       running: "bg-blue-100 text-blue-800 border-blue-300"
     };
     return (
-      <Badge className={colors[status] || "bg-gray-100 text-gray-800"}>
+      <Badge className={colors[status] || "bg-slate-100 text-slate-800"}>
         {status}
       </Badge>
     );
@@ -146,8 +146,8 @@ export default function SystemJobMonitor() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">System Job Monitor</h1>
-          <p className="text-gray-600">Monitor scheduled jobs and automated processes</p>
+          <h1 className="text-3xl font-bold text-slate-900">System Job Monitor</h1>
+          <p className="text-slate-600">Monitor scheduled jobs and automated processes</p>
         </div>
         <Button
           onClick={handleRunSync}
@@ -168,10 +168,10 @@ export default function SystemJobMonitor() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Jobs</p>
+                <p className="text-sm text-slate-600">Total Jobs</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
               </div>
-              <Activity className="w-8 h-8 text-gray-400" />
+              <Activity className="w-8 h-8 text-slate-400" />
             </div>
           </CardContent>
         </Card>
@@ -180,7 +180,7 @@ export default function SystemJobMonitor() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Success</p>
+                <p className="text-sm text-slate-600">Success</p>
                 <p className="text-2xl font-bold text-green-600">{stats.success}</p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-green-600" />
@@ -192,7 +192,7 @@ export default function SystemJobMonitor() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Errors</p>
+                <p className="text-sm text-slate-600">Errors</p>
                 <p className="text-2xl font-bold text-red-600">{stats.errors}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-600" />
@@ -204,7 +204,7 @@ export default function SystemJobMonitor() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Warnings</p>
+                <p className="text-sm text-slate-600">Warnings</p>
                 <p className="text-2xl font-bold text-yellow-600">{stats.warnings}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-yellow-600" />
@@ -216,7 +216,7 @@ export default function SystemJobMonitor() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Running</p>
+                <p className="text-sm text-slate-600">Running</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.running}</p>
               </div>
               <Clock className="w-8 h-8 text-blue-600" />
@@ -237,25 +237,25 @@ export default function SystemJobMonitor() {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <p className="text-gray-600">Status</p>
+                <p className="text-slate-600">Status</p>
                 <div className="mt-1">{getStatusBadge(lastGuidelineSync.status)}</div>
               </div>
               <div>
-                <p className="text-gray-600">Date</p>
+                <p className="text-slate-600">Date</p>
                 <p className="font-medium">{format(new Date(lastGuidelineSync.created_date), 'MMM d, yyyy h:mm a')}</p>
               </div>
               <div>
-                <p className="text-gray-600">Duration</p>
+                <p className="text-slate-600">Duration</p>
                 <p className="font-medium">{formatDuration(lastGuidelineSync.duration_ms)}</p>
               </div>
               <div>
-                <p className="text-gray-600">Records</p>
+                <p className="text-slate-600">Records</p>
                 <p className="font-medium">
                   {lastGuidelineSync.records_created || 0} created, {lastGuidelineSync.records_updated || 0} updated
                 </p>
               </div>
             </div>
-            <p className="text-sm text-gray-700 mt-3">{lastGuidelineSync.message}</p>
+            <p className="text-sm text-slate-700 mt-3">{lastGuidelineSync.message}</p>
           </CardContent>
         </Card>
       )}
@@ -292,13 +292,13 @@ export default function SystemJobMonitor() {
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">
-              <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">Loading logs...</p>
+              <RefreshCw className="w-8 h-8 animate-spin text-slate-400 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">Loading logs...</p>
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-8">
-              <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No logs found</p>
+              <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">No logs found</p>
             </div>
           ) : (
             <Table>
@@ -334,7 +334,7 @@ export default function SystemJobMonitor() {
                     <TableCell className="text-sm">
                       {log.records_processed !== undefined ? (
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-slate-500">
                             {log.records_processed} total
                           </span>
                           {log.records_failed > 0 && (
@@ -366,34 +366,34 @@ export default function SystemJobMonitor() {
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <p className="text-sm text-gray-600">Status</p>
+                                <p className="text-sm text-slate-600">Status</p>
                                 {getStatusBadge(log.status)}
                               </div>
                               <div>
-                                <p className="text-sm text-gray-600">Type</p>
+                                <p className="text-sm text-slate-600">Type</p>
                                 <Badge variant="outline">{log.job_type}</Badge>
                               </div>
                               <div>
-                                <p className="text-sm text-gray-600">Date</p>
+                                <p className="text-sm text-slate-600">Date</p>
                                 <p className="text-sm font-medium">
                                   {format(new Date(log.created_date), 'MMM d, yyyy h:mm:ss a')}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-sm text-gray-600">Duration</p>
+                                <p className="text-sm text-slate-600">Duration</p>
                                 <p className="text-sm font-medium">{formatDuration(log.duration_ms)}</p>
                               </div>
                             </div>
 
                             <div>
-                              <p className="text-sm text-gray-600 mb-1">Message</p>
+                              <p className="text-sm text-slate-600 mb-1">Message</p>
                               <p className="text-sm">{log.message}</p>
                             </div>
 
                             {log.details && (
                               <div>
-                                <p className="text-sm text-gray-600 mb-2">Details</p>
-                                <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
+                                <p className="text-sm text-slate-600 mb-2">Details</p>
+                                <pre className="bg-slate-100 p-3 rounded text-xs overflow-x-auto">
                                   {JSON.stringify(log.details, null, 2)}
                                 </pre>
                               </div>

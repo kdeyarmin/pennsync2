@@ -515,7 +515,7 @@ For each area, provide:
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -525,14 +525,14 @@ For each area, provide:
       case 'minor_issues': return 'text-yellow-600';
       case 'major_issues': return 'text-orange-600';
       case 'critical_issues': return 'text-red-600';
-      default: return 'text-gray-600';
+      default: return 'text-slate-600';
     }
   };
 
   if (!patient) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-gray-500">
+        <CardContent className="p-6 text-center text-slate-500">
           No patient data available
         </CardContent>
       </Card>
@@ -585,11 +585,11 @@ For each area, provide:
             {/* Overall Score */}
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
               <div>
-                <p className="text-sm text-gray-600">Overall Compliance</p>
+                <p className="text-sm text-slate-600">Overall Compliance</p>
                 <p className={`text-3xl font-bold ${getComplianceColor(auditResults.compliance_level)}`}>
                   {auditResults.overall_compliance_score}%
                 </p>
-                <p className="text-sm text-gray-500 capitalize">{auditResults.compliance_level?.replace(/_/g, ' ')}</p>
+                <p className="text-sm text-slate-500 capitalize">{auditResults.compliance_level?.replace(/_/g, ' ')}</p>
               </div>
               <div className="text-right">
                 <div className="flex gap-2 mb-2">
@@ -600,7 +600,7 @@ For each area, provide:
                     {auditResults.minor_findings?.length || 0} Minor
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500">
                   {auditResults.compliance_strengths?.length || 0} areas of strength
                 </p>
               </div>
@@ -723,7 +723,7 @@ For each area, provide:
                     <div key={idx} className="flex items-start justify-between p-2 bg-blue-50 rounded">
                       <div className="flex-1">
                         <p className="font-medium text-sm">{gap.field}</p>
-                        <p className="text-xs text-gray-600">{gap.impact}</p>
+                        <p className="text-xs text-slate-600">{gap.impact}</p>
                       </div>
                       <Badge variant="outline" className={
                         gap.importance === 'Required' ? 'bg-red-100 text-red-800' :
@@ -751,7 +751,7 @@ For each area, provide:
                   {auditResults.trending_concerns.map((concern, idx) => (
                     <div key={idx} className="bg-white p-3 rounded border border-orange-200">
                       <p className="font-medium text-sm text-orange-900 mb-1">{concern.concern}</p>
-                      <p className="text-xs text-gray-600 mb-2">{concern.evidence}</p>
+                      <p className="text-xs text-slate-600 mb-2">{concern.evidence}</p>
                       {concern.historical_context && (
                         <p className="text-xs text-orange-700 bg-orange-50 p-2 rounded mb-2 italic">
                           📊 Historical Context: {concern.historical_context}
@@ -820,7 +820,7 @@ For each area, provide:
                         <p className="font-medium text-sm flex-1">{action.action}</p>
                         <Badge variant="outline" className="text-xs">{action.deadline}</Badge>
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">{action.rationale}</p>
+                      <p className="text-xs text-slate-600 mb-1">{action.rationale}</p>
                       <p className="text-xs text-indigo-700">Assigned to: {action.assigned_to}</p>
                     </div>
                   ))}
@@ -841,7 +841,7 @@ For each area, provide:
                   {auditResults.best_practices.map((practice, idx) => (
                     <div key={idx} className="bg-green-50 p-2 rounded">
                       <p className="font-medium text-sm text-green-900">{practice.area}</p>
-                      <p className="text-xs text-gray-700 my-1">{practice.recommendation}</p>
+                      <p className="text-xs text-slate-700 my-1">{practice.recommendation}</p>
                       <p className="text-xs text-green-700">{practice.impact}</p>
                     </div>
                   ))}

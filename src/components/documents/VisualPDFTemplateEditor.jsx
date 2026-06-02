@@ -184,7 +184,7 @@ export default function VisualPDFTemplateEditor({
             <CardContent>
               <div
                 ref={canvasRef}
-                className="relative min-h-[600px] bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-auto"
+                className="relative min-h-[600px] bg-white border-2 border-dashed border-slate-300 rounded-lg overflow-auto"
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 style={{
@@ -203,7 +203,7 @@ export default function VisualPDFTemplateEditor({
                     className={`absolute p-2 bg-white border-2 rounded cursor-move transition-all ${
                       selectedElement?.id === element.id
                         ? 'border-blue-500 shadow-lg'
-                        : 'border-gray-300 hover:border-blue-400'
+                        : 'border-slate-300 hover:border-blue-400'
                     }`}
                     style={{
                       left: element.position.x,
@@ -215,7 +215,7 @@ export default function VisualPDFTemplateEditor({
                   >
                     <div className="flex items-center gap-2 mb-1">
                       {renderElementIcon(element.type)}
-                      <span className="text-xs font-medium text-gray-700">
+                      <span className="text-xs font-medium text-slate-700">
                         {element.label}
                       </span>
                       {element.properties.required && (
@@ -236,12 +236,12 @@ export default function VisualPDFTemplateEditor({
                       />
                     )}
                     {element.type === 'rich_text' && (
-                      <div className="text-xs text-gray-500 italic">
+                      <div className="text-xs text-slate-500 italic">
                         Rich text area
                       </div>
                     )}
                     {element.type === 'signature' && (
-                      <div className="border-t-2 border-gray-400 text-center text-xs text-gray-500">
+                      <div className="border-t-2 border-slate-400 text-center text-xs text-slate-500">
                         Signature Line
                       </div>
                     )}
@@ -255,7 +255,7 @@ export default function VisualPDFTemplateEditor({
                 ))}
 
                 {templateElements.length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                  <div className="absolute inset-0 flex items-center justify-center text-slate-400">
                     <div className="text-center">
                       <Move className="w-12 h-12 mx-auto mb-2" />
                       <p>Drag and drop elements here or click "Add Element" buttons above</p>
@@ -279,7 +279,7 @@ export default function VisualPDFTemplateEditor({
             />
           ) : (
             <Card>
-              <CardContent className="py-12 text-center text-gray-500">
+              <CardContent className="py-12 text-center text-slate-500">
                 <Edit3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>Select an element from the canvas to edit its properties</p>
               </CardContent>
@@ -301,7 +301,7 @@ export default function VisualPDFTemplateEditor({
                 className={`flex items-center gap-2 p-2 rounded cursor-pointer ${
                   selectedElement?.id === element.id
                     ? 'bg-blue-50 border border-blue-200'
-                    : 'hover:bg-gray-50'
+                    : 'hover:bg-slate-50'
                 }`}
                 onClick={() => setSelectedElement(element)}
               >
@@ -567,7 +567,7 @@ function ElementPropertiesPanel({ element, allElements, onUpdate, onDelete, onDu
             <ToggleLeft className="w-4 h-4" />
             Conditional Display
           </Label>
-          <p className="text-xs text-gray-600 mb-3">
+          <p className="text-xs text-slate-600 mb-3">
             Show this field only when another field meets certain criteria
           </p>
 

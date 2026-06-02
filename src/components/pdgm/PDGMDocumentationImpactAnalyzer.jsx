@@ -204,7 +204,7 @@ Return JSON with detailed analysis and actionable recommendations.
       <Card className="border-green-200 bg-green-50">
         <CardContent className="p-4 text-center text-sm">
           <Calculator className="w-8 h-8 text-green-600 mx-auto mb-2" />
-          <p className="text-gray-600">Start documenting to enable PDGM impact analysis</p>
+          <p className="text-slate-600">Start documenting to enable PDGM impact analysis</p>
         </CardContent>
       </Card>
     );
@@ -237,7 +237,7 @@ Return JSON with detailed analysis and actionable recommendations.
           {isAnalyzing && !analysis ? (
             <div className="text-center py-6">
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-green-600 mb-2" />
-              <p className="text-xs text-gray-500">Analyzing PDGM impact...</p>
+              <p className="text-xs text-slate-500">Analyzing PDGM impact...</p>
             </div>
           ) : analysis ? (
             <>
@@ -286,7 +286,7 @@ Return JSON with detailed analysis and actionable recommendations.
               {/* Priority Actions */}
               {analysis.overall_optimization_strategy?.priority_actions?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <Lightbulb className="w-3 h-3 text-yellow-600" />
                     Priority Optimization Actions
                   </p>
@@ -297,7 +297,7 @@ Return JSON with detailed analysis and actionable recommendations.
                       'bg-blue-50 border-blue-300'
                     }`}>
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className="text-xs font-medium text-gray-900">{action.action}</p>
+                        <p className="text-xs font-medium text-slate-900">{action.action}</p>
                         <div className="flex gap-1 flex-shrink-0">
                           <Badge className={`text-[10px] py-0 ${
                             action.impact === 'high' ? 'bg-green-600 text-white' :
@@ -318,7 +318,7 @@ Return JSON with detailed analysis and actionable recommendations.
                       </Badge>
                       {action.text_to_add && (
                         <div className="bg-white p-2 rounded border mt-1">
-                          <p className="text-[10px] text-gray-700 italic mb-1">
+                          <p className="text-[10px] text-slate-700 italic mb-1">
                             "{action.text_to_add.substring(0, 150)}..."
                           </p>
                           <Button
@@ -338,7 +338,7 @@ Return JSON with detailed analysis and actionable recommendations.
               {/* Functional Impairment Opportunities */}
               {analysis.functional_impairment_analysis?.optimization_opportunities?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700">Functional Impairment Opportunities</p>
+                  <p className="text-xs font-semibold text-slate-700">Functional Impairment Opportunities</p>
                   {analysis.functional_impairment_analysis.optimization_opportunities.map((opp, idx) => (
                     <div key={idx} className="bg-purple-50 p-2 rounded border border-purple-200">
                       <div className="flex items-center justify-between mb-1">
@@ -347,10 +347,10 @@ Return JSON with detailed analysis and actionable recommendations.
                           {opp.payment_impact}
                         </Badge>
                       </div>
-                      <p className="text-[10px] text-gray-600 mb-1">
+                      <p className="text-[10px] text-slate-600 mb-1">
                         OASIS: {opp.oasis_items_affected?.join(', ')}
                       </p>
-                      <div className="bg-white p-1.5 rounded text-[10px] text-gray-700">
+                      <div className="bg-white p-1.5 rounded text-[10px] text-slate-700">
                         <strong>Add:</strong> {opp.suggested_enhancement}
                       </div>
                       {opp.compliance_aligned && (
@@ -366,7 +366,7 @@ Return JSON with detailed analysis and actionable recommendations.
               {/* Comorbidity Additions */}
               {analysis.comorbidity_analysis?.potential_additions?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700">Comorbidity Documentation Opportunities</p>
+                  <p className="text-xs font-semibold text-slate-700">Comorbidity Documentation Opportunities</p>
                   {analysis.comorbidity_analysis.potential_additions.map((comorb, idx) => (
                     <div key={idx} className="bg-orange-50 p-2 rounded border border-orange-200">
                       <div className="flex items-center justify-between mb-1">
@@ -375,7 +375,7 @@ Return JSON with detailed analysis and actionable recommendations.
                           {comorb.payment_impact}
                         </Badge>
                       </div>
-                      <p className="text-[10px] text-gray-600 mb-1">
+                      <p className="text-[10px] text-slate-600 mb-1">
                         ICD-10: {comorb.icd10_code}
                       </p>
                       <div className="bg-white p-1.5 rounded text-[10px]">

@@ -214,8 +214,8 @@ Please review and approve in the Personnel File dashboard.`
               {pendingRenewals.map(cred => (
                 <div key={cred.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div>
-                    <h4 className="font-semibold text-gray-900">{cred.title}</h4>
-                    <p className="text-sm text-gray-600">Submitted {format(parseISO(cred.created_date), 'MMM d, yyyy')}</p>
+                    <h4 className="font-semibold text-slate-900">{cred.title}</h4>
+                    <p className="text-sm text-slate-600">Submitted {format(parseISO(cred.created_date), 'MMM d, yyyy')}</p>
                   </div>
                   <Badge className="bg-blue-600">Pending Approval</Badge>
                 </div>
@@ -235,7 +235,7 @@ Please review and approve in the Personnel File dashboard.`
         </CardHeader>
         <CardContent>
           {expiringCredentials.length === 0 && expiredCredentials.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-500">
               <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-500" />
               <p>All credentials are current</p>
             </div>
@@ -249,10 +249,10 @@ Please review and approve in the Personnel File dashboard.`
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">{cred.title}</h4>
+                          <h4 className="font-semibold text-slate-900">{cred.title}</h4>
                           <Badge className="bg-red-600">EXPIRED</Badge>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">
+                        <p className="text-sm text-slate-600 mb-1">
                           {cred.issuing_organization} • {cred.item_type}
                         </p>
                         <p className="text-sm text-red-700 font-medium">
@@ -278,10 +278,10 @@ Please review and approve in the Personnel File dashboard.`
                             <div>
                               <Label>Upload Renewed Document *</Label>
                               <div className="mt-2">
-                                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-slate-400 transition-colors">
                                   <div className="text-center">
-                                    <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                    <span className="text-sm text-gray-600">
+                                    <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                                    <span className="text-sm text-slate-600">
                                       {uploading ? "Uploading..." : renewalData.uploaded_file_name || "Click to upload"}
                                     </span>
                                   </div>
@@ -359,15 +359,15 @@ Please review and approve in the Personnel File dashboard.`
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">{cred.title}</h4>
+                          <h4 className="font-semibold text-slate-900">{cred.title}</h4>
                           <Badge className={getUrgencyColor(daysUntil)}>
                             {daysUntil} days
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">
+                        <p className="text-sm text-slate-600 mb-1">
                           {cred.issuing_organization} • {cred.item_type}
                         </p>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-slate-700">
                           Expires: {format(parseISO(cred.expiration_date), 'MMM d, yyyy')}
                         </p>
                       </div>
@@ -399,10 +399,10 @@ Please review and approve in the Personnel File dashboard.`
                             <div>
                               <Label>Upload Renewed Document *</Label>
                               <div className="mt-2">
-                                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-slate-400 transition-colors">
                                   <div className="text-center">
-                                    <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                    <span className="text-sm text-gray-600">
+                                    <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                                    <span className="text-sm text-slate-600">
                                       {uploading ? "Uploading..." : renewalData.uploaded_file_name || "Click to upload PDF or image"}
                                     </span>
                                   </div>

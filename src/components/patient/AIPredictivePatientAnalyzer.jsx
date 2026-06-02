@@ -299,8 +299,8 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
   if (!patient) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          <Brain className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+        <CardContent className="p-8 text-center text-slate-500">
+          <Brain className="w-12 h-12 mx-auto mb-3 text-slate-400" />
           <p>No patient data available for analysis</p>
         </CardContent>
       </Card>
@@ -411,7 +411,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
             <CardContent>
               <div className="space-y-4">
                 {analysis.healthRisks?.map((risk, idx) => (
-                  <div key={idx} className="border rounded-lg p-4 hover:bg-gray-50">
+                  <div key={idx} className="border rounded-lg p-4 hover:bg-slate-50">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold">{risk.risk}</h4>
@@ -420,7 +420,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-700 mb-3">{risk.rationale}</p>
+                    <p className="text-sm text-slate-700 mb-3">{risk.rationale}</p>
                     <div className="bg-green-50 border border-green-200 rounded p-3">
                       <p className="text-xs font-semibold text-green-900 mb-1">Mitigation Strategies:</p>
                       <ul className="space-y-1">
@@ -600,7 +600,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                     </div>
                   </div>
                   <div className="mb-3">
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Infection Types at Risk:</p>
+                    <p className="text-xs font-semibold text-slate-700 mb-1">Infection Types at Risk:</p>
                     <div className="flex flex-wrap gap-1">
                       {analysis.adverseEventPrediction?.infectionRisk?.riskTypes?.map((type, idx) => (
                         <Badge key={idx} variant="outline" className="text-xs">{type}</Badge>
@@ -620,9 +620,9 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                 {/* Other Adverse Events */}
                 {analysis.adverseEventPrediction?.otherAdverseEvents?.length > 0 && (
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-gray-900">Other Potential Adverse Events</h4>
+                    <h4 className="font-semibold text-slate-900">Other Potential Adverse Events</h4>
                     {analysis.adverseEventPrediction?.otherAdverseEvents?.map((event, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                      <div key={idx} className="border rounded-lg p-3 bg-slate-50">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium">{event.eventType}</span>
                           <Badge className={getSeverityColor(event.riskLevel)}>
@@ -631,7 +631,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                         </div>
                         <ul className="space-y-1">
                           {event.preventionActions?.map((action, aidx) => (
-                            <li key={aidx} className="text-xs text-gray-700">• {action}</li>
+                            <li key={aidx} className="text-xs text-slate-700">• {action}</li>
                           ))}
                         </ul>
                       </div>
@@ -656,7 +656,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                   <h4 className="font-semibold mb-3">Priority Education Topics</h4>
                   <div className="space-y-2">
                     {analysis.educationRecommendations?.priorityTopics?.map((topic, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 hover:bg-gray-50">
+                      <div key={idx} className="border rounded-lg p-3 hover:bg-slate-50">
                         <div className="flex items-start justify-between mb-2">
                           <h5 className="font-semibold">{topic.topic}</h5>
                           <Badge className={
@@ -667,7 +667,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                             {topic.priority} priority
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">{topic.rationale}</p>
+                        <p className="text-sm text-slate-700 mb-2">{topic.rationale}</p>
                         <div className="bg-blue-50 border border-blue-200 rounded p-2">
                           <p className="text-xs font-semibold text-blue-900 mb-1">Teaching Method:</p>
                           <p className="text-xs text-blue-800">{topic.teachingMethod}</p>
@@ -791,7 +791,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
           <CardContent className="p-12 text-center">
             <Brain className="w-16 h-16 mx-auto mb-4 text-purple-600" />
             <h3 className="text-xl font-semibold mb-2">Ready to Analyze</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               Click "Start Analysis" to generate AI-powered predictive insights for this patient.
             </p>
             <Button onClick={performAnalysis} className="bg-purple-600 hover:bg-purple-700">

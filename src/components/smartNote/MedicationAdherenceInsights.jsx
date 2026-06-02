@@ -111,7 +111,7 @@ Return JSON:
       good: "bg-green-100 text-green-800",
       partial: "bg-yellow-100 text-yellow-800",
       poor: "bg-red-100 text-red-800",
-      unknown: "bg-gray-100 text-gray-800"
+      unknown: "bg-slate-100 text-slate-800"
     };
     return colors[status] || colors.unknown;
   };
@@ -122,7 +122,7 @@ Return JSON:
       medium: "bg-yellow-100 text-yellow-800",
       low: "bg-blue-100 text-blue-800"
     };
-    return colors[severity] || "bg-gray-100 text-gray-800";
+    return colors[severity] || "bg-slate-100 text-slate-800";
   };
 
   const getIssueIcon = (type) => {
@@ -173,7 +173,7 @@ Return JSON:
             {/* Medications Found */}
             {insights.medications_mentioned?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1">Medications Identified:</p>
+                <p className="text-xs font-semibold text-slate-600 mb-1">Medications Identified:</p>
                 <div className="flex flex-wrap gap-1">
                   {insights.medications_mentioned.map((med, idx) => (
                     <Badge key={idx} variant="outline" className="text-xs">
@@ -202,7 +202,7 @@ Return JSON:
             {/* Identified Issues */}
             {insights.identified_issues?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1">Issues Identified:</p>
+                <p className="text-xs font-semibold text-slate-600 mb-1">Issues Identified:</p>
                 {insights.identified_issues.map((issue, idx) => (
                   <div key={idx} className="bg-orange-50 p-2 rounded border border-orange-200 mb-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -212,7 +212,7 @@ Return JSON:
                         {issue.severity}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-700">{issue.description}</p>
+                    <p className="text-xs text-slate-700">{issue.description}</p>
                   </div>
                 ))}
               </div>
@@ -227,7 +227,7 @@ Return JSON:
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="text-xs font-medium">{int.intervention}</p>
-                        <p className="text-xs text-gray-500">Addresses: {int.target_issue}</p>
+                        <p className="text-xs text-slate-500">Addresses: {int.target_issue}</p>
                       </div>
                       <Button
                         size="sm"
@@ -256,7 +256,7 @@ Return JSON:
                       ))}
                     </ul>
                     {edu.teach_back_question && (
-                      <p className="mt-1 italic text-gray-600">
+                      <p className="mt-1 italic text-slate-600">
                         Teach-back: "{edu.teach_back_question}"
                       </p>
                     )}

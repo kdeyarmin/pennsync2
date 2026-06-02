@@ -15,10 +15,10 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <DialogTitle className="text-lg font-bold text-gray-900 pr-8">
+            <DialogTitle className="text-lg font-bold text-slate-900 pr-8">
               {questionLabel}
             </DialogTitle>
-            <p className="text-sm text-gray-900 font-medium mt-1">{guidance.description}</p>
+            <p className="text-sm text-slate-900 font-medium mt-1">{guidance.description}</p>
           </div>
           <Button
             variant="ghost"
@@ -52,17 +52,17 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-sm text-gray-900 mb-2">
+                      <h4 className="font-semibold text-sm text-slate-900 mb-2">
                         {scenario.title}
                       </h4>
-                      <p className="text-sm text-gray-900 font-normal mb-3">
+                      <p className="text-sm text-slate-900 font-normal mb-3">
                         {scenario.description}
                       </p>
                       <div className="bg-white border-2 border-indigo-300 rounded-lg p-3">
                         <p className="text-xs font-bold text-indigo-700 mb-1">
                           Recommended Answer:
                         </p>
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p className="text-sm font-semibold text-slate-900">
                           {scenario.recommendedAnswer}
                         </p>
                       </div>
@@ -79,7 +79,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                 <BookOpen className="w-4 h-4" />
                 Clinical Assessment Guidelines
               </h4>
-              <div className="space-y-2 text-sm text-gray-900">
+              <div className="space-y-2 text-sm text-slate-900">
                 {guidance.howToAnswer.map((tip, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -95,7 +95,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                   <AlertCircle className="w-4 h-4" />
                   Red Flags to Watch For
                 </h4>
-                <div className="space-y-2 text-sm text-gray-900">
+                <div className="space-y-2 text-sm text-slate-900">
                   {guidance.redFlags.map((flag, idx) => (
                     <div key={idx} className="flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
@@ -112,7 +112,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
               <h4 className="font-semibold text-sm text-green-900 mb-3">
                 Documentation Best Practices
               </h4>
-              <ul className="space-y-2 text-sm text-gray-900">
+              <ul className="space-y-2 text-sm text-slate-900">
                 {guidance.bestPractices.map((practice, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-green-600 font-bold">•</span>
@@ -127,7 +127,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                 <h4 className="font-semibold text-sm text-amber-900 mb-3">
                   Medicare Compliance Tips
                 </h4>
-                <ul className="space-y-2 text-sm text-gray-900">
+                <ul className="space-y-2 text-sm text-slate-900">
                   {guidance.complianceTips.map((tip, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-amber-600 font-bold">•</span>

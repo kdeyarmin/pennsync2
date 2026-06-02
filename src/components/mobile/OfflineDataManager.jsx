@@ -263,20 +263,20 @@ export default function OfflineDataManager() {
         )}
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
             <div>
               <p className="text-sm font-semibold">Cached Patients</p>
-              <p className="text-xs text-gray-600">Available offline</p>
+              <p className="text-xs text-slate-600">Available offline</p>
             </div>
             <Badge variant="outline">
               {(() => { try { const d = localStorage.getItem('offline_patients'); return d ? JSON.parse(d).length : 0; } catch { return 0; } })()} patients
             </Badge>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
             <div>
               <p className="text-sm font-semibold">Pending Sync</p>
-              <p className="text-xs text-gray-600">Drafts waiting to upload</p>
+              <p className="text-xs text-slate-600">Drafts waiting to upload</p>
             </div>
             <Badge variant="outline" className={offlineCache.length > 0 ? 'bg-yellow-100' : ''}>
               {offlineCache.length} item{offlineCache.length !== 1 ? 's' : ''}

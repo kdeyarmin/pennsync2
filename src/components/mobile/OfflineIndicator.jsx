@@ -133,7 +133,7 @@ export default function OfflineIndicator() {
             {isSyncing && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Syncing...</span>
+                  <span className="text-slate-600">Syncing...</span>
                   <span className="font-medium">{Math.round(syncProgress)}%</span>
                 </div>
                 <Progress value={syncProgress} className="h-2" />
@@ -156,7 +156,7 @@ export default function OfflineIndicator() {
                       {lastSyncResult.success} items synced successfully
                     </p>
                     {lastSyncResult.failed > 0 && (
-                      <p className="text-gray-600">
+                      <p className="text-slate-600">
                         {lastSyncResult.failed} items failed
                       </p>
                     )}
@@ -167,27 +167,27 @@ export default function OfflineIndicator() {
 
             {/* Status Details */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm text-gray-600">Connection</span>
+              <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                <span className="text-sm text-slate-600">Connection</span>
                 <Badge className={isOnline ? 'bg-green-600' : 'bg-red-600'}>
                   {isOnline ? 'Online' : 'Offline'}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm text-gray-600">Pending Sync</span>
+              <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                <span className="text-sm text-slate-600">Pending Sync</span>
                 <Badge variant="outline" className={syncStatus.pending > 0 ? 'bg-yellow-100' : ''}>
                   {syncStatus.pending} items
                 </Badge>
               </div>
               {syncStatus.failed > 0 && (
                 <div className="flex items-center justify-between p-2 bg-red-50 rounded">
-                  <span className="text-sm text-gray-600">Failed</span>
+                  <span className="text-sm text-slate-600">Failed</span>
                   <Badge className="bg-red-600">{syncStatus.failed}</Badge>
                 </div>
               )}
               {syncStatus.synced > 0 && (
                 <div className="flex items-center justify-between p-2 bg-green-50 rounded">
-                  <span className="text-sm text-gray-600">Synced</span>
+                  <span className="text-sm text-slate-600">Synced</span>
                   <Badge className="bg-green-600">{syncStatus.synced}</Badge>
                 </div>
               )}

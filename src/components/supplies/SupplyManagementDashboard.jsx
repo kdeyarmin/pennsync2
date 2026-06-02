@@ -107,18 +107,18 @@ export default function SupplyManagementDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-sm font-medium text-gray-600">Total Items</div>
-            <div className="text-2xl font-bold text-gray-900">{supplies.length}</div>
+            <div className="text-sm font-medium text-slate-600">Total Items</div>
+            <div className="text-2xl font-bold text-slate-900">{supplies.length}</div>
           </CardContent>
         </Card>
 
         <Card className={criticalAlerts.length > 0 ? "border-red-300 bg-red-50" : ""}>
           <CardContent className="p-4">
-            <div className="text-sm font-medium text-gray-600 flex items-center gap-1">
+            <div className="text-sm font-medium text-slate-600 flex items-center gap-1">
               <AlertTriangle className="w-4 h-4 text-red-600" />
               Critical Alerts
             </div>
-            <div className={`text-2xl font-bold ${criticalAlerts.length > 0 ? "text-red-600" : "text-gray-900"}`}>
+            <div className={`text-2xl font-bold ${criticalAlerts.length > 0 ? "text-red-600" : "text-slate-900"}`}>
               {criticalAlerts.length}
             </div>
           </CardContent>
@@ -126,15 +126,15 @@ export default function SupplyManagementDashboard() {
 
         <Card>
           <CardContent className="p-4">
-            <div className="text-sm font-medium text-gray-600">Low Stock</div>
+            <div className="text-sm font-medium text-slate-600">Low Stock</div>
             <div className="text-2xl font-bold text-orange-600">{warningAlerts.length}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-4">
-            <div className="text-sm font-medium text-gray-600">Inventory Value</div>
-            <div className="text-2xl font-bold text-gray-900">${totalValue.toFixed(2)}</div>
+            <div className="text-sm font-medium text-slate-600">Inventory Value</div>
+            <div className="text-2xl font-bold text-slate-900">${totalValue.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
@@ -275,8 +275,8 @@ export default function SupplyManagementDashboard() {
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{supply.name}</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="font-semibold text-slate-900">{supply.name}</h4>
+                        <p className="text-sm text-slate-600">
                           {supply.category.replace(/_/g, " ")} • {supply.unit}
                         </p>
                       </div>
@@ -285,24 +285,24 @@ export default function SupplyManagementDashboard() {
 
                     <div className="grid md:grid-cols-3 gap-4 mb-3">
                       <div>
-                        <p className="text-xs text-gray-500">Current Stock</p>
-                        <p className="text-lg font-bold text-gray-900">
+                        <p className="text-xs text-slate-500">Current Stock</p>
+                        <p className="text-lg font-bold text-slate-900">
                           {supply.current_quantity} {supply.unit}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Low Stock Threshold</p>
+                        <p className="text-xs text-slate-500">Low Stock Threshold</p>
                         <p className="text-lg font-bold text-orange-600">{supply.low_stock_threshold}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Reorder Qty</p>
+                        <p className="text-xs text-slate-500">Reorder Qty</p>
                         <p className="text-lg font-bold text-blue-600">{supply.reorder_quantity}</p>
                       </div>
                     </div>
 
                     {/* Stock Level Bar */}
                     <div className="mb-3">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all ${
                             supply.status === "out_of_stock"
@@ -343,7 +343,7 @@ export default function SupplyManagementDashboard() {
         <TabsContent value="alerts" className="space-y-3">
           {alerts.length === 0 ? (
             <Card>
-              <CardContent className="p-8 text-center text-gray-500">
+              <CardContent className="p-8 text-center text-slate-500">
                 <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
                 <p>All supplies are in stock</p>
               </CardContent>
@@ -360,8 +360,8 @@ export default function SupplyManagementDashboard() {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{alert.supply_name}</h4>
-                      <p className="text-sm text-gray-600">
+                      <h4 className="font-semibold text-slate-900">{alert.supply_name}</h4>
+                      <p className="text-sm text-slate-600">
                         Current: {alert.current_quantity} / Threshold: {alert.threshold_quantity}
                       </p>
                     </div>
@@ -374,7 +374,7 @@ export default function SupplyManagementDashboard() {
                     </Badge>
                   </div>
 
-                  <p className="text-sm text-gray-700 mb-3">
+                  <p className="text-sm text-slate-700 mb-3">
                     Recommended reorder: {alert.recommended_reorder} units
                   </p>
 
@@ -403,8 +403,8 @@ export default function SupplyManagementDashboard() {
         <TabsContent value="usage" className="space-y-3">
           {usageLogs.length === 0 ? (
             <Card>
-              <CardContent className="p-8 text-center text-gray-500">
-                <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <CardContent className="p-8 text-center text-slate-500">
+                <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p>No supply usage recorded yet</p>
               </CardContent>
             </Card>
@@ -414,8 +414,8 @@ export default function SupplyManagementDashboard() {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{log.supply_name}</h4>
-                      <p className="text-sm text-gray-600">
+                      <h4 className="font-semibold text-slate-900">{log.supply_name}</h4>
+                      <p className="text-sm text-slate-600">
                         {log.quantity_used} {log.unit} • {log.usage_date}
                       </p>
                       {log.extracted_from_note && (
@@ -424,7 +424,7 @@ export default function SupplyManagementDashboard() {
                         </Badge>
                       )}
                       {log.notes && (
-                        <p className="text-xs text-gray-500 mt-2">{log.notes}</p>
+                        <p className="text-xs text-slate-500 mt-2">{log.notes}</p>
                       )}
                     </div>
                   </div>

@@ -98,8 +98,8 @@ export default function OASISReview() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">OASIS Review Center</h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Review and approve AI-generated OASIS suggestions</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">OASIS Review Center</h1>
+        <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Review and approve AI-generated OASIS suggestions</p>
       </div>
 
       {/* Stats Cards */}
@@ -164,7 +164,7 @@ export default function OASISReview() {
         <CardContent className="p-3 sm:p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search patients..."
                 value={searchTerm}
@@ -199,8 +199,8 @@ export default function OASISReview() {
             <Card>
               <CardContent className="p-12 text-center">
                 <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">All caught up!</h3>
-                <p className="text-gray-600">No OASIS suggestions pending review.</p>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">All caught up!</h3>
+                <p className="text-slate-600">No OASIS suggestions pending review.</p>
               </CardContent>
             </Card>
           ) : selectedPatient ? (
@@ -227,7 +227,7 @@ export default function OASISReview() {
                         <Badge className={
                           item.status === 'pending' ? 'bg-blue-100 text-blue-800' :
                           item.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-slate-100 text-slate-800'
                         }>
                           {item.status}
                         </Badge>
@@ -235,15 +235,15 @@ export default function OASISReview() {
                       
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-600">Total Suggestions</p>
+                          <p className="text-slate-600">Total Suggestions</p>
                           <p className="font-bold text-lg">{item.totalSuggestions}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600">Pending Review</p>
+                          <p className="text-slate-600">Pending Review</p>
                           <p className="font-bold text-lg text-blue-600">{item.pendingCount}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600">Last Updated</p>
+                          <p className="text-slate-600">Last Updated</p>
                           <p className="font-medium">{new Date(item.lastUpdated).toLocaleDateString()}</p>
                         </div>
                       </div>

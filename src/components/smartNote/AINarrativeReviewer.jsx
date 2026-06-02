@@ -260,7 +260,7 @@ Return a structured JSON response:
           {!reviewResults && !isReviewing && (
             <div className="text-center py-4">
               <Brain className="w-8 h-8 text-indigo-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500 mb-3">AI will review your enhanced note</p>
+              <p className="text-sm text-slate-500 mb-3">AI will review your enhanced note</p>
               <Button
                 onClick={runReview}
                 className="bg-indigo-600 hover:bg-indigo-700"
@@ -275,15 +275,15 @@ Return a structured JSON response:
           {isReviewing && !reviewResults && (
             <div className="flex flex-col items-center justify-center py-6">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-2" />
-              <p className="text-sm text-gray-600">Analyzing clinical narrative...</p>
+              <p className="text-sm text-slate-600">Analyzing clinical narrative...</p>
             </div>
           )}
 
           {reviewResults && (
             <div className="space-y-3">
               {/* Summary */}
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-700">{reviewResults.review_summary}</p>
+              <div className="p-2 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-700">{reviewResults.review_summary}</p>
               </div>
 
               {/* Strengths */}
@@ -303,34 +303,34 @@ Return a structured JSON response:
 
               {/* Quick Stats */}
               <div className="grid grid-cols-5 gap-1 text-center">
-                <div className={`p-1.5 rounded ${reviewResults.compliance_issues?.length > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+                <div className={`p-1.5 rounded ${reviewResults.compliance_issues?.length > 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
                   <Shield className="w-3 h-3 mx-auto text-red-500" />
                   <p className="text-xs font-bold">{reviewResults.compliance_issues?.length || 0}</p>
-                  <p className="text-[10px] text-gray-500">Comply</p>
+                  <p className="text-[10px] text-slate-500">Comply</p>
                 </div>
-                <div className={`p-1.5 rounded ${reviewResults.terminology_suggestions?.length > 0 ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                <div className={`p-1.5 rounded ${reviewResults.terminology_suggestions?.length > 0 ? 'bg-blue-50' : 'bg-slate-50'}`}>
                   <BookOpen className="w-3 h-3 mx-auto text-blue-500" />
                   <p className="text-xs font-bold">{reviewResults.terminology_suggestions?.length || 0}</p>
-                  <p className="text-[10px] text-gray-500">Terms</p>
+                  <p className="text-[10px] text-slate-500">Terms</p>
                 </div>
-                <div className={`p-1.5 rounded ${reviewResults.missing_elements?.length > 0 ? 'bg-yellow-50' : 'bg-gray-50'}`}>
+                <div className={`p-1.5 rounded ${reviewResults.missing_elements?.length > 0 ? 'bg-yellow-50' : 'bg-slate-50'}`}>
                   <FileText className="w-3 h-3 mx-auto text-yellow-500" />
                   <p className="text-xs font-bold">{reviewResults.missing_elements?.length || 0}</p>
-                  <p className="text-[10px] text-gray-500">Missing</p>
+                  <p className="text-[10px] text-slate-500">Missing</p>
                 </div>
-                <div className={`p-1.5 rounded ${reviewResults.clarity_improvements?.length > 0 ? 'bg-purple-50' : 'bg-gray-50'}`}>
+                <div className={`p-1.5 rounded ${reviewResults.clarity_improvements?.length > 0 ? 'bg-purple-50' : 'bg-slate-50'}`}>
                   <Lightbulb className="w-3 h-3 mx-auto text-purple-500" />
                   <p className="text-xs font-bold">{reviewResults.clarity_improvements?.length || 0}</p>
-                  <p className="text-[10px] text-gray-500">Clarity</p>
+                  <p className="text-[10px] text-slate-500">Clarity</p>
                 </div>
-                <div className={`p-1.5 rounded ${reviewResults.risk_flags?.length > 0 ? 'bg-orange-50' : 'bg-gray-50'}`}>
+                <div className={`p-1.5 rounded ${reviewResults.risk_flags?.length > 0 ? 'bg-orange-50' : 'bg-slate-50'}`}>
                   <AlertTriangle className="w-3 h-3 mx-auto text-orange-500" />
                   <p className="text-xs font-bold">{reviewResults.risk_flags?.length || 0}</p>
-                  <p className="text-[10px] text-gray-500">Risks</p>
+                  <p className="text-[10px] text-slate-500">Risks</p>
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-slate-500 text-center">
                 Detailed suggestions available in the Action Center →
               </p>
             </div>

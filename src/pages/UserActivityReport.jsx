@@ -281,7 +281,7 @@ export default function UserActivityReport() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading activity data...</p>
+          <p className="text-slate-600">Loading activity data...</p>
         </div>
       </div>
     );
@@ -293,11 +293,11 @@ export default function UserActivityReport() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
               <BarChart3 className="w-8 h-8 text-blue-600" />
               User Activity Report
             </h1>
-            <p className="text-gray-600 mt-1">Comprehensive analytics on user engagement and activity</p>
+            <p className="text-slate-600 mt-1">Comprehensive analytics on user engagement and activity</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={exportToCSV} variant="outline">
@@ -401,7 +401,7 @@ export default function UserActivityReport() {
               <div>
                 <label className="text-sm font-medium mb-2 block">Search Users</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     placeholder="Search by name or email..."
                     value={searchQuery}
@@ -434,8 +434,8 @@ export default function UserActivityReport() {
                             {stat.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">{stat.name}</p>
-                            <p className="text-sm text-gray-500">{stat.email}</p>
+                            <p className="font-semibold text-slate-900">{stat.name}</p>
+                            <p className="text-sm text-slate-500">{stat.email}</p>
                           </div>
                         </div>
                         <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -460,9 +460,9 @@ export default function UserActivityReport() {
                           <p className="text-xs text-orange-600 font-medium">Entities</p>
                           <p className="text-2xl font-bold text-orange-900">{stat.entities_interacted_count}</p>
                         </div>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-600 font-medium">Last Active</p>
-                          <p className="text-xs font-bold text-gray-900 mt-1">
+                        <div className="p-3 bg-slate-50 rounded-lg">
+                          <p className="text-xs text-slate-600 font-medium">Last Active</p>
+                          <p className="text-xs font-bold text-slate-900 mt-1">
                             <Clock className="w-3 h-3 inline mr-1" />
                             {formatDistanceToNow(new Date(stat.last_activity), { addSuffix: true })}
                           </p>
@@ -471,7 +471,7 @@ export default function UserActivityReport() {
 
                       <div className="space-y-2">
                         <div>
-                          <p className="text-xs font-medium text-gray-600 mb-1">Top Actions:</p>
+                          <p className="text-xs font-medium text-slate-600 mb-1">Top Actions:</p>
                           <div className="flex flex-wrap gap-1">
                             {stat.top_actions.slice(0, 5).map(([action, count]) => (
                               <Badge key={action} variant="outline" className="text-xs">
@@ -483,7 +483,7 @@ export default function UserActivityReport() {
 
                         {stat.pages_visited_list.length > 0 && (
                           <div>
-                            <p className="text-xs font-medium text-gray-600 mb-1">Pages Visited:</p>
+                            <p className="text-xs font-medium text-slate-600 mb-1">Pages Visited:</p>
                             <div className="flex flex-wrap gap-1">
                               {stat.pages_visited_list.slice(0, 6).map(page => (
                                 <Badge key={page} variant="outline" className="text-xs bg-blue-50">
@@ -501,7 +501,7 @@ export default function UserActivityReport() {
 
                         {stat.entities_interacted_list.length > 0 && (
                           <div>
-                            <p className="text-xs font-medium text-gray-600 mb-1">Entities Interacted:</p>
+                            <p className="text-xs font-medium text-slate-600 mb-1">Entities Interacted:</p>
                             <div className="flex flex-wrap gap-1">
                               {stat.entities_interacted_list.map(entity => (
                                 <Badge key={entity} variant="outline" className="text-xs bg-green-50">
@@ -518,8 +518,8 @@ export default function UserActivityReport() {
 
                 {processedStats.length === 0 && (
                   <div className="text-center py-12">
-                    <Activity className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No user activity found matching your criteria</p>
+                    <Activity className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500">No user activity found matching your criteria</p>
                   </div>
                 )}
               </div>

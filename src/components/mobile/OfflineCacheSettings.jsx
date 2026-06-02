@@ -186,7 +186,7 @@ export default function OfflineCacheSettings() {
                 />
                 <div className="flex-1">
                   <p className="font-medium text-sm">{module.label}</p>
-                  <p className="text-xs text-gray-600">{module.description}</p>
+                  <p className="text-xs text-slate-600">{module.description}</p>
                 </div>
               </div>
             ))}
@@ -199,7 +199,7 @@ export default function OfflineCacheSettings() {
             <Calendar className="w-4 h-4" />
             Data Freshness
           </Label>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-slate-600">
             Only cache data updated/created within the selected timeframe
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

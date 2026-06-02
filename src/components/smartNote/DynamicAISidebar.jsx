@@ -79,7 +79,7 @@ export default function DynamicAISidebar({
           </CardTitle>
         </CardHeader>
         <CardContent className="py-2 space-y-3">
-          <p className="text-xs text-gray-600 flex items-start gap-2">
+          <p className="text-xs text-slate-600 flex items-start gap-2">
             <Lightbulb className="w-3 h-3 flex-shrink-0 mt-0.5 text-indigo-500" />
             {content.message}
           </p>

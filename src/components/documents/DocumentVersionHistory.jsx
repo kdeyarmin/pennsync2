@@ -34,20 +34,20 @@ export default function DocumentVersionHistory({ documentSignatureId, _packageId
   };
 
   if (isLoading) {
-    return <div className="text-sm text-gray-500">Loading version history...</div>;
+    return <div className="text-sm text-slate-500">Loading version history...</div>;
   }
 
   if (versions.length === 0) {
-    return <div className="text-sm text-gray-500">No version history available</div>;
+    return <div className="text-sm text-slate-500">No version history available</div>;
   }
 
   return (
     <>
       <div className="space-y-2">
-        <h4 className="font-semibold text-sm text-gray-700">Version History ({versions.length})</h4>
+        <h4 className="font-semibold text-sm text-slate-700">Version History ({versions.length})</h4>
         <div className="border rounded-lg divide-y max-h-96 overflow-y-auto">
           {versions.map((version) => (
-            <div key={version.id} className="p-3 hover:bg-gray-50 transition-colors">
+            <div key={version.id} className="p-3 hover:bg-slate-50 transition-colors">
               <button
                 onClick={() => setExpandedVersion(expandedVersion === version.id ? null : version.id)}
                 className="w-full text-left flex items-start justify-between gap-2 py-1"
@@ -61,17 +61,17 @@ export default function DocumentVersionHistory({ documentSignatureId, _packageId
                       )}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-600 mt-1">
+                  <div className="text-xs text-slate-600 mt-1">
                     Uploaded {new Date(version.uploaded_at).toLocaleDateString()} by {version.uploaded_by}
                   </div>
                   {version.change_reason && (
-                    <div className="text-xs text-gray-500 mt-1">Reason: {version.change_reason}</div>
+                    <div className="text-xs text-slate-500 mt-1">Reason: {version.change_reason}</div>
                   )}
                 </div>
                 {expandedVersion === version.id ? (
-                  <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-1" />
+                  <ChevronUp className="w-4 h-4 text-slate-400 shrink-0 mt-1" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-1" />
+                  <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 mt-1" />
                 )}
               </button>
 
@@ -79,13 +79,13 @@ export default function DocumentVersionHistory({ documentSignatureId, _packageId
                 <div className="mt-3 pt-3 border-t space-y-3 pl-4">
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-600">Signature Status:</span>
+                      <span className="text-slate-600">Signature Status:</span>
                       <Badge className="ml-1" variant="outline">
                         {version.signature_status_at_version || 'Unknown'}
                       </Badge>
                     </div>
                     <div>
-                      <span className="text-gray-600">Invalidated Previous:</span>
+                      <span className="text-slate-600">Invalidated Previous:</span>
                       <Badge className="ml-1" variant={version.invalidated_previous_signatures ? 'destructive' : 'secondary'}>
                         {version.invalidated_previous_signatures ? 'Yes' : 'No'}
                       </Badge>
@@ -93,8 +93,8 @@ export default function DocumentVersionHistory({ documentSignatureId, _packageId
                   </div>
 
                   {version.change_summary && (
-                    <div className="text-xs bg-gray-50 p-2 rounded border">
-                      <p className="text-gray-700">{version.change_summary}</p>
+                    <div className="text-xs bg-slate-50 p-2 rounded border">
+                      <p className="text-slate-700">{version.change_summary}</p>
                     </div>
                   )}
 

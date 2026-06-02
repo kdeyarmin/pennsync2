@@ -159,12 +159,12 @@ export default function NursePerformanceMetrics({
       {isExpanded && (
         <CardContent className="space-y-4">
           {nurseMetrics.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No nurse performance data available</p>
+            <p className="text-center text-slate-500 py-8">No nurse performance data available</p>
           ) : (
             <>
               {/* Sort controls */}
               <div className="flex gap-2">
-                <span className="text-sm text-gray-600">Sort by:</span>
+                <span className="text-sm text-slate-600">Sort by:</span>
                 {['overall', 'oasis', 'notes', 'activity'].map(s => (
                   <Button
                     key={s}
@@ -179,7 +179,7 @@ export default function NursePerformanceMetrics({
               </div>
 
               {/* Performance chart */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-slate-50 p-4 rounded-lg">
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -196,7 +196,7 @@ export default function NursePerformanceMetrics({
               {/* Detailed table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-slate-100">
                     <tr>
                       <th className="text-left p-2">Nurse</th>
                       <th className="text-center p-2">OASIS Avg</th>
@@ -237,7 +237,7 @@ export default function NursePerformanceMetrics({
                         <td className="p-2 text-center">
                           {nurse.passRate !== null ? `${nurse.passRate}%` : '-'}
                         </td>
-                        <td className="p-2 text-center text-gray-600">
+                        <td className="p-2 text-center text-slate-600">
                           {nurse.totalActivity}
                         </td>
                       </tr>

@@ -113,7 +113,7 @@ export default function EnrollmentSummaryDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Enrolled</p>
+                <p className="text-sm text-slate-600">Total Enrolled</p>
                 <p className="text-3xl font-bold text-blue-600">{stats.totalEnrolled}</p>
               </div>
               <Users className="w-8 h-8 text-blue-500" />
@@ -125,7 +125,7 @@ export default function EnrollmentSummaryDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-sm text-slate-600">Completed</p>
                 <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-500" />
@@ -137,7 +137,7 @@ export default function EnrollmentSummaryDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Completion Rate</p>
+                <p className="text-sm text-slate-600">Completion Rate</p>
                 <p className="text-3xl font-bold text-yellow-600">{stats.completionRate}%</p>
               </div>
               <TrendingUp className="w-8 h-8 text-yellow-500" />
@@ -149,7 +149,7 @@ export default function EnrollmentSummaryDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Overdue</p>
+                <p className="text-sm text-slate-600">Overdue</p>
                 <p className="text-3xl font-bold text-red-600">{stats.overdue}</p>
               </div>
               <AlertCircle className="w-8 h-8 text-red-500" />

@@ -117,14 +117,14 @@ export default function EncryptionStatusIndicator() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-gray-900 text-sm">{check.name}</p>
+                    <p className="font-semibold text-slate-900 text-sm">{check.name}</p>
                     {check.critical && (
                       <Badge variant="outline" className="text-xs">Critical</Badge>
                     )}
                   </div>
-                  <p className="text-xs text-gray-600">{check.description}</p>
+                  <p className="text-xs text-slate-600">{check.description}</p>
                 </div>
-                <Icon className={`w-5 h-5 ${check.status ? 'text-green-500' : 'text-gray-400'}`} />
+                <Icon className={`w-5 h-5 ${check.status ? 'text-green-500' : 'text-slate-400'}`} />
               </div>
             );
           })}
@@ -144,10 +144,10 @@ export default function EncryptionStatusIndicator() {
         )}
 
         <div className="pt-3 border-t">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             <strong>Encryption Standards:</strong> AES-256 (at rest), TLS 1.2+ (in transit)
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             <strong>Compliance:</strong> HIPAA Security Rule 45 CFR § 164.312(a)(2)(iv) & § 164.312(e)(1)
           </p>
         </div>

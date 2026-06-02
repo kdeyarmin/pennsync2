@@ -26,8 +26,8 @@ export default function RegulatoryCompliance() {
           </Button>
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Regulatory Compliance Center</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Monitor healthcare regulations and manage compliance updates</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Regulatory Compliance Center</h1>
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Monitor healthcare regulations and manage compliance updates</p>
         </div>
       </div>
 

@@ -36,33 +36,33 @@ function InterventionCard({ item, index, onRemove, onSelect, isSelected, linkedP
               ? 'shadow-2xl rotate-1 border-indigo-400 scale-105'
               : isSelected
               ? 'border-indigo-500 shadow-md ring-2 ring-indigo-300'
-              : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+              : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
           <div className="flex items-start gap-2 p-3">
             <div {...provided.dragHandleProps} className="mt-0.5 cursor-grab active:cursor-grabbing">
-              <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+              <GripVertical className="w-4 h-4 text-slate-300 flex-shrink-0" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">{item.name}</p>
+                  <p className="text-sm font-semibold text-slate-800">{item.name}</p>
                   {category && (
-                    <p className="text-xs text-gray-400 mt-0.5">{category.category}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{category.category}</p>
                   )}
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
-                  className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
+                  className="text-slate-300 hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">{item.description}</p>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">{item.description}</p>
 
               <div className="flex flex-wrap gap-1.5 mt-2">
-                <span className="text-[10px] font-medium bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">
+                <span className="text-[10px] font-medium bg-slate-100 text-slate-600 rounded px-1.5 py-0.5">
                   {item.frequency}
                 </span>
                 <CompliancePill tag={item.complianceTag} />
@@ -85,10 +85,10 @@ export default function CarePlanCanvas({ planItems, onRemove, onSelectItem, sele
   const hasItems = planItems.length > 0;
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+    <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
       {/* Goal Tags */}
-      <div className="px-4 py-2.5 bg-white border-b border-gray-200 flex-shrink-0">
-        <p className="text-xs font-semibold text-gray-500 mb-1.5">Care Goals</p>
+      <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex-shrink-0">
+        <p className="text-xs font-semibold text-slate-500 mb-1.5">Care Goals</p>
         <div className="flex flex-wrap gap-1.5">
           {GOALS.map(g => (
             <span key={g.id} className={`text-xs font-medium border rounded-full px-2.5 py-1 ${g.color}`}>
@@ -101,9 +101,9 @@ export default function CarePlanCanvas({ planItems, onRemove, onSelectItem, sele
       {/* Drop zone */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-gray-700">Plan Interventions</h3>
+          <h3 className="text-sm font-bold text-slate-700">Plan Interventions</h3>
           {hasItems && (
-            <span className="text-xs text-gray-400 bg-white border border-gray-200 rounded-full px-2.5 py-0.5">
+            <span className="text-xs text-slate-400 bg-white border border-slate-200 rounded-full px-2.5 py-0.5">
               {planItems.length} added
             </span>
           )}
@@ -119,7 +119,7 @@ export default function CarePlanCanvas({ planItems, onRemove, onSelectItem, sele
                   ? 'bg-indigo-50 border-2 border-dashed border-indigo-400 ring-2 ring-indigo-200'
                   : hasItems
                   ? 'bg-transparent'
-                  : 'border-2 border-dashed border-gray-200 bg-white'
+                  : 'border-2 border-dashed border-slate-200 bg-white'
               }`}
             >
               {!hasItems && !snapshot.isDraggingOver && (
@@ -127,8 +127,8 @@ export default function CarePlanCanvas({ planItems, onRemove, onSelectItem, sele
                   <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mb-3">
                     <Info className="w-6 h-6 text-indigo-400" />
                   </div>
-                  <p className="text-sm font-semibold text-gray-400">Drop interventions here</p>
-                  <p className="text-xs text-gray-300 mt-1">Drag from the library on the left</p>
+                  <p className="text-sm font-semibold text-slate-400">Drop interventions here</p>
+                  <p className="text-xs text-slate-300 mt-1">Drag from the library on the left</p>
                 </div>
               )}
 

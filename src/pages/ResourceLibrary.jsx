@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Shield, GraduationCap, Stethoscope } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import ClinicalLibraryManager from "@/components/clinical/ClinicalLibraryManager";
 import ClinicalReferencePanel from "@/components/clinical/ClinicalReferencePanel";
 import GuidelineComplianceChecker from "@/components/guidelines/GuidelineComplianceChecker";
@@ -9,15 +10,11 @@ import EducationLibrary from "@/components/education/EducationLibrary";
 export default function ResourceLibrary() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <BookOpen className="w-8 h-8 text-indigo-600" />
-          Resource Library
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          Clinical templates, Medicare guidelines, and patient education materials
-        </p>
-      </div>
+      <PageHeader
+        icon={BookOpen}
+        title="Resource Library"
+        description="Clinical templates, Medicare guidelines, and patient education materials"
+      />
 
       <Tabs defaultValue="clinical" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">

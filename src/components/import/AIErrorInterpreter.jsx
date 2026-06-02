@@ -84,7 +84,7 @@ Focus on the most common errors first.`;
         {!analysis ? (
           <div className="text-center py-6">
             <Brain className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-sm text-slate-700 mb-4">
               Let AI analyze your import errors and provide intelligent solutions
             </p>
             <Button
@@ -119,7 +119,7 @@ Focus on the most common errors first.`;
                 <Card key={idx} className="bg-white">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900">{pattern.error_type}</h4>
+                      <h4 className="font-semibold text-slate-900">{pattern.error_type}</h4>
                       <Badge className="bg-red-100 text-red-800">
                         {pattern.affected_rows?.length || 0} rows
                       </Badge>
@@ -127,13 +127,13 @@ Focus on the most common errors first.`;
 
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 mb-1">ROOT CAUSE</p>
-                        <p className="text-sm text-gray-700">{pattern.root_cause}</p>
+                        <p className="text-xs font-semibold text-slate-500 mb-1">ROOT CAUSE</p>
+                        <p className="text-sm text-slate-700">{pattern.root_cause}</p>
                       </div>
 
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 mb-1">HOW TO FIX</p>
-                        <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                        <p className="text-xs font-semibold text-slate-500 mb-1">HOW TO FIX</p>
+                        <ol className="list-decimal list-inside space-y-1 text-sm text-slate-700">
                           {pattern.fix_instructions?.map((instruction, iIdx) => (
                             <li key={iIdx}>{instruction}</li>
                           ))}
@@ -142,8 +142,8 @@ Focus on the most common errors first.`;
 
                       {pattern.common_reasons && pattern.common_reasons.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-500 mb-1">COMMON CAUSES</p>
-                          <ul className="space-y-1 text-xs text-gray-600">
+                          <p className="text-xs font-semibold text-slate-500 mb-1">COMMON CAUSES</p>
+                          <ul className="space-y-1 text-xs text-slate-600">
                             {pattern.common_reasons.map((reason, rIdx) => (
                               <li key={rIdx}>• {reason}</li>
                             ))}

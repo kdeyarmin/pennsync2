@@ -127,8 +127,8 @@ export default function NurseTrainingHub() {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Nurse Training Hub</h1>
-        <p className="text-gray-600">AI-powered personalized training and skill development</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Nurse Training Hub</h1>
+        <p className="text-slate-600">AI-powered personalized training and skill development</p>
       </div>
 
       {/* Stats Overview */}
@@ -137,7 +137,7 @@ export default function NurseTrainingHub() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Completion Rate</p>
+                <p className="text-sm text-slate-600 mb-1">Completion Rate</p>
                 <p className="text-3xl font-bold text-blue-600">{completionRate}%</p>
               </div>
               <Award className="w-8 h-8 text-blue-400" />
@@ -149,7 +149,7 @@ export default function NurseTrainingHub() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Completed</p>
+                <p className="text-sm text-slate-600 mb-1">Completed</p>
                 <p className="text-3xl font-bold text-green-600">
                   {myCompletions.filter(c => c.status === 'completed').length}
                 </p>
@@ -163,7 +163,7 @@ export default function NurseTrainingHub() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">In Progress</p>
+                <p className="text-sm text-slate-600 mb-1">In Progress</p>
                 <p className="text-3xl font-bold text-orange-600">
                   {myCompletions.filter(c => c.status === 'in_progress').length}
                 </p>
@@ -177,7 +177,7 @@ export default function NurseTrainingHub() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Skill Gaps</p>
+                <p className="text-sm text-slate-600 mb-1">Skill Gaps</p>
                 <p className="text-3xl font-bold text-red-600">{skillGaps.length}</p>
               </div>
               <Target className="w-8 h-8 text-red-400" />
@@ -212,15 +212,15 @@ export default function NurseTrainingHub() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-gray-700 mb-4">
+                <p className="text-slate-700 mb-4">
                   Select a skill gap to generate personalized AI training content with lessons, scenarios, and quizzes.
                 </p>
                 <div className="space-y-2">
                   {skillGaps.map((gap, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{gap.skill}</p>
-                        <p className="text-sm text-gray-600">{gap.recommendation}</p>
+                        <p className="font-semibold text-slate-900">{gap.skill}</p>
+                        <p className="text-sm text-slate-600">{gap.recommendation}</p>
                         <Badge variant="destructive" className="mt-2">{gap.gap_severity} priority</Badge>
                       </div>
                       <Button
@@ -260,8 +260,8 @@ export default function NurseTrainingHub() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-gray-600">{module.description}</p>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <p className="text-sm text-slate-600">{module.description}</p>
+                  <div className="flex items-center gap-3 text-sm text-slate-500">
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       {module.duration_minutes} min
@@ -296,8 +296,8 @@ export default function NurseTrainingHub() {
                   <CardTitle className="text-base">{module.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-gray-600">{module.description}</p>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <p className="text-sm text-slate-600">{module.description}</p>
+                  <div className="flex items-center gap-3 text-sm text-slate-500">
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       {module.duration_minutes} min
@@ -350,23 +350,23 @@ export default function NurseTrainingHub() {
                       <div key={completion.id} className="p-4 border rounded-lg">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">
+                            <h4 className="font-semibold text-slate-900">
                               {module?.title || 'AI-Generated Training'}
                             </h4>
                             <div className="flex items-center gap-2 mt-2">
                               <Badge className={
                                 completion.status === 'completed' ? 'bg-green-500' :
                                 completion.status === 'in_progress' ? 'bg-orange-500' :
-                                'bg-gray-500'
+                                'bg-slate-500'
                               }>
                                 {completion.status}
                               </Badge>
                               {completion.score && (
-                                <span className="text-sm text-gray-600">Score: {completion.score}%</span>
+                                <span className="text-sm text-slate-600">Score: {completion.score}%</span>
                               )}
                             </div>
                             {completion.completion_date && (
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-slate-500 mt-1">
                                 Completed: {new Date(completion.completion_date).toLocaleDateString()}
                               </p>
                             )}

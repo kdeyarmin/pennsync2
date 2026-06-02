@@ -153,16 +153,16 @@ Return JSON with suggestions array.`,
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
   if (!diagnosis) {
     return (
-      <Card className="border-2 border-gray-200">
+      <Card className="border-2 border-slate-200">
         <CardContent className="p-6 text-center">
-          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Enter patient diagnosis to generate AI care plan suggestions</p>
+          <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <p className="text-sm text-slate-600">Enter patient diagnosis to generate AI care plan suggestions</p>
         </CardContent>
       </Card>
     );
@@ -173,7 +173,7 @@ Return JSON with suggestions array.`,
       <Card className="border-2 border-purple-200">
         <CardContent className="p-6 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-600">AI analyzing {diagnosis} and generating Medicare-compliant care plan suggestions...</p>
+          <p className="text-sm text-slate-600">AI analyzing {diagnosis} and generating Medicare-compliant care plan suggestions...</p>
         </CardContent>
       </Card>
     );
@@ -189,7 +189,7 @@ Return JSON with suggestions array.`,
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Generate evidence-based care plan recommendations for {diagnosis}
           </p>
           <Button onClick={generateSuggestions} className="w-full">
@@ -242,11 +242,11 @@ Return JSON with suggestions array.`,
                     <div className="flex items-start gap-2 mb-2">
                       <Target className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-semibold text-gray-700">SMART Goal</p>
-                        <p className="text-sm text-gray-900 font-medium">{suggestion.goal}</p>
+                        <p className="text-xs font-semibold text-slate-700">SMART Goal</p>
+                        <p className="text-sm text-slate-900 font-medium">{suggestion.goal}</p>
                       </div>
                     </div>
-                    <div className="flex gap-2 text-xs text-gray-600 mt-2">
+                    <div className="flex gap-2 text-xs text-slate-600 mt-2">
                       <Badge variant="outline" className="text-xs">
                         Target: {suggestion.target_timeframe_days} days
                       </Badge>
@@ -270,9 +270,9 @@ Return JSON with suggestions array.`,
                   </div>
 
                   {/* Baseline Measurement */}
-                  <div className="bg-gray-50 p-3 rounded border">
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Baseline Measurement:</p>
-                    <p className="text-xs text-gray-600">{suggestion.baseline_measurement}</p>
+                  <div className="bg-slate-50 p-3 rounded border">
+                    <p className="text-xs font-semibold text-slate-700 mb-1">Baseline Measurement:</p>
+                    <p className="text-xs text-slate-600">{suggestion.baseline_measurement}</p>
                   </div>
 
                   {/* Education Topics */}

@@ -19,7 +19,7 @@ export default function OASISDocumentationReview() {
       <div className="p-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-600">No analysis data available. Please analyze an OASIS document first.</p>
+            <p className="text-slate-600">No analysis data available. Please analyze an OASIS document first.</p>
             <Link to={createPageUrl("OASISAnalyzer")}>
               <Button className="mt-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -44,8 +44,8 @@ export default function OASISDocumentationReview() {
               <span className="sm:hidden">Back</span>
             </Button>
           </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-2 truncate">OASIS Documentation Review</h1>
-          {patientName && <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">Patient: {patientName}</p>}
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mt-2 truncate">OASIS Documentation Review</h1>
+          {patientName && <p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">Patient: {patientName}</p>}
         </div>
         <Badge className="bg-purple-600 text-white text-sm sm:text-base md:text-lg px-3 sm:px-4 py-2 flex items-center gap-2">
           <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />

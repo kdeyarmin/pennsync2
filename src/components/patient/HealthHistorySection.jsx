@@ -80,7 +80,7 @@ export default function HealthHistorySection({ patient }) {
       {/* Allergies */}
       <Card className="border-red-200">
         <CardHeader className="bg-red-50">
-          <CardTitle className="text-lg flex items-center justify-between text-gray-900">
+          <CardTitle className="text-lg flex items-center justify-between text-slate-900">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-600" />
               Allergies & Adverse Reactions
@@ -93,10 +93,10 @@ export default function HealthHistorySection({ patient }) {
         <CardContent className="pt-4">
           {patient.allergies ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-gray-900 whitespace-pre-wrap">{patient.allergies}</p>
+              <p className="text-sm text-slate-900 whitespace-pre-wrap">{patient.allergies}</p>
             </div>
           ) : (
-            <p className="text-sm text-gray-500 italic">No known allergies recorded</p>
+            <p className="text-sm text-slate-500 italic">No known allergies recorded</p>
           )}
         </CardContent>
       </Card>
@@ -104,7 +104,7 @@ export default function HealthHistorySection({ patient }) {
       {/* Past Medical History */}
       <Card>
         <CardHeader className="bg-blue-50">
-          <CardTitle className="text-lg flex items-center justify-between text-gray-900">
+          <CardTitle className="text-lg flex items-center justify-between text-slate-900">
             <div className="flex items-center gap-2">
               <Heart className="w-5 h-5 text-blue-600" />
               Past Medical History
@@ -120,12 +120,12 @@ export default function HealthHistorySection({ patient }) {
               {patient.past_medical_history.map((condition, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
-                  <span className="text-sm text-gray-900">{condition}</span>
+                  <span className="text-sm text-slate-900">{condition}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-gray-500 italic">No past medical history recorded</p>
+            <p className="text-sm text-slate-500 italic">No past medical history recorded</p>
           )}
         </CardContent>
       </Card>
@@ -133,7 +133,7 @@ export default function HealthHistorySection({ patient }) {
       {/* Surgeries & Hospitalizations */}
       <Card>
         <CardHeader className="bg-purple-50">
-          <CardTitle className="text-lg flex items-center justify-between text-gray-900">
+          <CardTitle className="text-lg flex items-center justify-between text-slate-900">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-purple-600" />
               Surgeries & Hospitalizations
@@ -147,14 +147,14 @@ export default function HealthHistorySection({ patient }) {
           {patient.past_hospitalizations?.length > 0 ? (
             <div className="space-y-3">
               {patient.past_hospitalizations.map((hosp, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <div key={index} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{hosp.reason}</p>
+                      <p className="font-medium text-slate-900">{hosp.reason}</p>
                       {hosp.hospital && (
-                        <p className="text-sm text-gray-600 mt-1">{hosp.hospital}</p>
+                        <p className="text-sm text-slate-600 mt-1">{hosp.hospital}</p>
                       )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                         {hosp.date && (
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
@@ -171,7 +171,7 @@ export default function HealthHistorySection({ patient }) {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 italic">No hospitalizations recorded</p>
+            <p className="text-sm text-slate-500 italic">No hospitalizations recorded</p>
           )}
         </CardContent>
       </Card>
@@ -179,7 +179,7 @@ export default function HealthHistorySection({ patient }) {
       {/* Family Medical History */}
       <Card>
         <CardHeader className="bg-green-50">
-          <CardTitle className="text-lg flex items-center justify-between text-gray-900">
+          <CardTitle className="text-lg flex items-center justify-between text-slate-900">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-green-600" />
               Family Medical History
@@ -192,10 +192,10 @@ export default function HealthHistorySection({ patient }) {
         <CardContent className="pt-4">
           {patient.family_medical_history ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-sm text-gray-900 whitespace-pre-wrap">{patient.family_medical_history}</p>
+              <p className="text-sm text-slate-900 whitespace-pre-wrap">{patient.family_medical_history}</p>
             </div>
           ) : (
-            <p className="text-sm text-gray-500 italic">No family medical history recorded</p>
+            <p className="text-sm text-slate-500 italic">No family medical history recorded</p>
           )}
         </CardContent>
       </Card>

@@ -247,7 +247,7 @@ Provide detailed feedback in JSON format:
                     <Badge variant="outline">{scenario.category}</Badge>
                   </div>
                   <h3 className="font-semibold text-lg mb-2">{scenario.title}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{scenario.description}</p>
+                  <p className="text-sm text-slate-600 mb-3">{scenario.description}</p>
                   <Button size="sm" className="w-full">
                     Start Practice <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -288,8 +288,8 @@ Provide detailed feedback in JSON format:
         </CardHeader>
         <CardContent>
           <div className="bg-white p-4 rounded-lg border border-indigo-200">
-            <h4 className="font-semibold text-gray-900 mb-2">Scenario:</h4>
-            <p className="text-gray-700">{selectedScenario.scenario}</p>
+            <h4 className="font-semibold text-slate-900 mb-2">Scenario:</h4>
+            <p className="text-slate-700">{selectedScenario.scenario}</p>
           </div>
         </CardContent>
       </Card>
@@ -379,7 +379,7 @@ Provide detailed feedback in JSON format:
             </div>
 
             <div className="bg-white p-4 rounded-lg border">
-              <p className="text-gray-700">{feedback.overallFeedback}</p>
+              <p className="text-slate-700">{feedback.overallFeedback}</p>
             </div>
 
             {feedback.elementsPresent?.length > 0 && (
@@ -390,7 +390,7 @@ Provide detailed feedback in JSON format:
                 </h4>
                 <ul className="space-y-1">
                   {feedback.elementsPresent.map((item, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                    <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                       <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
@@ -407,7 +407,7 @@ Provide detailed feedback in JSON format:
                 </h4>
                 <ul className="space-y-1">
                   {feedback.elementsMissing.map((item, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                    <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                       <XCircle className="w-3 h-3 text-orange-600 mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
@@ -424,15 +424,15 @@ Provide detailed feedback in JSON format:
                 </h4>
                 <ul className="space-y-2">
                   {feedback.improvements.map((item, idx) => (
-                    <li key={idx} className="text-sm text-gray-700">{item}</li>
+                    <li key={idx} className="text-sm text-slate-700">{item}</li>
                   ))}
                 </ul>
               </div>
             )}
 
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <h4 className="font-semibold text-gray-900 mb-2">Good Example:</h4>
-              <p className="text-sm text-gray-700 italic">{selectedScenario.goodExample}</p>
+            <div className="bg-white p-4 rounded-lg border border-slate-200">
+              <h4 className="font-semibold text-slate-900 mb-2">Good Example:</h4>
+              <p className="text-sm text-slate-700 italic">{selectedScenario.goodExample}</p>
             </div>
 
             <div className="flex gap-2">

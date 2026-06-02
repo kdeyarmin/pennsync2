@@ -155,7 +155,7 @@ Focus on:
             rows={6}
             className="font-mono text-sm"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {clinicalNotes.length} characters
             {extractedNarrative && ' • Narrative extracted from uploaded OASIS'}
           </p>
@@ -268,7 +268,7 @@ Focus on:
                           <p className="text-blue-900 italic">"{field.supporting_quote}"</p>
                         </div>
 
-                        <p className="text-xs text-gray-700 mb-2">{field.rationale}</p>
+                        <p className="text-xs text-slate-700 mb-2">{field.rationale}</p>
 
                         {field.additional_documentation_needed && (
                           <div className="bg-yellow-50 p-2 rounded text-xs border border-yellow-200">
@@ -295,7 +295,7 @@ Focus on:
                       <p className="font-medium text-orange-800">
                         {item.m_item_code}: {item.m_item_name}
                       </p>
-                      <p className="text-xs text-gray-700 mt-1">{item.why_important}</p>
+                      <p className="text-xs text-slate-700 mt-1">{item.why_important}</p>
                       <p className="text-xs text-blue-700 mt-1 italic">
                         Ask: "{item.suggested_assessment_question}"
                       </p>
@@ -314,7 +314,7 @@ Focus on:
                   {mappedFields.documentation_gaps.map((gap, idx) => (
                     <div key={idx} className="bg-white p-2 rounded text-sm">
                       <p className="font-medium text-red-800">{gap.area}</p>
-                      <p className="text-xs text-gray-700 mt-1">Missing: {gap.what_is_missing}</p>
+                      <p className="text-xs text-slate-700 mt-1">Missing: {gap.what_is_missing}</p>
                       <div className="bg-green-50 p-2 rounded mt-2 text-xs">
                         <p className="text-green-700">
                           <strong>Add:</strong> {gap.suggested_addition}

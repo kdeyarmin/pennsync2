@@ -96,10 +96,10 @@ export default function DischargeReportUploader() {
           />
           <label htmlFor="discharge-report-upload" className="cursor-pointer">
             <Upload className="w-12 h-12 mx-auto mb-3 text-orange-400" />
-            <p className="text-sm font-medium text-gray-700 mb-1">
+            <p className="text-sm font-medium text-slate-700 mb-1">
               {file ? file.name : 'Click to upload discharge report'}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               PDF, CSV, PNG, or JPG format accepted
             </p>
           </label>
@@ -110,10 +110,10 @@ export default function DischargeReportUploader() {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
-              <span className="text-sm text-gray-600 font-medium">Processing discharge report...</span>
+              <span className="text-sm text-slate-600 font-medium">Processing discharge report...</span>
             </div>
             <Progress value={50} className="h-2" />
-            <p className="text-xs text-gray-500">Extracting patient data and updating records...</p>
+            <p className="text-xs text-slate-500">Extracting patient data and updating records...</p>
           </div>
         )}
 
@@ -156,7 +156,7 @@ export default function DischargeReportUploader() {
             {/* Discharged Patients List */}
             {results.discharged_patients && results.discharged_patients.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
                   <UserX className="w-5 h-5 text-orange-600" />
                   Discharged Patients ({results.discharged_patients.length})
                 </h3>
@@ -170,11 +170,11 @@ export default function DischargeReportUploader() {
                               <UserX className="w-4 h-4 text-orange-600" />
                               <span className="font-medium text-orange-900">{patient.name}</span>
                             </div>
-                            <p className="text-xs text-gray-600 mt-1">
+                            <p className="text-xs text-slate-600 mt-1">
                               MRN: {patient.mrn} • Discharge Date: {patient.discharge_date || 'N/A'}
                             </p>
                             {patient.discharge_reason && (
-                              <p className="text-xs text-gray-700 mt-1 italic">
+                              <p className="text-xs text-slate-700 mt-1 italic">
                                 Reason: {patient.discharge_reason}
                               </p>
                             )}

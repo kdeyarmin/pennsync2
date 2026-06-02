@@ -72,7 +72,7 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
         <CardContent className="p-4">
           <div className="grid md:grid-cols-4 gap-4">
             <div className="md:col-span-2 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search training modules..."
                 value={searchTerm}
@@ -126,12 +126,12 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
                   )}
                 </div>
 
-                <h3 className="font-semibold text-gray-900 mb-2">{module.title}</h3>
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                <h3 className="font-semibold text-slate-900 mb-2">{module.title}</h3>
+                <p className="text-sm text-slate-600 mb-4 line-clamp-2">
                   {module.description}
                 </p>
 
-                <div className="flex items-center gap-4 text-xs text-gray-600 mb-4">
+                <div className="flex items-center gap-4 text-xs text-slate-600 mb-4">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {module.duration_minutes} min
@@ -150,7 +150,7 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
                 {completion?.score !== undefined && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-gray-600">Your Score:</span>
+                      <span className="text-slate-600">Your Score:</span>
                       <span className={`font-semibold ${
                         completion.score >= (module.passing_score || 80) 
                           ? 'text-green-600' 
@@ -180,7 +180,7 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
 
       {filteredModules.length === 0 && (
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-12 text-center text-slate-500">
             <p>No training modules found matching your filters</p>
           </CardContent>
         </Card>

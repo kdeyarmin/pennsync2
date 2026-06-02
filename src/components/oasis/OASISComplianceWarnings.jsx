@@ -103,7 +103,7 @@ export default function OASISComplianceWarnings({ issues }) {
             <span className="text-xs font-medium">No compliance flags detected</span>
           </div>
         ) : (
-          <p className="text-xs text-gray-400">Complete the assessment to see compliance flags</p>
+          <p className="text-xs text-slate-400">Complete the assessment to see compliance flags</p>
         )}
       </div>
     );
@@ -134,7 +134,7 @@ export default function OASISComplianceWarnings({ issues }) {
               <div className="flex-1 min-w-0">
                 <p className={`text-xs font-bold ${cfg.text}`}>{rule.title}</p>
                 <p className={`text-xs ${cfg.text} mt-0.5 leading-relaxed opacity-90`}>{rule.message}</p>
-                <p className="text-[10px] text-gray-400 mt-1 font-mono">CMS Ref: {rule.cms_ref}</p>
+                <p className="text-[10px] text-slate-400 mt-1 font-mono">CMS Ref: {rule.cms_ref}</p>
               </div>
             </div>
           </div>

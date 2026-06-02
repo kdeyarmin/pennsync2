@@ -165,7 +165,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
       <CardContent className="p-6 space-y-4">
         {!transcriptionResult ? (
           <>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Record or upload audio of a patient conversation. The AI will transcribe and extract clinical data.
             </p>
 
@@ -176,7 +176,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
               </TabsList>
 
               <TabsContent value="upload" className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
                   <input
                     type="file"
                     accept="audio/*"
@@ -186,23 +186,23 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                     disabled={isProcessing}
                   />
                   <label htmlFor="audio-upload" className="cursor-pointer">
-                    <Upload className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-                    <p className="text-sm font-medium text-gray-700">
+                    <Upload className="w-10 h-10 mx-auto mb-3 text-slate-400" />
+                    <p className="text-sm font-medium text-slate-700">
                       {audioFile ? audioFile.name : 'Click to upload audio file'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">MP3, WAV, WebM, or other audio formats</p>
+                    <p className="text-xs text-slate-500 mt-1">MP3, WAV, WebM, or other audio formats</p>
                   </label>
                 </div>
               </TabsContent>
 
               <TabsContent value="record" className="space-y-4">
-                <div className="border rounded-lg p-6 text-center bg-gray-50">
+                <div className="border rounded-lg p-6 text-center bg-slate-50">
                   {isRecording ? (
                     <>
                       <div className="w-16 h-16 bg-red-500 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
                         <Mic className="w-8 h-8 text-white" />
                       </div>
-                      <p className="text-sm font-medium text-gray-900 mb-2">Recording in progress...</p>
+                      <p className="text-sm font-medium text-slate-900 mb-2">Recording in progress...</p>
                       <Button onClick={stopRecording} variant="destructive">
                         Stop Recording
                       </Button>
@@ -212,7 +212,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                       <div className="w-16 h-16 bg-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                         <Mic className="w-8 h-8 text-white" />
                       </div>
-                      <p className="text-sm font-medium text-gray-900 mb-2">
+                      <p className="text-sm font-medium text-slate-900 mb-2">
                         {audioFile ? 'Recording captured' : 'Ready to record'}
                       </p>
                       <Button onClick={startRecording} className="bg-purple-600 hover:bg-purple-700">
@@ -327,8 +327,8 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                           {transcriptionResult.structured_data.new_medications.map((med, idx) => (
                             <div key={idx} className="text-sm border-l-2 border-purple-300 pl-2">
                               <p className="font-medium">{med.name}</p>
-                              <p className="text-gray-600">{med.dosage} - {med.frequency}</p>
-                              {med.instructions && <p className="text-xs text-gray-500">{med.instructions}</p>}
+                              <p className="text-slate-600">{med.dosage} - {med.frequency}</p>
+                              {med.instructions && <p className="text-xs text-slate-500">{med.instructions}</p>}
                             </div>
                           ))}
                         </div>

@@ -102,11 +102,11 @@ export default function DataQualityDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Data Quality Dashboard</h2>
-          <p className="text-sm text-gray-500">Monitor data completeness and compliance</p>
+          <h2 className="text-2xl font-bold text-slate-900">Data Quality Dashboard</h2>
+          <p className="text-sm text-slate-500">Monitor data completeness and compliance</p>
         </div>
         <div className="text-right">
-          <p className="text-sm text-gray-500">Overall Score</p>
+          <p className="text-sm text-slate-500">Overall Score</p>
           <p className="text-3xl font-bold text-indigo-600">{overallScore}%</p>
         </div>
       </div>
@@ -124,12 +124,12 @@ export default function DataQualityDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Patient Records</CardTitle>
-            <Users className="h-4 w-4 text-gray-500" />
+            <Users className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{qualityMetrics.patientCompleteness}%</div>
             <Progress value={parseFloat(qualityMetrics.patientCompleteness)} className="mt-2" />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2">
               {qualityMetrics.patientIssues.length} records missing critical data
             </p>
           </CardContent>
@@ -138,12 +138,12 @@ export default function DataQualityDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">User Profiles</CardTitle>
-            <Users className="h-4 w-4 text-gray-500" />
+            <Users className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{qualityMetrics.userCompleteness}%</div>
             <Progress value={parseFloat(qualityMetrics.userCompleteness)} className="mt-2" />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2">
               {qualityMetrics.userIssues.length} profiles incomplete
             </p>
           </CardContent>
@@ -152,12 +152,12 @@ export default function DataQualityDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Visit Documentation</CardTitle>
-            <FileText className="h-4 w-4 text-gray-500" />
+            <FileText className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{qualityMetrics.visitCompleteness}%</div>
             <Progress value={parseFloat(qualityMetrics.visitCompleteness)} className="mt-2" />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2">
               {qualityMetrics.visitIssues.length} visits need improvement
             </p>
           </CardContent>
@@ -166,12 +166,12 @@ export default function DataQualityDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Credential Tracking</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-gray-500" />
+            <ClipboardCheck className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{qualityMetrics.credentialCoverage}%</div>
             <Progress value={parseFloat(qualityMetrics.credentialCoverage)} className="mt-2" />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2">
               {qualityMetrics.missingCredentials} employees need credential upload
             </p>
           </CardContent>
@@ -192,7 +192,7 @@ export default function DataQualityDashboard() {
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {qualityMetrics.patientIssues.slice(0, 10).map(patient => (
-                  <div key={patient.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={patient.id} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                     <span className="text-sm font-medium">{patient.first_name} {patient.last_name}</span>
                     <Badge variant="outline" className="text-xs">
                       Missing: {[
@@ -205,7 +205,7 @@ export default function DataQualityDashboard() {
                   </div>
                 ))}
                 {qualityMetrics.patientIssues.length > 10 && (
-                  <p className="text-xs text-gray-500 text-center pt-2">
+                  <p className="text-xs text-slate-500 text-center pt-2">
                     +{qualityMetrics.patientIssues.length - 10} more patients
                   </p>
                 )}
@@ -227,7 +227,7 @@ export default function DataQualityDashboard() {
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {qualityMetrics.userIssues.slice(0, 10).map(user => (
-                  <div key={user.email} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={user.email} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                     <span className="text-sm font-medium">{user.full_name}</span>
                     <Badge variant="outline" className="text-xs">
                       Missing: {[
@@ -239,7 +239,7 @@ export default function DataQualityDashboard() {
                   </div>
                 ))}
                 {qualityMetrics.userIssues.length > 10 && (
-                  <p className="text-xs text-gray-500 text-center pt-2">
+                  <p className="text-xs text-slate-500 text-center pt-2">
                     +{qualityMetrics.userIssues.length - 10} more users
                   </p>
                 )}

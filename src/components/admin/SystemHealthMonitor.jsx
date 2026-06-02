@@ -41,14 +41,14 @@ function MetricCard({ label, value, unit, status, trend, icon: Icon }) {
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           <StatusDot status={status} />
-          <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{label}</span>
+          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{label}</span>
         </div>
         <Icon className={`w-4 h-4 ${textColor}`} />
       </div>
       <p className={`text-2xl font-bold ${textColor}`}>{value}{unit && <span className="text-sm font-normal ml-0.5">{unit}</span>}</p>
       <div className="flex items-center gap-1 mt-1">
-        <TrendIcon className="w-3 h-3 text-gray-400" />
-        <span className="text-xs text-gray-400">vs last check</span>
+        <TrendIcon className="w-3 h-3 text-slate-400" />
+        <span className="text-xs text-slate-400">vs last check</span>
       </div>
     </div>
   );
@@ -63,9 +63,9 @@ function AlertBanner({ alerts, onDismiss }) {
           <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${a.level === "critical" ? "text-red-600" : "text-yellow-600"}`} />
           <div className="flex-1 min-w-0">
             <p className={`text-sm font-semibold ${a.level === "critical" ? "text-red-800" : "text-yellow-800"}`}>{a.title}</p>
-            <p className="text-xs text-gray-600 mt-0.5">{a.message}</p>
+            <p className="text-xs text-slate-600 mt-0.5">{a.message}</p>
           </div>
-          <button onClick={() => onDismiss(i)} className="text-gray-400 hover:text-gray-600 shrink-0">
+          <button onClick={() => onDismiss(i)} className="text-slate-400 hover:text-slate-600 shrink-0">
             <XCircle className="w-4 h-4" />
           </button>
         </div>
@@ -201,8 +201,8 @@ export default function SystemHealthMonitor() {
         <div className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 ${statusBg[overallStatus]}`}>
           <StatusIcon className={`w-5 h-5 ${overallStatus === "good" ? "text-green-600" : overallStatus === "warn" ? "text-yellow-600" : "text-red-600"}`} />
           <div className="flex-1">
-            <p className="font-semibold text-gray-800 text-sm">{statusLabel[overallStatus]}</p>
-            {lastUpdated && <p className="text-xs text-gray-500">Last checked {lastUpdated.toLocaleTimeString()}</p>}
+            <p className="font-semibold text-slate-800 text-sm">{statusLabel[overallStatus]}</p>
+            {lastUpdated && <p className="text-xs text-slate-500">Last checked {lastUpdated.toLocaleTimeString()}</p>}
           </div>
           <Badge className={overallStatus === "good" ? "bg-green-100 text-green-800" : overallStatus === "warn" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}>
             {overallStatus.toUpperCase()}
@@ -257,17 +257,17 @@ export default function SystemHealthMonitor() {
             { label: "Visits Today", value: metrics.visits_today ?? "—", icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
             { label: "Total Users", value: metrics.total_users ?? "—", icon: Cpu, color: "text-purple-600", bg: "bg-purple-50" },
           ].map(({ label, value, icon: Icon, color, bg }) => (
-            <div key={label} className={`rounded-xl p-3 ${bg} border border-gray-100`}>
+            <div key={label} className={`rounded-xl p-3 ${bg} border border-slate-100`}>
               <div className="flex items-center gap-2 mb-1">
                 <Icon className={`w-3.5 h-3.5 ${color}`} />
-                <span className="text-xs text-gray-500 font-medium">{label}</span>
+                <span className="text-xs text-slate-500 font-medium">{label}</span>
               </div>
               <p className={`text-xl font-bold ${color}`}>{value}</p>
             </div>
           ))}
         </div>
 
-        <p className="text-xs text-gray-400 text-center">Auto-refreshes every 30s · API response simulated for demo; entity counts are live</p>
+        <p className="text-xs text-slate-400 text-center">Auto-refreshes every 30s · API response simulated for demo; entity counts are live</p>
       </CardContent>
     </Card>
   );

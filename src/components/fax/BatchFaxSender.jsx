@@ -199,9 +199,9 @@ export default function BatchFaxSender({ prefilledData }) {
               {files.map((f, idx) => (
                 <div
                   key={f.id}
-                  className="flex items-center gap-2 bg-gray-50 border rounded-lg px-3 py-2"
+                  className="flex items-center gap-2 bg-slate-50 border rounded-lg px-3 py-2"
                 >
-                  <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  <GripVertical className="w-4 h-4 text-slate-300 flex-shrink-0" />
                   {f.type === "image"
                     ? <Image className="w-4 h-4 text-blue-500 flex-shrink-0" />
                     : <FileText className="w-4 h-4 text-red-500 flex-shrink-0" />}
@@ -210,10 +210,10 @@ export default function BatchFaxSender({ prefilledData }) {
                     {f.type === "image" ? "photo" : "PDF"}
                   </Badge>
                   <div className="flex flex-col">
-                    <button onClick={() => moveFile(idx, -1)} disabled={idx === 0} className="text-gray-400 hover:text-gray-600 disabled:opacity-20">
+                    <button onClick={() => moveFile(idx, -1)} disabled={idx === 0} className="text-slate-400 hover:text-slate-600 disabled:opacity-20">
                       <ChevronUp className="w-3 h-3" />
                     </button>
-                    <button onClick={() => moveFile(idx, 1)} disabled={idx === files.length - 1} className="text-gray-400 hover:text-gray-600 disabled:opacity-20">
+                    <button onClick={() => moveFile(idx, 1)} disabled={idx === files.length - 1} className="text-slate-400 hover:text-slate-600 disabled:opacity-20">
                       <ChevronDown className="w-3 h-3" />
                     </button>
                   </div>
@@ -225,7 +225,7 @@ export default function BatchFaxSender({ prefilledData }) {
             </div>
 
             {files.length > 1 && (
-              <p className="text-xs text-gray-500 flex items-center gap-1">
+              <p className="text-xs text-slate-500 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 Files will be merged in the order shown above
               </p>
@@ -235,7 +235,7 @@ export default function BatchFaxSender({ prefilledData }) {
 
         {/* Recipient */}
         <div className="space-y-2">
-          <Label className="text-sm font-semibold text-gray-700">Recipient Fax Number</Label>
+          <Label className="text-sm font-semibold text-slate-700">Recipient Fax Number</Label>
           <Input
             type="tel"
             placeholder="+1234567890"

@@ -1583,7 +1583,7 @@ Return JSON:
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'critical': return 'bg-red-100 text-red-800 border-red-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -1593,7 +1593,7 @@ Return JSON:
       medium: 'bg-yellow-500',
       low: 'bg-blue-500'
     };
-    return colors[impact] || 'bg-gray-500';
+    return colors[impact] || 'bg-slate-500';
   };
 
   const copyToClipboard = (text, id) => {
@@ -1671,13 +1671,13 @@ Return JSON:
                 <FileCheck className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   OASIS Compliance Scrubber
                   {isOASISVisit && (
                     <Badge className="bg-blue-600">OASIS Visit</Badge>
                   )}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   Check for missing OASIS data elements and reimbursement risks
                 </p>
               </div>
@@ -1763,7 +1763,7 @@ Return JSON:
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowExtractedIndicators(!showExtractedIndicators)}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-slate-600 hover:text-slate-900"
               >
                 {showExtractedIndicators ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                 {showExtractedIndicators ? 'Hide' : 'Show'} Extracted Clinical Indicators
@@ -1772,7 +1772,7 @@ Return JSON:
               {showExtractedIndicators && (
                 <div className="mt-3 bg-white rounded-lg border p-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                       <BarChart3 className="w-4 h-4" />
                       Pre-Analysis Extraction Results
                     </h4>
@@ -1839,11 +1839,11 @@ Return JSON:
                               <div className={`p-2 rounded border ${
                                 indicator?.detected
                                   ? cs.bg
-                                  : 'bg-gray-50 border-gray-200'
+                                  : 'bg-slate-50 border-slate-200'
                               }`}>
                                 <div className="flex items-center gap-2">
-                                  <Icon className={`w-4 h-4 ${indicator?.detected ? cs.text : 'text-gray-400'}`} />
-                                  <span className={`text-xs font-medium ${indicator?.detected ? cs.label : 'text-gray-500'}`}>
+                                  <Icon className={`w-4 h-4 ${indicator?.detected ? cs.text : 'text-slate-400'}`} />
+                                  <span className={`text-xs font-medium ${indicator?.detected ? cs.label : 'text-slate-500'}`}>
                                     {label}
                                   </span>
                                 </div>
@@ -1861,7 +1861,7 @@ Return JSON:
                                 <div className="text-xs space-y-1">
                                   <p className="font-semibold">Relevant phrases:</p>
                                   {indicator.sentences.slice(0, 3).map((s, i) => (
-                                    <p key={i} className="text-gray-600">"{s.substring(0, 100)}..."</p>
+                                    <p key={i} className="text-slate-600">"{s.substring(0, 100)}..."</p>
                                   ))}
                                 </div>
                               ) : (
@@ -1893,21 +1893,21 @@ Return JSON:
                             alert.severity === 'high' ? 'border-red-300' : 'border-blue-200'
                           }`}>
                             <div className="flex items-start justify-between gap-2 mb-1">
-                              <p className="text-xs font-semibold text-gray-900">{alert.title}</p>
+                              <p className="text-xs font-semibold text-slate-900">{alert.title}</p>
                               <Badge className={`${
                                 alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
                               } text-white text-xs flex-shrink-0`}>
                                 {alert.severity}
                               </Badge>
                             </div>
-                            <p className="text-xs text-gray-700 mb-2">{alert.guideline}</p>
+                            <p className="text-xs text-slate-700 mb-2">{alert.guideline}</p>
                             <div className="flex flex-wrap gap-1 mb-1">
                               {alert.actions.slice(0, 3).map((action, i) => (
                                 <Badge key={i} variant="outline" className="text-xs bg-blue-50">✓ {action}</Badge>
                               ))}
                             </div>
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
-                              <p className="text-xs text-gray-500">
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
+                              <p className="text-xs text-slate-500">
                                 <strong>CMS:</strong> {alert.cmsReference}
                               </p>
                               <Button
@@ -1941,7 +1941,7 @@ Return JSON:
                         <span className="text-sm font-medium text-green-900">Identified Comorbidities</span>
                         <Badge className={`${
                           extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
-                          extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-gray-500'
+                          extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-slate-500'
                         }`}>
                           {extractedIndicators.comorbidities.adjustment} adjustment
                         </Badge>
@@ -1970,10 +1970,10 @@ Return JSON:
                       const phrases = extractedIndicators.functional[key];
                       const count = phrases?.allPhrases?.length || 0;
                       return (
-                        <div key={key} className={`p-2 rounded border text-center ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                        <div key={key} className={`p-2 rounded border text-center ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
                           <span className="text-lg">{icon}</span>
-                          <p className={`font-medium ${count > 0 ? 'text-blue-900' : 'text-gray-500'}`}>{label}</p>
-                          <p className={count > 0 ? 'text-blue-700' : 'text-gray-400'}>{count} phrases</p>
+                          <p className={`font-medium ${count > 0 ? 'text-blue-900' : 'text-slate-500'}`}>{label}</p>
+                          <p className={count > 0 ? 'text-blue-700' : 'text-slate-400'}>{count} phrases</p>
                         </div>
                       );
                     })}
@@ -2002,8 +2002,8 @@ Return JSON:
             <div className="py-12 text-center space-y-4">
               <Sparkles className="w-16 h-16 mx-auto text-green-600 animate-pulse" />
               <div>
-                <p className="text-lg font-semibold text-gray-900">Analyzing OASIS Compliance...</p>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-lg font-semibold text-slate-900">Analyzing OASIS Compliance...</p>
+                <p className="text-sm text-slate-600 mt-2">
                   Checking against CMS OASIS-E 2024 requirements for {visit?.visit_type?.replace(/_/g, ' ')} visits
                 </p>
                 <div className="flex justify-center gap-2 mt-4">
@@ -2049,7 +2049,7 @@ Return JSON:
               {/* Filter and Export Controls */}
               <div className="flex items-center justify-between mb-4 pb-3 border-b">
                 <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-gray-500" />
+                  <Filter className="w-4 h-4 text-slate-500" />
                   <Select value={analysisFilter} onValueChange={setAnalysisFilter}>
                     <SelectTrigger className="w-40 h-8 text-sm">
                       <SelectValue placeholder="Filter results" />
@@ -2091,7 +2091,7 @@ Return JSON:
                                       <div className={`w-2 h-2 rounded-full ${
                                         alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
                                       }`} />
-                                      <h5 className="font-bold text-gray-900">{alert.title}</h5>
+                                      <h5 className="font-bold text-slate-900">{alert.title}</h5>
                                     </div>
                                     <Badge className={`${
                                       alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
@@ -2106,10 +2106,10 @@ Return JSON:
                                   </div>
 
                                   <div className="mb-2">
-                                    <p className="text-xs font-semibold text-gray-700 mb-1">Recommended Actions:</p>
+                                    <p className="text-xs font-semibold text-slate-700 mb-1">Recommended Actions:</p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                                       {alert.actions.map((action, i) => (
-                                        <div key={i} className="flex items-center gap-1 text-xs text-gray-700">
+                                        <div key={i} className="flex items-center gap-1 text-xs text-slate-700">
                                           <CheckCircle2 className="w-3 h-3 text-green-600 flex-shrink-0" />
                                           {action}
                                         </div>
@@ -2127,7 +2127,7 @@ Return JSON:
                                   )}
 
                                   <div className="flex items-center justify-between pt-2 border-t">
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-slate-500">
                                       <strong>CMS Reference:</strong> {alert.cmsReference}
                                     </p>
                                     <Button
@@ -2179,7 +2179,7 @@ Return JSON:
                           </div>
                           {extractedIndicators.clinicalGroup.matchedPatterns.length > 0 && (
                             <div>
-                              <p className="text-xs text-gray-500 mb-1">Matched Patterns:</p>
+                              <p className="text-xs text-slate-500 mb-1">Matched Patterns:</p>
                               <div className="flex flex-wrap gap-1">
                                 {extractedIndicators.clinicalGroup.matchedPatterns.map((p, i) => (
                                   <Badge key={i} variant="outline" className="text-xs">{p}</Badge>
@@ -2198,7 +2198,7 @@ Return JSON:
                             Comorbidity Analysis
                             <Badge className={`ml-auto ${
                               extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
-                              extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-gray-500'
+                              extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-slate-500'
                             }`}>
                               {extractedIndicators.comorbidities.adjustment?.toUpperCase()} Adjustment
                             </Badge>
@@ -2219,7 +2219,7 @@ Return JSON:
                                   ))}
                                 </ul>
                               ) : (
-                                <p className="text-sm text-gray-500">None identified</p>
+                                <p className="text-sm text-slate-500">None identified</p>
                               )}
                             </div>
                             <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
@@ -2234,7 +2234,7 @@ Return JSON:
                                   ))}
                                 </ul>
                               ) : (
-                                <p className="text-sm text-gray-500">None identified</p>
+                                <p className="text-sm text-slate-500">None identified</p>
                               )}
                             </div>
                           </div>
@@ -2243,9 +2243,9 @@ Return JSON:
 
                       {/* Clinical Indicators Detail */}
                       <Card>
-                        <CardHeader className="py-3 bg-gray-50">
+                        <CardHeader className="py-3 bg-slate-50">
                           <CardTitle className="text-sm flex items-center gap-2">
-                            <Brain className="w-4 h-4 text-gray-600" />
+                            <Brain className="w-4 h-4 text-slate-600" />
                             Clinical Indicators Extracted
                           </CardTitle>
                         </CardHeader>
@@ -2280,10 +2280,10 @@ Return JSON:
                               const cs = colorStyles[color] || colorStyles.blue;
                               if (!indicator) return null;
                               return (
-                                <div key={key} className={`p-3 rounded border ${indicator.detected ? cs.bg : 'bg-gray-50 border-gray-200'}`}>
+                                <div key={key} className={`p-3 rounded border ${indicator.detected ? cs.bg : 'bg-slate-50 border-slate-200'}`}>
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                      <Icon className={`w-4 h-4 ${indicator.detected ? cs.text : 'text-gray-400'}`} />
+                                      <Icon className={`w-4 h-4 ${indicator.detected ? cs.text : 'text-slate-400'}`} />
                                       <span className="font-medium text-sm">{label}</span>
                                     </div>
                                     {indicator.detected ? (
@@ -2296,7 +2296,7 @@ Return JSON:
                                     <div className="mt-2 space-y-1 max-h-24 overflow-y-auto">
                                       {indicator.sentences.slice(0, 3).map((s, i) => (
                                         <div key={i} className="flex items-start gap-1 group">
-                                          <p className="text-xs text-gray-600 italic flex-1">"{s.substring(0, 150)}{s.length > 150 ? '...' : ''}"</p>
+                                          <p className="text-xs text-slate-600 italic flex-1">"{s.substring(0, 150)}{s.length > 150 ? '...' : ''}"</p>
                                           <Button
                                             variant="ghost"
                                             size="sm"
@@ -2344,7 +2344,7 @@ Return JSON:
                               const phrases = extractedIndicators.functional[key];
                               const count = phrases?.allPhrases?.length || 0;
                               return (
-                                <div key={key} className={`p-3 rounded border ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                                <div key={key} className={`p-3 rounded border ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                       <span className="text-lg">{icon}</span>
@@ -2360,11 +2360,11 @@ Return JSON:
                                     ))}
                                   </div>
                                   {count > 0 && phrases.allPhrases?.slice(0, 2).map((s, i) => (
-                                    <p key={i} className="text-xs text-gray-600 italic mb-1">"{s.substring(0, 80)}..."</p>
+                                    <p key={i} className="text-xs text-slate-600 italic mb-1">"{s.substring(0, 80)}..."</p>
                                   ))}
                                   {phrases?.assistLevel?.length > 0 && (
                                     <div className="mt-2 pt-2 border-t">
-                                      <p className="text-xs text-gray-500">Assist Levels Found:</p>
+                                      <p className="text-xs text-slate-500">Assist Levels Found:</p>
                                       {phrases.assistLevel.slice(0, 2).map((a, i) => (
                                         <Badge key={i} variant="outline" className="text-xs mr-1 mt-1">{a.substring(0, 40)}</Badge>
                                       ))}
@@ -2378,7 +2378,7 @@ Return JSON:
                       </Card>
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-gray-500">
+                    <div className="text-center py-12 text-slate-500">
                       <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>Run the OASIS analysis to see extracted indicators</p>
                     </div>
@@ -2418,7 +2418,7 @@ Return JSON:
                     </Alert>
                     {acceptedSuggestions.length > 0 && (
                       <div className="mt-4">
-                        <h4 className="font-semibold text-gray-900 mb-2">Applied Suggestions:</h4>
+                        <h4 className="font-semibold text-slate-900 mb-2">Applied Suggestions:</h4>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {acceptedSuggestions.map((s, idx) => (
                             <div key={idx} className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200 text-sm">
@@ -2455,7 +2455,7 @@ Return JSON:
                       <p className="font-bold text-lg">
                         {oasisResults.ready_for_submission ? 'Ready for Submission' : 'Action Required'}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         {oasisResults.critical_missing?.length || 0} missing items • 
                         {oasisResults.underscoring_opportunities?.length || 0} revenue opportunities • 
                         {oasisResults.overscoring_risks?.length || 0} audit risks
@@ -2503,33 +2503,33 @@ Return JSON:
               </div>
 
               {/* Overall Score Card */}
-              <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+              <div className="bg-white rounded-lg border-2 border-slate-200 p-6">
                 <div className="grid grid-cols-2 gap-6 mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-1">
                       Completeness: {oasisResults.completeness_percentage}%
                     </h3>
-                    <p className="text-sm text-gray-600">OASIS data elements documented</p>
+                    <p className="text-sm text-slate-600">OASIS data elements documented</p>
                     <Progress value={oasisResults.completeness_percentage} className="h-3 mt-2" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-1">
                       Quality Score: {oasisResults.overall_score}/100
                     </h3>
-                    <p className="text-sm text-gray-600">Documentation quality rating</p>
+                    <p className="text-sm text-slate-600">Documentation quality rating</p>
                     <Progress value={oasisResults.overall_score} className="h-3 mt-2" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Reimbursement Risk</p>
+                    <p className="text-xs text-slate-500 mb-1">Reimbursement Risk</p>
                     <Badge className={getRiskColor(oasisResults.reimbursement_risk_level)}>
                       {oasisResults.reimbursement_risk_level?.toUpperCase()} RISK
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Submission Status</p>
+                    <p className="text-xs text-slate-500 mb-1">Submission Status</p>
                     {oasisResults.ready_for_submission ? (
                       <Badge className="bg-green-100 text-green-800 border-green-300">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -2556,8 +2556,8 @@ Return JSON:
                     <div className="bg-white p-3 rounded border mb-3">
                       <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
                         <div>
-                          <p className="text-xs text-gray-500">Clinical Group (MMTA)</p>
-                          <p className="font-bold text-gray-900">{oasisResults.pdgm_analysis.clinical_group}</p>
+                          <p className="text-xs text-slate-500">Clinical Group (MMTA)</p>
+                          <p className="font-bold text-slate-900">{oasisResults.pdgm_analysis.clinical_group}</p>
                         </div>
                         <Badge className={`${
                           oasisResults.pdgm_analysis.clinical_group_confidence === 'high' ? 'bg-green-600' :
@@ -2567,7 +2567,7 @@ Return JSON:
                         </Badge>
                       </div>
                       {oasisResults.pdgm_analysis.clinical_group_rationale && (
-                        <p className="text-xs text-gray-600 mt-1">{oasisResults.pdgm_analysis.clinical_group_rationale}</p>
+                        <p className="text-xs text-slate-600 mt-1">{oasisResults.pdgm_analysis.clinical_group_rationale}</p>
                       )}
                       {oasisResults.pdgm_analysis.primary_dx_icd10_suggested && (
                         <p className="text-xs text-blue-700 mt-1">
@@ -2576,7 +2576,7 @@ Return JSON:
                       )}
                       {oasisResults.pdgm_analysis.alternative_clinical_groups?.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          <span className="text-xs text-gray-500">Alternatives:</span>
+                          <span className="text-xs text-slate-500">Alternatives:</span>
                           {oasisResults.pdgm_analysis.alternative_clinical_groups.map((alt, idx) => (
                             <Badge key={idx} variant="outline" className="text-xs">{alt}</Badge>
                           ))}
@@ -2586,27 +2586,27 @@ Return JSON:
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
                       <div className="bg-white p-2 rounded border">
-                        <p className="text-xs text-gray-500">Functional Level</p>
+                        <p className="text-xs text-slate-500">Functional Level</p>
                         <p className={`font-semibold ${
                           oasisResults.pdgm_analysis.functional_level === 'high' ? 'text-green-700' :
                           oasisResults.pdgm_analysis.functional_level === 'medium' ? 'text-yellow-700' : 'text-red-700'
                         }`}>{oasisResults.pdgm_analysis.functional_level?.toUpperCase()}</p>
                         {oasisResults.pdgm_analysis.functional_points_calculated && (
-                          <p className="text-xs text-gray-500 mt-1">{oasisResults.pdgm_analysis.functional_points_calculated} points</p>
+                          <p className="text-xs text-slate-500 mt-1">{oasisResults.pdgm_analysis.functional_points_calculated} points</p>
                         )}
                       </div>
                       <div className="bg-white p-2 rounded border">
-                        <p className="text-xs text-gray-500">Comorbidity Adj.</p>
+                        <p className="text-xs text-slate-500">Comorbidity Adj.</p>
                         <p className={`font-semibold ${
                           oasisResults.pdgm_analysis.comorbidity_adjustment === 'high' ? 'text-green-700' :
-                          oasisResults.pdgm_analysis.comorbidity_adjustment === 'low' ? 'text-yellow-700' : 'text-gray-700'
+                          oasisResults.pdgm_analysis.comorbidity_adjustment === 'low' ? 'text-yellow-700' : 'text-slate-700'
                         }`}>{oasisResults.pdgm_analysis.comorbidity_adjustment?.toUpperCase()}</p>
                         {oasisResults.pdgm_analysis.comorbidity_count > 0 && (
-                          <p className="text-xs text-gray-500 mt-1">{oasisResults.pdgm_analysis.comorbidity_count} qualifying</p>
+                          <p className="text-xs text-slate-500 mt-1">{oasisResults.pdgm_analysis.comorbidity_count} qualifying</p>
                         )}
                       </div>
                       <div className="bg-white p-2 rounded border">
-                        <p className="text-xs text-gray-500">Case-Mix Weight</p>
+                        <p className="text-xs text-slate-500">Case-Mix Weight</p>
                         <p className="font-bold text-green-700 text-lg">{oasisResults.pdgm_analysis.estimated_case_mix_weight}</p>
                       </div>
                       <div className="bg-green-100 p-2 rounded border border-green-300">
@@ -2657,7 +2657,7 @@ Return JSON:
                     {/* Case-Mix Weight Breakdown */}
                     {oasisResults.pdgm_analysis.case_mix_weight_breakdown && (
                       <div className="bg-white p-2 rounded border mb-3">
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Case-Mix Weight Breakdown:</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Case-Mix Weight Breakdown:</p>
                         <div className="flex gap-4 text-xs">
                           <span>Clinical: <strong>{oasisResults.pdgm_analysis.case_mix_weight_breakdown.clinical_component}</strong></span>
                           <span>Functional: <strong>{oasisResults.pdgm_analysis.case_mix_weight_breakdown.functional_component}</strong></span>
@@ -3047,9 +3047,9 @@ Return JSON:
                           <div key={key} className={`p-2 rounded border ${
                             item.accuracy === 'underscored' ? 'bg-yellow-100 border-yellow-300' :
                             item.accuracy === 'overscored' ? 'bg-red-100 border-red-300' :
-                            'bg-white border-gray-200'
+                            'bg-white border-slate-200'
                           }`}>
-                            <p className="font-medium text-gray-700">{key.replace('m', 'M').replace(/_/g, ' ')}</p>
+                            <p className="font-medium text-slate-700">{key.replace('m', 'M').replace(/_/g, ' ')}</p>
                             <p className="text-lg font-bold">{item.documented_value ?? '?'}</p>
                             {item.accuracy !== 'accurate' && (
                               <Badge className={`text-xs ${item.accuracy === 'underscored' ? 'bg-yellow-500' : 'bg-red-500'}`}>
@@ -3114,8 +3114,8 @@ Return JSON:
                               </div>
                             </div>
                             <div className="bg-white p-2 rounded border text-sm">
-                              <p className="text-xs text-gray-500">Discrepancy:</p>
-                              <p className="text-gray-900">{item.discrepancy}</p>
+                              <p className="text-xs text-slate-500">Discrepancy:</p>
+                              <p className="text-slate-900">{item.discrepancy}</p>
                             </div>
                             <Alert className="bg-blue-50 border-blue-200">
                               <Info className="w-4 h-4 text-blue-600" />
@@ -3184,8 +3184,8 @@ Return JSON:
                             </div>
                             {item.narrative_evidence && (
                               <div className="bg-white p-2 rounded border text-sm">
-                                <p className="text-xs text-gray-500">Evidence:</p>
-                                <p className="text-gray-900 italic">"{item.narrative_evidence}"</p>
+                                <p className="text-xs text-slate-500">Evidence:</p>
+                                <p className="text-slate-900 italic">"{item.narrative_evidence}"</p>
                               </div>
                             )}
                             {item.pdgm_impact && (
@@ -3219,25 +3219,25 @@ Return JSON:
                     {oasisResults.gg_section_analysis.gg0130_self_care_summary && (
                       <div className="bg-white p-3 rounded border">
                         <p className="text-xs font-semibold text-indigo-700 mb-1">GG0130 Self-Care</p>
-                        <p className="text-gray-700">{oasisResults.gg_section_analysis.gg0130_self_care_summary}</p>
+                        <p className="text-slate-700">{oasisResults.gg_section_analysis.gg0130_self_care_summary}</p>
                       </div>
                     )}
                     {oasisResults.gg_section_analysis.gg0170_mobility_summary && (
                       <div className="bg-white p-3 rounded border">
                         <p className="text-xs font-semibold text-indigo-700 mb-1">GG0170 Mobility</p>
-                        <p className="text-gray-700">{oasisResults.gg_section_analysis.gg0170_mobility_summary}</p>
+                        <p className="text-slate-700">{oasisResults.gg_section_analysis.gg0170_mobility_summary}</p>
                       </div>
                     )}
                     {oasisResults.gg_section_analysis.goal_appropriateness && (
                       <div className="bg-white p-3 rounded border">
                         <p className="text-xs font-semibold text-indigo-700 mb-1">Discharge Goal Assessment</p>
-                        <p className="text-gray-700">{oasisResults.gg_section_analysis.goal_appropriateness}</p>
+                        <p className="text-slate-700">{oasisResults.gg_section_analysis.goal_appropriateness}</p>
                       </div>
                     )}
                     {oasisResults.gg_section_analysis.functional_improvement_potential && (
                       <div className="bg-white p-3 rounded border">
                         <p className="text-xs font-semibold text-indigo-700 mb-1">Improvement Potential</p>
-                        <p className="text-gray-700">{oasisResults.gg_section_analysis.functional_improvement_potential}</p>
+                        <p className="text-slate-700">{oasisResults.gg_section_analysis.functional_improvement_potential}</p>
                       </div>
                     )}
                   </div>
@@ -3283,8 +3283,8 @@ Return JSON:
                             </div>
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="bg-white p-2 rounded border">
-                                <p className="text-xs text-gray-500">Current Implied Score</p>
-                                <p className="font-semibold text-gray-700">{item.current_implied_score || item.current_score}</p>
+                                <p className="text-xs text-slate-500">Current Implied Score</p>
+                                <p className="font-semibold text-slate-700">{item.current_implied_score || item.current_score}</p>
                               </div>
                               <div className="bg-green-100 p-2 rounded border border-green-300">
                                 <p className="text-xs text-green-700">Supported Score</p>
@@ -3297,8 +3297,8 @@ Return JSON:
                               </Badge>
                             )}
                             <div className="bg-white p-2 rounded border text-sm">
-                              <p className="text-xs text-gray-500 font-medium">📝 Evidence from Narrative:</p>
-                              <p className="text-gray-900 italic">"{item.narrative_evidence}"</p>
+                              <p className="text-xs text-slate-500 font-medium">📝 Evidence from Narrative:</p>
+                              <p className="text-slate-900 italic">"{item.narrative_evidence}"</p>
                             </div>
                             {item.cms_scoring_definition && (
                               <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
@@ -3378,7 +3378,7 @@ Return JSON:
                               <h5 className="font-bold text-red-900">{item.oasis_item}</h5>
                               <div className="flex gap-2">
                                 {item.score_difference && (
-                                  <Badge className="bg-gray-600">{item.score_difference}</Badge>
+                                  <Badge className="bg-slate-600">{item.score_difference}</Badge>
                                 )}
                                 <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : 'bg-orange-500'}`}>
                                   {item.audit_risk} audit risk
@@ -3391,14 +3391,14 @@ Return JSON:
                                 <p className="font-semibold text-red-800">{item.claimed_score}</p>
                               </div>
                               <div className="bg-white p-2 rounded border">
-                                <p className="text-xs text-gray-500">Actually Supported</p>
-                                <p className="font-semibold text-gray-700">{item.supported_score}</p>
+                                <p className="text-xs text-slate-500">Actually Supported</p>
+                                <p className="font-semibold text-slate-700">{item.supported_score}</p>
                               </div>
                             </div>
                             {item.narrative_evidence && (
                               <div className="bg-white p-2 rounded border text-sm">
-                                <p className="text-xs text-gray-500 font-medium">📝 Contradicting Evidence:</p>
-                                <p className="text-gray-900 italic">"{item.narrative_evidence}"</p>
+                                <p className="text-xs text-slate-500 font-medium">📝 Contradicting Evidence:</p>
+                                <p className="text-slate-900 italic">"{item.narrative_evidence}"</p>
                               </div>
                             )}
                             {item.cms_scoring_definition && (
@@ -3510,11 +3510,11 @@ Return JSON:
                             </div>
 
                             <div className="bg-white p-3 rounded border border-red-200">
-                              <p className="text-xs font-semibold text-gray-700 mb-1">
+                              <p className="text-xs font-semibold text-slate-700 mb-1">
                                 <Info className="w-3 h-3 inline mr-1" />
                                 Documentation Guidance:
                               </p>
-                              <p className="text-sm text-gray-900">{item.documentation_guidance}</p>
+                              <p className="text-sm text-slate-900">{item.documentation_guidance}</p>
                             </div>
 
                             <div className="bg-green-50 p-3 rounded border border-green-200">
@@ -3575,8 +3575,8 @@ Return JSON:
                             
                             {item.current_documentation && (
                               <div className="bg-white p-2 rounded border border-yellow-200">
-                                <p className="text-xs text-gray-600">Current documentation:</p>
-                                <p className="text-sm text-gray-900 italic">"{item.current_documentation}"</p>
+                                <p className="text-xs text-slate-600">Current documentation:</p>
+                                <p className="text-sm text-slate-900 italic">"{item.current_documentation}"</p>
                               </div>
                             )}
 
@@ -3643,8 +3643,8 @@ Return JSON:
                             </div>
 
                             <div className="bg-white p-2 rounded border text-sm">
-                              <p className="text-xs text-gray-600 font-medium">Problem:</p>
-                              <p className="text-gray-900">{item.problem}</p>
+                              <p className="text-xs text-slate-600 font-medium">Problem:</p>
+                              <p className="text-slate-900">{item.problem}</p>
                             </div>
 
                             {item.cms_requirement && (
@@ -3693,9 +3693,9 @@ Return JSON:
                                   </div>
                                 )}
                                 {item.example_for_lower_score && (
-                                  <div className="bg-gray-50 p-2 rounded border border-gray-200">
-                                    <p className="text-xs text-gray-600 font-medium">For Lower Score:</p>
-                                    <p className="text-gray-800 text-xs italic">"{item.example_for_lower_score}"</p>
+                                  <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                                    <p className="text-xs text-slate-600 font-medium">For Lower Score:</p>
+                                    <p className="text-slate-800 text-xs italic">"{item.example_for_lower_score}"</p>
                                   </div>
                                 )}
                               </div>
@@ -3779,7 +3779,7 @@ Return JSON:
                             
                             {item.oasis_items_affected && item.oasis_items_affected.length > 0 && (
                               <div className="flex flex-wrap gap-1">
-                                <span className="text-xs text-gray-600 mr-1">Affects:</span>
+                                <span className="text-xs text-slate-600 mr-1">Affects:</span>
                                 {item.oasis_items_affected.map((mi, idx) => (
                                   <Badge key={idx} variant="outline" className="bg-white text-orange-800 border-orange-300 text-xs">
                                     {mi}
@@ -3790,8 +3790,8 @@ Return JSON:
 
                             {item.why_problematic && (
                               <div className="bg-white p-2 rounded border text-sm">
-                                <p className="text-xs text-gray-600 font-medium">Why This Is Problematic:</p>
-                                <p className="text-gray-900">{item.why_problematic}</p>
+                                <p className="text-xs text-slate-600 font-medium">Why This Is Problematic:</p>
+                                <p className="text-slate-900">{item.why_problematic}</p>
                               </div>
                             )}
 
@@ -4096,27 +4096,27 @@ Return JSON:
 
                 {/* Documentation Quality Score */}
                 {oasisResults.documentation_quality && (
-                  <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
-                    <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <div className="bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+                    <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
                       <FileCheck className="w-5 h-5" />
                       Documentation Quality Analysis
                     </h4>
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div className="text-center">
-                        <p className="text-xs text-gray-500">Specificity Score</p>
-                        <p className="text-2xl font-bold text-gray-900">{oasisResults.documentation_quality.specificity_score || 'N/A'}</p>
+                        <p className="text-xs text-slate-500">Specificity Score</p>
+                        <p className="text-2xl font-bold text-slate-900">{oasisResults.documentation_quality.specificity_score || 'N/A'}</p>
                         <Progress value={oasisResults.documentation_quality.specificity_score || 0} className="h-2 mt-1" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-gray-500">Defensibility Score</p>
-                        <p className="text-2xl font-bold text-gray-900">{oasisResults.documentation_quality.defensibility_score || 'N/A'}</p>
+                        <p className="text-xs text-slate-500">Defensibility Score</p>
+                        <p className="text-2xl font-bold text-slate-900">{oasisResults.documentation_quality.defensibility_score || 'N/A'}</p>
                         <Progress value={oasisResults.documentation_quality.defensibility_score || 0} className="h-2 mt-1" />
                       </div>
                     </div>
                     {oasisResults.documentation_quality.key_weaknesses?.length > 0 && (
                       <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Key Weaknesses:</p>
-                        <ul className="text-xs text-gray-600 space-y-1">
+                        <p className="text-xs font-semibold text-slate-700 mb-2">Key Weaknesses:</p>
+                        <ul className="text-xs text-slate-600 space-y-1">
                           {oasisResults.documentation_quality.key_weaknesses.map((w, i) => (
                             <li key={i} className="flex items-start gap-1">
                               <XCircle className="w-3 h-3 text-red-500 mt-0.5 flex-shrink-0" />

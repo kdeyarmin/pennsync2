@@ -769,7 +769,7 @@ Return empty array if no significant AI-detected patterns found.`;
         case 'high': return 'bg-orange-100 border-orange-500 text-orange-900';
         case 'medium': return 'bg-yellow-100 border-yellow-500 text-yellow-900';
         case 'low': return 'bg-blue-100 border-blue-500 text-blue-900';
-        default: return 'bg-gray-100 border-gray-500 text-gray-900';
+        default: return 'bg-slate-100 border-slate-500 text-slate-900';
       }
     };
 
@@ -820,14 +820,14 @@ Return empty array if no significant AI-detected patterns found.`;
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white p-4 rounded-lg border-2 border-red-300">
-                <p className="text-sm text-gray-600 mb-1">Critical Alerts</p>
+                <p className="text-sm text-slate-600 mb-1">Critical Alerts</p>
                 <p className="text-3xl font-bold text-red-600">{criticalAlerts.length}</p>
-                <p className="text-xs text-gray-500 mt-1">Immediate action required</p>
+                <p className="text-xs text-slate-500 mt-1">Immediate action required</p>
               </div>
               <div className="bg-white p-4 rounded-lg border-2 border-orange-300">
-                <p className="text-sm text-gray-600 mb-1">High Priority Alerts</p>
+                <p className="text-sm text-slate-600 mb-1">High Priority Alerts</p>
                 <p className="text-3xl font-bold text-orange-600">{highAlerts.length}</p>
-                <p className="text-xs text-gray-500 mt-1">Urgent attention needed</p>
+                <p className="text-xs text-slate-500 mt-1">Urgent attention needed</p>
               </div>
             </div>
 
@@ -916,9 +916,9 @@ Return empty array if no significant AI-detected patterns found.`;
             {selectedAlert && (
               <div className="space-y-4 py-4">
                 {/* Summary */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">Summary</h4>
-                  <p className="text-gray-700">{selectedAlert.summary}</p>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-slate-900 mb-2">Summary</h4>
+                  <p className="text-slate-700">{selectedAlert.summary}</p>
                 </div>
 
                 {/* Details */}

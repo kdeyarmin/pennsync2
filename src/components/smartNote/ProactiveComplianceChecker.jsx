@@ -149,7 +149,7 @@ Return JSON:
       case 'present': return 'bg-green-50 border-green-200';
       case 'missing': return 'bg-red-50 border-red-200';
       case 'partial': return 'bg-yellow-50 border-yellow-200';
-      default: return 'bg-gray-50 border-gray-200';
+      default: return 'bg-slate-50 border-slate-200';
     }
   };
 
@@ -176,7 +176,7 @@ Return JSON:
           <div className="flex items-center gap-2">
             <ClipboardCheck className={`w-4 h-4 ${missingCount > 0 ? 'text-red-600' : 'text-green-600'}`} />
             Compliance Checklist
-            {isAnalyzing && <span className="text-xs text-gray-500">(analyzing...)</span>}
+            {isAnalyzing && <span className="text-xs text-slate-500">(analyzing...)</span>}
           </div>
           <div className="flex items-center gap-2">
             {checklist && (
@@ -196,7 +196,7 @@ Return JSON:
         <CardContent className="p-3 space-y-3">
           {/* Progress Bar */}
           <div>
-            <div className="flex justify-between text-xs text-gray-600 mb-1">
+            <div className="flex justify-between text-xs text-slate-600 mb-1">
               <span>Documentation Completeness</span>
               <span>{checklist.overall_score}%</span>
             </div>
@@ -219,7 +219,7 @@ Return JSON:
                       <span className="text-sm font-medium">{item.element}</span>
                       {getPriorityBadge(item.priority)}
                     </div>
-                    <p className="text-xs text-gray-600">{item.description}</p>
+                    <p className="text-xs text-slate-600">{item.description}</p>
                     {item.suggested_text && (
                       <Button
                         size="sm"

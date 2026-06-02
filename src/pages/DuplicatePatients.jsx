@@ -550,7 +550,7 @@ export default function DuplicatePatients() {
         <Card>
           <CardContent className="p-8 text-center">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">Loading patients...</p>
+            <p className="text-sm text-slate-600">Loading patients...</p>
           </CardContent>
         </Card>
       </div>
@@ -562,9 +562,9 @@ export default function DuplicatePatients() {
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <Users className="w-8 h-8 text-orange-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Duplicate Patients</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Duplicate Patients</h1>
         </div>
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           Scan the database for potential duplicate patient records
         </p>
       </div>
@@ -579,7 +579,7 @@ export default function DuplicatePatients() {
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">
+              <p className="text-sm text-slate-600 mb-1">
                 Total patients in database: <strong>{patients.length}</strong>
               </p>
               {duplicateGroups.length > 0 && (
@@ -645,10 +645,10 @@ export default function DuplicatePatients() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <Badge className="bg-blue-600 mb-2">Primary Record</Badge>
-                        <h4 className="font-bold text-lg text-gray-900">
+                        <h4 className="font-bold text-lg text-slate-900">
                           {group.primary.first_name} {group.primary.last_name}
                         </h4>
-                        <div className="text-sm text-gray-600 mt-1 space-y-1">
+                        <div className="text-sm text-slate-600 mt-1 space-y-1">
                           <p>DOB: {group.primary.date_of_birth || 'N/A'}</p>
                           <p>MRN: {group.primary.medical_record_number || 'N/A'}</p>
                           <p>Phone: {group.primary.phone || 'N/A'}</p>
@@ -657,7 +657,7 @@ export default function DuplicatePatients() {
                       </div>
                       <Badge className={
                         group.primary.status === 'active' ? 'bg-green-600' :
-                        group.primary.status === 'discharged' ? 'bg-gray-600' :
+                        group.primary.status === 'discharged' ? 'bg-slate-600' :
                         'bg-orange-600'
                       }>
                         {group.primary.status || 'unknown'}
@@ -689,18 +689,18 @@ export default function DuplicatePatients() {
 
                 {/* Duplicate Patients */}
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-sm text-gray-700">
+                  <h4 className="font-semibold text-sm text-slate-700">
                     Possible Duplicates ({group.duplicates.length}):
                   </h4>
                   {group.duplicates.map((dup, dupIdx) => (
-                    <Card key={dupIdx} className="bg-gray-50">
+                    <Card key={dupIdx} className="bg-slate-50">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h5 className="font-semibold text-gray-900">
+                            <h5 className="font-semibold text-slate-900">
                               {dup.patient.first_name} {dup.patient.last_name}
                             </h5>
-                            <div className="text-sm text-gray-600 mt-1 space-y-1">
+                            <div className="text-sm text-slate-600 mt-1 space-y-1">
                               <p>DOB: {dup.patient.date_of_birth || 'N/A'}</p>
                               <p>MRN: {dup.patient.medical_record_number || 'N/A'}</p>
                               <p>Phone: {dup.patient.phone || 'N/A'}</p>
@@ -720,7 +720,7 @@ export default function DuplicatePatients() {
                                 </Badge>
                               ))}
                               {dup.matches.length > 4 && (
-                                <Badge variant="outline" className="text-xs text-gray-500">
+                                <Badge variant="outline" className="text-xs text-slate-500">
                                   +{dup.matches.length - 4} more
                                 </Badge>
                               )}
@@ -729,7 +729,7 @@ export default function DuplicatePatients() {
                           <div className="flex flex-col gap-2 ml-4">
                             <Badge className={
                               dup.patient.status === 'active' ? 'bg-green-600' :
-                              dup.patient.status === 'discharged' ? 'bg-gray-600' :
+                              dup.patient.status === 'discharged' ? 'bg-slate-600' :
                               'bg-orange-600'
                             }>
                               {dup.patient.status || 'unknown'}

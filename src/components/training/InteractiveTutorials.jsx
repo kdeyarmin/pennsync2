@@ -244,7 +244,7 @@ export default function InteractiveTutorials({ userEmail, onComplete }) {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle>{selectedTutorial.title}</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">{selectedTutorial.description}</p>
+              <p className="text-sm text-slate-600 mt-1">{selectedTutorial.description}</p>
               <div className="flex items-center gap-2 mt-2">
                 <Badge>{selectedTutorial.difficulty}</Badge>
                 <Badge variant="outline">{selectedTutorial.duration}</Badge>
@@ -294,10 +294,10 @@ export default function InteractiveTutorials({ userEmail, onComplete }) {
                                 ? 'border-green-500 bg-green-50'
                                 : quizAnswers[qIdx] === oIdx
                                 ? 'border-red-500 bg-red-50'
-                                : 'border-gray-200'
+                                : 'border-slate-200'
                               : quizAnswers[qIdx] === oIdx
                               ? 'border-indigo-500 bg-indigo-50'
-                              : 'border-gray-200 hover:border-indigo-300'
+                              : 'border-slate-200 hover:border-indigo-300'
                           }`}
                           onClick={() => !quizSubmitted && setQuizAnswers({ ...quizAnswers, [qIdx]: oIdx })}
                         >
@@ -327,7 +327,7 @@ export default function InteractiveTutorials({ userEmail, onComplete }) {
                     <p className="text-lg font-semibold mb-2">
                       Score: {Math.round((Object.keys(quizAnswers).reduce((acc, idx) => acc + (quizAnswers[idx] === selectedTutorial.quiz[idx].correct ? 1 : 0), 0) / selectedTutorial.quiz.length) * 100)}%
                     </p>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-slate-700">
                       {(Object.keys(quizAnswers).reduce((acc, idx) => acc + (quizAnswers[idx] === selectedTutorial.quiz[idx].correct ? 1 : 0), 0) / selectedTutorial.quiz.length * 100) >= 80
                         ? '🎉 Congratulations! Tutorial completed.'
                         : '📚 Review the material and try again to score 80% or higher.'}
@@ -356,14 +356,14 @@ export default function InteractiveTutorials({ userEmail, onComplete }) {
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-lg font-semibold">{tutorial.title}</h3>
                     {isCompleted && <CheckCircle2 className="w-5 h-5 text-green-600" />}
-                    {isLocked && <Lock className="w-5 h-5 text-gray-400" />}
+                    {isLocked && <Lock className="w-5 h-5 text-slate-400" />}
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{tutorial.description}</p>
+                  <p className="text-sm text-slate-600 mb-3">{tutorial.description}</p>
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant="outline">{tutorial.difficulty}</Badge>
                     <Badge variant="outline">{tutorial.duration}</Badge>
                   </div>
-                  <div className="text-xs text-gray-600">
+                  <div className="text-xs text-slate-600">
                     <p className="font-medium mb-1">Topics covered:</p>
                     <ul className="list-disc list-inside space-y-1">
                       {tutorial.topics.slice(0, 3).map((topic, i) => (

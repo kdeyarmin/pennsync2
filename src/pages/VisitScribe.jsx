@@ -71,11 +71,11 @@ export default function VisitScribe() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
             <Mic className="w-8 h-8 text-indigo-600" />
             Visit Scribe
           </h1>
-          <p className="text-gray-600 mt-2">Record or upload patient interactions to generate compliant clinical notes</p>
+          <p className="text-slate-600 mt-2">Record or upload patient interactions to generate compliant clinical notes</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -121,7 +121,7 @@ export default function VisitScribe() {
               </CardHeader>
               <CardContent>
                 {!hasAudio ? (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors cursor-pointer">
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors cursor-pointer">
                     <input
                       type="file"
                       accept="audio/*"
@@ -130,9 +130,9 @@ export default function VisitScribe() {
                       id="audio-upload"
                     />
                     <label htmlFor="audio-upload" className="cursor-pointer">
-                      <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                      <p className="text-gray-900 font-medium">Click to upload or drag audio file</p>
-                      <p className="text-gray-500 text-sm">MP3, WAV, M4A up to 100MB</p>
+                      <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                      <p className="text-slate-900 font-medium">Click to upload or drag audio file</p>
+                      <p className="text-slate-500 text-sm">MP3, WAV, M4A up to 100MB</p>
                     </label>
                   </div>
                 ) : (
@@ -171,8 +171,8 @@ export default function VisitScribe() {
               <CardDescription>Review and refine the transcribed content</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto border border-gray-200">
-                <p className="text-gray-800 whitespace-pre-wrap">{roughNote}</p>
+              <div className="bg-slate-50 rounded-lg p-4 max-h-64 overflow-y-auto border border-slate-200">
+                <p className="text-slate-800 whitespace-pre-wrap">{roughNote}</p>
               </div>
             </CardContent>
           </Card>

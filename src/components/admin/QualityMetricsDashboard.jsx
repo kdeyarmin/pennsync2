@@ -355,7 +355,7 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
   if (visitsLoading) {
     return (
       <Card>
-        <CardContent className="p-12 text-center text-gray-500">
+        <CardContent className="p-12 text-center text-slate-500">
           Loading quality metrics...
         </CardContent>
       </Card>
@@ -386,7 +386,7 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-600">
               Data for: {dateRange.start} to {dateRange.end} ({timeRange} days)
             </div>
 
@@ -444,14 +444,14 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
           <div className="grid md:grid-cols-4 gap-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
               <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{metrics.activePatients}</p>
-              <p className="text-sm text-gray-600">Active Patients</p>
+              <p className="text-2xl font-bold text-slate-900">{metrics.activePatients}</p>
+              <p className="text-sm text-slate-600">Active Patients</p>
             </div>
 
             <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
               <Calendar className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{metrics.avgVisitsPerPatient}</p>
-              <p className="text-sm text-gray-600">Avg Visits/Patient</p>
+              <p className="text-2xl font-bold text-slate-900">{metrics.avgVisitsPerPatient}</p>
+              <p className="text-sm text-slate-600">Avg Visits/Patient</p>
             </div>
 
             <div className={`text-center p-4 rounded-lg border ${
@@ -464,9 +464,9 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
                 metrics.hospitalizationRate < 20 ? 'text-yellow-600' : 
                 'text-red-600'
               }`} />
-              <p className="text-2xl font-bold text-gray-900">{metrics.hospitalizationRate}</p>
-              <p className="text-sm text-gray-600">Hospitalization Rate</p>
-              <p className="text-xs text-gray-500 mt-1">per 100 patients</p>
+              <p className="text-2xl font-bold text-slate-900">{metrics.hospitalizationRate}</p>
+              <p className="text-sm text-slate-600">Hospitalization Rate</p>
+              <p className="text-xs text-slate-500 mt-1">per 100 patients</p>
             </div>
 
             <div className={`text-center p-4 rounded-lg border ${
@@ -479,9 +479,9 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
                 metrics.fallRate < 10 ? 'text-yellow-600' : 
                 'text-red-600'
               }`} />
-              <p className="text-2xl font-bold text-gray-900">{metrics.fallRate}</p>
-              <p className="text-sm text-gray-600">Fall Rate</p>
-              <p className="text-xs text-gray-500 mt-1">per 1000 visits</p>
+              <p className="text-2xl font-bold text-slate-900">{metrics.fallRate}</p>
+              <p className="text-sm text-slate-600">Fall Rate</p>
+              <p className="text-xs text-slate-500 mt-1">per 1000 visits</p>
             </div>
           </div>
         </CardContent>
@@ -502,8 +502,8 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
                 <AlertTriangle className="w-6 h-6 text-red-600" />
                 <Badge variant="destructive">{metrics.falls} Total</Badge>
               </div>
-              <p className="font-semibold text-gray-900">Patient Falls</p>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="font-semibold text-slate-900">Patient Falls</p>
+              <p className="text-sm text-slate-600 mt-1">
                 {metrics.falls > 0 
                   ? `Rate: ${Math.round((metrics.falls / metrics.totalVisits) * 1000)} per 1000 visits`
                   : 'No falls reported'}
@@ -515,8 +515,8 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
                 <Ambulance className="w-6 h-6 text-orange-600" />
                 <Badge className="bg-orange-500">{metrics.hospitalizations} Total</Badge>
               </div>
-              <p className="font-semibold text-gray-900">Hospitalizations</p>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="font-semibold text-slate-900">Hospitalizations</p>
+              <p className="text-sm text-slate-600 mt-1">
                 {metrics.hospitalizations > 0 
                   ? `Rate: ${metrics.hospitalizationRate} per 100 patients`
                   : 'No hospitalizations reported'}
@@ -528,8 +528,8 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
                 <Activity className="w-6 h-6 text-purple-600" />
                 <Badge className="bg-purple-500">{metrics.medErrors} Total</Badge>
               </div>
-              <p className="font-semibold text-gray-900">Medication Errors</p>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="font-semibold text-slate-900">Medication Errors</p>
+              <p className="text-sm text-slate-600 mt-1">
                 {metrics.medErrors > 0 
                   ? `Rate: ${Math.round((metrics.medErrors / metrics.totalVisits) * 1000)} per 1000 visits`
                   : 'No med errors reported'}
@@ -584,7 +584,7 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={stats.avgDocTime <= 45 ? 'text-green-600 font-semibold' : 'text-gray-900'}>
+                          <span className={stats.avgDocTime <= 45 ? 'text-green-600 font-semibold' : 'text-slate-900'}>
                             {stats.avgDocTime} min
                           </span>
                         </TableCell>
@@ -679,17 +679,17 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
           {isGenerating ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="w-6 h-6 animate-spin text-purple-600 mr-2" />
-              <span className="text-gray-600">Penn Sync AI is analyzing quality metrics...</span>
+              <span className="text-slate-600">Penn Sync AI is analyzing quality metrics...</span>
             </div>
           ) : aiInsights ? (
             <div className="space-y-4">
-              <div className="text-gray-700" style={{ whiteSpace: 'pre-wrap' }}>
+              <div className="text-slate-700" style={{ whiteSpace: 'pre-wrap' }}>
                 {aiInsights}
               </div>
               <Button
                 onClick={generateAIInsights}
                 variant="outline"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-800 gap-2 mt-4"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 gap-2 mt-4"
               >
                 <Sparkles className="w-4 h-4" />
                 Regenerate Insights

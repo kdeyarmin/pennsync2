@@ -117,21 +117,21 @@ export default function MedicationManagementSection({ patient }) {
   };
 
   const getFrequencyColor = (frequency) => {
-    if (!frequency) return 'bg-gray-100 text-gray-800';
+    if (!frequency) return 'bg-slate-100 text-slate-800';
     const lower = frequency.toLowerCase();
     if (lower.includes('daily') || lower.includes('qd')) return 'bg-blue-100 text-blue-800';
     if (lower.includes('twice') || lower.includes('bid')) return 'bg-green-100 text-green-800';
     if (lower.includes('three') || lower.includes('tid')) return 'bg-yellow-100 text-yellow-800';
     if (lower.includes('four') || lower.includes('qid')) return 'bg-orange-100 text-orange-800';
     if (lower.includes('prn') || lower.includes('needed')) return 'bg-purple-100 text-purple-800';
-    return 'bg-gray-100 text-gray-800';
+    return 'bg-slate-100 text-slate-800';
   };
 
   return (
     <div>
       <Card>
         <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
-          <CardTitle className="text-lg flex items-center justify-between text-gray-900">
+          <CardTitle className="text-lg flex items-center justify-between text-slate-900">
             <div className="flex items-center gap-2">
               <Pill className="w-5 h-5 text-indigo-600" />
               Current Medications
@@ -151,12 +151,12 @@ export default function MedicationManagementSection({ patient }) {
               {patient.current_medications.map((med, index) => (
                 <div 
                   key={index} 
-                  className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors"
+                  className="bg-white border-2 border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-gray-900 text-lg">{med.name}</h4>
+                        <h4 className="font-semibold text-slate-900 text-lg">{med.name}</h4>
                         <Badge className={getFrequencyColor(med.frequency)}>
                           {med.frequency}
                         </Badge>
@@ -165,25 +165,25 @@ export default function MedicationManagementSection({ patient }) {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         {med.dosage && (
                           <div className="flex items-center gap-2 text-sm">
-                            <Pill className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-600">Dosage:</span>
-                            <span className="font-medium text-gray-900">{med.dosage}</span>
+                            <Pill className="w-4 h-4 text-slate-400" />
+                            <span className="text-slate-600">Dosage:</span>
+                            <span className="font-medium text-slate-900">{med.dosage}</span>
                           </div>
                         )}
                         
                         {med.prescriber && (
                           <div className="flex items-center gap-2 text-sm">
-                            <User className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-600">Prescriber:</span>
-                            <span className="font-medium text-gray-900">{med.prescriber}</span>
+                            <User className="w-4 h-4 text-slate-400" />
+                            <span className="text-slate-600">Prescriber:</span>
+                            <span className="font-medium text-slate-900">{med.prescriber}</span>
                           </div>
                         )}
                         
                         {med.start_date && (
                           <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-600">Started:</span>
-                            <span className="font-medium text-gray-900">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            <span className="text-slate-600">Started:</span>
+                            <span className="font-medium text-slate-900">
                               {format(new Date(med.start_date), 'MMM d, yyyy')}
                             </span>
                           </div>
@@ -214,8 +214,8 @@ export default function MedicationManagementSection({ patient }) {
             </div>
           ) : (
             <div className="text-center py-8">
-              <Pill className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 italic mb-4">No current medications recorded</p>
+              <Pill className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm text-slate-500 italic mb-4">No current medications recorded</p>
               <Button size="sm" onClick={openAddMedication}>
                 <Plus className="w-4 h-4 mr-1" />
                 Add First Medication

@@ -199,7 +199,7 @@ Return JSON:
       case 'intervention': return 'bg-green-100 text-green-800 border-green-200';
       case 'education': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'compliance': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
@@ -208,7 +208,7 @@ Return JSON:
       case 'high': return 'bg-red-50 border-red-300';
       case 'medium': return 'bg-yellow-50 border-yellow-300';
       case 'low': return 'bg-blue-50 border-blue-300';
-      default: return 'bg-gray-50 border-gray-300';
+      default: return 'bg-slate-50 border-slate-300';
     }
   };
 
@@ -301,13 +301,13 @@ Return JSON:
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex items-center gap-2">
                             {getCategoryIcon(section.category)}
-                            <span className="font-medium text-sm text-gray-900">{section.section_name}</span>
+                            <span className="font-medium text-sm text-slate-900">{section.section_name}</span>
                           </div>
                           <Badge className={`text-xs ${getCategoryColor(section.category)}`}>
                             {section.category}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-2">{section.reason}</p>
+                        <p className="text-xs text-slate-600 mb-2">{section.reason}</p>
                         <div className="flex justify-end">
                           <Button
                             size="sm"
@@ -352,7 +352,7 @@ Return JSON:
                           <span className="font-medium text-sm">{prompt.diagnosis}</span>
                         </div>
                         <div className="mb-2">
-                          <p className="text-xs text-gray-600 mb-1">Key assessment points:</p>
+                          <p className="text-xs text-slate-600 mb-1">Key assessment points:</p>
                           <div className="flex flex-wrap gap-1">
                             {prompt.assessment_points?.slice(0, 4).map((point, i) => (
                               <Badge key={i} variant="outline" className="text-xs">

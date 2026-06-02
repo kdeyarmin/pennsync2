@@ -266,7 +266,7 @@ Return detailed compliance analysis in JSON format.`;
       case 'present': return 'bg-green-50 border-green-200';
       case 'partial': return 'bg-yellow-50 border-yellow-200';
       case 'missing': return 'bg-red-50 border-red-200';
-      default: return 'bg-gray-50 border-gray-200';
+      default: return 'bg-slate-50 border-slate-200';
     }
   };
 
@@ -276,7 +276,7 @@ Return detailed compliance analysis in JSON format.`;
       case 'high': return 'bg-orange-100 text-orange-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -287,7 +287,7 @@ Return detailed compliance analysis in JSON format.`;
       case 'moderate': return 'bg-yellow-600 text-white';
       case 'low': return 'bg-blue-600 text-white';
       case 'minimal': return 'bg-green-600 text-white';
-      default: return 'bg-gray-600 text-white';
+      default: return 'bg-slate-600 text-white';
     }
   };
 
@@ -352,7 +352,7 @@ Return detailed compliance analysis in JSON format.`;
               <div className="grid grid-cols-3 gap-3">
                 <Card className="border-2 border-purple-200">
                   <CardContent className="p-3 text-center">
-                    <p className="text-xs text-gray-600 mb-1">Compliance Score</p>
+                    <p className="text-xs text-slate-600 mb-1">Compliance Score</p>
                     <p className="text-2xl font-bold text-purple-700">
                       {complianceResults.overall_compliance_score}%
                     </p>
@@ -364,11 +364,11 @@ Return detailed compliance analysis in JSON format.`;
 
                 <Card className="border-2 border-purple-200">
                   <CardContent className="p-3 text-center">
-                    <p className="text-xs text-gray-600 mb-1">Visit Type</p>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-xs text-slate-600 mb-1">Visit Type</p>
+                    <p className="text-sm font-bold text-slate-900">
                       {complianceResults.visitTypeDisplay}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       {complianceResults.cmsReference}
                     </p>
                   </CardContent>
@@ -376,11 +376,11 @@ Return detailed compliance analysis in JSON format.`;
 
                 <Card className="border-2 border-purple-200">
                   <CardContent className="p-3 text-center">
-                    <p className="text-xs text-gray-600 mb-1">Elements</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-xs text-slate-600 mb-1">Elements</p>
+                    <p className="text-2xl font-bold text-slate-900">
                       {complianceResults.elements_status?.filter(e => e.status === 'present').length}/{complianceResults.totalElements}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">Complete</p>
+                    <p className="text-xs text-slate-500 mt-1">Complete</p>
                   </CardContent>
                 </Card>
               </div>
@@ -438,7 +438,7 @@ Return detailed compliance analysis in JSON format.`;
                           <Card key={idx} className="bg-white">
                             <CardContent className="p-3 space-y-2">
                               <div className="flex items-start justify-between">
-                                <p className="font-semibold text-sm text-gray-900 flex-1">{element.element}</p>
+                                <p className="font-semibold text-sm text-slate-900 flex-1">{element.element}</p>
                                 <Badge className={getSeverityColor(element.severity)}>
                                   {element.severity}
                                 </Badge>
@@ -473,7 +473,7 @@ Return detailed compliance analysis in JSON format.`;
                                 </div>
                               )}
 
-                              <p className="text-xs text-gray-700">
+                              <p className="text-xs text-slate-700">
                                 <strong>Recommendation:</strong> {element.recommendation}
                               </p>
                             </CardContent>
@@ -500,7 +500,7 @@ Return detailed compliance analysis in JSON format.`;
                         <Card key={idx} className="bg-white">
                           <CardContent className="p-3 space-y-2">
                             <div className="flex items-start justify-between">
-                              <p className="font-semibold text-sm text-gray-900">{element.element}</p>
+                              <p className="font-semibold text-sm text-slate-900">{element.element}</p>
                               <Badge className={getSeverityColor(element.severity)}>
                                 {element.severity}
                               </Badge>
@@ -578,7 +578,7 @@ Return detailed compliance analysis in JSON format.`;
                         <div className="flex items-start gap-2 mb-2">
                           <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-900">{issue.issue}</p>
+                            <p className="text-sm font-semibold text-slate-900">{issue.issue}</p>
                             <p className="text-xs text-orange-700 mt-1">
                               <ExternalLink className="w-3 h-3 inline mr-1" />
                               {issue.regulation}

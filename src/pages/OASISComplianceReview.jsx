@@ -18,7 +18,7 @@ export default function OASISComplianceReview() {
       <div className="p-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-600">No analysis data available. Please analyze an OASIS document first.</p>
+            <p className="text-slate-600">No analysis data available. Please analyze an OASIS document first.</p>
             <Link to={createPageUrl("OASISAnalyzer")}>
               <Button className="mt-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -46,16 +46,16 @@ export default function OASISComplianceReview() {
               <span className="sm:hidden">Back</span>
             </Button>
           </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-2 truncate">OASIS Compliance & Accuracy Review</h1>
-          {patientName && <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">Patient: {patientName}</p>}
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mt-2 truncate">OASIS Compliance & Accuracy Review</h1>
+          {patientName && <p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">Patient: {patientName}</p>}
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <div className="text-right">
-            <p className="text-sm text-gray-600">Compliance Score</p>
+            <p className="text-sm text-slate-600">Compliance Score</p>
             <div className="text-2xl font-bold text-blue-600">{complianceScore}%</div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600">Accuracy Score</p>
+            <p className="text-sm text-slate-600">Accuracy Score</p>
             <div className="text-2xl font-bold text-purple-600">{accuracyScore}%</div>
           </div>
         </div>
@@ -101,8 +101,8 @@ export default function OASISComplianceReview() {
                         {concern.severity}
                       </Badge>
                     </div>
-                    <p className="font-semibold text-gray-900 mb-1">{concern.area}</p>
-                    <p className="text-sm text-gray-700 mb-2">{concern.issue}</p>
+                    <p className="font-semibold text-slate-900 mb-1">{concern.area}</p>
+                    <p className="text-sm text-slate-700 mb-2">{concern.issue}</p>
                     <div className="bg-blue-50 p-2 rounded text-sm text-blue-900">
                       <strong>Recommendation:</strong> {concern.recommendation}
                     </div>
@@ -144,7 +144,7 @@ export default function OASISComplianceReview() {
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-700 mb-2">{issue.issue}</p>
+                    <p className="text-sm text-slate-700 mb-2">{issue.issue}</p>
                     <div className="bg-green-50 p-2 rounded text-sm text-green-900">
                       <strong>Recommendation:</strong> {issue.recommendation}
                     </div>

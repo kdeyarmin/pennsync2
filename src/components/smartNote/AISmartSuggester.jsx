@@ -183,7 +183,7 @@ Return JSON.`,
         {analyzing && (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2" />
-            <p className="text-xs text-gray-600">Analyzing note for actionable suggestions...</p>
+            <p className="text-xs text-slate-600">Analyzing note for actionable suggestions...</p>
           </div>
         )}
 
@@ -229,9 +229,9 @@ Return JSON.`,
                             <Badge variant="outline" className="text-xs">{task.type}</Badge>
                             <Badge variant="outline" className="text-xs">{task.timeframe}</Badge>
                           </div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">{task.title}</p>
-                          <p className="text-xs text-gray-600 mb-2">{task.description}</p>
-                          <p className="text-xs text-gray-500 italic">{task.rationale}</p>
+                          <p className="text-sm font-medium text-slate-900 mb-1">{task.title}</p>
+                          <p className="text-xs text-slate-600 mb-2">{task.description}</p>
+                          <p className="text-xs text-slate-500 italic">{task.rationale}</p>
                         </div>
                         {!isApplied && (
                           <Button
@@ -253,7 +253,7 @@ Return JSON.`,
               })}
 
               {suggestions.tasks?.length === 0 && (
-                <p className="text-xs text-gray-500 text-center py-4">
+                <p className="text-xs text-slate-500 text-center py-4">
                   No follow-up tasks suggested
                 </p>
               )}
@@ -278,17 +278,17 @@ Return JSON.`,
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 mb-1">{goal.problem}</p>
+                          <p className="text-sm font-medium text-slate-900 mb-1">{goal.problem}</p>
                           <p className="text-xs text-indigo-700 font-medium mb-2">Goal: {goal.goal}</p>
                           <div className="bg-blue-50 rounded p-2 mb-2">
-                            <p className="text-xs text-gray-700 font-semibold mb-1">Interventions:</p>
+                            <p className="text-xs text-slate-700 font-semibold mb-1">Interventions:</p>
                             <ul className="space-y-1">
                               {goal.interventions?.map((intervention, iIdx) => (
-                                <li key={iIdx} className="text-xs text-gray-700">• {intervention}</li>
+                                <li key={iIdx} className="text-xs text-slate-700">• {intervention}</li>
                               ))}
                             </ul>
                           </div>
-                          <p className="text-xs text-gray-500 italic">{goal.rationale}</p>
+                          <p className="text-xs text-slate-500 italic">{goal.rationale}</p>
                         </div>
                         {!isApplied && (
                           <Button
@@ -310,7 +310,7 @@ Return JSON.`,
               })}
 
               {suggestions.care_plan_goals?.length === 0 && (
-                <p className="text-xs text-gray-500 text-center py-4">
+                <p className="text-xs text-slate-500 text-center py-4">
                   Current care plans appear adequate
                 </p>
               )}

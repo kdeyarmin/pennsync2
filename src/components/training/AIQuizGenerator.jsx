@@ -122,8 +122,8 @@ Return JSON with:
       <Card className="border-2 border-purple-200">
         <CardContent className="p-8 text-center">
           <Sparkles className="w-16 h-16 text-purple-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">AI Quiz Generator</h3>
-          <p className="text-gray-600 mb-6">
+          <h3 className="text-xl font-bold text-slate-900 mb-2">AI Quiz Generator</h3>
+          <p className="text-slate-600 mb-6">
             Generate an interactive quiz based on the training material to assess understanding
           </p>
           <Button
@@ -167,7 +167,7 @@ Return JSON with:
             <div className={`text-6xl font-bold mb-2 ${quizResults.passed ? 'text-green-600' : 'text-orange-600'}`}>
               {quizResults.score}%
             </div>
-            <p className="text-lg text-gray-700 mb-1">
+            <p className="text-lg text-slate-700 mb-1">
               {quizResults.correctCount} of {quizResults.totalQuestions} correct
             </p>
             <Badge className={`text-sm ${quizResults.passed ? 'bg-green-600' : 'bg-orange-500'}`}>
@@ -177,7 +177,7 @@ Return JSON with:
 
           {/* Question Review */}
           <div className="space-y-3">
-            <h4 className="font-semibold text-gray-900">Review Your Answers</h4>
+            <h4 className="font-semibold text-slate-900">Review Your Answers</h4>
             {quiz.questions.map((q, idx) => {
               const isCorrect = selectedAnswers[idx] === q.correct_answer;
               return (
@@ -190,7 +190,7 @@ Return JSON with:
                         <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                       )}
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 mb-2">{q.question}</p>
+                        <p className="text-sm font-medium text-slate-900 mb-2">{q.question}</p>
                         <div className="space-y-1 text-sm">
                           <p className={isCorrect ? 'text-green-700' : 'text-red-700'}>
                             Your answer: {q.options[selectedAnswers[idx]]}
@@ -251,7 +251,7 @@ Return JSON with:
             }`}>
               {question.difficulty}
             </Badge>
-            <h3 className="text-lg font-medium text-gray-900 flex-1">{question.question}</h3>
+            <h3 className="text-lg font-medium text-slate-900 flex-1">{question.question}</h3>
           </div>
 
           <RadioGroup
@@ -259,7 +259,7 @@ Return JSON with:
             onValueChange={(value) => handleAnswerSelect(currentQuestion, parseInt(value))}
           >
             {question.options.map((option, idx) => (
-              <div key={idx} className="flex items-center space-x-3 p-3 rounded-lg border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors">
+              <div key={idx} className="flex items-center space-x-3 p-3 rounded-lg border-2 border-slate-200 hover:border-purple-300 hover:bg-purple-50 transition-colors">
                 <RadioGroupItem value={idx.toString()} id={`option-${idx}`} />
                 <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer text-sm">
                   {option}
@@ -279,7 +279,7 @@ Return JSON with:
             Previous
           </Button>
 
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-slate-600">
             {selectedAnswers[currentQuestion] !== undefined ? (
               <span className="text-green-600 font-medium flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4" /> Answered
@@ -310,7 +310,7 @@ Return JSON with:
         </div>
 
         {/* Progress Indicator */}
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-slate-500">
           {Object.keys(selectedAnswers).length} of {quiz.questions.length} questions answered
         </div>
       </CardContent>

@@ -277,8 +277,8 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
       <Card className="border-2 border-blue-300">
         <CardContent className="p-6 text-center">
           <Sparkles className="w-8 h-8 text-blue-600 mx-auto mb-3 animate-pulse" />
-          <p className="text-sm font-medium text-gray-700">Analyzing documentation...</p>
-          <p className="text-xs text-gray-500 mt-1">Checking compliance, completeness, and clarity</p>
+          <p className="text-sm font-medium text-slate-700">Analyzing documentation...</p>
+          <p className="text-xs text-slate-500 mt-1">Checking compliance, completeness, and clarity</p>
         </CardContent>
       </Card>
     );
@@ -294,7 +294,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Get instant AI-powered analysis of your documentation for compliance, completeness, and PDGM optimization.
           </p>
           <Button onClick={analyzeDocumentation} className="bg-blue-600 hover:bg-blue-700">
@@ -329,7 +329,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Compliance</p>
+              <p className="text-xs text-slate-600 mb-1">Compliance</p>
               <div className="flex items-center gap-2">
                 <Progress value={scores.compliance_score} className="flex-1" />
                 <span className={`text-sm font-bold ${getScoreColor(scores.compliance_score)}`}>
@@ -338,7 +338,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
               </div>
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-1">Completeness</p>
+              <p className="text-xs text-slate-600 mb-1">Completeness</p>
               <div className="flex items-center gap-2">
                 <Progress value={scores.completeness_score} className="flex-1" />
                 <span className={`text-sm font-bold ${getScoreColor(scores.completeness_score)}`}>
@@ -347,7 +347,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
               </div>
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-1">Clarity</p>
+              <p className="text-xs text-slate-600 mb-1">Clarity</p>
               <div className="flex items-center gap-2">
                 <Progress value={scores.clarity_score} className="flex-1" />
                 <span className={`text-sm font-bold ${getScoreColor(scores.clarity_score)}`}>
@@ -356,7 +356,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
               </div>
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-1">PDGM</p>
+              <p className="text-xs text-slate-600 mb-1">PDGM</p>
               <div className="flex items-center gap-2">
                 <Progress value={scores.pdgm_optimization_score} className="flex-1" />
                 <span className={`text-sm font-bold ${getScoreColor(scores.pdgm_optimization_score)}`}>
@@ -389,8 +389,8 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                   <div className="flex items-start gap-2">
                     <Badge className="bg-purple-600 text-white">{win.priority}</Badge>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{win.quick_fix}</p>
-                      <p className="text-xs text-gray-600 mt-1">{win.impact}</p>
+                      <p className="text-sm font-medium text-slate-900">{win.quick_fix}</p>
+                      <p className="text-xs text-slate-600 mt-1">{win.impact}</p>
                     </div>
                   </div>
                 </div>
@@ -441,7 +441,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                             <Copy className="w-3 h-3" />
                           </Button>
                         </div>
-                        <p className="text-sm text-gray-900">{issue.suggestion}</p>
+                        <p className="text-sm text-slate-900">{issue.suggestion}</p>
                       </div>
                     </div>
                   </AccordionContent>
@@ -487,9 +487,9 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                             <Copy className="w-3 h-3" />
                           </Button>
                         </div>
-                        <p className="text-sm text-gray-900">{gap.suggested_addition}</p>
+                        <p className="text-sm text-slate-900">{gap.suggested_addition}</p>
                       </div>
-                      <p className="text-xs text-gray-600 italic">{gap.impact}</p>
+                      <p className="text-xs text-slate-600 italic">{gap.impact}</p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -515,8 +515,8 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <p className="text-xs font-semibold text-yellow-900 mb-1">Vague:</p>
-                      <p className="text-sm text-gray-700 line-through">"{item.vague_statement}"</p>
-                      <p className="text-xs text-gray-500 mt-1">{item.location_hint}</p>
+                      <p className="text-sm text-slate-700 line-through">"{item.vague_statement}"</p>
+                      <p className="text-xs text-slate-500 mt-1">{item.location_hint}</p>
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
@@ -530,8 +530,8 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                           <Copy className="w-3 h-3" />
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-900 font-medium">"{item.improved_version}"</p>
-                      <p className="text-xs text-gray-600 mt-1 italic">{item.why_better}</p>
+                      <p className="text-sm text-slate-900 font-medium">"{item.improved_version}"</p>
+                      <p className="text-xs text-slate-600 mt-1 italic">{item.why_better}</p>
                     </div>
                   </div>
                 </div>
@@ -565,8 +565,8 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                   <AccordionContent className="px-3 pb-3">
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Current:</p>
-                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{item.current_documentation}</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Current:</p>
+                        <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded">{item.current_documentation}</p>
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-1">
@@ -580,7 +580,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                             <Copy className="w-3 h-3" />
                           </Button>
                         </div>
-                        <p className="text-sm text-gray-900 bg-green-50 p-2 rounded border border-green-200">
+                        <p className="text-sm text-slate-900 bg-green-50 p-2 rounded border border-green-200">
                           {item.enhanced_documentation}
                         </p>
                       </div>
@@ -634,8 +634,8 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                           {item.alignment_status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-700 mb-1">"{item.note_statement}"</p>
-                      <p className="text-xs text-gray-600 italic">{item.recommendation}</p>
+                      <p className="text-sm text-slate-700 mb-1">"{item.note_statement}"</p>
+                      <p className="text-xs text-slate-600 italic">{item.recommendation}</p>
                     </div>
                   </div>
                 </div>
@@ -658,8 +658,8 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
             <div className="space-y-2">
               {analysis.positive_elements.map((item, index) => (
                 <div key={index} className="bg-white p-3 rounded border border-emerald-200">
-                  <p className="text-sm font-medium text-gray-900 mb-1">✓ {item.strength}</p>
-                  <p className="text-xs text-gray-600 italic">"{item.example}"</p>
+                  <p className="text-sm font-medium text-slate-900 mb-1">✓ {item.strength}</p>
+                  <p className="text-xs text-slate-600 italic">"{item.example}"</p>
                 </div>
               ))}
             </div>

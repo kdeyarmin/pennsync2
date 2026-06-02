@@ -371,8 +371,8 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
         <CardContent className="p-6 text-center space-y-3">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
           <div>
-            <p className="text-sm text-gray-900 font-semibold">Orchestrating Compliance Checks...</p>
-            <p className="text-xs text-gray-600 mt-1">Running 4 parallel compliance analyzers</p>
+            <p className="text-sm text-slate-900 font-semibold">Orchestrating Compliance Checks...</p>
+            <p className="text-xs text-slate-600 mt-1">Running 4 parallel compliance analyzers</p>
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex items-center gap-1 justify-center">
@@ -465,7 +465,7 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
               <div key={category} className="bg-white p-2 rounded border text-center">
                 <div className="flex items-center justify-center gap-1 mb-1">
                   {getCategoryIcon(category)}
-                  <p className="text-xs font-semibold text-gray-700">{getCategoryLabel(category)}</p>
+                  <p className="text-xs font-semibold text-slate-700">{getCategoryLabel(category)}</p>
                 </div>
                 <p className={`text-xl font-bold ${score >= 90 ? 'text-green-600' : score >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
                   {score}%
@@ -498,7 +498,7 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
           )}
 
           {complianceResults.summary && (
-            <p className="text-sm text-gray-700 bg-white p-3 rounded border">{complianceResults.summary}</p>
+            <p className="text-sm text-slate-700 bg-white p-3 rounded border">{complianceResults.summary}</p>
           )}
         </CardContent>
       </Card>
@@ -540,7 +540,7 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
                               {getStatusIcon(violation.status)}
                               <div>
                                 <p className="font-semibold text-sm">{violation.rule_name}</p>
-                                <p className="text-xs text-gray-600">{violation.reference}</p>
+                                <p className="text-xs text-slate-600">{violation.reference}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -556,8 +556,8 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
                         <AccordionContent className="px-4 pb-4 space-y-3">
                           {violation.evidence_found && (
                             <div className="bg-white p-3 rounded border">
-                              <p className="text-xs font-semibold text-gray-700 mb-1">✓ Evidence:</p>
-                              <p className="text-xs text-gray-600 italic">"{violation.evidence_found}"</p>
+                              <p className="text-xs font-semibold text-slate-700 mb-1">✓ Evidence:</p>
+                              <p className="text-xs text-slate-600 italic">"{violation.evidence_found}"</p>
                             </div>
                           )}
 
@@ -587,9 +587,9 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
                           )}
 
                           {violation.regulatory_reference && (
-                            <div className="bg-gray-50 p-3 rounded border border-gray-300">
-                              <p className="text-xs font-semibold text-gray-900 mb-1">📋 Regulatory Reference:</p>
-                              <p className="text-xs text-gray-700">{violation.regulatory_reference}</p>
+                            <div className="bg-slate-50 p-3 rounded border border-slate-300">
+                              <p className="text-xs font-semibold text-slate-900 mb-1">📋 Regulatory Reference:</p>
+                              <p className="text-xs text-slate-700">{violation.regulatory_reference}</p>
                             </div>
                           )}
 

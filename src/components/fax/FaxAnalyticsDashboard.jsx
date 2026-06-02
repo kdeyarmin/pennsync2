@@ -49,14 +49,14 @@ export default function FaxAnalyticsDashboard() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Fax Analytics</h3>
+      <h3 className="text-lg font-semibold text-slate-900">Fax Analytics</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Success Rate</p>
+                <p className="text-sm text-slate-600">Success Rate</p>
                 <p className="text-2xl font-bold text-green-600">{successRate}%</p>
               </div>
               <TrendingUp className="w-8 h-8 text-green-600" />
@@ -68,7 +68,7 @@ export default function FaxAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Delivered</p>
+                <p className="text-sm text-slate-600">Delivered</p>
                 <p className="text-2xl font-bold text-blue-600">{delivered}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-blue-600" />
@@ -80,7 +80,7 @@ export default function FaxAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Failed</p>
+                <p className="text-sm text-slate-600">Failed</p>
                 <p className="text-2xl font-bold text-red-600">{failed}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-600" />
@@ -92,7 +92,7 @@ export default function FaxAnalyticsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Pending</p>
+                <p className="text-sm text-slate-600">Pending</p>
                 <p className="text-2xl font-bold text-yellow-600">{pending}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-600" />
@@ -112,19 +112,19 @@ export default function FaxAnalyticsDashboard() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total Cost:</span>
+                <span className="text-sm text-slate-600">Total Cost:</span>
                 <span className="font-semibold">${totalCost.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total Pages:</span>
+                <span className="text-sm text-slate-600">Total Pages:</span>
                 <span className="font-semibold">{totalPages}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">This Month:</span>
+                <span className="text-sm text-slate-600">This Month:</span>
                 <span className="font-semibold">{thisMonth.length} faxes</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Last Month:</span>
+                <span className="text-sm text-slate-600">Last Month:</span>
                 <span className="font-semibold">{lastMonth.length} faxes</span>
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function FaxAnalyticsDashboard() {
             <div className="space-y-2">
               {topRecipients.map(([name, count], idx) => (
                 <div key={idx} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 truncate">{name}</span>
+                  <span className="text-sm text-slate-700 truncate">{name}</span>
                   <Badge variant="outline">{count}</Badge>
                 </div>
               ))}
@@ -160,8 +160,8 @@ export default function FaxAnalyticsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600">
-              Busiest day: <span className="font-semibold text-gray-900">{busiestDay[0]}</span> ({busiestDay[1]} faxes)
+            <p className="text-sm text-slate-600">
+              Busiest day: <span className="font-semibold text-slate-900">{busiestDay[0]}</span> ({busiestDay[1]} faxes)
             </p>
           </CardContent>
         </Card>

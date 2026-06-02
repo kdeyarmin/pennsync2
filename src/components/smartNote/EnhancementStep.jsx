@@ -45,7 +45,7 @@ export default function EnhancementStep({
           <textarea
             value={enhancedNote}
             onChange={(e) => onNoteChange(e.target.value)}
-            className="w-full min-h-[900px] font-mono text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-all duration-200 bg-white"
+            className="w-full min-h-[900px] font-mono text-sm border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-all duration-200 bg-white"
           />
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
@@ -97,7 +97,7 @@ export default function EnhancementStep({
         </CardTitle>
       </CardHeader>
       <CardContent className="py-4 space-y-3">
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-slate-700">
           Your note is ready for AI enhancement. Click below to transform it into a Medicare-compliant document.
         </p>
         <Button 

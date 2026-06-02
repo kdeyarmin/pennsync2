@@ -222,7 +222,7 @@ export default function ComplianceAlertAggregator() {
       case 'critical': return 'bg-red-50 border-red-300';
       case 'warning': return 'bg-orange-50 border-orange-300';
       case 'info': return 'bg-blue-50 border-blue-300';
-      default: return 'bg-gray-50 border-gray-300';
+      default: return 'bg-slate-50 border-slate-300';
     }
   };
 

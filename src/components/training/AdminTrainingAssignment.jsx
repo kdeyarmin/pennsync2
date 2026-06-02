@@ -114,8 +114,8 @@ export default function AdminTrainingAssignment() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Training Assignment</h2>
-        <p className="text-gray-600">Assign training modules to nurses based on performance or compliance needs</p>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Training Assignment</h2>
+        <p className="text-slate-600">Assign training modules to nurses based on performance or compliance needs</p>
       </div>
 
       {/* Auto-Assign by Performance */}
@@ -152,7 +152,7 @@ export default function AdminTrainingAssignment() {
         <CardContent className="space-y-4">
           {/* Select Nurse */}
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
+            <label className="text-sm font-medium text-slate-700 mb-2 block">
               Select Nurse
             </label>
             <Select value={selectedNurse} onValueChange={setSelectedNurse}>
@@ -178,7 +178,7 @@ export default function AdminTrainingAssignment() {
 
           {/* Select Module */}
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
+            <label className="text-sm font-medium text-slate-700 mb-2 block">
               Training Module
             </label>
             <Select value={selectedModule} onValueChange={setSelectedModule}>
@@ -190,7 +190,7 @@ export default function AdminTrainingAssignment() {
                   <SelectItem key={module.id} value={module.id}>
                     <div>
                       <p className="font-medium">{module.title}</p>
-                      <p className="text-xs text-gray-500">{module.category} • {module.duration_minutes}min</p>
+                      <p className="text-xs text-slate-500">{module.category} • {module.duration_minutes}min</p>
                     </div>
                   </SelectItem>
                 ))}
@@ -200,7 +200,7 @@ export default function AdminTrainingAssignment() {
 
           {/* Due Date */}
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Due Date
             </label>
@@ -214,7 +214,7 @@ export default function AdminTrainingAssignment() {
 
           {/* Reason */}
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
+            <label className="text-sm font-medium text-slate-700 mb-2 block">
               Assignment Reason (optional)
             </label>
             <Textarea
@@ -247,12 +247,12 @@ export default function AdminTrainingAssignment() {
               <div
                 key={nurse.email}
                 className={`flex items-center justify-between p-3 rounded-lg ${
-                  nurse.needsTraining ? 'bg-red-50 border border-red-200' : 'bg-gray-50'
+                  nurse.needsTraining ? 'bg-red-50 border border-red-200' : 'bg-slate-50'
                 }`}
               >
                 <div>
-                  <p className="font-medium text-gray-900">{nurse.full_name}</p>
-                  <p className="text-xs text-gray-600">{nurse.auditCount} audits</p>
+                  <p className="font-medium text-slate-900">{nurse.full_name}</p>
+                  <p className="text-xs text-slate-600">{nurse.auditCount} audits</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge className={nurse.needsTraining ? 'bg-red-600' : 'bg-green-600'}>

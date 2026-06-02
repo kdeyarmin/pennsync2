@@ -7,8 +7,8 @@ export default function NotesStep({
   isCollapsed, _onToggleCollapse, currentStep
 }) {
   return (
-    <Card id="step-notes" className={`border-2 transition-all duration-300 ${currentStep === 'notes' ? 'border-purple-500 shadow-lg' : 'border-gray-300'}`}>
-      <CardHeader className={`py-4 md:py-5 ${currentStep === 'notes' ? 'bg-gradient-to-r from-purple-100 to-pink-100' : 'bg-gray-50'}`}>
+    <Card id="step-notes" className={`border-2 transition-all duration-300 ${currentStep === 'notes' ? 'border-purple-500 shadow-lg' : 'border-slate-300'}`}>
+      <CardHeader className={`py-4 md:py-5 ${currentStep === 'notes' ? 'bg-gradient-to-r from-purple-100 to-pink-100' : 'bg-slate-50'}`}>
         <CardTitle className="text-base md:text-lg flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className={`p-2 rounded-full ${roughNote.length >= 50 ? 'bg-green-500' : 'bg-purple-500'}`}>
@@ -33,7 +33,7 @@ export default function NotesStep({
                 // Don't prevent any keys - let all typing flow through
               }}
               placeholder="Type or dictate your rough notes or bullet points...\n\nExamples:\n• Patient states feeling better\n• Wound improving, less drainage\n• Taught medication management\n• BP elevated, pt needs MD follow-up"
-              className="w-full min-h-[700px] text-base border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-shadow duration-200 bg-white font-mono resize-none"
+              className="w-full min-h-[700px] text-base border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-shadow duration-200 bg-white font-mono resize-none"
               spellCheck="false"
             />
             {interimText && (
@@ -69,7 +69,7 @@ export default function NotesStep({
                   <span className="text-xs">Recording</span>
                 </div>
               )}
-              <p className={`${roughNote.length >= 50 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+              <p className={`${roughNote.length >= 50 ? 'text-green-600 font-medium' : 'text-slate-400'}`}>
                 {roughNote.length} chars {roughNote.length < 50 && roughNote.length > 0 && <span className="text-orange-500">(min 50)</span>}
               </p>
             </div>

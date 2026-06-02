@@ -33,8 +33,8 @@ export default function LearningReports() {
     return (
       <div className="p-6 text-center">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-        <p className="text-gray-600">Only administrators can access learning reports.</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h1>
+        <p className="text-slate-600">Only administrators can access learning reports.</p>
       </div>
     );
   }
@@ -46,8 +46,8 @@ export default function LearningReports() {
   return (
     <div className="space-y-6 p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Learning Reports & Analytics</h1>
-        <p className="text-gray-600">View training completion rates, employee transcripts, certificates, and compliance reports.</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Learning Reports & Analytics</h1>
+        <p className="text-slate-600">View training completion rates, employee transcripts, certificates, and compliance reports.</p>
       </div>
 
       <Tabs defaultValue="summary" className="space-y-6">
@@ -92,19 +92,19 @@ export default function LearningReports() {
 
         <TabsContent value="plan-compliance">
           <div className="text-center py-12">
-            <p className="text-gray-600">Learning Plan Compliance Report coming soon</p>
+            <p className="text-slate-600">Learning Plan Compliance Report coming soon</p>
           </div>
         </TabsContent>
 
         <TabsContent value="overdue">
           <div className="text-center py-12">
-            <p className="text-gray-600">Overdue & Reminders Report coming soon</p>
+            <p className="text-slate-600">Overdue & Reminders Report coming soon</p>
           </div>
         </TabsContent>
 
         <TabsContent value="expiring">
           <div className="text-center py-12">
-            <p className="text-gray-600">Certificate Expiration Report coming soon</p>
+            <p className="text-slate-600">Certificate Expiration Report coming soon</p>
           </div>
         </TabsContent>
       </Tabs>

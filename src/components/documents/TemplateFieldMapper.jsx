@@ -98,19 +98,19 @@ export default function TemplateFieldMapper({ mappings = [], signatureFields = [
           {mappings.length > 0 && (
             <div className="space-y-2">
               {mappings.map((mapping, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <div key={index} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
                   <div className="flex-1 grid grid-cols-4 gap-2 text-sm">
                     <div>
                       <span className="font-medium">{mapping.pdf_field_name}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">{mapping.data_source}</span>
+                      <span className="text-slate-600">{mapping.data_source}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">{mapping.field_path}</span>
+                      <span className="text-slate-600">{mapping.field_path}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">{mapping.field_type}</span>
+                      <span className="text-slate-500">{mapping.field_type}</span>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => removeMapping(index)}>
@@ -194,10 +194,10 @@ export default function TemplateFieldMapper({ mappings = [], signatureFields = [
           {signatureFields.length > 0 && (
             <div className="space-y-2">
               {signatureFields.map((field, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <div key={index} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
                   <div className="flex-1 text-sm">
                     <span className="font-medium">{field.label}</span>
-                    <span className="text-gray-500 ml-2">({field.role})</span>
+                    <span className="text-slate-500 ml-2">({field.role})</span>
                     {field.required && <span className="text-red-600 ml-2">*</span>}
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => removeSignatureField(index)}>

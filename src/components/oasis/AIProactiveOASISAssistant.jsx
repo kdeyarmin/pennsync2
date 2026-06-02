@@ -261,7 +261,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       case 'moderate': return 'bg-yellow-500';
       case 'high': return 'bg-orange-500';
       case 'critical': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -270,7 +270,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       case 'high': return 'text-green-600';
       case 'medium': return 'text-yellow-600';
       case 'low': return 'text-red-600';
-      default: return 'text-gray-600';
+      default: return 'text-slate-600';
     }
   };
 
@@ -327,7 +327,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
               {/* Completeness Score */}
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border-2 border-blue-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-bold text-gray-900">Documentation Completeness</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Documentation Completeness</h3>
                   <Badge className={`${getRiskColor(analysis.compliance_risk_level)} text-white text-lg px-4 py-2`}>
                     {analysis.compliance_risk_level.toUpperCase()}
                   </Badge>
@@ -336,7 +336,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
                   <span className="text-4xl font-bold text-blue-600">{analysis.completeness_score}%</span>
                   <Progress value={analysis.completeness_score} className="flex-1" />
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   Estimated time to complete: <strong>{analysis.estimated_completion_minutes} minutes</strong>
                 </p>
               </div>
@@ -367,15 +367,15 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex items-center gap-2">
                             <Badge className="bg-orange-600">{gap.oasis_item}</Badge>
-                            <p className="font-semibold text-gray-900">{gap.description}</p>
+                            <p className="font-semibold text-slate-900">{gap.description}</p>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">
+                        <p className="text-sm text-slate-700 mb-2">
                           <strong>Importance:</strong> {gap.importance}
                         </p>
                         <div className="bg-white p-3 rounded border border-orange-200">
-                          <p className="text-sm font-medium text-gray-900 mb-1">✓ Recommendation:</p>
-                          <p className="text-sm text-gray-700">{gap.recommendation}</p>
+                          <p className="text-sm font-medium text-slate-900 mb-1">✓ Recommendation:</p>
+                          <p className="text-sm text-slate-700">{gap.recommendation}</p>
                         </div>
                       </div>
                     ))}
@@ -396,7 +396,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
                     {analysis.priority_actions.map((action, i) => (
                       <div key={i} className="flex items-start gap-2 bg-white p-3 rounded-lg border border-yellow-200">
                         <span className="font-bold text-yellow-600">{i + 1}.</span>
-                        <p className="text-sm text-gray-900">{action}</p>
+                        <p className="text-sm text-slate-900">{action}</p>
                       </div>
                     ))}
                   </CardContent>
@@ -424,16 +424,16 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
                           </div>
                         </div>
                         <div className="mb-2">
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-slate-900">
                             Suggested Value: <span className="text-green-700">{item.suggested_value}</span>
                           </p>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">
+                        <p className="text-sm text-slate-700 mb-2">
                           <strong>Rationale:</strong> {item.rationale}
                         </p>
                         {item.data_needed && (
                           <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
-                            <p className="text-xs text-gray-700">
+                            <p className="text-xs text-slate-700">
                               <strong>Additional Data Needed:</strong> {item.data_needed}
                             </p>
                           </div>

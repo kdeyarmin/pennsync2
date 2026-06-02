@@ -340,8 +340,8 @@ Generate professional, Medicare-compliant clinical documentation based on the re
     <div className="space-y-3">
       {!generatedContent[type] ? (
         <div className="text-center py-6">
-          <Icon className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-sm text-gray-500 mb-3">Generate {title.toLowerCase()} based on patient data</p>
+          <Icon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+          <p className="text-sm text-slate-500 mb-3">Generate {title.toLowerCase()} based on patient data</p>
           <Button onClick={onGenerate} disabled={isGenerating} className="bg-indigo-600 hover:bg-indigo-700">
             {isGenerating ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>

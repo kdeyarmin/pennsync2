@@ -200,7 +200,7 @@ Return JSON with actionable, specific guidance:
         {isLoading ? (
           <div className="text-center py-6">
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600 mb-2" />
-            <p className="text-xs text-gray-600">Loading evidence-based guidelines...</p>
+            <p className="text-xs text-slate-600">Loading evidence-based guidelines...</p>
           </div>
         ) : guidelines ? (
           <>
@@ -235,7 +235,7 @@ Return JSON with actionable, specific guidance:
                         </Badge>
                       </div>
                       <p className="text-xs mb-1"><strong>Action:</strong> {flag.action}</p>
-                      <p className="text-[10px] text-gray-700">{flag.rationale}</p>
+                      <p className="text-[10px] text-slate-700">{flag.rationale}</p>
                     </div>
                   ))}
                 </CardContent>
@@ -259,7 +259,7 @@ Return JSON with actionable, specific guidance:
                           <p className="text-xs font-semibold text-blue-900">{protocol.category}</p>
                           <Badge variant="outline" className="text-[10px]">{protocol.frequency}</Badge>
                         </div>
-                        <ul className="list-disc list-inside text-[10px] text-gray-700 mb-2 space-y-0.5">
+                        <ul className="list-disc list-inside text-[10px] text-slate-700 mb-2 space-y-0.5">
                           {protocol.specific_assessments?.map((item, i) => (
                             <li key={i}>{item}</li>
                           ))}
@@ -295,11 +295,11 @@ Return JSON with actionable, specific guidance:
                         <p className="text-xs font-semibold text-green-900 mb-1">{param.parameter}</p>
                         <div className="grid grid-cols-2 gap-2 text-[10px] mb-2">
                           <div>
-                            <span className="text-gray-600">Normal: </span>
+                            <span className="text-slate-600">Normal: </span>
                             <span className="font-medium">{param.normal_range}</span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Alert if: </span>
+                            <span className="text-slate-600">Alert if: </span>
                             <span className="font-medium text-orange-700">{param.concerning_threshold}</span>
                           </div>
                         </div>
@@ -336,8 +336,8 @@ Return JSON with actionable, specific guidance:
                       <div key={idx} className="bg-pink-50 p-2 rounded border border-pink-200">
                         <p className="text-xs font-semibold text-pink-900 mb-1">{edu.topic}</p>
                         <div className="text-[10px] mb-2">
-                          <p className="font-semibold text-gray-700 mb-0.5">Key Messages:</p>
-                          <ul className="list-disc list-inside text-gray-600 space-y-0.5">
+                          <p className="font-semibold text-slate-700 mb-0.5">Key Messages:</p>
+                          <ul className="list-disc list-inside text-slate-600 space-y-0.5">
                             {edu.key_messages?.map((msg, i) => (
                               <li key={i}>{msg}</li>
                             ))}
@@ -345,8 +345,8 @@ Return JSON with actionable, specific guidance:
                         </div>
                         {edu.teach_back_questions?.length > 0 && (
                           <div className="text-[10px] mb-2 bg-white p-1.5 rounded">
-                            <p className="font-semibold text-gray-700 mb-0.5">Teach-Back Questions:</p>
-                            <ul className="list-disc list-inside text-gray-600">
+                            <p className="font-semibold text-slate-700 mb-0.5">Teach-Back Questions:</p>
+                            <ul className="list-disc list-inside text-slate-600">
                               {edu.teach_back_questions.map((q, i) => (
                                 <li key={i}>{q}</li>
                               ))}
@@ -384,7 +384,7 @@ Return JSON with actionable, specific guidance:
                           <p className="text-xs font-semibold text-purple-900 flex-1">{intervention.intervention}</p>
                           <Badge variant="outline" className="text-[10px]">{intervention.frequency}</Badge>
                         </div>
-                        <p className="text-[10px] text-gray-600 mb-1">
+                        <p className="text-[10px] text-slate-600 mb-1">
                           <strong>Evidence:</strong> {intervention.evidence_basis}
                         </p>
                         <p className="text-[10px] text-purple-700">
@@ -418,7 +418,7 @@ Return JSON with actionable, specific guidance:
                   <AccordionContent className="px-3 pb-3 space-y-2">
                     <div className="bg-orange-50 p-2 rounded border border-orange-200">
                       <p className="text-xs font-semibold text-orange-900 mb-2">Required Elements:</p>
-                      <ul className="list-disc list-inside text-[10px] text-gray-700 space-y-0.5 mb-2">
+                      <ul className="list-disc list-inside text-[10px] text-slate-700 space-y-0.5 mb-2">
                         {guidelines.diagnosis_specific_documentation.required_elements?.map((elem, i) => (
                           <li key={i}>{elem}</li>
                         ))}
@@ -426,7 +426,7 @@ Return JSON with actionable, specific guidance:
                       {guidelines.diagnosis_specific_documentation.sample_compliant_note && (
                         <>
                           <p className="text-xs font-semibold text-orange-900 mb-1">Sample Compliant Note:</p>
-                          <div className="bg-white p-2 rounded text-[10px] text-gray-700 italic mb-2">
+                          <div className="bg-white p-2 rounded text-[10px] text-slate-700 italic mb-2">
                             "{guidelines.diagnosis_specific_documentation.sample_compliant_note}"
                           </div>
                           <Button
@@ -445,8 +445,8 @@ Return JSON with actionable, specific guidance:
             </Accordion>
           </>
         ) : (
-          <div className="text-center py-6 text-gray-500 text-sm">
-            <Stethoscope className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+          <div className="text-center py-6 text-slate-500 text-sm">
+            <Stethoscope className="w-12 h-12 text-slate-300 mx-auto mb-2" />
             <p>Click "Load Guidelines" to access clinical protocols</p>
           </div>
         )}

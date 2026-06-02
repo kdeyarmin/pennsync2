@@ -122,18 +122,18 @@ export default function EducationVideos() {
               <BookOpen className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900">Educational Videos</h2>
-              <p className="text-sm text-gray-600">Comprehensive training on OASIS, documentation, and infection control</p>
+              <h2 className="text-xl font-bold text-slate-900">Educational Videos</h2>
+              <p className="text-sm text-slate-600">Comprehensive training on OASIS, documentation, and infection control</p>
             </div>
           </div>
           
           {/* Progress Bar */}
           <div className="bg-white rounded-lg p-4 border border-indigo-200">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Your Progress</span>
+              <span className="text-sm font-medium text-slate-700">Your Progress</span>
               <span className="text-sm font-bold text-indigo-600">{completedVideos.length} / {totalVideos} videos</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-slate-200 rounded-full h-3">
               <div 
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
@@ -146,7 +146,7 @@ export default function EducationVideos() {
       {/* Videos by Category */}
       {Object.entries(videosByCategory).map(([category, videos]) => (
         <div key={category} className="space-y-4">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
             {category}
           </h3>
@@ -167,15 +167,15 @@ export default function EducationVideos() {
                         )}
                         <span>{video.title}</span>
                       </CardTitle>
-                      <p className="text-sm text-gray-600 mb-2">{video.description}</p>
+                      <p className="text-sm text-slate-600 mb-2">{video.description}</p>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge className={categoryColors[video.category] || "bg-gray-100 text-gray-800"}>
+                        <Badge className={categoryColors[video.category] || "bg-slate-100 text-slate-800"}>
                           {video.category}
                         </Badge>
                         {video.priority === 'high' && (
                           <Badge className="bg-indigo-100 text-indigo-800">Priority</Badge>
                         )}
-                        <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
                           <Clock className="w-3 h-3" />
                           {video.duration}
                         </span>
@@ -218,8 +218,8 @@ export default function EducationVideos() {
             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Congratulations!</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Congratulations!</h3>
+            <p className="text-slate-600">
               You've completed all educational videos. Keep up the great work!
             </p>
           </CardContent>

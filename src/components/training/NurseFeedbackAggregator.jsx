@@ -187,7 +187,7 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
         {isAnalyzing ? (
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Analyzing your documentation feedback...</p>
+            <p className="text-sm text-slate-600">Analyzing your documentation feedback...</p>
           </div>
         ) : aggregatedData ? (
           <>
@@ -195,22 +195,22 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-blue-50 p-3 rounded-lg text-center">
                 <p className="text-2xl font-bold text-blue-700">{aggregatedData.avgQuality}%</p>
-                <p className="text-xs text-gray-600">Avg Quality</p>
+                <p className="text-xs text-slate-600">Avg Quality</p>
               </div>
               <div className="bg-green-50 p-3 rounded-lg text-center">
                 <p className="text-2xl font-bold text-green-700">{aggregatedData.avgCompliance}%</p>
-                <p className="text-xs text-gray-600">Avg Compliance</p>
+                <p className="text-xs text-slate-600">Avg Compliance</p>
               </div>
               <div className="bg-purple-50 p-3 rounded-lg text-center">
                 <p className="text-2xl font-bold text-purple-700">{aggregatedData.passRate}%</p>
-                <p className="text-xs text-gray-600">Pass Rate</p>
+                <p className="text-xs text-slate-600">Pass Rate</p>
               </div>
             </div>
 
             {/* Skill Gaps Radar */}
             {getSkillRadarData().length > 0 && (
               <div className="h-48">
-                <p className="text-xs font-semibold text-gray-700 mb-2">Documentation Skill Profile</p>
+                <p className="text-xs font-semibold text-slate-700 mb-2">Documentation Skill Profile</p>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={getSkillRadarData()}>
                     <PolarGrid />
@@ -224,13 +224,13 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
 
             {/* Top Skill Gaps */}
             <div>
-              <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+              <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3 text-orange-500" />
                 Areas Needing Improvement
               </p>
               <div className="space-y-2">
                 {aggregatedData.skillGaps.slice(0, 5).map((gap, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
                     <div className="flex items-center gap-2">
                       <Badge className={`text-[10px] ${
                         gap.priority > 10 ? 'bg-red-100 text-red-800' :
@@ -239,7 +239,7 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
                       }`}>
                         {gap.count} issues
                       </Badge>
-                      <span className="text-xs font-medium text-gray-700">{gap.category}</span>
+                      <span className="text-xs font-medium text-slate-700">{gap.category}</span>
                     </div>
                     <Button size="sm" variant="ghost" className="h-6 text-xs text-indigo-600">
                       <BookOpen className="w-3 h-3 mr-1" /> Train
@@ -250,7 +250,7 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
             </div>
           </>
         ) : (
-          <p className="text-sm text-gray-500 text-center py-4">
+          <p className="text-sm text-slate-500 text-center py-4">
             No feedback data available yet. Complete some documentation to see your analysis.
           </p>
         )}

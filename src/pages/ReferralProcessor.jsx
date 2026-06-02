@@ -137,8 +137,8 @@ export default function ReferralProcessor() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Referral Processor</h1>
-        <p className="text-sm sm:text-base text-gray-600">Upload and process patient referral PDFs for admission</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-2">Referral Processor</h1>
+        <p className="text-sm sm:text-base text-slate-600">Upload and process patient referral PDFs for admission</p>
       </div>
 
       <div className="space-y-4 sm:space-y-6">
@@ -225,13 +225,13 @@ export default function ReferralProcessor() {
                                 <Badge className={`${
                                   dx.reimbursement_tier === 'High' ? 'bg-green-600' :
                                   dx.reimbursement_tier === 'Medium' ? 'bg-yellow-600' :
-                                  'bg-gray-600'
+                                  'bg-slate-600'
                                 } text-white`}>
                                   {dx.reimbursement_tier}
                                 </Badge>
-                                <span className="text-xs text-gray-600">{dx.estimated_payment_range}</span>
+                                <span className="text-xs text-slate-600">{dx.estimated_payment_range}</span>
                               </div>
-                              <p className="font-semibold text-gray-900">{dx.diagnosis}</p>
+                              <p className="font-semibold text-slate-900">{dx.diagnosis}</p>
                             </div>
                             {selectedPrimaryDx === dx.diagnosis && (
                               <CheckCircle2 className="w-5 h-5 text-purple-600 flex-shrink-0" />
@@ -240,30 +240,30 @@ export default function ReferralProcessor() {
 
                           <div className="space-y-2 text-sm">
                             <div>
-                              <p className="font-semibold text-gray-900">PDGM Group: {dx.pdgm_clinical_group}</p>
+                              <p className="font-semibold text-slate-900">PDGM Group: {dx.pdgm_clinical_group}</p>
                             </div>
 
                             <div>
-                              <p className="font-semibold text-gray-700">Key Factors:</p>
+                              <p className="font-semibold text-slate-700">Key Factors:</p>
                               <ul className="ml-4 space-y-1">
                                 {dx.key_factors?.map((factor, fidx) => (
-                                  <li key={fidx} className="text-gray-600">• {factor}</li>
+                                  <li key={fidx} className="text-slate-600">• {factor}</li>
                                 ))}
                               </ul>
                             </div>
 
                             {dx.documentation_requirements?.length > 0 && (
                               <div>
-                                <p className="font-semibold text-gray-700">Documentation Required:</p>
+                                <p className="font-semibold text-slate-700">Documentation Required:</p>
                                 <ul className="ml-4 space-y-1">
                                   {dx.documentation_requirements.map((req, ridx) => (
-                                    <li key={ridx} className="text-gray-600">• {req}</li>
+                                    <li key={ridx} className="text-slate-600">• {req}</li>
                                   ))}
                                 </ul>
                               </div>
                             )}
 
-                            <p className="text-gray-600 italic">{dx.rationale}</p>
+                            <p className="text-slate-600 italic">{dx.rationale}</p>
                           </div>
                         </div>
                       ))}
@@ -316,7 +316,7 @@ export default function ReferralProcessor() {
                   {!createdCarePlans ? (
                     <div className="space-y-3">
                       <Alert className="bg-white border-teal-300">
-                        <AlertDescription className="text-sm text-gray-700">
+                        <AlertDescription className="text-sm text-slate-700">
                           Generate comprehensive, Medicare-compliant care plans based on the selected diagnosis and referral data.
                         </AlertDescription>
                       </Alert>
@@ -352,8 +352,8 @@ export default function ReferralProcessor() {
                       <div className="space-y-2">
                         {createdCarePlans.care_plans?.map((cp, idx) => (
                           <div key={idx} className="bg-white border border-teal-200 rounded p-3">
-                            <p className="font-semibold text-gray-900 mb-1">{cp.problem}</p>
-                            <p className="text-sm text-gray-700 mb-2">Goal: {cp.goal}</p>
+                            <p className="font-semibold text-slate-900 mb-1">{cp.problem}</p>
+                            <p className="text-sm text-slate-700 mb-2">Goal: {cp.goal}</p>
                             <div className="flex gap-2">
                               <Badge className="bg-teal-600 text-white text-xs">{cp.status}</Badge>
                               <Badge variant="outline" className="text-xs">

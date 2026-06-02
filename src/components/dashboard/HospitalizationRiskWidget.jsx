@@ -226,7 +226,7 @@ Return detailed risk assessment:`,
       case 'high': return 'bg-orange-600';
       case 'moderate': return 'bg-yellow-600';
       case 'low': return 'bg-green-600';
-      default: return 'bg-gray-600';
+      default: return 'bg-slate-600';
     }
   };
 
@@ -243,7 +243,7 @@ Return detailed risk assessment:`,
             </div>
             <div>
               <div className="text-base sm:text-lg">Hospitalization Risk Monitor</div>
-              <div className="text-xs font-normal text-gray-500">AI-powered predictive analysis</div>
+              <div className="text-xs font-normal text-slate-500">AI-powered predictive analysis</div>
             </div>
           </CardTitle>
           <Button
@@ -261,17 +261,17 @@ Return detailed risk assessment:`,
       <CardContent>
         {!riskScores && !analyzing && (
           <div className="text-center py-8">
-            <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-600 mb-4">Click "Analyze" to assess hospitalization risk for all active patients</p>
-            <p className="text-xs text-gray-500">AI analyzes vitals, medications, and clinical notes</p>
+            <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-600 mb-4">Click "Analyze" to assess hospitalization risk for all active patients</p>
+            <p className="text-xs text-slate-500">AI analyzes vitals, medications, and clinical notes</p>
           </div>
         )}
 
         {analyzing && (
           <div className="text-center py-8">
             <RefreshCw className="w-12 h-12 text-blue-500 mx-auto mb-3 animate-spin" />
-            <p className="text-gray-600 font-medium">Analyzing {patients.length} patients...</p>
-            <p className="text-xs text-gray-500 mt-2">Reviewing vitals, medications, and clinical patterns</p>
+            <p className="text-slate-600 font-medium">Analyzing {patients.length} patients...</p>
+            <p className="text-xs text-slate-500 mt-2">Reviewing vitals, medications, and clinical patterns</p>
           </div>
         )}
 
@@ -328,7 +328,7 @@ Return detailed risk assessment:`,
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <p className="font-semibold text-gray-900 truncate">{risk.patient_name}</p>
+                              <p className="font-semibold text-slate-900 truncate">{risk.patient_name}</p>
                               <Badge className={`${getRiskColor(risk.risk_level)} text-white text-xs`}>
                                 {risk.risk_score}/100
                               </Badge>
@@ -340,7 +340,7 @@ Return detailed risk assessment:`,
                             </div>
                             
                             {risk.primary_diagnosis && (
-                              <p className="text-xs text-gray-600 mb-2">{risk.primary_diagnosis}</p>
+                              <p className="text-xs text-slate-600 mb-2">{risk.primary_diagnosis}</p>
                             )}
 
                             {/* Top Risk Factors */}
@@ -350,16 +350,16 @@ Return detailed risk assessment:`,
                                   <AlertCircle className={`w-3 h-3 flex-shrink-0 mt-0.5 ${
                                     risk.risk_level === 'critical' ? 'text-red-600' : 'text-orange-600'
                                   }`} />
-                                  <span className="text-gray-700">{factor}</span>
+                                  <span className="text-slate-700">{factor}</span>
                                 </div>
                               ))}
                             </div>
 
                             {/* Immediate Actions */}
                             {risk.immediate_actions && risk.immediate_actions.length > 0 && (
-                              <div className="mt-2 pt-2 border-t border-gray-200">
-                                <p className="text-xs font-semibold text-gray-700 mb-1">Immediate Action:</p>
-                                <p className="text-xs text-gray-600">{risk.immediate_actions[0]}</p>
+                              <div className="mt-2 pt-2 border-t border-slate-200">
+                                <p className="text-xs font-semibold text-slate-700 mb-1">Immediate Action:</p>
+                                <p className="text-xs text-slate-600">{risk.immediate_actions[0]}</p>
                               </div>
                             )}
 
@@ -372,7 +372,7 @@ Return detailed risk assessment:`,
                             )}
                           </div>
                           
-                          <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
+                          <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 mt-1" />
                         </div>
                       </div>
                     </Link>
@@ -404,7 +404,7 @@ Return detailed risk assessment:`,
 
             {/* Last Analyzed */}
             {lastAnalyzed && (
-              <div className="text-xs text-gray-500 text-center pt-2 border-t">
+              <div className="text-xs text-slate-500 text-center pt-2 border-t">
                 Last analyzed: {lastAnalyzed.toLocaleTimeString()} • {riskScores.length} patients assessed
               </div>
             )}

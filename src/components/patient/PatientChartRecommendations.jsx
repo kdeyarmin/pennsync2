@@ -77,7 +77,7 @@ export default function PatientChartRecommendations({ patientId }) {
   const _completedRecs = recommendations.filter(r => r.status === 'completed');
 
   if (isLoading) {
-    return <Card><CardContent className="p-6 text-center text-gray-500">Loading recommendations...</CardContent></Card>;
+    return <Card><CardContent className="p-6 text-center text-slate-500">Loading recommendations...</CardContent></Card>;
   }
 
   if (recommendations.length === 0) {
@@ -101,8 +101,8 @@ export default function PatientChartRecommendations({ patientId }) {
               <CardContent className="p-3">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{rec.title}</p>
-                    <p className="text-xs text-gray-500">{rec.description?.substring(0, 100)}...</p>
+                    <p className="font-semibold text-slate-900">{rec.title}</p>
+                    <p className="text-xs text-slate-500">{rec.description?.substring(0, 100)}...</p>
                   </div>
                   <div className="flex flex-col gap-1 items-end">
                     <Badge className={
@@ -115,7 +115,7 @@ export default function PatientChartRecommendations({ patientId }) {
                     <Badge variant="outline" className="text-xs">{rec.recommendation_type.replace(/_/g, ' ')}</Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Clock className="w-3 h-3" />
                   <span>{new Date(rec.created_date).toLocaleDateString()}</span>
                   <span>•</span>
@@ -127,7 +127,7 @@ export default function PatientChartRecommendations({ patientId }) {
 
           {acceptedRecs.length > 0 && (
             <div className="pt-3 border-t">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Accepted ({acceptedRecs.length})</p>
+              <p className="text-sm font-semibold text-slate-700 mb-2">Accepted ({acceptedRecs.length})</p>
               {acceptedRecs.slice(0, 3).map((rec) => (
                 <div key={rec.id} className="p-2 bg-green-50 rounded border border-green-200 mb-2 text-sm">
                   <p className="font-medium text-green-900">{rec.title}</p>
@@ -150,17 +150,17 @@ export default function PatientChartRecommendations({ patientId }) {
             {selectedRec && (
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Description:</p>
-                  <p className="text-sm text-gray-800">{selectedRec.description}</p>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">Description:</p>
+                  <p className="text-sm text-slate-800">{selectedRec.description}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-xs text-gray-600">Priority:</p>
+                    <p className="text-xs text-slate-600">Priority:</p>
                     <Badge className={getSeverityColor(selectedRec.priority)}>{selectedRec.priority}</Badge>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Type:</p>
+                    <p className="text-xs text-slate-600">Type:</p>
                     <Badge variant="outline">{selectedRec.recommendation_type.replace(/_/g, ' ')}</Badge>
                   </div>
                 </div>
@@ -181,10 +181,10 @@ export default function PatientChartRecommendations({ patientId }) {
 
                 {selectedRec.implementation_steps?.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Implementation Steps:</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Implementation Steps:</p>
                     <ol className="space-y-1">
                       {selectedRec.implementation_steps.map((step, idx) => (
-                        <li key={idx} className="text-sm text-gray-800 flex items-start gap-2">
+                        <li key={idx} className="text-sm text-slate-800 flex items-start gap-2">
                           <span className="bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">
                             {idx + 1}
                           </span>
@@ -197,7 +197,7 @@ export default function PatientChartRecommendations({ patientId }) {
 
                 {selectedRec.status === 'pending' && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Implementation Notes (optional):</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Implementation Notes (optional):</p>
                     <Textarea
                       value={implementationNotes}
                       onChange={(e) => setImplementationNotes(e.target.value)}
@@ -235,7 +235,7 @@ export default function PatientChartRecommendations({ patientId }) {
 
         {pendingRecs.length > 0 && (
           <div className="flex items-center justify-between pt-3 border-t mt-4">
-            <p className="text-sm text-gray-600">{recommendations.length} total recommendations</p>
+            <p className="text-sm text-slate-600">{recommendations.length} total recommendations</p>
           </div>
         )}
       </CardContent>
@@ -249,6 +249,6 @@ const getSeverityColor = (priority) => {
     case 'high': return 'bg-orange-500 text-white';
     case 'medium': return 'bg-yellow-500 text-white';
     case 'low': return 'bg-blue-500 text-white';
-    default: return 'bg-gray-500 text-white';
+    default: return 'bg-slate-500 text-white';
   }
 };

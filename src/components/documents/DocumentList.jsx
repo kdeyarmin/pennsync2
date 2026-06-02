@@ -46,7 +46,7 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-gray-900 truncate">{doc.title}</h3>
+              <h3 className="font-semibold text-slate-900 truncate">{doc.title}</h3>
               {doc.ai_analysis?.analyzed && (
                 <Brain className="w-4 h-4 text-purple-600 flex-shrink-0" />
               )}
@@ -55,7 +55,7 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
               )}
             </div>
             {doc.description && (
-              <p className="text-sm text-gray-600 line-clamp-2 mt-1">{doc.description}</p>
+              <p className="text-sm text-slate-600 line-clamp-2 mt-1">{doc.description}</p>
             )}
           </div>
           {doc.is_sensitive && (
@@ -68,20 +68,20 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
             {getCategoryLabel(doc.category)}
           </Badge>
           {showPatientInfo && doc.patient_id && (
-            <div className="flex items-center gap-1 text-sm text-gray-600">
+            <div className="flex items-center gap-1 text-sm text-slate-600">
               <User className="w-3 h-3" />
               {getPatientName(doc.patient_id)}
             </div>
           )}
           {doc.document_date && (
-            <div className="flex items-center gap-1 text-sm text-gray-600">
+            <div className="flex items-center gap-1 text-sm text-slate-600">
               <Calendar className="w-3 h-3" />
               {format(new Date(doc.document_date), 'MMM d, yyyy')}
             </div>
           )}
           {doc.tags?.length > 0 && (
             <div className="flex items-center gap-1 flex-wrap">
-              <Tag className="w-3 h-3 text-gray-400" />
+              <Tag className="w-3 h-3 text-slate-400" />
               {doc.tags.map((tag, i) => (
                 <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
               ))}
@@ -155,7 +155,7 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
           </AlertDialog>
         </div>
 
-        <div className="mt-3 pt-3 border-t text-xs text-gray-500">
+        <div className="mt-3 pt-3 border-t text-xs text-slate-500">
           Uploaded {format(new Date(doc.created_date), 'MMM d, yyyy')} by {doc.uploaded_by || doc.created_by}
         </div>
       </CardContent>
@@ -225,20 +225,20 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
       discharge_summary: "bg-orange-100 text-orange-800",
       medication_list: "bg-teal-100 text-teal-800",
       orders: "bg-red-100 text-red-800",
-      other: "bg-gray-100 text-gray-800"
+      other: "bg-slate-100 text-slate-800"
     };
     return colors[category] || colors.other;
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-500">Loading documents...</div>;
+    return <div className="text-center py-8 text-slate-500">Loading documents...</div>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search documents..."
             value={searchTerm}
@@ -277,8 +277,8 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
 
       {filteredDocuments.length === 0 ? (
         <div className="text-center py-12">
-          <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500">No documents found</p>
+          <FileText className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+          <p className="text-slate-500">No documents found</p>
         </div>
       ) : (
         <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-2"}>

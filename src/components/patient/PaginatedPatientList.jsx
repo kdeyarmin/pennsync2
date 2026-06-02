@@ -68,7 +68,7 @@ export default function PaginatedPatientList({
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
-      case 'discharged': return 'bg-gray-100 text-gray-800';
+      case 'discharged': return 'bg-slate-100 text-slate-800';
       case 'hospitalized': return 'bg-red-100 text-red-800';
       default: return 'bg-blue-100 text-blue-800';
     }
@@ -80,7 +80,7 @@ export default function PaginatedPatientList({
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         {showSearch ? (
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="Search patients by name or MRN..."
               value={search}
@@ -121,7 +121,7 @@ export default function PaginatedPatientList({
       </div>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm text-gray-600">
+      <div className="flex items-center justify-between text-sm text-slate-600">
         <span>
           Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredAndSortedPatients.length)} of {filteredAndSortedPatients.length} patients
         </span>
@@ -155,11 +155,11 @@ export default function PaginatedPatientList({
                   {getPatientInitials(patient)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">
+                  <h3 className="font-semibold text-slate-900 truncate">
                     {getPatientDisplayName(patient)}
                   </h3>
                   {patient.medical_record_number && (
-                    <p className="text-xs text-gray-500">MRN: {patient.medical_record_number}</p>
+                    <p className="text-xs text-slate-500">MRN: {patient.medical_record_number}</p>
                   )}
                   <div className="flex flex-wrap gap-1 mt-2">
                     <Badge variant="outline" className={getStatusColor(patient.status)}>

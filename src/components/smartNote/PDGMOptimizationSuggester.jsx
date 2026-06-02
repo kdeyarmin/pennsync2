@@ -181,7 +181,7 @@ Return JSON.`,
           {analyzing && (
             <div className="text-center py-6">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Analyzing PDGM opportunities...</p>
+              <p className="text-sm text-slate-600">Analyzing PDGM opportunities...</p>
             </div>
           )}
 
@@ -198,8 +198,8 @@ Return JSON.`,
               {/* Revenue Impact Overview */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white border border-green-200 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-600 mb-1">Current Estimate</p>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p className="text-xs text-slate-600 mb-1">Current Estimate</p>
+                  <p className="text-lg font-bold text-slate-900">
                     {optimization.current_case_mix_estimate?.toFixed(2) || 'N/A'}
                   </p>
                 </div>
@@ -232,14 +232,14 @@ Return JSON.`,
                                 }`}>
                                   {opp.priority}
                                 </Badge>
-                                <span className="text-xs font-semibold text-gray-900">{opp.category}</span>
+                                <span className="text-xs font-semibold text-slate-900">{opp.category}</span>
                                 {opp.revenue_impact > 0 && (
                                   <Badge className="bg-green-600 text-xs">
                                     +${opp.revenue_impact}
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-700 mb-2">{opp.finding}</p>
+                              <p className="text-xs text-slate-700 mb-2">{opp.finding}</p>
                             </div>
                             {opp.actionable_now && !isApplied && (
                               <Button
@@ -264,7 +264,7 @@ Return JSON.`,
                           </div>
 
                           {opp.evidence && (
-                            <p className="text-xs text-gray-600 italic mt-2">
+                            <p className="text-xs text-slate-600 italic mt-2">
                               Evidence: {opp.evidence}
                             </p>
                           )}

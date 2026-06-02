@@ -103,12 +103,12 @@ export default function DocumentationGapsReport({ oasisData = [], noteData = [],
       </CardHeader>
       <CardContent>
         {oasisData.length === 0 && noteData.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No documentation data available</p>
+          <p className="text-center text-slate-500 py-8">No documentation data available</p>
         ) : (
           <div className={compact ? "" : "grid grid-cols-1 lg:grid-cols-3 gap-6"}>
             {/* Common OASIS issues chart */}
             <div className={compact ? "" : "lg:col-span-2"}>
-              <p className="text-sm font-medium text-gray-700 mb-3">Most Common OASIS Issues</p>
+              <p className="text-sm font-medium text-slate-700 mb-3">Most Common OASIS Issues</p>
               {commonIssues.length > 0 ? (
                 <ResponsiveContainer width="100%" height={compact ? 180 : 250}>
                   <BarChart data={commonIssues} layout="vertical">
@@ -121,14 +121,14 @@ export default function DocumentationGapsReport({ oasisData = [], noteData = [],
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-gray-500 py-8">No OASIS issues found</p>
+                <p className="text-center text-slate-500 py-8">No OASIS issues found</p>
               )}
             </div>
 
             {/* Gap categories pie */}
             {!compact && gapCategories.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">Gap Categories</p>
+                <p className="text-sm font-medium text-slate-700 mb-3">Gap Categories</p>
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
@@ -160,7 +160,7 @@ export default function DocumentationGapsReport({ oasisData = [], noteData = [],
             {/* Note quality issues */}
             {!compact && noteIssues.length > 0 && (
               <div className="lg:col-span-3 pt-4 border-t">
-                <p className="text-sm font-medium text-gray-700 mb-3">Smart Note Quality Issues</p>
+                <p className="text-sm font-medium text-slate-700 mb-3">Smart Note Quality Issues</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {noteIssues.map((issue, idx) => (
                     <div key={idx} className="p-3 bg-red-50 rounded-lg border border-red-200">

@@ -57,11 +57,11 @@ export default function TemplateLibrary() {
       </Button>
 
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
           <ClipboardList className="w-10 h-10 text-blue-600" />
           Clinical Template Library
         </h1>
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           AI-intelligent documentation templates for various visit types and conditions
         </p>
       </div>
@@ -156,11 +156,11 @@ export default function TemplateLibrary() {
           ) : (
             <Card className="h-full border-2 border-dashed">
               <CardContent className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-8">
-                <FileText className="w-16 h-16 text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <FileText className="w-16 h-16 text-slate-300 mb-4" />
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">
                   Select a Template
                 </h3>
-                <p className="text-gray-500 max-w-sm">
+                <p className="text-slate-500 max-w-sm">
                   Choose a visit type or condition template from the library to generate 
                   AI-powered clinical documentation.
                 </p>
@@ -173,28 +173,28 @@ export default function TemplateLibrary() {
       {/* Features Info */}
       <Card className="mt-8 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-600" />
             Template Library Features
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">📋 Visit Type Templates</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="font-medium text-slate-900 mb-2">📋 Visit Type Templates</h4>
+              <p className="text-sm text-slate-600">
                 Pre-built templates for Admission, Routine, Recertification, Discharge, PRN, 
                 and Supervisory visits with all required Medicare elements.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">💊 Condition-Specific</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="font-medium text-slate-900 mb-2">💊 Condition-Specific</h4>
+              <p className="text-sm text-slate-600">
                 Specialized templates for CHF, COPD, Diabetes, Wound Care, Stroke, 
                 Orthopedic, Hospice, and Hypertension with condition-specific assessments.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">🤖 AI-Intelligent</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="font-medium text-slate-900 mb-2">🤖 AI-Intelligent</h4>
+              <p className="text-sm text-slate-600">
                 Templates include clinical prompts, dropdown options for structured data, 
                 and AI enhancement to complete documentation professionally.
               </p>

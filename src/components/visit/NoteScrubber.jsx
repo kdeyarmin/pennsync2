@@ -372,7 +372,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
       case 'good': return 'bg-blue-500';
       case 'needs_work': return 'bg-yellow-500';
       case 'critical_deficiencies': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -381,7 +381,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
       case 'low': return 'bg-green-100 text-green-800 border-green-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'high': return 'bg-red-100 text-red-800 border-red-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -395,8 +395,8 @@ Be thorough and specific. For critical items, provide exact template text the nu
                 <FileCheck className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Medicare Compliance Scrubber</h3>
-                <p className="text-sm text-gray-600">Check your note before closing the visit</p>
+                <h3 className="text-lg font-bold text-slate-900">Medicare Compliance Scrubber</h3>
+                <p className="text-sm text-slate-600">Check your note before closing the visit</p>
               </div>
             </div>
             <Button
@@ -438,8 +438,8 @@ Be thorough and specific. For critical items, provide exact template text the nu
             <div className="py-12 text-center space-y-4">
               <Sparkles className="w-16 h-16 mx-auto text-blue-600 animate-pulse" />
               <div>
-                <p className="text-lg font-semibold text-gray-900">Analyzing Your Documentation...</p>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-lg font-semibold text-slate-900">Analyzing Your Documentation...</p>
+                <p className="text-sm text-slate-600 mt-2">
                   Checking against {patient.care_type === 'hospice' ? 'hospice' : 'home health'} Medicare requirements
                 </p>
               </div>
@@ -447,13 +447,13 @@ Be thorough and specific. For critical items, provide exact template text the nu
           ) : scrubResults ? (
             <div className="space-y-6 py-4">
               {/* Overall Score */}
-              <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+              <div className="bg-white rounded-lg border-2 border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">
+                    <h3 className="text-2xl font-bold text-slate-900">
                       Compliance Score: {scrubResults.overall_score}/100
                     </h3>
-                    <p className="text-gray-600 capitalize mt-1">
+                    <p className="text-slate-600 capitalize mt-1">
                       {scrubResults.compliance_level?.replace('_', ' ')}
                     </p>
                   </div>
@@ -461,7 +461,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
                     <Badge className={getRiskBadgeColor(scrubResults.medicare_risk_level)}>
                       {scrubResults.medicare_risk_level?.toUpperCase()} RISK
                     </Badge>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       Est. fix time: {scrubResults.estimated_time_to_fix}
                     </p>
                   </div>
@@ -522,8 +522,8 @@ Be thorough and specific. For critical items, provide exact template text the nu
                         </div>
 
                         <div className="bg-white p-3 rounded border border-red-200">
-                          <p className="text-xs font-semibold text-gray-700 mb-1">Medicare-Compliant Example:</p>
-                          <p className="text-sm text-gray-900 italic">{item.example}</p>
+                          <p className="text-xs font-semibold text-slate-700 mb-1">Medicare-Compliant Example:</p>
+                          <p className="text-sm text-slate-900 italic">{item.example}</p>
                         </div>
 
                         <div className="bg-blue-50 p-3 rounded border border-blue-200">
@@ -532,7 +532,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
                         </div>
 
                         {item.location && (
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-slate-600">
                             <strong>Add to:</strong> {item.location}
                           </p>
                         )}
@@ -585,7 +585,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
                         </p>
                         {item.current_text && (
                           <div className="bg-white p-2 rounded border border-yellow-200">
-                            <p className="text-xs text-gray-600">Current: "{item.current_text}"</p>
+                            <p className="text-xs text-slate-600">Current: "{item.current_text}"</p>
                           </div>
                         )}
                         <div className="bg-green-50 p-2 rounded border border-green-200">
@@ -626,7 +626,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
                           <p className="text-purple-900">
                             <strong>{issue.issue}:</strong>
                           </p>
-                          <p className="text-gray-700 ml-4">
+                          <p className="text-slate-700 ml-4">
                             "{issue.location}" → "{issue.correction}"
                           </p>
                         </div>

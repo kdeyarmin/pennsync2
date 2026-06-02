@@ -203,7 +203,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
         </CardHeader>
         <CardContent className="space-y-2">
           {threads.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">No messages yet</p>
+            <p className="text-sm text-slate-500 text-center py-4">No messages yet</p>
           ) : (
             threads.map(thread => (
               <div
@@ -216,17 +216,17 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                 className={`p-3 rounded-lg cursor-pointer transition-colors ${
                   selectedThread?.threadId === thread.threadId
                     ? 'bg-blue-100 border-2 border-blue-500'
-                    : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-slate-50 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <p className="text-sm font-semibold text-gray-900 line-clamp-1">{thread.subject}</p>
+                  <p className="text-sm font-semibold text-slate-900 line-clamp-1">{thread.subject}</p>
                   {thread.unreadCount > 0 && (
                     <Badge className="bg-red-600 text-white text-xs">{thread.unreadCount}</Badge>
                   )}
                 </div>
-                <p className="text-xs text-gray-600 line-clamp-2 mb-1">{thread.lastMessage.message_text}</p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <p className="text-xs text-slate-600 line-clamp-2 mb-1">{thread.lastMessage.message_text}</p>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Clock className="w-3 h-3" />
                   {format(new Date(thread.lastMessage.created_date), 'MMM d, h:mm a')}
                 </div>
@@ -331,7 +331,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                   {suggestions.suggested_info?.map((info, idx) => (
                     <div key={idx} className="bg-white p-2 rounded text-xs">
                       <Badge className="bg-blue-600 text-white mb-1">{info.category}</Badge>
-                      <p className="text-gray-900">{info.information}</p>
+                      <p className="text-slate-900">{info.information}</p>
                     </div>
                   ))}
 
@@ -369,11 +369,11 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                 className={`p-3 rounded-lg ${
                   msg.sender_email === user?.email
                     ? 'bg-blue-100 ml-8'
-                    : 'bg-gray-100 mr-8'
+                    : 'bg-slate-100 mr-8'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-semibold text-gray-900">{msg.sender_name}</p>
+                  <p className="text-xs font-semibold text-slate-900">{msg.sender_name}</p>
                   <div className="flex items-center gap-2">
                     {msg.priority !== 'normal' && (
                       <Badge className={`text-xs ${
@@ -382,12 +382,12 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                         {msg.priority}
                       </Badge>
                     )}
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {format(new Date(msg.created_date), 'MMM d, h:mm a')}
                     </p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.message_text}</p>
+                <p className="text-sm text-slate-800 whitespace-pre-wrap">{msg.message_text}</p>
                 
                 {/* Referral Action Buttons */}
                 {msg.related_event_type === 'referral' && msg.related_event_id && (

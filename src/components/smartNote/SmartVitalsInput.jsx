@@ -97,7 +97,7 @@ const getStatusColor = (status) => {
       case 'low': return 'border-yellow-400 bg-yellow-50';
       case 'moderate': return 'border-yellow-400 bg-yellow-50';
       case 'normal': return 'border-green-400 bg-green-50';
-      default: return 'border-gray-200';
+      default: return 'border-slate-200';
     }
 };
 
@@ -121,7 +121,7 @@ const VitalInput = React.memo(({ field, label, icon: Icon, placeholder, value, o
         <Popover>
           <PopoverTrigger asChild>
             <button type="button" className="inline-flex">
-              <Info className="w-3 h-3 text-gray-400 cursor-help" />
+              <Info className="w-3 h-3 text-slate-400 cursor-help" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-48 p-2">

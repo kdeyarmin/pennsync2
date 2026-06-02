@@ -150,7 +150,7 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
       case 'low':
         return 'bg-orange-600';
       default:
-        return 'bg-gray-600';
+        return 'bg-slate-600';
     }
   };
 
@@ -227,7 +227,7 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
         {assessment.assessment_priorities?.length > 0 && (
           <Card className="bg-white">
             <CardContent className="p-3">
-              <h4 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1">
+              <h4 className="text-xs font-semibold text-slate-900 mb-2 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3 text-orange-600" />
                 Assessment Priorities
               </h4>
@@ -236,9 +236,9 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
                   <div key={idx} className="bg-orange-50 border border-orange-200 rounded p-2">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge className="bg-orange-600 text-white text-xs">{priority.priority}</Badge>
-                      <span className="text-xs font-semibold text-gray-900">{priority.area}</span>
+                      <span className="text-xs font-semibold text-slate-900">{priority.area}</span>
                     </div>
-                    <p className="text-xs text-gray-700">{priority.rationale}</p>
+                    <p className="text-xs text-slate-700">{priority.rationale}</p>
                   </div>
                 ))}
               </div>
@@ -301,11 +301,11 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
                             {item.confidence_level}
                           </Badge>
                           {item.category && (
-                            <Badge className="bg-gray-600 text-white text-xs">{item.category}</Badge>
+                            <Badge className="bg-slate-600 text-white text-xs">{item.category}</Badge>
                           )}
                         </div>
-                        <p className="text-xs font-semibold text-gray-900 mb-1">{item.item_name}</p>
-                        <p className="text-xs text-gray-700">
+                        <p className="text-xs font-semibold text-slate-900 mb-1">{item.item_name}</p>
+                        <p className="text-xs text-slate-700">
                           <strong>Suggested:</strong> {item.suggested_response}
                         </p>
                       </div>
@@ -337,7 +337,7 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
                   {isExpanded && (
                     <div className="border-t border-indigo-200 bg-indigo-50 p-3 space-y-3">
                       <div>
-                        <p className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <p className="text-xs font-semibold text-slate-900 mb-2 flex items-center gap-2">
                           <Edit className="w-3 h-3" />
                           Edit Response:
                         </p>
@@ -353,19 +353,19 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
                       </div>
 
                       <div>
-                        <p className="text-xs font-semibold text-gray-900 mb-1">Rationale:</p>
-                        <p className="text-xs text-gray-700">{item.rationale}</p>
+                        <p className="text-xs font-semibold text-slate-900 mb-1">Rationale:</p>
+                        <p className="text-xs text-slate-700">{item.rationale}</p>
                       </div>
 
                       {item.questions_to_ask?.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-900 mb-1 flex items-center gap-1">
+                          <p className="text-xs font-semibold text-slate-900 mb-1 flex items-center gap-1">
                             <MessageSquare className="w-3 h-3" />
                             Questions to Ask:
                           </p>
                           <ul className="space-y-1">
                             {item.questions_to_ask.map((q, qidx) => (
-                              <li key={qidx} className="text-xs text-gray-700 bg-white p-2 rounded">• {q}</li>
+                              <li key={qidx} className="text-xs text-slate-700 bg-white p-2 rounded">• {q}</li>
                             ))}
                           </ul>
                         </div>
@@ -373,10 +373,10 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
 
                       {item.documentation_tips?.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-900 mb-1">Documentation Tips:</p>
+                          <p className="text-xs font-semibold text-slate-900 mb-1">Documentation Tips:</p>
                           <ul className="space-y-1">
                             {item.documentation_tips.map((tip, tidx) => (
-                              <li key={tidx} className="text-xs text-gray-700">• {tip}</li>
+                              <li key={tidx} className="text-xs text-slate-700">• {tip}</li>
                             ))}
                           </ul>
                         </div>

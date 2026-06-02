@@ -102,21 +102,21 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
 
   if (extractedData) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <h3 className="font-semibold text-gray-900">Data Extracted Successfully</h3>
+              <h3 className="font-semibold text-slate-900">Data Extracted Successfully</h3>
             </div>
-            <p className="text-xs text-gray-500">{uploadedFile?.name}</p>
+            <p className="text-xs text-slate-500">{uploadedFile?.name}</p>
             {extractedData.document_info?.confidence_score && (
               <Badge className="mt-2 bg-blue-100 text-blue-800">
                 {extractedData.document_info.confidence_score}% confidence
               </Badge>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={reset} className="text-gray-400">
+          <Button variant="ghost" size="sm" onClick={reset} className="text-slate-400">
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -132,35 +132,35 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
 
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div>
-            <p className="text-gray-500 font-medium mb-1">Patient</p>
-            <p className="text-gray-900 font-semibold">
+            <p className="text-slate-500 font-medium mb-1">Patient</p>
+            <p className="text-slate-900 font-semibold">
               {extractedData.patient?.first_name} {extractedData.patient?.last_name || "N/A"}
             </p>
             {extractedData.patient?.date_of_birth && (
-              <p className="text-gray-600 text-xs mt-0.5">{extractedData.patient.date_of_birth}</p>
+              <p className="text-slate-600 text-xs mt-0.5">{extractedData.patient.date_of_birth}</p>
             )}
           </div>
           <div>
-            <p className="text-gray-500 font-medium mb-1">Primary Diagnosis</p>
-            <p className="text-gray-900">{extractedData.clinical?.primary_diagnosis || "N/A"}</p>
+            <p className="text-slate-500 font-medium mb-1">Primary Diagnosis</p>
+            <p className="text-slate-900">{extractedData.clinical?.primary_diagnosis || "N/A"}</p>
           </div>
           {extractedData.vitals?.blood_pressure_systolic && (
             <div>
-              <p className="text-gray-500 font-medium mb-1">BP</p>
-              <p className="text-gray-900">
+              <p className="text-slate-500 font-medium mb-1">BP</p>
+              <p className="text-slate-900">
                 {extractedData.vitals.blood_pressure_systolic}/{extractedData.vitals.blood_pressure_diastolic}
               </p>
             </div>
           )}
           {extractedData.vitals?.heart_rate && (
             <div>
-              <p className="text-gray-500 font-medium mb-1">HR</p>
-              <p className="text-gray-900">{extractedData.vitals.heart_rate} bpm</p>
+              <p className="text-slate-500 font-medium mb-1">HR</p>
+              <p className="text-slate-900">{extractedData.vitals.heart_rate} bpm</p>
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 pt-2 border-t border-gray-100">
+        <div className="flex gap-2 pt-2 border-t border-slate-100">
           <Button
             variant="outline"
             size="sm"
@@ -182,27 +182,27 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogTitle>Extracted Clinical Data</DialogTitle>
-            <DialogDescription className="text-xs text-gray-600 mb-4">
+            <DialogDescription className="text-xs text-slate-600 mb-4">
               Review and verify extracted information before mapping to patient profile
             </DialogDescription>
             <div className="space-y-4 text-sm">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Patient Demographics</h4>
-                <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg text-xs">
+                <h4 className="font-semibold text-slate-900 mb-2">Patient Demographics</h4>
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg text-xs">
                   <div>
-                    <p className="text-gray-600">Name</p>
+                    <p className="text-slate-600">Name</p>
                     <p className="font-medium">{extractedData.patient?.first_name} {extractedData.patient?.last_name}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">DOB</p>
+                    <p className="text-slate-600">DOB</p>
                     <p className="font-medium">{extractedData.patient?.date_of_birth || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">MRN</p>
+                    <p className="text-slate-600">MRN</p>
                     <p className="font-medium">{extractedData.patient?.medical_record_number || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Phone</p>
+                    <p className="text-slate-600">Phone</p>
                     <p className="font-medium">{extractedData.patient?.phone || "N/A"}</p>
                   </div>
                 </div>
@@ -210,41 +210,41 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
 
               {Object.values(extractedData.vitals || {}).some(v => v) && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Vital Signs</h4>
-                  <div className="grid grid-cols-3 gap-2 bg-gray-50 p-3 rounded-lg text-xs">
+                  <h4 className="font-semibold text-slate-900 mb-2">Vital Signs</h4>
+                  <div className="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-lg text-xs">
                     {extractedData.vitals?.blood_pressure_systolic && (
                       <div>
-                        <p className="text-gray-600">BP</p>
+                        <p className="text-slate-600">BP</p>
                         <p className="font-medium">{extractedData.vitals.blood_pressure_systolic}/{extractedData.vitals.blood_pressure_diastolic}</p>
                       </div>
                     )}
                     {extractedData.vitals?.heart_rate && (
                       <div>
-                        <p className="text-gray-600">HR</p>
+                        <p className="text-slate-600">HR</p>
                         <p className="font-medium">{extractedData.vitals.heart_rate} bpm</p>
                       </div>
                     )}
                     {extractedData.vitals?.temperature && (
                       <div>
-                        <p className="text-gray-600">Temp</p>
+                        <p className="text-slate-600">Temp</p>
                         <p className="font-medium">{extractedData.vitals.temperature}°F</p>
                       </div>
                     )}
                     {extractedData.vitals?.oxygen_saturation && (
                       <div>
-                        <p className="text-gray-600">O2</p>
+                        <p className="text-slate-600">O2</p>
                         <p className="font-medium">{extractedData.vitals.oxygen_saturation}%</p>
                       </div>
                     )}
                     {extractedData.vitals?.respiratory_rate && (
                       <div>
-                        <p className="text-gray-600">RR</p>
+                        <p className="text-slate-600">RR</p>
                         <p className="font-medium">{extractedData.vitals.respiratory_rate}</p>
                       </div>
                     )}
                     {extractedData.vitals?.pain_level && (
                       <div>
-                        <p className="text-gray-600">Pain</p>
+                        <p className="text-slate-600">Pain</p>
                         <p className="font-medium">{extractedData.vitals.pain_level}/10</p>
                       </div>
                     )}
@@ -253,31 +253,31 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
               )}
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Clinical Information</h4>
-                <div className="space-y-2 bg-gray-50 p-3 rounded-lg text-xs">
+                <h4 className="font-semibold text-slate-900 mb-2">Clinical Information</h4>
+                <div className="space-y-2 bg-slate-50 p-3 rounded-lg text-xs">
                   <div>
-                    <p className="text-gray-600">Chief Complaint</p>
+                    <p className="text-slate-600">Chief Complaint</p>
                     <p className="font-medium">{extractedData.clinical?.chief_complaint || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Primary Diagnosis</p>
+                    <p className="text-slate-600">Primary Diagnosis</p>
                     <p className="font-medium">{extractedData.clinical?.primary_diagnosis || "N/A"}</p>
                   </div>
                   {extractedData.clinical?.secondary_diagnoses?.length > 0 && (
                     <div>
-                      <p className="text-gray-600">Secondary Diagnoses</p>
+                      <p className="text-slate-600">Secondary Diagnoses</p>
                       <p className="font-medium">{extractedData.clinical.secondary_diagnoses.join(", ")}</p>
                     </div>
                   )}
                   {extractedData.clinical?.allergies && (
                     <div>
-                      <p className="text-gray-600">Allergies</p>
+                      <p className="text-slate-600">Allergies</p>
                       <p className="font-medium">{extractedData.clinical.allergies}</p>
                     </div>
                   )}
                   {extractedData.clinical?.current_medications?.length > 0 && (
                     <div>
-                      <p className="text-gray-600">Medications</p>
+                      <p className="text-slate-600">Medications</p>
                       <ul className="space-y-1">
                         {extractedData.clinical.current_medications.map((med, i) => (
                           <li key={i} className="font-medium">
@@ -291,18 +291,18 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Document Info</h4>
-                <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg text-xs">
+                <h4 className="font-semibold text-slate-900 mb-2">Document Info</h4>
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg text-xs">
                   <div>
-                    <p className="text-gray-600">Type</p>
+                    <p className="text-slate-600">Type</p>
                     <p className="font-medium capitalize">{extractedData.document_info?.document_type || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Date</p>
+                    <p className="text-slate-600">Date</p>
                     <p className="font-medium">{extractedData.document_info?.document_date || "N/A"}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-gray-600">Source</p>
+                    <p className="text-slate-600">Source</p>
                     <p className="font-medium">{extractedData.document_info?.source_facility || "Unknown"}</p>
                   </div>
                 </div>
@@ -323,20 +323,20 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
           isDragging
             ? "border-indigo-500 bg-indigo-50"
-            : "border-gray-300 bg-gray-50 hover:border-indigo-400"
+            : "border-slate-300 bg-slate-50 hover:border-indigo-400"
         }`}
       >
         {loading ? (
           <>
             <Loader2 className="w-8 h-8 text-indigo-500 mx-auto mb-3 animate-spin" />
-            <p className="font-semibold text-gray-800">Processing document…</p>
-            <p className="text-xs text-gray-500 mt-1">Extracting clinical data with AI</p>
+            <p className="font-semibold text-slate-800">Processing document…</p>
+            <p className="text-xs text-slate-500 mt-1">Extracting clinical data with AI</p>
           </>
         ) : (
           <>
-            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-            <p className="font-semibold text-gray-900">Drop your document here or click to browse</p>
-            <p className="text-xs text-gray-500 mt-1">PDF or scanned image (JPG, PNG)</p>
+            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+            <p className="font-semibold text-slate-900">Drop your document here or click to browse</p>
+            <p className="text-xs text-slate-500 mt-1">PDF or scanned image (JPG, PNG)</p>
             <input
               type="file"
               accept=".pdf,image/*"
@@ -365,7 +365,7 @@ export default function DocumentIngestionUploader({ onDataExtracted, _patientId 
         </Alert>
       )}
 
-      <p className="text-xs text-gray-500 text-center">
+      <p className="text-xs text-slate-500 text-center">
         Supported: Clinical records, faxes, lab results, imaging reports, medication lists
       </p>
     </div>

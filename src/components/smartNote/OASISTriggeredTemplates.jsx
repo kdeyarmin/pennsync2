@@ -239,7 +239,7 @@ export default function OASISTriggeredTemplates({
       indigo: 'bg-indigo-100 text-indigo-800 border-indigo-200',
       teal: 'bg-teal-100 text-teal-800 border-teal-200'
     };
-    return colors[color] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colors[color] || 'bg-slate-100 text-slate-800 border-slate-200';
   };
 
   return (
@@ -262,7 +262,7 @@ export default function OASISTriggeredTemplates({
 
       {isExpanded && (
         <CardContent className="pt-3 space-y-2">
-          <p className="text-xs text-gray-600 mb-2">
+          <p className="text-xs text-slate-600 mb-2">
             Based on OASIS findings, these documentation templates are recommended:
           </p>
 

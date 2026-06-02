@@ -178,8 +178,8 @@ export default function SmartAutoComplete({
       {/* Suggestions popup */}
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
-          <div className="p-2 border-b bg-gray-50">
-            <p className="text-xs text-gray-500 flex items-center gap-1">
+          <div className="p-2 border-b bg-slate-50">
+            <p className="text-xs text-slate-500 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
               Smart suggestions (Tab to insert)
             </p>
@@ -194,10 +194,10 @@ export default function SmartAutoComplete({
                 <Badge variant="outline" className="text-[10px]">
                   {suggestion.trigger}
                 </Badge>
-                <span className="text-xs text-gray-600 truncate flex-1">
+                <span className="text-xs text-slate-600 truncate flex-1">
                   {suggestion.text.substring(0, 60)}...
                 </span>
-                <Plus className="w-3 h-3 text-gray-400" />
+                <Plus className="w-3 h-3 text-slate-400" />
               </div>
             </div>
           ))}
@@ -217,7 +217,7 @@ export default function SmartAutoComplete({
               </Badge>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-2" align="start">
-              <p className="text-xs font-semibold text-gray-500 mb-2 capitalize">{category} Phrases</p>
+              <p className="text-xs font-semibold text-slate-500 mb-2 capitalize">{category} Phrases</p>
               <div className="space-y-1 max-h-48 overflow-auto">
                 {phrases.map((phrase, idx) => (
                   <div
@@ -231,7 +231,7 @@ export default function SmartAutoComplete({
                     <Badge variant="secondary" className="text-[10px] mr-2">
                       {phrase.trigger}
                     </Badge>
-                    <span className="text-gray-600">{phrase.text.substring(0, 40)}...</span>
+                    <span className="text-slate-600">{phrase.text.substring(0, 40)}...</span>
                   </div>
                 ))}
               </div>
@@ -259,7 +259,7 @@ export default function SmartAutoComplete({
                       textareaRef.current?.focus();
                     }}
                   >
-                    <span className="text-gray-600">{phrase.text}</span>
+                    <span className="text-slate-600">{phrase.text}</span>
                   </div>
                 ))}
               </div>

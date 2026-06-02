@@ -138,7 +138,7 @@ Return JSON:
       moderate: "bg-yellow-100 text-yellow-800",
       severe: "bg-red-100 text-red-800"
     };
-    return colors[severity] || "bg-gray-100 text-gray-800";
+    return colors[severity] || "bg-slate-100 text-slate-800";
   };
 
   const getPriorityColor = (priority) => {
@@ -147,7 +147,7 @@ Return JSON:
       medium: "bg-yellow-100 text-yellow-800",
       low: "bg-blue-100 text-blue-800"
     };
-    return colors[priority] || "bg-gray-100 text-gray-800";
+    return colors[priority] || "bg-slate-100 text-slate-800";
   };
 
   // Toggle care plan selection
@@ -292,14 +292,14 @@ Return JSON:
             {/* Vital Signs */}
             {extractedData.vital_signs && Object.values(extractedData.vital_signs).some(v => v) && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                <p className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
                   <Activity className="w-3 h-3" /> Vital Signs Detected
                 </p>
                 <div className="grid grid-cols-2 gap-1 text-xs">
                   {Object.entries(extractedData.vital_signs).map(([key, value]) => 
                     value && (
-                      <div key={key} className="bg-gray-50 p-1 rounded">
-                        <span className="text-gray-500">{key.replace(/_/g, ' ')}:</span> {value}
+                      <div key={key} className="bg-slate-50 p-1 rounded">
+                        <span className="text-slate-500">{key.replace(/_/g, ' ')}:</span> {value}
                       </div>
                     )
                   )}
@@ -310,7 +310,7 @@ Return JSON:
             {/* Symptoms */}
             {extractedData.symptoms?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1">Symptoms</p>
+                <p className="text-xs font-semibold text-slate-600 mb-1">Symptoms</p>
                 <div className="space-y-1">
                   {extractedData.symptoms.map((s, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-xs">
@@ -326,14 +326,14 @@ Return JSON:
             {/* Medications */}
             {extractedData.medications?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                <p className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
                   <Pill className="w-3 h-3" /> Medications
                 </p>
                 <div className="space-y-1">
                   {extractedData.medications.map((m, idx) => (
                     <div key={idx} className="text-xs bg-purple-50 p-1 rounded">
                       <strong>{m.name}</strong> - {m.action}
-                      {m.notes && <span className="text-gray-500"> ({m.notes})</span>}
+                      {m.notes && <span className="text-slate-500"> ({m.notes})</span>}
                     </div>
                   ))}
                 </div>
@@ -344,7 +344,7 @@ Return JSON:
             {extractedData.suggested_care_plans?.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                     <Target className="w-3 h-3" /> Suggested Care Plans ({extractedData.suggested_care_plans.length})
                   </p>
                   <Button
@@ -374,9 +374,9 @@ Return JSON:
                         />
                         <div className="flex-1">
                           <p className="text-xs font-medium">{cp.problem}</p>
-                          <p className="text-xs text-gray-600">Goal: {cp.goal}</p>
+                          <p className="text-xs text-slate-600">Goal: {cp.goal}</p>
                           {cp.rationale && (
-                            <p className="text-xs text-gray-500 italic mt-1">{cp.rationale}</p>
+                            <p className="text-xs text-slate-500 italic mt-1">{cp.rationale}</p>
                           )}
                         </div>
                       </div>
@@ -426,7 +426,7 @@ Return JSON:
             {/* Follow-up Tasks */}
             {extractedData.follow_up_tasks?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                <p className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" /> Follow-up Tasks
                 </p>
                 <div className="space-y-1">

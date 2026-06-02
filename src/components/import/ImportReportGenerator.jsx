@@ -207,7 +207,7 @@ export default function ImportReportGenerator({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Report Options */}
-        <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+        <div className="bg-slate-50 rounded-lg p-4 space-y-3">
           <Label className="font-semibold">Report Options</Label>
           
           <div className="space-y-2">
@@ -279,7 +279,7 @@ export default function ImportReportGenerator({
           </Button>
         </div>
 
-        <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+        <div className="text-xs text-slate-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
           <p className="font-medium text-blue-900 mb-1">Report Contents:</p>
           <ul className="space-y-1 ml-4">
             <li>• Import timestamp and metadata</li>

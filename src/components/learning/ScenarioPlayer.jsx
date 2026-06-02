@@ -132,16 +132,16 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
             )}
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-6 mb-6">
-            <p className="text-sm text-gray-600 mb-2">Your Score</p>
-            <p className="text-4xl font-bold text-gray-900 mb-2">{score}%</p>
+          <div className="bg-slate-50 rounded-lg p-6 mb-6">
+            <p className="text-sm text-slate-600 mb-2">Your Score</p>
+            <p className="text-4xl font-bold text-slate-900 mb-2">{score}%</p>
             <Progress value={score} className="h-2 mb-2" />
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Passing score: {scenario.passingScore}%
             </p>
           </div>
 
-          <p className="text-gray-600 mb-6">
+          <p className="text-slate-600 mb-6">
             Correct decisions: {decisions.filter(d => d.isCorrect).length} / {decisions.length}
           </p>
 
@@ -175,7 +175,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
       {/* Progress */}
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm text-gray-600 mb-1">Progress</p>
+          <p className="text-sm text-slate-600 mb-1">Progress</p>
           <Progress value={scenario.totalNodes ? (decisions.length / scenario.totalNodes) * 100 : Math.min(decisions.length * 20, 100)} className="h-2" />
         </div>
         <Badge className="ml-4">{decisions.length} decisions</Badge>
@@ -188,8 +188,8 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Scenario Text */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-gray-900 whitespace-pre-wrap">{currentNode?.text}</p>
+          <div className="p-4 bg-slate-50 rounded-lg">
+            <p className="text-slate-900 whitespace-pre-wrap">{currentNode?.text}</p>
           </div>
 
           {/* Feedback */}
@@ -210,7 +210,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
                 <p className="font-medium text-sm mb-1">
                   {decisions[decisions.length - 1]?.isCorrect ? 'Correct!' : 'Not the best choice'}
                 </p>
-                <p className="text-sm text-gray-700">{feedback}</p>
+                <p className="text-sm text-slate-700">{feedback}</p>
               </div>
             </div>
           )}
@@ -254,7 +254,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
               {decisions.map((decision, idx) => (
                 <div key={idx} className="flex items-center gap-2 text-sm">
                   <span className="font-medium">Step {idx + 1}:</span>
-                  <span className="text-gray-700">{decision.text}</span>
+                  <span className="text-slate-700">{decision.text}</span>
                   {decision.isCorrect ? (
                     <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
                   ) : (

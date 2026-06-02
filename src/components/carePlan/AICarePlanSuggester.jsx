@@ -210,8 +210,8 @@ export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
                       </Badge>
                       <Target className="w-4 h-4 text-indigo-600" />
                     </div>
-                    <h4 className="font-semibold text-sm text-gray-900">{suggestion.problem}</h4>
-                    <p className="text-xs text-gray-600 mt-1">{suggestion.goal}</p>
+                    <h4 className="font-semibold text-sm text-slate-900">{suggestion.problem}</h4>
+                    <p className="text-xs text-slate-600 mt-1">{suggestion.goal}</p>
                   </div>
                   <Button variant="ghost" size="sm">
                     {isExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -219,15 +219,15 @@ export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
                 </div>
 
                 {isExpanded && (
-                  <div className="space-y-3 border-t border-gray-200 pt-3 mt-3">
+                  <div className="space-y-3 border-t border-slate-200 pt-3 mt-3">
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                         <FileText className="w-3 h-3" />
                         Interventions:
                       </p>
                       <ul className="space-y-1">
                         {suggestion.interventions?.map((intervention, idx) => (
-                          <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
+                          <li key={idx} className="text-xs text-slate-600 flex items-start gap-2">
                             <span className="text-indigo-600">•</span>
                             <span>{intervention}</span>
                           </li>
@@ -236,18 +236,18 @@ export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-1">Expected Outcomes:</p>
-                      <p className="text-xs text-gray-600">{suggestion.expected_outcomes}</p>
+                      <p className="text-xs font-semibold text-slate-700 mb-1">Expected Outcomes:</p>
+                      <p className="text-xs text-slate-600">{suggestion.expected_outcomes}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Baseline:</p>
-                        <p className="text-xs text-gray-600">{suggestion.baseline_measurement}</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Baseline:</p>
+                        <p className="text-xs text-slate-600">{suggestion.baseline_measurement}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Frequency:</p>
-                        <p className="text-xs text-gray-600">{suggestion.frequency}</p>
+                        <p className="text-xs font-semibold text-slate-700 mb-1">Frequency:</p>
+                        <p className="text-xs text-slate-600">{suggestion.frequency}</p>
                       </div>
                     </div>
 
