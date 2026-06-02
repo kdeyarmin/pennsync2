@@ -31,6 +31,7 @@ must not be able to write directly; writes go through backend functions.
 | `User.personal_cell_e164` | **service-role + admin only** | admin/provision fn | Private masked-bridge target — never patient-facing. |
 | `CallLog` | owning `nurse_email` + admin | service-role | Real call legs incl. cell. |
 | `SmsMessage` (`body` = PHI) | owning `nurse_email` + admin | service-role / `sendSms` | |
+| `ScheduledSms` (`body` = PHI) | owning `nurse_email` + admin | owner / `scheduleSms` + service-role | Queued future sends; `dispatchScheduledSms` writes via service-role. |
 | `SmsConsent` | admin + service-role | service-role | TCPA opt-in/out ledger. |
 | `FaxLog` | owning `sent_by` + admin | owner + service-role | Contains recipient + document URL (PHI). |
 | `TelehealthSession` | host/participant + admin | host + admin | `createTelehealthToken` authorizes against it. |
@@ -56,15 +57,20 @@ These run privileged `asServiceRole` work with **no `auth.me()`** (correct only
 if the platform restricts who can invoke function endpoints — **confirm**):
 `processScheduledFaxes`, `sendExpirationNotifications`,
 `sendPersonnelExpirationNotifications`, `monitorComplianceRisks`,
-`scheduledGuidelineSync`, `autoApproveInvitedUser`, `deduplicatePatients`.
+`scheduledGuidelineSync`, `autoApproveInvitedUser`, `deduplicatePatients`,
+`dispatchScheduledSms`.
 
 - Enable **only one** scheduled-fax processor (`processScheduledFaxes` **or**
   `processScheduledFaxesByPriority`) — both running double-sends.
+- Likewise enable **only one** schedule for `dispatchScheduledSms` (e.g. every
+  5 min). Its `pending → sending` claim is best-effort, not atomic, so two
+  overlapping runs could double-send a queued text.
 
 ## 5. Webhooks
 
-- Point 8x8 (inbound SMS, DLR, VCA, CDR) and Twilio (fax status) webhooks at the
-  deployed function URLs.
+- Point 8x8 (inbound SMS, DLR, VCA, CDR, and — if voicemail is enabled —
+  the `handleEightXEightVoicemail` recording callback) and Twilio (fax status)
+  webhooks at the deployed function URLs.
 - Confirm 8x8's **signature header/scheme** matches `verifyWebhook`
   (`SIGNATURE_HEADERS`) and its **timestamp field** for the replay guard
   (`isReplayStale`). Confirm Twilio's `X-Twilio-Signature` validation
@@ -74,7 +80,11 @@ if the platform restricts who can invoke function endpoints — **confirm**):
 
 - `User.scheduled_off_duty_start`, `scheduled_off_duty_end` (ISO strings),
   `scheduled_off_duty_recurring` (boolean)
-- `AgencySettings.sms_quick_replies` (string array)
+- `AgencySettings.sms_quick_replies` (string array), `sms_templates` (object
+  array), `voicemail_enabled` (boolean), `voicemail_greeting` (text)
+- `CallLog.note`, `disposition`, `has_voicemail`, `voicemail_url`,
+  `voicemail_duration_seconds`
+- New `ScheduledSms` entity
 - 8x8 fields per `docs/8x8-entities.md`.
 
 ## 7. Verification (do before go-live)

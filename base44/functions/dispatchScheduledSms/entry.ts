@@ -59,7 +59,10 @@ Deno.serve(async (req) => {
     const result = { processed: 0, sent: 0, failed: 0, skipped: 0 };
 
     for (const row of due) {
-      // Claim the row so a concurrent run won't also send it.
+      // Best-effort claim: flip pending -> sending so a non-overlapping next run
+      // skips it. This is NOT an atomic compare-and-swap, so enable only ONE
+      // schedule for this function (see docs/SECURITY-RLS-CHECKLIST.md) — two
+      // overlapping runs could still double-send, like the fax processors.
       try {
         await base44.asServiceRole.entities.ScheduledSms.update(row.id, { status: 'sending' });
       } catch {
