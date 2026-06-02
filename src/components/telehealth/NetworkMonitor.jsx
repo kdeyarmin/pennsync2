@@ -6,7 +6,10 @@ import { Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 // reports a level from 0 (lost) to 5 (excellent); we subscribe to changes.
 // (The previous implementation called room.getStats() — which returns a
 // Promise — synchronously, so it never actually reported anything.)
-export default function NetworkMonitor({ roomRef }) {
+//
+// `room` is the connected Twilio Room (a real value, not a ref) so this effect
+// re-subscribes if/when the room becomes available or changes.
+export default function NetworkMonitor({ room }) {
   const [level, setLevel] = useState(null);
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
 
@@ -22,13 +25,13 @@ export default function NetworkMonitor({ roomRef }) {
   }, []);
 
   useEffect(() => {
-    const localParticipant = roomRef?.current?.localParticipant;
+    const localParticipant = room?.localParticipant;
     if (!localParticipant) return;
     setLevel(localParticipant.networkQualityLevel);
     const handler = (lvl) => setLevel(lvl);
     localParticipant.on('networkQualityLevelChanged', handler);
     return () => localParticipant.removeListener('networkQualityLevelChanged', handler);
-  }, [roomRef]);
+  }, [room]);
 
   if (!online || level === 0) {
     return (

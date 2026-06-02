@@ -320,7 +320,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
           </Badge>
         </div>
         <div className="flex items-center gap-3">
-          <NetworkMonitor roomRef={roomRef} />
+          <NetworkMonitor room={roomRef.current} />
           <span className={`text-sm font-mono ${isFullscreen ? "text-gray-300" : "text-gray-500"}`}>{mm}:{ss}</span>
         </div>
       </div>
