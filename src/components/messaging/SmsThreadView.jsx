@@ -6,18 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, MessageSquare, AlertTriangle, RotateCw } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Send, MessageSquare, AlertTriangle, RotateCw, FileText, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 import { smsSegments } from "@/components/messaging/smsUtils";
 import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
+import { getTemplates, renderTemplate, buildTemplateContext } from "@/components/messaging/smsTemplates";
 
 /**
  * SmsThreadView — renders one SMS conversation (message bubbles) and a compose
  * box that sends through the nurse's work number via the sendSms function.
  */
-export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumber, patientId, optedOut, onSent }) {
+export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumber, patientId, patient, currentUser, optedOut, onSent }) {
   const [draft, setDraft] = useState("");
 
   const [resendingId, setResendingId] = useState(null);
@@ -64,6 +68,9 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
     initialData: [],
   });
   const quickReplies = getQuickReplies(settingsArr[0]);
+  const templates = getTemplates(settingsArr[0]);
+  const templateContext = buildTemplateContext({ patient, user: currentUser, settings: settingsArr[0] });
+  const applyTemplate = (body) => setDraft(renderTemplate(body, templateContext));
 
   if (!thread) {
     return (
@@ -146,21 +153,37 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
           </Alert>
         ) : (
           <div className="space-y-2 border-t pt-3">
-            {quickReplies.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {quickReplies.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => insertReply(q.text)}
-                    title={q.text}
-                    className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                  >
-                    {q.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center flex-wrap gap-1.5">
+              {templates.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs">
+                      <FileText className="w-3.5 h-3.5 mr-1.5" /> Templates
+                      <ChevronDown className="w-3 h-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="max-w-xs">
+                    {templates.map((t, i) => (
+                      <DropdownMenuItem key={i} onSelect={() => applyTemplate(t.body)} className="flex-col items-start">
+                        <span className="text-xs font-medium">{t.label}</span>
+                        <span className="text-[11px] text-gray-500 line-clamp-2">{renderTemplate(t.body, templateContext)}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {quickReplies.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => insertReply(q.text)}
+                  title={q.text}
+                  className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
             <Textarea
               placeholder="Type a text message… (avoid clinical details / PHI)"
               value={draft}

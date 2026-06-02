@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Phone, Save, ShieldCheck, Info, CheckCircle2, AlertTriangle, XCircle,
-  Loader2, Copy, Check, Activity, Webhook,
+  Loader2, Copy, Check, Activity, Webhook, Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import { maskPhone, formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils";
@@ -94,6 +94,7 @@ export default function PhoneProvisioningPanel() {
     default_off_duty_template: "",
     sms_messaging_enabled: true,
     sms_quick_replies: [],
+    sms_templates: [],
   });
   const [inputs, setInputs] = useState({}); // email -> { work, cell }
 
@@ -108,6 +109,7 @@ export default function PhoneProvisioningPanel() {
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
         sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
+        sms_templates: Array.isArray(settings.sms_templates) ? settings.sms_templates : [],
       });
     }
   }, [settings]);
@@ -147,6 +149,23 @@ export default function PhoneProvisioningPanel() {
       else toast.success("8x8 connection looks healthy.");
     },
     onError: (err) => toast.error(err?.message || "Connection test failed"),
+  });
+
+  // End-to-end test send: deliver one real, fixed, PHI-free text to a number
+  // the admin controls — the definitive check the read-only probe can't make.
+  const [testNumber, setTestNumber] = useState("");
+  const [testSendResult, setTestSendResult] = useState(null);
+  const sendTest = useMutation({
+    mutationFn: (to_number) => base44.functions.invoke("sendTestSms", { to_number }),
+    onSuccess: (res) => {
+      const data = res?.data || res;
+      setTestSendResult({ ok: true, ...data });
+      toast.success("Test text sent — check that phone.");
+    },
+    onError: (err) => {
+      setTestSendResult({ ok: false, error: err?.message || "Failed to send test text" });
+      toast.error(err?.message || "Failed to send test text");
+    },
   });
 
   // Config checklist reflects the live form values so it updates as the admin
@@ -232,6 +251,40 @@ export default function PhoneProvisioningPanel() {
                 </>
               )}
             </div>
+          </div>
+
+          {/* End-to-end test send */}
+          <div className="border-t pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Send a test text</p>
+            <p className="text-xs text-gray-500 mb-2">
+              The definitive check: sends one real, non-PHI message from a provisioned work number to a phone you
+              control. Honors opt-outs; bypasses the SMS kill switch since it's a diagnostic.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder="Your mobile +1…"
+                value={testNumber}
+                onChange={(e) => setTestNumber(e.target.value)}
+                className={`sm:max-w-xs ${testNumber && !normalizeE164(testNumber) ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => sendTest.mutate(testNumber)}
+                disabled={sendTest.isPending || !testNumber || !normalizeE164(testNumber)}
+              >
+                {sendTest.isPending
+                  ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Sending…</>
+                  : <><Send className="w-3.5 h-3.5 mr-1.5" /> Send test text</>}
+              </Button>
+            </div>
+            {testSendResult && (
+              <p className={`text-xs mt-2 flex items-start gap-1.5 ${testSendResult.ok ? "text-green-700" : "text-red-700"}`}>
+                {testSendResult.ok
+                  ? <><CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" /> Sent from {formatPhoneDisplay(testSendResult.from_number)} to {formatPhoneDisplay(testSendResult.to_number)}.</>
+                  : <><XCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" /> {testSendResult.error}</>}
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -359,6 +412,41 @@ export default function PhoneProvisioningPanel() {
             />
             <p className="text-xs text-gray-500 mt-1">
               One-tap snippets nurses can insert when texting (keep them PHI-free). Leave blank to use the built-in defaults.
+            </p>
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Message templates</Label>
+            <Textarea
+              rows={5}
+              placeholder={"One per line as  Label | body  e.g.\nReminder | Hi {first_name}, reminder of your visit. Call {office} with questions."}
+              value={(agency.sms_templates || [])
+                .map((t) => (typeof t === "string" ? t : `${t.label || ""} | ${t.body || ""}`))
+                .join("\n")}
+              onChange={(e) =>
+                setAgency((a) => ({
+                  ...a,
+                  sms_templates: e.target.value
+                    .split("\n")
+                    .map((line) => {
+                      const i = line.indexOf("|");
+                      if (i === -1) {
+                        const body = line.trim();
+                        return body ? { label: body.slice(0, 24), body } : null;
+                      }
+                      const label = line.slice(0, i).trim();
+                      const body = line.slice(i + 1).trim();
+                      return body ? { label: label || body.slice(0, 24), body } : null;
+                    })
+                    .filter(Boolean),
+                }))
+              }
+              className="mt-1 resize-none font-mono text-xs"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Longer reusable messages with merge fields. Available: <code className="bg-gray-100 px-1 rounded">{"{first_name}"}</code>{" "}
+              <code className="bg-gray-100 px-1 rounded">{"{last_name}"}</code>{" "}
+              <code className="bg-gray-100 px-1 rounded">{"{nurse_name}"}</code>{" "}
+              <code className="bg-gray-100 px-1 rounded">{"{office}"}</code>. Keep them PHI-free; leave blank for built-in defaults.
             </p>
           </div>
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
