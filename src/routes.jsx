@@ -60,6 +60,22 @@ export const ROUTES = [
   { name: 'VisitScribe', Component: lazyPage(() => import('@/pages/VisitScribe')) },
   { name: 'ClinicalChart', Component: lazyPage(() => import('@/pages/ClinicalChart')) },
   { name: 'RegulatoryCompliance', Component: lazyPage(() => import('@/pages/RegulatoryCompliance')) },
+
+  // Real features that are linked from already-routed pages (patient chart,
+  // document hub, admin operations, learning center) but had lost their route,
+  // so those links dead-ended on PageNotFound. Re-routed so navigation works.
+  { name: 'SignDocument', Component: lazyPage(() => import('@/pages/SignDocument')) },
+  { name: 'DocumentSignatures', Component: lazyPage(() => import('@/pages/DocumentSignatures')) },
+  { name: 'DocumentVisit', Component: lazyPage(() => import('@/pages/DocumentVisit')) },
+  { name: 'PatientAlerts', Component: lazyPage(() => import('@/pages/PatientAlerts')) },
+  { name: 'ReferralAdmissionNote', Component: lazyPage(() => import('@/pages/ReferralAdmissionNote')) },
+  { name: 'AIComplianceInServices', Component: lazyPage(() => import('@/pages/AIComplianceInServices')) },
+  { name: 'AnnualEducationTranscript', Component: lazyPage(() => import('@/pages/AnnualEducationTranscript')) },
+  { name: 'EmployeeTranscript', Component: lazyPage(() => import('@/pages/EmployeeTranscript')) },
+  { name: 'MyAnnualEducation', Component: lazyPage(() => import('@/pages/MyAnnualEducation')) },
+  { name: 'MyTraining', Component: lazyPage(() => import('@/pages/MyTraining')) },
+  { name: 'AnnualMandatoryEducation', Component: lazyPage(() => import('@/pages/AnnualMandatoryEducation')) },
+  { name: 'ManagerSkillGapDashboard', Component: lazyPage(() => import('@/pages/ManagerSkillGapDashboard')) },
 ];
 
 /**
@@ -70,6 +86,11 @@ export const ROUTES = [
 export const REDIRECTS = [
   { from: '/StaffTrainingHub', to: '/AdminTraining' },
   { from: '/IncidentReporting', to: '/Incidents' },
+  // Renamed/consolidated pages — point old links and bookmarks at the current page.
+  { from: '/AdminDashboard', to: '/AdminOperations' },
+  { from: '/ComplianceDashboard', to: '/ComplianceCenter' },
+  { from: '/Reports', to: '/ReportsAnalytics' },
+  { from: '/Support', to: '/Help' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';
