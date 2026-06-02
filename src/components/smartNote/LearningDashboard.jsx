@@ -44,7 +44,7 @@ import { createPageUrl } from "@/utils";
 
 export default function LearningDashboard({ 
   nurseEmail,
-  complianceHistory = [],
+  _complianceHistory = [],
   onStartTraining,
   compact = false
 }) {

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, Video, File, CheckCircle2, X } from "lucide-react";
 
-export default function TrainingMaterialUploader({ moduleId, existingContent, onUploadComplete }) {
+export default function TrainingMaterialUploader({ _moduleId, existingContent, onUploadComplete }) {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState(existingContent || []);
   const [error, setError] = useState(null);

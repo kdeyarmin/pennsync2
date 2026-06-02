@@ -27,7 +27,7 @@ export default function PDGMCaseMixForecaster({ compact = false }) {
   const [isForecasting, setIsForecasting] = useState(false);
   const [forecast, setForecast] = useState(null);
   const [timeframe, setTimeframe] = useState("30");
-  const [selectedPatient, setSelectedPatient] = useState("all");
+  const [_selectedPatient, _setSelectedPatient] = useState("all");
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],

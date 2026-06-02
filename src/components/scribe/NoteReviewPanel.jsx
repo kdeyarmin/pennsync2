@@ -11,9 +11,9 @@ import { base44 } from "@/api/base44Client";
 export default function NoteReviewPanel({
   transcription,
   generatedNote,
-  patientId,
-  visitType,
-  diagnosis,
+  _patientId,
+  _visitType,
+  _diagnosis,
   onSave,
   onDiscard,
   treatmentSuggestions = []

@@ -366,7 +366,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
     setShowDialog(false);
   };
 
-  const getComplianceLevelColor = (level) => {
+  const _getComplianceLevelColor = (level) => {
     switch (level) {
       case 'excellent': return 'bg-green-500';
       case 'good': return 'bg-blue-500';

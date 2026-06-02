@@ -9,7 +9,7 @@ export default function ConditionalAIAssistant({
   visitType, 
   diagnosis, 
   roughNote,
-  patientData,
+  _patientData,
   vitalSigns,
   onSuggestion 
 }) {

@@ -28,11 +28,11 @@ export default function AIComplianceAuditor({
   visitId = null,
   autoRun = false,
   onIssuesFound,
-  scope = "comprehensive" // "comprehensive", "visit", "documentation", "oasis"
+  _scope = "comprehensive" // "comprehensive", "visit", "documentation", "oasis"
 }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [auditResults, setAuditResults] = useState(null);
-  const [expandedSection, setExpandedSection] = useState(null);
+  const [_expandedSection, _setExpandedSection] = useState(null);
 
   const { data: patient } = useQuery({
     queryKey: ['patient', patientId],
@@ -86,7 +86,7 @@ export default function AIComplianceAuditor({
       const historyContext = formatHistoryForAI(patientHistory);
       const keyInsights = extractKeyInsights(patientHistory);
 
-      const targetVisit = visitId ? visits.find(v => v.id === visitId) : visits[0];
+      const _targetVisit = visitId ? visits.find(v => v.id === visitId) : visits[0];
       const latestOASIS = oasisData[0];
 
       const prompt = `You are an expert healthcare compliance auditor specializing in home health and hospice regulations. Perform a comprehensive compliance audit of this patient record WITH EMPHASIS ON CONTINUITY OF CARE AND TREND ANALYSIS.

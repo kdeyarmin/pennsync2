@@ -40,12 +40,12 @@ import { format, subMonths, parseISO, isWithinInterval } from "date-fns";
 export default function AdvancedComplianceAnalytics({ 
   audits = [], 
   trainingCompletions = [],
-  nurses = [],
-  patients = []
+  _nurses = [],
+  _patients = []
 }) {
   const [timeRange, setTimeRange] = useState("6m");
   const [selectedNurse, setSelectedNurse] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [_selectedCategory, _setSelectedCategory] = useState("all");
 
   // Calculate date range based on selection
   const dateRange = useMemo(() => {

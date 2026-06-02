@@ -73,7 +73,7 @@ export default function OASISIntegratedClinicalSupport({
   });
 
   // Care plan update mutation
-  const updateCarePlanMutation = useMutation({
+  const _updateCarePlanMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.CarePlan.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientCarePlans', patientId] });

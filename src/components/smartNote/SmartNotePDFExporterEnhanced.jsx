@@ -53,7 +53,7 @@ export default function SmartNotePDFExporterEnhanced({
             "-created_date",
             10
           );
-        } catch (_) {}
+        } catch {}
       }
 
       const doc = new jsPDF("p", "mm", "letter");
@@ -118,7 +118,7 @@ export default function SmartNotePDFExporterEnhanced({
       const dob = patient?.date_of_birth || "Not on file";
       const mrn = patient?.medical_record_number || "Not on file";
       const dx = patient?.primary_diagnosis || "Not documented";
-      const careType = (patient?.care_type || "home_health").replace(/_/g, " ");
+      const _careType = (patient?.care_type || "home_health").replace(/_/g, " ");
       const visitLabel = VISIT_TYPE_LABELS[visitType] || visitType?.replace(/_/g, " ") || "—";
       const clinician = currentUser?.full_name || "—";
 
@@ -292,7 +292,7 @@ export default function SmartNotePDFExporterEnhanced({
         try {
           doc.addImage(signatureImage, "PNG", margin, y, sigLineW, 18);
           y += 21;
-        } catch (_) {
+        } catch {
           doc.setDrawColor(0); doc.line(margin, y + 8, margin + sigLineW, y + 8);
           y += 12;
         }

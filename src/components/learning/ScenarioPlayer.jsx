@@ -30,7 +30,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
   }
 
   // Reconstruct flat node map from tree
-  function flattenNodes(node, map = {}) {
+  function _flattenNodes(node, map = {}) {
     if (!node) return map;
     map[node.id] = node;
     (node.choices || []).forEach(choice => {

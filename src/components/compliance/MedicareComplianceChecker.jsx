@@ -28,7 +28,7 @@ export default function MedicareComplianceChecker({
   visitType,
   patientData,
   diagnosis,
-  vitalSigns,
+  _vitalSigns,
   nurseType = "RN",
   onApplyFix,
   autoCheck = true

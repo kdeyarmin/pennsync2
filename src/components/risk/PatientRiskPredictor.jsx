@@ -35,7 +35,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
     }
   });
 
-  const getRiskColor = (score) => {
+  const _getRiskColor = (score) => {
     if (score >= 85) return 'bg-red-500';
     if (score >= 70) return 'bg-orange-500';
     if (score >= 50) return 'bg-yellow-500';

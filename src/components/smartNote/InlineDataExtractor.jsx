@@ -135,14 +135,14 @@ Return JSON:
     }
   };
 
-  const handleApplySymptoms = () => {
+  const _handleApplySymptoms = () => {
     if (extractedData?.symptoms && onSymptomsExtracted) {
       onSymptomsExtracted(extractedData.symptoms);
       setAppliedItems(prev => new Set([...prev, 'symptoms']));
     }
   };
 
-  const handleApplyInterventions = () => {
+  const _handleApplyInterventions = () => {
     if (extractedData?.interventions && onInterventionsExtracted) {
       onInterventionsExtracted(extractedData.interventions);
       setAppliedItems(prev => new Set([...prev, 'interventions']));

@@ -32,18 +32,18 @@ export default function UnifiedComplianceEngine({
   visitType,
   patientData,
   diagnosis,
-  vitalSigns,
+  _vitalSigns,
   nurseType = "RN",
   careType = "home_health",
   onApplyFix,
   autoCheck = true,
-  oasisData = null
+  _oasisData = null
 }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [complianceResults, setComplianceResults] = useState(null);
   const [appliedFixes, setAppliedFixes] = useState(new Set());
 
-  const { data: complianceRules = [] } = useQuery({
+  const { data: _complianceRules = [] } = useQuery({
     queryKey: ['medicareComplianceRules'],
     queryFn: () => base44.entities.MedicareComplianceRule.list(),
     initialData: [],

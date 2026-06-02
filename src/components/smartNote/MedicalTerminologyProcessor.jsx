@@ -118,12 +118,12 @@ export function standardizeTerminology(text) {
   return standardized;
 }
 
-export default function MedicalTerminologyProcessor({ text, onSuggestion }) {
+export default function MedicalTerminologyProcessor({ text, _onSuggestion }) {
   const [analysis, setAnalysis] = React.useState(null);
 
   React.useEffect(() => {
     if (text && text.length > 10) {
-      const { expandedText, expansions } = expandAbbreviations(text);
+      const { _expandedText, expansions } = expandAbbreviations(text);
       const detectedTerms = detectMedicalTerms(text);
       const standardized = standardizeTerminology(text);
       

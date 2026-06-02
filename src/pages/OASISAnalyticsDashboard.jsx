@@ -49,7 +49,7 @@ import { format, subDays } from "date-fns";
 export default function OASISAnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("30");
   const [filterAssessmentType, setFilterAssessmentType] = useState("all");
-  const [sortBy, setSortBy] = useState("date");
+  const [_sortBy, _setSortBy] = useState("date");
 
   // Fetch all OASIS uploads with analysis data
   const { data: oasisUploads = [], isLoading } = useQuery({

@@ -27,7 +27,7 @@ export default function ComplianceTargetSettings({
 }) {
   const [target, setTarget] = useState(currentTarget);
   const [preset, setPreset] = useState(
-    Object.entries(PRESET_TARGETS).find(([k, v]) => v.value === currentTarget)?.[0] || 'custom'
+    Object.entries(PRESET_TARGETS).find(([_k, v]) => v.value === currentTarget)?.[0] || 'custom'
   );
   const [showSettings, setShowSettings] = useState(false);
 
@@ -140,7 +140,7 @@ export default function ComplianceTargetSettings({
                 className="w-full"
                 onClick={() => {
                   setTarget(recommendation.target);
-                  setPreset(Object.entries(PRESET_TARGETS).find(([k, v]) => v.value === recommendation.target)?.[0] || 'custom');
+                  setPreset(Object.entries(PRESET_TARGETS).find(([_k, v]) => v.value === recommendation.target)?.[0] || 'custom');
                   onTargetChange?.(recommendation.target);
                 }}
               >

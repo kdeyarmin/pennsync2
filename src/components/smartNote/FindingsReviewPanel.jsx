@@ -79,7 +79,7 @@ function FindingCard({ finding, selected, onToggle, answers, onAnswerChange }) {
   );
 }
 
-export default function FindingsReviewPanel({ analysis, selected, onToggle, answers, onAnswerChange, needsClarificationFindings, criticalFindings, onSelectAll, onSelectNone, onSelectByType }) {
+export default function FindingsReviewPanel({ analysis, selected, onToggle, answers, onAnswerChange, _needsClarificationFindings, criticalFindings, onSelectAll, onSelectNone, onSelectByType }) {
   const calculateRevenueImpact = () => {
     if (!analysis) return 0;
     return analysis.findings

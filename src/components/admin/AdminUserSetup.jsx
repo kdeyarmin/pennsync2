@@ -66,7 +66,7 @@ export default function AdminUserSetup() {
     setIsLoading(true);
     try {
       // Create user through backend function
-       const { user } = await base44.functions.invoke('createUserWithTempPassword', {
+       const { _user } = await base44.functions.invoke('createUserWithTempPassword', {
          email: formData.email,
          full_name: formData.full_name,
          role: formData.role,

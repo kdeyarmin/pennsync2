@@ -18,7 +18,7 @@ import {
 import { calculateStats, calculateNurseStats, formatCurrency } from "../components/utils/statsCalculator";
 
 export default function AgencyAnalytics() {
-  const [dateRange, setDateRange] = useState("30days");
+  const [_dateRange, _setDateRange] = useState("30days");
 
   // Fetch all necessary data
   const { data: visits = [] } = useQuery({

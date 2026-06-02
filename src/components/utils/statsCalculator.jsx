@@ -11,7 +11,7 @@ export const calculateStats = (data) => {
     patients = [],
     incidents = [],
     complianceAudits = [],
-    userActivities = [],
+    _userActivities = [],
     dateRange = 30 // default 30 days
   } = data;
 

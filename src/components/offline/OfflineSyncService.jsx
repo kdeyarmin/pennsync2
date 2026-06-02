@@ -191,7 +191,7 @@ class OfflineSyncWorker {
 
         case 'task':
           if (item.data.id && item.data.id.startsWith('offline_')) {
-            const { id, ...taskData } = item.data;
+            const { id: _offlineId, ...taskData } = item.data;
             result = await base44.entities.Task.create(taskData);
           } else if (item.data.id) {
             const { id, ...taskData } = item.data;

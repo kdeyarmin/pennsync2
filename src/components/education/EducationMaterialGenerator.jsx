@@ -43,7 +43,7 @@ export default function EducationMaterialGenerator({ patient, teachBackHistory =
     if (teachBackHistory.length > 0) {
       const levels = teachBackHistory.map(t => t.understandingLevel);
       const goodCount = levels.filter(l => l === 'good').length;
-      const fairCount = levels.filter(l => l === 'fair').length;
+      const _fairCount = levels.filter(l => l === 'fair').length;
       const poorCount = levels.filter(l => l === 'poor').length;
       
       let recommendedLevel = 'simple';

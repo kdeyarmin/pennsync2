@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Share2, Mail, Link as LinkIcon, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function SecureDocumentShare({ documentName, documentData }) {
+export default function SecureDocumentShare({ documentName, _documentData }) {
   const [isOpen, setIsOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState('');
   const [expiresIn, setExpiresIn] = useState('7');

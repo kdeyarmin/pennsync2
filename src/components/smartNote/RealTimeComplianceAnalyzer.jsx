@@ -10,7 +10,7 @@ export default function RealTimeComplianceAnalyzer({
   roughNote, 
   visitType, 
   diagnosis,
-  patientData,
+  _patientData,
   onApplySuggestion,
   onApplyAll,
   autoAnalyze = true

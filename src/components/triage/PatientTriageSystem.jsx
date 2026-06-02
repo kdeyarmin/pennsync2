@@ -360,7 +360,7 @@ Provide a brief triage assessment in JSON format:
     return { type: 'routine_visit', label: 'Routine Visit', timing: 'Per care plan schedule' };
   };
 
-  const getUrgencyColor = (level) => {
+  const _getUrgencyColor = (level) => {
     switch (level) {
       case 'critical': return 'bg-red-500 text-white';
       case 'high': return 'bg-orange-500 text-white';
@@ -370,7 +370,7 @@ Provide a brief triage assessment in JSON format:
     }
   };
 
-  const getUrgencyIcon = (level) => {
+  const _getUrgencyIcon = (level) => {
     switch (level) {
       case 'critical': return <Ambulance className="w-4 h-4" />;
       case 'high': return <AlertTriangle className="w-4 h-4" />;
@@ -380,7 +380,7 @@ Provide a brief triage assessment in JSON format:
     }
   };
 
-  const getTrendIcon = (trend) => {
+  const _getTrendIcon = (trend) => {
     switch (trend) {
       case 'increasing': return <TrendingUp className="w-4 h-4 text-red-500" />;
       case 'decreasing': return <TrendingDown className="w-4 h-4 text-blue-500" />;

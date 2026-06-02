@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Calendar, Package, FileText } from "lucide-react";
 
 export default function OneClickActions({ 
-  patient, 
-  visit,
+  _patient, 
+  _visit,
   onMarkUrgent,
   onScheduleFollowUp,
   onRequestSupplies

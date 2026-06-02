@@ -39,7 +39,7 @@ export default function LearningReports() {
     );
   }
 
-  const adminBusinessLines = isSuperAdmin ? BUSINESS_LINES : [
+  const _adminBusinessLines = isSuperAdmin ? BUSINESS_LINES : [
     { value: currentUser?.business_line || 'home_health', label: currentUser?.business_line === 'home_health' ? 'Home Health' : 'Hospice' }
   ];
 

@@ -26,8 +26,8 @@ import {
 export default function OASISDataSync({ 
   patientId,
   onSyncData,
-  currentDiagnosis,
-  currentVitalSigns
+  _currentDiagnosis,
+  _currentVitalSigns
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedOASIS, setSelectedOASIS] = useState(null);

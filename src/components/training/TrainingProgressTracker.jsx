@@ -14,7 +14,7 @@ import {
   Loader2
 } from "lucide-react";
 
-export default function TrainingProgressTracker({ userEmail, trainingProgress, practiceSubmissions }) {
+export default function TrainingProgressTracker({ _userEmail, trainingProgress, practiceSubmissions }) {
   const [isDownloading, setIsDownloading] = React.useState(false);
   
   const completedTutorials = trainingProgress.filter(t => t.status === 'completed').length;

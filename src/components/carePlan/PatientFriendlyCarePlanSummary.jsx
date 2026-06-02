@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-export default function PatientFriendlyCarePlanSummary({ patient, carePlans, onEmailSummary }) {
+export default function PatientFriendlyCarePlanSummary({ patient, carePlans, _onEmailSummary }) {
   const [summary, setSummary] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);

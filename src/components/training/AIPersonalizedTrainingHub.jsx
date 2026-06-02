@@ -22,7 +22,7 @@ import {
 export default function AIPersonalizedTrainingHub({ nurseEmail }) {
   const [isGeneratingPath, setIsGeneratingPath] = useState(false);
   const [learningPath, setLearningPath] = useState(null);
-  const [selectedModule, setSelectedModule] = useState(null);
+  const [_selectedModule, _setSelectedModule] = useState(null);
 
   // Fetch nurse's compliance audits
   const { data: complianceAudits = [] } = useQuery({

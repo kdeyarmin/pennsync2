@@ -24,7 +24,7 @@ export default function SignDocument() {
   const [currentSignerIndex, setCurrentSignerIndex] = useState(0);
   const [signatures, setSignatures] = useState({});
 
-  const { data: currentUser } = useQuery({
+  const { data: _currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
@@ -116,7 +116,7 @@ export default function SignDocument() {
       setTimeout(() => {
         navigate(createPageUrl("DocumentSignatures"));
       }, 1500);
-    } catch (error) {
+    } catch {
       toast.error("Failed to save signatures");
     }
   };

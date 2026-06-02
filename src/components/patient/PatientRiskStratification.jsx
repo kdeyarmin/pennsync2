@@ -221,7 +221,7 @@ Return JSON:
     return colors[level] || 'bg-slate-50';
   };
 
-  const getProgressColor = (level) => {
+  const _getProgressColor = (level) => {
     const colors = {
       critical: 'bg-red-600',
       high: 'bg-orange-500',

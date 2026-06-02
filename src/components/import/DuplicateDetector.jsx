@@ -39,7 +39,7 @@ const levenshteinDistance = (str1, str2) => {
 };
 
 // Calculate string similarity (0-100)
-const calculateSimilarity = (str1, str2) => {
+const _calculateSimilarity = (str1, str2) => {
   if (!str1 || !str2) return 0;
   const distance = levenshteinDistance(str1, str2);
   const maxLength = Math.max(str1.length, str2.length);
@@ -146,7 +146,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
   const [sensitivity, setSensitivity] = useState('medium');
   const [customThreshold, setCustomThreshold] = useState(40);
   const [showSettings, setShowSettings] = useState(false);
-  const [matchingCriteria, setMatchingCriteria] = useState({
+  const [matchingCriteria, _setMatchingCriteria] = useState({
     mrn: true,
     nameAndDob: true,
     phoneAndLastName: true,

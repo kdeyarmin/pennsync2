@@ -209,7 +209,7 @@ export default function PopulationRiskOverview({
                   innerRadius={50}
                   outerRadius={80}
                   dataKey="value"
-                  label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  label={({ _name, percent }) => `${(percent * 100).toFixed(0)}%`}
                 >
                   {riskDistribution.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />

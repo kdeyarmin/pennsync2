@@ -154,7 +154,7 @@ ${patientData ? `PATIENT CONTEXT:
 ` : ''}
 
 VITAL SIGNS DOCUMENTED:
-${vitalSigns ? Object.entries(vitalSigns).filter(([k,v]) => v).map(([k,v]) => `- ${k}: ${v}`).join('\n') : 'No vitals provided'}
+${vitalSigns ? Object.entries(vitalSigns).filter(([_k,v]) => v).map(([k,v]) => `- ${k}: ${v}`).join('\n') : 'No vitals provided'}
 
 PERFORM COMPREHENSIVE COMPLIANCE CHECK:
 
@@ -252,7 +252,7 @@ Return detailed compliance analysis in JSON format.`;
     setIsChecking(false);
   };
 
-  const getStatusIcon = (status) => {
+  const _getStatusIcon = (status) => {
     switch (status) {
       case 'present': return <CheckCircle2 className="w-4 h-4 text-green-600" />;
       case 'partial': return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
@@ -261,7 +261,7 @@ Return detailed compliance analysis in JSON format.`;
     }
   };
 
-  const getStatusColor = (status) => {
+  const _getStatusColor = (status) => {
     switch (status) {
       case 'present': return 'bg-green-50 border-green-200';
       case 'partial': return 'bg-yellow-50 border-yellow-200';

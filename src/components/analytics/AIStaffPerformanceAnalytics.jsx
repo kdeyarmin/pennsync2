@@ -78,7 +78,7 @@ export default function AIStaffPerformanceAnalytics({ timeRange = 30, autoAnalyz
     initialData: [],
   });
 
-  const { data: carePlans = [] } = useQuery({
+  const { data: _carePlans = [] } = useQuery({
     queryKey: ['carePlansForAnalytics'],
     queryFn: () => base44.entities.CarePlan.list('-created_date', 500),
     initialData: [],
@@ -345,7 +345,7 @@ Return detailed analysis suitable for management dashboard.`,
     setIsAnalyzing(false);
   };
 
-  const getPerformanceColor = (score) => {
+  const _getPerformanceColor = (score) => {
     if (score >= 85) return 'bg-green-500';
     if (score >= 70) return 'bg-blue-500';
     if (score >= 60) return 'bg-yellow-500';

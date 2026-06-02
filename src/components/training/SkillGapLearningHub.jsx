@@ -69,7 +69,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
     try { localStorage.setItem(`skill_gaps_${nurseEmail}`, JSON.stringify(updatedGaps)); } catch {}
   };
 
-  const getStatusColor = (status) => {
+  const _getStatusColor = (status) => {
     const colors = {
       completed: 'bg-green-100 text-green-800',
       in_progress: 'bg-blue-100 text-blue-800',

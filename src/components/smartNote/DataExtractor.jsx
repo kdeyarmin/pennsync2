@@ -20,13 +20,13 @@ export default function DataExtractor({
   narrativeText, 
   patientId,
   onExtractedData,
-  onCreateCarePlan,
+  _onCreateCarePlan,
   onCreateTask,
   onCarePlansCreated
 }) {
   const [extractedData, setExtractedData] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
-  const [selectedItems, setSelectedItems] = useState({});
+  const [_selectedItems, _setSelectedItems] = useState({});
   const [isCreatingCarePlans, setIsCreatingCarePlans] = useState(false);
   const [createdCarePlans, setCreatedCarePlans] = useState([]);
   const [selectedCarePlans, setSelectedCarePlans] = useState({});

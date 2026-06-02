@@ -18,7 +18,7 @@ export default function DocumentManagement() {
     initialData: []
   });
 
-  const { data: patients = [] } = useQuery({
+  const { data: _patients = [] } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list(),
     initialData: []

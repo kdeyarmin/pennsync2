@@ -35,7 +35,7 @@ export default function GuidelineReferencePanel({
   const [searchTerm, setSearchTerm] = useState("");
   const [relevantGuidelines, setRelevantGuidelines] = useState([]);
   const [copied, setCopied] = useState(null);
-  const [isLoadingRelevant, setIsLoadingRelevant] = useState(false);
+  const [_isLoadingRelevant, setIsLoadingRelevant] = useState(false);
 
   const { data: allGuidelines = [] } = useQuery({
     queryKey: ['activeGuidelines'],

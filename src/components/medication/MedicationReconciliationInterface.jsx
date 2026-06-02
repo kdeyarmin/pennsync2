@@ -17,12 +17,12 @@ import {
 } from 'lucide-react';
 import DrugInteractionAlert from './DrugInteractionAlert';
 
-export default function MedicationReconciliationInterface({ patientId, onClose, onComplete }) {
+export default function MedicationReconciliationInterface({ patientId, onClose, _onComplete }) {
   const queryClient = useQueryClient();
   const [step, setStep] = useState('upload'); // upload, review, reconcile, complete
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
+  const [_isUploading, setIsUploading] = useState(false);
   const [reconciliationId, setReconciliationId] = useState(null);
   const [resolutionNotes, setResolutionNotes] = useState({});
 

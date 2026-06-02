@@ -22,7 +22,7 @@ export default function OASISReview() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [severityFilter, setSeverityFilter] = useState("all");
+  const [_severityFilter, _setSeverityFilter] = useState("all");
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   const { data: currentUser } = useQuery({
@@ -61,12 +61,12 @@ export default function OASISReview() {
   const reviewItems = Object.entries(patientOASISMap).map(([patientId, oasis]) => {
     const patient = patients.find(p => p.id === patientId);
     const aiSuggestions = Object.entries(oasis.extracted_data || {}).filter(
-      ([key, data]) => data?.source?.includes('ai_automation')
+      ([_key, data]) => data?.source?.includes('ai_automation')
     );
     
-    const pendingCount = aiSuggestions.filter(([k, d]) => !d.reviewed).length;
-    const approvedCount = aiSuggestions.filter(([k, d]) => d.approved).length;
-    const rejectedCount = aiSuggestions.filter(([k, d]) => d.rejected).length;
+    const pendingCount = aiSuggestions.filter(([_k, d]) => !d.reviewed).length;
+    const approvedCount = aiSuggestions.filter(([_k, d]) => d.approved).length;
+    const rejectedCount = aiSuggestions.filter(([_k, d]) => d.rejected).length;
     
     return {
       patientId,
@@ -271,7 +271,7 @@ export default function OASISReview() {
           <TabsContent value="approval">
             <OASISApprovalWorkflow
               pendingItems={reviewItems.filter(i => i.approvedCount > 0)}
-              onApprove={(patientId) => {
+              onApprove={(_patientId) => {
                 queryClient.invalidateQueries({ queryKey: ['oasisRecords'] });
               }}
             />

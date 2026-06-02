@@ -143,7 +143,7 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
             <CardContent className="p-6 space-y-4">
               {/* Approved Items */}
               {item.aiSuggestions
-                .filter(([k, d]) => d.approved)
+                .filter(([_k, d]) => d.approved)
                 .map(([itemNumber, data]) => (
                   <div key={itemNumber} className="bg-green-50 p-4 rounded-lg border border-green-200">
                     <div className="flex items-start justify-between mb-2">
@@ -167,7 +167,7 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
 
               {/* Rejected Items */}
               {item.aiSuggestions
-                .filter(([k, d]) => d.rejected)
+                .filter(([_k, d]) => d.rejected)
                 .map(([itemNumber, data]) => (
                   <div key={itemNumber} className="bg-red-50 p-4 rounded-lg border border-red-200">
                     <div className="flex items-start justify-between mb-2">

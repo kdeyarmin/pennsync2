@@ -32,7 +32,7 @@ export async function canAccessPatient(_patientId) {
  */
 export async function canAccessVisit(_visitId) {
   try {
-    const user = await base44.auth.me();
+    const _user = await base44.auth.me();
     
     // All authenticated users can access all visits
     return true;

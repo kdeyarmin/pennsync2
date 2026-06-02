@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export default function OneClickComplianceFixer({ 
   documentType = "visit_note",
   documentContent = "",
-  patientId,
+  _patientId,
   onContentFixed
 }) {
   const [isChecking, setIsChecking] = useState(false);

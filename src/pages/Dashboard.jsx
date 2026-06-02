@@ -32,7 +32,7 @@ const CarePlanProposalReviewer = lazy(() => import("@/components/carePlan/CarePl
 export default function Dashboard() {
   const queryClient = useQueryClient();
   const containerRef = useRef(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [_isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],

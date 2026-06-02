@@ -13,7 +13,7 @@ import ClinicalGuidelinesAssistant from "./ClinicalGuidelinesAssistant";
 import OASISItemLinker from "./OASISItemLinker";
 
 export default function DynamicAISidebar({
-  currentStep,
+  _currentStep,
   hasPatient,
   hasNotes,
   hasEnhancedNote,

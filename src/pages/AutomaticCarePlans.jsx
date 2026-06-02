@@ -48,6 +48,7 @@ import {
 import PageHeader from "@/components/ui/PageHeader";
 
 export default function AutomaticCarePlans() {
+
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState(null);

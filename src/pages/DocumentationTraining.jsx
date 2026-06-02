@@ -144,7 +144,7 @@ export default function DocumentationTraining() {
         <TabsContent value="tutorials" className="mt-6">
           <InteractiveTutorials
             userEmail={currentUser?.email}
-            onComplete={(tutorialId) => {
+            onComplete={(_tutorialId) => {
               queryClient.invalidateQueries({ queryKey: ['trainingProgress'] });
             }}
           />

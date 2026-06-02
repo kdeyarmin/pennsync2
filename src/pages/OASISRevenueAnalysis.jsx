@@ -11,7 +11,7 @@ import PDGMImpactAnalyzer from "../components/oasis/PDGMImpactAnalyzer";
 
 export default function OASISRevenueAnalysis() {
   const location = useLocation();
-  const { analysisResults, pdgmData, patientName, uploadId } = location.state || {};
+  const { analysisResults, pdgmData, patientName, _uploadId } = location.state || {};
 
   if (!analysisResults || !pdgmData) {
     return (

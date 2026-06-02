@@ -48,7 +48,7 @@ export default function InteractivePDFSigner({
   const [annotations, setAnnotations] = useState({});
   const [currentText, setCurrentText] = useState('');
   const [showSignaturePad, setShowSignaturePad] = useState(false);
-  const [signatures, setSignatures] = useState({});
+  const [_signatures, setSignatures] = useState({});
   const [activeSignatureId, setActiveSignatureId] = useState(null);
   
   // Load PDF

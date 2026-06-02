@@ -28,9 +28,9 @@ export default function AIDrivenDocumentationPrompts({
   vitalSigns,
   carePlans = [],
   previousVisits = [],
-  extractedData,
+  _extractedData,
   onInsertPromptResponse,
-  onInsertQuestion
+  _onInsertQuestion
 }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [prompts, setPrompts] = useState(null);

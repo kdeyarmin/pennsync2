@@ -61,7 +61,7 @@ const SKIP_LOGIC = {
   }
 };
 
-export default function DynamicOASISForm({ patientId, onSave, initialData = {} }) {
+export default function DynamicOASISForm({ _patientId, onSave, initialData = {} }) {
   const [answers, setAnswers] = useState(initialData);
   const [currentSection, setCurrentSection] = useState(0);
   const [validationSummary, setValidationSummary] = useState(null);

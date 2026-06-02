@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 // Voice command patterns for Smart Note Assistant
-const VOICE_COMMANDS = {
+const _VOICE_COMMANDS = {
   vitals: {
     patterns: [
       /(?:blood pressure|bp)\s*(?:is\s*)?(\d{2,3})\s*(?:over|\/)\s*(\d{2,3})/i,

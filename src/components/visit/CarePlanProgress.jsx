@@ -18,7 +18,7 @@ import {
 
 export default function CarePlanProgress({ 
   patientId, 
-  visit,
+  _visit,
   vitalSigns,
   previousVisit,
   onProgressGenerated 

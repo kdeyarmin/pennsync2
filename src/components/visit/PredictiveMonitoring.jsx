@@ -32,7 +32,7 @@ export default function PredictiveMonitoring({ patient, currentVitals, allVisits
       .map(v => v.vital_signs.blood_pressure_systolic);
     
     if (bpReadings.length >= 3) {
-      const avgBP = bpReadings.reduce((sum, bp) => sum + bp, 0) / bpReadings.length;
+      const _avgBP = bpReadings.reduce((sum, bp) => sum + bp, 0) / bpReadings.length;
       const trend = bpReadings[bpReadings.length - 1] - bpReadings[0];
       
       if (trend > 20) {

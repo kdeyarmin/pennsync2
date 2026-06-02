@@ -33,9 +33,9 @@ import {
 } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
 
-export default function EarlyWarningSystem({ patient, currentVisit, allVisits }) {
+export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }) {
   const [alerts, setAlerts] = useState([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [_isAnalyzing, setIsAnalyzing] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
@@ -835,7 +835,7 @@ Return empty array if no significant AI-detected patterns found.`;
             <div className="space-y-2">
               {alerts.map((alert) => {
                 const Icon = alert.icon || getSeverityIcon(alert.severity);
-                const SeverityIcon = getSeverityIcon(alert.severity); // This variable is not used but kept as it was in the original code.
+                const _SeverityIcon = getSeverityIcon(alert.severity); // This variable is not used but kept as it was in the original code.
 
                 return (
                   <Alert 

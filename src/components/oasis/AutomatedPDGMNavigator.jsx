@@ -41,7 +41,7 @@ import AIGroupAssignmentValidator from "./AIGroupAssignmentValidator";
 
 
 // CMS PDGM Clinical Groups
-const CLINICAL_GROUPS = {
+const _CLINICAL_GROUPS = {
   'MMTA_Surgical_Aftercare': { name: 'Surgical Aftercare', category: 'MMTA' },
   'MMTA_Cardiac_Circulatory': { name: 'Cardiac/Circulatory', category: 'MMTA' },
   'MMTA_Endocrine': { name: 'Endocrine', category: 'MMTA' },
@@ -66,7 +66,7 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [loadingResolution, setLoadingResolution] = useState(null);
   const [financialPredictions, setFinancialPredictions] = useState({});
   const [loadingPrediction, setLoadingPrediction] = useState(null);
-  const [showCostSettings, setShowCostSettings] = useState(false);
+  const [_showCostSettings, _setShowCostSettings] = useState(false);
   const [patientForecasts, setPatientForecasts] = useState(null);
   const [isLoadingForecasts, setIsLoadingForecasts] = useState(false);
   
@@ -657,7 +657,7 @@ Return JSON:
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Fetch historical patient data for forecasting
-  const { data: patientHistory = [] } = useQuery({
+  const { data: _patientHistory = [] } = useQuery({
     queryKey: ['patientOasisHistory', pdgmData?.patient_info?.name],
     queryFn: async () => {
       if (!pdgmData?.patient_info?.name) return [];

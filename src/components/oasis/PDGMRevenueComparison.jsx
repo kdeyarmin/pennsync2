@@ -147,7 +147,7 @@ function AlternativeScenarios({ scenarios, currentKey }) {
   );
 }
 
-function CaseMixBreakdown({ original, corrected }) {
+function _CaseMixBreakdown({ original, corrected }) {
   if (!original) return null;
 
   const componentData = [
@@ -382,7 +382,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
   const [hasAutoCalculated, setHasAutoCalculated] = useState(false);
   const [showCorrections, setShowCorrections] = useState(false);
   const [activeTab, setActiveTab] = useState("analysis");
-  const [whatIfScenario, setWhatIfScenario] = useState(null);
+  const [_whatIfScenario, setWhatIfScenario] = useState(null);
   const [whatIfRevenue, setWhatIfRevenue] = useState(null);
   const [isCalculatingWhatIf, setIsCalculatingWhatIf] = useState(false);
   const [dataValidation, setDataValidation] = useState(null);

@@ -28,7 +28,7 @@ import {
 
 export default function AIDocumentationAutomation({
   patient,
-  visit,
+  _visit,
   vitalSigns,
   narrativeText,
   carePlans,

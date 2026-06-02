@@ -320,7 +320,7 @@ export default function UserManagement() {
   const now = new Date();
   const pendingInvitations = invitations.filter(i => i.status === 'pending');
   const expiredInvitations = invitations.filter(i => i.status === 'expired' || (i.status === 'pending' && new Date(i.expires_at) < now));
-  const expiringSoonInvitations = pendingInvitations.filter(i => {
+  const _expiringSoonInvitations = pendingInvitations.filter(i => {
     const expiresAt = new Date(i.expires_at);
     const hoursUntilExpiry = (expiresAt - now) / (1000 * 60 * 60);
     return hoursUntilExpiry > 0 && hoursUntilExpiry <= 24;

@@ -32,7 +32,7 @@ export default function ComplianceMonitoringDashboard() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState(new Set());
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],

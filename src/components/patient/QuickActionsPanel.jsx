@@ -24,7 +24,7 @@ export default function QuickActionsPanel({
 }) {
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayVisit = upcomingVisits.find(v => v.visit_date && isValid(new Date(v.visit_date)) && v.visit_date === today);
-  const nextVisit = upcomingVisits.find(v => v.visit_date && isValid(new Date(v.visit_date)) && v.visit_date > today);
+  const _nextVisit = upcomingVisits.find(v => v.visit_date && isValid(new Date(v.visit_date)) && v.visit_date > today);
 
   const quickActions = [
     {

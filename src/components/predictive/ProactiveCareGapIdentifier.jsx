@@ -30,7 +30,7 @@ export default function ProactiveCareGapIdentifier({
   const queryClient = useQueryClient();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [identifiedGaps, setIdentifiedGaps] = useState(null);
-  const [selectedPatients, setSelectedPatients] = useState([]);
+  const [_selectedPatients, _setSelectedPatients] = useState([]);
 
   useEffect(() => {
     if (autoAnalyze && patients?.length > 0) {

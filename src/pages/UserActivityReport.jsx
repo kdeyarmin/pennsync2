@@ -32,7 +32,7 @@ export default function UserActivityReport() {
     queryFn: () => base44.entities.UserActivity.list('-created_date', 5000)
   });
 
-  const { data: users = [] } = useQuery({
+  const { data: _users = [] } = useQuery({
     queryKey: ['all-users-report'],
     queryFn: () => base44.entities.User.list('-created_date', 500)
   });

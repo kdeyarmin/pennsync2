@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function DrugInteractionAlert({ medications, patientId, autoCheck = true }) {
+export default function DrugInteractionAlert({ medications, _patientId, autoCheck = true }) {
   const [isChecking, setIsChecking] = useState(false);
   const [interactionResults, setInteractionResults] = useState(null);
   const [expandedInteractions, setExpandedInteractions] = useState({});

@@ -11,13 +11,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, Loader2, CheckCircle2, Users, Calendar } from "lucide-react";
 import { todayEastern } from "../utils/timezone";
 
-export default function OfflinePatientSelector({ onCacheComplete, showDetails = false, selectedPatientId, onSelectPatient }) {
+export default function OfflinePatientSelector({ onCacheComplete, _showDetails = false, _selectedPatientId, onSelectPatient }) {
   const [selectedPatients, setSelectedPatients] = useState([]);
-  const [dateRange, setDateRange] = useState(1); // days
+  const [_dateRange, _setDateRange] = useState(1); // days
   const [isCaching, setIsCaching] = useState(false);
   const [cacheResult, setCacheResult] = useState(null);
 
-  const { data: currentUser } = useQuery({
+  const { data: _currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
@@ -25,7 +25,7 @@ export default function OfflinePatientSelector({ onCacheComplete, showDetails = 
   const { data: allVisits = [] } = useQuery({
     queryKey: ['upcomingVisits'],
     queryFn: async () => {
-      const today = todayEastern();
+      const _today = todayEastern();
       return base44.entities.Visit.filter({ 
         status: 'scheduled'
       }, 'visit_date', 100);

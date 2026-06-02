@@ -26,7 +26,7 @@ export default function IntelligentPatientContext({
   patient, 
   carePlans = [], 
   previousVisits = [],
-  currentNoteText = "",
+  _currentNoteText = "",
   visitType,
   onInsertContext,
   onPrefillSuggestion
@@ -34,7 +34,7 @@ export default function IntelligentPatientContext({
   const [isExpanded, setIsExpanded] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const [copiedItem, setCopiedItem] = useState(null);
+  const [_copiedItem, setCopiedItem] = useState(null);
 
   // Auto-generate suggestions when patient is selected
   useEffect(() => {
@@ -119,7 +119,7 @@ Return JSON:
     setIsLoadingSuggestions(false);
   };
 
-  const handleCopy = (text, id) => {
+  const _handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedItem(id);
     setTimeout(() => setCopiedItem(null), 2000);

@@ -123,7 +123,7 @@ export default function Patients() {
     enabled: !!summaryPatient?.id,
   });
 
-  const handleShowSummary = (patient) => {
+  const _handleShowSummary = (patient) => {
     setSummaryPatient(patient);
     setShowSummaryDialog(true);
   };
@@ -205,7 +205,7 @@ export default function Patients() {
     deletePatientMutation.mutate(patientToDelete.id);
   };
 
-  const handleSubmit = (data) => {
+  const _handleSubmit = (data) => {
     if (editingPatient) {
       updatePatientMutation.mutate({ id: editingPatient.id, data });
     } else {
@@ -214,7 +214,7 @@ export default function Patients() {
   };
 
   // Visit type template quick-add
-  const createVisitFromTemplate = useMutation({
+  const _createVisitFromTemplate = useMutation({
     mutationFn: async ({ patientId, templateType }) => {
       const today = format(new Date(), 'yyyy-MM-dd');
       const visitData = {
@@ -235,7 +235,7 @@ export default function Patients() {
     }
   });
 
-  const visitTemplates = [
+  const _visitTemplates = [
     { type: 'routine_visit', label: 'Routine Visit', icon: '📋' },
     { type: 'skilled_nursing', label: 'Skilled Nursing', icon: '💉' },
     { type: 'admission', label: 'Admission', icon: '🏥' },
