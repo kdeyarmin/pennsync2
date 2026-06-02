@@ -36,6 +36,7 @@ const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
 export default function IncidentForm({ patients = [], currentUser, onSubmitted }) {
   const [photoFiles, setPhotoFiles] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [form, setForm] = useState({
     patient_id: "",
     incident_type: "safety_event",
@@ -57,6 +58,7 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      setErrorMessage("");
       const photo_urls = await Promise.all(
         photoFiles.map(async (file) => {
           const result = await base44.integrations.Core.UploadFile({ file });
@@ -101,6 +103,14 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
       });
       onSubmitted?.();
     },
+    onError: (error) => {
+      // A patient-safety incident that appears submitted but isn't is dangerous.
+      // Surface the failure and keep the form data so the report can be retried.
+      setErrorMessage(
+        error?.message ||
+          "Failed to submit the incident report. Please check your connection and try again — your entry has been kept."
+      );
+    },
   });
 
   return (
@@ -122,6 +132,12 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
         {successMessage && (
           <Alert>
             <AlertDescription>{successMessage}</AlertDescription>
+          </Alert>
+        )}
+
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertDescription>{errorMessage}</AlertDescription>
           </Alert>
         )}
 
