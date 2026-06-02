@@ -272,26 +272,62 @@ function sumDaysForType(requests, type, year, statuses) {
   }, 0);
 }
 
-/** Balance detail for one tracked type, or null if the type is untracked. */
-export function getBalanceForType(requests = [], allowances = {}, type, year = new Date().getFullYear()) {
+/**
+ * Fraction of the annual allowance accrued for a given year as of `today`.
+ * Prior years are fully accrued; the current year accrues monthly
+ * (months elapsed ÷ 12); future years are treated as fully available for planning.
+ */
+export function accruedFraction(year, today = new Date()) {
+  const currentYear = today.getFullYear();
+  if (year < currentYear || year > currentYear) return 1;
+  return (today.getMonth() + 1) / 12;
+}
+
+/** Days carried over into `year` from the prior year, capped at carryoverMax. */
+export function getCarryover(requests = [], baseAllowance = 0, type, year, carryoverMax = 0) {
+  const cap = Number(carryoverMax) || 0;
+  if (cap <= 0) return 0;
+  const prevUsed = sumDaysForType(requests, type, year - 1, ["approved"]);
+  return Math.max(0, Math.min(cap, baseAllowance - prevUsed));
+}
+
+/**
+ * Effective allowance = (accrued portion of this year's base, if accrual is on)
+ * plus any carryover from last year. With no policy it's just the base.
+ */
+function effectiveAllowance(requests, baseAllowance, type, year, policy, today) {
+  if (!policy) return baseAllowance;
+  const accrued = policy.accrual_enabled
+    ? Math.round(baseAllowance * accruedFraction(year, today))
+    : baseAllowance;
+  return accrued + getCarryover(requests, baseAllowance, type, year, policy.carryover_max);
+}
+
+/**
+ * Balance detail for one tracked type, or null if the type is untracked.
+ * `options.policy` applies accrual/carryover; without it, the flat annual
+ * allowance is used (preserving the simple model).
+ */
+export function getBalanceForType(requests = [], allowances = {}, type, year = new Date().getFullYear(), options = {}) {
   if (!allowances || !(type in allowances)) return null;
-  const allowance = Number(allowances[type]) || 0;
+  const base = Number(allowances[type]) || 0;
+  const allowance = effectiveAllowance(requests, base, type, year, options.policy, options.today || new Date());
   const used = sumDaysForType(requests, type, year, ["approved"]);
   const pending = sumDaysForType(requests, type, year, ["pending"]);
   return { type, allowance, used, pending, remaining: allowance - used - pending };
 }
 
 /** Balance detail for every tracked type. */
-export function computeBalances(requests = [], allowances = {}, year = new Date().getFullYear()) {
-  return Object.keys(allowances || {}).map((type) => getBalanceForType(requests, allowances, type, year));
+export function computeBalances(requests = [], allowances = {}, year = new Date().getFullYear(), options = {}) {
+  return Object.keys(allowances || {}).map((type) => getBalanceForType(requests, allowances, type, year, options));
 }
 
 /**
  * Returns an error string if requesting `requestedDays` of `type` would exceed
  * the remaining balance, else null. Untracked types never block.
  */
-export function getBalanceViolation(requests = [], allowances = {}, type, requestedDays = 0, year = new Date().getFullYear()) {
-  const bal = getBalanceForType(requests, allowances, type, year);
+export function getBalanceViolation(requests = [], allowances = {}, type, requestedDays = 0, year = new Date().getFullYear(), options = {}) {
+  const bal = getBalanceForType(requests, allowances, type, year, options);
   if (!bal) return null;
   if (requestedDays > bal.remaining) {
     const remaining = Math.max(0, bal.remaining);

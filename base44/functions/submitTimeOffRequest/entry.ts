@@ -152,11 +152,27 @@ Deno.serve(async (req) => {
         if (!es || es.getFullYear() !== year) return sum;
         return sum + (Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day));
       }, 0);
-      const allowance = Number(allowances[request_type]) || 0;
+      // Effective allowance: accrued portion (if accrual is on) + carryover.
+      const base = Number(allowances[request_type]) || 0;
+      const nowYear = new Date().getFullYear();
+      const fraction = year === nowYear ? (new Date().getMonth() + 1) / 12 : 1;
+      const accrued = policy && policy.accrual_enabled ? Math.round(base * fraction) : base;
+      const carryMax = Number(policy && policy.carryover_max) || 0;
+      let carryover = 0;
+      if (carryMax > 0) {
+        const prevUsed = (existing || []).reduce((sum, r) => {
+          if (r.status !== 'approved') return sum;
+          const es = parseISODate(r.start_date);
+          if (!es || es.getFullYear() !== year - 1) return sum;
+          return sum + (Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day));
+        }, 0);
+        carryover = Math.max(0, Math.min(carryMax, base - prevUsed));
+      }
+      const allowance = accrued + carryover;
       if (usedPending + total > allowance) {
         const remaining = Math.max(0, allowance - usedPending);
         return Response.json(
-          { error: `This exceeds the ${request_type.replace(/_/g, ' ')} allowance — ${remaining} of ${allowance} day(s) remaining this year.` },
+          { error: `This exceeds the ${request_type.replace(/_/g, ' ')} allowance — ${remaining} of ${allowance} day(s) available this year.` },
           { status: 400 }
         );
       }

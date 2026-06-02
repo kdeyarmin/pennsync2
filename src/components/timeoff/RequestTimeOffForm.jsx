@@ -78,12 +78,12 @@ export default function RequestTimeOffForm({
   // Balance for the selected type (current year for display; request year for the check).
   const requestYear = parseISODate(form.start_date)?.getFullYear();
   const typeBalance = useMemo(
-    () => getBalanceForType(myRequests, allowances, form.request_type, requestYear),
-    [myRequests, allowances, form.request_type, requestYear]
+    () => getBalanceForType(myRequests, allowances, form.request_type, requestYear, { policy }),
+    [myRequests, allowances, form.request_type, requestYear, policy]
   );
   const balanceViolation = useMemo(
-    () => (totalDays > 0 ? getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear) : null),
-    [myRequests, allowances, form.request_type, totalDays, requestYear]
+    () => (totalDays > 0 ? getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear, { policy }) : null),
+    [myRequests, allowances, form.request_type, totalDays, requestYear, policy]
   );
 
   const submit = useMutation({
@@ -92,7 +92,7 @@ export default function RequestTimeOffForm({
       if (validationError) throw new Error(validationError);
       const policyError = getPolicyViolation(form.start_date, form.end_date, policy);
       if (policyError) throw new Error(policyError);
-      const balanceError = getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear);
+      const balanceError = getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear, { policy });
       if (balanceError) throw new Error(balanceError);
 
       // Identity, day totals, approver validation, and notifications are all

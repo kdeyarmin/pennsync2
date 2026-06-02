@@ -75,7 +75,10 @@ export default function TimeOff() {
   // Resolve this user's allowances (agency defaults + personal overrides) and
   // derive their current-year balances for display and request validation.
   const allowances = useMemo(() => resolveAllowances(policy, currentUser), [policy, currentUser]);
-  const balances = useMemo(() => computeBalances(myRequests, allowances), [myRequests, allowances]);
+  const balances = useMemo(
+    () => computeBalances(myRequests, allowances, new Date().getFullYear(), { policy }),
+    [myRequests, allowances, policy]
+  );
 
   // For managers, scope the calendar/who's-off views to requests they oversee
   // (their reports) rather than their own. Admins see all.

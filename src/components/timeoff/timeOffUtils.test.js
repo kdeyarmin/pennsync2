@@ -22,6 +22,8 @@ import {
   getBalanceForType,
   computeBalances,
   getBalanceViolation,
+  accruedFraction,
+  getCarryover,
   typeLabel,
   statusLabel,
 } from "./timeOffUtils.js";
@@ -238,6 +240,42 @@ test("getBalanceViolation blocks only when a tracked request exceeds remaining",
   assert.equal(getBalanceViolation(requests, allowances, "vacation", 2, 2026), null); // 5 used + 2 = 7, ok
   assert.match(getBalanceViolation(requests, allowances, "vacation", 3, 2026), /exceeds your/i); // 5 + 3 > 7
   assert.equal(getBalanceViolation(requests, allowances, "sick", 99, 2026), null); // untracked never blocks
+});
+
+test("accruedFraction is monthly for the current year, full otherwise", () => {
+  const today = new Date(2026, 5, 15); // June 2026 (month index 5 => 6th month)
+  assert.equal(accruedFraction(2026, today), 6 / 12);
+  assert.equal(accruedFraction(2025, today), 1); // prior year fully accrued
+  assert.equal(accruedFraction(2027, today), 1); // future year available for planning
+});
+
+test("getCarryover rolls unused prior-year days up to the cap", () => {
+  const requests = [
+    { request_type: "vacation", status: "approved", start_date: "2025-03-02", end_date: "2025-03-04", total_days: 3 },
+  ];
+  // base 15, used 3 last year => 12 unused, capped at 5
+  assert.equal(getCarryover(requests, 15, "vacation", 2026, 5), 5);
+  // smaller unused than cap
+  assert.equal(getCarryover([{ request_type: "vacation", status: "approved", start_date: "2025-01-01", end_date: "2025-01-12", total_days: 13 }], 15, "vacation", 2026, 5), 2);
+  assert.equal(getCarryover(requests, 15, "vacation", 2026, 0), 0); // carryover disabled
+});
+
+test("getBalanceForType applies accrual and carryover when a policy is supplied", () => {
+  const today = new Date(2026, 5, 1); // June => 6/12 accrued
+  const requests = [
+    // prior year: used 5 of 12 => 7 unused, capped at 5 carryover
+    { request_type: "vacation", status: "approved", start_date: "2025-04-01", end_date: "2025-04-07", total_days: 5 },
+  ];
+  const allowances = { vacation: 12 };
+  const accrualOnly = getBalanceForType(requests, allowances, "vacation", 2026, { policy: { accrual_enabled: true }, today });
+  assert.equal(accrualOnly.allowance, 6); // round(12 * 6/12)
+  const withCarry = getBalanceForType(requests, allowances, "vacation", 2026, {
+    policy: { accrual_enabled: true, carryover_max: 5 },
+    today,
+  });
+  assert.equal(withCarry.allowance, 11); // 6 accrued + 5 carried over
+  // No policy => flat annual allowance (back-compat).
+  assert.equal(getBalanceForType(requests, allowances, "vacation", 2026).allowance, 12);
 });
 
 test("buildTimeOffCSV emits a header row and escapes special characters", () => {

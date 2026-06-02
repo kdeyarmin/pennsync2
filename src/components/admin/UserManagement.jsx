@@ -47,7 +47,7 @@ import { logActivity } from "@/components/utils/activityLogger";
 import { toast } from "sonner";
 import { BALANCE_TRACKABLE_TYPES, typeLabel } from "@/components/timeoff/timeOffUtils";
 
-export default function UserManagement({ users, currentUser }) {
+export default function UserManagement({ users }) {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -192,7 +192,6 @@ export default function UserManagement({ users, currentUser }) {
   );
 
   const pendingUsers = users.filter(u => !u.is_approved && u.role !== 'admin');
-  const approvedUsers = users.filter(u => u.is_approved || u.role === 'admin');
 
   const downloadUserRoster = async () => {
     setIsDownloadingRoster(true);

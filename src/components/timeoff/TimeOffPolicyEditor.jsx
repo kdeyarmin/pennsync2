@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ShieldCheck, Plus, Trash2, CalendarOff, Info, Wallet } from "lucide-react";
 import { toast } from "sonner";
@@ -21,6 +22,8 @@ export default function TimeOffPolicyEditor({ policy }) {
     coverage_threshold: 0,
     blackout_periods: [],
     default_allowances: {},
+    accrual_enabled: false,
+    carryover_max: 0,
   });
   const [error, setError] = useState("");
 
@@ -34,6 +37,8 @@ export default function TimeOffPolicyEditor({ policy }) {
           ? policy.blackout_periods.map((p) => ({ label: p.label || "", start_date: p.start_date || "", end_date: p.end_date || "" }))
           : [],
         default_allowances: policy.default_allowances || {},
+        accrual_enabled: policy.accrual_enabled === true,
+        carryover_max: Number(policy.carryover_max) || 0,
       });
     }
   }, [policy?.id]);
@@ -68,6 +73,8 @@ export default function TimeOffPolicyEditor({ policy }) {
         coverage_threshold: Math.max(0, Number(form.coverage_threshold) || 0),
         blackout_periods: cleaned,
         default_allowances: allowances,
+        accrual_enabled: !!form.accrual_enabled,
+        carryover_max: Math.max(0, Number(form.carryover_max) || 0),
       };
       return policy?.id
         ? base44.entities.TimeOffPolicy.update(policy.id, payload)
@@ -146,6 +153,31 @@ export default function TimeOffPolicyEditor({ policy }) {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-1">Leave blank to leave a type untracked (no balance / no limit).</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+              <div>
+                <Label htmlFor="accrual" className="text-sm">Accrue monthly</Label>
+                <p className="text-xs text-slate-400">Earn allowance over the year vs. all on Jan 1.</p>
+              </div>
+              <Switch
+                id="accrual"
+                checked={form.accrual_enabled}
+                onCheckedChange={(checked) => setForm((p) => ({ ...p, accrual_enabled: checked }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="carryover">Max carryover (days)</Label>
+              <Input
+                id="carryover"
+                type="number"
+                min={0}
+                className="mt-1"
+                value={form.carryover_max}
+                onChange={(e) => setForm((p) => ({ ...p, carryover_max: e.target.value }))}
+              />
+              <p className="text-xs text-slate-400 mt-1">Unused prior-year days roll over, up to this cap. 0 = none.</p>
+            </div>
+          </div>
         </div>
 
         <div>
