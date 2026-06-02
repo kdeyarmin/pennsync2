@@ -43,6 +43,7 @@ import {
   User,
   Info
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import EncryptionStatusIndicator from "../components/security/EncryptionStatusIndicator";
 import AIAuditAnalyzer from "../components/security/AIAuditAnalyzer";
 import SecurityAuditScheduler from "../components/security/SecurityAuditScheduler";
@@ -253,6 +254,7 @@ export default function SecurityCompliance() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+<<<<<<< HEAD
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
@@ -266,6 +268,19 @@ export default function SecurityCompliance() {
           {complianceScore}% Compliant
         </Badge>
       </div>
+=======
+      <PageHeader
+        icon={Shield}
+        title="Security & HIPAA Compliance"
+        description="Monitor security status, compliance metrics, and audit trail"
+        actions={
+          <Badge className="bg-green-600 text-lg px-4 py-2">
+            <CheckCircle2 className="w-5 h-5 mr-2" />
+            {complianceScore}% Compliant
+          </Badge>
+        }
+      />
+>>>>>>> origin/main
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 mb-6 h-auto">

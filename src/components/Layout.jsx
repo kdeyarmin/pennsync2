@@ -3,10 +3,14 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
+<<<<<<< HEAD
 import { Bell, LogOut } from "lucide-react";
+=======
+import { clearCachedPHI } from "@/lib/phiStorage";
+import { Bell, LogOut, Clock } from "lucide-react";
+>>>>>>> origin/main
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 import { buildNavCategories, buildAdminItems, NAV_MANIFEST } from "@/lib/nav.manifest";
@@ -21,19 +25,31 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 import CommandPalette from "@/components/navigation/CommandPalette";
+import { getPageMeta } from "@/components/navigation/navConfig";
+
+// Build a sidebar item from the shared navConfig manifest so label + icon stay
+// in sync with the command palette and breadcrumbs. `extra` carries the
+// sidebar-only bits (dynamic unread badges, etc.).
+const navItem = (page, extra = {}) => {
+  const meta = getPageMeta(page);
+  return { name: meta.label, icon: meta.icon, page, ...extra };
+};
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
 
+  // PennSync ships a single, fully-designed light theme: every page and
+  // component uses explicit light styles and none provide `dark:` variants.
+  // Previously this effect mirrored the OS `prefers-color-scheme`, toggling the
+  // `dark` class on <html>. That flipped only the CSS-variable tokens (popovers,
+  // dropdown menus, charts, `muted` text) to dark while the hardcoded
+  // `bg-white` / `text-slate-900` surfaces stayed light — producing an
+  // inconsistent, partially-unreadable UI for anyone on a dark-mode device.
+  // Keep the app in its intended light theme so every screen renders the same.
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const update = (isDark) => document.documentElement.classList.toggle('dark', isDark);
-    const handler = (e) => update(e.matches);
-    update(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    document.documentElement.classList.remove('dark');
   }, []);
 
   const { data: currentUser } = useQuery({
@@ -58,6 +74,7 @@ export default function Layout({ children, currentPageName }) {
 
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
+  const isTimeOffApprover = isAdmin || currentUser?.is_manager === true;
 
   useEffect(() => {
     if (!currentUser?.email) return;
@@ -79,6 +96,18 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => base44.entities.Message.filter({ recipients: currentUser.email }, '-created_date', 50),
     initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email,
   });
+
+  // Time-off requests awaiting this user's review (admins see all pending;
+  // managers see their direct reports'). Drives the "Time Off" nav badge.
+  const { data: pendingTimeOff = [] } = useQuery({
+    queryKey: ['pending-timeoff', currentUser?.email, isAdmin],
+    queryFn: () => isAdmin
+      ? base44.entities.TimeOffRequest.filter({ status: 'pending' }, '-created_date', 100)
+      : base44.entities.TimeOffRequest.filter({ manager_email: currentUser.email, status: 'pending' }, '-created_date', 100),
+    initialData: [], refetchInterval: 120000, enabled: !!currentUser?.email && isTimeOffApprover,
+  });
+  // Exclude the reviewer's own requests — they can't approve those.
+  const pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
 
   // Fetch charted visits to filter alerts
   const { data: chartedVisits = [] } = useQuery({
@@ -130,6 +159,7 @@ export default function Layout({ children, currentPageName }) {
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
+<<<<<<< HEAD
   // Badge value map — keys match the `badge` field in nav.manifest entries
   const badgeValues = useMemo(() => ({
     messages: unreadMessageCount,
@@ -141,6 +171,90 @@ export default function Layout({ children, currentPageName }) {
   const actionHandlers = useMemo(() => ({
     openNotifications: () => setNotificationCenterOpen(true),
   }), []);
+=======
+  const navCategories = useMemo(() => [
+    { category: "Overview", items: [navItem("Dashboard")] },
+    {
+      category: "Patient Care",
+      items: [
+        navItem("Patients"),
+        navItem("CarePlanManagement"),
+        navItem("SmartOASISAssessment"),
+        navItem("Incidents"),
+      ],
+    },
+    {
+      category: "Documentation",
+      items: [
+        navItem("ClinicalDocumentation"),
+        navItem("DocumentHub"),
+        navItem("ReferralIntake"),
+      ],
+    },
+    {
+      category: "Communication",
+      items: [
+        navItem("Messages", { badge: unreadMessageCount }),
+        navItem("PhoneCenter", { badge: unreadSmsCount }),
+        navItem("SendFax"),
+        navItem("PhysicianDirectory"),
+        navItem("Telehealth"),
+      ],
+    },
+    {
+      category: "Resources",
+      items: [navItem("ResourceLibrary")],
+    },
+    {
+      category: "My Learning",
+      items: [
+        navItem("LearningCenter"),
+        navItem("MyLearning"),
+        navItem("ClinicalSkillsChecklist"),
+      ],
+    },
+    {
+      category: "Workplace",
+      items: [
+        navItem("TimeOff", { badge: pendingTimeOffCount }),
+      ],
+    },
+    {
+      category: "Tools",
+      items: [
+        navItem("UserSettings"),
+        navItem("OfflineMode"),
+        navItem("Help"),
+      ],
+    },
+  ], [unreadMessageCount, unreadSmsCount, pendingTimeOffCount]);
+
+  const adminItems = useMemo(() => [
+    { category: "Admin", items: [navItem("AdminOperations")] },
+    {
+      category: "Manage",
+      items: [
+        navItem("UserManagement"),
+        navItem("AdminTraining"),
+        navItem("ClinicalPathwayManager"),
+      ]
+    },
+    { 
+      category: "Analytics", 
+      items: [
+        navItem("ReportsAnalytics"),
+        navItem("ComplianceCenter"),
+        { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
+      ] 
+    },
+    {
+      category: "Configuration",
+      items: [
+        navItem("PatientDataManagement"),
+        navItem("SecurityCompliance"),
+      ]
+    },
+>>>>>>> origin/main
 
   // Build nav arrays from manifest, then inject runtime badges/actions
   const navCategories = useMemo(() => {
@@ -196,8 +310,10 @@ export default function Layout({ children, currentPageName }) {
         user_agent: navigator.userAgent,
       });
     } catch {}
-    // HIPAA: purge cached PHI before logging out (shared-device safety).
+    // HIPAA: purge cached PHI before logging out (shared-device safety). Await
+    // the storage purge so the IndexedDB clear isn't abandoned by the redirect.
     try { queryClientInstance.clear(); } catch { /* no-op */ }
+    try { await clearCachedPHI(); } catch { /* no-op */ }
     base44.auth.logout();
 
   }, [currentUser?.email]);
@@ -231,7 +347,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <>
-      <Toaster position="top-right" richColors closeButton />
+      <Toaster position="top-right" richColors closeButton theme="light" />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>

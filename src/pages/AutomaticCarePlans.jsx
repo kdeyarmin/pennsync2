@@ -45,6 +45,7 @@ import {
   CheckCircle2,
   AlertTriangle
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import { useNavigate } from "react-router-dom";
 
 export default function AutomaticCarePlans() {
@@ -240,6 +241,7 @@ export default function AutomaticCarePlans() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+<<<<<<< HEAD
       <div className="mb-4 sm:mb-6 md:mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
@@ -251,6 +253,13 @@ export default function AutomaticCarePlans() {
           </div>
         </div>
       </div>
+=======
+      <PageHeader
+        icon={Zap}
+        title="Automatic Care Plans"
+        description="Set up care plans that trigger automatically based on diagnosis or medication"
+      />
+>>>>>>> origin/main
 
       <Alert className="mb-4 sm:mb-6 bg-blue-50 border-blue-200">
         <Shield className="w-4 h-4 text-blue-600" />

@@ -98,6 +98,7 @@ export default function OASISReview() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+<<<<<<< HEAD
       <PageHeader
         icon={ClipboardList}
         iconColor="bg-blue-600"
@@ -106,6 +107,12 @@ export default function OASISReview() {
         description="Review and approve AI-generated OASIS suggestions"
         favoritePage="OASISReview"
       />
+=======
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">OASIS Review Center</h1>
+        <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Review and approve AI-generated OASIS suggestions</p>
+      </div>
+>>>>>>> origin/main
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">

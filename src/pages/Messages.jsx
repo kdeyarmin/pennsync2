@@ -201,6 +201,7 @@ export default function Messages() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+<<<<<<< HEAD
       <PageHeader
         icon={Mail}
         iconColor="bg-blue-600"
@@ -216,6 +217,27 @@ export default function Messages() {
           </Button>
         }
       />
+=======
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
+            <Mail className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 flex-shrink-0" />
+            <span className="truncate">Messages</span>
+            {unreadCount > 0 && (
+              <Badge className="bg-red-600 text-xs sm:text-sm flex-shrink-0">{unreadCount} Unread</Badge>
+            )}
+          </h1>
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-1 hidden sm:block">Secure internal messaging for patient care coordination</p>
+        </div>
+        <Button
+          onClick={() => setShowNewMessage(true)}
+          className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
+        >
+          <Send className="w-4 h-4 mr-2" />
+          New Message
+        </Button>
+      </div>
+>>>>>>> origin/main
 
       {/* Filters */}
       <Card className="mb-4 sm:mb-6">

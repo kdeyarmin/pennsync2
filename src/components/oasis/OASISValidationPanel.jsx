@@ -27,7 +27,9 @@ export default function OASISValidationPanel({ pdgmData, analysisResults }) {
 
   const validationChecks = performValidationChecks(pdgmData, analysisResults);
   const { totalChecks, passedChecks, criticalIssues, warningIssues, infoIssues } = validationChecks.summary;
-  const validationScore = Math.round((passedChecks / totalChecks) * 100);
+  const validationScore = totalChecks > 0
+    ? Math.min(100, Math.max(0, Math.round((passedChecks / totalChecks) * 100)))
+    : 100;
 
   const getSeverityColor = (severity) => {
     switch (severity) {
@@ -275,8 +277,12 @@ function performValidationChecks(pdgmData, _analysisResults) {
   ];
 
   const allIssues = [...admissionChecks, ...diagnosisChecks, ...functionalChecks, ...clinicalChecks, ...dateChecks];
-  const totalChecks = 15; // Total number of validation checks
-  const passedChecks = totalChecks - allIssues.length;
+  // Baseline of 15 expected checks, but a single assessment can surface more than
+  // 15 issues; never let the denominator be exceeded (which produced negative
+  // "passed" counts and a negative validation score).
+  const BASELINE_CHECKS = 15;
+  const totalChecks = Math.max(BASELINE_CHECKS, allIssues.length);
+  const passedChecks = Math.max(0, totalChecks - allIssues.length);
   
   const criticalIssues = allIssues.filter(i => i.severity === 'critical').length;
   const warningIssues = allIssues.filter(i => i.severity === 'high' || i.severity === 'medium').length;

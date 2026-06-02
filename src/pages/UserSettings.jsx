@@ -33,6 +33,7 @@ import {
   AlertTriangle,
   Shield
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
@@ -221,6 +222,7 @@ export default function UserSettings() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
+<<<<<<< HEAD
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 sm:gap-3">
           <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
@@ -228,6 +230,13 @@ export default function UserSettings() {
         </h1>
         <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-2">Manage your profile, credentials, and AI preferences</p>
       </div>
+=======
+      <PageHeader
+        icon={Settings}
+        title="Settings & Profile"
+        description="Manage your profile, credentials, and AI preferences"
+      />
+>>>>>>> origin/main
 
       {saveSuccess && (
         <Alert className="mb-6 bg-green-50 border-green-300">

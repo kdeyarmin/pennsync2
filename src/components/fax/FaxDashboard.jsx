@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { openExternalUrl } from "@/components/utils/security";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -356,7 +357,7 @@ export default function FaxDashboard() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => window.open(fax.document_url, '_blank')}
+                              onClick={() => openExternalUrl(fax.document_url)}
                               className="gap-1.5"
                             >
                               <Download className="h-3.5 w-3.5" />

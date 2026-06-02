@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, TrendingUp, Activity, Brain, RefreshCw } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import ReferralVolumeReport from "@/components/reports/ReferralVolumeReport";
 import PatientOutcomesReport from "@/components/reports/PatientOutcomesReport";
 import NursePerformanceReport from "@/components/reports/NursePerformanceReport";
@@ -82,6 +83,7 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+<<<<<<< HEAD
       <div className="mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
@@ -93,6 +95,13 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
           </p>
         </div>
       </div>
+=======
+      <PageHeader
+        icon={BarChart3}
+        title="Reports & Analytics"
+        description="KPIs, outcomes, performance metrics, and AI-powered population health insights"
+      />
+>>>>>>> origin/main
 
       <Tabs defaultValue="kpi" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">

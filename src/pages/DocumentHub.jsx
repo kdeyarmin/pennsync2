@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus
+  Plus, FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/ui/PageHeader";
 import DocumentManagementDashboard from "@/components/documents/DocumentManagementDashboard";
 import DocumentPackageCreator from "@/components/documents/DocumentPackageCreator";
 import SignatureTracking from "@/components/documents/SignatureTracking";
@@ -46,6 +47,7 @@ export default function DocumentHub() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+<<<<<<< HEAD
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Document Hub</h1>
@@ -59,24 +61,34 @@ export default function DocumentHub() {
               <Button 
                 onClick={() => navigate('/CreateSignatureRequest')}
                 className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
+=======
+      <PageHeader
+        icon={FileText}
+        title="Document Hub"
+        description="Manage signatures, templates, and patient documents"
+        actions={activeTab === "signatures" && (
+          <>
+            <Button
+              onClick={() => navigate('/CreateSignatureRequest')}
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Send for Signature
+            </Button>
+            {currentUser?.role === 'admin' && (
+              <Button
+                onClick={() => setShowTemplateBuilder(true)}
+                variant="outline"
+                className="w-full sm:w-auto min-h-[44px]"
+>>>>>>> origin/main
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Send for Signature
+                Create Template
               </Button>
-              {currentUser?.role === 'admin' && (
-                <Button 
-                  onClick={() => setShowTemplateBuilder(true)}
-                  variant="outline"
-                  className="w-full sm:w-auto min-h-[44px]"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Template
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+            )}
+          </>
+        )}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1">
