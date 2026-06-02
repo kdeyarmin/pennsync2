@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -25,7 +26,12 @@ export default function OfflineMode() {
     };
   }, []);
 
-  const cachedPatients = JSON.parse(localStorage.getItem('offline_patient_data') || '[]');
+  let cachedPatients = [];
+  try {
+    cachedPatients = JSON.parse(localStorage.getItem('offline_patient_data') || '[]');
+  } catch (e) {
+    console.warn('Failed to parse cached patient data:', e);
+  }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
@@ -78,7 +84,7 @@ export default function OfflineMode() {
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm text-yellow-600 font-medium mb-1 truncate">Pending Sync</p>
                 <p className="text-2xl sm:text-3xl font-bold text-yellow-900">
-                  {JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]').length}
+                  {(() => { try { return JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]').length; } catch { return 0; } })()}
                 </p>
               </div>
               <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 flex-shrink-0" />
@@ -107,7 +113,9 @@ export default function OfflineMode() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-6">
           <OfflineSyncManager />
-          <OfflinePatientSelector onCacheComplete={() => {}} />
+          <OfflinePatientSelector onCacheComplete={() => {
+            toast.success('Patient data cached for offline use');
+          }} />
         </div>
 
         <div className="space-y-4 sm:space-y-6">

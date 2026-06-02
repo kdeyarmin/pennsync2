@@ -8,10 +8,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
+
     // Verify admin access for background jobs
     const user = await base44.auth.me();
-    if (user?.role !== 'admin') {
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
@@ -20,8 +20,8 @@ Deno.serve(async (req) => {
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
 
     if (!accountSid || !authToken) {
-      return Response.json({ 
-        error: 'Missing Twilio credentials' 
+      return Response.json({
+        error: 'Missing Twilio credentials'
       }, { status: 500 });
     }
 
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     }, '-created_date', 20);
 
     console.log(`Found ${pendingFaxes.length} pending faxes to check`);
-    
+
     // Early exit if no pending faxes
     if (pendingFaxes.length === 0) {
       return Response.json({
@@ -53,14 +53,14 @@ Deno.serve(async (req) => {
     // Check status of each pending fax with timeout safeguard
     const startTime = Date.now();
     const maxDuration = 35000; // 35 seconds max (strict buffer for CPU limits)
-    
+
     for (const faxLog of pendingFaxes) {
       // Break early if approaching CPU time limit
       if (Date.now() - startTime > maxDuration) {
         console.warn(`Timeout approaching, stopping fax checks after ${results.checked} faxes`);
         break;
       }
-      
+
       if (!faxLog.telnyx_fax_id) {
         console.warn(`FaxLog ${faxLog.id} missing telnyx_fax_id (Twilio SID)`);
         continue;
@@ -109,15 +109,15 @@ Deno.serve(async (req) => {
 
           // Send notification
           await sendStatusNotification(
-            base44, 
-            faxLog, 
-            twilioStatus, 
+            base44,
+            faxLog,
+            twilioStatus,
             faxData.num_pages,
             updateData.failure_reason
           );
 
-          // Log activity (skip to save CPU time)
-          if (faxLog.sent_by && false) {
+          // Log activity (audit trail of fax status changes)
+          if (faxLog.sent_by) {
             await base44.asServiceRole.entities.UserActivity.create({
               user_email: faxLog.sent_by,
               action: 'fax_status_sync',
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
                 to_number: faxLog.to_number,
               },
               status: twilioStatus === 'failed' ? 'failure' : 'success',
-            }).catch(() => {});
+            }).catch((err) => console.error('Failed to send fax status notification:', err));
           }
         }
 
@@ -150,9 +150,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Fax status sync error:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString(),
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });
@@ -173,7 +172,7 @@ async function sendStatusNotification(base44, faxLog, status, numPages, failureR
   if (!faxLog.sent_by) return;
 
   const recipientName = faxLog.to_name || faxLog.to_number;
-  
+
   try {
     let notificationData = null;
 

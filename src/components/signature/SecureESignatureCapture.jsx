@@ -7,11 +7,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import SignatureCanvas from 'react-signature-canvas';
-import { 
-  PenTool, 
-  RotateCcw, 
-  Check, 
-  AlertTriangle, 
+import {
+  PenTool,
+  RotateCcw,
+  Check,
+  AlertTriangle,
   Lock,
   Shield,
   Calendar,
@@ -20,13 +20,15 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { buildSignatureIntegrityPayload, generateSignatureHash } from './signatureUtils';
 
-export default function SecureESignatureCapture({ 
-  documentType, 
-  documentId, 
+export default function SecureESignatureCapture({
+  documentType,
+  documentId,
   documentTitle,
   onSignatureComplete,
-  requireWitness = false 
+  requireWitness = false,
+  signatureRole = 'signer'
 }) {
   const signatureRef = useRef(null);
   const [signatureData, setSignatureData] = useState(null);
@@ -38,20 +40,30 @@ export default function SecureESignatureCapture({
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const loadUser = async () => {
       try {
         const currentUser = await base44.auth.me();
-        setUser(currentUser);
+        if (isMounted) {
+          setUser(currentUser);
+        }
       } catch (error) {
         console.error('Failed to load user:', error);
       }
     };
+
     loadUser();
 
     // Capture location data
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          if (!isMounted) {
+            return;
+          }
+
           setLocationData({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -65,10 +77,23 @@ export default function SecureESignatureCapture({
     }
 
     // Capture IP address via a simple API call
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => setIpAddress(data.ip))
-      .catch(() => setIpAddress('Unknown'));
+    fetch('https://api.ipify.org?format=json', { signal: abortController.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted) {
+          setIpAddress(data.ip);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIpAddress('Unknown');
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   const handleClear = () => {
@@ -82,17 +107,6 @@ export default function SecureESignatureCapture({
     }
   };
 
-  const generateSignatureHash = (data) => {
-    // Simple hash generation for tamper detection
-    const str = JSON.stringify(data);
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16);
-  };
 
   const handleSubmitSignature = async () => {
     if (!signatureData) {
@@ -114,7 +128,7 @@ export default function SecureESignatureCapture({
 
     try {
       const timestamp = new Date().toISOString();
-      
+
       // Create signature record with audit trail
       const signatureRecord = {
         document_type: documentType,
@@ -131,11 +145,13 @@ export default function SecureESignatureCapture({
         attestation_accepted: attestation,
         attestation_text: `I attest that I am ${user.full_name} and that the information in this ${documentType} is accurate and complete to the best of my knowledge.`,
         signature_method: 'electronic_capture',
+        signature_role: signatureRole,
         device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
       };
 
-      // Generate tamper-evident hash
-      const signatureHash = generateSignatureHash(signatureRecord);
+      // Generate tamper-evident hash from the canonical integrity payload so that
+      // verification (which uses the same shared util) matches exactly.
+      const signatureHash = generateSignatureHash(buildSignatureIntegrityPayload(signatureRecord));
       signatureRecord.signature_hash = signatureHash;
 
       // Save to DocumentSignature entity
@@ -150,6 +166,7 @@ export default function SecureESignatureCapture({
           document_type: documentType,
           document_id: documentId,
           signature_id: savedSignature.id,
+          signature_role: signatureRole,
           signature_hash: signatureHash,
           timestamp: timestamp,
           ip_address: ipAddress,
@@ -160,7 +177,7 @@ export default function SecureESignatureCapture({
       });
 
       toast.success('Signature captured successfully');
-      
+
       if (onSignatureComplete) {
         onSignatureComplete(savedSignature);
       }
@@ -191,7 +208,7 @@ export default function SecureESignatureCapture({
           <div className="flex items-center gap-2 text-sm">
             <User className="w-4 h-4 text-gray-600" />
             <span className="font-semibold text-gray-900">Signer:</span>
-            <span className="text-gray-700">{user?.full_name}</span>
+            <span className="text-gray-700">{user?.full_name} {signatureRole ? `(${signatureRole})` : ''}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="w-4 h-4 text-gray-600" />
@@ -208,6 +225,15 @@ export default function SecureESignatureCapture({
             </div>
           )}
         </div>
+
+        {requireWitness && (
+          <Alert className="bg-amber-50 border-amber-200">
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 text-sm">
+              This signature requires a witness. Capture the primary signer first, then collect the witness signature in the next workflow step.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Credentials Input */}
         <div className="space-y-2">

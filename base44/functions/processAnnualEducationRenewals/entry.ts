@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     for (let i = 0; i < notificationsToCreate.length; i += 50) {
       const batch = notificationsToCreate.slice(i, i + 50);
       await Promise.all(
-        batch.map(n => base44.asServiceRole.entities.Notification.create(n).catch(() => {}))
+        batch.map(n => base44.asServiceRole.entities.Notification.create(n).catch((err) => console.error('Failed to create notification:', err)))
       );
       notificationsCreated += batch.length;
     }

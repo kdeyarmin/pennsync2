@@ -3,7 +3,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { fax_log_id, analysis_type = 'full' } = await req.json();
 
     if (!fax_log_id) {
@@ -17,6 +19,10 @@ Deno.serve(async (req) => {
     }
 
     const fax = faxLog[0];
+    // Ownership: only the sender (or an admin) may analyze a fax's PHI content.
+    if (fax.sent_by && fax.sent_by !== user.email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const ocrText = fax.ocr_text || '';
 
     if (!ocrText) {
@@ -171,10 +177,10 @@ Return JSON: {
       });
 
       // Match with actual contacts
-      suggestedContacts = contactResult.suggested_contacts.map(suggested => {
-        const match = allContacts.find(c => 
-          c.fax_number === suggested.fax_number || 
-          c.name.toLowerCase().includes(suggested.name.toLowerCase())
+      suggestedContacts = (contactResult?.suggested_contacts || []).map(suggested => {
+        const match = allContacts.find(c =>
+          c.fax_number === suggested.fax_number ||
+          c.name?.toLowerCase().includes(suggested.name?.toLowerCase())
         );
         return {
           ...suggested,

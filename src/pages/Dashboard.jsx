@@ -2,9 +2,10 @@ import { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatEastern, todayEastern } from "@/components/utils/timezone";
+import { toast } from "sonner";
+import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
 
@@ -51,16 +52,13 @@ export default function Dashboard() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Refetch all dashboard queries
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['todayVisits'] }),
-        queryClient.refetchQueries({ queryKey: ['patients'] }),
-        queryClient.refetchQueries({ queryKey: ['activeCarePlans'] }),
-        queryClient.refetchQueries({ queryKey: ['recentIncidents'] }),
+        queryClient.refetchQueries({ queryKey: ['dashboardData'] }),
         queryClient.refetchQueries({ queryKey: ['myNoteConversions'] }),
       ]);
-    } catch (error) {
-      console.error('Refresh failed:', error);
+      toast.success('Dashboard refreshed');
+    } catch {
+      toast.error('Some data failed to refresh. Please try again.');
     } finally {
       setIsRefreshing(false);
     }
@@ -77,40 +75,27 @@ export default function Dashboard() {
       }
     }, [currentUser?.email]);
 
-    const { data: visits = [], isLoading, error: visitsError } = useQuery({
-      queryKey: ['todayVisits'],
-      queryFn: async () => {
-        const today = todayEastern();
-        return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
-      },
-      initialData: [],
-      staleTime: 120000,      // 2 min — visits change occasionally
-      gcTime: 300000,
-    });
-
-  const { data: patients = [], error: patientsError } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 100), // reduced from 200
-    initialData: [],
-    staleTime: 600000,        // 10 min — patient list rarely changes mid-session
-    gcTime: 900000,
+  // Core datasets are fetched through a SERVER-SCOPED function so a non-admin's
+  // browser only receives their assigned patients' data (admins: agency-wide).
+  // Kept under a dedicated ['dashboardData'] key to avoid disturbing the shared
+  // ['patients']/['todayVisits']/... cache used across the rest of the app.
+  const { data: dashboardData = {}, isLoading, error: dashboardError } = useQuery({
+    queryKey: ['dashboardData', currentUser?.email],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getDashboardData', {});
+      return res?.data || {};
+    },
+    enabled: !!currentUser?.email,
+    initialData: {},
+    staleTime: 120000,
+    gcTime: 300000,
   });
-
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['activeCarePlans'],
-    queryFn: () => base44.entities.CarePlan.filter({ status: 'active' }, '-updated_date', 50),  // reduced from 100
-    initialData: [],
-    staleTime: 600000,
-    gcTime: 900000,
-  });
-
-  const { data: incidents = [] } = useQuery({
-    queryKey: ['recentIncidents'],
-    queryFn: () => base44.entities.Incident.list('-incident_date', 20),  // reduced from 30
-    initialData: [],
-    staleTime: 600000,
-    gcTime: 900000,
-  });
+  const visits = dashboardData.visits || [];
+  const patients = dashboardData.patients || [];
+  const carePlans = dashboardData.carePlans || [];
+  const incidents = dashboardData.incidents || [];
+  const visitsError = dashboardError;
+  const patientsError = dashboardError;
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['myNoteConversions', currentUser?.email],
@@ -134,7 +119,7 @@ export default function Dashboard() {
     if (!currentUser?.email) {
       return { noteConversions: 0, timeSavedDisplay: '0 hrs', noteEnhancements: { total: 0 } };
     }
-    
+
     // Filter for current user's enhancements
     return calculateNurseStats(currentUser.email, {
       visits,
@@ -172,7 +157,10 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Welcome to Penn Sync!</h1>
           <p className="text-gray-500 mt-1">Let's set up your profile before we get started.</p>
         </div>
-        <CareScopeSelector currentUser={currentUser} onSaved={() => {}} />
+        <CareScopeSelector currentUser={currentUser} onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+          toast.success('Care scope saved! Loading your dashboard...');
+        }} />
       </div>
     );
   }
@@ -220,6 +208,16 @@ export default function Dashboard() {
 
 
 
+      {/* Quick Navigation Hint */}
+      <div className="mb-3 flex items-center justify-center">
+        <button
+          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5"
+        >
+          Press <kbd className="bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-mono">Ctrl+K</kbd> to quickly navigate anywhere
+        </button>
+      </div>
+
       {/* New Features Banner */}
       <NewFeaturesBanner />
 
@@ -227,28 +225,60 @@ export default function Dashboard() {
       <AnnouncementsWidget />
 
       {/* Nurse Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card className="modern-card">
-          <CardContent className="p-5 sm:p-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <Card className="bg-gradient-to-br from-emerald-600 to-emerald-500 border-emerald-500 shadow-md">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-slate-500 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
-                <p className="text-3xl sm:text-4xl font-bold text-slate-900">
-                  {noteConversions.length}
+                <p className="text-[10px] sm:text-xs text-emerald-100 font-semibold mb-1 uppercase tracking-wide">Today's Visits</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
+                  {visits.filter(v => v.status === 'scheduled').length}
+                </p>
+                <p className="text-[10px] sm:text-xs text-emerald-200 mt-0.5">
+                  {visits.filter(v => v.status === 'completed').length} completed
                 </p>
               </div>
-              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-slate-300 flex-shrink-0" />
+              <Calendar className="w-9 h-9 sm:w-11 sm:h-11 text-emerald-300 flex-shrink-0 opacity-70" />
             </div>
           </CardContent>
         </Card>
-        <Card className="modern-card">
-          <CardContent className="p-5 sm:p-6">
+        <Card className="bg-gradient-to-br from-violet-600 to-violet-500 border-violet-500 shadow-md">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-slate-500 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
-                <p className="text-3xl sm:text-4xl font-bold text-slate-900">{stats.timeSavedDisplay}</p>
+                <p className="text-[10px] sm:text-xs text-violet-100 font-semibold mb-1 uppercase tracking-wide">Active Care Plans</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
+                  {carePlans.length}
+                </p>
+                <p className="text-[10px] sm:text-xs text-violet-200 mt-0.5">
+                  {patients.length} patients
+                </p>
               </div>
-              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-slate-200 flex-shrink-0" />
+              <Target className="w-9 h-9 sm:w-11 sm:h-11 text-violet-300 flex-shrink-0 opacity-70" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] sm:text-xs text-slate-300 font-semibold mb-1 uppercase tracking-wide">Note Enhancements</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
+                  {noteConversions.length}
+                </p>
+              </div>
+              <FileText className="w-9 h-9 sm:w-11 sm:h-11 text-slate-400 flex-shrink-0 opacity-70" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-blue-700 to-blue-600 border-blue-600 shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] sm:text-xs text-blue-200 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.timeSavedDisplay}</p>
+              </div>
+              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-blue-300 flex-shrink-0 opacity-70" />
             </div>
           </CardContent>
         </Card>
@@ -286,7 +316,10 @@ export default function Dashboard() {
           <SmartRouteOptimizer
             visits={visits.filter(v => v.status === 'scheduled')}
             patients={patients}
-            onOptimizedSchedule={() => {}}
+            onOptimizedSchedule={() => {
+              toast.success('Route optimized! Your schedule has been updated.');
+              queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
+            }}
           />
         </div>
       )}
@@ -294,7 +327,7 @@ export default function Dashboard() {
       {/* Proactive Clinical Support - Show for first scheduled patient */}
       {visits.length > 0 && visits[0]?.patient_id && (
         <div className="mb-6">
-          <ProactiveClinicalSupport 
+          <ProactiveClinicalSupport
             patientId={visits[0].patient_id}
             compact={true}
           />
@@ -303,7 +336,7 @@ export default function Dashboard() {
 
 
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="flex items-center justify-center py-12 text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" />Loading...</div>}>
         {/* AI Care Plan Proposals - Nurse Review */}
         <div className="mb-6">
           <CarePlanProposalReviewer compact={true} />

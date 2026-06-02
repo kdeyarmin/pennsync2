@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import CareScopeSelector from "../components/profile/CareScopeSelector";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
+import DutyStatusCard from "../components/voice/DutyStatusCard";
 
 const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
@@ -94,9 +96,7 @@ export default function UserSettings() {
     initialData: [],
   });
 
-  const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
-
-  const myCredentials = useMemo(() => 
+  const myCredentials = useMemo(() =>
     credentials.filter((item) => item.user_id === currentUser?.email), 
     [credentials, currentUser]
   );
@@ -175,7 +175,7 @@ export default function UserSettings() {
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Failed to save preferences. Please try again.');
+      toast.error('Failed to save preferences. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -213,7 +213,7 @@ export default function UserSettings() {
       await base44.auth.logout();
     } catch (error) {
       console.error('Error deleting account:', error);
-      alert('Failed to delete account. Please contact support.');
+      toast.error('Failed to delete account. Please contact support.');
     } finally {
       setIsDeleting(false);
     }
@@ -269,6 +269,8 @@ export default function UserSettings() {
 
         {/* Profile / Role Tab */}
         <TabsContent value="profile" className="space-y-6">
+          <DutyStatusCard />
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -337,7 +339,10 @@ export default function UserSettings() {
               )}
               <CareScopeSelector
                 currentUser={currentUser}
-                onSaved={() => {}}
+                onSaved={() => {
+                  queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+                  toast.success('Care scope updated successfully');
+                }}
               />
             </CardContent>
           </Card>
