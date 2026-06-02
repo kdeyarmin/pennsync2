@@ -49,6 +49,10 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
     onSettled: () => setResendingId(null),
   });
   const handleResend = (msg) => {
+    // Guard against concurrent resends: only one outbound request at a time,
+    // regardless of which failed bubble was tapped (each bubble's own spinner
+    // is still driven by resendingId).
+    if (resendMutation.isPending || sendMutation.isPending) return;
     setResendingId(msg.id);
     resendMutation.mutate(msg.body);
   };
@@ -121,7 +125,7 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                       variant="ghost"
                       className="h-6 px-2 text-xs text-red-700 hover:text-red-800 hover:bg-red-50"
                       onClick={() => handleResend(msg)}
-                      disabled={resendMutation.isPending && resendingId === msg.id}
+                      disabled={resendMutation.isPending || sendMutation.isPending}
                     >
                       <RotateCw className={`w-3 h-3 mr-1 ${resendMutation.isPending && resendingId === msg.id ? "animate-spin" : ""}`} />
                       Resend

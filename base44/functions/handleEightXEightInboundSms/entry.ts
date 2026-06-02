@@ -113,12 +113,24 @@ async function getAgencyConfig(base44: any) {
 }
 
 async function sendSms8x8(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string) {
+  // Bound the auto-reply with a timeout: this is awaited before we return 200,
+  // so a hung send would delay the ack and trigger 8x8 webhook retries.
   const url = `${host}/api/v1/subaccounts/${subAccountId}/messages`;
-  return fetch(url, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ source, destination, text, encoding: 'AUTO', clientMessageId: crypto.randomUUID() }),
-  }).catch((err) => { console.error('auto-reply send failed:', err); return null; });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    return await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source, destination, text, encoding: 'AUTO', clientMessageId: crypto.randomUUID() }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    console.error('auto-reply send failed:', err);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**

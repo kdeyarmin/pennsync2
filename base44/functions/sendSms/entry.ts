@@ -116,9 +116,13 @@ Deno.serve(async (req) => {
       consent_checked: consentStatus === 'opted_in',
     });
 
-    // Send via 8x8 SMS API
+    // Send via 8x8 SMS API. Bound the request with an AbortController timeout so
+    // a slow/blackholed host can't hang the function (and leave the row queued).
     const host = `https://sms.${region}.8x8.com`;
     const url = `${host}/api/v1/subaccounts/${smsSubAccountId}/messages`;
+    const SEND_TIMEOUT_MS = 15000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
     let resp: Response;
     try {
       resp = await fetch(url, {
@@ -134,14 +138,24 @@ Deno.serve(async (req) => {
           encoding: 'AUTO',
           clientMessageId,
         }),
+        signal: controller.signal,
       });
     } catch (netErr) {
-      // Network/DNS failure: don't leave the row stuck in 'queued' forever.
+      // Network/DNS failure or timeout: don't leave the row stuck in 'queued'.
+      const aborted = netErr?.name === 'AbortError';
+      const reason = aborted
+        ? `Timed out after ${SEND_TIMEOUT_MS} ms reaching 8x8`
+        : `Network error reaching 8x8: ${netErr.message}`;
       await base44.entities.SmsMessage.update(smsRow.id, {
         status: 'failed',
-        failure_reason: `Network error reaching 8x8: ${netErr.message}`,
+        failure_reason: reason,
       }).catch(() => {});
-      return Response.json({ error: 'Failed to reach 8x8 SMS API', details: netErr.message }, { status: 502 });
+      return Response.json(
+        { error: aborted ? '8x8 SMS API timed out' : 'Failed to reach 8x8 SMS API', details: netErr.message },
+        { status: aborted ? 504 : 502 },
+      );
+    } finally {
+      clearTimeout(timer);
     }
 
     const data = await resp.json().catch(() => ({}));

@@ -22,21 +22,32 @@ async function getSettings(base44: any) {
   return rows[0] || {};
 }
 
+const PROBE_TIMEOUT_MS = 8000;
+
 /**
- * Read-only probe: list a single message on the SMS sub-account. We don't care
- * about the body — only what the HTTP outcome tells us:
- *   - network error      → host/region wrong, or the function has no egress (fail)
- *   - 401 / 403          → the API key is wrong or not authorized here (fail)
- *   - 2xx                → authenticated and reachable (ok)
- *   - other (404/400/5xx)→ reachable + authenticated, but verify the sub-account id (warn)
+ * Read-only probe of the SMS sub-account, bounded by an AbortController timeout
+ * so a slow/blackholed host can't hang the diagnostic. We interpret the HTTP
+ * outcome conservatively — the 8x8 send endpoint is POST-only, so a GET may
+ * legitimately return 404/405 on a correctly configured account. We therefore
+ * only treat an explicit auth rejection as proof the key is bad, and never
+ * over-claim "authenticated" for a non-2xx response:
+ *   - network error / timeout → host/region wrong, or no egress (fail)
+ *   - 401 / 403               → the API key is rejected — definitive (fail)
+ *   - 2xx                     → authenticated and reachable (ok)
+ *   - other (404/405/400/5xx) → 8x8 was reached and did NOT reject the key, but
+ *                               this read-only probe can't fully confirm it;
+ *                               a real test text is the definitive check (warn)
  */
 async function probeSmsApi(apiKey: string, host: string, smsSubAccountId: string) {
   const url = `https://${host}/api/v1/subaccounts/${encodeURIComponent(smsSubAccountId)}/messages?pageSize=1`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   const startedAt = Date.now();
   try {
     const resp = await fetch(url, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' },
+      signal: controller.signal,
     });
     const latencyMs = Date.now() - startedAt;
     // Drain the body so the connection can be reused / closed cleanly.
@@ -54,17 +65,22 @@ async function probeSmsApi(apiKey: string, host: string, smsSubAccountId: string
     }
     return {
       status: 'warn',
-      detail: `Reached and authenticated, but the probe returned HTTP ${resp.status}. Double-check the SMS sub-account ID and region.`,
+      detail: `Reached 8x8 and the API key was not rejected (HTTP ${resp.status}), but this read-only probe can't fully confirm the SMS sub-account — the send endpoint is POST-only. Send a test text to verify end to end.`,
       httpStatus: resp.status,
       latencyMs,
     };
   } catch (err) {
+    const aborted = (err as Error)?.name === 'AbortError';
     return {
       status: 'fail',
-      detail: `Could not reach https://${host} — verify the 8x8 region. (${(err as Error).message})`,
+      detail: aborted
+        ? `Timed out after ${PROBE_TIMEOUT_MS} ms reaching https://${host}. Check the 8x8 region and that the function has network egress.`
+        : `Could not reach https://${host} — verify the 8x8 region. (${(err as Error).message})`,
       httpStatus: null,
       latencyMs: Date.now() - startedAt,
     };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
