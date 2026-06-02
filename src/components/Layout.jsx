@@ -6,7 +6,7 @@ import { queryClientInstance } from "@/lib/query-client";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Phone
+  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Phone, CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,6 +61,7 @@ export default function Layout({ children, currentPageName }) {
 
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
+  const isTimeOffApprover = isAdmin || currentUser?.is_manager === true;
 
   useEffect(() => {
     if (!currentUser?.email) return;
@@ -81,6 +82,16 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['unreadMessages', currentUser?.email],
     queryFn: () => base44.entities.Message.filter({ recipients: currentUser.email }, '-created_date', 50),
     initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email,
+  });
+
+  // Time-off requests awaiting this user's review (admins see all pending;
+  // managers see their direct reports'). Drives the "Time Off" nav badge.
+  const { data: pendingTimeOff = [] } = useQuery({
+    queryKey: ['pending-timeoff', currentUser?.email, isAdmin],
+    queryFn: () => isAdmin
+      ? base44.entities.TimeOffRequest.filter({ status: 'pending' }, '-created_date', 100)
+      : base44.entities.TimeOffRequest.filter({ manager_email: currentUser.email, status: 'pending' }, '-created_date', 100),
+    initialData: [], refetchInterval: 120000, enabled: !!currentUser?.email && isTimeOffApprover,
   });
 
   // Fetch charted visits to filter alerts
@@ -177,13 +188,19 @@ export default function Layout({ children, currentPageName }) {
       ],
     },
     {
+      category: "Workplace",
+      items: [
+        { name: "Time Off", icon: CalendarDays, page: "TimeOff", badge: pendingTimeOff.length },
+      ],
+    },
+    {
       category: "Tools",
       items: [
         { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Help", icon: HelpCircle, page: "Help" },
       ],
     },
-  ], [unreadMessageCount, unreadSmsCount]);
+  ], [unreadMessageCount, unreadSmsCount, pendingTimeOff.length]);
 
   const adminItems = useMemo(() => [
     { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },

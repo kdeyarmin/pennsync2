@@ -119,6 +119,15 @@
     "profile_completeness_score": {
       "type": "number",
       "description": "Percentage of profile fields completed (0-100)"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of this user's manager/approver for time-off and approvals"
+    },
+    "is_manager": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this user can approve time-off requests for their direct reports"
     }
   },
   "required": [

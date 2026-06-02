@@ -57,6 +57,7 @@ const DocumentAuditLogs = lazy(() => import('@/pages/DocumentAuditLogs'));
 const BulkSignatureRequests = lazy(() => import('@/pages/BulkSignatureRequests'));
 const FaxAnalytics = lazy(() => import('@/pages/FaxAnalytics'));
 const CreateSignatureRequest = lazy(() => import('@/pages/CreateSignatureRequest'));
+const TimeOff = lazy(() => import('@/pages/TimeOff'));
 // Pages that are linked via createPageUrl()/navigation but were previously
 // unrouted (dead links). Routed here so every linked feature is reachable.
 const AIComplianceInServices = lazy(() => import('@/pages/AIComplianceInServices'));
@@ -176,6 +177,7 @@ const AuthenticatedApp = () => {
         <Route path="/BulkSignatureRequests" element={<LayoutWrapper currentPageName="BulkSignatureRequests"><BulkSignatureRequests /></LayoutWrapper>} />
         <Route path="/FaxAnalytics" element={<LayoutWrapper currentPageName="FaxAnalytics"><FaxAnalytics /></LayoutWrapper>} />
         <Route path="/CreateSignatureRequest" element={<LayoutWrapper currentPageName="CreateSignatureRequest"><CreateSignatureRequest /></LayoutWrapper>} />
+        <Route path="/TimeOff" element={<LayoutWrapper currentPageName="TimeOff"><TimeOff /></LayoutWrapper>} />
         <Route path="/AIComplianceInServices" element={<LayoutWrapper currentPageName="AIComplianceInServices"><AIComplianceInServices /></LayoutWrapper>} />
         <Route path="/AdminDashboard" element={<LayoutWrapper currentPageName="AdminDashboard"><AdminDashboard /></LayoutWrapper>} />
         <Route path="/AnnualEducationTranscript" element={<LayoutWrapper currentPageName="AnnualEducationTranscript"><AnnualEducationTranscript /></LayoutWrapper>} />
