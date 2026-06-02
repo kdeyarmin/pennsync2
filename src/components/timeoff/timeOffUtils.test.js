@@ -18,6 +18,10 @@ import {
   coverageCountOnDate,
   availableYears,
   buildTimeOffCSV,
+  resolveAllowances,
+  getBalanceForType,
+  computeBalances,
+  getBalanceViolation,
   typeLabel,
   statusLabel,
 } from "./timeOffUtils.js";
@@ -193,6 +197,47 @@ test("availableYears returns distinct start years newest-first", () => {
     { start_date: "bad" },
   ];
   assert.deepEqual(availableYears(requests), [2026, 2024]);
+});
+
+test("resolveAllowances merges agency defaults with per-user overrides", () => {
+  const policy = { default_allowances: { vacation: 15, sick: 10 } };
+  const user = { pto_allowances: { vacation: 20 } }; // override vacation only
+  const merged = resolveAllowances(policy, user);
+  assert.equal(merged.vacation, 20); // override wins
+  assert.equal(merged.sick, 10); // falls back to default
+  assert.equal("personal" in merged, false); // untracked
+  // Blank/invalid overrides fall back to the default.
+  assert.equal(resolveAllowances(policy, { pto_allowances: { vacation: "" } }).vacation, 15);
+  assert.deepEqual(resolveAllowances(null, null), {});
+});
+
+test("getBalanceForType computes used/pending/remaining and ignores other years", () => {
+  const requests = [
+    { request_type: "vacation", status: "approved", start_date: "2026-03-02", end_date: "2026-03-06", total_days: 5 },
+    { request_type: "vacation", status: "pending", start_date: "2026-05-01", end_date: "2026-05-01", total_days: 1 },
+    { request_type: "vacation", status: "approved", start_date: "2025-02-02", end_date: "2025-02-02", total_days: 1 },
+    { request_type: "sick", status: "approved", start_date: "2026-04-01", end_date: "2026-04-01", total_days: 1 },
+  ];
+  const bal = getBalanceForType(requests, { vacation: 15 }, "vacation", 2026);
+  assert.deepEqual(bal, { type: "vacation", allowance: 15, used: 5, pending: 1, remaining: 9 });
+  // Untracked type returns null.
+  assert.equal(getBalanceForType(requests, { vacation: 15 }, "sick", 2026), null);
+});
+
+test("computeBalances returns one entry per tracked type", () => {
+  const balances = computeBalances([], { vacation: 15, sick: 10 }, 2026);
+  assert.equal(balances.length, 2);
+  assert.deepEqual(balances.map((b) => b.type).sort(), ["sick", "vacation"]);
+});
+
+test("getBalanceViolation blocks only when a tracked request exceeds remaining", () => {
+  const requests = [
+    { request_type: "vacation", status: "approved", start_date: "2026-03-02", end_date: "2026-03-06", total_days: 5 },
+  ];
+  const allowances = { vacation: 7 };
+  assert.equal(getBalanceViolation(requests, allowances, "vacation", 2, 2026), null); // 5 used + 2 = 7, ok
+  assert.match(getBalanceViolation(requests, allowances, "vacation", 3, 2026), /exceeds your/i); // 5 + 3 > 7
+  assert.equal(getBalanceViolation(requests, allowances, "sick", 99, 2026), null); // untracked never blocks
 });
 
 test("buildTimeOffCSV emits a header row and escapes special characters", () => {

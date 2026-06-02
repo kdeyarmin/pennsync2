@@ -78,6 +78,23 @@ function getPolicyViolation(start, end, policy) {
   return null;
 }
 
+const BALANCE_TRACKABLE_TYPES = ['vacation', 'sick', 'personal', 'parental'];
+
+// Merge agency default allowances with a user's per-user overrides.
+function resolveAllowances(policy, user) {
+  const defaults = (policy && policy.default_allowances) || {};
+  const overrides = (user && user.pto_allowances) || {};
+  const merged = {};
+  for (const type of BALANCE_TRACKABLE_TYPES) {
+    const raw = overrides[type] != null && overrides[type] !== '' ? overrides[type] : defaults[type];
+    if (raw != null && raw !== '') {
+      const n = Number(raw);
+      if (!Number.isNaN(n)) merged[type] = n;
+    }
+  }
+  return merged;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -115,9 +132,34 @@ Deno.serve(async (req) => {
 
     // Enforce agency policy (minimum notice + blackout periods) authoritatively.
     const policies = await base44.asServiceRole.entities.TimeOffPolicy.list('-created_date', 1).catch(() => []);
-    const policyViolation = getPolicyViolation(start_date, end_date, policies && policies[0]);
+    const policy = policies && policies[0];
+    const policyViolation = getPolicyViolation(start_date, end_date, policy);
     if (policyViolation) {
       return Response.json({ error: policyViolation }, { status: 400 });
+    }
+
+    // Enforce the annual balance for tracked leave types (defaults + per-user
+    // overrides). Computed against the start date's calendar year.
+    const allowances = resolveAllowances(policy, user);
+    if (request_type in allowances) {
+      const year = start.getFullYear();
+      const existing = await base44.asServiceRole.entities.TimeOffRequest
+        .filter({ employee_email: user.email, request_type })
+        .catch(() => []);
+      const usedPending = (existing || []).reduce((sum, r) => {
+        if (!['approved', 'pending'].includes(r.status)) return sum;
+        const es = parseISODate(r.start_date);
+        if (!es || es.getFullYear() !== year) return sum;
+        return sum + (Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day));
+      }, 0);
+      const allowance = Number(allowances[request_type]) || 0;
+      if (usedPending + total > allowance) {
+        const remaining = Math.max(0, allowance - usedPending);
+        return Response.json(
+          { error: `This exceeds the ${request_type.replace(/_/g, ' ')} allowance — ${remaining} of ${allowance} day(s) remaining this year.` },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate the chosen approver: must be an admin or a flagged manager, and

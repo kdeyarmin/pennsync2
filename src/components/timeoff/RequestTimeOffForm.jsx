@@ -17,7 +17,15 @@ import {
 } from "@/components/ui/select";
 import { CalendarPlus, Send, Info } from "lucide-react";
 import { toast } from "sonner";
-import { REQUEST_TYPES, totalRequestedDays, getRequestValidationError, getPolicyViolation } from "./timeOffUtils";
+import {
+  REQUEST_TYPES,
+  totalRequestedDays,
+  getRequestValidationError,
+  getPolicyViolation,
+  getBalanceForType,
+  getBalanceViolation,
+  parseISODate,
+} from "./timeOffUtils";
 
 function todayISO() {
   const d = new Date();
@@ -34,7 +42,14 @@ const EMPTY = {
   coverage: "",
 };
 
-export default function RequestTimeOffForm({ currentUser, approvers = [], defaultManagerEmail = "", policy = null }) {
+export default function RequestTimeOffForm({
+  currentUser,
+  approvers = [],
+  defaultManagerEmail = "",
+  policy = null,
+  allowances = {},
+  myRequests = [],
+}) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ ...EMPTY, manager_email: defaultManagerEmail || "" });
   const [error, setError] = useState("");
@@ -60,12 +75,25 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
     [form.start_date, form.end_date, policy]
   );
 
+  // Balance for the selected type (current year for display; request year for the check).
+  const requestYear = parseISODate(form.start_date)?.getFullYear();
+  const typeBalance = useMemo(
+    () => getBalanceForType(myRequests, allowances, form.request_type, requestYear),
+    [myRequests, allowances, form.request_type, requestYear]
+  );
+  const balanceViolation = useMemo(
+    () => (totalDays > 0 ? getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear) : null),
+    [myRequests, allowances, form.request_type, totalDays, requestYear]
+  );
+
   const submit = useMutation({
     mutationFn: async () => {
       const validationError = getRequestValidationError(form.start_date, form.end_date, form.half_day);
       if (validationError) throw new Error(validationError);
       const policyError = getPolicyViolation(form.start_date, form.end_date, policy);
       if (policyError) throw new Error(policyError);
+      const balanceError = getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear);
+      if (balanceError) throw new Error(balanceError);
 
       // Identity, day totals, approver validation, and notifications are all
       // handled server-side by the function (the entity is admin-write-only),
@@ -94,7 +122,7 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
   });
 
   const canSubmit =
-    form.start_date && form.end_date && totalDays > 0 && !policyViolation && !submit.isPending && !!currentUser?.email;
+    form.start_date && form.end_date && totalDays > 0 && !policyViolation && !balanceViolation && !submit.isPending && !!currentUser?.email;
 
   return (
     <Card className="shadow-sm">
@@ -142,6 +170,13 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
                 ))}
               </SelectContent>
             </Select>
+            {typeBalance && (
+              <p className="text-xs text-slate-400 mt-1">
+                {Math.max(0, typeBalance.remaining)} of {typeBalance.allowance} day
+                {typeBalance.allowance === 1 ? "" : "s"} remaining this year
+                {typeBalance.pending > 0 ? ` (${typeBalance.pending} pending)` : ""}.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -239,10 +274,10 @@ export default function RequestTimeOffForm({ currentUser, approvers = [], defaul
             />
           </div>
 
-          {policyViolation && !error && (
+          {(policyViolation || balanceViolation) && !error && (
             <Alert className="bg-amber-50 border-amber-200">
               <Info className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">{policyViolation}</AlertDescription>
+              <AlertDescription className="text-amber-800">{policyViolation || balanceViolation}</AlertDescription>
             </Alert>
           )}
 

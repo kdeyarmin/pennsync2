@@ -5,9 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
 
+import { resolveAllowances, computeBalances } from "@/components/timeoff/timeOffUtils";
 import RequestTimeOffForm from "@/components/timeoff/RequestTimeOffForm";
 import MyTimeOffList from "@/components/timeoff/MyTimeOffList";
 import TimeOffSummaryCards from "@/components/timeoff/TimeOffSummaryCards";
+import TimeOffBalances from "@/components/timeoff/TimeOffBalances";
 import PendingApprovalsQueue from "@/components/timeoff/PendingApprovalsQueue";
 import TeamTimeOffCalendar from "@/components/timeoff/TeamTimeOffCalendar";
 import TeamRequestsTable from "@/components/timeoff/TeamRequestsTable";
@@ -70,6 +72,11 @@ export default function TimeOff() {
   });
   const policy = policies[0] || null;
 
+  // Resolve this user's allowances (agency defaults + personal overrides) and
+  // derive their current-year balances for display and request validation.
+  const allowances = useMemo(() => resolveAllowances(policy, currentUser), [policy, currentUser]);
+  const balances = useMemo(() => computeBalances(myRequests, allowances), [myRequests, allowances]);
+
   // For managers, scope the calendar/who's-off views to requests they oversee
   // (their reports) rather than their own. Admins see all.
   const teamForViews = useMemo(
@@ -130,12 +137,15 @@ export default function TimeOff() {
 
         <TabsContent value="mine" className="space-y-6">
           <TimeOffSummaryCards requests={myRequests} />
+          {balances.length > 0 && <TimeOffBalances balances={balances} />}
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6 items-start">
             <RequestTimeOffForm
               currentUser={currentUser}
               approvers={approvers}
               defaultManagerEmail={currentUser?.manager_email || ""}
               policy={policy}
+              allowances={allowances}
+              myRequests={myRequests}
             />
             <MyTimeOffList requests={myRequests} />
           </div>

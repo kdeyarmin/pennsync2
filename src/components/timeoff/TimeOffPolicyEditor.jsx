@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ShieldCheck, Plus, Trash2, CalendarOff, Info } from "lucide-react";
+import { ShieldCheck, Plus, Trash2, CalendarOff, Info, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import { BALANCE_TRACKABLE_TYPES, typeLabel } from "./timeOffUtils";
 
 function emptyBlackout() {
   return { label: "", start_date: "", end_date: "" };
@@ -19,6 +20,7 @@ export default function TimeOffPolicyEditor({ policy }) {
     minimum_notice_days: 0,
     coverage_threshold: 0,
     blackout_periods: [],
+    default_allowances: {},
   });
   const [error, setError] = useState("");
 
@@ -31,6 +33,7 @@ export default function TimeOffPolicyEditor({ policy }) {
         blackout_periods: Array.isArray(policy.blackout_periods)
           ? policy.blackout_periods.map((p) => ({ label: p.label || "", start_date: p.start_date || "", end_date: p.end_date || "" }))
           : [],
+        default_allowances: policy.default_allowances || {},
       });
     }
   }, [policy?.id]);
@@ -52,10 +55,19 @@ export default function TimeOffPolicyEditor({ policy }) {
           throw new Error(`Blackout "${p.label || p.start_date}" ends before it starts.`);
         }
       }
+      // Keep only the allowances the admin actually filled in.
+      const allowances = {};
+      for (const type of BALANCE_TRACKABLE_TYPES) {
+        const raw = form.default_allowances[type];
+        if (raw !== "" && raw != null && !Number.isNaN(Number(raw))) {
+          allowances[type] = Math.max(0, Number(raw));
+        }
+      }
       const payload = {
         minimum_notice_days: Math.max(0, Number(form.minimum_notice_days) || 0),
         coverage_threshold: Math.max(0, Number(form.coverage_threshold) || 0),
         blackout_periods: cleaned,
+        default_allowances: allowances,
       };
       return policy?.id
         ? base44.entities.TimeOffPolicy.update(policy.id, payload)
@@ -110,6 +122,30 @@ export default function TimeOffPolicyEditor({ policy }) {
             />
             <p className="text-xs text-slate-400 mt-1">Flag days with at least this many people off. 0 = off.</p>
           </div>
+        </div>
+
+        <div>
+          <Label className="flex items-center gap-2 mb-2">
+            <Wallet className="w-4 h-4 text-slate-500" /> Default annual allowances (days)
+          </Label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {BALANCE_TRACKABLE_TYPES.map((type) => (
+              <div key={type}>
+                <Label className="text-xs text-slate-500">{typeLabel(type)}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  className="mt-1"
+                  placeholder="—"
+                  value={form.default_allowances[type] ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, default_allowances: { ...p.default_allowances, [type]: e.target.value } }))
+                  }
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400 mt-1">Leave blank to leave a type untracked (no balance / no limit).</p>
         </div>
 
         <div>

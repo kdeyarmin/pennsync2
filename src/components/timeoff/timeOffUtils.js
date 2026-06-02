@@ -245,6 +245,61 @@ export function availableYears(requests = []) {
   return years.sort((a, b) => b - a);
 }
 
+/** Leave types that carry an annual balance/allowance. */
+export const BALANCE_TRACKABLE_TYPES = ["vacation", "sick", "personal", "parental"];
+
+/** Merge agency default allowances with a user's per-user overrides. */
+export function resolveAllowances(policy, user) {
+  const defaults = (policy && policy.default_allowances) || {};
+  const overrides = (user && user.pto_allowances) || {};
+  const merged = {};
+  for (const type of BALANCE_TRACKABLE_TYPES) {
+    const raw = overrides[type] != null && overrides[type] !== "" ? overrides[type] : defaults[type];
+    if (raw != null && raw !== "") {
+      const n = Number(raw);
+      if (!Number.isNaN(n)) merged[type] = n;
+    }
+  }
+  return merged;
+}
+
+function sumDaysForType(requests, type, year, statuses) {
+  return requests.reduce((sum, r) => {
+    if (r.request_type !== type || !statuses.includes(r.status)) return sum;
+    const s = parseISODate(r.start_date);
+    if (!s || (year && s.getFullYear() !== year)) return sum;
+    return sum + (Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day));
+  }, 0);
+}
+
+/** Balance detail for one tracked type, or null if the type is untracked. */
+export function getBalanceForType(requests = [], allowances = {}, type, year = new Date().getFullYear()) {
+  if (!allowances || !(type in allowances)) return null;
+  const allowance = Number(allowances[type]) || 0;
+  const used = sumDaysForType(requests, type, year, ["approved"]);
+  const pending = sumDaysForType(requests, type, year, ["pending"]);
+  return { type, allowance, used, pending, remaining: allowance - used - pending };
+}
+
+/** Balance detail for every tracked type. */
+export function computeBalances(requests = [], allowances = {}, year = new Date().getFullYear()) {
+  return Object.keys(allowances || {}).map((type) => getBalanceForType(requests, allowances, type, year));
+}
+
+/**
+ * Returns an error string if requesting `requestedDays` of `type` would exceed
+ * the remaining balance, else null. Untracked types never block.
+ */
+export function getBalanceViolation(requests = [], allowances = {}, type, requestedDays = 0, year = new Date().getFullYear()) {
+  const bal = getBalanceForType(requests, allowances, type, year);
+  if (!bal) return null;
+  if (requestedDays > bal.remaining) {
+    const remaining = Math.max(0, bal.remaining);
+    return `This exceeds your ${typeLabel(type)} balance — ${remaining} of ${bal.allowance} day${bal.allowance === 1 ? "" : "s"} remaining this year.`;
+  }
+  return null;
+}
+
 /** Serialize requests to a CSV string with properly escaped fields. */
 export function buildTimeOffCSV(requests = []) {
   const headers = [

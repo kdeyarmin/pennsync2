@@ -32,6 +32,16 @@
           }
         }
       }
+    },
+    "default_allowances": {
+      "type": "object",
+      "description": "Default annual day allowance per leave type (a type omitted here is untracked)",
+      "properties": {
+        "vacation": { "type": "number" },
+        "sick": { "type": "number" },
+        "personal": { "type": "number" },
+        "parental": { "type": "number" }
+      }
     }
   },
   "rls": {
