@@ -93,7 +93,6 @@ Deno.serve(async (req) => {
     for (const course of targets) {
       const completion = await openai.chat.completions.create({
         model: 'gpt-5.4-mini',
-        temperature: 0.4,
         max_completion_tokens: 7000,
         response_format: { type: 'json_object' },
         messages: [
