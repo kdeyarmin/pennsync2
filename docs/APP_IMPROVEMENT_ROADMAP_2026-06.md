@@ -12,10 +12,17 @@ prior review docs (see [§7](#7-relationship-to-prior-docs)).
 - ✅ **E4 (moment)** — removed the unused `moment` dependency.
 - ✅ **D2 (partial)** — `manualChunks` splits the heaviest vendor libs into cacheable chunks.
 - ✅ **F1 (partial)** — added a per-route error boundary so one page crash no longer unmounts the app.
+- ✅ **C1 (foundation)** — Vitest + React Testing Library harness alongside the node:test util
+  suites; `npm test` runs both; wired into CI and `verify:workflow-quality`.
+- ✅ **B1** — offline notes auto-re-run grounding on reconnect (non-blocking; does not block the save).
+- ✅ **B4** — critical-vital escalation via a tested detector (both vitals key conventions) raising a
+  non-blocking `PatientAlert`, deduped per (patient, breach) with retry-on-failure.
+- ✅ **E2 (start)** — extracted `OASISAnalyzer`'s analytics into a tested `oasisAnalytics.js`
+  (the pattern for decomposing the mega-components); this also surfaced + fixed a real gender-miscount bug.
 
-Remaining items below are recommendations with verified code references; several (B1/B2/B4/B5)
-are **deliberate designs or clinical-policy decisions** and some (E1/E2/C1/F2/G) are **large
-refactors that need a test net first** — these are called out inline and should not be applied blindly.
+Remaining items below are recommendations with verified code references; several (B2/B5)
+are **deliberate designs or clinical-policy decisions** and some (E1, the rest of E2, F2, G) are
+**large refactors** to do incrementally on the new test foundation — called out inline and not to be applied blindly.
 
 ---
 
