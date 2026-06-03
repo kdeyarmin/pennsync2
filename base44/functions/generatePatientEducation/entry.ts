@@ -96,7 +96,7 @@ Do NOT use medical jargon. Make it conversational and supportive.`;
 
       const contentResult = await base44.integrations.Core.InvokeLLM({
         prompt: contentPrompt,
-        model: 'gpt_5'
+        model: 'gpt_5_5'
       });
 
       const material = {

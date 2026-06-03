@@ -54,7 +54,6 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
         patient_id: patientId,
         transcript_length: data.transcript?.length || 0,
         fields_extracted: Object.keys(data.structured_data || {}).length,
-        quality_score: 85,
         applied: false
       });
 
@@ -136,7 +135,6 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
       patient_id: patientId,
       transcript_length: transcriptionResult.transcript?.length || 0,
       fields_extracted: Object.keys(transcriptionResult.structured_data || {}).length,
-      quality_score: 90,
       applied: true
     });
 

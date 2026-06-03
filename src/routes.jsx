@@ -153,8 +153,9 @@ export const ROUTES = [
   { name: 'TrainingManagement', Component: lazyPage(() => import('@/pages/TrainingManagement')) },
   { name: 'AdminTrainingAnalytics', Component: lazyPage(() => import('@/pages/AdminTrainingAnalytics')) },
   { name: 'LearningReports', Component: lazyPage(() => import('@/pages/LearningReports')) },
-  // Compliance & security
-  { name: 'MedicareComplianceDashboard', Component: lazyPage(() => import('@/pages/MedicareComplianceDashboard')) },
+  // Compliance & security (MedicareComplianceDashboard is intentionally NOT routed
+  // here — main judged it a duplicate of ComplianceCenter's audit metrics, so it
+  // is redirected there in REDIRECTS below.)
   { name: 'ComplianceMonitoringDashboard', Component: lazyPage(() => import('@/pages/ComplianceMonitoringDashboard')) },
   { name: 'RealTimeComplianceDashboard', Component: lazyPage(() => import('@/pages/RealTimeComplianceDashboard')) },
   { name: 'ComplianceRegulatory', Component: lazyPage(() => import('@/pages/ComplianceRegulatory')) },
@@ -196,6 +197,8 @@ export const REDIRECTS = [
   // QualityDashboard is an empty placeholder; its quality metrics live in the
   // Compliance Center, so send links there instead of an empty page.
   { from: '/QualityDashboard', to: '/ComplianceCenter' },
+  // MedicareComplianceDashboard duplicates ComplianceCenter's audit metrics.
+  { from: '/MedicareComplianceDashboard', to: '/ComplianceCenter' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';

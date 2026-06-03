@@ -65,7 +65,7 @@ Generate a comprehensive, Medicare-compliant clinical note that includes:
 Format the note professionally for medical records.`;
 
     const noteResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "gpt_5_4",
+      model: "gpt_5_5",
       prompt: notePrompt,
       add_context_from_internet: false
     });
@@ -92,7 +92,7 @@ Provide 3-5 specific treatment suggestions in JSON format:
 Only include clinically appropriate suggestions.`;
 
     const treatmentResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "gpt_5_4",
+      model: "gpt_5_5",
       prompt: treatmentPrompt,
       response_json_schema: {
         type: 'array',
