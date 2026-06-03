@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ArrowRight, HelpCircle, AlertTriangle, ShieldCheck, Loader2, Copy, CheckCircle2 } from "lucide-react";
@@ -26,8 +26,16 @@ import NoteDiffView from "./NoteDiffView";
  *   priorNote      — (optional) the patient's last note, for carry-forward pre-fill
  *   currentUser    — (optional) for the grounding call's rate-limit key
  *   onFinalNote    — (optional) called with the verified note text
+ *   onBack         — (optional) renders a Back button next to Generate
+ *   renderFinalNote — (optional) host render-prop for the final-note area. Receives
+ *                     an `api` with { finalNote, setFinalNote, building, copy,
+ *                     copied, verified, dirty, fixRequired, coverage, recheck,
+ *                     result }. `recheck()` re-verifies and resolves to the
+ *                     save-ready `result` (or null if it fails). When provided,
+ *                     the reviewer renders the fact-check banner but defers the
+ *                     note display + actions (e.g. Save-to-chart, PDF) to the host.
  */
-export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", priorNote = "", currentUser, onFinalNote }) {
+export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", priorNote = "", currentUser, onFinalNote, onBack, renderFinalNote }) {
   const [answers, setAnswers] = useState({});
   const [prefilledIds, setPrefilledIds] = useState(new Set());
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
@@ -48,15 +56,21 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     return { normalized, required, presence, gaps, draftScore };
   }, [roughNote, serviceLine, visitType]);
 
-  // Reset + pre-fill carry-forward answers whenever the scan changes.
+  // Reset + pre-fill carry-forward answers whenever the SCAN changes. Keyed on
+  // `analysis` only (not priorNote) and reads priorNote via a ref, so a late-
+  // arriving prior note (async patient fetch) can't wipe answers the nurse has
+  // already typed. Switching patient/visit re-mounts this component, which
+  // re-prefills from the new patient.
+  const priorNoteRef = useRef("");
+  priorNoteRef.current = priorNote;
   useEffect(() => {
     setFinalNote(""); setVerifiedNote(""); setFixRequired(null);
     if (!analysis) { setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set()); return; }
-    const prefill = computeCarryForward(priorNote || "", analysis.gaps);
+    const prefill = computeCarryForward(priorNoteRef.current || "", analysis.gaps);
     setAnswers(prefill);
     setPrefilledIds(new Set(Object.keys(prefill)));
     setConfirmedNegatives(new Set());
-  }, [analysis, priorNote]);
+  }, [analysis]);
 
   const setAnswer = (id, value) => {
     setAnswers(prev => ({ ...prev, [id]: value }));
@@ -75,6 +89,15 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     const answerTexts = analysis.required.filter(e => answers[e.id]?.trim()).map(e => answers[e.id].trim());
     const negPhrases = analysis.required.filter(e => confirmedNegatives.has(e.id) && e.standardNegative).map(e => e.standardNegative.phrase);
     return [analysis.normalized, ...answerTexts, ...negPhrases, ...computeNotDocumented()].join(" ");
+  };
+
+  // Save-ready snapshot the host (e.g. SmartNoteAssistant) persists to the chart.
+  const computeResult = (text) => {
+    if (!analysis) return null;
+    const answeredIds = analysis.required.filter(e => answers[e.id]?.trim()).map(e => e.id);
+    const confirmedNegativeIds = Array.from(confirmedNegatives);
+    const coverageScore = computeCoverageScore({ requiredElements: analysis.required, presenceResults: analysis.presence, answeredIds, confirmedNegativeIds });
+    return { finalNote: text, coverageScore, draftScore: analysis.draftScore, presence: analysis.presence, required: analysis.required, answeredIds, confirmedNegativeIds, answers };
   };
 
   const verifyNote = async (text) => {
@@ -131,11 +154,14 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     }
   };
 
+  // Re-verify the (possibly edited) note. Resolves to the save-ready result, or null.
   const recheck = async () => {
-    if (!finalNote.trim()) return;
+    if (!finalNote.trim()) return null;
     setBuilding(true);
     try {
-      applyVerification(finalNote, await verifyNote(finalNote));
+      const v = await verifyNote(finalNote);
+      applyVerification(finalNote, v);
+      return v.ok ? computeResult(finalNote) : null;
     } finally {
       setBuilding(false);
     }
@@ -166,6 +192,15 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       </div>
     );
   }
+
+  const finalApi = {
+    finalNote, setFinalNote, building, copy, copied,
+    verified: !dirty && !fixRequired,
+    dirty, fixRequired,
+    coverage: liveCoverage,
+    recheck,
+    result: computeResult(finalNote),
+  };
 
   return (
     <div className="space-y-4">
@@ -238,9 +273,12 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
             </div>
           )}
 
-          <Button onClick={generate} disabled={criticalUnanswered.length > 0} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
-            <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={generate} disabled={criticalUnanswered.length > 0} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
+              <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
+            </Button>
+            {onBack && <Button variant="outline" onClick={onBack} className="h-12 px-4">← Back</Button>}
+          </div>
         </>
       )}
 
@@ -276,21 +314,26 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
             </div>
           )}
 
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">Final Clinical Note</span>
-              <span className="text-xs text-slate-400">editable · {finalNote.length} chars</span>
-            </div>
-            <textarea value={finalNote} onChange={e => setFinalNote(e.target.value)} className="w-full min-h-[280px] font-mono text-sm border-0 px-4 py-3 focus:ring-0 bg-white resize-none outline-none" />
-            <div className="flex gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50">
-              <Button onClick={copy} className="flex-1 bg-green-600 hover:bg-green-700 h-11 gap-2 font-semibold">
-                {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
-              </Button>
-              <Button variant="outline" className="h-11 px-4" onClick={() => { setFinalNote(""); setVerifiedNote(""); setFixRequired(null); }}>Back</Button>
-            </div>
-          </div>
-
-          <NoteDiffView originalNote={roughNote} enhancedNote={finalNote} />
+          {renderFinalNote ? (
+            renderFinalNote(finalApi)
+          ) : (
+            <>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+                  <span className="text-sm font-semibold text-slate-700">Final Clinical Note</span>
+                  <span className="text-xs text-slate-400">editable · {finalNote.length} chars</span>
+                </div>
+                <textarea value={finalNote} onChange={e => setFinalNote(e.target.value)} className="w-full min-h-[280px] font-mono text-sm border-0 px-4 py-3 focus:ring-0 bg-white resize-none outline-none" />
+                <div className="flex gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50">
+                  <Button onClick={copy} className="flex-1 bg-green-600 hover:bg-green-700 h-11 gap-2 font-semibold">
+                    {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
+                  </Button>
+                  <Button variant="outline" className="h-11 px-4" onClick={() => { setFinalNote(""); setVerifiedNote(""); setFixRequired(null); }}>Back</Button>
+                </div>
+              </div>
+              <NoteDiffView originalNote={roughNote} enhancedNote={finalNote} />
+            </>
+          )}
         </>
       )}
     </div>
