@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -717,7 +718,7 @@ Return JSON array:
 
 Return empty array if no significant AI-detected patterns found.`;
 
-        const result = await base44.integrations.Core.InvokeLLM({
+        const result = await invokeLLM({
           prompt,
           response_json_schema: {
             type: "object",

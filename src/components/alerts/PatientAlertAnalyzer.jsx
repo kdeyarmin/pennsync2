@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,7 @@ export default function PatientAlertAnalyzer({
 
       setAnalysisProgress(50);
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an AI clinical decision support system for home health/hospice. Analyze this patient's data to identify potential critical events, deteriorations, or risks that require proactive intervention.
 
 PATIENT PROFILE:

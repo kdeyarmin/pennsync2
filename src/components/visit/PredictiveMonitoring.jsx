@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -144,7 +144,7 @@ Return JSON:
   "interventions": ["string"]
 }`;
 
-      const risk = await base44.integrations.Core.InvokeLLM({
+      const risk = await invokeLLM({
         prompt,
         response_json_schema: {
           type: "object",

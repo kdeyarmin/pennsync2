@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ Examples (Compliant): ${rule.examples_compliant?.[0] || 'N/A'}
 Examples (Non-compliant): ${rule.examples_non_compliant?.[0] || 'N/A'}
 `).join('\n');
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a Medicare home health compliance expert with access to live internet data from CMS.gov. Analyze this clinical note against the LATEST 2025 42 CFR 484 Conditions of Participation for home health agencies.
 
 CLINICAL NOTE:

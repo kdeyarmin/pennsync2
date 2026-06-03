@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +122,7 @@ export default function EventReport() {
       const incident = await base44.entities.Incident.create(incidentData);
 
       // Generate PDF
-      const _pdfResponse = await base44.integrations.Core.InvokeLLM({
+      const _pdfResponse = await invokeLLM({
         prompt: `Generate an Event Report PDF document with the following information:
 
 Event Report ID: ${incident.id}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,7 @@ export default function AIHealthInsights({ patientId, patient, visits, carePlans
     try {
       const completedVisits = visits.filter(v => v.status === 'completed').slice(0, 10);
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a clinical AI analyst specializing in home health patient care. Analyze this patient's health trends and provide actionable insights.
 
 PATIENT INFORMATION:

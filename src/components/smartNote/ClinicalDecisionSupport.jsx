@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -432,7 +432,7 @@ export default function ClinicalDecisionSupport({
     
     setIsProactiveAnalyzing(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert Clinical Decision Support AI for home health nursing. Based on REAL-TIME information as the nurse is documenting, provide IMMEDIATE, ACTIONABLE clinical guidance.
 
 CRITICAL: Provide SPECIFIC intervention suggestions nurses can implement NOW during the visit, not generic advice.
@@ -653,7 +653,7 @@ Return JSON with SPECIFIC, ACTIONABLE guidance:
 
     setIsAnalyzing(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a Clinical Decision Support AI for home health/hospice nursing. Analyze this clinical documentation and provide real-time safety alerts and recommendations.
 
 PATIENT CONTEXT:

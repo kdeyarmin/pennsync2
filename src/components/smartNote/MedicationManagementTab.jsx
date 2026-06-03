@@ -8,6 +8,7 @@ import {
   Loader2, RefreshCw, ChevronDown, ChevronUp, PenLine
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import MedicationBottleScanner from "./MedicationBottleScanner";
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -161,7 +162,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
     try {
       const baseNote = buildReconciliationNote(medications, interactions);
       if (interactions.length > 0) {
-        const enhanced = await base44.integrations.Core.InvokeLLM({
+        const enhanced = await invokeLLM({
           prompt: `You are a clinical medication specialist. Enhance the following medication reconciliation note to be professional and clinical. Keep it concise. Return ONLY the note text.\n\n${baseNote}`,
         });
         setRecon(typeof enhanced === "string" ? enhanced : baseNote);

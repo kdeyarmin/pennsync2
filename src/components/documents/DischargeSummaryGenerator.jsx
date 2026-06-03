@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default function DischargeSummaryGenerator({ patientId, patient }) {
     try {
       const completedVisits = visits.filter(v => v.status === 'completed').slice(0, 10);
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Generate a comprehensive Medicare-compliant discharge summary for home health services.
 
 PATIENT INFORMATION:

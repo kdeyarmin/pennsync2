@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export default function AITrainingModuleGenerator() {
       const selectedRecs = trainingRecommendations.filter(r => selectedRecommendations.has(r.id));
       const selectedExs = exemplaryDocs.filter(e => selectedExemplars.has(e.id));
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert clinical education specialist for home health nursing. Create a comprehensive training module for Pennsylvania home health staff focusing on Medicare compliance (42 CFR 484).
 
 INPUT DATA FOR MODULE GENERATION:

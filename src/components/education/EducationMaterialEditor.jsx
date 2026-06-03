@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,7 +77,7 @@ export default function EducationMaterialEditor({ material, onClose, onSave }) {
 
     setIsEnhancing(true);
     try {
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `You are a patient education specialist. Enhance the following patient education content to be clear, empathetic, and easy to understand at a ${formData.reading_level} reading level. Keep variable placeholders like {{patient_name}} intact. Make it warm and supportive while maintaining medical accuracy.
 
 Content to enhance:

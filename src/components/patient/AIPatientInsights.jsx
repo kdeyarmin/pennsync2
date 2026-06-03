@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ export default function AIPatientInsights({ patient, visits, carePlans, incident
         notes_summary: v.nurse_notes?.substring(0, 200)
       }));
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a predictive healthcare AI analyzing patient data to identify future health risks and care needs.
 
 PATIENT PROFILE:

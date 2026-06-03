@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export default function UnifiedComplianceEngine({
       // Orchestrate all compliance checks in parallel
       const [medicareResult, guidelineResult, visitTypeResult, regulatoryResult] = await Promise.all([
         // Medicare CoP Check
-        base44.integrations.Core.InvokeLLM({
+        invokeLLM({
           prompt: `Analyze this clinical note against 42 CFR 484 Medicare Conditions of Participation for ${visitType} visits.
 
 CLINICAL NOTE:
@@ -121,7 +122,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
         }).catch(_err => ({ compliance_score: 0, violations: [] })),
 
         // Clinical Guideline Check
-        base44.integrations.Core.InvokeLLM({
+        invokeLLM({
           prompt: `Check this clinical note against evidence-based guidelines for ${diagnosis}.
 
 CLINICAL NOTE:
@@ -162,7 +163,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
         }).catch(_err => ({ compliance_score: 0, violations: [] })),
 
         // Visit Type Check
-        base44.integrations.Core.InvokeLLM({
+        invokeLLM({
           prompt: `Verify this ${visitType} visit note has all required elements.
 
 CLINICAL NOTE:
@@ -200,7 +201,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
         }).catch(_err => ({ compliance_score: 0, violations: [] })),
 
         // Recent Regulatory Updates Check
-        base44.integrations.Core.InvokeLLM({
+        invokeLLM({
           prompt: `Check compliance with these recent CMS regulatory updates:
 
 ${regulatoryUpdates.slice(0, 5).map(reg => `
@@ -269,7 +270,7 @@ Identify any violations of these recent regulations.`,
         }));
 
       // Generate AI summary using all results
-      const summaryResult = await base44.integrations.Core.InvokeLLM({
+      const summaryResult = await invokeLLM({
         prompt: `Create a brief executive summary of these compliance check results:
 
 MEDICARE CoP: ${medicareResult.compliance_score}% (${medicareResult.violations.length} issues)

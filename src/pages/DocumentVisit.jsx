@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -702,7 +703,7 @@ REQUIRED HOSPICE MEDICARE ELEMENTS (must include these sections with prompts):
 
 Generate the complete template now:`;
 
-      const template = await base44.integrations.Core.InvokeLLM({
+      const template = await invokeLLM({
         prompt: prompt
       });
 
@@ -814,7 +815,7 @@ ${narrativeText}
 
 Generate the complete clinical narrative based on the audio and context:`;
 
-        const llmResult = await base44.integrations.Core.InvokeLLM({
+        const llmResult = await invokeLLM({
           prompt: prompt,
           file_urls: [file_url]
         });

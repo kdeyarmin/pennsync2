@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +44,7 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
     }, 2500);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert home health nurse with 20+ years of experience writing comprehensive, Medicare-compliant admission notes.
 
 Using the extracted referral data below, generate a complete, professional admission nursing assessment note that is ready for clinical documentation.

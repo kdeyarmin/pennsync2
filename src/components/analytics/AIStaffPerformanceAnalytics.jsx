@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -183,7 +184,7 @@ export default function AIStaffPerformanceAnalytics({ timeRange = 30, autoAnalyz
         }
       });
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an AI workforce analytics specialist for home health nursing. Analyze comprehensive staff performance data to provide actionable insights.
 
 TIME RANGE: Last ${timeRange} days
