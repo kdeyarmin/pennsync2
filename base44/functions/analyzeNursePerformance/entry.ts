@@ -415,7 +415,6 @@ Assess burnout risk (low/moderate/high) and provide specific warning signs and r
     console.error('Error analyzing nurse performance:', error);
     return Response.json({ 
       error: error.message,
-      stack: error.stack 
     }, { status: 500 });
   }
 });
