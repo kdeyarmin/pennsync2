@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ export default function PatientSummaryGenerator({ patient, visitTranscript, visi
     setLoading(true);
     try {
       const meds = patient.current_medications?.map(m => `${m.name} ${m.dosage}`).join(", ") || "none";
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a home health clinical documentation expert. Generate a concise, structured patient summary from this visit transcript/note.
 
 PATIENT: ${patient.first_name} ${patient.last_name}

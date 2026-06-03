@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +57,7 @@ export default function AIPatientSimulation({
     setOverallFeedback(null);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Create an interactive patient simulation for home health nurse training.
 
 SCENARIO TYPE: ${scenarios[scenario] || scenario}
@@ -129,7 +129,7 @@ Make it realistic and challenging, focusing on Medicare compliance documentation
     const step = simulation.steps[currentStep];
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Evaluate this nurse's response in a patient simulation.
 
 SCENARIO: ${simulation.title}
@@ -190,7 +190,7 @@ Provide detailed, constructive feedback. Be encouraging but thorough in identify
         const allResponses = [...(responses || []), { step: currentStep, response: currentResponse, feedback }];
         const avgScore = Math.round(allResponses.reduce((sum, r) => sum + (r.feedback?.score || 0), 0) / allResponses.length);
 
-        const result = await base44.integrations.Core.InvokeLLM({
+        const result = await invokeLLM({
           prompt: `Provide overall feedback for a nurse who completed a patient simulation.
 
 SCENARIO: ${simulation.title}

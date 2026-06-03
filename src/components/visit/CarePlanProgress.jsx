@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -85,7 +86,7 @@ Format: [Status statement]. [Evidence]. [Intervention].
 
 Example: "Goal progress: Improved. Blood pressure decreased to 132/78 from baseline of 158/92, demonstrating positive response to medication management and dietary modifications. Reinforced low-sodium diet education and proper medication administration technique."`;
 
-      const progress = await base44.integrations.Core.InvokeLLM({
+      const progress = await invokeLLM({
         prompt: prompt
       });
 

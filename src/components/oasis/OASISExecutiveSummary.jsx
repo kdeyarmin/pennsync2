@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,7 +37,7 @@ export default function OASISExecutiveSummary({ analysisResults, pdgmData }) {
       const topRevenue = (analysisResults.revenue_tips || []).slice(0, 2).map(r => r.tip || r);
       const _topAccuracy = (analysisResults.accuracy_issues || []).slice(0, 2).map(a => a.issue || a);
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Create executive summary for OASIS assessment.
 
 Scores: Overall ${analysisResults.overall_score}%, Compliance ${analysisResults.compliance_score}%, Revenue ${analysisResults.revenue_optimization_score}%

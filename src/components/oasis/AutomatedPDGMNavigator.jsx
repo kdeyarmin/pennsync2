@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,7 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
     setError(null);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a CMS PDGM expert navigator. Analyze this OASIS data and determine the correct PDGM grouping with detailed explanation.
 
 OASIS/PDGM DATA:
@@ -398,7 +399,7 @@ Return JSON:
     setLoadingPrediction(index);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a PDGM financial analyst. Predict the financial impact of this ${type} over a 1-year period.
 
 ${type.toUpperCase()} DETAILS:
@@ -544,7 +545,7 @@ Return JSON:
     setLoadingResolution(index);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a CMS OASIS compliance expert. Provide a detailed resolution workflow for this PDGM discrepancy.
 
 DISCREPANCY DETAILS:
@@ -756,7 +757,7 @@ PREDICT:
    - Timeline for key milestones
    - Resource optimization opportunities`;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt,
         response_json_schema: {
           type: "object",

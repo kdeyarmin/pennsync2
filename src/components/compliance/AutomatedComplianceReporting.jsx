@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,7 +107,7 @@ export default function AutomatedComplianceReporting({ _nurseEmail, isAdmin = fa
         dataSummary.incident_types[i.incident_type] = (dataSummary.incident_types[i.incident_type] || 0) + 1;
       });
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a healthcare compliance reporting AI. Generate a comprehensive compliance report based on this data.
 
 DATA SUMMARY:

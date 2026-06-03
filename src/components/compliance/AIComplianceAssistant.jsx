@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ export default function AIComplianceAssistant({ compact = false, context = null 
         `${rule.cop_reference} - ${rule.rule_name}: ${rule.description}`
       ).join('\n\n');
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert Medicare compliance advisor for home health agencies, specializing in 42 CFR 484 regulations and Pennsylvania state requirements.
 
 QUESTION: ${questionText}

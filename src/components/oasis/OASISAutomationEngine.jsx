@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ ${JSON.stringify(automationRules.slice(0, 5), null, 2)}
 
 Generate actionable tasks. Each task must have: title, description, priority (high/medium/low), type, due_in_days (number), reason, impact_category.`;
 
-      const aiSuggestions = await base44.integrations.Core.InvokeLLM({
+      const aiSuggestions = await invokeLLM({
         prompt,
         response_json_schema: {
           type: "object",

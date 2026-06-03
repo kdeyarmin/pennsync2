@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -49,7 +50,7 @@ export default function RealTimeRiskScoring({ patientId, compact = false }) {
     setIsCalculating(true);
     try {
       // Real-time AI risk calculation
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `Analyze this patient's risk across multiple dimensions and provide a comprehensive risk assessment:
 
 Patient Data:

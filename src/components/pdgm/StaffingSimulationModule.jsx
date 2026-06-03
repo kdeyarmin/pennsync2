@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,7 @@ export default function StaffingSimulationModule({ currentData, formatCurrency }
   const runStaffingSimulation = async () => {
     setIsSimulating(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Simulate financial impact of staffing changes for a home health agency.
 
 CURRENT STATE:
@@ -147,7 +147,7 @@ Return JSON:
     const selectedService = SERVICE_LINES.find(s => s.id === newServiceLine);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Simulate financial impact of adding a new service line to a home health agency.
 
 CURRENT STATE:

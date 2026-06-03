@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,7 +62,7 @@ export default function PDGMImpactAnalyzer({
       });
 
       // Get detailed AI analysis of the changes
-      const aiAnalysis = await base44.integrations.Core.InvokeLLM({
+      const aiAnalysis = await invokeLLM({
         prompt: `You are a PDGM reimbursement optimization expert. Analyze the impact of suggested documentation improvements on PDGM payment.
 
 CURRENT PDGM DATA:

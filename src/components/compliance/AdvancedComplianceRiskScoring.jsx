@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,7 +80,7 @@ export default function AdvancedComplianceRiskScoring({
       const criticalAlertsCount = alerts.filter(a => a.severity === 'critical').length;
       const trainingGapsCount = trainingRecommendations.filter(t => !t.addressed).length;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an AI Medicare compliance risk analyst for Pennsylvania home health agencies. Perform advanced risk scoring and predictive analysis.
 
 CURRENT COMPLIANCE DATA (Last ${timeRange} days):

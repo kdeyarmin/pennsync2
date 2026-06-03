@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
       const diagnoses = [...new Set(patients.map(p => p.primary_diagnosis).filter(Boolean))];
       const taskTypes = tasks.slice(0, 20).map(t => `${t.type}: ${t.title}`).join('\n');
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an AI training coordinator for home health nurses. Analyze this nurse's profile and recommend personalized training.
 
 NURSE'S CURRENT SKILLS:

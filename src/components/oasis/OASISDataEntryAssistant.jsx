@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,7 +144,7 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
 
     try {
       // AI-powered validation and insights
-      const insights = await base44.integrations.Core.InvokeLLM({
+      const insights = await invokeLLM({
         prompt: `Analyze this extracted OASIS data for compliance issues, clinical concerns, and care opportunities.
 
 EXTRACTED OASIS DATA:

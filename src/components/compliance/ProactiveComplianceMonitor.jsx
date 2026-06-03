@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +79,7 @@ export default function ProactiveComplianceMonitor({
       });
 
       // Use AI to identify critical patterns
-      const patternAnalysis = await base44.integrations.Core.InvokeLLM({
+      const patternAnalysis = await invokeLLM({
         prompt: `Analyze Medicare compliance patterns for Pennsylvania home health agency. Identify critical trends requiring immediate attention.
 
 RECENT DATA:

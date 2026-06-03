@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +48,7 @@ export default function PersonalizedSkillBuilder({ userEmail }) {
         scores = storedScores ? JSON.parse(storedScores) : [];
       } catch {}
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a clinical documentation educator. Analyze this nurse's documentation patterns and suggest personalized skill-building modules.
 
 DOCUMENTATION HISTORY:

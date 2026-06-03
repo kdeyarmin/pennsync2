@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy, CheckCircle2, Sparkles } from "lucide-react";
@@ -18,7 +18,7 @@ export default function InlineDocumentationAssistant({
     setIsGenerating(true);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a CMS OASIS documentation expert. Generate specific clinical documentation to address this issue.
 
 ISSUE DETAILS:

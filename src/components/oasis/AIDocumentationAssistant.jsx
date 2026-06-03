@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ export default function AIDocumentationAssistant({ analysisResults, pdgmData, on
         ...(analysisResults.documentation_improvements || [])
       ].slice(0, 8);
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert OASIS clinical documentation specialist. Based on these identified issues, generate SPECIFIC documentation text that clinicians can use to improve their OASIS assessments.
 
 IDENTIFIED ISSUES:
@@ -117,7 +117,7 @@ Return JSON:
         ...(analysisResults.audit_risk_areas || [])
       ].slice(0, 6);
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a CMS regulations expert specializing in home health OASIS documentation. Explain the regulatory requirements for these flagged compliance items in plain language that clinicians can understand.
 
 FLAGGED ITEMS:

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,7 @@ export default function ReferralPDFSummarizer({
         ? 'This is a scanned/faxed document image. Extract text carefully, accounting for potential OCR errors or handwriting.' 
         : 'This is a PDF document.';
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert home health intake coordinator with advanced document reading capabilities. ${fileTypeContext}
 
 CRITICAL DOCUMENT READING INSTRUCTIONS:

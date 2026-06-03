@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +34,7 @@ export default function SupplyForecastDashboard() {
 
   const generatePredictionsMutation = useMutation({
     mutationFn: (patientId) =>
-      base44.integrations.Core.InvokeLLM({
+      invokeLLM({
         prompt: `Generate supply predictions for patient ${patientId}`,
       }),
     onSuccess: () => {

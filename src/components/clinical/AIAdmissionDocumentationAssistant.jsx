@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ export default function AIAdmissionDocumentationAssistant({
   const generateDocumentation = async () => {
     setIsGenerating(true);
     try {
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `You are an expert home health nurse creating comprehensive admission documentation. Using the provided referral data, OASIS analysis, and patient information, draft detailed clinical documentation sections.
 
 **REFERRAL DATA:**
@@ -209,7 +209,7 @@ For each section, provide:
           if (relevantInputs.length === 0) return section;
 
           // Use AI to incorporate the subjective inputs into the section
-          const enhancedContent = await base44.integrations.Core.InvokeLLM({
+          const enhancedContent = await invokeLLM({
             prompt: `Enhance this clinical documentation section by incorporating the nurse's subjective observations and assessments.
 
 **ORIGINAL SECTION (${section.title}):**

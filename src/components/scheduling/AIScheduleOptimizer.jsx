@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -118,7 +119,7 @@ export default function AIScheduleOptimizer({ nurseEmail, selectedDate }) {
         context: f.feedback_text
       }));
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an AI scheduling optimizer for home health nurses. Analyze these visits and create an optimized daily schedule.
 
 SCHEDULED VISITS FOR ${dateToUse}:

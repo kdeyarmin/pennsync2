@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,7 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
           }));
 
         // Analyze with AI
-        const analysis = await base44.integrations.Core.InvokeLLM({
+        const analysis = await invokeLLM({
           prompt: `You are a clinical risk assessment AI analyzing home health patient data to predict hospitalization risk.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
