@@ -22,7 +22,7 @@ function toLocalInput(d) {
  * later via the scheduleSms function. Validates the time client-side before
  * calling the backend (which re-validates and re-checks consent at send time).
  */
-export default function ScheduleSendDialog({ toNumber, patientId, body, templateLabel, disabled, onScheduled }) {
+export default function ScheduleSendDialog({ toNumber, patientId, body, templateLabel, disabled, onScheduled, compact }) {
   const [open, setOpen] = useState(false);
   const [when, setWhen] = useState("");
 
@@ -64,10 +64,25 @@ export default function ScheduleSendDialog({ toNumber, patientId, body, template
 
   return (
     <>
-      <Button type="button" variant="outline" disabled={disabled} onClick={openDialog}>
-        <CalendarClock className="w-4 h-4 mr-2" />
-        Schedule
-      </Button>
+      {compact ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={disabled}
+          onClick={openDialog}
+          title="Schedule send"
+          aria-label="Schedule send"
+          className="h-9 w-9 flex-shrink-0 rounded-full text-slate-500 hover:bg-slate-100"
+        >
+          <CalendarClock className="h-5 w-5" />
+        </Button>
+      ) : (
+        <Button type="button" variant="outline" disabled={disabled} onClick={openDialog}>
+          <CalendarClock className="w-4 h-4 mr-2" />
+          Schedule
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

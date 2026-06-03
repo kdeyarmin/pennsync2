@@ -1,31 +1,54 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Send, MessageSquare, AlertTriangle, RotateCw, FileText, ChevronDown } from "lucide-react";
-import { format } from "date-fns";
+import { ArrowUp, AlertTriangle, RotateCw, FileText } from "lucide-react";
+import { format, isSameDay } from "date-fns";
 import { toast } from "sonner";
 import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 import { smsSegments } from "@/components/messaging/smsUtils";
 import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
 import { getTemplates, renderTemplate, buildTemplateContext } from "@/components/messaging/smsTemplates";
 import ScheduleSendDialog from "@/components/messaging/ScheduleSendDialog";
+import PhoneTopBar from "@/components/phone/PhoneTopBar";
+import ContactAvatar from "@/components/phone/ContactAvatar";
+
+/** A faint day divider between message groups, like a real texting app. */
+function DayDivider({ date }) {
+  return (
+    <div className="my-3 flex justify-center">
+      <span className="rounded-full bg-slate-200/80 px-3 py-0.5 text-[11px] font-medium text-slate-500">
+        {format(date, "EEEE, MMM d")}
+      </span>
+    </div>
+  );
+}
 
 /**
- * SmsThreadView — renders one SMS conversation (message bubbles) and a compose
- * box that sends through the nurse's work number via the sendSms function.
+ * SmsThreadView — one SMS conversation rendered as a full phone screen: a back
+ * nav bar, iMessage-style chat bubbles (outbound blue on the right, inbound gray
+ * on the left, with day dividers), and a pinned compose bar that sends through
+ * the nurse's work number via the sendSms function.
  */
-export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumber, patientId, patient, currentUser, optedOut, onSent }) {
+export default function SmsThreadView({
+  thread,
+  otherPartyLabel,
+  otherPartyNumber,
+  patientId,
+  patient,
+  currentUser,
+  optedOut,
+  onSent,
+  onBack,
+}) {
   const [draft, setDraft] = useState("");
-
   const [resendingId, setResendingId] = useState(null);
+  const scrollRef = useRef(null);
+  const bottomRef = useRef(null);
 
   const sendMutation = useMutation({
     mutationFn: (body) =>
@@ -73,16 +96,13 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
   const templateContext = buildTemplateContext({ patient, user: currentUser, settings: settingsArr[0] });
   const applyTemplate = (body) => setDraft(renderTemplate(body, templateContext));
 
-  if (!thread) {
-    return (
-      <Card className="lg:col-span-2">
-        <CardContent className="p-12 text-center text-slate-500">
-          <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p>Select a conversation to view messages.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Keep the latest message in view as the thread loads or grows.
+  const lastId = thread?.messages?.[thread.messages.length - 1]?.id;
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ block: "end" });
+  }, [lastId, thread?.threadId]);
+
+  if (!thread) return null;
 
   const handleSend = () => {
     if (!draft.trim()) return;
@@ -95,79 +115,94 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
   const meta = smsSegments(draft);
 
   return (
-    <Card className="lg:col-span-2">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            {otherPartyLabel}
-          </span>
-          <span className="text-xs font-normal text-slate-500">{formatPhoneDisplay(otherPartyNumber)}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {thread.messages.map((msg) => {
-            const outbound = msg.direction === "outbound";
-            return (
-              <div key={msg.id} className={`p-3 rounded-lg ${outbound ? "bg-blue-100 ml-8" : "bg-slate-100 mr-8"}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-semibold text-slate-900">{outbound ? "You" : otherPartyLabel}</p>
-                  <div className="flex items-center gap-2">
-                    {msg.status === "failed" && <Badge className="bg-red-600 text-white text-xs">failed</Badge>}
-                    {outbound && msg.status && msg.status !== "failed" && (
-                      <span className="text-xs text-slate-400">{msg.status}</span>
-                    )}
-                    <p className="text-xs text-slate-500">{format(new Date(msg.created_date), "MMM d, h:mm a")}</p>
-                  </div>
+    <div className="flex min-h-0 flex-1 flex-col bg-slate-50">
+      <PhoneTopBar
+        onBack={onBack}
+        backLabel="Messages"
+        title={otherPartyLabel}
+        subtitle={formatPhoneDisplay(otherPartyNumber)}
+        avatar={<ContactAvatar name={patient ? otherPartyLabel : null} number={otherPartyNumber} size="sm" className="mb-0.5" />}
+      />
+
+      {/* Bubbles */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+        {thread.messages.map((msg, i) => {
+          const outbound = msg.direction === "outbound";
+          const failed = msg.status === "failed";
+          const date = new Date(msg.created_date);
+          const prev = thread.messages[i - 1];
+          const showDay = !prev || !isSameDay(new Date(prev.created_date), date);
+          return (
+            <div key={msg.id}>
+              {showDay && <DayDivider date={date} />}
+              <div className={`flex flex-col ${outbound ? "items-end" : "items-start"} mb-1.5`}>
+                <div
+                  className={`max-w-[80%] whitespace-pre-wrap break-words px-3.5 py-2 text-[15px] leading-snug shadow-sm ${
+                    failed
+                      ? "rounded-2xl rounded-br-md border border-red-200 bg-red-50 text-red-900"
+                      : outbound
+                        ? "rounded-2xl rounded-br-md bg-blue-500 text-white"
+                        : "rounded-2xl rounded-bl-md bg-white text-slate-900 ring-1 ring-slate-200"
+                  }`}
+                >
+                  {msg.body}
                 </div>
-                <p className="text-sm text-slate-800 whitespace-pre-wrap">{msg.body}</p>
-                {outbound && msg.status === "failed" && !optedOut && (
-                  <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-red-200">
-                    {msg.failure_reason
-                      ? <span className="text-[11px] text-red-700 truncate" title={msg.failure_reason}>{msg.failure_reason}</span>
-                      : <span />}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 px-2 text-xs text-red-700 hover:text-red-800 hover:bg-red-50"
-                      onClick={() => handleResend(msg)}
-                      disabled={resendMutation.isPending || sendMutation.isPending}
-                    >
-                      <RotateCw className={`w-3 h-3 mr-1 ${resendMutation.isPending && resendingId === msg.id ? "animate-spin" : ""}`} />
-                      Resend
-                    </Button>
-                  </div>
+                <div className={`mt-0.5 flex items-center gap-1.5 px-1 text-[10px] text-slate-400 ${outbound ? "flex-row-reverse" : ""}`}>
+                  <span>{format(date, "h:mm a")}</span>
+                  {outbound && failed && <span className="font-medium text-red-500">Not delivered</span>}
+                  {outbound && !failed && msg.status && (
+                    <span className="capitalize">{msg.status.replace(/_/g, " ")}</span>
+                  )}
+                </div>
+                {outbound && failed && !optedOut && (
+                  <button
+                    type="button"
+                    onClick={() => handleResend(msg)}
+                    disabled={resendMutation.isPending || sendMutation.isPending}
+                    className="mt-0.5 flex items-center gap-1 px-1 text-[11px] font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                    title={msg.failure_reason || "Resend"}
+                  >
+                    <RotateCw className={`h-3 w-3 ${resendMutation.isPending && resendingId === msg.id ? "animate-spin" : ""}`} />
+                    Resend
+                  </button>
                 )}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
 
-        {optedOut ? (
-          <Alert className="bg-red-50 border-red-300">
-            <AlertTriangle className="w-4 h-4 text-red-600" />
-            <AlertDescription className="text-red-900 text-sm">
-              This patient has opted out of text messages (replied STOP). You cannot text them until they reply START.
+      {/* Compose / opted-out notice */}
+      {optedOut ? (
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white p-3">
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-sm text-red-900">
+              This patient opted out of texts (replied STOP). You can't text them until they reply START.
             </AlertDescription>
           </Alert>
-        ) : (
-          <div className="space-y-2 border-t pt-3">
-            <div className="flex items-center flex-wrap gap-1.5">
+        </div>
+      ) : (
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white">
+          {/* Quick replies + templates strip */}
+          {(quickReplies.length > 0 || templates.length > 0) && (
+            <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {templates.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs">
-                      <FileText className="w-3.5 h-3.5 mr-1.5" /> Templates
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
+                    <button
+                      type="button"
+                      className="flex flex-shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                    >
+                      <FileText className="h-3.5 w-3.5" /> Templates
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="max-w-xs">
                     {templates.map((t, i) => (
                       <DropdownMenuItem key={i} onSelect={() => applyTemplate(t.body)} className="flex-col items-start">
                         <span className="text-xs font-medium">{t.label}</span>
-                        <span className="text-[11px] text-slate-500 line-clamp-2">{renderTemplate(t.body, templateContext)}</span>
+                        <span className="line-clamp-2 text-[11px] text-slate-500">{renderTemplate(t.body, templateContext)}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -179,46 +214,57 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                   type="button"
                   onClick={() => insertReply(q.text)}
                   title={q.text}
-                  className="text-xs px-2 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  className="flex-shrink-0 whitespace-nowrap rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
                 >
                   {q.label}
                 </button>
               ))}
             </div>
-            <Textarea
-              placeholder="Type a text message… (avoid clinical details / PHI)"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={3}
-              className="resize-none"
+          )}
+
+          {/* Input pill + send */}
+          <div className="flex items-end gap-2 px-2.5 pb-2.5 pt-1">
+            <ScheduleSendDialog
+              compact
+              toNumber={otherPartyNumber}
+              patientId={patientId}
+              body={draft}
+              disabled={!draft.trim() || sendMutation.isPending}
+              onScheduled={() => setDraft("")}
             />
-            <div className="flex justify-between items-center gap-2">
-              <span className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-slate-400"}`}>
-                {meta.chars > 0
-                  ? `${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`
-                  : ""}
-              </span>
-              <div className="flex items-center gap-2">
-                <ScheduleSendDialog
-                  toNumber={otherPartyNumber}
-                  patientId={patientId}
-                  body={draft}
-                  disabled={!draft.trim() || sendMutation.isPending}
-                  onScheduled={() => setDraft("")}
-                />
-                <Button
-                  onClick={handleSend}
-                  disabled={!draft.trim() || sendMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Text
-                </Button>
-              </div>
+            <div className="flex flex-1 items-center rounded-3xl border border-slate-300 bg-white px-3">
+              <textarea
+                rows={1}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Text message — avoid PHI"
+                className="max-h-28 w-full resize-none border-0 bg-transparent py-2 text-[15px] placeholder:text-slate-400 focus:outline-none focus:ring-0"
+              />
             </div>
+            <Button
+              type="button"
+              size="icon"
+              onClick={handleSend}
+              disabled={!draft.trim() || sendMutation.isPending}
+              aria-label="Send text"
+              className="h-9 w-9 flex-shrink-0 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300"
+            >
+              <ArrowUp className="h-5 w-5" />
+            </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          {meta.chars > 0 && (
+            <p className={`px-4 pb-1.5 text-right text-[10px] ${meta.segments > 1 ? "text-amber-600" : "text-slate-400"}`}>
+              {meta.chars} chars · {meta.segments} SMS{meta.segments > 1 ? ` (${meta.encoding})` : ""}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
