@@ -72,6 +72,9 @@ export const REDIRECTS = [
   { from: '/ComplianceDashboard', to: '/ComplianceCenter' },
   { from: '/Reports', to: '/ReportsAnalytics' },
   { from: '/Support', to: '/Help' },
+  // QualityDashboard is an empty placeholder; its quality metrics live in the
+  // Compliance Center, so send links there instead of an empty page.
+  { from: '/QualityDashboard', to: '/ComplianceCenter' },
   // MedicareComplianceDashboard duplicates ComplianceCenter's audit metrics.
   { from: '/MedicareComplianceDashboard', to: '/ComplianceCenter' },
 ];

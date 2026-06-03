@@ -1,5 +1,81 @@
 # UI / UX Review — Navigation, Organization & Formatting
 
+Date: 2026-06-02 (navigation reachability pass added 2026-06-03)
+
+## Update — 2026-06-03: navigation now can't dead-end
+
+A follow-up pass closed the most user-visible part of the route/feature drift
+called out in finding #4, and finished the single-source-of-truth consolidation
+from finding #5:
+
+- **Nav is now reachability-aware.** The sidebar and the `Ctrl/Cmd+K` command
+  palette previously offered ~130 manifest pages while only ~52 were actually
+  routed, so most palette results — and the sidebar's **Agency Settings** —
+  dead-ended on PageNotFound. `nav.manifest.js` now derives a `ROUTED_PAGES` set
+  directly from `src/routes.jsx` and filters the sidebar, palette, and
+  breadcrumb *links* to pages that actually render. Route a page and it appears;
+  unroute it and it drops out — they can't drift.
+- **Restored dead-ended routes.** Pages that were already linked from routed
+  screens but had lost their route are routed again: `AgencySettings` (sidebar),
+  `OASISAnalyzer` / `OASISComplianceReview` / `OASISDocumentationReview` /
+  `OASISRevenueAnalysis` (OASIS assessment), `NursePerformanceDashboard`,
+  `NurseTraining`. The empty `QualityDashboard` placeholder now redirects to the
+  Compliance Center where the real quality metrics live.
+- **Time Off is discoverable.** `TimeOff` was routed but absent from the nav, so
+  the whole PTO feature was unreachable except by typing the URL. Added it to the
+  Tools section, and wired its previously-dead "pending approvals" badge so
+  managers/admins see a count of requests awaiting their review.
+- **Removed the duplicate nav manifest.** `src/components/navigation/navConfig.js`
+  (the old `NAV_PAGES`/`getPageMeta` source) was orphaned — nothing imported it,
+  yet it still described itself as the source of truth. Deleted; `nav.manifest.js`
+  is the sole nav manifest.
+
+### Slice 2 — surfaced three hidden feature suites
+
+A first slice of the finding #4 consolidation. Three "hub + sub-pages" areas were
+documented in the manifest (with breadcrumb parents) and their hubs were routed,
+but the sub-pages themselves had no route — so the whole sub-area was unreachable
+and invisible in the palette. Routed the real pages in each (18 total):
+
+- **OASIS** (under *OASIS Assessment*): `OASISReview`, `OASISClinicalReview`,
+  `OASISAuditDashboard`, `OASISAnalyticsDashboard`.
+- **Documents / PDF / Templates** (under *Documents*): `DocumentManagement`,
+  `DocumentIngestion`, `DocumentAuditLogs`, `DischargeSummaries`, `PDFTools`,
+  `PDFSearch`, `PDFTemplateLibrary`, `TemplateLibrary`, `TemplateManagement`.
+- **Fax** (under *Fax*): `FaxDashboard`, `FaxLogsDashboard`, `FaxContacts`,
+  `FaxAddressBook`, `FaxAnalytics`.
+
+Reachable pages went 59 → 77. Also improved palette grouping: sub-pages
+(`category: null`) used to fall into a generic "More" bucket; `paletteGroupFor()`
+now inherits the nearest ancestor's category, so OASIS sub-pages group with OASIS,
+Fax sub-pages under Communication, document tools under Documentation. The empty
+`PatientTriage` stub is intentionally left unrouted (nothing links to it).
+
+### Slice 3 — routed every remaining real page + a shared admin route guard
+
+Completed the consolidation: routed the remaining ~46 real, standalone pages that
+were documented in the manifest but unrouted (patient-care, documentation,
+resources/learning, compliance, analytics, admin/system, and tools areas), plus
+`CustomizableDashboard` (which also gained a manifest entry). **Every routed page
+now appears in the command palette and resolves; the only pages left unrouted are
+intentional:** empty placeholders (`Home`, `PatientTriage`, `ProductivityDashboard`,
+`ScheduleOptimizer`, `SurveyPreparation`, `PopulationHealthAnalytics`,
+`QualityDashboard`), the public token-gated pages (`JoinTelehealth`, `SignerPortal`),
+and pages already consolidated behind redirects (`AdminDashboard`, `ComplianceDashboard`,
+`Reports`, `Support`, `StaffTrainingHub`, `IncidentReporting`). Reachable pages: 77 → 123.
+
+**Security — route-level admin guard.** Routing the admin-only pages surfaced a
+real authorization gap (raised by PR review): several `adminOnly` pages had no
+internal role check, so once routed they'd be reachable by any authenticated user
+via direct URL. Added an `AdminRoute` guard in `App.jsx` that reads the manifest's
+`adminOnly` flag (single source) and redirects non-admins to the Dashboard — so
+every admin page is protected at the route, independent of whether the page also
+self-guards. This is defense-in-depth on top of the backend's own access control.
+
+Original review below.
+
+---
+
 Date: 2026-06-02
 
 ## Purpose

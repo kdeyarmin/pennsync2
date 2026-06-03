@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandSeparator,
 } from "@/components/ui/command";
-import { buildPaletteEntries, NAV_MANIFEST } from "@/lib/nav.manifest";
+import { buildPaletteEntries, paletteGroupFor, NAV_MANIFEST } from "@/lib/nav.manifest";
 
 const RECENTS_KEY = "pennsync_recent_pages";
 const MAX_RECENTS = 5;
@@ -34,7 +34,7 @@ function pushRecent(pageName) {
   }
 }
 
-const getCategory = (page) => page.category || "More";
+const getCategory = (page) => page.category || paletteGroupFor(page.page);
 
 export default function CommandPalette({ isAdmin }) {
   const [open, setOpen] = useState(false);
