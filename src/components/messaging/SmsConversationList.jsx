@@ -1,17 +1,19 @@
 import { useMemo, useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MessageSquare, Clock, Info } from "lucide-react";
-import { format } from "date-fns";
+import { MessageSquare, Info, Ban } from "lucide-react";
 import SmsThreadView from "@/components/messaging/SmsThreadView";
+import PhoneTopBar from "@/components/phone/PhoneTopBar";
+import ContactAvatar from "@/components/phone/ContactAvatar";
+import { PhoneEmptyState } from "@/components/phone/PhoneFrame";
+import { shortAgo } from "@/components/phone/timeUtils";
 import { last10, formatPhoneDisplay } from "@/components/voice/phoneUtils";
 
 /**
- * SmsConversationList — a nurse's text inbox. Groups SmsMessage rows into
- * patient conversations, shows unread counts, and renders the selected thread.
+ * SmsConversationList — a nurse's text inbox styled like a phone Messages app.
+ * Groups SmsMessage rows into patient conversations with tinted avatars, unread
+ * dots and relative times, and pushes into a full-screen thread when tapped.
  */
 export default function SmsConversationList() {
   const queryClient = useQueryClient();
@@ -105,66 +107,85 @@ export default function SmsConversationList() {
 
   if (!user?.work_phone_number) {
     return (
-      <Alert className="bg-amber-50 border-amber-200">
-        <Info className="w-4 h-4 text-amber-600" />
-        <AlertDescription className="text-amber-800">
-          You don't have a work number assigned yet. Ask an administrator to provision one before you can
-          send or receive patient texts.
-        </AlertDescription>
-      </Alert>
+      <>
+        <PhoneTopBar title="Messages" large />
+        <div className="p-4">
+          <Alert className="border-amber-200 bg-amber-50">
+            <Info className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              You don't have a work number assigned yet. Ask an administrator to provision one before you can
+              send or receive patient texts.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </>
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <Card className="lg:col-span-1">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            Conversations
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {isLoading ? (
-            <p className="text-sm text-slate-500 text-center py-4">Loading…</p>
-          ) : threads.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-4">No text conversations yet.</p>
-          ) : (
-            threads.map((t) => (
-              <div
-                key={t.threadId}
-                onClick={() => setSelectedThreadId(t.threadId)}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                  selectedThreadId === t.threadId
-                    ? "bg-blue-100 border-2 border-blue-500"
-                    : "bg-slate-50 hover:bg-slate-100 border border-slate-200"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <p className="text-sm font-semibold text-slate-900 line-clamp-1">{t.label}</p>
-                  {t.unreadCount > 0 && <Badge className="bg-red-600 text-white text-xs">{t.unreadCount}</Badge>}
-                </div>
-                <p className="text-xs text-slate-600 line-clamp-2 mb-1">{t.lastMessage.body}</p>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <Clock className="w-3 h-3" />
-                  {format(new Date(t.lastMessage.created_date), "MMM d, h:mm a")}
-                </div>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
+  // Drilled-in conversation screen.
+  if (selected) {
+    return (
       <SmsThreadView
         thread={selected}
-        otherPartyLabel={selected?.label}
-        otherPartyNumber={selected?.otherNumber}
-        patientId={selected?.patientId}
-        patient={selected?.patient}
+        otherPartyLabel={selected.label}
+        otherPartyNumber={selected.otherNumber}
+        patientId={selected.patientId}
+        patient={selected.patient}
         currentUser={user}
-        optedOut={selected?.optedOut}
+        optedOut={selected.optedOut}
+        onBack={() => setSelectedThreadId(null)}
         onSent={() => queryClient.invalidateQueries({ queryKey: ["sms-messages", user?.email] })}
       />
+    );
+  }
+
+  // Inbox screen.
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <PhoneTopBar title="Messages" large />
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        {isLoading ? (
+          <p className="py-8 text-center text-sm text-slate-500">Loading…</p>
+        ) : threads.length === 0 ? (
+          <PhoneEmptyState icon={MessageSquare} title="No conversations yet" hint="Patient texts will show up here." />
+        ) : (
+          <ul className="divide-y divide-slate-100 bg-white">
+            {threads.map((t) => (
+              <li key={t.threadId}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedThreadId(t.threadId)}
+                  className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+                >
+                  <div className="relative">
+                    <ContactAvatar name={t.patient ? t.label : null} number={t.otherNumber} size="md" />
+                    {t.unreadCount > 0 && (
+                      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-blue-500 px-1 text-[10px] font-bold text-white">
+                        {t.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className={`truncate text-[15px] ${t.unreadCount > 0 ? "font-bold text-slate-900" : "font-semibold text-slate-800"}`}>
+                        {t.label}
+                      </p>
+                      <span className="flex-shrink-0 text-[11px] text-slate-400">{shortAgo(t.lastMessage.created_date)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {t.optedOut && <Ban className="h-3 w-3 flex-shrink-0 text-red-500" />}
+                      <p className={`truncate text-[13px] ${t.unreadCount > 0 ? "text-slate-700" : "text-slate-500"}`}>
+                        {t.lastMessage.direction === "outbound" ? "You: " : ""}
+                        {t.lastMessage.body}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
