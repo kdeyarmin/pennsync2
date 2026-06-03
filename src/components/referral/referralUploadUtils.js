@@ -96,9 +96,12 @@ export function isImageReferral(file) {
 export function validateReferralFile(file, { maxBytes = MAX_REFERRAL_FILE_BYTES } = {}) {
   if (!file) return { valid: false, error: "No file selected." };
 
+  // resolveMimeType already falls back to the extension *only* when the browser
+  // reports an empty file.type, so checking the resolved type both supports
+  // type-less scanner/fax uploads and still rejects files whose browser-reported
+  // MIME is a concrete unsupported type (e.g. a .docx renamed to .pdf).
   const mime = resolveMimeType(file);
-  const extOk = ACCEPTED_REFERRAL_EXTENSIONS.includes(`.${getFileExtension(file.name)}`);
-  if (!ACCEPTED_REFERRAL_MIME_TYPES.includes(mime) && !extOk) {
+  if (!ACCEPTED_REFERRAL_MIME_TYPES.includes(mime)) {
     return {
       valid: false,
       error:

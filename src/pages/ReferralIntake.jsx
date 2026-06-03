@@ -128,10 +128,13 @@ export default function ReferralIntake() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFile(file_url);
       // Auto-classify the document type (pdf vs scanned image) from the file.
-      setNewReferral(prev => ({ ...prev, document_type: getDocumentType(file) }));
+      // Use the resolved type so PDFs from sources that leave file.type empty
+      // (some scanners/fax servers) still take the multi-referral path.
+      const docType = getDocumentType(file);
+      setNewReferral(prev => ({ ...prev, document_type: docType }));
 
       // If it's a PDF, check for multiple referrals
-      if (file.type === 'application/pdf') {
+      if (docType === 'pdf') {
         setMultiReferralDetection({ fileUrl: file_url, fileName: file.name });
         setIsUploading(false);
         return;

@@ -61,6 +61,14 @@ test("validateReferralFile rejects unsupported types", () => {
   assert.match(res.error, /Unsupported file type/);
 });
 
+test("validateReferralFile rejects a concrete bad MIME even with an accepted extension", () => {
+  // A Word doc renamed to .pdf reports a real, unsupported MIME — the extension
+  // fallback must only apply when file.type is empty, not override a known type.
+  const res = validateReferralFile(fakeFile("evil.pdf", "application/msword"));
+  assert.equal(res.valid, false);
+  assert.match(res.error, /Unsupported file type/);
+});
+
 test("validateReferralFile rejects empty and oversized files", () => {
   assert.match(validateReferralFile(fakeFile("a.pdf", "application/pdf", 0)).error, /empty/);
 

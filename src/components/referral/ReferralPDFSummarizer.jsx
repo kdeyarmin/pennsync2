@@ -11,7 +11,7 @@ import AIFieldIndicator from "@/components/ui/ai-field-indicator";
 import ProgressFeedback from "@/components/ui/progress-feedback";
 import {
   validateReferralFile,
-  isImageReferral,
+  resolveMimeType,
   formatBytes,
   REFERRAL_ACCEPT_ATTR,
 } from "./referralUploadUtils";
@@ -107,7 +107,9 @@ export default function ReferralPDFSummarizer({
     setIsUploading(true);
     try {
       const result = await base44.integrations.Core.UploadFile({ file });
-      const mime = isImageReferral(file) ? "image/tiff" : file.type || "application/pdf";
+      // Preserve the real resolved MIME (with extension fallback for type-less
+      // scanner/fax uploads) so downstream context/logging stays accurate.
+      const mime = resolveMimeType(file) || "application/pdf";
       setFileUrl(result.file_url);
       lastProcessedRef.current = { url: result.file_url, mime };
       setIsUploading(false);
@@ -154,7 +156,10 @@ export default function ReferralPDFSummarizer({
   const processReferral = async (url, fileType = 'application/pdf') => {
     setIsProcessing(true);
     setProcessingStage(0);
-    
+    // Drop any packet URL cached from a previously processed document so a
+    // failed regeneration can never open the prior patient's admission packet.
+    setGeneratedPdfUrl(null);
+
     const progressInterval = setInterval(() => {
       setProcessingStage(prev => Math.min(prev + 1, processingStages.length - 1));
     }, 3000);
@@ -793,9 +798,11 @@ HANDWRITTEN NOTES HANDLING:
         referralData: data
       });
 
-      // Convert blob to file and upload to get permanent URL
+      // Convert blob to file and upload to get permanent URL. Use a
+      // non-identifying filename — embedding the patient's name would leak PHI
+      // into browser download history and stored file metadata.
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      const file = new File([blob], `admission_packet_${data.demographics?.full_name?.replace(/\s+/g, '_') || 'patient'}_${Date.now()}.pdf`, { type: 'application/pdf' });
+      const file = new File([blob], `admission_packet_${Date.now()}.pdf`, { type: 'application/pdf' });
 
       // Upload to get permanent URL
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
