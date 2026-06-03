@@ -67,8 +67,7 @@ Rules:
 - Include a realistic example and 3 short questions.`;
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0.3,
+    model: 'gpt-5.4-mini',
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: 'You create clear, practical micro-learning JSON only.' },

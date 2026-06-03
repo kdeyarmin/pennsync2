@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     // Create FormData for OpenAI Whisper
     const whisperFormData = new FormData();
     whisperFormData.append("file", new Blob([buffer], { type: "audio/mp3" }), "audio.mp3");
-    whisperFormData.append("model", "whisper-1");
+    whisperFormData.append("model", "gpt-4o-transcribe");
     whisperFormData.append("language", "en");
 
     const transcribeResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {

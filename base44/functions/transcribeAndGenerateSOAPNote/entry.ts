@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         // 1. Transcribe audio using Whisper
         const transcriptionResponse = await openai.audio.transcriptions.create({
             file: file,
-            model: "whisper-1",
+            model: "gpt-4o-transcribe",
             response_format: "text",
         });
 
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
 
         // 2. Generate SOAP note using GPT-4o
         const soapResponse = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-5.5",
             messages: [
                 {
                     role: "system",

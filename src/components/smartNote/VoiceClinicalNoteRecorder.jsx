@@ -92,7 +92,7 @@ export default function VoiceClinicalNoteRecorder({ onTranscriptionComplete, ini
 Transcription: "${rawTranscription}"
 
 Return only the enhanced clinical narrative, no explanations.`,
-        model: "gpt_5"
+        model: "gpt_5_5"
       });
 
       setEnhancedNote(enhanceRes);
