@@ -36,7 +36,7 @@ were shipping dead weight (and attack surface) in a HIPAA app:
 | `@stripe/react-stripe-js`, `@stripe/stripe-js` | no billing/payments feature exists |
 | `zod`, `@hookform/resolvers` | no schema validation in use |
 | `react-hot-toast` | superseded by `sonner` + the in-repo toaster |
-| `@radix-ui/react-progress`, `@radix-ui/react-toast` | replaced by hand-rolled `ui/progress.jsx` / `ui/toast.jsx` |
+| `@radix-ui/react-progress`, `@radix-ui/react-toast` | replaced by hand-rolled `src/components/ui/progress.jsx` / `src/components/ui/toast.jsx` |
 | `@floating-ui/core` | only a transitive dep of Radix, never imported directly |
 | `quill` (direct) | pulled transitively by `react-quill-new`; the version pin lives in `overrides` (bumped to 2.0.3) |
 
