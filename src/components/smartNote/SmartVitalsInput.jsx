@@ -180,7 +180,7 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
         <VitalInput field="pain" label="Pain Level" icon={Activity} placeholder="0-10" value={vitalSigns.pain || ''} onChangeValue={handleFieldChange('pain')} />
       </div>
       
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <VitalInput field="o2" label="O2 Saturation" icon={Wind} placeholder="98" value={vitalSigns.o2 || ''} onChangeValue={handleFieldChange('o2')} />
         <div>
           <Label className="text-xs mb-1 block">O2 Source</Label>

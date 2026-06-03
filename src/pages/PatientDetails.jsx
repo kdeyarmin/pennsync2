@@ -872,7 +872,7 @@ export default function PatientDetails() {
       {/* Schedule Visit Card */}
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-wrap gap-2 justify-between items-center">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
               Schedule New Visit
