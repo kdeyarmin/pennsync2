@@ -298,7 +298,7 @@ const E = {
 // which Medicare auditors treat as fraudulent.
 const CARRY_FORWARD = new Set([
   "homebound", "diagnoses", "allergies", "emergency_plan",
-  "functional_baseline", "advance_directives", "terminal_prognosis", "benefit_period",
+  "advance_directives", "terminal_prognosis", "benefit_period",
 ]);
 
 /** Build an element instance with a chosen severity. */

@@ -62,9 +62,9 @@ recommendation carries a `file:line` reference so it can be picked up directly.
    "Complete Visit". Add a null-check on the function result to avoid `undefined.success` crashes.
 
 7. **Make AI-generated clinical content explicitly "verify-before-use."**
-   OASIS suggestions (`oasis/AIGeneratedOASISAssessment.jsx`, where `ai_suggested: true` is set but
-   never surfaced), care plans (`carePlan/AICarePlanGenerator.jsx`), and the LLM drug-interaction
-   analysis (`medication/MedicationInteractionChecker.jsx`) present AI output without a consistent
+   OASIS suggestions (`src/components/oasis/AIGeneratedOASISAssessment.jsx`, where `ai_suggested: true`
+   is set but never surfaced), care plans (`src/components/carePlan/AICarePlanGenerator.jsx`), and the
+   LLM drug-interaction analysis (`src/components/medication/MedicationInteractionChecker.jsx`) present AI output without a consistent
    badge or attestation gate. Add a shared "AI-Generated — reviewed by nurse" badge + checkbox,
    logged to the audit trail. Enforces the unfulfilled policy in `AI_TRUSTWORTHINESS_AUDIT.md`.
 
@@ -75,7 +75,7 @@ recommendation carries a `file:line` reference so it can be picked up directly.
    asthma), and add an "AI-assisted — verify against authoritative source" disclaimer on LLM output.
 
 9. **OASIS ↔ care-plan consistency guard.**
-   `oasis/oasisScoringEngine.js` intervention IDs (`fp-1`…) have no backing definitions, and
+   `src/components/oasis/oasisScoringEngine.js` intervention IDs (`fp-1`…) have no backing definitions, and
    care-plan goals aren't validated against OASIS function scores (a "bedfast" patient can get an
    "ambulate independently" goal). Add a consistency check and resolve intervention IDs to a real
    library.
@@ -89,7 +89,7 @@ recommendation carries a `file:line` reference so it can be picked up directly.
     five `InvokeLLM` calls (lines 72/121/162/200/269) in try/catch with schema validation.
 
 11. **Offline + versioned compliance rules.**
-    Compliance/audit checks (`compliance/UnifiedComplianceEngine.jsx`, `audit/AIDocumentationAudit.jsx`)
+    Compliance/audit checks (`src/components/compliance/UnifiedComplianceEngine.jsx`, `src/components/audit/AIDocumentationAudit.jsx`)
     are LLM-only and break offline. Add a lightweight client-side rule pass (homebound present?
     vitals present? abbreviations expanded?) and add `effective_date`/`cms_reference`/version to
     `MedicareComplianceRule` so each note records which rule version judged it. Add an
@@ -108,48 +108,53 @@ recommendation carries a `file:line` reference so it can be picked up directly.
     (`predictPatientRisks`, `analyzeClinicalRisks`, `generatePatientChartPDF`, `getScopedPatientAlerts`).
 
 14. **Concurrency safety on shared records.**
-    OASIS approval (`oasis/OASISApprovalWorkflow.jsx`) and patient/visit edits use read-modify-write
+    OASIS approval (`src/components/oasis/OASISApprovalWorkflow.jsx`) and patient/visit edits use read-modify-write
     with no optimistic locking, and patient create has no uniqueness guard → lost updates and
     duplicate patients. Add version/`updated_date` checks and a server-side uniqueness constraint
     (name+DOB+address). This also backs the existing **DuplicatePatients** page.
 
 15. **Replace toast-only failures with a retry queue.**
     Fax/SMS/time-off/incident failures surface a single auto-dismissing toast with no client-side
-    retry (e.g. `fax/FaxDashboard.jsx:70`, `messaging/SmsThreadView.jsx:56-63`). Add a persisted
+    retry (e.g. `src/components/fax/FaxDashboard.jsx:70`, `src/components/messaging/SmsThreadView.jsx:56-63`). Add a persisted
     "unsent" queue that retries on reconnect, plus **exponential backoff on outbound-fax retries**
     keyed to the actual `failure_reason` (don't retry "invalid number"; back off "busy").
 
 ## P2 — Nurse workflow & operations features
 
 16. **Voicemail transcription + richer duty status.**
-    `voice/CallbackQueue.jsx` plays voicemail audio but offers no transcript; duty status is binary
-    (`voice/DutyStatusCard.jsx`). Add async speech-to-text on voicemails, a multi-state duty
-    dropdown (on-break / in-visit / lunch / off), a callback SLA timer with escalation, and a live
-    8x8 connectivity test (today `admin/eightxeightSetup.js` only displays entered config).
+    `src/components/voice/CallbackQueue.jsx` plays voicemail audio but offers no transcript; duty
+    status is binary (`src/components/voice/DutyStatusCard.jsx`). Add async speech-to-text on
+    voicemails, a multi-state duty dropdown (on-break / in-visit / lunch / off), and a callback SLA
+    timer with escalation. (A live 8x8 connectivity probe already exists — `PhoneProvisioningPanel`
+    invokes the `testEightXEightConnection` backend function — so that gap is already covered.)
 
 17. **Messaging upgrades.**
     Add read receipts, group/broadcast SMS (by diagnosis or last-visit age), keyword auto-replies
-    (confirm visit, pain check), extensible merge fields, and "export thread to chart." Fix the
-    silent empty-merge-field bug in `messaging/smsTemplates.js:45` (warn instead of emitting "Hi ,").
+    (confirm visit, pain check), extensible merge fields, and "export thread to chart." Note that
+    `src/components/messaging/smsTemplates.js:43-48` already strips the dangling space when a merge
+    field is empty (renders `"Hi,"`, not `"Hi ,"`), so the residual gap is just the missing
+    personalization — optionally warn the nurse when a referenced merge field has no value rather
+    than silently sending an unpersonalized greeting.
 
 18. **Scheduling & time-off visibility.**
-    `scheduling/AIScheduleOptimizer.jsx` collects feedback that is never persisted or used — wire it
-    up, and add soft constraints (nurse/patient preferences, continuity) plus pre-assignment
-    conflict checks against approved time off. In `timeoff/`, surface accrual progress and
-    carryover-expiration warnings (logic already exists in `timeOffUtils.js`), and show coverage
+    `src/components/scheduling/AIScheduleOptimizer.jsx` collects feedback that is never persisted or
+    used — wire it up, and add soft constraints (nurse/patient preferences, continuity) plus
+    pre-assignment conflict checks against approved time off. In `src/components/timeoff/`, surface
+    accrual progress and carryover-expiration warnings (logic already exists in
+    `src/components/timeoff/timeOffUtils.js`), and show coverage
     impact in the approval queue.
 
 19. **Outbound-fax operational polish.**
     Keep faxing outbound-only. Improve it with: batch send (one document to multiple referring
     physicians), delivery-proof detail (sent vs delivered timestamps), an escalation task after the
     final failed retry instead of a lone toast, and CSV-import validation/de-dup in
-    `fax/FaxAddressBook.jsx` (validate fax-number format, skip-and-continue on bad rows).
+    `src/components/fax/FaxAddressBook.jsx` (validate fax-number format, skip-and-continue on bad rows).
 
 20. **Real system telemetry** **[verified: metrics are synthetic]**.
     `src/components/admin/SystemHealthMonitor.jsx:22-25` generates API response/uptime/error via
     `Math.random()` (labeled "simulated for demo"). Replace with real backend telemetry and add
     real-time degradation alerts (email/SMS). Make the user activity log searchable/exportable for
-    HIPAA/SOC2, and add bulk user operations + an active-invitations view to `admin/UserManagement`.
+    HIPAA/SOC2, and add bulk user operations + an active-invitations view to `src/components/admin/UserManagement.jsx`.
 
 ## P3 — Code health & long-term reliability
 
@@ -161,10 +166,11 @@ recommendation carries a `file:line` reference so it can be picked up directly.
     `useWorkflowExecution` hook already recommended in `COMPREHENSIVE_APP_REVIEW.md`.
 
 22. **Decompose mega-components.**
-    `visit/OASISScrubber.jsx` (4,146 lines), `pages/OASISAnalyzer.jsx` (3,162),
-    `oasis/AutomatedPDGMNavigator.jsx` (2,278), `visit/QuickTemplatesLibrary.jsx` (1,969). At
-    minimum extract pure logic into `.js` modules with unit tests (the pattern already used for
-    `oasisScoringEngine.js`), splitting OASIS upload/extract/analyze/save phases.
+    `src/components/visit/OASISScrubber.jsx` (4,146 lines), `src/pages/OASISAnalyzer.jsx` (3,162),
+    `src/components/oasis/AutomatedPDGMNavigator.jsx` (2,278),
+    `src/components/visit/QuickTemplatesLibrary.jsx` (1,969). At minimum extract pure logic into
+    `.js` modules with unit tests (the pattern already used for
+    `src/components/oasis/oasisScoringEngine.js`), splitting OASIS upload/extract/analyze/save phases.
 
 23. **Delete SmartNote dead code.**
     `SMARTNOTE_REVIEW.md` documents ~122 orphan components (with ~72 unused `InvokeLLM` prompts)

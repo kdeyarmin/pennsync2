@@ -146,7 +146,7 @@ export default function HospitalReadmissionRisk({ patient }) {
     
     highRiskDiagnoses.forEach(dx => {
       if (dx.terms.some(term => diagnosis.includes(term))) {
-        comorbidityCount++;
+        _comorbidityCount++;
         totalScore += 5;
         riskFactors.push({
           factor: `High-Risk Diagnosis: ${dx.name}`,
