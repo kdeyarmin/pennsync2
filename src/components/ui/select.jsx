@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check, ChevronDown } from "lucide-react"
+import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 function cn(...inputs) {
   return inputs.filter(Boolean).join(' ')
@@ -29,6 +29,28 @@ const SelectTrigger = React.forwardRef((props, ref) => (
 ))
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
 
+const SelectScrollUpButton = React.forwardRef((props, ref) => (
+  <SelectPrimitive.ScrollUpButton
+    ref={ref}
+    className={cn("flex cursor-default items-center justify-center py-1 bg-white text-slate-500", props.className)}
+    {...props}
+  >
+    <ChevronUp className="h-4 w-4" />
+  </SelectPrimitive.ScrollUpButton>
+))
+SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
+
+const SelectScrollDownButton = React.forwardRef((props, ref) => (
+  <SelectPrimitive.ScrollDownButton
+    ref={ref}
+    className={cn("flex cursor-default items-center justify-center py-1 bg-white text-slate-500", props.className)}
+    {...props}
+  >
+    <ChevronDown className="h-4 w-4" />
+  </SelectPrimitive.ScrollDownButton>
+))
+SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
+
 const SelectContent = React.forwardRef((props, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
@@ -40,9 +62,11 @@ const SelectContent = React.forwardRef((props, ref) => (
       position={props.position || "popper"}
       {...props}
     >
+      <SelectScrollUpButton />
       <SelectPrimitive.Viewport className="p-1 bg-white">
         {props.children}
       </SelectPrimitive.Viewport>
+      <SelectScrollDownButton />
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ))
@@ -95,4 +119,6 @@ export {
   SelectLabel,
   SelectItem,
   SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
 }
