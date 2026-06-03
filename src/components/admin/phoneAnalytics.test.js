@@ -96,3 +96,8 @@ test("formatDuration renders m:ss and guards non-positive input", () => {
   assert.equal(formatDuration(undefined), "0:00");
   assert.equal(formatDuration(-3), "0:00");
 });
+
+test("formatDuration floors fractional seconds instead of emitting a decimal", () => {
+  assert.equal(formatDuration(125.7), "2:05");
+  assert.equal(formatDuration(59.9), "0:59");
+});

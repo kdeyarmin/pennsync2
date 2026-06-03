@@ -81,3 +81,13 @@ test("computeSummaryStats handles populated and empty inputs", () => {
   const empty = computeSummaryStats([]);
   assert.deepEqual(empty, { totalAssessments: 0, avgScore: 0, avgPayment: 0, totalRevenue: 0 });
 });
+
+test("aggregateDemographics routes an unparseable dob to Unknown, not 85+", () => {
+  const u = (over) => ({ ...over });
+  const { age } = aggregateDemographics([
+    u({ pdgm_data: { patient_info: { gender: "Male", dob: "garbage" } } }),
+  ]);
+  const byName = Object.fromEntries(age.map((a) => [a.name, a.value]));
+  assert.equal(byName.Unknown, 1);
+  assert.equal(byName["85+"], 0);
+});

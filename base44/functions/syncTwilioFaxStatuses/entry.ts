@@ -90,6 +90,15 @@ Deno.serve(async (req) => {
         // Track status distribution
         results.statuses[twilioStatus] = (results.statuses[twilioStatus] || 0) + 1;
 
+        // Unrecognized/missing status: leave the fax unchanged rather than
+        // coercing it to 'sending', which would keep it pending and re-polled
+        // forever (it would never reach a final state or notify the user).
+        if (!mappedStatus) {
+          console.warn(`Unrecognized Twilio status "${twilioStatus}" for fax ${faxLog.id}; leaving unchanged`);
+          results.errors++;
+          continue;
+        }
+
         // Only update if status has changed
         if (mappedStatus !== faxLog.status) {
           console.log(`Updating FaxLog ${faxLog.id}: ${faxLog.status} → ${mappedStatus}`);
@@ -99,19 +108,22 @@ Deno.serve(async (req) => {
             pages: faxData.num_pages || faxLog.pages,
           };
 
-          // Add error info if failed
+          // Add error info for failed/canceled (both map to the 'failed' status).
           if (twilioStatus === 'failed') {
             updateData.failure_reason = faxData.error_message || 'Delivery failed';
+          } else if (twilioStatus === 'canceled') {
+            updateData.failure_reason = faxData.error_message || 'Fax canceled';
           }
 
           await base44.asServiceRole.entities.FaxLog.update(faxLog.id, updateData);
           results.updated++;
 
-          // Send notification
+          // Notify off the mapped (stored) status so the message can't claim a
+          // state the record doesn't hold (a 'canceled' fax is stored 'failed').
           await sendStatusNotification(
             base44,
             faxLog,
-            twilioStatus,
+            mappedStatus,
             faxData.num_pages,
             updateData.failure_reason
           );
@@ -129,7 +141,9 @@ Deno.serve(async (req) => {
                 sync_method: 'background_poll',
                 to_number: faxLog.to_number,
               },
-              status: twilioStatus === 'failed' ? 'failure' : 'success',
+              // Base the audit outcome on the stored (mapped) status so a
+              // canceled fax (mapped to 'failed') isn't logged as a success.
+              status: mappedStatus === 'failed' ? 'failure' : 'success',
             }).catch((err) => console.error('Failed to send fax status notification:', err));
           }
         }
@@ -165,7 +179,9 @@ function mapTwilioStatus(twilioStatus) {
     'failed': 'failed',
     'canceled': 'failed'
   };
-  return statusMap[twilioStatus] || 'sending';
+  // Return null (not a default) for unknown/missing statuses so the caller can
+  // skip the update instead of silently parking the fax in 'sending'.
+  return statusMap[twilioStatus] || null;
 }
 
 async function sendStatusNotification(base44, faxLog, status, numPages, failureReason) {

@@ -37,11 +37,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check expiration
+    // Check expiration. A missing/malformed expires_at yields an Invalid Date,
+    // and `now > Invalid Date` is false — which would treat a corrupt token as
+    // valid forever. Treat an unparseable expiry as expired.
     const now = new Date();
     const expiresAt = new Date(tokenRecord.expires_at);
 
-    if (now > expiresAt) {
+    if (Number.isNaN(expiresAt.getTime()) || now > expiresAt) {
       await base44.asServiceRole.entities.DocumentPackageToken.update(
         tokenRecord.id,
         { is_active: false }
@@ -53,14 +55,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get package details
+    // Get package details. The package may have been deleted after the token
+    // was issued, so guard against a missing package / signature list rather
+    // than throwing a 500 at a legitimate signer.
     const pkg = await base44.asServiceRole.entities.DocumentPackage.get(
       tokenRecord.package_id
-    );
+    ).catch(() => null);
+
+    if (!pkg) {
+      return Response.json(
+        { error: 'Document package is no longer available', valid: false },
+        { status: 404 }
+      );
+    }
 
     // Get signatures
+    const signatureIds = Array.isArray(pkg.document_signatures)
+      ? pkg.document_signatures
+      : [];
     const signatures = await Promise.all(
-      pkg.document_signatures.map((id) =>
+      signatureIds.map((id) =>
         base44.asServiceRole.entities.DocumentSignature.get(id).catch(
           () => null
         )

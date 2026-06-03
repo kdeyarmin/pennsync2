@@ -98,6 +98,8 @@ export function formatDuration(seconds) {
   const s = Number(seconds);
   if (!Number.isFinite(s) || s <= 0) return "0:00";
   const m = Math.floor(s / 60);
-  const r = s % 60;
+  // Floor the remainder so fractional seconds (raw duration_seconds can be
+  // non-integer) don't render as "2:5.7000…" with a broken/over-long pad.
+  const r = Math.floor(s % 60);
   return `${m}:${String(r).padStart(2, "0")}`;
 }

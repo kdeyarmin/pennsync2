@@ -49,3 +49,11 @@ test("UCS-2 splits at 70/67", () => {
   assert.equal(r.perSegment, 67);
   assert.ok(r.segments >= 2);
 });
+
+test("a 2-unit char straddling a segment boundary is not split (no undercount)", () => {
+  // 152 'a' + '{' (2 units) + 152 'a': the escape pair can't sit across the
+  // 153-unit boundary, so this packs into 3 segments, not 2.
+  const r = smsSegments("a".repeat(152) + "{" + "a".repeat(152));
+  assert.equal(r.chars, 306);
+  assert.equal(r.segments, 3);
+});
