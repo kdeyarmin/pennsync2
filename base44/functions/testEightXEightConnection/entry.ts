@@ -113,11 +113,14 @@ Deno.serve(async (req) => {
     // from the dashboard env OR the in-app super-admin config.
     const apiKey = isSet(envApiKey) ? envApiKey : (isSet(stored.api_secret) ? stored.api_secret : '');
     const apiKeySource = isSet(envApiKey) ? 'dashboard env' : isSet(stored.api_secret) ? 'in-app config' : null;
+    // Single-secret model: a dedicated webhook secret wins, otherwise the
+    // resolved API secret (env OR in-app) verifies webhooks. Mirrors the
+    // fallback in the webhook handlers so the diagnostic matches reality.
     const webhookSecret = isSet(envWebhookSecret)
       ? envWebhookSecret
       : isSet(stored.webhook_secret)
         ? stored.webhook_secret
-        : (isSet(stored.api_secret) ? stored.api_secret : '');
+        : (apiKey || '');
     const settings = await getSettings(base44);
     const region = (settings.eight_x_eight_region && String(settings.eight_x_eight_region).trim()) || 'us';
     const smsSubAccountId = settings.eight_x_eight_sms_subaccount_id;
@@ -132,7 +135,7 @@ Deno.serve(async (req) => {
       status: apiKey ? 'ok' : 'fail',
       detail: apiKey
         ? `The single 8x8 API secret is configured (${apiKeySource}).`
-        : 'No 8x8 API secret found. Add it on the Super Admin → Integrations page, or set EIGHT_X_EIGHT_API_KEY in the Base44 dashboard.',
+        : 'No 8x8 API secret found. Add it on the Administration → Super Admin page, or set EIGHT_X_EIGHT_API_KEY in the Base44 dashboard.',
     });
     checks.push({
       id: 'webhook_secret',

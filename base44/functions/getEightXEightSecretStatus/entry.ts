@@ -3,7 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 /**
  * getEightXEightSecretStatus — admin/super-admin read of whether the single 8x8
  * API secret is configured, and HOW (in-app config vs. dashboard env), without
- * ever returning the secret value. Powers the Super Admin -> Integrations page so
+ * ever returning the secret value. Powers the Administration -> Super Admin page so
  * it can show "Configured ••••1234" and pick the right call-to-action.
  *
  * Returns: {

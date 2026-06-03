@@ -10,8 +10,10 @@
  *   2. account_type === 'super_admin' on the User record (what the rest of the
  *      app — Learning Center, skill dashboards — already keys off of).
  *
- * Keeping the email here (not scattered as string literals) means there is one
- * place to change the owner, and the frontend + backend agree on it.
+ * This is the single source of truth for the owner email on the FRONTEND. The
+ * Base44 backend functions (ensureSuperAdmin, saveEightXEightSecret, etc.) run
+ * as standalone Deno modules that can't import this file, so each mirrors the
+ * same literal; keep them in sync when changing the owner.
  */
 
 /** The platform owner. This account is always treated as the super admin. */

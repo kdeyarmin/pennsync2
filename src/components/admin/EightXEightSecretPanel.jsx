@@ -107,9 +107,9 @@ export default function EightXEightSecretPanel() {
               <button
                 type="button"
                 onClick={() => setReveal((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                tabIndex={-1}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
                 aria-label={reveal ? "Hide secret" : "Show secret"}
+                aria-pressed={reveal}
               >
                 {reveal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
