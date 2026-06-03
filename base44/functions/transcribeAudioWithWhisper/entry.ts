@@ -26,13 +26,13 @@ Deno.serve(async (req) => {
     const arrayBuffer = await audioFile.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
 
-    // Call OpenAI Whisper API
+    // Call OpenAI transcription API (gpt-4o-transcribe)
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiApiKey) {
       return Response.json({ error: "OpenAI API key not configured" }, { status: 500 });
     }
 
-    // Create FormData for OpenAI Whisper
+    // Create FormData for OpenAI transcription (gpt-4o-transcribe)
     const whisperFormData = new FormData();
     whisperFormData.append("file", new Blob([buffer], { type: "audio/mp3" }), "audio.mp3");
     whisperFormData.append("model", "gpt-4o-transcribe");

@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
         const file = new File([bytes], `audio.${ext}`, { type: mime_type || "audio/webm" });
 
-        // 1. Transcribe audio using Whisper
+        // 1. Transcribe audio using gpt-4o-transcribe
         const transcriptionResponse = await openai.audio.transcriptions.create({
             file: file,
             model: "gpt-4o-transcribe",
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
         const transcript = transcriptionResponse;
 
-        // 2. Generate SOAP note using GPT-4o
+        // 2. Generate SOAP note using gpt-5.5
         const soapResponse = await openai.chat.completions.create({
             model: "gpt-5.5",
             messages: [

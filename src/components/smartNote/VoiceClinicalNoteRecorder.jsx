@@ -75,7 +75,7 @@ export default function VoiceClinicalNoteRecorder({ onTranscriptionComplete, ini
       const uploadRes = await base44.integrations.Core.UploadFile({ file: audioBlob });
       const audioUrl = uploadRes.file_url;
 
-      // Transcribe with Whisper
+      // Transcribe with Gemini
       const transcribeRes = await base44.integrations.Core.InvokeLLM({
         prompt: `Transcribe the following medical/clinical audio recording. Preserve all clinical details and terminology. Return only the transcribed text.`,
         file_urls: [audioUrl],
