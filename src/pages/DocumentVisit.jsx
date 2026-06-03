@@ -673,10 +673,9 @@ Generate the complete template now:`;
       const sanitizedTemplate = sanitizeInput(template);
       setNarrativeText(sanitizedTemplate);
       setHasGeneratedTemplate(true);
-      
-      await updateVisitMutation.mutateAsync({ 
-        nurse_notes: sanitizedTemplate
-      });
+      // Do NOT auto-persist the AI template to the chart. It populates the editor
+      // (with [nurse to document] placeholders) for the nurse to complete and
+      // review; autosave/Save commits it after review.
       await logSecurityEvent('TEMPLATE_GENERATED', { visit_id: visitId });
       
       // Track template usage for performance metrics
@@ -789,11 +788,11 @@ Generate the complete clinical narrative based on the audio and context:`;
       const result = await secureAICall(() => processAudioWrapper(), user.email);
       
       const sanitizedResult = sanitizeInput(result);
+      // Do NOT auto-persist the AI-generated narrative to the chart. Audio
+      // transcription can mishear vitals/medications, so it populates the editor
+      // for the nurse to review/correct; autosave/Save commits it after review.
+      // (Also avoids overwriting raw_transcription with a misleading boilerplate.)
       setNarrativeText(sanitizedResult);
-      await updateVisitMutation.mutateAsync({ 
-        nurse_notes: sanitizedResult,
-        raw_transcription: "Processed from audio and intelligently merged into clinical narrative."
-      });
 
       await logSecurityEvent('AUDIO_DOCUMENTATION_PROCESSED', { 
         visit_id: visitId,

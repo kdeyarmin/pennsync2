@@ -188,7 +188,7 @@ export default function VisitScribe() {
             <CardContent>
               <UnifiedDocumentReview
                 roughNote={roughNote}
-                onEnhancedNoteReady={({ enhancedNote }) => setRoughNote(enhancedNote)}
+                currentUser={currentUser}
               />
             </CardContent>
           </Card>

@@ -2,8 +2,8 @@ import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Mail, BookUser, Video,
   HelpCircle, AlertTriangle, BookOpen, WifiOff, Heart, Activity,
-  Phone, FileSignature, ShieldCheck, DollarSign, Award, ClipboardCheck, CalendarDays,
-  TrendingUp, LifeBuoy, FileCheck, Stethoscope, ScrollText, CheckCircle2,
+  Phone, FileSignature, Award, CalendarDays,
+  TrendingUp, FileCheck, Stethoscope, ScrollText, CheckCircle2,
 } from "lucide-react";
 
 /**
@@ -37,9 +37,9 @@ export const NAV_PAGES = [
   // OASIS
   { page: "SmartOASISAssessment", label: "OASIS Assessment", icon: Brain, category: "OASIS", keywords: ["oasis", "assessment", "start of care", "soc"] },
   { page: "OASISAnalyzer", label: "OASIS Analyzer", icon: Brain, category: "OASIS", keywords: ["oasis", "analyze", "scrubber", "coding"] },
-  { page: "OASISComplianceReview", label: "OASIS Compliance Review", icon: ClipboardCheck, category: "OASIS", keywords: ["oasis", "compliance", "review", "qa"] },
-  { page: "OASISDocumentationReview", label: "OASIS Documentation Review", icon: FileCheck, category: "OASIS", keywords: ["oasis", "documentation", "review"] },
-  { page: "OASISRevenueAnalysis", label: "OASIS Revenue Analysis", icon: DollarSign, category: "OASIS", keywords: ["oasis", "revenue", "pdgm", "reimbursement"] },
+  // OASIS Compliance/Documentation/Revenue Review are drill-downs reached from
+  // OASISAnalyzer with router state (they render empty when opened directly), so
+  // they are routed but intentionally NOT listed as standalone nav destinations.
 
   // Documentation
   { page: "SmartNoteAssistant", label: "Smart Note Assistant", icon: Brain, category: "Documentation", keywords: ["smart note", "clinical note", "documentation", "ai"] },
@@ -47,7 +47,6 @@ export const NAV_PAGES = [
   { page: "VisitScribe", label: "Visit Scribe", icon: Stethoscope, category: "Documentation", keywords: ["scribe", "dictation", "voice", "ambient"] },
   { page: "DocumentVisit", label: "Document Visit", icon: FileText, category: "Documentation", keywords: ["document visit", "visit note", "charting"] },
   { page: "EventReport", label: "Event Report", icon: FileText, category: "Documentation", keywords: ["event", "report", "incident report"] },
-  { page: "IncidentReporting", label: "Incident Reporting", icon: AlertTriangle, category: "Documentation", keywords: ["incident", "reporting", "occurrence"] },
   { page: "ReferralIntake", label: "Referrals", icon: FileText, category: "Documentation", keywords: ["referral", "intake", "admission", "new patient"] },
 
   // Documents & Signatures
@@ -68,7 +67,6 @@ export const NAV_PAGES = [
 
   // Compliance & Quality
   { page: "ComplianceCenter", label: "Compliance Center", icon: Shield, category: "Compliance", keywords: ["compliance", "audit", "quality", "metrics"] },
-  { page: "ComplianceDashboard", label: "Compliance Dashboard", icon: ShieldCheck, category: "Compliance", keywords: ["compliance", "dashboard", "overview"] },
   { page: "RegulatoryCompliance", label: "Regulatory Compliance", icon: ClipboardList, category: "Compliance", keywords: ["regulatory", "cms", "state requirements"] },
   { page: "QualityDashboard", label: "Quality Dashboard", icon: TrendingUp, category: "Compliance", keywords: ["quality", "qapi", "outcomes", "metrics"] },
   { page: "SecurityCompliance", label: "Security", icon: Shield, category: "Compliance", keywords: ["security", "hipaa", "privacy"] },
@@ -76,7 +74,6 @@ export const NAV_PAGES = [
 
   // Analytics & Reports
   { page: "ReportsAnalytics", label: "Reports & Analytics", icon: BarChart3, category: "Analytics", keywords: ["reports", "analytics", "metrics", "export", "data"] },
-  { page: "Reports", label: "Reports", icon: BarChart3, category: "Analytics", keywords: ["reports", "report builder"] },
   { page: "NursePerformanceDashboard", label: "Nurse Performance", icon: TrendingUp, category: "Analytics", keywords: ["nurse performance", "productivity", "scorecard"] },
   { page: "ManagerSkillGapDashboard", label: "Skill Gap Dashboard", icon: BarChart3, category: "Analytics", keywords: ["skill gap", "manager", "competency analytics"] },
 
@@ -87,7 +84,6 @@ export const NAV_PAGES = [
   { page: "NurseTraining", label: "Nurse Training", icon: Stethoscope, category: "Learning", keywords: ["nurse training", "clinical training"] },
   { page: "ClinicalSkillsChecklist", label: "Skills Checklists", icon: CheckCircle2, category: "Learning", keywords: ["skills", "checklist", "competency"] },
   { page: "TrainingCoursePlayer", label: "Training Course Player", icon: Video, category: "Learning", keywords: ["course", "player", "lesson", "module"] },
-  { page: "StaffTrainingHub", label: "Staff Training Hub", icon: GraduationCap, category: "Learning", keywords: ["staff training", "hub"] },
   { page: "AnnualMandatoryEducation", label: "Annual Mandatory Education", icon: Award, category: "Learning", keywords: ["annual", "mandatory", "education", "compliance training"] },
   { page: "MyAnnualEducation", label: "My Annual Education", icon: Award, category: "Learning", keywords: ["my annual education", "yearly"] },
   { page: "AnnualEducationTranscript", label: "Annual Education Transcript", icon: ScrollText, category: "Learning", keywords: ["transcript", "annual education record"] },
@@ -95,7 +91,6 @@ export const NAV_PAGES = [
 
   // Admin (palette: admins only)
   { page: "AdminOperations", label: "Operations Center", icon: BarChart3, category: "Admin", keywords: ["admin", "operations", "manage", "operations center"] },
-  { page: "AdminDashboard", label: "Admin Dashboard", icon: BarChart3, category: "Admin", keywords: ["admin", "dashboard", "overview"] },
   { page: "AdminTraining", label: "Training Manager", icon: GraduationCap, category: "Admin", keywords: ["training manager", "assign training"] },
   { page: "ClinicalPathwayManager", label: "Clinical Pathways", icon: ClipboardList, category: "Admin", keywords: ["pathways", "clinical pathways", "protocols"] },
   { page: "UserManagement", label: "Users", icon: Users, category: "Admin", keywords: ["users", "accounts", "roles", "permissions"] },
@@ -106,7 +101,6 @@ export const NAV_PAGES = [
   { page: "ResourceLibrary", label: "Library", icon: BookOpen, category: "Tools", keywords: ["library", "resources", "guidelines"] },
   { page: "OfflineMode", label: "Offline Mode", icon: WifiOff, category: "Tools", keywords: ["offline", "sync"] },
   { page: "Help", label: "Help", icon: HelpCircle, category: "Tools", keywords: ["help", "guide", "manual"] },
-  { page: "Support", label: "Support", icon: LifeBuoy, category: "Tools", keywords: ["support", "contact", "ticket", "faq"] },
 
   // Settings
   { page: "UserSettings", label: "Settings", icon: Settings, category: "Settings", keywords: ["settings", "preferences", "profile", "notifications"] },

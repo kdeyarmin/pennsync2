@@ -109,7 +109,7 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
 
     const aiResponse = await base44.integrations.Core.InvokeLLM({
       prompt: aiPrompt,
-      model: 'gpt_5'
+      model: 'gpt_5_5'
     });
 
     // Extract visit highlights

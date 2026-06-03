@@ -92,9 +92,8 @@ Deno.serve(async (req) => {
 
     for (const course of targets) {
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        temperature: 0.4,
-        max_tokens: 7000,
+        model: 'gpt-5.4-mini',
+        max_completion_tokens: 7000,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: 'You create practical healthcare in-service training as valid JSON only.' },

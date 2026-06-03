@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { extractPhrases, getSentencesContaining } from "@/components/smartNote/compliance/factExtraction";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -214,22 +215,8 @@ export default function OASISScrubber({
 
       const visitType = visit?.visit_type?.replace(/_/g, ' ').toUpperCase() || 'VISIT';
 
-      // Helper function to extract matching phrases with context
-      const extractPhrases = (text, pattern) => {
-        if (!text) return [];
-        const matches = text.match(pattern) || [];
-        return matches.map(m => m.trim()).filter(m => m.length > 5);
-      };
-
-      // Helper to get sentence containing match
-      const getSentencesContaining = (text, pattern) => {
-        if (!text) return [];
-        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-        return sentences
-          .filter(s => pattern.test(s))
-          .map(s => s.trim() + '.')
-          .slice(0, 5); // Limit to 5 most relevant
-      };
+      // extractPhrases / getSentencesContaining are imported from the shared
+      // factExtraction module (single source of truth).
 
       // === ENHANCED CLINICAL INDICATOR EXTRACTION ===
       const clinicalIndicators = {
