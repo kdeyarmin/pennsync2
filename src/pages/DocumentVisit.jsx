@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { invokeLLM, invokeLLMWithFile } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -815,7 +815,7 @@ ${narrativeText}
 
 Generate the complete clinical narrative based on the audio and context:`;
 
-        const llmResult = await invokeLLM({
+        const llmResult = await invokeLLMWithFile({
           prompt: prompt,
           file_urls: [file_url]
         });

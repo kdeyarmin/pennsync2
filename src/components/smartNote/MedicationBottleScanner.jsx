@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { invokeLLMWithFile } from "@/lib/invokeLLM";
 
 export default function MedicationBottleScanner({ onMedicationExtracted }) {
   const videoRef = useRef(null);
@@ -61,7 +61,7 @@ export default function MedicationBottleScanner({ onMedicationExtracted }) {
     setIsExtracting(true);
     setError(null);
     try {
-      const result = await invokeLLM({
+      const result = await invokeLLMWithFile({
         prompt: `Analyze this medication bottle image and extract the following information:
 1. Medication name
 2. Strength/dosage (e.g., 500mg, 10mg/5mL)
