@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ export default function AIQuizGenerator({ trainingContent, moduleTitle, onComple
   const generateQuiz = async () => {
     setGenerating(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Generate a comprehensive nursing quiz based on the following training content.
 
 TRAINING CONTENT:

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
     setIsScanning(true);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a healthcare regulatory monitoring AI. Generate realistic recent regulatory updates that a home health/hospice agency should be aware of.
 
 Current date: ${format(new Date(), 'yyyy-MM-dd')}

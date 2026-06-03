@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,7 +75,7 @@ export default function AutomatedComplianceAuditor({ onAuditComplete }) {
       setAuditProgress({ current: i + 1, total: visitsToAudit.length });
 
       try {
-        const auditResult = await base44.integrations.Core.InvokeLLM({
+        const auditResult = await invokeLLM({
           prompt: `Perform a Medicare compliance audit on this clinical documentation.
 
 VISIT TYPE: ${visit.visit_type || 'routine_visit'}

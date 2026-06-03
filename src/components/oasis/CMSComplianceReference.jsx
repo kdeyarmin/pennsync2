@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -348,7 +348,7 @@ export default function CMSComplianceReference({ oasisItem, onInsertGuidance, co
   const fetchLiveUpdates = async () => {
     setIsLoading(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Check for any recent CMS OASIS-E updates or guidance changes effective 2024-2025. Focus on:
 1. Any changes to functional scoring (GG items, M1800-M1860)
 2. PDGM calculation updates

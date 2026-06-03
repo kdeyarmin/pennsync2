@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ export default function ReportsAnalytics() {
   const runPopulationAnalysis = async () => {
     setAnalyzing(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze population health data: ${patients.length} patients, ${visits.length} visits, ${incidents.length} incidents.
 Identify infection clusters, readmission patterns, clinical deterioration trends, and predictive risk factors.
 Return JSON with: executive_summary, infection_clusters, readmission_patterns, quality_indicators, urgent_actions.`,

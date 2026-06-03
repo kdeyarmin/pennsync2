@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,7 @@ export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = fal
         existingOASIS: existingOASIS.length > 0
       };
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert OASIS documentation specialist with deep knowledge of CMS home health regulations and PDGM requirements.
 
 **CRITICAL TASK:** Analyze this patient's data to identify OASIS documentation gaps and generate a preliminary OASIS assessment.

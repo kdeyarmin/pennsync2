@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ For each issue found, provide:
 - Affected users/records
 - Recommended actions`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: analysisPrompt,
         response_json_schema: {
           type: 'object',

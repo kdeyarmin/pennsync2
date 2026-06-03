@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mic, MicOff, Copy, CheckCircle2, AlertTriangle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { toast } from "sonner";
 
 export default function VoiceClinicalNoteRecorder({ onTranscriptionComplete, initialText = "" }) {
@@ -80,7 +81,7 @@ export default function VoiceClinicalNoteRecorder({ onTranscriptionComplete, ini
       const audioUrl = uploadRes.file_url;
 
       // Transcribe with Gemini
-      const transcribeRes = await base44.integrations.Core.InvokeLLM({
+      const transcribeRes = await invokeLLM({
         prompt: `Transcribe the following medical/clinical audio recording. Preserve all clinical details and terminology. Return only the transcribed text.`,
         file_urls: [audioUrl],
         model: "gemini_3_flash"
@@ -90,7 +91,7 @@ export default function VoiceClinicalNoteRecorder({ onTranscriptionComplete, ini
       setTranscription(rawTranscription);
 
       // Enhance with medical terminology
-      const enhanceRes = await base44.integrations.Core.InvokeLLM({
+      const enhanceRes = await invokeLLM({
         prompt: `You are a clinical documentation specialist. Take the following clinical observation transcription and enhance it into proper medical narrative format with appropriate clinical terminology, while preserving all clinical details. Structure it as a cohesive paragraph suitable for medical records. Ensure all clinical observations are properly documented with appropriate medical terminology.
 
 Transcription: "${rawTranscription}"

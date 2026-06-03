@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ export default function CareCoordinationAnalyzer({
       const hospitalizations = incidents.filter(i => i.incident_type === 'hospitalized');
       const recentHospitalization = hospitalizations.length > 0 ? hospitalizations[0] : null;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an AI care coordination specialist for home health. Analyze this patient's data to identify care gaps and provider coordination needs.
 
 PATIENT: ${patient.first_name} ${patient.last_name}

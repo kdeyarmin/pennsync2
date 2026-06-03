@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -206,7 +206,7 @@ IMPORTANT RULES:
 Return only the structured clinical note, no preamble.`;
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({ prompt, model: "claude_sonnet_4_6" });
+      const result = await invokeLLM({ prompt, model: "claude_sonnet_4_6" });
       setStructuredNote(result);
     } catch {
       setError("Failed to structure note. Please try again.");

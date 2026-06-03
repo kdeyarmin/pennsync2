@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ export default function ProactiveCareGapIdentifier({
       });
 
       // Use AI to identify care gaps
-      const gapAnalysis = await base44.integrations.Core.InvokeLLM({
+      const gapAnalysis = await invokeLLM({
         prompt: `You are an expert home health clinical analyst. Analyze these patient profiles to proactively identify potential care gaps, missed opportunities, and risks before they become problems.
 
 PATIENT PROFILES:

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +51,7 @@ export default function AIPatientSummaryReport({
         notes: v.nurse_notes?.substring(0, 300)
       }));
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Generate a concise clinical summary report for this patient. This will be used by nurses for quick context before/during visits.
 
 PATIENT INFORMATION:

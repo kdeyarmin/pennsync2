@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -142,7 +143,7 @@ Required Elements: ${rule.required_elements?.join(', ') || 'N/A'}
 Keywords to look for: ${rule.keywords?.join(', ') || 'N/A'}`
         ).join('\n\n');
 
-        const auditResult = await base44.integrations.Core.InvokeLLM({
+        const auditResult = await invokeLLM({
           prompt: `Perform a detailed compliance audit on this clinical documentation against specific rules.
 
 VISIT TYPE: ${visit.visit_type || 'routine_visit'}

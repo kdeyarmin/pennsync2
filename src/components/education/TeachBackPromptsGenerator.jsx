@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,7 @@ export default function TeachBackPromptsGenerator({
     setIsComplete(false);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert in patient education and the teach-back method. Generate tailored teach-back prompts for a nurse to use during a patient education session.
 
 CONDITION/TOPIC: ${topic}
@@ -149,7 +149,7 @@ Return JSON:
     try {
       const currentPrompt = prompts.prompts[currentPromptIdx];
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Based on the patient's teach-back response, generate a tailored follow-up prompt.
 
 ORIGINAL QUESTION: "${currentPrompt.primary_question}"

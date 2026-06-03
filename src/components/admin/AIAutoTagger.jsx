@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ Generate 3-7 specific tags covering:
 Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...]`;
 
           try {
-            const tags = await base44.integrations.Core.InvokeLLM({
+            const tags = await invokeLLM({
               prompt,
               response_json_schema: {
                 type: "array",
@@ -112,7 +113,7 @@ Generate 3-5 specific tags covering:
 Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...]`;
 
         try {
-          const tags = await base44.integrations.Core.InvokeLLM({
+          const tags = await invokeLLM({
             prompt,
             response_json_schema: {
               type: "array",

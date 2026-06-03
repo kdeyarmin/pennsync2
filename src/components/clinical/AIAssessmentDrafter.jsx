@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,7 @@ export default function AIAssessmentDrafter({ visitNotes, patientData, onDraftCo
     setIsGenerating(true);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Generate a comprehensive OASIS assessment draft based on the following patient visit notes and data:
 
 VISIT NOTES:

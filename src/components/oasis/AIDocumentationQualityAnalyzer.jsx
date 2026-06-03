@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -106,7 +106,7 @@ export default function AIDocumentationQualityAnalyzer({ analysisResults, pdgmDa
         compliance_score: analysisResults.compliance_score
       };
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `You are an expert OASIS documentation reviewer and home health compliance specialist. Analyze the following OASIS assessment data for documentation quality, focusing on narrative clarity, completeness, and consistency with coded data.
 
 OASIS DATA CONTEXT:

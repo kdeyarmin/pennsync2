@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +111,7 @@ export default function TherapyNeedForecaster({
     const patientVisits = visits.filter(v => v.patient_id === patientId);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze this patient's therapy needs and forecast required therapy services.
 
 PATIENT: ${patient?.first_name} ${patient?.last_name}

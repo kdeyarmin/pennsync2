@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ export default function ComplianceReportGenerator({
         .map(([element, count]) => ({ element, count, percentage: (count / totalAudits * 100).toFixed(1) }));
 
       // Use AI to generate insights
-      const aiInsights = await base44.integrations.Core.InvokeLLM({
+      const aiInsights = await invokeLLM({
         prompt: `Generate Medicare compliance insights report for Pennsylvania home health agency.
 
 DATA:

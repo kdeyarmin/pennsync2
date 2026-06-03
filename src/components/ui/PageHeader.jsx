@@ -17,17 +17,17 @@ export default function PageHeader({
   className,
   children,
 }) {
-  // Accept either a component *type* or an already-built element. lucide-react
-  // icons are React.forwardRef objects (not plain functions), so a
-  // `typeof === "function"` check misses them and React throws "Objects are not
-  // valid as a React child" when the bare object is rendered. isValidElement
-  // distinguishes a ready element (render as-is) from a component type (render
-  // via <IconProp/>), covering function components, forwardRef and memo alike.
-  const iconEl = IconProp
-    ? (isValidElement(IconProp)
-        ? IconProp
-        : <IconProp className={cn("w-6 h-6", iconClassName)} aria-hidden="true" />)
-    : null;
+  // `icon` may be a component *reference* or an already-built element.
+  // Don't gate on `typeof === "function"`: lucide-react icons (and any
+  // forwardRef/memo component) are objects, not functions, so that check
+  // sent them down the "render as-is" path and React threw
+  // "Objects are not valid as a React child ({$$typeof, render})".
+  // Render already-built elements as-is; instantiate everything else.
+  const iconEl = IconProp && (
+    isValidElement(IconProp)
+      ? IconProp
+      : <IconProp className={cn("w-6 h-6", iconClassName)} aria-hidden="true" />
+  );
 
   return (
     <Card className={cn("mb-6 border-0 bg-gradient-to-r from-white via-slate-50 to-blue-50/70 shadow-[0_20px_60px_rgba(15,23,42,0.08)]", className)}>

@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Phone, PhoneOff, Save, Info, CalendarClock, CalendarDays } from "lucide-react";
+import { Phone, PhoneOff, Save, Info, CalendarClock, CalendarDays, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { scheduleState, getUpcomingWeekend, WEEK_MS } from "@/components/voice/dutyUtils";
+import { cn } from "@/lib/utils";
 
 /** ISO string -> value for an <input type="datetime-local"> (local time). */
 function toLocalInput(iso) {
@@ -147,142 +148,193 @@ export default function DutyStatusCard() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {onDuty ? <Phone className="w-5 h-5 text-green-600" /> : <PhoneOff className="w-5 h-5 text-amber-600" />}
-          Phone Availability
-        </CardTitle>
-        <CardDescription>
-          Choose whether patient calls and texts reach you, or schedule time off so they go to the main office.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {!hasWorkNumber && (
-          <Alert className="bg-amber-50 border-amber-200">
-            <Info className="w-4 h-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              No work number is assigned to your account yet. Ask an administrator to provision one
-              so patients can reach you privately.
-            </AlertDescription>
-          </Alert>
-        )}
+    <div className="space-y-5">
+      {!hasWorkNumber && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <Info className="w-4 h-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            No work number is assigned to your account yet. Ask an administrator to provision one
+            so patients can reach you privately.
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {/* 1. On / Off duty */}
-        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-          <div className="flex-1 pr-3">
-            <Label className="text-base font-semibold flex items-center gap-2">
-              {onDuty ? "On Duty" : "Off Duty"}
-              <Badge className={onDuty ? "bg-green-600" : "bg-amber-600"}>
-                {onDuty ? "Available" : "Unavailable"}
-              </Badge>
-            </Label>
-            <p className="text-sm text-slate-600 mt-1">
-              {onDuty
-                ? "Patient calls ring your phone (caller ID shows your work number) and texts reach your inbox."
-                : "Patient calls hear your off-duty greeting and transfer to the main office; texts get an auto-reply."}
-            </p>
-          </div>
-          <Switch checked={onDuty} onCheckedChange={handleToggle} disabled={mutation.isPending || !hasWorkNumber} />
-        </div>
-
-        {/* Heads-up when a schedule is overriding an on-duty status right now */}
-        {onDuty && savedState === "active" && (
-          <Alert className="bg-amber-50 border-amber-200">
-            <CalendarClock className="w-4 h-4 text-amber-600" />
-            <AlertDescription className="text-amber-800 text-sm">
-              {savedRecurring
-                ? "Scheduled time off is active right now (weekly) — calls and texts are going to the main office."
-                : `Scheduled time off is active right now — calls and texts are going to the main office until ${format(new Date(user.scheduled_off_duty_end), "EEE MMM d, h:mm a")}.`}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* 2. Scheduled time off */}
-        <div className="p-4 border rounded-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 pr-3">
-              <Label className="text-sm font-semibold flex items-center gap-2">
-                <CalendarClock className="w-4 h-4 text-indigo-600" />
-                Schedule time off
-              </Label>
-              <p className="text-xs text-slate-600 mt-1">
-                Be off duty for a set window (like the weekend). You'll be back on duty automatically when it ends.
-              </p>
-            </div>
-            <Switch checked={scheduleOn} onCheckedChange={handleScheduleToggle} disabled={mutation.isPending || !hasWorkNumber} />
-          </div>
-
-          {scheduleOn && (
-            <div className="space-y-3 pt-1">
-              <div>
-                <Button type="button" variant="outline" size="sm" onClick={fillWeekend} className="text-xs">
-                  <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
-                  This weekend
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="off-start" className="text-xs font-medium text-slate-600">Start</Label>
-                  <Input
-                    id="off-start"
-                    type="datetime-local"
-                    value={startInput}
-                    onChange={(e) => setStartInput(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="off-end" className="text-xs font-medium text-slate-600">End</Label>
-                  <Input
-                    id="off-end"
-                    type="datetime-local"
-                    value={endInput}
-                    onChange={(e) => setEndInput(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="off-recurring" className="text-xs text-slate-600">
-                  Repeat every week (e.g. every weekend)
-                </Label>
-                <Switch id="off-recurring" checked={recurring} onCheckedChange={setRecurring} disabled={mutation.isPending} />
-              </div>
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-xs text-slate-500">
-                  {savedState === "active" && (
-                    <Badge className="bg-amber-600">
-                      {savedRecurring ? "Active now · weekly" : `Active now · ends ${format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}`}
-                    </Badge>
-                  )}
-                  {savedState === "upcoming" && (
-                    <Badge className="bg-blue-600">Scheduled · {prettyWindow(user.scheduled_off_duty_start, user.scheduled_off_duty_end)}</Badge>
-                  )}
-                  {savedState === "recurring" && (
-                    <Badge className="bg-indigo-600">
-                      Weekly · {format(new Date(user.scheduled_off_duty_start), "EEE h:mm a")} – {format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}
-                    </Badge>
-                  )}
-                </span>
-                <Button onClick={handleSaveSchedule} disabled={mutation.isPending} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                  <Save className="w-4 h-4 mr-2" />
-                  Save schedule
-                </Button>
-              </div>
-            </div>
+      {/* 1. Availability hero — the primary on/off control, color-coded so the
+          nurse's current reachability is obvious at a glance. */}
+      <Card className="overflow-hidden">
+        <div
+          className={cn(
+            "p-5 sm:p-6 transition-colors",
+            onDuty
+              ? "bg-gradient-to-br from-emerald-50 via-green-50 to-white"
+              : "bg-gradient-to-br from-amber-50 via-orange-50 to-white"
           )}
-        </div>
+        >
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4 min-w-0">
+              <div
+                className={cn(
+                  "flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-white shadow-sm",
+                  onDuty ? "bg-green-600" : "bg-amber-500"
+                )}
+              >
+                {onDuty ? <Phone className="w-7 h-7" /> : <PhoneOff className="w-7 h-7" />}
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-xl font-bold text-slate-900">{onDuty ? "On Duty" : "Off Duty"}</h3>
+                  <Badge className={onDuty ? "bg-green-600" : "bg-amber-500"}>
+                    {onDuty ? "Available" : "Unavailable"}
+                  </Badge>
+                </div>
+                <p className="mt-1.5 text-sm text-slate-600 max-w-md">
+                  {onDuty
+                    ? "Patient calls ring your phone (caller ID shows your work number) and texts reach your inbox."
+                    : "Patient calls hear your off-duty greeting and transfer to the main office; texts get an auto-reply."}
+                </p>
+              </div>
+            </div>
 
-        {/* 3. Off-duty greeting */}
-        <div>
-          <Label htmlFor="off-duty-message" className="text-sm font-medium">
-            Off-duty message
-          </Label>
-          <p className="text-xs text-slate-500 mb-2">
-            Played to callers and sent as a text auto-reply while you're off duty. Avoid clinical details
-            (no diagnoses). Use <code className="bg-slate-100 px-1 rounded">{"{office}"}</code> to insert the main office number.
-          </p>
+            <div className="flex items-center gap-3 self-start sm:self-center flex-shrink-0">
+              <span className={cn("text-sm font-medium", !onDuty ? "text-amber-700" : "text-slate-400")}>Off</span>
+              <Switch
+                checked={onDuty}
+                onCheckedChange={handleToggle}
+                disabled={mutation.isPending || !hasWorkNumber}
+                aria-label="Toggle on duty"
+                className="scale-125 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-amber-400"
+              />
+              <span className={cn("text-sm font-medium", onDuty ? "text-green-700" : "text-slate-400")}>On</span>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Heads-up when a schedule is overriding an on-duty status right now */}
+      {onDuty && savedState === "active" && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <CalendarClock className="w-4 h-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 text-sm">
+            {savedRecurring
+              ? "Scheduled time off is active right now (weekly) — calls and texts are going to the main office."
+              : `Scheduled time off is active right now — calls and texts are going to the main office until ${format(new Date(user.scheduled_off_duty_end), "EEE MMM d, h:mm a")}.`}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* 2. Scheduled time off */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                <CalendarClock className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <CardTitle className="text-base">Schedule time off</CardTitle>
+                <CardDescription className="mt-1">
+                  Be off duty for a set window (like the weekend). You'll be back on duty automatically when it ends.
+                </CardDescription>
+              </div>
+            </div>
+            <Switch
+              checked={scheduleOn}
+              onCheckedChange={handleScheduleToggle}
+              disabled={mutation.isPending || !hasWorkNumber}
+              aria-label="Enable scheduled time off"
+              className="flex-shrink-0 mt-0.5 data-[state=checked]:bg-indigo-600"
+            />
+          </div>
+        </CardHeader>
+
+        {scheduleOn && (
+          <CardContent className="space-y-4 pt-0">
+            <Button type="button" variant="outline" size="sm" onClick={fillWeekend}>
+              <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
+              This weekend
+            </Button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="off-start" className="text-xs font-medium text-slate-600">Start</Label>
+                <Input
+                  id="off-start"
+                  type="datetime-local"
+                  value={startInput}
+                  onChange={(e) => setStartInput(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="off-end" className="text-xs font-medium text-slate-600">End</Label>
+                <Input
+                  id="off-end"
+                  type="datetime-local"
+                  value={endInput}
+                  onChange={(e) => setEndInput(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
+              <div className="min-w-0">
+                <Label htmlFor="off-recurring" className="text-sm font-medium text-slate-700">
+                  Repeat every week
+                </Label>
+                <p className="text-xs text-slate-500">e.g. every weekend</p>
+              </div>
+              <Switch
+                id="off-recurring"
+                checked={recurring}
+                onCheckedChange={setRecurring}
+                disabled={mutation.isPending}
+                className="flex-shrink-0 data-[state=checked]:bg-indigo-600"
+              />
+            </div>
+
+            <div className="flex items-center justify-between flex-wrap gap-3 pt-1">
+              <div>
+                {savedState === "active" && (
+                  <Badge className="bg-amber-600">
+                    {savedRecurring ? "Active now · weekly" : `Active now · ends ${format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}`}
+                  </Badge>
+                )}
+                {savedState === "upcoming" && (
+                  <Badge className="bg-blue-600">Scheduled · {prettyWindow(user.scheduled_off_duty_start, user.scheduled_off_duty_end)}</Badge>
+                )}
+                {savedState === "recurring" && (
+                  <Badge className="bg-indigo-600">
+                    Weekly · {format(new Date(user.scheduled_off_duty_start), "EEE h:mm a")} – {format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}
+                  </Badge>
+                )}
+              </div>
+              <Button onClick={handleSaveSchedule} disabled={mutation.isPending} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+                <Save className="w-4 h-4 mr-2" />
+                Save schedule
+              </Button>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* 3. Off-duty greeting */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-base">Off-duty message</CardTitle>
+              <CardDescription className="mt-1">
+                Played to callers and sent as a text auto-reply while you're off duty. Avoid clinical details
+                (no diagnoses). Use <code className="bg-slate-100 px-1 rounded text-slate-700">{"{office}"}</code> to insert the main office number.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
           <Textarea
             id="off-duty-message"
             value={offDutyMessage}
@@ -291,14 +343,14 @@ export default function DutyStatusCard() {
             placeholder="Hi, you've reached your care team's off-hours line. For assistance please call our main office at {office}."
             className="resize-none"
           />
-          <div className="flex justify-end mt-2">
+          <div className="flex justify-end">
             <Button onClick={handleSaveMessage} disabled={mutation.isPending} variant="outline">
               <Save className="w-4 h-4 mr-2" />
-              Save Message
+              Save message
             </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
