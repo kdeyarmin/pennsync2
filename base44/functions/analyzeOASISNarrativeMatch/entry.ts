@@ -182,7 +182,6 @@ Return JSON with detailed findings:`,
     console.error('OASIS narrative analysis error:', error);
     return Response.json({ 
       error: error.message,
-      stack: error.stack 
     }, { status: 500 });
   }
 });

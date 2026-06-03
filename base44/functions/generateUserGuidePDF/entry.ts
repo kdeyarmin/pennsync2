@@ -690,7 +690,6 @@ Keep language simple and non-technical. Include specific button names and field 
     console.error('Error generating user guide:', error);
     return Response.json({ 
       error: error.message,
-      stack: error.stack 
     }, { status: 500 });
   }
 });

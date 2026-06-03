@@ -466,7 +466,6 @@ Deno.serve(async (req) => {
     console.error('Error generating guide:', error);
     return Response.json({ 
       error: error.message,
-      stack: error.stack 
     }, { status: 500 });
   }
 });

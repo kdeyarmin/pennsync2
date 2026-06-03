@@ -11,6 +11,27 @@ export default defineConfig(({ command }) => ({
   // extensions, error collectors) and leaks PHI. Dev (`command === 'serve'`)
   // keeps logs so local debugging is unaffected.
   esbuild: command === 'build' ? { drop: ['console', 'debugger'] } : {},
+  build: {
+    // Raise the warning threshold slightly — large lazy page chunks are
+    // expected in this app — while we split the heaviest vendor libs below.
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        // Pull the heaviest leaf dependencies into their own cacheable chunks
+        // so they are downloaded once and shared across the routes that use
+        // them, instead of being duplicated into multiple lazy page bundles.
+        // Everything else keeps Vite's default per-dynamic-import splitting.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('pdfjs-dist')) return 'vendor-pdfjs';
+          if (id.includes('jspdf') || id.includes('html2canvas')) return 'vendor-pdf-export';
+          if (id.includes('twilio-video')) return 'vendor-twilio';
+          if (id.includes('recharts') || id.includes('/d3-') || id.includes('victory-vendor')) return 'vendor-charts';
+          if (id.includes('framer-motion')) return 'vendor-motion';
+        },
+      },
+    },
+  },
   plugins: [
     base44({
       // Support for legacy code that imports the base44 SDK with @/integrations, @/entities, etc.
