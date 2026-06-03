@@ -63,7 +63,7 @@ export default function PhoneCenter() {
         ];
 
   const tabTriggerClass =
-    "min-h-[44px] flex-1 px-4 text-sm whitespace-nowrap data-[state=active]:bg-slate-900 data-[state=active]:text-white";
+    "min-h-[44px] px-4 text-sm whitespace-nowrap data-[state=active]:bg-slate-900 data-[state=active]:text-white";
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 pb-24 max-w-6xl mx-auto animate-fade-in">
