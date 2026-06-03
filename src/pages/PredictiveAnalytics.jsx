@@ -80,13 +80,13 @@ export default function PredictiveAnalytics() {
             </SelectContent>
           </Select>
 
-          <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+          <Select value={selectedPatientId || "all"} onValueChange={(v) => setSelectedPatientId(v === "all" ? "" : v)}>
             <SelectTrigger className="w-full sm:w-48 h-11 touch-target">
               <Users className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Select Patient" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={null}>All Patients</SelectItem>
+              <SelectItem value="all">All Patients</SelectItem>
               {patients.map(p => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.first_name} {p.last_name}

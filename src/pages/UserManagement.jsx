@@ -1073,12 +1073,12 @@ iconColor="bg-gradient-to-br from-purple-600 to-indigo-600"
             </div>
             <div>
               <Label htmlFor="staff_type">Staff Type (Optional)</Label>
-              <Select value={setupFormData.staff_type || ""} onValueChange={(staff_type) => setSetupFormData({ ...setupFormData, staff_type: staff_type || "" })}>
+              <Select value={setupFormData.staff_type || "none"} onValueChange={(staff_type) => setSetupFormData({ ...setupFormData, staff_type: staff_type === "none" ? "" : staff_type })}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select staff type" />
                 </SelectTrigger>
                 <SelectContent style={{ zIndex: 9999 }}>
-                  <SelectItem value={null}>None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   <SelectItem value="RN">RN</SelectItem>
                   <SelectItem value="LPN">LPN</SelectItem>
                   <SelectItem value="office_staff">Office Staff</SelectItem>
