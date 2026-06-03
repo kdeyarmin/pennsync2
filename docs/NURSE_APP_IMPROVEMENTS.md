@@ -49,11 +49,15 @@ recommendation carries a `file:line` reference so it can be picked up directly.
    `computeNotDocumented()` phrases. Asserting "X was not documented" as note text fabricates a
    negative. Instead, require the nurse to answer the missing critical element before generation.
 
-5. **Add vital-sign plausibility validation + critical-value escalation.**
-   `src/components/visit/VitalSignsForm.jsx` accepts any number (temp 200°F, HR 999, etc.). Add
-   client-side ranges (temp 95–104°F, HR 40–150, systolic 70–250, O2 70–100) and an escalation
-   path: BP >180/120, O2 <88%, pain 10/10 → alert supervisor/physician instead of silently saving.
-   Gate the "same as last visit" path so vitals must be re-measured.
+5. **Add vital-sign plausibility validation + critical-value escalation.** *(plausibility
+   validation **implemented**; escalation + "same as last visit" gating still recommended.)*
+   `src/components/visit/VitalSignsForm.jsx` previously accepted any number (temp 200°F, HR 999).
+   Each field now carries a deliberately-wide plausible range and shows a non-blocking
+   "please confirm" warning when a value falls outside it — this catches data-entry/unit mistakes
+   (e.g. a Celsius temperature) without blocking genuine abnormal-but-real readings. Still
+   recommended: a critical-value **escalation** path (BP >180/120, O2 <88%, pain 10/10 → alert
+   supervisor/physician instead of silently saving) and gating the "same as last visit" flow so
+   vitals must be re-measured.
 
 6. **Add visit-completion pre-flight checks.** *(result null-check **implemented**; content
    pre-flight still recommended server-side.)*
