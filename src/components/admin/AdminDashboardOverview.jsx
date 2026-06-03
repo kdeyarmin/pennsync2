@@ -118,10 +118,11 @@ export default function AdminDashboardOverview() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Section header — the page-level "Admin Console" header and the tools
+          directory render above this, so keep this a secondary (h2) heading. */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
-        <p className="text-slate-600 mt-1">System overview and administrative controls</p>
+        <h2 className="text-xl font-bold text-slate-900">System Overview</h2>
+        <p className="text-slate-600 mt-1">Live health, key metrics, and recent administrative activity</p>
       </div>
 
       {/* Quick Health Overview */}

@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShieldAlert, Activity, Database, Settings, Zap } from "lucide-react";
+import AdminConsoleDirectory from "@/components/admin/AdminConsoleDirectory";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import UserActivityDashboard from "@/components/admin/UserActivityDashboard";
 import DataQualityDashboard from "@/components/admin/DataQualityDashboard";
@@ -34,12 +35,12 @@ export default function AdminOperations() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-<PageHeader
+      <PageHeader
         icon={Settings}
         iconColor="bg-indigo-600"
         eyebrow="Administration"
-        title="Admin Operations"
-        description="System monitoring, data quality, user activity, and operational oversight"
+        title="Admin Console"
+        description="Your command center — reach every administrative tool, plus system monitoring, data quality, user activity, and settings."
         favoritePage="AdminOperations"
       />
 
@@ -69,7 +70,8 @@ export default function AdminOperations() {
           </TabsList>
         </div>
 
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="space-y-6">
+          <AdminConsoleDirectory />
           <AdminDashboardOverview />
         </TabsContent>
 
