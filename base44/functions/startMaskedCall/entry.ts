@@ -31,6 +31,23 @@ function phoneVariants(value: string): string[] {
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
+/**
+ * Resolve the single 8x8 API secret: prefer the legacy backend env var, then the
+ * secret the super admin saved in-app (IntegrationSecret). Either one configures
+ * the integration, so the Base44 dashboard env is optional.
+ */
+async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
+  const env = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+  if (env && env.trim()) return env.trim();
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
+    const v = rows?.[0]?.api_secret;
+    return v && String(v).trim() ? String(v).trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -62,7 +79,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const apiKey = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+    const apiKey = await resolveEightXEightApiKey(base44);
     const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
     const voiceBase = settings[0]?.eight_x_eight_voice_api_base;
     const voiceSubAccountId = settings[0]?.eight_x_eight_voice_subaccount_id;

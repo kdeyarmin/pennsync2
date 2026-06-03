@@ -878,6 +878,16 @@ export const NAV_MANIFEST = [
     keywords: ["admin", "console", "operations", "manage", "control", "command center", "tools"],
   },
   {
+    page: "SuperAdminConfig",
+    label: "Super Admin",
+    navLabel: "Super Admin",
+    icon: Lock,
+    category: "Administration",
+    adminOnly: true,
+    breadcrumbParent: "AdminOperations",
+    keywords: ["super admin", "8x8", "api secret", "integration", "provisioning", "phone setup", "owner"],
+  },
+  {
     page: "UserManagement",
     label: "Users",
     icon: Users,

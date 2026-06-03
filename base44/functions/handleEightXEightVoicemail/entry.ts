@@ -24,10 +24,27 @@ function timingSafeEqual(a: string, b: string): boolean {
   return out === 0;
 }
 
-async function verifyWebhook(req: Request, raw: string): Promise<boolean> {
-  const secret = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
+/**
+ * Resolve the 8x8 webhook signing secret: dedicated env var first, then the
+ * webhook_secret saved in-app, then the single api_secret as a fallback so one
+ * configured 8x8 secret fully verifies inbound webhooks. Fails closed.
+ */
+async function resolveEightXEightWebhookSecret(base44: any): Promise<string | null> {
+  const env = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
+  if (env && env.trim()) return env.trim();
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
+    const rec = rows?.[0] || {};
+    const v = rec.webhook_secret || rec.api_secret;
+    return v && String(v).trim() ? String(v).trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function verifyWebhook(req: Request, raw: string, secret: string | null): Promise<boolean> {
   if (!secret) {
-    console.error('EIGHT_X_EIGHT_WEBHOOK_SECRET not configured — rejecting webhook');
+    console.error('8x8 webhook secret not configured — rejecting webhook');
     return false;
   }
   for (const h of ['x-8x8-signature', 'x-signature', 'x-hub-signature-256']) {
@@ -44,7 +61,9 @@ async function verifyWebhook(req: Request, raw: string): Promise<boolean> {
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
-    if (!(await verifyWebhook(req, raw))) {
+    const base44 = createClientFromRequest(req);
+    const webhookSecret = await resolveEightXEightWebhookSecret(base44);
+    if (!(await verifyWebhook(req, raw, webhookSecret))) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -57,7 +76,6 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: 'Missing call id or recording URL' });
     }
 
-    const base44 = createClientFromRequest(req);
     const rows = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: providerCallId });
     if (rows.length === 0) {
       return Response.json({ success: false, message: 'CallLog not found' });
