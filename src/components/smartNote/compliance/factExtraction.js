@@ -30,7 +30,7 @@ export function getSentencesContaining(text, pattern) {
   if (!text) return [];
   const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
   return sentences
-    .filter((s) => pattern.test(s))
+    .filter((s) => { pattern.lastIndex = 0; return pattern.test(s); })
     .map((s) => s.trim() + ".")
     .slice(0, 5);
 }

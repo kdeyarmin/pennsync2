@@ -50,3 +50,13 @@ test("getSentencesContaining returns the matching sentence", () => {
   assert.equal(hits.length, 1);
   assert.match(hits[0], /right heel/);
 });
+
+
+test("getSentencesContaining is deterministic with a global regex (no lastIndex carry-over)", () => {
+  const text = "Patient uses a walker. The walker is new. A walker helps mobility. Walker stored at home.";
+  // All four sentences mention a walker; a stateful global regex (advancing
+  // RegExp.lastIndex across .test() calls) would skip some of them.
+  assert.equal(getSentencesContaining(text, /walker/gi).length, 4);
+  const re = /walker/gi;
+  assert.deepEqual(getSentencesContaining(text, re), getSentencesContaining(text, re));
+});
