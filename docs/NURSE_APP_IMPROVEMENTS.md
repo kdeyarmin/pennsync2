@@ -1,0 +1,195 @@
+# Nurse App — Functional Review & Improvement Recommendations
+
+Date: 2026-06-03
+
+## Purpose & scope
+
+PennSync2 is a large home-health & hospice application for nurses (React/Vite + Base44 SDK +
+Supabase): **138 page components, 111 data entities, ~1,027 source files, and 213 files that
+call `InvokeLLM`**. This document is a whole-app functional review with a prioritized list of
+recommendations to improve how the app works for nurses and administrators.
+
+It **consolidates still-open items** from the existing review docs and **adds newly found,
+verified findings**. It does not repeat already-completed work (route consolidation, dark-mode
+fix, navigation manifest, etc.). See the cross-references to:
+`COMPREHENSIVE_APP_REVIEW.md`, `AI_TRUSTWORTHINESS_AUDIT.md`, `OASIS_REVIEW.md`,
+`SMARTNOTE_REVIEW.md`, `UI_UX_REVIEW.md`, `PHASE2_REVIEW.md`, `ROUTE_CONSOLIDATION.md`,
+`SECURITY-RLS-CHECKLIST.md`.
+
+Items marked **[verified]** were confirmed by reading the cited code during this review. Each
+recommendation carries a `file:line` reference so it can be picked up directly.
+
+> Scope note: faxing is intentionally **outbound-only**. Inbound fax reception is explicitly
+> out of scope for this product and is not recommended here.
+
+---
+
+## P0 — Patient safety & clinical correctness (do first)
+
+1. **Fix the readmission-risk `ReferenceError`** **[verified]**.
+   `src/components/patient/HospitalReadmissionRisk.jsx:134` declares `let _comorbidityCount = 0;`
+   but line 149 increments `comorbidityCount` (undefined → `ReferenceError` in strict ES modules).
+   The risk calculation throws whenever a high-risk comorbidity is encountered. One-character fix,
+   high impact.
+
+2. **Stop persisting AI clinical content as "verified" when grounding was skipped** **[verified]**.
+   `src/components/smartNote/ConstrainedNoteReviewer.jsx:112-118`: the offline path returns
+   `{ ok: true, offline: true }` and saves the note as verified with only `offlinePending: true`.
+   A note with hallucinated findings can reach the chart unverified. Save offline notes as
+   **draft — pending grounding**, block chart submission, and re-verify on reconnect.
+
+3. **Remove `functional_baseline` from note carry-forward (Medicare cloning risk)** **[verified]**.
+   `src/components/smartNote/compliance/requiredElements.js:301` includes `functional_baseline`
+   in `CARRY_FORWARD`. Functional status must be re-assessed each visit; pre-filling it from the
+   prior note invites cloned findings. Re-frame all carry-forward fields as
+   "pre-filled — confirm or edit" with explicit nurse confirmation required.
+
+4. **Don't auto-append "was not documented" sentences to generated notes** **[verified]**.
+   `src/components/smartNote/ConstrainedNoteReviewer.jsx:145-146` appends
+   `computeNotDocumented()` phrases. Asserting "X was not documented" as note text fabricates a
+   negative. Instead, require the nurse to answer the missing critical element before generation.
+
+5. **Add vital-sign plausibility validation + critical-value escalation.**
+   `src/components/visit/VitalSignsForm.jsx` accepts any number (temp 200°F, HR 999, etc.). Add
+   client-side ranges (temp 95–104°F, HR 40–150, systolic 70–250, O2 70–100) and an escalation
+   path: BP >180/120, O2 <88%, pain 10/10 → alert supervisor/physician instead of silently saving.
+   Gate the "same as last visit" path so vitals must be re-measured.
+
+6. **Add visit-completion pre-flight checks.**
+   `src/components/visit/VisitCompletionButton.jsx` calls `processCompletedVisit` with no guard
+   that a narrative or vitals exist — AI then generates a note from near-nothing. Require a minimum
+   narrative length + at least BP/HR + homebound answered (home health) before enabling
+   "Complete Visit". Add a null-check on the function result to avoid `undefined.success` crashes.
+
+7. **Make AI-generated clinical content explicitly "verify-before-use."**
+   OASIS suggestions (`oasis/AIGeneratedOASISAssessment.jsx`, where `ai_suggested: true` is set but
+   never surfaced), care plans (`carePlan/AICarePlanGenerator.jsx`), and the LLM drug-interaction
+   analysis (`medication/MedicationInteractionChecker.jsx`) present AI output without a consistent
+   badge or attestation gate. Add a shared "AI-Generated — reviewed by nurse" badge + checkbox,
+   logged to the audit trail. Enforces the unfulfilled policy in `AI_TRUSTWORTHINESS_AUDIT.md`.
+
+8. **Harden medication safety.**
+   `src/components/medication/drugInteractions.js` has only ~17 deterministic pairs and matches
+   drug names by exact substring (typos slip through). Expand to ≥50 high-severity pairs, add
+   fuzzy/RxNorm matching, add a drug–condition contraindication check (NSAID+CKD, beta-blocker+
+   asthma), and add an "AI-assisted — verify against authoritative source" disclaimer on LLM output.
+
+9. **OASIS ↔ care-plan consistency guard.**
+   `oasis/oasisScoringEngine.js` intervention IDs (`fp-1`…) have no backing definitions, and
+   care-plan goals aren't validated against OASIS function scores (a "bedfast" patient can get an
+   "ambulate independently" goal). Add a consistency check and resolve intervention IDs to a real
+   library.
+
+## P1 — Compliance, audit integrity & reliability
+
+10. **Debounce the live compliance checker** **[verified]**.
+    `src/components/compliance/UnifiedComplianceEngine.jsx:58-62` fires an `InvokeLLM` call on every
+    keystroke past 100 chars (deps `[noteContent, autoCheck]`, no debounce). This hammers the LLM
+    API, runs up cost, and flags mid-sentence false positives. Add debounce (~2 s idle) and wrap the
+    five `InvokeLLM` calls (lines 72/121/162/200/269) in try/catch with schema validation.
+
+11. **Offline + versioned compliance rules.**
+    Compliance/audit checks (`compliance/UnifiedComplianceEngine.jsx`, `audit/AIDocumentationAudit.jsx`)
+    are LLM-only and break offline. Add a lightweight client-side rule pass (homebound present?
+    vitals present? abbreviations expanded?) and add `effective_date`/`cms_reference`/version to
+    `MedicareComplianceRule` so each note records which rule version judged it. Add an
+    override/waiver path ("patient refused — documented") so valid exceptions stop re-flagging.
+
+12. **Enforce the state-reportable incident workflow.**
+    `src/components/incident/` collects incidents but doesn't auto-classify state-reportable events
+    or enforce the typical 24-h reporting deadline, and has no status tracking or de-dup. Add
+    auto-classification + deadline banner, post-submission status (pending→in-progress→closed),
+    duplicate detection, draft auto-save, and confirmed alert delivery/acknowledgement.
+
+13. **Close the training-certificate RLS gap.**
+    Per `SECURITY-RLS-CHECKLIST.md §2/§8`, `TrainingCertificate` is still client-writable; set
+    `INTERNAL_FN_SECRET` and route writes only through the `gradeTrainingAttempt` backend function
+    to prevent forged certificates. Complete the deferred IDOR audit on patient-scoped functions
+    (`predictPatientRisks`, `analyzeClinicalRisks`, `generatePatientChartPDF`, `getScopedPatientAlerts`).
+
+14. **Concurrency safety on shared records.**
+    OASIS approval (`oasis/OASISApprovalWorkflow.jsx`) and patient/visit edits use read-modify-write
+    with no optimistic locking, and patient create has no uniqueness guard → lost updates and
+    duplicate patients. Add version/`updated_date` checks and a server-side uniqueness constraint
+    (name+DOB+address). This also backs the existing **DuplicatePatients** page.
+
+15. **Replace toast-only failures with a retry queue.**
+    Fax/SMS/time-off/incident failures surface a single auto-dismissing toast with no client-side
+    retry (e.g. `fax/FaxDashboard.jsx:70`, `messaging/SmsThreadView.jsx:56-63`). Add a persisted
+    "unsent" queue that retries on reconnect, plus **exponential backoff on outbound-fax retries**
+    keyed to the actual `failure_reason` (don't retry "invalid number"; back off "busy").
+
+## P2 — Nurse workflow & operations features
+
+16. **Voicemail transcription + richer duty status.**
+    `voice/CallbackQueue.jsx` plays voicemail audio but offers no transcript; duty status is binary
+    (`voice/DutyStatusCard.jsx`). Add async speech-to-text on voicemails, a multi-state duty
+    dropdown (on-break / in-visit / lunch / off), a callback SLA timer with escalation, and a live
+    8x8 connectivity test (today `admin/eightxeightSetup.js` only displays entered config).
+
+17. **Messaging upgrades.**
+    Add read receipts, group/broadcast SMS (by diagnosis or last-visit age), keyword auto-replies
+    (confirm visit, pain check), extensible merge fields, and "export thread to chart." Fix the
+    silent empty-merge-field bug in `messaging/smsTemplates.js:45` (warn instead of emitting "Hi ,").
+
+18. **Scheduling & time-off visibility.**
+    `scheduling/AIScheduleOptimizer.jsx` collects feedback that is never persisted or used — wire it
+    up, and add soft constraints (nurse/patient preferences, continuity) plus pre-assignment
+    conflict checks against approved time off. In `timeoff/`, surface accrual progress and
+    carryover-expiration warnings (logic already exists in `timeOffUtils.js`), and show coverage
+    impact in the approval queue.
+
+19. **Outbound-fax operational polish.**
+    Keep faxing outbound-only. Improve it with: batch send (one document to multiple referring
+    physicians), delivery-proof detail (sent vs delivered timestamps), an escalation task after the
+    final failed retry instead of a lone toast, and CSV-import validation/de-dup in
+    `fax/FaxAddressBook.jsx` (validate fax-number format, skip-and-continue on bad rows).
+
+20. **Real system telemetry** **[verified: metrics are synthetic]**.
+    `src/components/admin/SystemHealthMonitor.jsx:22-25` generates API response/uptime/error via
+    `Math.random()` (labeled "simulated for demo"). Replace with real backend telemetry and add
+    real-time degradation alerts (email/SMS). Make the user activity log searchable/exportable for
+    HIPAA/SOC2, and add bulk user operations + an active-invitations view to `admin/UserManagement`.
+
+## P3 — Code health & long-term reliability
+
+21. **Add a shared AI-call hook** **[verified: none exists]**.
+    Only `src/hooks/use-mobile.jsx` and `src/components/hooks/useScrollPosition.jsx` exist; 213
+    files call `InvokeLLM` with no shared timeout/retry/error/PHI-logging policy. Introduce
+    `useAICall` (timeout, retry, error surface, schema validation) and adopt it incrementally,
+    starting with the compliance/medication/care-plan call sites above. Add the
+    `useWorkflowExecution` hook already recommended in `COMPREHENSIVE_APP_REVIEW.md`.
+
+22. **Decompose mega-components.**
+    `visit/OASISScrubber.jsx` (4,146 lines), `pages/OASISAnalyzer.jsx` (3,162),
+    `oasis/AutomatedPDGMNavigator.jsx` (2,278), `visit/QuickTemplatesLibrary.jsx` (1,969). At
+    minimum extract pure logic into `.js` modules with unit tests (the pattern already used for
+    `oasisScoringEngine.js`), splitting OASIS upload/extract/analyze/save phases.
+
+23. **Delete SmartNote dead code.**
+    `SMARTNOTE_REVIEW.md` documents ~122 orphan components (with ~72 unused `InvokeLLM` prompts)
+    shipping in the bundle. Remove in one build-verified PR to cut bundle size, lint noise, and
+    onboarding burden.
+
+24. **Raise the testing floor.**
+    Test coverage is ~0.7% of LOC and limited to utilities. Add the three workflow-engine
+    integration tests from `COMPREHENSIVE_APP_REVIEW.md` (no-trigger / partial-failure /
+    dup-prevention) and smoke tests for the core journeys: patient intake, referral→admission,
+    OASIS upload→export, document signing, outbound fax send+retry, training completion.
+
+25. **Pay down lint/typecheck debt and unify severity vocabulary.**
+    `PHASE2_REVIEW.md` reported 631 lint issues; expand `typecheck` scope to `src/lib` + `src/api`
+    and run a full eslint sweep targeting <100 issues. Separately, unify the severity scales that
+    currently diverge across modules (OASIS high/medium/low vs drug critical/major/moderate vs risk
+    Very-High…Low) onto one Critical/High/Medium/Low/None scale to prevent nurse misreads.
+
+---
+
+## Suggested sequencing
+
+- **Sprint 1 (safety):** items 1–4 (small, verified, high-risk), then 5–6.
+- **Sprint 2 (cost/compliance):** items 10, 13, 12.
+- **Then:** work down P1 reliability (11, 14, 15) and pull P2/P3 items by business priority.
+
+The P0 list is deliberately front-loaded with low-effort, high-impact fixes (several are a few
+lines) that reduce real patient-safety and Medicare-compliance exposure.
