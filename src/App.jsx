@@ -107,7 +107,14 @@ const AuthenticatedApp = () => {
             path={`/${name}`}
             element={
               <LayoutWrapper currentPageName={name}>
-                {adminOnly && !isAdmin ? <AdminOnlyFallback /> : <Component />}
+                {/* Per-route boundary: a render error in one page shows a
+                    contained error here while the nav shell stays mounted, and
+                    navigating to another route remounts a fresh boundary (no
+                    full-app reload). The app-level boundary in App() still
+                    catches errors in the layout/providers themselves. */}
+                <ErrorBoundary key={name}>
+                  {adminOnly && !isAdmin ? <AdminOnlyFallback /> : <Component />}
+                </ErrorBoundary>
               </LayoutWrapper>
             }
           />
