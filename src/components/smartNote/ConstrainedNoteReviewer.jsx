@@ -167,6 +167,23 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     }
   };
 
+  // If the note was built offline, its LLM grounding pass was deferred. When the
+  // browser reconnects, run grounding automatically (fulfilling the "will run
+  // when you reconnect" promise shown in the pending banner) and surface the
+  // result. This never blocks the offline save — it upgrades a pending note to
+  // fully verified, or flags any sentences to review before finalizing.
+  useEffect(() => {
+    if (!finalNote || !fixRequired?.offlinePending) return;
+    const onReconnect = async () => {
+      const v = await verifyNote(finalNote);
+      applyVerification(finalNote, v);
+      if (v.ok) toast.success("Reconnected — every value re-verified against your input.");
+      else toast.error("Reconnected — grounding flagged items to review before finalizing.");
+    };
+    window.addEventListener("online", onReconnect);
+    return () => window.removeEventListener("online", onReconnect);
+  }, [finalNote, fixRequired]);
+
   const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
 
   // derived
