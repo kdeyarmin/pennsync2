@@ -63,6 +63,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import { validateReferralFile, getDocumentType } from "../components/referral/referralUploadUtils";
+import { runReferralQuickScan } from "../components/referral/referralExtraction";
 import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
@@ -140,111 +141,11 @@ export default function ReferralIntake() {
         return;
       }
       
-      // Immediately extract data from document with enhanced AI categorization
-      const extracted = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this referral document and extract key information with automatic categorization.
+      // Immediately extract data for instant form pre-population + urgency triage.
+      // Uses the shared quick-scan definition (single source of truth) wrapped in
+      // the standard retry/timeout policy.
+      const extracted = await runReferralQuickScan(base44, { fileUrl: file_url });
 
-Extract and categorize:
-
-1. PATIENT INFORMATION:
-- Patient full name
-- Date of birth
-- Contact information
-- Address
-
-2. REFERRAL DETAILS:
-- Referral source (hospital, physician, facility name)
-- Referral date
-- Referring physician name and contact
-
-3. CLINICAL CATEGORIZATION:
-- Primary diagnosis
-- Secondary diagnoses
-- Category classification (cardiac, respiratory, wound_care, orthopedic, neurological, diabetes, post_surgical, general_medical, hospice, palliative)
-- ICD-10 codes if mentioned
-- Medical history highlights
-
-4. URGENCY ASSESSMENT:
-- Urgency indicators (urgent, high priority, stat, emergency, routine)
-- Clinical urgency factors (recent hospitalization, unstable vitals, critical condition)
-- Administrative urgency (insurance requirements, requested start date)
-- Recommended priority level
-
-5. INITIAL CARE NEEDS:
-- Skilled nursing needs
-- Therapy requirements (PT, OT, ST)
-- Medical equipment needs (DME)
-- Medication management requirements
-- Wound care needs
-- IV therapy requirements
-
-6. SUGGESTED INITIAL TASKS:
-- Critical actions needed immediately (within 24 hours)
-- High priority actions (within 48-72 hours)
-- Important follow-ups (within first week)
-
-Return comprehensive structured data for intelligent form pre-population and care planning.`,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            patient_name: { type: "string" },
-            patient_dob: { type: "string" },
-            patient_phone: { type: "string" },
-            patient_address: { type: "string" },
-            referral_source: { type: "string" },
-            referral_date: { type: "string" },
-            referring_physician: { type: "string" },
-            physician_contact: { type: "string" },
-            primary_diagnosis: { type: "string" },
-            secondary_diagnoses: { type: "array", items: { type: "string" } },
-            category: { 
-              type: "string",
-              enum: ["cardiac", "respiratory", "wound_care", "orthopedic", "neurological", "diabetes", "post_surgical", "general_medical", "hospice", "palliative"]
-            },
-            icd10_codes: { type: "array", items: { type: "string" } },
-            urgency_level: { 
-              type: "string",
-              enum: ["urgent", "high", "normal", "low"]
-            },
-            urgency_factors: { type: "array", items: { type: "string" } },
-            clinical_urgency_score: { type: "number" },
-            administrative_urgency_score: { type: "number" },
-            skilled_nursing_needs: { type: "array", items: { type: "string" } },
-            therapy_requirements: { type: "array", items: { type: "string" } },
-            dme_needs: { type: "array", items: { type: "string" } },
-            medication_management: { type: "boolean" },
-            wound_care_needed: { type: "boolean" },
-            iv_therapy_needed: { type: "boolean" },
-            suggested_initial_tasks: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  task: { type: "string" },
-                  priority: { type: "string" },
-                  timeframe: { type: "string" },
-                  reason: { type: "string" }
-                }
-              }
-            },
-            suggested_care_plans: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  problem: { type: "string" },
-                  goal: { type: "string" },
-                  interventions: { type: "array", items: { type: "string" } },
-                  rationale: { type: "string" }
-                }
-              }
-            },
-            confidence_score: { type: "number" }
-          }
-        }
-      });
-      
       setExtractedFormData(extracted);
       
       // Auto-populate form with comprehensive extracted data
