@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,8 @@ export default function AICarePlanGenerator({
   const [editingPlan, setEditingPlan] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [createdCount, setCreatedCount] = useState(0);
+  // Shared timeout/retry policy for the (longer) care-plan generation call.
+  const { run: runAI } = useAICall({ timeoutMs: 45000, retries: 2 });
 
   const generateCarePlans = async () => {
     if (!diagnosis) {
@@ -74,7 +77,7 @@ export default function AICarePlanGenerator({
       // Get existing care plan problems to avoid duplicates
       const existingProblems = existingCarePlans.map(cp => cp.problem?.toLowerCase()).filter(Boolean);
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await runAI({
         prompt: `You are an expert home health/hospice clinical documentation specialist. Generate comprehensive, Medicare-compliant care plans for this patient.
 
 PATIENT: ${patientName || 'Patient'}

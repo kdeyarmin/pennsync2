@@ -19,17 +19,20 @@ export default function VisitCompletionButton({ visitId, currentStatus, onComple
       // Call the AI processing function
       const result = await processCompletedVisit({ visit_id: visitId });
 
-      if (result.success) {
-        toast.success('Visit completed successfully', {
-          description: `Medicare-compliant narrative generated. ${result.tasks_created} follow-up task${result.tasks_created !== 1 ? 's' : ''} created.`,
-          duration: 5000
-        });
+      // Guard against a null/empty response (e.g. a 5xx or network failure) so we
+      // don't crash on `result.success` and instead surface a clear error.
+      if (!result || !result.success) {
+        throw new Error(result?.error || 'Processing failed — no response from server');
+      }
 
-        if (onCompleted) {
-          onCompleted(result);
-        }
-      } else {
-        throw new Error(result.error || 'Processing failed');
+      const tasksCreated = result.tasks_created ?? 0;
+      toast.success('Visit completed successfully', {
+        description: `Medicare-compliant narrative generated. ${tasksCreated} follow-up task${tasksCreated !== 1 ? 's' : ''} created.`,
+        duration: 5000
+      });
+
+      if (onCompleted) {
+        onCompleted(result);
       }
     } catch (error) {
       console.error('Visit completion error:', error);
