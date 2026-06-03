@@ -92,6 +92,31 @@ export const ROUTES = [
   { name: 'OASISComplianceReview', Component: lazyPage(() => import('@/pages/OASISComplianceReview')) },
   { name: 'OASISDocumentationReview', Component: lazyPage(() => import('@/pages/OASISDocumentationReview')) },
   { name: 'OASISRevenueAnalysis', Component: lazyPage(() => import('@/pages/OASISRevenueAnalysis')) },
+
+  // Feature suites documented in the nav manifest (with breadcrumb parents) but
+  // never routed, so the whole sub-area was unreachable — invisible in the
+  // command palette and 404 if linked. Routed here so each hub's sub-pages work.
+  // OASIS review suite (children of SmartOASISAssessment)
+  { name: 'OASISReview', Component: lazyPage(() => import('@/pages/OASISReview')) },
+  { name: 'OASISClinicalReview', Component: lazyPage(() => import('@/pages/OASISClinicalReview')) },
+  { name: 'OASISAuditDashboard', Component: lazyPage(() => import('@/pages/OASISAuditDashboard')) },
+  { name: 'OASISAnalyticsDashboard', Component: lazyPage(() => import('@/pages/OASISAnalyticsDashboard')) },
+  // Documents, PDF & templates suite (children of DocumentHub)
+  { name: 'DocumentManagement', Component: lazyPage(() => import('@/pages/DocumentManagement')) },
+  { name: 'DocumentIngestion', Component: lazyPage(() => import('@/pages/DocumentIngestion')) },
+  { name: 'DocumentAuditLogs', Component: lazyPage(() => import('@/pages/DocumentAuditLogs')) },
+  { name: 'DischargeSummaries', Component: lazyPage(() => import('@/pages/DischargeSummaries')) },
+  { name: 'PDFTools', Component: lazyPage(() => import('@/pages/PDFTools')) },
+  { name: 'PDFSearch', Component: lazyPage(() => import('@/pages/PDFSearch')) },
+  { name: 'PDFTemplateLibrary', Component: lazyPage(() => import('@/pages/PDFTemplateLibrary')) },
+  { name: 'TemplateLibrary', Component: lazyPage(() => import('@/pages/TemplateLibrary')) },
+  { name: 'TemplateManagement', Component: lazyPage(() => import('@/pages/TemplateManagement')) },
+  // Fax suite (children of SendFax)
+  { name: 'FaxDashboard', Component: lazyPage(() => import('@/pages/FaxDashboard')) },
+  { name: 'FaxLogsDashboard', Component: lazyPage(() => import('@/pages/FaxLogsDashboard')) },
+  { name: 'FaxContacts', Component: lazyPage(() => import('@/pages/FaxContacts')) },
+  { name: 'FaxAddressBook', Component: lazyPage(() => import('@/pages/FaxAddressBook')) },
+  { name: 'FaxAnalytics', Component: lazyPage(() => import('@/pages/FaxAnalytics')) },
 ];
 
 /**

@@ -1423,3 +1423,21 @@ export function buildBreadcrumbs(pageName, navMap = NAV_MAP) {
 export function buildPaletteEntries(manifest, isAdmin) {
   return manifest.filter(e => (!e.adminOnly || isAdmin) && ROUTED_PAGES.has(e.page));
 }
+
+/**
+ * Group heading for a page in the command palette. Sub-pages have
+ * `category: null` (so they stay out of the sidebar); rather than dump them all
+ * under a generic "More", inherit the category of their nearest ancestor in the
+ * breadcrumb chain — so e.g. "OASIS Audit" groups with "OASIS Assessment", and
+ * "Fax Logs" groups under "Communication" with "Fax".
+ */
+export function paletteGroupFor(pageName, navMap = NAV_MAP) {
+  let cursor = navMap[pageName];
+  const visited = new Set();
+  while (cursor && !visited.has(cursor.page)) {
+    if (cursor.category) return cursor.category;
+    visited.add(cursor.page);
+    cursor = cursor.breadcrumbParent ? navMap[cursor.breadcrumbParent] : null;
+  }
+  return "More";
+}

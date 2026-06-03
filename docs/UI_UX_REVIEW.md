@@ -30,6 +30,27 @@ from finding #5:
   yet it still described itself as the source of truth. Deleted; `nav.manifest.js`
   is the sole nav manifest.
 
+### Slice 2 — surfaced three hidden feature suites
+
+A first slice of the finding #4 consolidation. Three "hub + sub-pages" areas were
+documented in the manifest (with breadcrumb parents) and their hubs were routed,
+but the sub-pages themselves had no route — so the whole sub-area was unreachable
+and invisible in the palette. Routed the real pages in each (18 total):
+
+- **OASIS** (under *OASIS Assessment*): `OASISReview`, `OASISClinicalReview`,
+  `OASISAuditDashboard`, `OASISAnalyticsDashboard`.
+- **Documents / PDF / Templates** (under *Documents*): `DocumentManagement`,
+  `DocumentIngestion`, `DocumentAuditLogs`, `DischargeSummaries`, `PDFTools`,
+  `PDFSearch`, `PDFTemplateLibrary`, `TemplateLibrary`, `TemplateManagement`.
+- **Fax** (under *Fax*): `FaxDashboard`, `FaxLogsDashboard`, `FaxContacts`,
+  `FaxAddressBook`, `FaxAnalytics`.
+
+Reachable pages went 59 → 77. Also improved palette grouping: sub-pages
+(`category: null`) used to fall into a generic "More" bucket; `paletteGroupFor()`
+now inherits the nearest ancestor's category, so OASIS sub-pages group with OASIS,
+Fax sub-pages under Communication, document tools under Documentation. The empty
+`PatientTriage` stub is intentionally left unrouted (nothing links to it).
+
 Original review below.
 
 ---
