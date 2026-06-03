@@ -36,7 +36,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
     (node.choices || []).forEach(choice => {
       if (choice.nextNodeId) {
         const next = findNodeById(nodes, choice.nextNodeId);
-        if (next) flattenNodes(next, map);
+        if (next) _flattenNodes(next, map);
       }
     });
     return map;
