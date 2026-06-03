@@ -239,4 +239,43 @@ related correctness bug (S5):
 The remaining items (C2–C7, S1–S4, S6–S7) are left as documented,
 prioritized recommendations because they touch persistence semantics, scoring
 integrity, or large-scale deletion and warrant their own reviewed changes.
+
+---
+
+## Update — full redesign implemented (2026-06-03)
+
+The recommendations above were taken further than a surgical fix: the Smart Note
+flow was re-architected into a **constrained-scribe pipeline** and the same
+guarantees were extended to the Visit Scribe page.
+
+**New deterministic engine** — `src/components/smartNote/compliance/` (pure,
+offline, unit-tested): `requiredElements` (single source of truth for required
+elements per service line × visit type, with severity/CoP/keywords/negatives/
+carry-forward flags), `factExtraction`, `presenceDetection` (+ `computeCarryForward`),
+`normalize`, `valueGuard`, `coverageScore`, `schemas` (zod), `generation`
+(constrained generation + AI grounding). 29 unit tests.
+
+**Status of findings:**
+
+| Finding | Status |
+| --- | --- |
+| C1 — clarification Q&A never rendered | **Fixed** — questions are deterministic gaps; answered/confirmed feed the note |
+| C2 — save-before-review / dead Save button | **Fixed** — review→Save-to-chart; edits re-verify; same Visit updated (no dup) |
+| C4 — fabricated/non-deterministic scores | **Fixed** — reproducible coverage score; real before/after written to `NoteConversion` (same fix applied to `UnifiedDocumentReview`) |
+| C5 — LLM "revenue impact" dollars | **Removed** from the flow |
+| C6 — empty structured `Visit` fields | **Fixed** — `homebound_status_verified` / `homebound_justification` / `skilled_intervention_documented` now populated |
+| C7 — "everything required" asserted by LLM | **Fixed** — deterministic required-elements gate + coverage |
+| Hallucination (core goal) | **Fixed** — LLM is a constrained scribe; value-guard + AI grounding **block** unverified values |
+| S1 — attestation | **N/A** — note is copied into the external EMR; no in-app signing (Save-to-chart only) |
+| S2 — offline | **Partial** — scan/value-guard run offline; grounding deferred to reconnect |
+| Pre-fill from chart | **Added** — stable elements carry forward from the last note for confirmation; visit-specific findings never auto-carried (anti-cloning) |
+| Visit Scribe parity | **Done** — extracted shared `ConstrainedNoteReviewer`; `VisitScribe`/`UnifiedDocumentReview` run the same pipeline |
+
+**Deferred (own focused pass, needs runtime test against the backend):**
+migrate `SmartNoteAssistant`'s Step-2 UI onto the shared `ConstrainedNoteReviewer`
+to remove the last presentation-layer duplication (the engine and LLM calls are
+already shared, so the factual guarantees cannot drift). Also still open: C3
+(delete ~122 orphaned components), S3 (consolidate calls), S6/S7 polish, and
+applying the same engine to `MedicalScribe`/`StructuredNoteDrafter`.
+
 </content>
