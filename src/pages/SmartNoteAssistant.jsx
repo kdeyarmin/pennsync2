@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
-  Mic, Square, HelpCircle
+  Mic, Square, HelpCircle, AlertTriangle, ShieldCheck
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -19,11 +19,17 @@ import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder
 import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
 import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
-import AlertsPanel from "../components/smartNote/AlertsPanel";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
 import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNoteRecorder";
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
+import { normalizeDraft } from "../components/smartNote/compliance/normalize";
+import { getRequiredElements } from "../components/smartNote/compliance/requiredElements";
+import { detectPresence, computeGaps, computeCriticalGaps } from "../components/smartNote/compliance/presenceDetection";
+import { splitSentences } from "../components/smartNote/compliance/factExtraction";
+import { generateConstrainedNote, groundNote } from "../components/smartNote/compliance/generation";
+import { valueGuard } from "../components/smartNote/compliance/valueGuard";
+import { computeCoverageScore, computeDraftPresenceScore, toNoteConversionFields, deriveStructuredVisitFields } from "../components/smartNote/compliance/coverageScore";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
@@ -60,19 +66,19 @@ export default function SmartNoteAssistant() {
   const [visitType, setVisitType] = useState("routine_visit");
   const visitDate = todayEastern();
   const [note, setNote] = useState("");
+  // `analysis` holds the deterministic compliance scan, not an LLM judgement:
+  // { serviceLine, visitType, normalized, required[], presence[], gaps[], draftScore }
   const [analysis, setAnalysis] = useState(null);
-  const [alerts, setAlerts] = useState([]);
-  const [selected, setSelected] = useState(new Set());
   const [answers, setAnswers] = useState({});
+  const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
   const [finalNote, setFinalNote] = useState("");
+  const [fixRequired, setFixRequired] = useState(null);
   const [step, setStep] = useState(1);
-  const [analyzing, setAnalyzing] = useState(false);
   const [building, setBuilding] = useState(false);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
   const [activeTab, setActiveTab] = useState("builder");
   const [noteSections, setNoteSections] = useState(null);
-  const [_copiedSection, setCopiedSection] = useState(null);
   const [hasDraft, setHasDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [signatureImage, setSignatureImage] = useState(null);
@@ -81,13 +87,14 @@ export default function SmartNoteAssistant() {
   const recRef = useRef(null);
   const textareaRef = useRef(null);
   const DRAFT_KEY = "smart_note_draft_v2";
-  const ANALYSIS_KEY = "smart_note_analysis_v1";
+  const ANALYSIS_KEY = "smart_note_analysis_v2";
   const SAVED_PATIENT_KEY = "smart_note_patient_v1";
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const careScope = currentUser?.care_scope || "home_health";
   const VISIT_TYPES = getVisitTypes(careScope);
   const isHospice = careScope === "hospice";
+  const serviceLine = isHospice ? "hospice" : "home_health";
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: async () => {
@@ -145,12 +152,12 @@ export default function SmartNoteAssistant() {
     }
   }, [note, visitType, patientId]);
 
-  // Save analysis state to sessionStorage for persistence
+  // Persist in-progress answers/negatives so a tab switch doesn't lose them
   useEffect(() => {
     if (analysis && step >= 2) {
-      sessionStorage.setItem(ANALYSIS_KEY, JSON.stringify({ analysis, answers, selected: Array.from(selected) }));
+      sessionStorage.setItem(ANALYSIS_KEY, JSON.stringify({ answers, confirmedNegatives: Array.from(confirmedNegatives) }));
     }
-  }, [analysis, answers, selected, step]);
+  }, [analysis, answers, confirmedNegatives, step]);
 
   // Save final note to sessionStorage
   useEffect(() => {
@@ -201,270 +208,223 @@ export default function SmartNoteAssistant() {
   };
   const stopDictation = () => { recRef.current?.stop(); setListening(false); };
 
-  const buildCtx = () => {
-    if (!patient) return "No patient context available.";
-    const meds = patient.current_medications?.map(m => `${m.name} ${m.dosage}`).join(", ") || "None";
-    const diagnoses = [patient.primary_diagnosis, ...(patient.secondary_diagnoses || [])].filter(Boolean).join(", ") || "Not documented";
-    return [
-      `Patient: ${patient.first_name} ${patient.last_name}`,
-      `DOB: ${patient.date_of_birth || "Not on file"}`,
-      `Diagnoses: ${diagnoses}`,
-      `Medications: ${meds}`,
-      `Allergies: ${patient.allergies || "NKDA"}`,
-      `Fall Risk: ${patient.functional_status?.fall_risk || "Not documented"}`,
-      `Ambulation: ${patient.functional_status?.ambulation || "Not documented"}`,
-      `ADL Independence: ${patient.functional_status?.adl_independence || "Not documented"}`,
-      `Cognitive Status: ${patient.functional_status?.cognitive_status || "Not documented"}`,
-      `Care Type: ${patient.care_type || "home_health"}`,
-    ].join(" | ");
+  const setAnswer = (id, value) => setAnswers(prev => ({ ...prev, [id]: value }));
+  const toggleNegative = (id) => setConfirmedNegatives(prev => {
+    const n = new Set(prev);
+    n.has(id) ? n.delete(id) : n.add(id);
+    return n;
+  });
+
+  // ── Step 1 → 2: instant, deterministic compliance scan (no LLM, offline-ok) ──
+  const runComplianceScan = () => {
+    if (!note || note.trim().length < 20) return;
+    const normalized = normalizeDraft(note);
+    const required = getRequiredElements(serviceLine, visitType);
+    const presence = detectPresence(normalized, required);
+    const gaps = computeGaps(presence, required);
+    const draftScore = computeDraftPresenceScore({ requiredElements: required, presenceResults: presence });
+    setAnswers({});
+    setConfirmedNegatives(new Set());
+    setFinalNote("");
+    setFixRequired(null);
+    setNoteSections(null);
+    setAnalysis({ serviceLine, visitType, normalized, required, presence, gaps, draftScore });
+    setStep(2);
   };
 
-  const analyze = async () => {
-    if (!note || note.trim().length < 20) return;
-    setAnalyzing(true);
-    setAnalysis(null);
-    setAlerts([]);
-    setAnswers({});
-    setFinalNote("");
-    const ctx = buildCtx();
-    const visitSpecificMap = isHospice ? {
-       admission: "terminal prognosis (≤6 months), election of hospice benefit, comfort-focused goals, IDG team members, initial symptom assessment, advance directives, patient/family education on hospice philosophy",
-       routine_visit: "symptom management (pain/dyspnea/nausea), comfort measures provided, patient/family emotional support, medication review for comfort, IDG coordination, patient prognosis stability",
-       recertification: "continued terminal prognosis, benefit period continuation, IDG review, goals of care reaffirmed, progress/decline documented, face-to-face encounter (if applicable)",
-       discharge: "reason (goals met / revocation / extended prognosis / transfer), discharge summary, patient/family education, bereavement referral, follow-up plan",
-       prn: "reason for unscheduled visit, symptom crisis assessment, comfort interventions provided, physician notification, patient/family response",
-     } : {
-      admission: "baseline assessment, medication reconciliation, homebound status establishment, physician orders, emergency plan, primary and secondary diagnoses, functional baseline",
-      recertification: "continued homebound status justification, continued skilled need, progress toward goals, updated care plan, discharge planning",
-      discharge: "reason for discharge, goals met/unmet, patient/caregiver education on discharge, instructions given, follow-up plan",
-      routine_visit: "skilled need for this visit, homebound status, patient response to interventions, progress toward care plan goals",
-      prn: "reason for unscheduled visit, assessment findings, interventions, physician notification if applicable",
-    };
-    const visitSpecific = visitSpecificMap[visitType] || (isHospice ? "symptom management, comfort measures, patient/family support" : "skilled need, homebound status, interventions, patient response");
+  // Non-critical required elements the nurse left blank → explicit, approved
+  // "Not documented this visit." lines (deterministic boilerplate, never invented).
+  const computeNotDocumented = () => {
+    if (!analysis) return [];
+    return analysis.gaps
+      .filter(e => e.severity !== "critical" && !answers[e.id]?.trim() && !confirmedNegatives.has(e.id))
+      .map(e => e.notDocumentedPhrase);
+  };
 
+  // Build the corpus the note is allowed to draw from: draft + answers + confirmed
+  // negatives + the approved "not documented" boilerplate (so the fact-check
+  // treats that boilerplate as supported source, not as an invented claim).
+  const buildAllowedInput = () => {
+    if (!analysis) return "";
+    const answerTexts = analysis.required.filter(e => answers[e.id]?.trim()).map(e => answers[e.id].trim());
+    const negPhrases = analysis.required.filter(e => confirmedNegatives.has(e.id) && e.standardNegative).map(e => e.standardNegative.phrase);
+    return [analysis.normalized, ...answerTexts, ...negPhrases, ...computeNotDocumented()].join(" ");
+  };
+
+  // ── Step 2: constrained generation → value-guard + grounding → finalize ──
+  const generateFinalNote = async () => {
+    if (!analysis) return;
+    const { required, presence } = analysis;
+    const criticalUnanswered = computeCriticalGaps(presence, required).filter(e => !answers[e.id]?.trim());
+    if (criticalUnanswered.length) {
+      toast.error(`Required before generating: ${criticalUnanswered.map(e => e.label).join(", ")}`);
+      return;
+    }
+
+    setBuilding(true);
+    setFixRequired(null);
     try {
-      const complianceFramework = isHospice
-        ? "42 CFR Part 418 Hospice CoPs, CMS Hospice Benefit, terminal prognosis documentation, IDG interdisciplinary coordination, comfort-focused goal documentation, symptom management standards, Medicare Hospice Benefit election requirements"
-        : "Medicare 42 CFR Part 484, homebound status justification, skilled need per Medicare coverage guidelines, OASIS data element documentation, vitals with clinical interpretation, patient response to skilled interventions, education with teach-back confirmation, safety and fall risk, functional status, care plan goal progress, pain assessment, medication adherence, state home health survey standards";
+      const draftSentences = splitSentences(analysis.normalized);
+      const answersPayload = required
+        .filter(e => answers[e.id]?.trim())
+        .map(e => ({ label: e.label, text: answers[e.id].trim() }));
+      const confirmedNegativePhrases = required
+        .filter(e => confirmedNegatives.has(e.id) && e.standardNegative)
+        .map(e => e.standardNegative.phrase);
+      const userKey = currentUser?.email || "anon";
 
+      // 1. constrained generation (the only generative LLM call)
+      let generated;
       try {
-      const [doc, cds] = await Promise.all([
-      base44.integrations.Core.InvokeLLM({
-        prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. ONLY analyze Medicare compliance requirements - do NOT flag quality, billing, or clinical issues.
-
-      CRITICAL RULES:
-      1. NEVER invent clinical information not in the note.
-      2. ONLY flag Medicare compliance gaps. Ignore all other issues.
-      3. For EVERY finding, generate the exact sentence/phrase that must be added to the note.
-      4. If you can write the exact sentence from existing note content → needs_clarification: false, provide exact sentence
-      5. If the exact phrase requires nurse input → needs_clarification: true AND provide a template with [bracketed] placeholders
-      6. Do NOT flag something as missing if already documented.
-      7. Apply ONLY ${isHospice ? "hospice" : "home health"} Medicare compliance rules.
-
-      NOTE: ${note}
-      PATIENT: ${ctx}
-      VISIT TYPE: ${visitType}
-      SERVICE LINE: ${isHospice ? "HOSPICE" : "HOME HEALTH"}
-      REQUIRED: ${visitSpecific}
-
-      COMPLIANCE CHECKS (${isHospice ? "Hospice" : "Home Health"}): ${complianceFramework}
-
-      Return JSON:
-      {
-      "overall_score": 0-100, "compliance_score": 0-100, "quality_score": 0-100,
-      "summary": "string", "strengths": ["string"],
-      "findings": [{
-      "id": "string",
-      "category": "compliance",
-      "severity": "critical|high|medium|low",
-      "issue": "what Medicare compliance rule is missing",
-      "needs_clarification": true|false,
-      "suggestion": "exact sentence/phrase to add to note - must be verbatim text to insert (use [placeholder] if nurse must fill in)",
-      "question": "specific question for nurse if needs_clarification=true (empty if not needed)",
-      "rationale": "why this is required by Medicare",
-      "revenue_impact": "payment impact if missing"
-      }],
-      "enhanced_note": "formalized version of ONLY what is in the note"
-      }`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            overall_score: { type: "number" }, compliance_score: { type: "number" }, quality_score: { type: "number" },
-            summary: { type: "string" }, strengths: { type: "array", items: { type: "string" } },
-            findings: { type: "array", items: { type: "object", properties: {
-              id: { type: "string" }, category: { type: "string" }, severity: { type: "string" },
-              issue: { type: "string" }, needs_clarification: { type: "boolean" },
-              suggestion: { type: "string" }, question: { type: "string" },
-              rationale: { type: "string" }, revenue_impact: { type: "string" }
-            }}},
-            enhanced_note: { type: "string" }
-          }
-        }
-      }),
-          base44.integrations.Core.InvokeLLM({
-            prompt: `Home health clinical decision support. Only flag risks genuinely evidenced by the note.
-NOTE: ${note}
-PATIENT: ${ctx}
-Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|safety|followup|cardiovascular|infection|cognitive", "urgency": "immediate|soon|monitor", "title": "string", "finding": "exact text from note", "recommended_actions": ["string"], "notify_physician": true|false }] }`,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                clinical_alerts: { type: "array", items: { type: "object", properties: {
-                  risk_type: { type: "string" }, urgency: { type: "string" }, title: { type: "string" },
-                  finding: { type: "string" }, recommended_actions: { type: "array", items: { type: "string" } },
-                  notify_physician: { type: "boolean" }
-                }}}
-              }
-            }
-          })
-        ]);
-
-        setAnalysis(doc);
-        setAlerts(cds?.clinical_alerts || []);
-        const autoSelect = new Set((doc.findings || []).filter(f => !f.needs_clarification).map(f => f.id));
-        setSelected(autoSelect);
-        setStep(2);
-        
-        // Auto-build if no clarifications needed (critical findings are shown as warnings but don't block generation)
-        if ((doc.findings || []).filter(f => f.needs_clarification).length === 0) {
-          setTimeout(() => autoBuild(doc, autoSelect), 800);
-        }
-      } catch (promiseErr) {
-        console.error('LLM analysis error:', promiseErr);
-        const errorMsg = promiseErr?.status === 402 || promiseErr?.data?.extra_data?.reason === 'integration_credits_limit_reached'
-          ? "Monthly integration limit reached. Please upgrade your plan to continue."
-          : "Analysis failed. Please try again.";
-        toast.error(errorMsg);
-        setStep(1);
-        setAnalyzing(false);
+        const res = await generateConstrainedNote(
+          { draftSentences, answers: answersPayload, confirmedNegatives: confirmedNegativePhrases },
+          { userKey }
+        );
+        generated = res.note.trim();
+      } catch (genErr) {
+        console.error("Generation error:", genErr);
+        const credits = genErr?.status === 402 || genErr?.data?.extra_data?.reason === 'integration_credits_limit_reached';
+        toast.error(credits ? "Monthly integration limit reached. Please upgrade your plan to continue." : "Note generation failed. Please try again.");
+        setBuilding(false);
         return;
       }
-    } catch {
-      toast.error("Analysis failed. Please try again.");
-      setStep(1);
+
+      // 2. deterministically append "Not documented this visit." for non-critical,
+      //    unanswered, non-confirmed gaps (these are never produced by the LLM).
+      const notDocumented = computeNotDocumented();
+      const finalText = notDocumented.length ? `${generated}\n\n${notDocumented.join(" ")}` : generated;
+
+      // 3. fact-check the GENERATED prose against the nurse's own material.
+      //    Deterministic value-guard runs always (offline too); AI grounding when online.
+      const allowedInput = buildAllowedInput();
+      const vg = valueGuard(generated, allowedInput);
+      if (!vg.ok) {
+        setFinalNote(finalText);
+        setNoteSections(parseNoteSections(finalText));
+        setFixRequired({ values: vg.unverified, sentences: [], offlinePending: false });
+        setBuilding(false);
+        return;
+      }
+
+      if (navigator.onLine) {
+        const grounding = await groundNote(generated, allowedInput, { userKey });
+        if (!grounding.ok) {
+          setFinalNote(finalText);
+          setNoteSections(parseNoteSections(finalText));
+          setFixRequired({ values: [], sentences: grounding.unsupported || [], groundingError: grounding.error, offlinePending: false });
+          setBuilding(false);
+          return;
+        }
+        await finalizeNote(finalText);
+      } else {
+        // Offline: value-guard passed; defer AI grounding to reconnect but keep the
+        // note usable in the field (finalizeNote queues it for sync).
+        await finalizeNote(finalText);
+        setFixRequired({ offlinePending: true, values: [], sentences: [] });
+      }
+    } catch (err) {
+      console.error("generateFinalNote error:", err);
+      toast.error("Something went wrong building the note.");
     } finally {
-      setAnalyzing(false);
+      setBuilding(false);
     }
   };
 
-  const autoBuild = async (analysisData, selectedSet) => {
+  // Re-run the fact-check after the nurse edits the note to remove flagged content
+  const recheckNote = async () => {
+    if (!finalNote.trim() || !analysis) return;
     setBuilding(true);
     try {
-      const selectedFindings = (analysisData.findings || []).filter(f => selectedSet.has(f.id));
-      const baseNote = analysisData.enhanced_note || "";
-      const additions = selectedFindings.filter(f => f.suggestion).map(f => f.suggestion).join(" ");
-      let result = baseNote;
-      if (additions) {
-        result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Produce a final Medicare-compliant nursing note.
-BASE NOTE (from nurse's documentation): ${baseNote}
-APPROVED ADDITIONS (selected by nurse): ${additions}
-RULES: Only use source material above. No invented clinical info. Past-tense clinical narrative. Logical flow: assessment → interventions → patient response → education → plan.
-Return ONLY the final note text.`
-        });
-        if (typeof result !== "string") result = baseNote + " " + additions;
+      const allowedInput = buildAllowedInput();
+      const vg = valueGuard(finalNote, allowedInput);
+      if (!vg.ok) {
+        setFixRequired({ values: vg.unverified, sentences: [], offlinePending: false });
+        setBuilding(false);
+        return;
       }
-      setFinalNote(result);
-      setNoteSections(parseNoteSections(result));
-      setStep(2);
-      if (patientId && currentUser?.email) {
-        const noteText = typeof result === "string" ? result : JSON.stringify(result);
-        
-        if (navigator.onLine) {
-            const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
-            
-            // Update patient chart with enhanced notes
-            const currentPatient = await base44.entities.Patient.get(patientId);
-            const enhancedHistory = currentPatient.enhanced_notes_history || [];
-            enhancedHistory.push({
-              date: visitDate,
-              visit_type: visitType,
-              note: noteText,
-              compliance_score: analysisData.compliance_score,
-              created_by: currentUser.email,
-              created_at: new Date().toISOString()
-            });
-            
-            await Promise.all([
-              base44.entities.Patient.update(patientId, {
-                enhanced_notes_history: enhancedHistory,
-                clinical_notes: noteText
-              }),
-              base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: noteText.length, quality_score: analysisData.overall_score, rough_note_compliance: Math.max(0, analysisData.compliance_score - 20), enhanced_note_compliance: analysisData.compliance_score, compliance_improvement: 20 }),
-              base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysisData.compliance_score, status: analysisData.compliance_score >= 90 ? "passed" : analysisData.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
-            ]);
-            // Auto-generate follow-up tasks from the finalized note
-            generateTasksFromNote(noteText, visit.id);
-            // Auto-analyze supply usage from visit notes
-            analyzeSupplyUsage(noteText, visit.id);
-        } else {
-            const { addToSyncQueue } = await import('@/lib/indexedDB');
-            await addToSyncQueue('CREATE_VISIT', { patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
-            toast.success("Saved offline. Will sync when reconnected.");
+      if (navigator.onLine) {
+        const grounding = await groundNote(finalNote, allowedInput, { userKey: currentUser?.email || "anon" });
+        if (!grounding.ok) {
+          setFixRequired({ values: [], sentences: grounding.unsupported || [], groundingError: grounding.error, offlinePending: false });
+          setBuilding(false);
+          return;
         }
-        logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysisData.overall_score });
+        await finalizeNote(finalNote);
+      } else {
+        await finalizeNote(finalNote);
+        setFixRequired({ offlinePending: true, values: [], sentences: [] });
       }
-    } catch (err) {
-      console.error("Auto-build error:", err);
     } finally {
       setBuilding(false);
+    }
+  };
+
+  // Persist the finalized note with a real, deterministic coverage score
+  const finalizeNote = async (finalText) => {
+    setFinalNote(finalText);
+    setNoteSections(parseNoteSections(finalText));
+    setFixRequired(null);
+    if (!analysis) return;
+    const { required, presence } = analysis;
+    const answeredIds = required.filter(e => answers[e.id]?.trim()).map(e => e.id);
+    const confirmedNegativeIds = Array.from(confirmedNegatives);
+    const coverageScore = computeCoverageScore({ requiredElements: required, presenceResults: presence, answeredIds, confirmedNegativeIds });
+
+    if (!patientId || !currentUser?.email) return;
+    try {
+      if (navigator.onLine) {
+        const structured = deriveStructuredVisitFields(presence, { answeredIds, confirmedNegativeIds, textById: answers });
+        const visit = await base44.entities.Visit.create({
+          patient_id: patientId, visit_date: visitDate, visit_type: visitType,
+          status: "completed", nurse_notes: finalText, raw_transcription: note,
+          compliance_score: coverageScore, ...structured,
+        });
+
+        const currentPatient = await base44.entities.Patient.get(patientId);
+        const enhancedHistory = currentPatient.enhanced_notes_history || [];
+        enhancedHistory.push({
+          date: visitDate, visit_type: visitType, note: finalText,
+          compliance_score: coverageScore, created_by: currentUser.email,
+          created_at: new Date().toISOString(),
+        });
+
+        await Promise.all([
+          base44.entities.Patient.update(patientId, { enhanced_notes_history: enhancedHistory, clinical_notes: finalText }),
+          base44.entities.NoteConversion.create(toNoteConversionFields({
+            coverageScore, draftPresenceScore: analysis.draftScore,
+            roughLen: note.length, enhancedLen: finalText.length,
+            visitType, diagnosis: patient?.primary_diagnosis || "",
+            nurseEmail: currentUser.email, patientId,
+          })),
+          base44.entities.ComplianceAudit.create({
+            visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId,
+            audit_date: new Date().toISOString(), compliance_score: coverageScore,
+            status: coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical",
+            audit_type: "automated",
+          }),
+        ]);
+        generateTasksFromNote(finalText, visit.id);
+        analyzeSupplyUsage(finalText, visit.id);
+      } else {
+        const { addToSyncQueue } = await import('@/lib/indexedDB');
+        await addToSyncQueue('CREATE_VISIT', { patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore });
+        toast.success("Saved offline. Will sync when reconnected.");
+      }
+      logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
+    } catch (err) {
+      console.error("Persist error:", err);
+      toast.error("Note generated, but saving to the chart failed.");
     }
   };
 
   const analyzeSupplyUsage = async (noteText, visitId) => {
     if (!noteText || !patientId) return;
     try {
-      await analyzeVisitForSupplyUsage({
-        visitId,
-        visitNotes: noteText,
-        patientId
-      });
+      await analyzeVisitForSupplyUsage({ visitId, visitNotes: noteText, patientId });
     } catch (err) {
       console.error("Supply analysis failed:", err);
     }
   };
-
-  const setAnswer = (id, value) => setAnswers(prev => ({ ...prev, [id]: value }));
-
-  const proceedToBuild = () => {
-    if (analysis) {
-      const updatedFindings = (analysis.findings || []).map(f => {
-        if (f.needs_clarification && answers[f.id]?.trim()) {
-          return { ...f, needs_clarification: false, suggestion: answers[f.id].trim() };
-        }
-        return f;
-      });
-      setAnalysis({ ...analysis, findings: updatedFindings });
-      // Only merge findings that are complete: concrete suggestions or answered
-      // clarifications. Findings still needing clarification are skipped so their
-      // [bracketed placeholder] text can never reach the final note.
-      const selectedSet = new Set(
-        updatedFindings.filter(f => f.suggestion && !f.needs_clarification).map(f => f.id)
-      );
-      setSelected(selectedSet);
-      autoBuild({ ...analysis, findings: updatedFindings }, selectedSet);
-    }
-  };
-
-  const _selectBySeverity = (severity) => {
-    if (!analysis) return;
-    const filtered = (analysis.findings || []).filter(f => f.severity === severity).map(f => f.id);
-    setSelected(new Set([...selected, ...filtered]));
-  };
-
-  const calculateTotalRevenueImpact = () => {
-    if (!analysis) return 0;
-    const selected_findings = (analysis.findings || []).filter(f => selected.has(f.id));
-    const impacts = selected_findings
-      .map(f => {
-        const match = f.revenue_impact?.match(/\$?([\d,]+)/);
-        return match ? parseInt(match[1].replace(/,/g, '')) : 0;
-      })
-      .reduce((a, b) => a + b, 0);
-    return impacts;
-  };
-
-
 
   const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
 
@@ -490,9 +450,9 @@ Return ONLY the final note text.`
   };
 
   const reset = () => {
-    setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set());
-    setAnswers({}); setFinalNote(""); setStep(1); setNoteSections(null); setDraftRestored(false);
-    setSignatureImage(null); setFollowUpTasks([]);
+    setNote(""); setAnalysis(null); setAnswers({}); setConfirmedNegatives(new Set());
+    setFinalNote(""); setFixRequired(null); setStep(1); setNoteSections(null);
+    setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
     sessionStorage.removeItem(DRAFT_KEY);
     sessionStorage.removeItem(ANALYSIS_KEY);
     sessionStorage.removeItem("smart_note_final_v1");
@@ -518,22 +478,28 @@ Return ONLY the final note text.`
     return secs.length > 1 ? secs : null;
   };
 
-  const _copySection = async (key, text) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedSection(key);
-    setTimeout(() => setCopiedSection(null), 2000);
-  };
-
-  const toggle = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-
-  const _urgentAlerts = alerts.filter(a => a.urgency === "immediate");
-  const _criticalFindings = analysis?.findings?.filter(f => f.severity === "critical") || [];
-  const needsClarificationFindings = analysis?.findings?.filter(f => f.needs_clarification) || [];
-  const answeredCount = needsClarificationFindings.filter(f => answers[f.id]?.trim()).length;
-  const _complianceFindings = analysis?.findings?.filter(f => f.category === "compliance") || [];
-  const _qualityFindings = analysis?.findings?.filter(f => f.category === "quality") || [];
-  const _totalRevenueImpact = calculateTotalRevenueImpact();
-  const scoreColor = !analysis ? "text-slate-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
+  // ── derived view state ──
+  const gaps = analysis?.gaps || [];
+  const criticalUnanswered = analysis
+    ? computeCriticalGaps(analysis.presence, analysis.required).filter(e => !answers[e.id]?.trim())
+    : [];
+  const answeredOrConfirmed = (id) => !!answers[id]?.trim() || confirmedNegatives.has(id);
+  const answeredCount = gaps.filter(g => answeredOrConfirmed(g.id)).length;
+  const documentedCount = analysis
+    ? analysis.required.filter(e => {
+        const p = analysis.presence.find(r => r.id === e.id);
+        return (p && p.present) || answeredOrConfirmed(e.id);
+      }).length
+    : 0;
+  const liveCoverage = analysis
+    ? computeCoverageScore({
+        requiredElements: analysis.required,
+        presenceResults: analysis.presence,
+        answeredIds: analysis.required.filter(e => answers[e.id]?.trim()).map(e => e.id),
+        confirmedNegativeIds: Array.from(confirmedNegatives),
+      })
+    : 0;
+  const coverageTone = liveCoverage >= 90 ? "green" : liveCoverage >= 70 ? "orange" : "red";
   const ready = note.trim().length >= 20;
 
   return (
@@ -617,10 +583,10 @@ Return ONLY the final note text.`
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Patient</label>
                     <span className="text-xs text-slate-400 font-normal normal-case ml-1">optional</span>
                   </div>
-                  <SearchablePatientSelect 
-                    patients={patients} 
-                    value={patientId} 
-                    onValueChange={setPatientId} 
+                  <SearchablePatientSelect
+                    patients={patients}
+                    value={patientId}
+                    onValueChange={setPatientId}
                     className="bg-slate-50 border-slate-200 h-12 sm:h-11 text-sm rounded-xl"
                   />
                 </div>
@@ -678,8 +644,8 @@ Return ONLY the final note text.`
                 </div>
                 {/* Enhanced Audio Recorder */}
                 <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex flex-wrap gap-2 items-center">
-                  <Button 
-                    variant={listening ? "destructive" : "default"} 
+                  <Button
+                    variant={listening ? "destructive" : "default"}
                     className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                     onClick={listening ? stopDictation : startDictation}
                   >
@@ -689,9 +655,9 @@ Return ONLY the final note text.`
                     onTranscribed={(transcribed) => setNote(prev => prev ? prev + " " + transcribed : transcribed)}
                     disabled={false}
                   />
-                  <SOAPAudioRecorder 
-                    onSOAPGenerated={(soapText) => setNote(prev => prev ? prev + "\n\n" + soapText : soapText)} 
-                    disabled={false} 
+                  <SOAPAudioRecorder
+                    onSOAPGenerated={(soapText) => setNote(prev => prev ? prev + "\n\n" + soapText : soapText)}
+                    disabled={false}
                   />
                 </div>
                 <textarea ref={textareaRef} value={note} onChange={e => setNote(e.target.value)}
@@ -702,16 +668,8 @@ Return ONLY the final note text.`
                   <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-slate-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
-                  <Button onClick={analyze} disabled={!ready || analyzing} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
-                    {analyzing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Analyzing…
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" /> Analyze & Check Compliance <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
+                  <Button onClick={runComplianceScan} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
+                    <Sparkles className="w-4 h-4" /> Check Compliance <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
@@ -721,181 +679,164 @@ Return ONLY the final note text.`
             </div>
           )}
 
-          {/* STEP 2: GENERATE & REVIEW */}
+          {/* STEP 2: QUESTIONS / GENERATE / REVIEW */}
           {step === 2 && (
             <div className="space-y-4">
-              {analyzing ? (
+              {building ? (
                 <div className="bg-white border border-slate-200 rounded-xl p-10 text-center shadow-sm">
                   <Loader2 className="w-10 h-10 text-indigo-500 mx-auto animate-spin mb-3" />
-                  <p className="font-semibold text-slate-800">Performing compliance check…</p>
-                  <p className="text-sm text-slate-400 mt-1">Checking Medicare, clinical, and state standards</p>
+                  <p className="font-semibold text-slate-800">Building your note…</p>
+                  <p className="text-sm text-slate-400 mt-1">Re-voicing your words and verifying every detail against what you wrote</p>
                 </div>
-              ) : building ? (
-                <div className="bg-white border border-slate-200 rounded-xl p-10 text-center shadow-sm">
-                  <Loader2 className="w-10 h-10 text-indigo-500 mx-auto animate-spin mb-3" />
-                  <p className="font-semibold text-slate-800">Building your final note…</p>
-                  <p className="text-sm text-slate-400 mt-1">Incorporating approved suggestions</p>
-                </div>
-              ) : analysis && (
+              ) : (
                 <>
-                  <div className={`rounded-xl border-2 p-4 ${analysis.overall_score >= 80 ? "border-green-300 bg-green-50" : analysis.overall_score >= 60 ? "border-orange-300 bg-orange-50" : "border-red-300 bg-red-50"}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-700">Initial Compliance Score</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{analysis.summary}</p>
-                      </div>
-                      <span className={`text-4xl font-bold ${scoreColor}`}>{analysis.overall_score}%</span>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="flex-1 bg-white rounded-lg p-2 text-center">
-                        <p className="text-xs text-slate-400">Medicare</p>
-                        <p className="text-lg font-bold text-orange-600">{analysis.compliance_score}%</p>
-                      </div>
-                      <div className="flex-1 bg-white rounded-lg p-2 text-center">
-                        <p className="text-xs text-slate-400">Clinical Quality</p>
-                        <p className="text-lg font-bold text-blue-600">{analysis.quality_score}%</p>
-                      </div>
-                    </div>
-                    {analysis.strengths?.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1 pt-3 border-t border-current/10">
-                        {analysis.strengths.slice(0, 5).map((s, i) => <span key={i} className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">✓ {s}</span>)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Clarifying questions the note needs — required Medicare elements
-                      missing from the draft that only the nurse can supply */}
-                  {needsClarificationFindings.length > 0 && (
-                    <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                          <HelpCircle className="w-4 h-4 text-amber-500" /> Questions to Complete Your Note
-                        </h3>
-                        <span className="text-xs text-slate-500 shrink-0">{answeredCount}/{needsClarificationFindings.length} answered</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mb-3">
-                        These details are required for Medicare compliance but weren't in your draft. Answer what applies — anything left blank is skipped, never inserted as a placeholder.
-                      </p>
-                      <div className="space-y-3">
-                        {needsClarificationFindings.map(f => (
-                          <div key={f.id} className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
-                            <div className="flex items-start gap-2">
-                              <Badge className={`shrink-0 text-xs ${f.severity === 'critical' ? 'bg-red-100 text-red-800' : f.severity === 'high' ? 'bg-orange-100 text-orange-800' : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
-                                {f.severity}
-                              </Badge>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-900">{f.question || f.issue}</p>
-                                {f.rationale && <p className="text-xs text-slate-500 mt-0.5">{f.rationale}</p>}
-                              </div>
-                            </div>
-                            <textarea
-                              value={answers[f.id] || ""}
-                              onChange={e => setAnswer(f.id, e.target.value)}
-                              placeholder="Type your answer — it will be written into the note in compliant language…"
-                              className="mt-2 w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none resize-none min-h-[60px] leading-relaxed"
-                            />
+                  {analysis && !finalNote && (
+                    <>
+                      {/* Coverage meter (deterministic, reproducible) */}
+                      <div className={`rounded-xl border-2 p-4 ${coverageTone === "green" ? "border-green-300 bg-green-50" : coverageTone === "orange" ? "border-orange-300 bg-orange-50" : "border-red-300 bg-red-50"}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-700">Compliance Coverage</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{documentedCount} of {analysis.required.length} required elements documented</p>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Medicare Compliance Suggestions */}
-                  {analysis?.findings?.filter(f => f.category === 'compliance' && f.suggestion && !f.needs_clarification).length > 0 && (
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="font-semibold text-slate-900">Medicare Compliance Additions</h3>
-                          <p className="text-xs text-slate-500 mt-0.5">Check items to add to your final note</p>
+                          <span className={`text-4xl font-bold ${coverageTone === "green" ? "text-green-600" : coverageTone === "orange" ? "text-orange-500" : "text-red-600"}`}>{liveCoverage}%</span>
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set(analysis.findings.filter(f => f.category === 'compliance' && f.suggestion && !f.needs_clarification).map(f => f.id)))}>Select All</Button>
-                          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set())}>Clear</Button>
+                        <div className="h-2 bg-white rounded-full overflow-hidden">
+                          <div className={`h-full transition-all ${coverageTone === "green" ? "bg-green-500" : coverageTone === "orange" ? "bg-orange-400" : "bg-red-400"}`} style={{ width: `${liveCoverage}%` }} />
                         </div>
                       </div>
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {analysis.findings.filter(f => f.category === 'compliance' && f.suggestion && !f.needs_clarification).map(f => (
-                          <div
-                            key={f.id}
-                            role="checkbox"
-                            aria-checked={selected.has(f.id)}
-                            tabIndex={0}
-                            className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer"
-                            onClick={() => toggle(f.id)}
-                            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(f.id); } }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selected.has(f.id)}
-                              readOnly
-                              tabIndex={-1}
-                              aria-hidden="true"
-                              className="w-5 h-5 mt-0.5 text-indigo-600 rounded pointer-events-none"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900">{f.issue}</p>
-                              <div className="mt-2 p-2 bg-white border border-indigo-200 rounded text-sm text-slate-700 font-mono whitespace-pre-wrap">{f.suggestion}</div>
-                              {f.revenue_impact && <p className="text-xs text-green-600 mt-1.5 font-semibold">{f.revenue_impact}</p>}
-                            </div>
-                            <Badge className={`shrink-0 text-xs ${f.severity === 'critical' ? 'bg-red-100 text-red-800' : f.severity === 'high' ? 'bg-orange-100 text-orange-800' : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
-                              {f.severity}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
-                  <div className="flex gap-3">
-                    <Button onClick={proceedToBuild} disabled={needsClarificationFindings.length === 0} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
-                      {needsClarificationFindings.length === 0 ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" /> Done — Note Generated
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
-                        </>
+                      {/* Critical gate */}
+                      {criticalUnanswered.length > 0 && (
+                        <div className="flex items-start gap-2 bg-red-50 border border-red-300 rounded-xl px-4 py-3">
+                          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                          <p className="text-sm text-red-800">
+                            <strong>Required before generating:</strong> {criticalUnanswered.map(e => e.label).join(", ")}. Medicare can deny the visit without these.
+                          </p>
+                        </div>
                       )}
-                    </Button>
-                    <Button variant="outline" onClick={() => setStep(1)} className="h-12 px-4">← Back</Button>
-                  </div>
+
+                      {/* Questions derived from deterministic gaps */}
+                      {gaps.length > 0 && (
+                        <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-sm">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                              <HelpCircle className="w-4 h-4 text-amber-500" /> Questions to Complete Your Note
+                            </h3>
+                            <span className="text-xs text-slate-500 shrink-0">{answeredCount}/{gaps.length} addressed</span>
+                          </div>
+                          <p className="text-xs text-slate-500 mb-3">
+                            These required elements weren't in your draft. Answer what applies. Non-critical items left blank become an explicit "Not documented this visit." — never invented.
+                          </p>
+                          <div className="space-y-3">
+                            {gaps.map(g => {
+                              const negConfirmed = confirmedNegatives.has(g.id);
+                              return (
+                                <div key={g.id} className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
+                                  <div className="flex items-start gap-2">
+                                    <Badge className={`shrink-0 text-xs ${g.severity === 'critical' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+                                      {g.severity === 'critical' ? 'required' : 'optional'}
+                                    </Badge>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-slate-900">{g.question}</p>
+                                      <p className="text-xs text-slate-400 mt-0.5">{g.copReference}</p>
+                                    </div>
+                                  </div>
+                                  {g.standardNegative && (
+                                    <label className="mt-2 flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                      <input type="checkbox" checked={negConfirmed} onChange={() => toggleNegative(g.id)} className="w-4 h-4 text-indigo-600 rounded" />
+                                      <span>Confirm: “{g.standardNegative.phrase}”</span>
+                                    </label>
+                                  )}
+                                  {!negConfirmed && (
+                                    <textarea
+                                      value={answers[g.id] || ""}
+                                      onChange={e => setAnswer(g.id, e.target.value)}
+                                      placeholder="Type your answer — written into the note in compliant language…"
+                                      className="mt-2 w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none resize-none min-h-[56px] leading-relaxed"
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-3">
+                        <Button onClick={generateFinalNote} disabled={criticalUnanswered.length > 0} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
+                          <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" onClick={() => setStep(1)} className="h-12 px-4">← Back</Button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* FINAL NOTE + FACT-CHECK RESULT */}
+                  {finalNote && (
+                    <>
+                      {fixRequired && fixRequired.offlinePending ? (
+                        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 space-y-1">
+                          <h3 className="font-semibold text-amber-800 flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Saved offline — verification pending</h3>
+                          <p className="text-sm text-amber-800">Every value was checked against your input. The AI grounding pass will run when you reconnect. Review carefully before pasting into the EMR.</p>
+                        </div>
+                      ) : fixRequired ? (
+                        <div className="rounded-xl border-2 border-red-300 bg-red-50 p-4 space-y-2">
+                          <h3 className="font-semibold text-red-800 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Fix required before finalizing</h3>
+                          {fixRequired.values?.length > 0 && (
+                            <p className="text-sm text-red-800">Values not found in your input: <strong>{fixRequired.values.map(v => v.value).join(", ")}</strong></p>
+                          )}
+                          {fixRequired.sentences?.length > 0 && (
+                            <div className="text-sm text-red-800">
+                              Sentences not supported by your input:
+                              <ul className="list-disc ml-5 mt-1 space-y-0.5">
+                                {fixRequired.sentences.slice(0, 6).map((s, i) => <li key={i}>{s.text}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {fixRequired.groundingError && <p className="text-sm text-red-700">Verification error: {fixRequired.groundingError}</p>}
+                          <p className="text-xs text-red-600">Edit the note below to remove anything you didn't document, then re-check.</p>
+                          <Button onClick={recheckNote} disabled={building} className="bg-red-600 hover:bg-red-700 h-9 gap-2 text-sm font-semibold">
+                            <ShieldCheck className="w-4 h-4" /> Re-check
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
+                          <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" />
+                          Every value and statement in this note was verified against what you wrote.
+                        </div>
+                      )}
+
+                      {generatingTasks && (
+                        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
+                          <Loader2 className="w-4 h-4 animate-spin text-green-600 shrink-0" />
+                          Generating follow-up tasks from your note…
+                        </div>
+                      )}
+                      {followUpTasks.length > 0 && (
+                        <FollowUpTasksPanel tasks={followUpTasks} onDismiss={() => setFollowUpTasks([])} />
+                      )}
+                      <FinalNoteDisplay
+                        finalNote={finalNote}
+                        setFinalNote={setFinalNote}
+                        onCopy={copy}
+                        copied={copied}
+                        patient={patient}
+                        visitType={visitType}
+                        analysisScore={liveCoverage}
+                        analysis={{ overall_score: liveCoverage, compliance_score: liveCoverage, findings: [] }}
+                        currentUser={currentUser}
+                        signatureImage={signatureImage}
+                        setSignatureImage={setSignatureImage}
+                        onReset={reset}
+                        originalNote={note}
+                        noteSections={noteSections}
+                      />
+                    </>
+                  )}
                 </>
               )}
             </div>
-          )}
-
-          {/* STEP 2 (CONTINUED): FINAL NOTE DISPLAY */}
-
-          {step === 2 && finalNote && (
-            <>
-              <AlertsPanel alerts={alerts} />
-              {generatingTasks && (
-                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-                  <Loader2 className="w-4 h-4 animate-spin text-green-600 shrink-0" />
-                  Generating follow-up tasks from your note…
-                </div>
-              )}
-              {followUpTasks.length > 0 && (
-                <FollowUpTasksPanel tasks={followUpTasks} onDismiss={() => setFollowUpTasks([])} />
-              )}
-              <FinalNoteDisplay
-                finalNote={finalNote}
-                setFinalNote={setFinalNote}
-                onCopy={copy}
-                copied={copied}
-                patient={patient}
-                visitType={visitType}
-                analysisScore={analysis?.overall_score}
-                analysis={analysis}
-                currentUser={currentUser}
-                signatureImage={signatureImage}
-                setSignatureImage={setSignatureImage}
-                onReset={reset}
-                originalNote={note}
-                noteSections={noteSections}
-              />
-            </>
           )}
         </>
       )}
