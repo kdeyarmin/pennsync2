@@ -49,6 +49,8 @@ import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClin
 import AIDocumentationAudit from "../components/audit/AIDocumentationAudit";
 import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
 import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
+import { scoreNoteFromText } from "../components/smartNote/compliance/scoreNoteFromText";
+import { toNoteConversionFields } from "../components/smartNote/compliance/coverageScore";
 import ICD10CodeSuggester from "../components/visit/ICD10CodeSuggester";
 import DischargeVisitSummary from "../components/visit/DischargeVisitSummary";
 import ProactiveRiskIdentifier from "../components/alerts/ProactiveRiskIdentifier";
@@ -150,11 +152,18 @@ export default function DocumentVisit() {
     };
   }, []);
 
+  // Current user → drives the compliance service line (home_health vs hospice)
+  // and the nurse_email stamped on the audit records, mirroring SmartNoteAssistant.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const { data: visit, isLoading } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: () => base44.entities.Visit.filter({ id: visitId }),
     select: (data) => data[0],
-    enabled: !!visitId && hasAccess === true, 
+    enabled: !!visitId && hasAccess === true,
   });
 
   const { data: patient } = useQuery({
@@ -922,12 +931,25 @@ Generate the complete clinical narrative based on the audio and context:`;
       
       const sanitizedNarrative = sanitizeInput(narrativeText);
       
+      // Deterministic, offline compliance scoring — the same engine Smart Notes
+      // uses, so a note finalized here is scored and audited identically to one
+      // authored there.
+      const serviceLine = currentUser?.care_scope === 'hospice' ? 'hospice' : 'home_health';
+      const visitType = visit?.visit_type || 'routine_visit';
+      const { coverageScore, draftScore, structured } = scoreNoteFromText({
+        text: sanitizedNarrative,
+        serviceLine,
+        visitType,
+      });
+
       const visitData = {
         nurse_notes: sanitizedNarrative,
         vital_signs: vitalSigns,
         start_time: startTime,
         end_time: endTime || now,
-        status: 'completed'
+        status: 'completed',
+        compliance_score: coverageScore,
+        ...structured,
       };
 
       // Add scanned documents if any
@@ -950,10 +972,58 @@ Generate the complete clinical narrative based on the audio and context:`;
         'Visit'
       );
 
-      await logSecurityEvent('VISIT_DOCUMENTATION_COMPLETED', { 
+      await logSecurityEvent('VISIT_DOCUMENTATION_COMPLETED', {
         visit_id: visitId,
-        patient_id: visit.patient_id 
+        patient_id: visit.patient_id
       });
+
+      // Propagate the finalized note to the patient chart and write the audit
+      // trail (NoteConversion + ComplianceAudit) — parity with Smart Notes
+      // (SmartNoteAssistant.persistNote). Secondary to the visit write: a failure
+      // here must never fail an already-saved, completed visit, and an empty note
+      // must never overwrite the patient's existing clinical_notes.
+      if (visit.patient_id && sanitizedNarrative.trim()) {
+        try {
+          const nurseEmail = currentUser?.email || (await base44.auth.me()).email;
+          const currentPatient = await base44.entities.Patient.get(visit.patient_id);
+          const history = currentPatient?.enhanced_notes_history || [];
+          history.push({
+            date: visit.visit_date,
+            visit_type: visitType,
+            note: sanitizedNarrative,
+            compliance_score: coverageScore,
+            created_by: nurseEmail,
+            created_at: new Date().toISOString(),
+          });
+          await Promise.all([
+            base44.entities.Patient.update(visit.patient_id, {
+              clinical_notes: sanitizedNarrative,
+              enhanced_notes_history: history,
+            }),
+            base44.entities.NoteConversion.create(toNoteConversionFields({
+              coverageScore,
+              draftPresenceScore: draftScore,
+              roughLen: (visit.raw_transcription || sanitizedNarrative).length,
+              enhancedLen: sanitizedNarrative.length,
+              visitType,
+              diagnosis: patient?.primary_diagnosis || "",
+              nurseEmail,
+              patientId: visit.patient_id,
+            })),
+            base44.entities.ComplianceAudit.create({
+              visit_id: visitId,
+              nurse_email: nurseEmail,
+              patient_id: visit.patient_id,
+              audit_date: new Date().toISOString(),
+              compliance_score: coverageScore,
+              status: coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical",
+              audit_type: "automated",
+            }),
+          ]);
+        } catch (auditErr) {
+          console.error("Chart propagation / audit write failed (visit was saved):", auditErr);
+        }
+      }
 
       // Track comprehensive visit completion metrics
       const visitDuration = startTime && endTime ? 
@@ -966,7 +1036,7 @@ Generate the complete clinical narrative based on the audio and context:`;
         visit_type: visit.visit_type,
         duration_minutes: visitDuration,
         documentation_time: docTime,
-        compliance_score: null, // Will be filled by compliance checker
+        compliance_score: coverageScore,
         ai_tools_used: aiToolsUsed,
         template_used: hasGeneratedTemplate,
         voice_dictation_used: aiToolsUsed.includes('voice_dictation'),
