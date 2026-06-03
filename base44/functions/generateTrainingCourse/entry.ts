@@ -106,6 +106,7 @@ Design principles:
 
     const outlineCompletion = await openai.chat.completions.create({
       model: 'gpt-5.5',
+      temperature: 0.3,
       max_completion_tokens: 4000,
       response_format: { type: 'json_object' },
       messages: [
@@ -319,6 +320,7 @@ CONTENT CREATION RULES:
 
     const contentCompletion = await openai.chat.completions.create({
       model: 'gpt-5.5',
+      temperature: 0.4,
       max_completion_tokens: 16000,
       response_format: { type: 'json_object' },
       messages: [
