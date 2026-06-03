@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  FileText, Search, Eye, Download, CheckCircle, 
+import {
+  FileText, Search, Eye, Download, CheckCircle,
   Clock, Send
 } from 'lucide-react';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 
 import DischargeSummaryWorkflow from '../components/discharge/DischargeSummaryWorkflow';
 
@@ -71,12 +73,14 @@ export default function DischargeSummaries() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Discharge Summaries</h1>
-        <p className="text-slate-600">Review, sign, and manage patient discharge documentation</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Documentation"
+        title="Discharge Summaries"
+        description="Review, sign, and manage patient discharge documentation"
+        favoritePage="DischargeSummaries"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -244,6 +248,6 @@ export default function DischargeSummaries() {
           }}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

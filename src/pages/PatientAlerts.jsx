@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Bell,
+  AlertTriangle,
   Brain,
   Activity,
   Zap
@@ -19,6 +19,8 @@ import {
 
 import PatientAlertsDashboard from "../components/alerts/PatientAlertsDashboard";
 import PatientAlertAnalyzer from "../components/alerts/PatientAlertAnalyzer";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function PatientAlerts() {
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -39,17 +41,14 @@ export default function PatientAlerts() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6 md:mb-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center gap-2 sm:gap-3">
-          <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 flex-shrink-0" />
-          <span className="truncate">Patient Alerts</span>
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600">
-          AI-powered proactive identification of critical events and potential deteriorations
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={AlertTriangle}
+        eyebrow="Patient Care"
+        title="Patient Alerts"
+        description="AI-powered proactive identification of critical events and potential deteriorations"
+        favoritePage="PatientAlerts"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Alerts Dashboard */}
@@ -173,6 +172,6 @@ export default function PatientAlerts() {
           </Card>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -23,6 +23,7 @@ import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import PaginatedPatientList from "../components/patient/PaginatedPatientList";
 import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
 import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
@@ -364,11 +365,10 @@ export default function Patients() {
 
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <PageContainer>
       <PageHeader
         icon={Users}
-        iconColor="bg-blue-600"
-        eyebrow="Roster workspace"
+        eyebrow="Patient Care"
         title="Patient Management"
         description="Manage the active roster, review duplicates, and keep imported census data clean and organized."
         badges={[
@@ -616,6 +616,6 @@ export default function Patients() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </div>
+                </PageContainer>
               );
             }

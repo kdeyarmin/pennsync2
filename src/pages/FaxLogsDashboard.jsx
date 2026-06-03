@@ -4,10 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  FileText, AlertCircle, CheckCircle2, Clock, 
-  RefreshCw, TrendingUp, Brain, Zap, Download, Search
+import {
+  FileText, AlertCircle, CheckCircle2, Clock,
+  RefreshCw, TrendingUp, Brain, Zap, Download, Search, Archive
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -156,22 +158,24 @@ Provide actionable insights in a structured format with clear sections.`,
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Fax Logs Dashboard</h1>
-          <p className="text-slate-600 mt-1">AI-powered fax transmission analytics and insights</p>
-        </div>
-        <Button 
-          onClick={generateAIInsights} 
-          disabled={aiInsightsLoading || failedLogs.length === 0}
-          className="bg-gradient-to-r from-purple-600 to-indigo-600"
-        >
-          <Brain className="w-4 h-4 mr-2" />
-          {aiInsightsLoading ? "Analyzing..." : "Generate AI Insights"}
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Archive}
+        eyebrow="Communication"
+        title="Fax Logs"
+        description="AI-powered fax transmission analytics and insights"
+        favoritePage="FaxLogsDashboard"
+        actions={
+          <Button
+            onClick={generateAIInsights}
+            disabled={aiInsightsLoading || failedLogs.length === 0}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600"
+          >
+            <Brain className="w-4 h-4 mr-2" />
+            {aiInsightsLoading ? "Analyzing..." : "Generate AI Insights"}
+          </Button>
+        }
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -454,6 +458,6 @@ Provide actionable insights in a structured format with clear sections.`,
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

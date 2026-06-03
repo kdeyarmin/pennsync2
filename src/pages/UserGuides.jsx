@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Download, BookOpen, Users, Stethoscope } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function UserGuides() {
   const [downloading, setDownloading] = useState(null);
@@ -289,14 +291,14 @@ export default function UserGuides() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">User Guides & Training Materials</h1>
-          <p className="text-slate-600">
-            Download comprehensive PDF guides with step-by-step instructions and screenshots
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={BookOpen}
+        eyebrow="Tools"
+        title="User Guides & Training Materials"
+        description="Download comprehensive PDF guides with step-by-step instructions and screenshots"
+        favoritePage="UserGuides"
+      />
 
         {/* Featured Complete Guide */}
         {guides.filter(g => g.featured).map((guide) => {
@@ -449,13 +451,12 @@ export default function UserGuides() {
                 checkpoints included for clinical documentation.
               </p>
               <p className="mt-4 pt-3 border-t border-yellow-300">
-                <strong>💡 Tip:</strong> Print these guides and keep them available at workstations 
+                <strong>💡 Tip:</strong> Print these guides and keep them available at workstations
                 for quick reference during daily workflows.
               </p>
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

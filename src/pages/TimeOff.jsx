@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 import { resolveAllowances, computeBalances } from "@/components/timeoff/timeOffUtils";
 import RequestTimeOffForm from "@/components/timeoff/RequestTimeOffForm";
@@ -95,20 +97,14 @@ export default function TimeOff() {
   const pendingCount = teamForViews.filter((r) => r.status === "pending").length;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="modern-card border-l-4 border-l-blue-500 p-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100 flex-shrink-0">
-            <CalendarDays className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Time Off</h1>
-            <p className="text-sm sm:text-base text-slate-500 mt-1">
-              Request time off, track approvals, and {isApprover ? "manage your team's coverage" : "see where your requests stand"}.
-            </p>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={CalendarDays}
+        eyebrow="Tools"
+        title="Time Off"
+        description={`Request time off, track approvals, and ${isApprover ? "manage your team's coverage" : "see where your requests stand"}.`}
+        favoritePage="TimeOff"
+      />
 
       <Tabs defaultValue={isApprover ? "approvals" : "mine"} className="space-y-6">
         <TabsList className={`grid w-full ${!isApprover ? "grid-cols-1" : isAdmin ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"}`}>
@@ -182,6 +178,6 @@ export default function TimeOff() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

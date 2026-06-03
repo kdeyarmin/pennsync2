@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import PageHeader from "@/components/ui/PageHeader";
 import { toast } from "sonner";
 import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
@@ -137,13 +138,11 @@ export default function Dashboard() {
 
   const fullName = currentUser?.full_name || 'there';
   const careScope = currentUser?.care_scope;
-
-  // Banner gradient based on care scope
-  const bannerGradient = careScope === "hospice"
-    ? "from-slate-800 via-slate-900 to-slate-950"
+  const careScopeLabel = careScope === "hospice"
+    ? "Hospice"
     : careScope === "both"
-    ? "from-slate-800 via-indigo-950 to-slate-950"
-    : "from-slate-800 via-blue-950 to-slate-950";
+    ? "Home Health & Hospice"
+    : "Home Health";
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -167,7 +166,7 @@ export default function Dashboard() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
-    <div ref={containerRef} className="max-w-5xl mx-auto animate-fade-in">
+    <div ref={containerRef} className="max-w-7xl mx-auto">
       {hasDataError && (
         <Card className="mb-4 border-red-200 bg-white">
           <CardContent className="p-4">
@@ -184,27 +183,15 @@ export default function Dashboard() {
       {/* Profile Completeness Alert */}
       <ProfileCompletenessAlert user={currentUser} />
 
-      {/* Welcome Banner */}
-      <Card className={`mb-4 sm:mb-6 bg-gradient-to-br ${bannerGradient} text-white border-none shadow-xl overflow-hidden rounded-2xl`}>
-        <CardContent className="p-4 sm:p-6 md:p-8 relative">
-          <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-1">
-              {careScope === "hospice" ? <Heart className="w-5 h-5 text-white/80" /> : <Home className="w-5 h-5 text-white/80" />}
-              <span className="text-white/80 text-xs font-medium uppercase tracking-wide">
-                {careScope === "hospice" ? "Hospice" : careScope === "both" ? "Home Health & Hospice" : "Home Health"}
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
-              {greeting}, {fullName}! 👋
-            </h1>
-            <p className="text-white text-xs sm:text-sm md:text-base drop-shadow-md">
-              {formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Welcome header — personalized, but rendered through the standard PageHeader */}
+      <PageHeader
+        className="mb-4 sm:mb-6"
+        icon={careScope === "hospice" ? Heart : Home}
+        eyebrow={careScopeLabel}
+        title={`${greeting}, ${fullName}!`}
+        description={formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
+        favoritePage="Dashboard"
+      />
 
 
 

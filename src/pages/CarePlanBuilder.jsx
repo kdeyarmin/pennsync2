@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PageContainer from "@/components/ui/PageContainer";
 import {
   Save, RotateCcw, FileText, CheckSquare, Users,
   Sparkles, ChevronDown, Loader2, CheckCircle2, Search
@@ -158,6 +159,7 @@ export default function CarePlanBuilder() {
   const complianceCount = planItems.filter(i => i.complianceTag).length;
 
   return (
+    <PageContainer>
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
       {/* Top Bar */}
       <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
@@ -303,5 +305,6 @@ export default function CarePlanBuilder() {
         />
       </div>
     </div>
+    </PageContainer>
   );
 }

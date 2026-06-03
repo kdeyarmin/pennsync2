@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Mail, Megaphone } from "lucide-react";
 import NotificationPreferences from "../components/notifications/NotificationPreferences";
 import AnnouncementManager from "../components/admin/AnnouncementManager";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function NotificationSettings() {
   const { data: currentUser } = useQuery({
@@ -15,19 +17,14 @@ export default function NotificationSettings() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-              <Bell className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Notification Settings</h1>
-              <p className="text-slate-600">Manage your notification preferences</p>
-            </div>
-          </div>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={Bell}
+        eyebrow="Tools"
+        title="Notification Settings"
+        description="Manage your notification preferences"
+        favoritePage="NotificationSettings"
+      />
 
         <Tabs defaultValue="preferences" className="space-y-6">
           <TabsList className={`grid ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'} w-full max-w-md`}>
@@ -63,7 +60,6 @@ export default function NotificationSettings() {
             </TabsContent>
           )}
         </Tabs>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import {
   Select,
   SelectContent,
@@ -97,11 +98,10 @@ export default function OASISReview() {
   const needsApproval = reviewItems.filter(i => i.approvedCount > 0 && !isAdmin);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={ClipboardList}
-        iconColor="bg-blue-600"
-        eyebrow="Clinical Assessment"
+        eyebrow="Patient Care"
         title="OASIS Review Center"
         description="Review and approve AI-generated OASIS suggestions"
         favoritePage="OASISReview"
@@ -278,6 +278,6 @@ export default function OASISReview() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

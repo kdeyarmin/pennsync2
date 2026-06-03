@@ -12,6 +12,8 @@ import { useQuery } from '@tanstack/react-query';
 import EnrollmentSummaryDashboard from '../components/learning/EnrollmentSummaryDashboard';
 import EmployeeTranscriptCenter from '../components/learning/EmployeeTranscriptCenter';
 import CourseRosterReport from '../components/learning/CourseRosterReport';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 
 const BUSINESS_LINES = [
   { value: 'home_health', label: 'Home Health' },
@@ -44,11 +46,14 @@ export default function LearningReports() {
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Learning Reports & Analytics</h1>
-        <p className="text-slate-600">View training completion rates, employee transcripts, certificates, and compliance reports.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={BarChart3}
+        eyebrow="My Learning"
+        title="Learning Reports & Analytics"
+        description="View training completion rates, employee transcripts, certificates, and compliance reports."
+        favoritePage="LearningReports"
+      />
 
       <Tabs defaultValue="summary" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
@@ -108,6 +113,6 @@ export default function LearningReports() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

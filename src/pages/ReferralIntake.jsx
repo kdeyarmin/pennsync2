@@ -46,6 +46,7 @@ import {
   UserCheck
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -1024,11 +1025,10 @@ Actions available:
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <PageContainer>
       <PageHeader
-icon={ClipboardList}
-        iconColor="bg-blue-600"
-        eyebrow="Admissions"
+        icon={ClipboardList}
+        eyebrow="Documentation"
         title="Referral Intake"
         description="Streamlined workflow for processing incoming referrals"
         favoritePage="ReferralIntake"
@@ -1712,6 +1712,6 @@ icon={ClipboardList}
         </AlertDialogContent>
       </AlertDialog>
 
-    </div>
+    </PageContainer>
   );
 }

@@ -24,8 +24,11 @@ import {
   Award,
   AlertCircle,
   CheckCircle2,
-  Clock
+  Clock,
+  BarChart3
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function AdminTrainingAnalytics() {
   const [_selectedModule, _setSelectedModule] = useState('all');
@@ -137,11 +140,14 @@ export default function AdminTrainingAnalytics() {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Training Analytics Dashboard</h1>
-        <p className="text-slate-600">Monitor training progress and effectiveness across your agency</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={BarChart3}
+        eyebrow="Manage"
+        title="Training Analytics Dashboard"
+        description="Monitor training progress and effectiveness across your agency"
+        favoritePage="AdminTrainingAnalytics"
+      />
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -317,6 +323,6 @@ export default function AdminTrainingAnalytics() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

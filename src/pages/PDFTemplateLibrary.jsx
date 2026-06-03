@@ -1,9 +1,10 @@
 import PDFTemplateManager from "../components/documents/PDFTemplateManager";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function PDFTemplateLibrary() {
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <PageContainer>
       <PDFTemplateManager />
-    </div>
+    </PageContainer>
   );
 }

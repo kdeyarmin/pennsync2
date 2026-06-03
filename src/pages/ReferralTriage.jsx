@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, AlertCircle, Filter } from 'lucide-react';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 import ReferralTriageAnalyzer from '../components/referral/ReferralTriageAnalyzer';
 
 /**
@@ -78,15 +80,14 @@ export default function ReferralTriage() {
   };
 
   return (
-    <div className="w-full">
-      <div className="max-w-6xl mx-auto px-4">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Referral Triage</h1>
-        <p className="text-slate-600">
-          AI-powered analysis of incoming referrals with automatic urgency assessment and care plan generation
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Filter}
+        eyebrow="Documentation"
+        title="Referral Triage"
+        description="AI-powered analysis of incoming referrals with automatic urgency assessment and care plan generation"
+        favoritePage="ReferralTriage"
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -189,7 +190,6 @@ export default function ReferralTriage() {
           </div>
         </CardContent>
       </Card>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

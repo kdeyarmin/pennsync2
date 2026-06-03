@@ -44,6 +44,8 @@ import {
   Download,
   Filter
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { format, subDays } from "date-fns";
 
 export default function OASISAnalyticsDashboard() {
@@ -233,18 +235,20 @@ export default function OASISAnalyticsDashboard() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">OASIS Analytics Dashboard</h1>
-          <p className="text-slate-600 mt-1">Performance insights and trends across all OASIS submissions</p>
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Download className="w-4 h-4" />
-          Export Report
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={BarChart3}
+        eyebrow="Patient Care"
+        title="OASIS Analytics Dashboard"
+        description="Performance insights and trends across all OASIS submissions"
+        favoritePage="OASISAnalyticsDashboard"
+        actions={
+          <Button variant="outline" className="gap-2">
+            <Download className="w-4 h-4" />
+            Export Report
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <Card>
@@ -607,6 +611,6 @@ export default function OASISAnalyticsDashboard() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

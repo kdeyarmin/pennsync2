@@ -3,7 +3,9 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Stethoscope, Activity } from "lucide-react";
+import { ArrowLeft, Stethoscope, ClipboardList } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
@@ -33,24 +35,22 @@ export default function OASISClinicalReview() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+    <PageContainer>
+      <PageHeader
+        icon={ClipboardList}
+        eyebrow="Patient Care"
+        title="OASIS Clinical Review"
+        description={patientName ? `Patient: ${patientName}` : "Review AI-generated OASIS clinical recommendations and care planning"}
+        favoritePage="OASISClinicalReview"
+        actions={
           <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="ghost" size="sm">
+            <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Analyzer
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 mt-2">OASIS Clinical Review & Actions</h1>
-          {patientName && <p className="text-slate-600 mt-1">Patient: {patientName}</p>}
-        </div>
-        <Badge className="bg-indigo-600 text-white text-lg px-4 py-2">
-          <Activity className="w-5 h-5 mr-2" />
-          Clinical Insights & Care Planning
-        </Badge>
-      </div>
+        }
+      />
 
       {/* Predictive Outcomes Analyzer */}
       <PredictiveOutcomesAnalyzer
@@ -138,6 +138,6 @@ export default function OASISClinicalReview() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

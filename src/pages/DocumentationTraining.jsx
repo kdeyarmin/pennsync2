@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  GraduationCap,
   BookOpen,
   FileText,
   Users,
@@ -13,6 +12,8 @@ import {
   Target,
   Sparkles
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import InteractiveTutorials from "../components/training/InteractiveTutorials";
 import PracticeNoteSubmission from "../components/training/PracticeNoteSubmission";
 import ScenarioSimulator from "../components/training/ScenarioSimulator";
@@ -52,14 +53,14 @@ export default function DocumentationTraining() {
     : 0;
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-          <GraduationCap className="w-8 h-8 text-indigo-600" />
-          AI Documentation Training
-        </h1>
-        <p className="text-slate-600">Master Medicare-compliant documentation with interactive AI-powered training</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={FileText}
+        eyebrow="My Learning"
+        title="Documentation Training"
+        description="Master Medicare-compliant documentation with interactive AI-powered training"
+        favoritePage="DocumentationTraining"
+      />
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -180,6 +181,6 @@ export default function DocumentationTraining() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

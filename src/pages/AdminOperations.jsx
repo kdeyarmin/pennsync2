@@ -9,6 +9,7 @@ import DataQualityDashboard from "@/components/admin/DataQualityDashboard";
 import SystemHealthPanel from "@/components/admin/SystemHealthPanel";
 import SystemSettings from "@/components/admin/SystemSettings";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function AdminOperations() {
   const { data: currentUser, isLoading } = useQuery({
@@ -33,11 +34,10 @@ export default function AdminOperations() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={Settings}
-        iconColor="bg-indigo-600"
-        eyebrow="Administration"
+        eyebrow="Admin"
         title="Admin Operations"
         description="System monitoring, data quality, user activity, and operational oversight"
         favoritePage="AdminOperations"
@@ -89,6 +89,6 @@ export default function AdminOperations() {
           <SystemSettings />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

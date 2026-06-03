@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Building2, DollarSign, MapPin, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Building2, DollarSign, MapPin, Save, CheckCircle2, AlertCircle, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomValidationRuleManager from "../components/validation/CustomValidationRuleManager";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function AgencySettings() {
   const queryClient = useQueryClient();
@@ -87,16 +89,14 @@ export default function AgencySettings() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-3 sm:p-4 md:p-6">
-      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-            <span className="truncate">Agency Settings</span>
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-2 hidden sm:block">Configure agency-wide settings, validation rules, and cost analysis</p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={Settings}
+        eyebrow="Configuration"
+        title="Agency Settings"
+        description="Configure agency-wide settings, validation rules, and cost analysis"
+        favoritePage="AgencySettings"
+      />
 
         {successMessage && (
           <Alert className="bg-green-50 border-green-200">
@@ -301,7 +301,6 @@ export default function AgencySettings() {
             <CustomValidationRuleManager />
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

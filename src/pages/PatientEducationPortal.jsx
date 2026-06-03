@@ -12,6 +12,7 @@ import {
   BookOpen, CheckCircle2, Clock, Loader2, Send, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function PatientEducationPortal() {
   const queryClient = useQueryClient();
@@ -96,7 +97,7 @@ export default function PatientEducationPortal() {
   const deliveredMaterials = materials.filter(m => m.delivery_status === "delivered");
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Patient Selection */}
         <Card className="lg:row-span-2">
@@ -258,7 +259,7 @@ export default function PatientEducationPortal() {
           </Tabs>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

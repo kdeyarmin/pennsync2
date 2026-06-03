@@ -16,10 +16,13 @@ import {
   Loader2,
   Brain,
   Lightbulb,
-  PlayCircle
+  PlayCircle,
+  GraduationCap
 } from "lucide-react";
 import InteractiveTrainingModule from "../components/training/InteractiveTrainingModule";
 import PersonalizedTrainingRecommender from "../components/training/PersonalizedTrainingRecommender";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function NurseTrainingHub() {
   const [_selectedModule, setSelectedModule] = useState(null);
@@ -124,12 +127,14 @@ export default function NurseTrainingHub() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Nurse Training Hub</h1>
-        <p className="text-slate-600">AI-powered personalized training and skill development</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={GraduationCap}
+        eyebrow="My Learning"
+        title="Nurse Training Hub"
+        description="AI-powered personalized training and skill development"
+        favoritePage="NurseTrainingHub"
+      />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -381,6 +386,6 @@ export default function NurseTrainingHub() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

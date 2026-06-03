@@ -3,19 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OfflineSyncService from '../components/offline/OfflineSyncService';
 import OfflineVisitDocumentation from '../components/offline/OfflineVisitDocumentation';
-import { FileText, Upload, AlertCircle, Info } from 'lucide-react';
+import { FileText, Upload, AlertCircle, Info, WifiOff } from 'lucide-react';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function OfflineDocumentation() {
   const [selectedPatientId, _setSelectedPatientId] = useState(null);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Offline Documentation</h1>
-        <p className="text-slate-500">
-          Document patient visits even without internet connection - data syncs automatically when online
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={WifiOff}
+        eyebrow="Tools"
+        title="Offline Documentation"
+        description="Document patient visits even without internet connection - data syncs automatically when online"
+        favoritePage="OfflineDocumentation"
+      />
 
       {/* Sync Status */}
       <OfflineSyncService />
@@ -101,6 +104,6 @@ export default function OfflineDocumentation() {
           <p><strong>Data Retention:</strong> Offline data persists until successfully synced</p>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

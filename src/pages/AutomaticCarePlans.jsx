@@ -46,6 +46,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function AutomaticCarePlans() {
 
@@ -239,11 +240,10 @@ export default function AutomaticCarePlans() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={Zap}
-        iconColor="bg-gradient-to-br from-blue-500 to-indigo-600"
-        eyebrow="Care Planning"
+        eyebrow="Patient Care"
         title="Automatic Care Plans"
         description="Set up care plans that trigger automatically based on diagnosis or medication"
         favoritePage="AutomaticCarePlans"
@@ -581,6 +581,6 @@ export default function AutomaticCarePlans() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

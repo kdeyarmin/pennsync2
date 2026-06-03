@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sparkles, BookOpen, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Sparkles, BookOpen, AlertTriangle, CheckCircle2, Loader2, Brain } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { generateTrainingCourse } from '@/functions/generateTrainingCourse';
@@ -90,17 +92,14 @@ export default function AITrainingGenerator() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-          <Sparkles className="w-7 h-7 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">AI Training Course Generator</h1>
-          <p className="text-slate-600">Create audit-ready in-service training with AI</p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Brain}
+        eyebrow="My Learning"
+        title="AI Training Generator"
+        description="Create audit-ready in-service training with AI"
+        favoritePage="AITrainingGenerator"
+      />
 
       {/* Important Notice */}
       <Alert className="bg-yellow-50 border-yellow-300">
@@ -321,6 +320,6 @@ export default function AITrainingGenerator() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

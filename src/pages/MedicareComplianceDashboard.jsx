@@ -27,6 +27,8 @@ import {
   BarChart3,
   Sparkles
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { format, subDays, startOfDay } from "date-fns";
 import ComplianceReportGenerator from "../components/compliance/ComplianceReportGenerator";
@@ -267,63 +269,56 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
   const _COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
-      <div className="mb-4 sm:mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Medicare Compliance Dashboard</h1>
-              <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">42 CFR 484 CoP Monitoring for Pennsylvania Home Health</p>
-            </div>
-          </div>
-          <Button onClick={generateAIInsights} disabled={isGeneratingInsights} className="w-full sm:w-auto min-h-[44px]">
-            {isGeneratingInsights ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                Analyzing...
-              </>
-            ) : (
-              <>
-                <BarChart3 className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Generate AI Insights</span>
-                <span className="sm:hidden">AI Insights</span>
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(parseInt(v))}>
-            <SelectTrigger className="w-full sm:w-48 h-11 touch-target">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 Days</SelectItem>
-              <SelectItem value="30">Last 30 Days</SelectItem>
-              <SelectItem value="60">Last 60 Days</SelectItem>
-              <SelectItem value="90">Last 90 Days</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {isAdmin && (
-            <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-              <SelectTrigger className="w-full sm:w-64 h-11 touch-target">
+    <PageContainer>
+      <PageHeader
+        icon={Shield}
+        eyebrow="Analytics"
+        title="Medicare Compliance Dashboard"
+        description="42 CFR 484 CoP Monitoring for Pennsylvania Home Health"
+        favoritePage="MedicareComplianceDashboard"
+        actions={
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(parseInt(v))}>
+              <SelectTrigger className="w-full sm:w-48 h-11 touch-target">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Nurses</SelectItem>
-                {uniqueNurses.map(nurse => (
-                  <SelectItem key={nurse} value={nurse}>{nurse}</SelectItem>
-                ))}
+                <SelectItem value="7">Last 7 Days</SelectItem>
+                <SelectItem value="30">Last 30 Days</SelectItem>
+                <SelectItem value="60">Last 60 Days</SelectItem>
+                <SelectItem value="90">Last 90 Days</SelectItem>
               </SelectContent>
             </Select>
-          )}
-        </div>
-      </div>
+            {isAdmin && (
+              <Select value={selectedNurse} onValueChange={setSelectedNurse}>
+                <SelectTrigger className="w-full sm:w-64 h-11 touch-target">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Nurses</SelectItem>
+                  {uniqueNurses.map(nurse => (
+                    <SelectItem key={nurse} value={nurse}>{nurse}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button onClick={generateAIInsights} disabled={isGeneratingInsights} className="w-full sm:w-auto min-h-[44px]">
+              {isGeneratingInsights ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Generate AI Insights</span>
+                  <span className="sm:hidden">AI Insights</span>
+                </>
+              )}
+            </Button>
+          </div>
+        }
+      />
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
@@ -820,6 +815,6 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

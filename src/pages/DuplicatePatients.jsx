@@ -17,6 +17,8 @@ import {
   buildVisitsByPatient,
   findDuplicateGroups,
 } from "@/components/patient/patientDuplicateUtils";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function DuplicatePatients() {
   const [isScanning, setIsScanning] = useState(false);
@@ -120,16 +122,14 @@ export default function DuplicatePatients() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Users className="w-8 h-8 text-orange-600" />
-          <h1 className="text-3xl font-bold text-slate-900">Duplicate Patients</h1>
-        </div>
-        <p className="text-slate-600">
-          Scan the database for potential duplicate patient records
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Users}
+        eyebrow="Patient Care"
+        title="Duplicate Patients"
+        description="Scan the database for potential duplicate patient records"
+        favoritePage="DuplicatePatients"
+      />
 
       <Card className="mb-6">
         <CardHeader>
@@ -317,6 +317,6 @@ export default function DuplicatePatients() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

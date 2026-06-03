@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  FileText, 
-  Clock, 
+import {
+  FileText,
+  Clock,
   CheckCircle2,
   AlertTriangle,
   Pen,
@@ -15,6 +15,8 @@ import {
   Eye,
   Search
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -87,25 +89,26 @@ export default function DocumentSignatures() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Document Signatures</h1>
-          <p className="text-sm sm:text-base text-slate-600 mt-1">
-            Track and manage electronic signatures
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge className="bg-yellow-100 text-yellow-800">
-            {stats.pending} Pending
-          </Badge>
-          {stats.overdue > 0 && (
-            <Badge className="bg-red-100 text-red-800">
-              {stats.overdue} Overdue
+    <PageContainer>
+      <PageHeader
+        icon={Pen}
+        eyebrow="Documentation"
+        title="Document Signatures"
+        description="Track and manage electronic signatures"
+        favoritePage="DocumentSignatures"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Badge className="bg-yellow-100 text-yellow-800">
+              {stats.pending} Pending
             </Badge>
-          )}
-        </div>
-      </div>
+            {stats.overdue > 0 && (
+              <Badge className="bg-red-100 text-red-800">
+                {stats.overdue} Overdue
+              </Badge>
+            )}
+          </div>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -300,6 +303,6 @@ export default function DocumentSignatures() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

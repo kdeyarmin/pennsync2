@@ -13,7 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mail, Plus, Shield, AlertTriangle, Check } from "lucide-react";
+import { Mail, Plus, Shield, AlertTriangle, Check, UserCheck } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
@@ -78,13 +80,14 @@ export default function AdminUserSetup() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-          User Setup & Invitations
-        </h1>
-        <p className="text-slate-600">Manage user invitations and setup new team members</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={UserCheck}
+        eyebrow="Manage"
+        title="User Setup"
+        description="Manage user invitations and setup new team members"
+        favoritePage="AdminUserSetup"
+      />
 
       {/* Invite New User */}
       <Card className="mb-6">
@@ -177,6 +180,6 @@ export default function AdminUserSetup() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   Trash2,
   User,
-  ArrowLeft,
   Sparkles,
   Plus,
   ChevronDown
@@ -35,7 +34,8 @@ import CarePlanTimeline from "../components/carePlan/CarePlanTimeline";
 import AIEducationRecommender from "../components/carePlan/AIEducationRecommender";
 import EducationTracker from "../components/carePlan/EducationTracker";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
-import FavoriteButton from "../components/navigation/FavoriteButton";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { INTERVENTIONS_LIBRARY } from "@/components/carePlan/InterventionLibrary";
 import InterventionLibrary from "@/components/carePlan/InterventionLibrary";
@@ -504,29 +504,14 @@ export default function CarePlanManagement() {
     );
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <Button
-        variant="outline"
-        onClick={() => navigate(createPageUrl("Dashboard"))}
-        className="mb-4 sm:mb-6 min-h-[44px]"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        <span className="hidden sm:inline">Back to Dashboard</span>
-        <span className="sm:hidden">Back</span>
-      </Button>
-
-      <div className="mb-4 sm:mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border border-slate-200 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-            <Target className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Care Plans</h1>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Manage plans and build new interventions</p>
-          </div>
-          <FavoriteButton type="page" id="CarePlanManagement" name="Care Plans" />
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Target}
+        eyebrow="Patient Care"
+        title="Care Plans"
+        description="Manage plans and build new interventions"
+        favoritePage="CarePlanManagement"
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
@@ -935,6 +920,6 @@ export default function CarePlanManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }

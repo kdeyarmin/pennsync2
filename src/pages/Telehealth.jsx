@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Video, Plus, Calendar, Clock, CheckCircle2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import { toast } from "sonner";
 import TelehealthCall from "../components/telehealth/TelehealthCall";
 import SessionCard from "../components/telehealth/SessionCard";
@@ -162,24 +163,19 @@ export default function Telehealth() {
   };
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6">
-      {/* Header */}
-<div className="px-3 sm:px-4 md:px-6">
-        <PageHeader
-          icon={Video}
-          iconColor="bg-blue-600"
-          eyebrow="Communication"
-          title="Telehealth"
-          description="Secure video visits with patients via Twilio"
-          favoritePage="Telehealth"
-          className="mb-0"
-          actions={
-            <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-              <Plus className="w-4 h-4" /> New Session
-            </Button>
-          }
-        />
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Video}
+        eyebrow="Communication"
+        title="Telehealth"
+        description="Secure video visits with patients via Twilio"
+        favoritePage="Telehealth"
+        actions={
+          <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+            <Plus className="w-4 h-4" /> New Session
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="px-3 sm:px-4 md:px-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -289,7 +285,7 @@ export default function Telehealth() {
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }
 

@@ -26,6 +26,8 @@ import {
   Download,
   Users
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AIContactExtractor from "../components/fax/AIContactExtractor";
@@ -182,23 +184,20 @@ export default function FaxContactsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <BookUser className="w-8 h-8 text-indigo-600" />
-            Fax Contacts
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Manage your fax contact directory for quick recipient selection
-          </p>
-        </div>
-        <Badge variant="outline" className="text-lg px-3 py-1">
-          <Users className="w-4 h-4 mr-2" />
-          {contacts.length} contacts
-        </Badge>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={BookUser}
+        eyebrow="Communication"
+        title="Fax Contacts"
+        description="Manage your fax contact directory for quick recipient selection"
+        favoritePage="FaxContacts"
+        actions={
+          <Badge variant="outline" className="text-lg px-3 py-1">
+            <Users className="w-4 h-4 mr-2" />
+            {contacts.length} contacts
+          </Badge>
+        }
+      />
 
       {/* Actions */}
       <Card>
@@ -417,6 +416,6 @@ export default function FaxContactsPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

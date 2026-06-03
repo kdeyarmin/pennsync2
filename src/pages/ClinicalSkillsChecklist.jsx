@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, CheckCircle2 } from "lucide-react";
 import EmployeeCompetencyProfile from "@/components/training/EmployeeCompetencyProfile";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 const canSupervise = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin' || user?.training_role === 'supervisor' || /manager|director|supervisor|lead/i.test(user?.job_title || '');
 
@@ -30,11 +32,14 @@ export default function ClinicalSkillsChecklist() {
   if (currentUser && !canSupervise(currentUser)) return <div className="max-w-3xl mx-auto p-6 text-slate-600">This clinical skills checklist module is available to supervisors, managers, and admins only.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-700 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">Clinical Skills Checklists</h1>
-        <p className="text-blue-100">Supervisors can sign off patient-care competencies, add observation notes, and attach supporting files directly to each employee’s competency record.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={CheckCircle2}
+        eyebrow="My Learning"
+        title="Skills Checklists"
+        description="Supervisors can sign off patient-care competencies, add observation notes, and attach supporting files directly to each employee’s competency record."
+        favoritePage="ClinicalSkillsChecklist"
+      />
       <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
         <Card>
           <CardContent className="p-4 space-y-4">
@@ -55,6 +60,6 @@ export default function ClinicalSkillsChecklist() {
         </Card>
         {selectedEmployee ? <EmployeeCompetencyProfile employee={selectedEmployee} currentUser={currentUser} /> : <Card><CardContent className="p-10 text-center text-slate-500">No employees available for observation.</CardContent></Card>}
       </div>
-    </div>
+    </PageContainer>
   );
 }

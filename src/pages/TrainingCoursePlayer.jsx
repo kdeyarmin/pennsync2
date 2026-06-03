@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, CheckCircle2, RotateCcw, Award, ChevronRight, ChevronLeft,
   BookOpen, Clock, Star, FileText, Send, Eye, RefreshCw, Home,
-  Check, Target, AlertCircle, Timer
+  Check, Target, AlertCircle, Timer, GraduationCap
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { gradeTrainingAttempt } from "@/functions/gradeTrainingAttempt";
@@ -221,7 +223,14 @@ export default function TrainingCoursePlayer() {
   const courseName = previewMode ? course.title : assignment.course_title;
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6" ref={topRef}>
+    <PageContainer>
+      <div ref={topRef} />
+      <PageHeader
+        icon={GraduationCap}
+        eyebrow="My Learning"
+        title="Course Player"
+        favoritePage="TrainingCoursePlayer"
+      />
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
         <button
@@ -732,6 +741,6 @@ export default function TrainingCoursePlayer() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

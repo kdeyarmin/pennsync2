@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Upload, TrendingUp, Users, FolderOpen } from "lucide-react";
 import DocumentUploader from "../components/documents/DocumentUploader";
 import DocumentList from "../components/documents/DocumentList";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function DocumentManagement() {
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
@@ -37,22 +39,20 @@ export default function DocumentManagement() {
   }, {});
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <FolderOpen className="w-8 h-8" />
-            Document Management
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Upload, organize, and manage patient documents
-          </p>
-        </div>
-        <Button onClick={() => setIsUploaderOpen(true)} size="lg">
-          <Upload className="w-5 h-5 mr-2" />
-          Upload Document
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Documentation"
+        title="Document Management"
+        description="Upload, organize, and manage patient documents"
+        favoritePage="DocumentManagement"
+        actions={
+          <Button onClick={() => setIsUploaderOpen(true)} size="lg">
+            <Upload className="w-5 h-5 mr-2" />
+            Upload Document
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -146,6 +146,6 @@ export default function DocumentManagement() {
         onOpenChange={setIsUploaderOpen}
         onUploadComplete={() => setIsUploaderOpen(false)}
       />
-    </div>
+    </PageContainer>
   );
 }

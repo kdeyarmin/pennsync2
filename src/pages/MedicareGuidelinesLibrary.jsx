@@ -36,6 +36,8 @@ import {
   Trash2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function MedicareGuidelinesLibrary() {
   const queryClient = useQueryClient();
@@ -153,27 +155,22 @@ export default function MedicareGuidelinesLibrary() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-              <span className="truncate">Medicare Guidelines Library</span>
-            </h1>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-1">
-              Official CMS guidelines and regulations for home health documentation
-            </p>
-          </div>
-          {isAdmin && (
-            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px]">
-                  <Plus className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Add Guideline</span>
-                  <span className="sm:hidden">Add</span>
-                </Button>
-              </DialogTrigger>
+    <PageContainer>
+      <PageHeader
+        icon={BookOpen}
+        eyebrow="Resources"
+        title="Medicare Guidelines Library"
+        description="Official CMS guidelines and regulations for home health documentation"
+        favoritePage="MedicareGuidelinesLibrary"
+        actions={isAdmin && (
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px]">
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Add Guideline</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Fetch Medicare Guideline from CMS.gov</DialogTitle>
@@ -278,10 +275,10 @@ export default function MedicareGuidelinesLibrary() {
                 </div>
               </DialogContent>
             </Dialog>
-          )}
-        </div>
+        )}
+      />
 
-        {/* Search and Filter */}
+      {/* Search and Filter */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -311,7 +308,6 @@ export default function MedicareGuidelinesLibrary() {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
       {/* Guidelines List */}
       {isLoading ? (
@@ -523,6 +519,6 @@ export default function MedicareGuidelinesLibrary() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

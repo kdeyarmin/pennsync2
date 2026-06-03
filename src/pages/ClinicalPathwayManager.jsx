@@ -40,6 +40,8 @@ import {
   Brain,
   ShieldAlert
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIAssessmentDrafter from "../components/clinical/AIAssessmentDrafter";
 import AIICD10Suggester from "../components/clinical/AIICD10Suggester";
@@ -368,18 +370,14 @@ export default function ClinicalPathwayManager() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-3 sm:p-4 md:p-6 lg:p-8">
-      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 flex-shrink-0" />
-              <span className="truncate">Clinical & OASIS Management</span>
-            </h1>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-1 sm:mt-2 hidden sm:block">
-              AI-powered clinical documentation, OASIS assessments, and care planning
-            </p>
-          </div>
+    <PageContainer>
+      <PageHeader
+        icon={ClipboardList}
+        eyebrow="Manage"
+        title="Clinical Pathways"
+        description="AI-powered clinical documentation, OASIS assessments, and care planning"
+        favoritePage="ClinicalPathwayManager"
+        actions={
           <div className="flex gap-2 w-full sm:w-auto">
             {pathways.length === 0 && (
               <Button
@@ -422,7 +420,8 @@ export default function ClinicalPathwayManager() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
+        }
+      />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
@@ -626,7 +625,6 @@ export default function ClinicalPathwayManager() {
             />
           </TabsContent>
         </Tabs>
-      </div>
 
       <AlertDialog open={!!pathwayToDelete} onOpenChange={(open) => { if (!open) setPathwayToDelete(null); }}>
         <AlertDialogContent>
@@ -650,7 +648,7 @@ export default function ClinicalPathwayManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }
 
