@@ -38,14 +38,16 @@ export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAler
       const result = await base44.functions.invoke('predictiveRiskAnalysis', {
         patient_id: patientId
       });
+      // functions.invoke returns the axios response; the body is on .data.
+      const data = result.data;
 
-      if (result.success) {
-        setAnalysis(result);
-        if (onAlertsCreated && result.alerts_created > 0) {
-          onAlertsCreated(result.alerts_created);
+      if (data.success) {
+        setAnalysis(data);
+        if (onAlertsCreated && data.alerts_created > 0) {
+          onAlertsCreated(data.alerts_created);
         }
       } else {
-        setError(result.error || 'Analysis failed');
+        setError(data.error || 'Analysis failed');
       }
     } catch (err) {
       console.error('Risk analysis error:', err);
