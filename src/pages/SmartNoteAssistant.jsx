@@ -25,7 +25,7 @@ import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNote
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import { normalizeDraft } from "../components/smartNote/compliance/normalize";
 import { getRequiredElements } from "../components/smartNote/compliance/requiredElements";
-import { detectPresence, computeGaps, computeCriticalGaps } from "../components/smartNote/compliance/presenceDetection";
+import { detectPresence, computeGaps, computeCriticalGaps, computeCarryForward } from "../components/smartNote/compliance/presenceDetection";
 import { splitSentences } from "../components/smartNote/compliance/factExtraction";
 import { generateConstrainedNote, groundNote } from "../components/smartNote/compliance/generation";
 import { valueGuard } from "../components/smartNote/compliance/valueGuard";
@@ -70,6 +70,7 @@ export default function SmartNoteAssistant() {
   // { serviceLine, visitType, normalized, required[], presence[], gaps[], draftScore }
   const [analysis, setAnalysis] = useState(null);
   const [answers, setAnswers] = useState({});
+  const [prefilledIds, setPrefilledIds] = useState(new Set()); // answers carried from the last visit
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
   const [finalNote, setFinalNote] = useState("");
   const [fixRequired, setFixRequired] = useState(null);
@@ -115,6 +116,19 @@ export default function SmartNoteAssistant() {
     }
   });
   const patient = patients.find(p => p.id === patientId);
+  // Full record for the selected patient (the list query may not include the
+  // note history). Used to pre-fill carry-forward answers from the last visit.
+  const { data: patientDetail } = useQuery({
+    queryKey: ["patientDetail", patientId],
+    queryFn: () => base44.entities.Patient.get(patientId),
+    enabled: !!patientId,
+  });
+  const getPriorNote = (p) => {
+    if (!p) return "";
+    const hist = p.enhanced_notes_history;
+    if (Array.isArray(hist) && hist.length) return hist[hist.length - 1]?.note || "";
+    return p.clinical_notes || "";
+  };
 
   useEffect(() => {
     if (currentUser?.email) logActivity(ActivityActions.PAGE_VISIT, { page: "SmartNoteAssistant" });
@@ -212,7 +226,16 @@ export default function SmartNoteAssistant() {
   };
   const stopDictation = () => { recRef.current?.stop(); setListening(false); };
 
-  const setAnswer = (id, value) => setAnswers(prev => ({ ...prev, [id]: value }));
+  const setAnswer = (id, value) => {
+    setAnswers(prev => ({ ...prev, [id]: value }));
+    // once the nurse edits a carried-forward answer it's their own input
+    setPrefilledIds(prev => {
+      if (!prev.has(id)) return prev;
+      const n = new Set(prev);
+      n.delete(id);
+      return n;
+    });
+  };
   const toggleNegative = (id) => setConfirmedNegatives(prev => {
     const n = new Set(prev);
     n.has(id) ? n.delete(id) : n.add(id);
@@ -227,7 +250,11 @@ export default function SmartNoteAssistant() {
     const presence = detectPresence(normalized, required);
     const gaps = computeGaps(presence, required);
     const draftScore = computeDraftPresenceScore({ requiredElements: required, presenceResults: presence });
-    setAnswers({});
+    // Pre-fill carry-forward-safe gaps from the patient's last saved note (the
+    // nurse confirms/edits each). Visit-specific findings are never carried.
+    const prefill = computeCarryForward(getPriorNote(patientDetail || patient), gaps);
+    setAnswers(prefill);
+    setPrefilledIds(new Set(Object.keys(prefill)));
     setConfirmedNegatives(new Set());
     setFinalNote("");
     setVerifiedNote("");
@@ -481,7 +508,7 @@ export default function SmartNoteAssistant() {
   };
 
   const reset = () => {
-    setNote(""); setAnalysis(null); setAnswers({}); setConfirmedNegatives(new Set());
+    setNote(""); setAnalysis(null); setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set());
     setFinalNote(""); setVerifiedNote(""); setSaved(false); setSavedVisitId(null);
     setFixRequired(null); setStep(1); setNoteSections(null);
     setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
@@ -758,9 +785,14 @@ export default function SmartNoteAssistant() {
                             </h3>
                             <span className="text-xs text-slate-500 shrink-0">{answeredCount}/{gaps.length} addressed</span>
                           </div>
-                          <p className="text-xs text-slate-500 mb-3">
+                          <p className="text-xs text-slate-500 mb-2">
                             These required elements weren't in your draft. Answer what applies. Non-critical items left blank become an explicit "Not documented this visit." — never invented.
                           </p>
+                          {prefilledIds.size > 0 && (
+                            <p className="text-xs text-violet-700 bg-violet-50 border border-violet-200 rounded-lg px-3 py-2 mb-3">
+                              Some answers were carried from this patient's last visit — confirm each still applies before generating.
+                            </p>
+                          )}
                           <div className="space-y-3">
                             {gaps.map(g => {
                               const negConfirmed = confirmedNegatives.has(g.id);
@@ -771,7 +803,12 @@ export default function SmartNoteAssistant() {
                                       {g.severity === 'critical' ? 'required' : 'optional'}
                                     </Badge>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-slate-900">{g.question}</p>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <p className="text-sm font-medium text-slate-900">{g.question}</p>
+                                        {prefilledIds.has(g.id) && (
+                                          <span className="shrink-0 text-[10px] font-semibold text-violet-700 bg-violet-100 px-1.5 py-0.5 rounded-full">from last visit · confirm</span>
+                                        )}
+                                      </div>
                                       <p className="text-xs text-slate-400 mt-0.5">{g.copReference}</p>
                                     </div>
                                   </div>

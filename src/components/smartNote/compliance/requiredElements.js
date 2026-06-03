@@ -291,11 +291,21 @@ const E = {
   },
 };
 
+// Stable / administrative elements that may be PRE-FILLED from a prior note for
+// the nurse to confirm. Visit-specific clinical findings (vitals, pain, wounds,
+// today's interventions, patient response) are intentionally excluded so the
+// tool never auto-carries-forward assessments — that would be note "cloning",
+// which Medicare auditors treat as fraudulent.
+const CARRY_FORWARD = new Set([
+  "homebound", "diagnoses", "allergies", "emergency_plan",
+  "functional_baseline", "advance_directives", "terminal_prognosis", "benefit_period",
+]);
+
 /** Build an element instance with a chosen severity. */
 function el(id, severity = "required", extra = {}) {
   const base = E[id];
   if (!base) throw new Error(`Unknown required element: ${id}`);
-  return { id, severity, ...base, ...extra };
+  return { id, severity, carryForward: CARRY_FORWARD.has(id), ...base, ...extra };
 }
 
 // ── Composition per service line × visit type ──────────────────────────────

@@ -54,3 +54,24 @@ export function computeGaps(presenceResults, requiredElements) {
 export function computeCriticalGaps(presenceResults, requiredElements) {
   return computeGaps(presenceResults, requiredElements).filter((e) => e.severity === "critical");
 }
+
+/**
+ * For the carry-forward-safe gaps, pull the evidence sentence from a prior note
+ * so it can PRE-FILL the nurse's answer (to confirm/edit). Only elements flagged
+ * `carryForward` are eligible — visit-specific findings are never carried.
+ * @param {string} priorNote the patient's most recent saved note
+ * @param {Array} gaps missing required elements (from computeGaps)
+ * @returns {Record<string,string>} map of elementId -> suggested answer text
+ */
+export function computeCarryForward(priorNote, gaps) {
+  if (!priorNote) return {};
+  const eligible = gaps.filter((e) => e.carryForward);
+  if (!eligible.length) return {};
+  const priorPresence = detectPresence(priorNote, eligible);
+  /** @type {Record<string,string>} */
+  const out = {};
+  for (const r of priorPresence) {
+    if (r.present && r.evidence) out[r.id] = r.evidence;
+  }
+  return out;
+}

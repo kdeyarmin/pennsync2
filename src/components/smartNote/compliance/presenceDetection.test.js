@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { detectPresence, computeGaps, computeCriticalGaps } from "./presenceDetection.js";
+import { detectPresence, computeGaps, computeCriticalGaps, computeCarryForward } from "./presenceDetection.js";
 import { getRequiredElements } from "./requiredElements.js";
 
 const reqs = getRequiredElements("home_health", "routine_visit");
@@ -43,4 +43,24 @@ test("a fully documented draft has no critical gaps", () => {
     "Skilled nursing assessment and wound care performed to the right heel.";
   const results = detectPresence(draft, reqs);
   assert.equal(computeCriticalGaps(results, reqs).length, 0);
+});
+
+test("carry-forward pre-fills stable elements from a prior note, never visit-specific ones", () => {
+  const draft = "Skilled wound care performed."; // homebound + vitals are gaps
+  const gaps = computeGaps(detectPresence(draft, reqs), reqs);
+  const priorNote =
+    "Patient is homebound, unable to leave without considerable and taxing effort. " +
+    "BP 150/88, pain 4/10 this visit.";
+  const prefill = computeCarryForward(priorNote, gaps);
+  // homebound (stable) is carried with its prior evidence sentence...
+  assert.ok(prefill.homebound);
+  assert.match(prefill.homebound, /taxing effort/i);
+  // ...but visit-specific findings (vitals, pain) are NOT carried forward.
+  assert.equal(prefill.vitals, undefined);
+  assert.equal(prefill.pain, undefined);
+});
+
+test("carry-forward returns nothing without a prior note", () => {
+  const gaps = computeGaps(detectPresence("", reqs), reqs);
+  assert.deepEqual(computeCarryForward("", gaps), {});
 });
