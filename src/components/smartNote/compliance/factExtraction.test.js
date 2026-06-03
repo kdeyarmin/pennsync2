@@ -51,7 +51,17 @@ test("getSentencesContaining returns the matching sentence", () => {
   assert.match(hits[0], /right heel/);
 });
 
+
 // ── Regression tests for audit fixes ────────────────────────────────────────
+
+test("getSentencesContaining is deterministic with a global regex (no lastIndex carry-over)", () => {
+  const text = "Patient uses a walker. The walker is new. A walker helps mobility. Walker stored at home.";
+  // All four sentences mention a walker; a stateful global regex (advancing
+  // RegExp.lastIndex across .test() calls) would skip some of them.
+  assert.equal(getSentencesContaining(text, /walker/gi).length, 4);
+  const re = /walker/gi;
+  assert.deepEqual(getSentencesContaining(text, re), getSentencesContaining(text, re));
+});
 
 test("getSentencesContaining returns ALL matches with a global-flag pattern", () => {
   const text = "Wound to heel. Dressing changed today. Patient stable. Incision clean. Vitals normal.";

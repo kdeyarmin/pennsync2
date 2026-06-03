@@ -28,16 +28,9 @@ export function extractPhrases(text, pattern) {
 /** Return up to 5 full sentences that match `pattern`. */
 export function getSentencesContaining(text, pattern) {
   if (!text) return [];
-  // A /g or /gi RegExp is stateful across `.test()` calls (lastIndex advances),
-  // which silently skips matching sentences. Every real caller (OASISScrubber)
-  // passes a /gi pattern, so test against a non-global copy.
-  const re =
-    pattern instanceof RegExp && /[gy]/.test(pattern.flags)
-      ? new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, ""))
-      : pattern;
   const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
   return sentences
-    .filter((s) => re.test(s))
+    .filter((s) => { pattern.lastIndex = 0; return pattern.test(s); })
     .map((s) => s.trim() + ".")
     .slice(0, 5);
 }
