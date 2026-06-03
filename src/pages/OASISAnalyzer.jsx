@@ -1130,7 +1130,7 @@ Return JSON:
                   functional_scores: { type: "object" }
                 }
               }
-            });
+            }, { timeoutMs: 90000, retries: 1 });
             
             // Map parsed data to extraction output format
             extractedData = {
@@ -1522,7 +1522,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 clinician_questions: { type: "array", items: { type: "string" } }
               }
             }
-          }),
+          }, { timeoutMs: 90000, retries: 0 }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Analysis timeout - please try again')), 90000)
           )
