@@ -19,7 +19,86 @@ import {
   Database
 } from "lucide-react";
 import { toast } from "sonner";
-import { findDuplicateGroups } from "@/components/patient/patientDuplicateUtils";
+import {
+  similarity,
+  normalizeName,
+  digitsOnly,
+} from "@/components/patient/patientDuplicateUtils";
+
+// Composite, per-criterion matching for the destructive advanced scan. Each
+// enabled rule pairs a criterion with a corroborating identifier so a match is
+// always high confidence — a name match alone is never sufficient, and
+// phone/email require a matching last name (as the original scanner did).
+// Scores mirror the original calibration; a pair is a duplicate at >= 70.
+const ADVANCED_MATCH_THRESHOLD = 70;
+
+const evaluateAdvancedMatch = (a, b, opts) => {
+  let score = 0;
+  const reasons = [];
+
+  const firstA = normalizeName(a.first_name);
+  const firstB = normalizeName(b.first_name);
+  const lastA = normalizeName(a.last_name);
+  const lastB = normalizeName(b.last_name);
+  const sameLastName = !!lastA && lastA === lastB;
+
+  // Exact MRN — a unique identifier, definitive on its own.
+  if (opts.matchByMRN && a.medical_record_number && b.medical_record_number) {
+    const mrnA = String(a.medical_record_number).trim().toUpperCase();
+    const mrnB = String(b.medical_record_number).trim().toUpperCase();
+    if (mrnA && mrnA === mrnB) {
+      score += 100;
+      reasons.push("MRN match");
+    }
+  }
+
+  // Name + DOB. The fuzzy toggle controls whether names are compared by
+  // similarity/typo tolerance or must be exact.
+  if (
+    opts.matchByNameAndDOB &&
+    a.date_of_birth &&
+    b.date_of_birth &&
+    a.date_of_birth === b.date_of_birth
+  ) {
+    const namesMatch = opts.fuzzyNameMatching
+      ? similarity(firstA, firstB) >= 80 && similarity(lastA, lastB) >= 80
+      : !!firstA && firstA === firstB && sameLastName;
+    if (namesMatch) {
+      score += 90;
+      reasons.push(opts.fuzzyNameMatching ? "Name+DOB match (fuzzy)" : "Name+DOB match");
+    }
+  }
+
+  // Phone + last name.
+  if (opts.matchByPhone && a.phone && b.phone && sameLastName) {
+    const phoneA = digitsOnly(a.phone);
+    const phoneB = digitsOnly(b.phone);
+    if (phoneA.length >= 10 && phoneA === phoneB) {
+      score += 70;
+      reasons.push("Phone + last name match");
+    }
+  }
+
+  // Email + last name.
+  if (opts.matchByEmail && a.email && b.email && sameLastName) {
+    if (a.email.toLowerCase().trim() === b.email.toLowerCase().trim()) {
+      score += 75;
+      reasons.push("Email + last name match");
+    }
+  }
+
+  // Address + name similarity (corroborating only — not sufficient alone).
+  if (opts.matchByAddress && a.address && b.address) {
+    const addressSim = similarity(a.address, b.address);
+    const nameSim = (similarity(firstA, firstB) + similarity(lastA, lastB)) / 2;
+    if (addressSim >= 85 && nameSim >= 70) {
+      score += 60;
+      reasons.push("Address + name similarity");
+    }
+  }
+
+  return { isMatch: score >= ADVANCED_MATCH_THRESHOLD, score, reasons };
+};
 
 export default function DuplicateScanner() {
   const [isScanning, setIsScanning] = useState(false);
@@ -78,25 +157,31 @@ export default function DuplicateScanner() {
           }
         };
 
-        // Map the advanced toggles onto the shared scorer's signal groups.
-        const signals = {
-          name: advancedOptions.matchByNameAndDOB,
-          dob: advancedOptions.matchByNameAndDOB,
-          mrn: advancedOptions.matchByMRN,
-          phone: advancedOptions.matchByPhone,
-          address: advancedOptions.matchByAddress,
-          contact: advancedOptions.matchByEmail,
-        };
-        // This flow auto-discharges records, so require high confidence.
-        // Fuzzy matching on => catch looser matches; off => stricter.
-        const minScore = advancedOptions.fuzzyNameMatching ? 60 : 80;
-
         // Phase 1: Identify duplicate groups (no API calls). allPatients is
-        // ordered by -created_date, so each group's primary is the most recent.
-        const groups = findDuplicateGroups(allPatients, {
-          scoreOptions: { signals },
-          minScore,
-        });
+        // ordered by -created_date, so the first record in each group (lowest
+        // index) is the most recent and is the one we keep.
+        const processedIds = new Set();
+        const groups = [];
+        for (let i = 0; i < allPatients.length; i++) {
+          const primary = allPatients[i];
+          if (processedIds.has(primary.id)) continue;
+
+          const matched = [];
+          for (let j = i + 1; j < allPatients.length; j++) {
+            const candidate = allPatients[j];
+            if (processedIds.has(candidate.id)) continue;
+            const { isMatch, score, reasons } = evaluateAdvancedMatch(primary, candidate, advancedOptions);
+            if (isMatch) {
+              matched.push({ patient: candidate, score, reasons });
+              processedIds.add(candidate.id);
+            }
+          }
+
+          if (matched.length > 0) {
+            processedIds.add(primary.id);
+            groups.push({ primary, duplicates: matched });
+          }
+        }
 
         for (const group of groups) {
           const toKeep = group.primary;
@@ -132,11 +217,11 @@ export default function DuplicateScanner() {
             removed: group.duplicates.map(d => ({
               name: `${d.patient.first_name} ${d.patient.last_name}`,
               mrn: d.patient.medical_record_number,
-              match_score: d.confidencePercent,
-              match_reasons: d.matches
+              match_score: Math.min(100, d.score),
+              match_reasons: d.reasons
             })),
             average_match_score: Math.round(
-              group.duplicates.reduce((sum, d) => sum + d.confidencePercent, 0) / group.duplicates.length
+              group.duplicates.reduce((sum, d) => sum + Math.min(100, d.score), 0) / group.duplicates.length
             )
           });
         }
