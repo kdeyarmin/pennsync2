@@ -78,8 +78,12 @@ export const parseCsv = (content) => {
       } else {
         field += char;
       }
-    } else if (char === '"') {
+    } else if (char === '"' && field.trim() === '') {
+      // RFC-4180: a quote only opens a quoted field at the start of the field
+      // (leading whitespace before it is dropped). A quote anywhere else is a
+      // literal character, so values like He said "hi" are preserved as-is.
       inQuotes = true;
+      field = '';
     } else if (char === ',') {
       record.push(field);
       field = '';

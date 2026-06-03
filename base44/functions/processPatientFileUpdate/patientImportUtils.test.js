@@ -61,6 +61,18 @@ test("parseCsv handles quoted commas and escaped quotes", () => {
   assert.deepEqual(rows, [["name", "note"], ["Doe, Jane", 'She said "hi"']]);
 });
 
+test("parseCsv treats mid-field quotes as literal characters", () => {
+  // A quote that does not start the field is literal text, not an opener,
+  // so the value is preserved verbatim instead of having its quotes stripped.
+  const rows = parseCsv('note\nHe said "hi"');
+  assert.deepEqual(rows, [["note"], ['He said "hi"']]);
+});
+
+test("parseCsv still treats a quote at the field start (after leading spaces) as quoting", () => {
+  const rows = parseCsv('a,b\n1, "Doe, Jane"');
+  assert.deepEqual(rows, [["a", "b"], ["1", "Doe, Jane"]]);
+});
+
 test("parseCsv keeps embedded newlines inside quoted fields in one field", () => {
   const rows = parseCsv('addr\n"123 Main St\nApt 2"');
   assert.deepEqual(rows, [["addr"], ["123 Main St\nApt 2"]]);
