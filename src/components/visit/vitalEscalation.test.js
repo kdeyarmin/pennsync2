@@ -56,3 +56,12 @@ test("multiple simultaneous breaches are all reported", () => {
   const ids = breaches.map((b) => b.id).sort();
   assert.deepEqual(ids, ["hypertensive_crisis", "severe_hypoxia", "severe_pain"]);
 });
+
+test("supports the SmartVitalsInput key convention (bp string, o2, pain)", () => {
+  assert.equal(detectCriticalVitals({ bp: "190/125" })[0]?.id, "hypertensive_crisis");
+  assert.equal(detectCriticalVitals({ bp: "150 / 122" })[0]?.id, "hypertensive_crisis");
+  assert.equal(detectCriticalVitals({ o2: "85" })[0]?.id, "severe_hypoxia");
+  assert.equal(detectCriticalVitals({ pain: "10" })[0]?.id, "severe_pain");
+  // Normal values in the SmartVitalsInput convention must not alert.
+  assert.deepEqual(detectCriticalVitals({ bp: "120/80", o2: "98", pain: "2" }), []);
+});

@@ -20,7 +20,7 @@
     "preview": "vite preview",
     "check:updates": "node tools-check-updates.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
-    "verify:workflow-quality": "npm run lint:workflow-targets && npm run typecheck:utils && npm run test:utils && npm run build"
+    "verify:workflow-quality": "npm run lint:workflow-targets && npm run typecheck:utils && npm run test:utils && npm run test:components && npm run build"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.31",

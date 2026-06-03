@@ -262,15 +262,20 @@ export default function DocumentVisit() {
 
   // Critical-vital escalation (non-blocking): when an entered vital crosses a
   // life-threatening threshold, raise a PatientAlert so a supervisor/physician
-  // is looped in. This never blocks saving a genuine abnormal reading; each
-  // distinct breach alerts at most once per visit session.
+  // is looped in. This never blocks saving a genuine abnormal reading. Each
+  // (patient, breach) pair alerts at most once — keys are scoped by patient id
+  // so switching patients can't suppress the new one, and a failed create is
+  // rolled back so it retries on the next change.
   const escalatedVitalsRef = useRef(new Set());
   useEffect(() => {
     const pid = patient?.id;
     if (!pid) return;
-    const breaches = detectCriticalVitals(vitalSigns).filter((b) => !escalatedVitalsRef.current.has(b.id));
+    const breaches = detectCriticalVitals(vitalSigns).filter((b) => !escalatedVitalsRef.current.has(`${pid}:${b.id}`));
     if (!breaches.length) return;
-    breaches.forEach((b) => escalatedVitalsRef.current.add(b.id));
+    const keys = breaches.map((b) => `${pid}:${b.id}`);
+    // Optimistically mark as alerted so a rapid re-render can't duplicate an
+    // in-flight create; roll back on failure so it retries next time.
+    keys.forEach((k) => escalatedVitalsRef.current.add(k));
     const severity = breaches.some((b) => b.severity === "critical") ? "critical" : "high";
     base44.entities.PatientAlert.create({
       patient_id: pid,
@@ -284,7 +289,10 @@ export default function DocumentVisit() {
         "Reassess and document intervention and patient response",
         "Escalate per agency protocol",
       ],
-    }).catch((err) => console.error("Vital escalation alert failed:", err));
+    }).catch((err) => {
+      console.error("Vital escalation alert failed:", err);
+      keys.forEach((k) => escalatedVitalsRef.current.delete(k));
+    });
   }, [vitalSigns, patient]);
 
   const handleVoiceCommand = async (action, spokenText) => {

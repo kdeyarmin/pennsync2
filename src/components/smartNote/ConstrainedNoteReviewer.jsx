@@ -175,10 +175,15 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   useEffect(() => {
     if (!finalNote || !fixRequired?.offlinePending) return;
     const onReconnect = async () => {
-      const v = await verifyNote(finalNote);
-      applyVerification(finalNote, v);
-      if (v.ok) toast.success("Reconnected — every value re-verified against your input.");
-      else toast.error("Reconnected — grounding flagged items to review before finalizing.");
+      try {
+        const v = await verifyNote(finalNote);
+        applyVerification(finalNote, v);
+        if (v.ok) toast.success("Reconnected — every value re-verified against your input.");
+        else toast.error("Reconnected — grounding flagged items to review before finalizing.");
+      } catch (err) {
+        console.error("Reconnect grounding failed:", err);
+        toast.error("Reconnected, but verification couldn't run. Use Re-check before finalizing.");
+      }
     };
     window.addEventListener("online", onReconnect);
     return () => window.removeEventListener("online", onReconnect);

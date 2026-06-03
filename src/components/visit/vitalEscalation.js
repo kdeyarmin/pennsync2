@@ -12,6 +12,26 @@ const toNum = (x) => {
   return Number.isFinite(n) ? n : null;
 };
 
+// Vitals reach the shared visit state under TWO key conventions, both of which
+// must be supported so escalation works regardless of which entry card is used:
+//   - VitalSignsForm (workflow): blood_pressure_systolic / blood_pressure_diastolic,
+//     oxygen_saturation, pain_level
+//   - SmartVitalsInput (primary card): bp ("120/80" string), o2, pain
+function readBloodPressure(v) {
+  let systolic = toNum(v.blood_pressure_systolic);
+  let diastolic = toNum(v.blood_pressure_diastolic);
+  if ((systolic === null || diastolic === null) && typeof v.bp === "string") {
+    const m = v.bp.match(/(\d{2,3})\s*\/\s*(\d{2,3})/);
+    if (m) {
+      if (systolic === null) systolic = toNum(m[1]);
+      if (diastolic === null) diastolic = toNum(m[2]);
+    }
+  }
+  return { systolic, diastolic };
+}
+const readOxygen = (v) => toNum(v.oxygen_saturation) ?? toNum(v.o2);
+const readPain = (v) => toNum(v.pain_level) ?? toNum(v.pain);
+
 /**
  * Each rule: { id, label, severity, test(vitals) -> bool, describe(vitals) -> string }.
  * Thresholds match the agency-approved escalation defaults.
@@ -22,32 +42,33 @@ export const CRITICAL_VITAL_RULES = [
     label: "Hypertensive crisis",
     severity: "critical",
     test: (v) => {
-      const s = toNum(v.blood_pressure_systolic);
-      const d = toNum(v.blood_pressure_diastolic);
-      return (s !== null && s > 180) || (d !== null && d > 120);
+      const { systolic, diastolic } = readBloodPressure(v);
+      return (systolic !== null && systolic > 180) || (diastolic !== null && diastolic > 120);
     },
-    describe: (v) =>
-      `BP ${v.blood_pressure_systolic ?? "?"}/${v.blood_pressure_diastolic ?? "?"} mmHg (threshold >180/120)`,
+    describe: (v) => {
+      const { systolic, diastolic } = readBloodPressure(v);
+      return `BP ${systolic ?? "?"}/${diastolic ?? "?"} mmHg (threshold >180/120)`;
+    },
   },
   {
     id: "severe_hypoxia",
     label: "Severe hypoxia",
     severity: "critical",
     test: (v) => {
-      const o = toNum(v.oxygen_saturation);
+      const o = readOxygen(v);
       return o !== null && o > 0 && o < 88;
     },
-    describe: (v) => `O2 saturation ${v.oxygen_saturation}% (threshold <88%)`,
+    describe: (v) => `O2 saturation ${readOxygen(v)}% (threshold <88%)`,
   },
   {
     id: "severe_pain",
     label: "Severe pain",
     severity: "high",
     test: (v) => {
-      const p = toNum(v.pain_level);
+      const p = readPain(v);
       return p !== null && p >= 10;
     },
-    describe: (v) => `Pain ${v.pain_level}/10 (threshold 10/10)`,
+    describe: (v) => `Pain ${readPain(v)}/10 (threshold 10/10)`,
   },
 ];
 
