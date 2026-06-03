@@ -45,7 +45,6 @@ import {
 import { format } from "date-fns";
 import { logActivity } from "@/components/utils/activityLogger";
 import { toast } from "sonner";
-import { BALANCE_TRACKABLE_TYPES, typeLabel } from "@/components/timeoff/timeOffUtils";
 
 export default function UserManagement({ users }) {
   const queryClient = useQueryClient();
@@ -139,8 +138,7 @@ export default function UserManagement({ users }) {
       role: user.role,
       is_approved: user.is_approved ?? false,
       is_manager: user.is_manager ?? false,
-      manager_email: user.manager_email || '',
-      pto_allowances: user.pto_allowances || {}
+      manager_email: user.manager_email || ''
     });
     setShowEditDialog(true);
   };
@@ -149,14 +147,6 @@ export default function UserManagement({ users }) {
     if (!editingUser) return;
 
     const { id, ...userData } = editingUser;
-    // Normalize allowance overrides: keep only valid numbers, drop blanks.
-    const allowances = {};
-    Object.entries(userData.pto_allowances || {}).forEach(([type, value]) => {
-      if (value !== "" && value != null && !Number.isNaN(Number(value))) {
-        allowances[type] = Math.max(0, Number(value));
-      }
-    });
-    userData.pto_allowances = allowances;
     updateUserMutation.mutate({ userId: id, data: userData });
   };
 
@@ -649,29 +639,6 @@ export default function UserManagement({ users }) {
                         ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label className="text-sm">Annual time-off allowances (days)</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
-                    {BALANCE_TRACKABLE_TYPES.map((type) => (
-                      <div key={type}>
-                        <Label className="text-xs text-slate-500">{typeLabel(type)}</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          placeholder="default"
-                          value={editingUser.pto_allowances?.[type] ?? ''}
-                          onChange={(e) =>
-                            setEditingUser({
-                              ...editingUser,
-                              pto_allowances: { ...(editingUser.pto_allowances || {}), [type]: e.target.value },
-                            })
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">Blank uses the agency default for that type.</p>
                 </div>
               </div>
 

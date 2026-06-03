@@ -46,55 +46,6 @@ function totalRequestedDays(start, end, halfDay) {
   return halfDay ? Math.max(0.5, business - 0.5) : business;
 }
 
-function rangesOverlap(aStart, aEnd, bStart, bEnd) {
-  const as = parseISODate(aStart);
-  const ae = parseISODate(aEnd);
-  const bs = parseISODate(bStart);
-  const be = parseISODate(bEnd);
-  if (!as || !ae || !bs || !be) return false;
-  return as <= be && bs <= ae;
-}
-
-// Authoritative copy of the client-side policy check (getPolicyViolation).
-function getPolicyViolation(start, end, policy) {
-  const s = parseISODate(start);
-  if (!policy || !s) return null;
-  const notice = Number(policy.minimum_notice_days) || 0;
-  if (notice > 0) {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const earliest = new Date(today);
-    earliest.setDate(earliest.getDate() + notice);
-    if (s < earliest) {
-      return `Time off requires at least ${notice} day${notice === 1 ? '' : 's'} of advance notice.`;
-    }
-  }
-  const periods = Array.isArray(policy.blackout_periods) ? policy.blackout_periods : [];
-  for (const p of periods) {
-    if (p && rangesOverlap(start, end, p.start_date, p.end_date)) {
-      return `Your selected dates fall within a blackout period${p.label ? ` (${p.label})` : ''}.`;
-    }
-  }
-  return null;
-}
-
-const BALANCE_TRACKABLE_TYPES = ['vacation', 'sick', 'personal', 'parental'];
-
-// Merge agency default allowances with a user's per-user overrides.
-function resolveAllowances(policy, user) {
-  const defaults = (policy && policy.default_allowances) || {};
-  const overrides = (user && user.pto_allowances) || {};
-  const merged = {};
-  for (const type of BALANCE_TRACKABLE_TYPES) {
-    const raw = overrides[type] != null && overrides[type] !== '' ? overrides[type] : defaults[type];
-    if (raw != null && raw !== '') {
-      const n = Number(raw);
-      if (!Number.isNaN(n)) merged[type] = n;
-    }
-  }
-  return merged;
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -128,54 +79,6 @@ Deno.serve(async (req) => {
     const total = totalRequestedDays(start_date, end_date, !!half_day);
     if (total <= 0) {
       return Response.json({ error: 'The selected range contains no working days.' }, { status: 400 });
-    }
-
-    // Enforce agency policy (minimum notice + blackout periods) authoritatively.
-    const policies = await base44.asServiceRole.entities.TimeOffPolicy.list('-created_date', 1).catch(() => []);
-    const policy = policies && policies[0];
-    const policyViolation = getPolicyViolation(start_date, end_date, policy);
-    if (policyViolation) {
-      return Response.json({ error: policyViolation }, { status: 400 });
-    }
-
-    // Enforce the annual balance for tracked leave types (defaults + per-user
-    // overrides). Computed against the start date's calendar year.
-    const allowances = resolveAllowances(policy, user);
-    if (request_type in allowances) {
-      const year = start.getFullYear();
-      const existing = await base44.asServiceRole.entities.TimeOffRequest
-        .filter({ employee_email: user.email, request_type })
-        .catch(() => []);
-      const usedPending = (existing || []).reduce((sum, r) => {
-        if (!['approved', 'pending'].includes(r.status)) return sum;
-        const es = parseISODate(r.start_date);
-        if (!es || es.getFullYear() !== year) return sum;
-        return sum + (Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day));
-      }, 0);
-      // Effective allowance: accrued portion (if accrual is on) + carryover.
-      const base = Number(allowances[request_type]) || 0;
-      const nowYear = new Date().getFullYear();
-      const fraction = year === nowYear ? (new Date().getMonth() + 1) / 12 : 1;
-      const accrued = policy && policy.accrual_enabled ? Math.round(base * fraction) : base;
-      const carryMax = Number(policy && policy.carryover_max) || 0;
-      let carryover = 0;
-      if (carryMax > 0) {
-        const prevUsed = (existing || []).reduce((sum, r) => {
-          if (r.status !== 'approved') return sum;
-          const es = parseISODate(r.start_date);
-          if (!es || es.getFullYear() !== year - 1) return sum;
-          return sum + (Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day));
-        }, 0);
-        carryover = Math.max(0, Math.min(carryMax, base - prevUsed));
-      }
-      const allowance = accrued + carryover;
-      if (usedPending + total > allowance) {
-        const remaining = Math.max(0, allowance - usedPending);
-        return Response.json(
-          { error: `This exceeds the ${request_type.replace(/_/g, ' ')} allowance — ${remaining} of ${allowance} day(s) available this year.` },
-          { status: 400 }
-        );
-      }
     }
 
     // Validate the chosen approver: must be an admin or a flagged manager, and
