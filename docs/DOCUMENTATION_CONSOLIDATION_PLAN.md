@@ -89,6 +89,9 @@ Safety properties of Phase 1:
 
 ### Phase 2 — Unify the page (future, separate PR). Medium risk.
 
+> **Detailed design:** see `DOCUMENTATION_CONSOLIDATION_PHASE2.md` (decision:
+> Smart Note Assistant is the surviving host; sequenced slices + risks).
+
 Collapse to one route that accepts **either** an existing `visitId` **or**
 patient/referral context:
 

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mic, Upload, Loader2, Check } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import AudioRecorder from "../components/visit/AudioRecorder";
 import UnifiedDocumentReview from "../components/smartNote/UnifiedDocumentReview";
 import RealTimeDictationScribe from "../components/visit/RealTimeDictationScribe";
@@ -67,16 +69,14 @@ export default function VisitScribe() {
   const hasRoughNote = !!roughNote;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Mic className="w-8 h-8 text-indigo-600" />
-            Visit Scribe
-          </h1>
-          <p className="text-slate-600 mt-2">Record or upload patient interactions to generate compliant clinical notes</p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={Mic}
+        eyebrow="Documentation"
+        title="Visit Scribe"
+        description="Record or upload patient interactions to generate compliant clinical notes"
+        favoritePage="VisitScribe"
+      />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -193,7 +193,6 @@ export default function VisitScribe() {
             </CardContent>
           </Card>
         )}
-      </div>
-    </div>
+    </PageContainer>
   );
 }

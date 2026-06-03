@@ -39,8 +39,11 @@ import {
   Zap,
   Plus,
   Edit2,
-  Trash2
+  Trash2,
+  TrendingUp
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -166,47 +169,46 @@ export default function NursePerformanceDashboard() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 sm:mb-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Nurse Performance Dashboard</h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 hidden sm:block">AI-powered insights and personalized recommendations</p>
-          </div>
-          {currentUser?.role === 'admin' && (
-            <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-              <SelectTrigger className="w-full sm:w-64 h-11 touch-target">
-                <SelectValue placeholder="Select nurse..." />
+    <PageContainer>
+      <PageHeader
+        icon={TrendingUp}
+        eyebrow="Admin"
+        title="Nurse Performance Dashboard"
+        description="AI-powered insights and personalized recommendations"
+        favoritePage="NursePerformanceDashboard"
+        actions={
+          <div className="flex flex-col sm:flex-row gap-2">
+            {currentUser?.role === 'admin' && (
+              <Select value={selectedNurse} onValueChange={setSelectedNurse}>
+                <SelectTrigger className="w-full sm:w-64 h-11 touch-target">
+                  <SelectValue placeholder="Select nurse..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {allUsers.filter(u => u.role === 'user' && u.is_approved !== false).map(user => (
+                    <SelectItem key={user.email} value={user.email}>
+                      {user.full_name || user.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-full sm:w-40 h-11 touch-target">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {allUsers.filter(u => u.role === 'user' && u.is_approved !== false).map(user => (
-                  <SelectItem key={user.email} value={user.email}>
-                    {user.full_name || user.email}
-                  </SelectItem>
-                ))}
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+                <SelectItem value="365">Last year</SelectItem>
               </SelectContent>
             </Select>
-          )}
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-full sm:w-40 h-11 touch-target">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-              <SelectItem value="365">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={() => refetch()} variant="outline" className="min-h-[44px] w-full sm:w-auto">
-            Refresh
-          </Button>
-        </div>
-      </div>
+            <Button onClick={() => refetch()} variant="outline" className="min-h-[44px] w-full sm:w-auto">
+              Refresh
+            </Button>
+          </div>
+        }
+      />
 
       {!performanceData ? (
         <Card>
@@ -1129,6 +1131,6 @@ export default function NursePerformanceDashboard() {
           </Dialog>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

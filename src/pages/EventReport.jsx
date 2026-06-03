@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Send, Loader2 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function EventReport() {
   const { data: _currentUser } = useQuery({
@@ -224,7 +225,7 @@ Please review this report in the Incident Reporting system.
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <PageContainer>
       <Card>
         <CardHeader className="text-center border-b">
           <CardTitle className="text-2xl font-bold">Event Report</CardTitle>
@@ -449,6 +450,6 @@ Please review this report in the Incident Reporting system.
           </form>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

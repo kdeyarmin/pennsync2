@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Pill, Plus, Search, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Pill, Plus, Search, AlertTriangle, CheckCircle, Clock, Package } from 'lucide-react';
 
 import MedicationReconciliationInterface from '../components/medication/MedicationReconciliationInterface';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function MedicationReconciliation() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,11 +50,14 @@ export default function MedicationReconciliation() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Medication Reconciliation</h1>
-        <p className="text-slate-600">Compare discharge orders with current medications and resolve discrepancies</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Package}
+        eyebrow="Patient Care"
+        title="Medication Reconciliation"
+        description="Compare discharge orders with current medications and resolve discrepancies"
+        favoritePage="MedicationReconciliation"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -200,6 +205,6 @@ export default function MedicationReconciliation() {
           }}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

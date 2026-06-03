@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Edit, Sparkles, Star, Rocket, Zap, Heart, Gift } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const iconMap = {
@@ -122,17 +124,20 @@ export default function ManageNewFeatures() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Manage New Features</h1>
-          <p className="text-slate-600 mt-1">Add and manage features to display on the dashboard</p>
-        </div>
-        <Button onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Feature
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Zap}
+        eyebrow="Admin"
+        title="Manage Features"
+        description="Add and manage features to display on the dashboard"
+        favoritePage="ManageNewFeatures"
+        actions={
+          <Button onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Feature
+          </Button>
+        }
+      />
 
       <div className="grid gap-4">
         {features.map((feature) => {
@@ -289,6 +294,6 @@ export default function ManageNewFeatures() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

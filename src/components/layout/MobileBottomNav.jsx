@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Users, Brain, BookUser, Mail } from "lucide-react";
+import { Home, Users, Brain, Send, Mail } from "lucide-react";
 
 const BOTTOM_NAV_ITEMS = [
   { page: "Dashboard",          Icon: Home,     label: "Home" },
   { page: "Patients",           Icon: Users,    label: "Patients" },
   { page: "SmartNoteAssistant", Icon: Brain,    label: "Notes" },
-  { page: "SendFax",            Icon: BookUser, label: "Fax" },
+  { page: "SendFax",            Icon: Send,     label: "Fax" },
   { page: "Messages",           Icon: Mail,     label: "Messages", hasBadge: true },
 ];
 

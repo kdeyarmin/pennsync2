@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CertificateDownloadButton from '@/components/training/CertificateDownloadButton';
@@ -185,37 +187,30 @@ export default function LearningCenter() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      {/* Hero Header */}
-      <div className="rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white p-6 sm:p-8 shadow-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
-              <GraduationCap className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">
-                Welcome back{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}
-              </h1>
-              <p className="text-blue-200 mt-1">Your professional development hub — courses, certifications, and learning plans</p>
-            </div>
-          </div>
+    <PageContainer>
+      <PageHeader
+        icon={GraduationCap}
+        eyebrow="My Learning"
+        title={`Welcome back${user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}`}
+        description="Your professional development hub — courses, certifications, and learning plans"
+        favoritePage="LearningCenter"
+        actions={
           <div className="flex flex-wrap gap-2">
             <Link to={createPageUrl('MyLearning')}>
-              <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0">
+              <Button variant="outline" size="sm">
                 <BookOpen className="w-4 h-4 mr-1.5" />
                 My Courses
               </Button>
             </Link>
             <Link to={createPageUrl('MyAnnualEducation')}>
-              <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0">
+              <Button variant="outline" size="sm">
                 <GraduationCap className="w-4 h-4 mr-1.5" />
                 My Annual Education
               </Button>
             </Link>
             {isEducatorOrAdmin && (
               <Link to={createPageUrl('AdminTraining')}>
-                <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0">
+                <Button variant="outline" size="sm">
                   <Sparkles className="w-4 h-4 mr-1.5" />
                   Training Admin
                 </Button>
@@ -223,15 +218,15 @@ export default function LearningCenter() {
             )}
             {isSupervisor && (
               <Link to={createPageUrl('ClinicalSkillsChecklist')}>
-                <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0">
+                <Button variant="outline" size="sm">
                   <CheckCircle2 className="w-4 h-4 mr-1.5" />
                   Skills Checklists
                 </Button>
               </Link>
             )}
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -797,6 +792,6 @@ export default function LearningCenter() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

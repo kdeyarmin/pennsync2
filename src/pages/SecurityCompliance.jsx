@@ -44,6 +44,7 @@ import {
   Info
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import EncryptionStatusIndicator from "../components/security/EncryptionStatusIndicator";
 import AIAuditAnalyzer from "../components/security/AIAuditAnalyzer";
 import SecurityAuditScheduler from "../components/security/SecurityAuditScheduler";
@@ -253,11 +254,10 @@ export default function SecurityCompliance() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={Shield}
-        iconColor="bg-blue-600"
-        eyebrow="Security"
+        eyebrow="Analytics"
         title="Security & HIPAA Compliance"
         description="Monitor security status, compliance metrics, and audit trail"
         favoritePage="SecurityCompliance"
@@ -825,6 +825,6 @@ export default function SecurityCompliance() {
           <AIAuditAnalyzer />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

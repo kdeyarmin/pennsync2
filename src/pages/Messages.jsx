@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function Messages() {
   const queryClient = useQueryClient();
@@ -200,10 +201,9 @@ export default function Messages() {
   const unreadCount = threads.filter(t => t.unreadCount > 0).length;
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={Mail}
-        iconColor="bg-blue-600"
         eyebrow="Communication"
         title="Messages"
         description="Secure internal messaging for patient care coordination"
@@ -501,6 +501,6 @@ export default function Messages() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

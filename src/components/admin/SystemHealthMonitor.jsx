@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,16 +16,6 @@ const METRICS = [
   { key: "uptime", label: "Uptime", unit: "%", good: 99.5, warn: 99, invert: true },
   { key: "active_users", label: "Active Users", unit: "", good: null, warn: null },
 ];
-
-function generateMetric(key) {
-  const base = {
-    api_response: () => Math.round(120 + Math.random() * 250),
-    error_rate: () => parseFloat((Math.random() * 3).toFixed(2)),
-    uptime: () => parseFloat((99 + Math.random() * 0.99).toFixed(3)),
-    active_users: () => Math.round(5 + Math.random() * 40),
-  };
-  return base[key]?.() ?? 0;
-}
 
 function StatusDot({ status }) {
   const colors = { good: "bg-green-500", warn: "bg-yellow-400 animate-pulse", critical: "bg-red-500 animate-pulse" };
@@ -82,6 +72,13 @@ export default function SystemHealthMonitor() {
   const [dismissed, setDismissed] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [autoRefresh, _setAutoRefresh] = useState(true);
+  // Real measured latency + observed availability (replaces simulated values).
+  const [measured, setMeasured] = useState({ apiLatency: null, dbLatency: null });
+  const upProbesRef = useRef({ ok: 0, total: 0 });
+  // Track the latest metrics in a ref so `refresh` doesn't depend on `metrics`
+  // state (which it sets) — that dependency would re-create the callback and
+  // re-fire the effect that calls it, an infinite update loop.
+  const metricsRef = useRef({});
 
   // Fetch real entity counts for actual system data
   const { data: visits = [] } = useQuery({
@@ -103,26 +100,52 @@ export default function SystemHealthMonitor() {
     refetchInterval: autoRefresh ? 30000 : false,
   });
 
+  // Probe real backend latency and observed availability every 30s.
+  useEffect(() => {
+    let cancelled = false;
+    const probe = async () => {
+      // Time a real authenticated API round-trip.
+      const apiStart = performance.now();
+      let ok = true;
+      try { await base44.auth.me(); } catch { ok = false; }
+      const apiLatency = Math.round(performance.now() - apiStart);
+
+      // Time a real DB-bound query round-trip.
+      const dbStart = performance.now();
+      try { await base44.entities.Visit.list("-created_date", 1); } catch { ok = false; }
+      const dbLatency = Math.round(performance.now() - dbStart);
+
+      upProbesRef.current.total += 1;
+      if (ok) upProbesRef.current.ok += 1;
+      if (!cancelled) setMeasured({ apiLatency, dbLatency });
+    };
+    probe();
+    const id = setInterval(probe, 30000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
   const refresh = useCallback(() => {
-    setPrevMetrics(metrics);
+    setPrevMetrics(metricsRef.current);
     const today = new Date();
     const recentVisits = visits.filter(v => {
       const d = new Date(v.created_date);
       return (today - d) < 24 * 60 * 60 * 1000;
     });
 
+    const probes = upProbesRef.current;
     const newMetrics = {
-      api_response: generateMetric("api_response"),
+      api_response: measured.apiLatency ?? 0,
       error_rate: parseFloat((incidents.length / Math.max(visits.length, 1) * 10).toFixed(2)),
-      uptime: parseFloat((99.5 + Math.random() * 0.49).toFixed(3)),
+      uptime: probes.total ? parseFloat(((probes.ok / probes.total) * 100).toFixed(3)) : 100,
       active_users: users.filter(u => {
         const d = new Date(u.updated_date || u.created_date);
         return (today - d) < 60 * 60 * 1000;
-      }).length || Math.round(3 + Math.random() * 12),
-      db_latency: Math.round(10 + Math.random() * 40),
+      }).length,
+      db_latency: measured.dbLatency ?? 0,
       visits_today: recentVisits.length,
       total_users: users.length,
     };
+    metricsRef.current = newMetrics;
     setMetrics(newMetrics);
     setLastUpdated(new Date());
 
@@ -136,7 +159,7 @@ export default function SystemHealthMonitor() {
     if (newMetrics.uptime < 99) newAlerts.push({ level: "critical", title: "Uptime Below Threshold", message: `System uptime at ${newMetrics.uptime}% — investigate immediately.` });
     setAlerts(newAlerts);
     setDismissed([]);
-  }, [visits, users, incidents, metrics, notificationsEnabled]);
+  }, [visits, users, incidents, notificationsEnabled, measured]);
 
   useEffect(() => {
     refresh();
@@ -267,7 +290,7 @@ export default function SystemHealthMonitor() {
           ))}
         </div>
 
-        <p className="text-xs text-slate-400 text-center">Auto-refreshes every 30s · API response simulated for demo; entity counts are live</p>
+        <p className="text-xs text-slate-400 text-center">Auto-refreshes every 30s · API &amp; DB latency and availability measured live; entity counts are live</p>
       </CardContent>
     </Card>
   );

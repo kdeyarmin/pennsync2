@@ -60,6 +60,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
 import { toast } from "sonner";
@@ -369,11 +370,10 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+    <PageContainer>
       <PageHeader
         icon={Users}
-iconColor="bg-gradient-to-br from-purple-600 to-indigo-600"
-        eyebrow="Administration"
+        eyebrow="Manage"
         title="User Management"
         description="Manage user accounts, roles, and permissions"
         favoritePage="UserManagement"
@@ -1110,6 +1110,6 @@ iconColor="bg-gradient-to-br from-purple-600 to-indigo-600"
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

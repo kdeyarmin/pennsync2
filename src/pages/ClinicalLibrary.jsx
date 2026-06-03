@@ -1,15 +1,18 @@
 import ClinicalLibraryManager from "../components/clinical/ClinicalLibraryManager";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
+import { BookOpen } from "lucide-react";
 
 export default function ClinicalLibrary() {
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-4">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Clinical Phrase Library</h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-2">
-          Create and manage quick phrases that expand into full Medicare-compliant documentation.
-          Perfect for common assessments, education, and interventions.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={BookOpen}
+        eyebrow="Resources"
+        title="Clinical Library"
+        description="Create and manage quick phrases that expand into full Medicare-compliant documentation. Perfect for common assessments, education, and interventions."
+        favoritePage="ClinicalLibrary"
+      />
 
       <ClinicalLibraryManager />
 
@@ -56,6 +59,6 @@ export default function ClinicalLibrary() {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

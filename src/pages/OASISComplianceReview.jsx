@@ -3,7 +3,9 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Shield } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
 import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";
@@ -35,31 +37,32 @@ export default function OASISComplianceReview() {
   const accuracyScore = analysisResults.accuracy_score || 0;
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="min-w-0 flex-1">
-          <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="ghost" size="sm" className="min-h-[44px]">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Back to Analyzer</span>
-              <span className="sm:hidden">Back</span>
-            </Button>
-          </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mt-2 truncate">OASIS Compliance & Accuracy Review</h1>
-          {patientName && <p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">Patient: {patientName}</p>}
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
-          <div className="text-right">
-            <p className="text-sm text-slate-600">Compliance Score</p>
-            <div className="text-2xl font-bold text-blue-600">{complianceScore}%</div>
+    <PageContainer>
+      <PageHeader
+        icon={Shield}
+        eyebrow="Patient Care"
+        title="OASIS Compliance Review"
+        description={patientName ? `Patient: ${patientName}` : undefined}
+        favoritePage="OASISComplianceReview"
+        actions={
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <Link to={createPageUrl("OASISAnalyzer")}>
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Analyzer
+              </Button>
+            </Link>
+            <div className="text-right">
+              <p className="text-sm text-slate-600">Compliance Score</p>
+              <div className="text-2xl font-bold text-blue-600">{complianceScore}%</div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-slate-600">Accuracy Score</p>
+              <div className="text-2xl font-bold text-purple-600">{accuracyScore}%</div>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-slate-600">Accuracy Score</p>
-            <div className="text-2xl font-bold text-purple-600">{accuracyScore}%</div>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Advanced AI Compliance Analyzer */}
       <AdvancedComplianceAnalyzer
@@ -166,6 +169,6 @@ export default function OASISComplianceReview() {
           />
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

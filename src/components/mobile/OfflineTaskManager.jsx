@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  FileText, 
+import {
+  FileText,
   AlertCircle,
   CheckCircle,
   Clock,
@@ -22,6 +23,8 @@ export default function OfflineTaskManager({ patientId, patientName }) {
   const [formData, setFormData] = useState({
     visit_date: new Date().toISOString().split('T')[0],
     visit_type: 'routine_visit',
+    incident_type: 'fall',
+    severity: 'medium',
     notes: '',
     vital_signs: {
       blood_pressure_systolic: '',
@@ -52,26 +55,29 @@ export default function OfflineTaskManager({ patientId, patientName }) {
       alert('Please enter visit notes');
       return;
     }
+    if (!patientId) {
+      alert('No patient selected for this visit.');
+      return;
+    }
 
     setSaving(true);
     try {
+      const hasVitals = !!formData.vital_signs.blood_pressure_systolic;
       const visitData = {
         patient_id: patientId,
         visit_date: formData.visit_date,
         visit_type: formData.visit_type,
         status: 'completed',
-        nurse_notes: formData.notes,
-        vital_signs: formData.vital_signs.blood_pressure_systolic ? formData.vital_signs : null,
-        created_offline: !isOnline
+        nurse_notes: formData.notes.trim(),
+        vital_signs: hasVitals ? formData.vital_signs : null,
       };
 
       if (isOnline) {
-        // Save directly if online
-        // Note: In real implementation, this would use base44 API
-        console.log('Saving visit online:', visitData);
+        // Persist directly to the backend when connected.
+        await base44.entities.Visit.create(visitData);
       } else {
-        // Queue for offline sync
-        offlineStorage.addPendingChange('visit_create', visitData);
+        // Queue for offline sync; the sync service replays it when back online.
+        offlineStorage.addPendingChange('visit_create', { ...visitData, created_offline: true });
       }
 
       setSaved(true);
@@ -81,6 +87,8 @@ export default function OfflineTaskManager({ patientId, patientName }) {
         setFormData({
           visit_date: new Date().toISOString().split('T')[0],
           visit_type: 'routine_visit',
+          incident_type: 'fall',
+          severity: 'medium',
           notes: '',
           vital_signs: {
             blood_pressure_systolic: '',
@@ -99,27 +107,38 @@ export default function OfflineTaskManager({ patientId, patientName }) {
   };
 
   const handleSaveIncident = async () => {
+    if (!formData.notes.trim()) {
+      alert('Please describe the incident');
+      return;
+    }
+    if (!patientId) {
+      alert('No patient selected for this incident.');
+      return;
+    }
+
     setSaving(true);
     try {
       const incidentData = {
         patient_id: patientId,
-        incident_type: 'fall', // Example
+        patient_name: patientName || undefined,
+        incident_type: formData.incident_type,
         incident_date: formData.visit_date,
-        severity: 'medium',
-        details: { description: formData.notes },
-        created_offline: !isOnline
+        severity: formData.severity,
+        report: formData.notes.trim(),
+        details: { description: formData.notes.trim() },
       };
 
       if (isOnline) {
-        console.log('Saving incident online:', incidentData);
+        await base44.entities.Incident.create(incidentData);
       } else {
-        offlineStorage.addPendingChange('incident_create', incidentData);
+        offlineStorage.addPendingChange('incident_create', { ...incidentData, created_offline: true });
       }
 
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
       console.error('Save error:', error);
+      alert('Failed to report incident');
     }
     setSaving(false);
   };
@@ -307,6 +326,43 @@ export default function OfflineTaskManager({ patientId, patientName }) {
                 value={formData.visit_date}
                 onChange={(e) => setFormData({ ...formData, visit_date: e.target.value })}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="incident_type">Incident Type</Label>
+                <select
+                  id="incident_type"
+                  value={formData.incident_type}
+                  onChange={(e) => setFormData({ ...formData, incident_type: e.target.value })}
+                  className="w-full h-10 px-3 rounded-md border border-slate-300"
+                >
+                  <option value="fall">Fall</option>
+                  <option value="hospitalized">Hospitalized</option>
+                  <option value="medication_error">Medication Error</option>
+                  <option value="behavioral_change">Behavioral Change</option>
+                  <option value="infection_suspected">Infection Suspected</option>
+                  <option value="refusal_of_care">Refusal of Care</option>
+                  <option value="pressure_injury">Pressure Injury</option>
+                  <option value="emergency_visit">Emergency Visit</option>
+                  <option value="safety_event">Safety Event</option>
+                  <option value="wound_concern">Wound Concern</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="incident_severity">Severity</Label>
+                <select
+                  id="incident_severity"
+                  value={formData.severity}
+                  onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
+                  className="w-full h-10 px-3 rounded-md border border-slate-300"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
             </div>
 
             <div>

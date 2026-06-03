@@ -380,13 +380,15 @@ Return detailed risk assessment:`,
                   ))}
 
                 {riskScores.filter(r => r.risk_level === 'critical' || r.risk_level === 'high').length > 5 && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    asChild
+                    variant="outline"
                     className="w-full text-sm"
-                    onClick={() => alert('Full risk report feature - navigate to Analytics Dashboard')}
                   >
-                    View All {highRiskCount} High-Risk Patients
-                    <ChevronRight className="w-4 h-4 ml-2" />
+                    <Link to={createPageUrl('PredictiveAnalytics')}>
+                      View All {highRiskCount} High-Risk Patients
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Link>
                   </Button>
                 )}
               </div>

@@ -38,14 +38,10 @@ export default function AICarePlanSuggestionEngine({
     initialData: [],
   });
 
-  const { data: _educationMaterials = [] } = useQuery({
-    queryKey: ['patientEducationForCarePlan', diagnosis],
-    queryFn: async () => {
-      // Simulated - would query generated education materials
-      return [];
-    },
+  const { data: educationMaterials = [] } = useQuery({
+    queryKey: ['patientEducationForCarePlan'],
+    queryFn: () => base44.entities.EducationMaterial.filter({ is_published: true }, '-last_used_date', 50),
     initialData: [],
-    enabled: !!diagnosis
   });
 
   useEffect(() => {
@@ -77,6 +73,9 @@ ${existingCarePlans.length > 0 ? existingCarePlans.map(cp => `- ${cp.problem}: $
 
 MEDICARE REQUIREMENTS (42 CFR 484):
 ${medicareRules.filter(r => r.category === 'plan_of_care').map(r => `- ${r.rule_name}: ${r.description}`).join('\n')}
+
+AVAILABLE PATIENT EDUCATION MATERIALS (prefer these titles when suggesting education_topics):
+${educationMaterials.length > 0 ? educationMaterials.map(m => `- ${m.title}${m.category ? ` (${m.category})` : ''}`).join('\n') : 'None on file'}
 
 Generate 3-5 NEW care plan suggestions that:
 1. Are NOT duplicates of existing plans

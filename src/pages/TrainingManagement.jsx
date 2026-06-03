@@ -4,8 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Users, GraduationCap } from "lucide-react";
 import CourseManager from "../components/training/CourseManager";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import LearningPlanManager from "../components/training/LearningPlanManager";
 import AIComplianceInServicesHub from "../components/training/AIComplianceInServicesHub";
 
@@ -22,11 +24,14 @@ export default function TrainingManagement() {
   }, []);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Training Management</h1>
-        <p className="text-sm sm:text-base text-slate-600">Manage courses, create learning plans, and assign training</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={GraduationCap}
+        eyebrow="Manage"
+        title="Training Management"
+        description="Manage courses, create learning plans, and assign training"
+        favoritePage="TrainingManagement"
+      />
 
       <Tabs defaultValue="courses" className="space-y-4 sm:space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
@@ -54,7 +59,7 @@ export default function TrainingManagement() {
           <AIComplianceInServicesHub />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
 

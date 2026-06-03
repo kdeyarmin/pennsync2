@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import DocumentManagementDashboard from "@/components/documents/DocumentManagementDashboard";
 import DocumentPackageCreator from "@/components/documents/DocumentPackageCreator";
 import SignatureTracking from "@/components/documents/SignatureTracking";
@@ -46,10 +47,9 @@ export default function DocumentHub() {
   }), [normalizedSignatures]);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={FileText}
-        iconColor="bg-indigo-600"
         eyebrow="Documentation"
         title="Document Hub"
         description="Manage signatures, templates, and patient documents"
@@ -132,6 +132,6 @@ export default function DocumentHub() {
           <DocumentAnalytics />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

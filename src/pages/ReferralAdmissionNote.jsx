@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Sparkles, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function ReferralAdmissionNote() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -146,7 +147,7 @@ ${data.orders_treatments?.physician_orders?.join('\n') || 'To be clarified with 
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <PageContainer>
       <div className="mb-6">
         <Link to={createPageUrl('ReferralIntake')}>
           <Button variant="outline" size="sm">
@@ -198,6 +199,6 @@ ${data.orders_treatments?.physician_orders?.join('\n') || 'To be clarified with 
           />
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

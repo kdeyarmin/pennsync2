@@ -13,22 +13,17 @@ export default function TeamNotes({ visitId, patientId }) {
   const [newNote, setNewNote] = useState("");
   const [showNotes, setShowNotes] = useState(false);
 
-  // For demo purposes, using visit entity to store team notes
-  // In production, you'd create a TeamNote entity
+  // Team notes are persisted to the TeamNote entity so they're visible to every
+  // nurse caring for this patient. created_by / created_date are set by Base44.
   const { data: notes } = useQuery({
     queryKey: ['teamNotes', patientId],
-    queryFn: async () => {
-      // Placeholder - would query TeamNote entity
-      return [];
-    },
+    queryFn: () => base44.entities.TeamNote.filter({ patient_id: patientId }, '-created_date', 100),
     initialData: [],
+    enabled: !!patientId,
   });
 
   const addNoteMutation = useMutation({
-    mutationFn: async (noteData) => {
-      // Placeholder - would create TeamNote record
-      return { id: Date.now(), ...noteData };
-    },
+    mutationFn: (noteData) => base44.entities.TeamNote.create(noteData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teamNotes', patientId] });
       setNewNote("");
@@ -36,15 +31,12 @@ export default function TeamNotes({ visitId, patientId }) {
   });
 
   const handleAddNote = async () => {
-    if (!newNote.trim()) return;
+    if (!newNote.trim() || !patientId) return;
 
-    const user = await base44.auth.me();
     await addNoteMutation.mutateAsync({
       patient_id: patientId,
       visit_id: visitId,
-      note: newNote,
-      created_by: user.email,
-      created_date: new Date().toISOString(),
+      note: newNote.trim(),
       flagged: false
     });
   };
@@ -106,11 +98,11 @@ export default function TeamNotes({ visitId, patientId }) {
             />
             <Button
               onClick={handleAddNote}
-              disabled={!newNote.trim()}
+              disabled={!newNote.trim() || addNoteMutation.isPending}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               <Send className="w-4 h-4 mr-2" />
-              Add Team Note
+              {addNoteMutation.isPending ? 'Adding…' : 'Add Team Note'}
             </Button>
           </div>
 

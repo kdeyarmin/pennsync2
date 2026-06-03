@@ -11,14 +11,9 @@ export default function AIComplianceInServices() {
 
   const isAdmin = currentUser?.role === 'admin';
 
-  // Admins see the full management hub, regular users see their training view
+  // Admins see the full management hub; everyone else sees their in-service
+  // training view, which renders its own standard page header.
   return isAdmin ? <AIComplianceInServicesHub /> : (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">AI Compliance In-Services</h1>
-        <p className="text-sm sm:text-base text-slate-600">Your assigned compliance in-service trainings</p>
-      </div>
-      <MyTrainingDashboard filterByType="in_service" />
-    </div>
+    <MyTrainingDashboard filterByType="in_service" />
   );
 }

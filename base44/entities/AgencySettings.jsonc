@@ -19,6 +19,14 @@
       "type": "string",
       "description": "Agency office address"
     },
+    "office_phone": {
+      "type": "string",
+      "description": "Agency office phone number shown to patients/families on communications"
+    },
+    "office_email": {
+      "type": "string",
+      "description": "Agency office contact email shown to patients/families on communications"
+    },
     "avg_staff_hourly_rate": {
       "type": "number",
       "default": 45,

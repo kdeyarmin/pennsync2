@@ -1,7 +1,9 @@
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Users, TrendingUp, AlertTriangle } from "lucide-react";
+import { Activity, Users, TrendingUp, AlertTriangle, Brain } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import PopulationTrendAnalyzer from "../components/analytics/PopulationTrendAnalyzer";
 import DiseaseProgressionPredictor from "../components/analytics/DiseaseProgressionPredictor";
 
@@ -41,19 +43,14 @@ export default function ClinicalInsightsDashboard() {
   const completionRate = myVisitsCount > 0 ? Math.round((myCompletedVisits / myVisitsCount) * 100) : 0;
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-            <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Clinical Insights</h1>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Population health trends and patient monitoring</p>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Brain}
+        eyebrow="Admin"
+        title="Clinical Insights"
+        description="Population health trends and patient monitoring"
+        favoritePage="ClinicalInsightsDashboard"
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -144,6 +141,6 @@ export default function ClinicalInsightsDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

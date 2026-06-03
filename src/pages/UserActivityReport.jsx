@@ -17,6 +17,8 @@ import {
   Clock,
   MousePointer
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { formatDistanceToNow } from "date-fns";
 import { formatEastern } from "../components/utils/timezone";
 import { jsPDF } from "jspdf";
@@ -288,17 +290,14 @@ export default function UserActivityReport() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-              <BarChart3 className="w-8 h-8 text-blue-600" />
-              User Activity Report
-            </h1>
-            <p className="text-slate-600 mt-1">Comprehensive analytics on user engagement and activity</p>
-          </div>
+    <PageContainer>
+      <PageHeader
+        icon={BarChart3}
+        eyebrow="Admin"
+        title="User Activity Report"
+        description="Comprehensive analytics on user engagement and activity"
+        favoritePage="UserActivityReport"
+        actions={
           <div className="flex gap-2">
             <Button onClick={exportToCSV} variant="outline">
               <Download className="w-4 h-4 mr-2" />
@@ -309,7 +308,8 @@ export default function UserActivityReport() {
               Export PDF
             </Button>
           </div>
-        </div>
+        }
+      />
 
         {/* Overall Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -526,7 +526,6 @@ export default function UserActivityReport() {
             </ScrollArea>
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -2,7 +2,9 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, FileText, Activity, AlertTriangle } from "lucide-react";
+import { Shield, FileText, Activity, AlertTriangle, Lock } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import SecurityDocumentation from "../components/security/SecurityDocumentation";
 import AuditTrailViewer from "../components/security/AuditTrailViewer";
 import SecurityAnomalyDetector from "../components/security/SecurityAnomalyDetector";
@@ -19,16 +21,14 @@ export default function SecurityPolicy() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 mb-2">
-          <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-          <span className="truncate">Security & Compliance</span>
-        </h1>
-        <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">
-          HIPAA security measures, audit trails, and compliance documentation
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Lock}
+        eyebrow="Analytics"
+        title="Security Policy"
+        description="HIPAA security measures, audit trails, and compliance documentation"
+        favoritePage="SecurityPolicy"
+      />
 
       <Tabs defaultValue="documentation" className="space-y-4 sm:space-y-6">
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
@@ -128,6 +128,6 @@ export default function SecurityPolicy() {
           )}
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

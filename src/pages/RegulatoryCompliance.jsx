@@ -1,12 +1,14 @@
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 import RegulatoryMonitor from "../components/compliance/RegulatoryMonitor";
 import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function RegulatoryCompliance() {
   const { data: currentUser } = useQuery({
@@ -17,19 +19,22 @@ export default function RegulatoryCompliance() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Link to={createPageUrl("ComplianceDashboard")} className="w-full sm:w-auto">
-          <Button variant="outline" size="sm" className="min-h-[44px] w-full sm:w-auto">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Regulatory Compliance Center</h1>
-          <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Monitor healthcare regulations and manage compliance updates</p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={ClipboardList}
+        eyebrow="Analytics"
+        title="Regulatory Compliance Center"
+        description="Monitor healthcare regulations and manage compliance updates"
+        favoritePage="RegulatoryCompliance"
+        actions={
+          <Link to={createPageUrl("ComplianceDashboard")}>
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+        }
+      />
 
       {!isAdmin && (
         <div className="mb-4 sm:mb-6">
@@ -38,6 +43,6 @@ export default function RegulatoryCompliance() {
       )}
 
       <RegulatoryMonitor isAdmin={isAdmin} />
-    </div>
+    </PageContainer>
   );
 }

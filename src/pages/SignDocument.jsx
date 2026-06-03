@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, FileText, Pen, User } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
@@ -148,13 +150,14 @@ export default function SignDocument() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Sign Document</h1>
-        <p className="text-slate-600">
-          {patient.first_name} {patient.last_name} • {signatureRecord.document_title}
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Pen}
+        eyebrow="Documentation"
+        title="Sign Document"
+        description={`${patient.first_name} ${patient.last_name} • ${signatureRecord.document_title}`}
+        favoritePage="SignDocument"
+      />
 
       {/* Document Preview */}
       <Card className="mb-6">
@@ -274,6 +277,6 @@ export default function SignDocument() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </PageContainer>
   );
 }

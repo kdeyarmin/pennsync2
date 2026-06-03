@@ -34,6 +34,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO, subMonths } from "date-fns";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function IncidentReportingModule() {
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -264,19 +266,14 @@ Please review this incident in the Incident Reporting Dashboard.`
   };
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
-              <AlertTriangle className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Incident Reporting</h1>
-              <p className="text-sm text-slate-600">Document and track safety incidents</p>
-            </div>
-          </div>
+    <PageContainer>
+      <PageHeader
+        icon={AlertTriangle}
+        eyebrow="Patient Care"
+        title="Incident Reporting"
+        description="Document and track safety incidents"
+        favoritePage="IncidentReportingModule"
+        actions={
           <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
             <DialogTrigger asChild>
               <Button className="bg-red-600 hover:bg-red-700">
@@ -529,8 +526,8 @@ Please review this incident in the Incident Reporting Dashboard.`
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
+        }
+      />
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -681,6 +678,6 @@ Please review this incident in the Incident Reporting Dashboard.`
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -122,7 +122,7 @@ export default function SecurityAuditScheduler() {
         score -= 20;
       }
 
-      // Check 5: Password strength (simulated - would need backend validation)
+      // Check 5: Authentication strength — flag accounts without MFA enrolled.
       const usersWithoutStrongAuth = users.filter(u => !u.mfa_enabled);
       if (usersWithoutStrongAuth.length > 0) {
         findings.push({

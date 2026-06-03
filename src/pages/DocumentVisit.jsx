@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { invokeLLM, invokeLLMWithFile } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Mic, Save, Clock, User, Sparkles, FileText, CheckCircle2, Download, Mail, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Mic, Save, Clock, Sparkles, FileText, CheckCircle2, Download, Mail, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +81,8 @@ import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import CameraScanner from "../components/mobile/CameraScanner";
 import offlineStorage from "../components/mobile/OfflineStorage";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function DocumentVisit() {
   const navigate = useNavigate();
@@ -474,10 +476,12 @@ Next Steps:
 
 For questions, please contact your care team.`;
 
-      const recipientEmail = patient.email || 'caregiver@example.com';
+      // Never send PHI to a placeholder address — require a real email on file.
       if (!patient.email) {
-        console.warn(`Patient email not found for ${patient.first_name} ${patient.last_name}. Sending to default: ${recipientEmail}`);
+        alert(`No email address on file for ${patient.first_name} ${patient.last_name}. Add an email to the patient record before sending a visit summary.`);
+        return;
       }
+      const recipientEmail = patient.email;
 
       await base44.integrations.Core.SendEmail({
         to: recipientEmail,
@@ -824,7 +828,7 @@ ${narrativeText}
 
 Generate the complete clinical narrative based on the audio and context:`;
 
-        const llmResult = await invokeLLM({
+        const llmResult = await invokeLLMWithFile({
           prompt: prompt,
           file_urls: [file_url]
         });
@@ -956,6 +960,74 @@ Generate the complete clinical narrative based on the audio and context:`;
       return homeboundText;
     });
     setHasUnsavedChanges(true);
+  };
+
+  // One-click quick actions — each creates a real record the office/nurse can act on.
+  const handleScheduleFollowUp = async () => {
+    if (!patient || !visit) return;
+    try {
+      const user = await base44.auth.me();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 7);
+      await base44.entities.Task.create({
+        patient_id: patient.id,
+        title: `Schedule follow-up visit for ${patient.first_name} ${patient.last_name}`,
+        description: `Follow-up requested during the ${visit.visit_type?.replace(/_/g, ' ')} visit on ${visit.visit_date}.`,
+        type: 'followup',
+        priority: 'medium',
+        status: 'pending',
+        due_date: dueDate.toISOString().split('T')[0],
+        due_timeframe: 'this_week',
+        assigned_to: user.email,
+        source: 'manual',
+        related_visit_id: visit.id,
+      });
+      alert('Follow-up task added to your task list.');
+    } catch (error) {
+      console.error('Failed to create follow-up task:', error);
+      alert('Could not create the follow-up task. Please try again.');
+    }
+  };
+
+  const handleMarkUrgent = async () => {
+    if (!patient || !visit) return;
+    try {
+      await base44.entities.PatientAlert.create({
+        patient_id: patient.id,
+        alert_type: 'urgent_intervention',
+        severity: 'high',
+        title: `Urgent: ${patient.first_name} ${patient.last_name}`,
+        message: `Flagged as urgent by the visiting nurse during the ${visit.visit_type?.replace(/_/g, ' ')} visit on ${visit.visit_date}. Office review requested.`,
+        status: 'active',
+        flagged_urgent: true,
+      });
+      alert('Patient flagged as urgent — the office will see this in active alerts.');
+    } catch (error) {
+      console.error('Failed to create urgent alert:', error);
+      alert('Could not flag this patient as urgent. Please try again.');
+    }
+  };
+
+  const handleRequestSupplies = async () => {
+    if (!patient || !visit) return;
+    try {
+      const user = await base44.auth.me();
+      await base44.entities.Task.create({
+        patient_id: patient.id,
+        title: `Supply request for ${patient.first_name} ${patient.last_name}`,
+        description: `Supplies requested by the visiting nurse during the ${visit.visit_type?.replace(/_/g, ' ')} visit on ${visit.visit_date}.`,
+        type: 'order',
+        priority: 'medium',
+        status: 'pending',
+        assigned_to: user.email,
+        source: 'manual',
+        related_visit_id: visit.id,
+      });
+      alert('Supply request logged as a task for the office.');
+    } catch (error) {
+      console.error('Failed to create supply request:', error);
+      alert('Could not create the supply request. Please try again.');
+    }
   };
 
   const handleSave = async () => {
@@ -1175,45 +1247,30 @@ Generate the complete clinical narrative based on the audio and context:`;
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
+    <PageContainer>
       <VoiceCommandListener
         onCommand={handleVoiceCommand}
         commands={getCommandsForContext('documentation')}
         context="documentation"
       />
 
-      <div className="mb-4 sm:mb-6">
-        <Button
-          variant="outline"
-          onClick={() => navigate(createPageUrl("Dashboard"))}
-          className="mb-3 sm:mb-4 min-h-[44px]"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 truncate">
-                  {patient?.first_name} {patient?.last_name}
-                </h1>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600 mt-1">
-                  <span className="truncate">MRN: {patient?.medical_record_number || 'N/A'}</span>
-                  <span className="hidden sm:inline">•</span>
-                  <span className="truncate">{patient?.primary_diagnosis}</span>
-                  <span className="hidden sm:inline">•</span>
-                  <span className="capitalize">{patient?.care_type?.replace('_', ' ')}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Documentation"
+        title={`${patient?.first_name} ${patient?.last_name}`}
+        description={`MRN: ${patient?.medical_record_number || 'N/A'} • ${patient?.primary_diagnosis} • ${patient?.care_type?.replace('_', ' ')}`}
+        favoritePage="DocumentVisit"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => navigate(createPageUrl("Dashboard"))}
+            className="min-h-[44px]"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        }
+      />
 
       {(isSaving || lastSaved) && (
         <Alert className={`mb-4 ${isSaving ? 'bg-blue-50 border-blue-200' : hasUnsavedChanges ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
@@ -1248,9 +1305,9 @@ Generate the complete clinical narrative based on the audio and context:`;
               <OneClickActions
                 patient={patient}
                 visit={visit}
-                onScheduleFollowUp={() => alert('Schedule follow-up feature coming soon')}
-                onMarkUrgent={() => alert('Urgent flag set - office will be notified')}
-                onRequestSupplies={() => alert('Supply request sent to office')}
+                onScheduleFollowUp={handleScheduleFollowUp}
+                onMarkUrgent={handleMarkUrgent}
+                onRequestSupplies={handleRequestSupplies}
               />
 
               <QuickIncidentReporting 
@@ -1888,6 +1945,6 @@ Generate the complete clinical narrative based on the audio and context:`;
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
