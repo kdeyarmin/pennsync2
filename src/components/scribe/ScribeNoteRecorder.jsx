@@ -27,7 +27,12 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setAudioBlob(blob);
+        // Wrap the Blob in a File so the SDK uploads it as multipart/form-data
+        // rather than JSON-serializing it into an empty object.
+        const file = new File([blob], `scribe-recording-${Date.now()}.webm`, {
+          type: "audio/webm",
+        });
+        setAudioBlob(file);
       };
 
       mediaRecorder.start();

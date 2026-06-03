@@ -68,11 +68,15 @@ export default function VoiceClinicalNoteRecorder({ onTranscriptionComplete, ini
     setIsProcessing(true);
     try {
       const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-      const formData = new FormData();
-      formData.append("file", audioBlob);
+      // Wrap the Blob in a File so the SDK uploads it as multipart/form-data.
+      // A bare Blob is not `instanceof File`, so the SDK JSON-serializes it into
+      // an empty object and the API rejects it ("'file' field is an empty object").
+      const audioFile = new File([audioBlob], `clinical-note-${Date.now()}.webm`, {
+        type: "audio/webm",
+      });
 
       // Upload audio file
-      const uploadRes = await base44.integrations.Core.UploadFile({ file: audioBlob });
+      const uploadRes = await base44.integrations.Core.UploadFile({ file: audioFile });
       const audioUrl = uploadRes.file_url;
 
       // Transcribe with Gemini
