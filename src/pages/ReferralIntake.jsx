@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,7 +136,7 @@ export default function ReferralIntake() {
       }
       
       // Immediately extract data from document with enhanced AI categorization
-      const extracted = await base44.integrations.Core.InvokeLLM({
+      const extracted = await invokeLLM({
         prompt: `Analyze this referral document and extract key information with automatic categorization.
 
 Extract and categorize:

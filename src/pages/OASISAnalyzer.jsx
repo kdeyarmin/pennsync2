@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import {
   aggregateDemographics,
   aggregateTopDiagnoses,
@@ -1091,7 +1092,7 @@ export default function OASISAnalyzer() {
             console.log("Text fallback successful, extracted", textExtract.output.full_text.length, "characters");
             
             // Use AI to parse the raw text for critical fields
-            const parsedData = await base44.integrations.Core.InvokeLLM({
+            const parsedData = await invokeLLM({
               prompt: `Parse this OASIS document text and extract key data fields. Focus on accuracy.
 
 DOCUMENT TEXT:
@@ -1489,7 +1490,7 @@ Return JSON:
       let analysisResult;
       try {
         analysisResult = await Promise.race([
-          base44.integrations.Core.InvokeLLM({
+          invokeLLM({
             prompt: `Analyze OASIS document. Extract: diagnosis, functional scores, compliance issues, revenue opportunities.
 
 DATA:

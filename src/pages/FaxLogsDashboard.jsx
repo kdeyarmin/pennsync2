@@ -2,6 +2,7 @@ import { useState } from "react";
 import { openExternalUrl } from "@/components/utils/security";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -58,7 +59,7 @@ export default function FaxLogsDashboard() {
         date: log.created_date,
       }));
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze these fax transmission failures and provide:
 1. Common failure patterns and root causes
 2. Specific recommendations for each failure type

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -374,7 +375,7 @@ iconColor="bg-indigo-600"
             <Button className="w-full sm:w-auto" onClick={async () => {
               setIsGeneratingInsights(true);
               try {
-                const result = await base44.integrations.Core.InvokeLLM({
+                const result = await invokeLLM({
                   prompt: `Analyze Medicare compliance data and provide executive insights.
 METRICS: ${filteredAudits.length} audits, ${avgComplianceScore.toFixed(1)}% avg score, ${criticalIssuesCount} critical issues
 TOP ISSUES: ${topIssues.slice(0, 5).map(i => `${i.name}: ${i.count}`).join(', ')}
