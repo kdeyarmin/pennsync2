@@ -61,7 +61,7 @@ Run it with `npm run test:components` (or `npx vitest run src/test/navPages.test
 
 - **Result: 33/33 nav pages mount without crashing.**
 
-### Bug found and fixed: `PageHeader` crashed on lucide icons
+### Bug surfaced by the smoke test: `PageHeader` crashed on lucide icons
 
 The smoke test surfaced a real crash. `PageHeader` chose how to render its `icon`
 prop with `typeof IconProp === "function"`. lucide-react (1.17.0) icons are
@@ -79,6 +79,9 @@ their loading state.
 **Fix** (`src/components/ui/PageHeader.jsx`): use `isValidElement` to tell an
 already-built element (render as-is) from a component type (render via
 `<IconProp/>`), which works for function components, `forwardRef`, and `memo`.
+This exact fix also landed on `main` independently while this branch was open
+(corroborating the bug), so it arrives via the merge; the value this branch adds
+is the smoke test that now guards against the crash regressing.
 
 ## Caveat
 
