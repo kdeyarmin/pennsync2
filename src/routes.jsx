@@ -87,7 +87,9 @@ export const REDIRECTS = [
   { from: '/ComplianceRegulatory', to: '/ComplianceCenter' },
   { from: '/DataQualityMonitor', to: '/AdminOperations?tab=data-quality' },
   { from: '/SystemHealthMonitor', to: '/AdminOperations?tab=system-health' },
-  { from: '/SystemMonitoring', to: '/AdminOperations?tab=system-jobs' },
+  // SystemMonitoring was an Activity + Jobs wrapper; Activity now lives in the
+  // Admin Console "User Activity" tab and the job monitor is its own page.
+  { from: '/SystemMonitoring', to: '/SystemJobMonitor' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';

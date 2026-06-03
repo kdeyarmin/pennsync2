@@ -1062,11 +1062,11 @@ export const NAV_MANIFEST = [
   },
 
   // ─── System / Admin Config ───────────────────────────────────────────────────
-  // NOTE: System monitoring now lives in the Admin Console tabs. The retired
-  // SystemMonitoring (User Activity + Jobs wrapper) and SystemHealthMonitor
-  // (System Health panel duplicate) redirect to /AdminOperations?tab=… — see
-  // REDIRECTS in src/routes.jsx. SystemJobMonitor stays routed as the deep-link
-  // target behind the console's "Background Jobs" tab.
+  // NOTE: The retired SystemMonitoring (a User Activity + Jobs wrapper) and
+  // SystemHealthMonitor (a System Health panel duplicate) are consolidated — User
+  // Activity and System Health are Admin Console tabs (see /AdminOperations?tab=…
+  // in REDIRECTS), and the job monitor stays its own page below. SystemMonitoring
+  // redirects here, to the job monitor.
   {
     page: "SystemJobMonitor",
     label: "Background Jobs",
@@ -1074,7 +1074,7 @@ export const NAV_MANIFEST = [
     category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
-    keywords: ["system", "jobs", "monitor", "background", "scheduled", "tasks"],
+    keywords: ["system", "jobs", "monitor", "background", "scheduled", "tasks", "system monitoring"],
   },
   {
     page: "AgencySettings",
