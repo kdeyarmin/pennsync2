@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 
 import AudioRecorder from "../components/visit/AudioRecorder";
 import VitalSignsForm from "../components/visit/VitalSignsForm";
+import { detectCriticalVitals } from "../components/visit/vitalEscalation";
 import TemplateGenerator from "../components/visit/TemplateGenerator";
 import VitalSignsComparison from "../components/visit/VitalSignsComparison";
 import ClinicalDecisionSupport from "../components/visit/ClinicalDecisionSupport";
@@ -258,6 +259,41 @@ export default function DocumentVisit() {
       }
     };
   }, [narrativeText, vitalSigns, startTime, endTime, visit]);
+
+  // Critical-vital escalation (non-blocking): when an entered vital crosses a
+  // life-threatening threshold, raise a PatientAlert so a supervisor/physician
+  // is looped in. This never blocks saving a genuine abnormal reading. Each
+  // (patient, breach) pair alerts at most once — keys are scoped by patient id
+  // so switching patients can't suppress the new one, and a failed create is
+  // rolled back so it retries on the next change.
+  const escalatedVitalsRef = useRef(new Set());
+  useEffect(() => {
+    const pid = patient?.id;
+    if (!pid) return;
+    const breaches = detectCriticalVitals(vitalSigns).filter((b) => !escalatedVitalsRef.current.has(`${pid}:${b.id}`));
+    if (!breaches.length) return;
+    const keys = breaches.map((b) => `${pid}:${b.id}`);
+    // Optimistically mark as alerted so a rapid re-render can't duplicate an
+    // in-flight create; roll back on failure so it retries next time.
+    keys.forEach((k) => escalatedVitalsRef.current.add(k));
+    const severity = breaches.some((b) => b.severity === "critical") ? "critical" : "high";
+    base44.entities.PatientAlert.create({
+      patient_id: pid,
+      alert_type: "vital_deterioration",
+      severity,
+      title: "Critical vital sign recorded",
+      message: `A vital sign crossed a critical threshold during this visit: ${breaches.map((b) => b.detail).join("; ")}. Notify the supervising clinician/physician.`,
+      contributing_factors: breaches.map((b) => `${b.label}: ${b.detail}`),
+      recommended_actions: [
+        "Notify supervising clinician / physician",
+        "Reassess and document intervention and patient response",
+        "Escalate per agency protocol",
+      ],
+    }).catch((err) => {
+      console.error("Vital escalation alert failed:", err);
+      keys.forEach((k) => escalatedVitalsRef.current.delete(k));
+    });
+  }, [vitalSigns, patient]);
 
   const handleVoiceCommand = async (action, spokenText) => {
     // Track voice command usage

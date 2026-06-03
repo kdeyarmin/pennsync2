@@ -432,14 +432,14 @@ export default function Messages() {
             <div>
               <label className="text-sm font-semibold mb-2 block">Related Patient (Optional)</label>
               <Select
-                value={newMessage.patient_id || ""}
-                onValueChange={(value) => setNewMessage({...newMessage, patient_id: value || null})}
+                value={newMessage.patient_id || "none"}
+                onValueChange={(value) => setNewMessage({...newMessage, patient_id: value === "none" ? null : value})}
               >
                 <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {patients.map(p => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.first_name} {p.last_name}

@@ -223,7 +223,7 @@ export default function ClinicalLibraryManager() {
   const handleBulkMove = (folderId) => {
     const idsToMove = Array.from(selectedTemplateIds);
     idsToMove.forEach(id => {
-      updateMutation.mutate({ id, data: { folder_id: folderId } });
+      updateMutation.mutate({ id, data: { folder_id: folderId === "__uncategorized__" ? null : folderId } });
     });
     setSelectedTemplateIds(new Set());
     toast.success(`Moved ${idsToMove.length} template(s)`);
@@ -350,7 +350,7 @@ export default function ClinicalLibraryManager() {
                   <SelectValue placeholder="Move to folder..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>Uncategorized</SelectItem>
+                  <SelectItem value="__uncategorized__">Uncategorized</SelectItem>
                   {userFolders.map(folder => (
                     <SelectItem key={folder.id} value={folder.id}>
                       {folder.name}

@@ -21,10 +21,6 @@ import {
   REQUEST_TYPES,
   totalRequestedDays,
   getRequestValidationError,
-  getPolicyViolation,
-  getBalanceForType,
-  getBalanceViolation,
-  parseISODate,
 } from "./timeOffUtils";
 
 function todayISO() {
@@ -46,9 +42,6 @@ export default function RequestTimeOffForm({
   currentUser,
   approvers = [],
   defaultManagerEmail = "",
-  policy = null,
-  allowances = {},
-  myRequests = [],
 }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ ...EMPTY, manager_email: defaultManagerEmail || "" });
@@ -69,31 +62,10 @@ export default function RequestTimeOffForm({
     [form.start_date, form.end_date, form.half_day]
   );
 
-  // Live policy feedback (notice + blackout). Server re-validates authoritatively.
-  const policyViolation = useMemo(
-    () => (form.start_date && form.end_date ? getPolicyViolation(form.start_date, form.end_date, policy) : null),
-    [form.start_date, form.end_date, policy]
-  );
-
-  // Balance for the selected type (current year for display; request year for the check).
-  const requestYear = parseISODate(form.start_date)?.getFullYear();
-  const typeBalance = useMemo(
-    () => getBalanceForType(myRequests, allowances, form.request_type, requestYear, { policy }),
-    [myRequests, allowances, form.request_type, requestYear, policy]
-  );
-  const balanceViolation = useMemo(
-    () => (totalDays > 0 ? getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear, { policy }) : null),
-    [myRequests, allowances, form.request_type, totalDays, requestYear, policy]
-  );
-
   const submit = useMutation({
     mutationFn: async () => {
       const validationError = getRequestValidationError(form.start_date, form.end_date, form.half_day);
       if (validationError) throw new Error(validationError);
-      const policyError = getPolicyViolation(form.start_date, form.end_date, policy);
-      if (policyError) throw new Error(policyError);
-      const balanceError = getBalanceViolation(myRequests, allowances, form.request_type, totalDays, requestYear, { policy });
-      if (balanceError) throw new Error(balanceError);
 
       // Identity, day totals, approver validation, and notifications are all
       // handled server-side by the function (the entity is admin-write-only),
@@ -122,7 +94,7 @@ export default function RequestTimeOffForm({
   });
 
   const canSubmit =
-    form.start_date && form.end_date && totalDays > 0 && !policyViolation && !balanceViolation && !submit.isPending && !!currentUser?.email;
+    form.start_date && form.end_date && totalDays > 0 && !submit.isPending && !!currentUser?.email;
 
   return (
     <Card className="shadow-sm">
@@ -133,22 +105,6 @@ export default function RequestTimeOffForm({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {(Number(policy?.minimum_notice_days) > 0 || policy?.blackout_periods?.length > 0) && (
-          <div className="mb-4 rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 space-y-1">
-            {Number(policy?.minimum_notice_days) > 0 && (
-              <p>• Requests need {policy.minimum_notice_days} day{policy.minimum_notice_days === 1 ? "" : "s"} of advance notice.</p>
-            )}
-            {policy?.blackout_periods?.length > 0 && (
-              <p>
-                • Blackout dates:{" "}
-                {policy.blackout_periods
-                  .filter((p) => p.start_date && p.end_date)
-                  .map((p) => `${p.label ? `${p.label} ` : ""}(${p.start_date} → ${p.end_date})`)
-                  .join(", ")}
-              </p>
-            )}
-          </div>
-        )}
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -170,13 +126,6 @@ export default function RequestTimeOffForm({
                 ))}
               </SelectContent>
             </Select>
-            {typeBalance && (
-              <p className="text-xs text-slate-400 mt-1">
-                {Math.max(0, typeBalance.remaining)} of {typeBalance.allowance} day
-                {typeBalance.allowance === 1 ? "" : "s"} remaining this year
-                {typeBalance.pending > 0 ? ` (${typeBalance.pending} pending)` : ""}.
-              </p>
-            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -273,13 +222,6 @@ export default function RequestTimeOffForm({
               onChange={(e) => update({ coverage: e.target.value })}
             />
           </div>
-
-          {(policyViolation || balanceViolation) && !error && (
-            <Alert className="bg-amber-50 border-amber-200">
-              <Info className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">{policyViolation || balanceViolation}</AlertDescription>
-            </Alert>
-          )}
 
           {error && (
             <Alert variant="destructive">

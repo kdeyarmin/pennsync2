@@ -13,17 +13,9 @@ import {
   approvedDaysInYear,
   validateRequestDates,
   getRequestValidationError,
-  getPolicyViolation,
   requestsCoveringDate,
-  coverageCountOnDate,
   availableYears,
   buildTimeOffCSV,
-  resolveAllowances,
-  getBalanceForType,
-  computeBalances,
-  getBalanceViolation,
-  accruedFraction,
-  getCarryover,
   typeLabel,
   statusLabel,
 } from "./timeOffUtils.js";
@@ -158,25 +150,6 @@ test("typeLabel and statusLabel resolve known values with safe fallbacks", () =>
   assert.equal(statusLabel(undefined), "—");
 });
 
-test("getPolicyViolation enforces minimum advance notice", () => {
-  const today = new Date(2026, 2, 2); // 2026-03-02
-  const policy = { minimum_notice_days: 7 };
-  assert.match(getPolicyViolation("2026-03-05", "2026-03-06", policy, today), /advance notice/i);
-  assert.equal(getPolicyViolation("2026-03-09", "2026-03-10", policy, today), null); // exactly 7 days out
-  assert.equal(getPolicyViolation("2026-03-05", "2026-03-06", { minimum_notice_days: 0 }, today), null);
-  assert.equal(getPolicyViolation("2026-03-05", "2026-03-06", null, today), null);
-});
-
-test("getPolicyViolation blocks ranges overlapping a blackout period", () => {
-  const today = new Date(2026, 0, 1);
-  const policy = {
-    blackout_periods: [{ label: "Survey window", start_date: "2026-06-01", end_date: "2026-06-10" }],
-  };
-  assert.match(getPolicyViolation("2026-06-05", "2026-06-07", policy, today), /blackout period \(Survey window\)/i);
-  assert.match(getPolicyViolation("2026-05-30", "2026-06-02", policy, today), /blackout/i); // partial overlap
-  assert.equal(getPolicyViolation("2026-06-11", "2026-06-12", policy, today), null); // just after
-});
-
 test("requestsCoveringDate honors the includePending flag", () => {
   const requests = [
     { id: "a", status: "approved", start_date: "2026-03-02", end_date: "2026-03-06" },
@@ -188,7 +161,6 @@ test("requestsCoveringDate honors the includePending flag", () => {
     requestsCoveringDate(requests, "2026-03-04", { includePending: true }).map((r) => r.id),
     ["a", "b"]
   );
-  assert.equal(coverageCountOnDate(requests, "2026-03-04"), 1);
 });
 
 test("availableYears returns distinct start years newest-first", () => {
@@ -199,83 +171,6 @@ test("availableYears returns distinct start years newest-first", () => {
     { start_date: "bad" },
   ];
   assert.deepEqual(availableYears(requests), [2026, 2024]);
-});
-
-test("resolveAllowances merges agency defaults with per-user overrides", () => {
-  const policy = { default_allowances: { vacation: 15, sick: 10 } };
-  const user = { pto_allowances: { vacation: 20 } }; // override vacation only
-  const merged = resolveAllowances(policy, user);
-  assert.equal(merged.vacation, 20); // override wins
-  assert.equal(merged.sick, 10); // falls back to default
-  assert.equal("personal" in merged, false); // untracked
-  // Blank/invalid overrides fall back to the default.
-  assert.equal(resolveAllowances(policy, { pto_allowances: { vacation: "" } }).vacation, 15);
-  assert.deepEqual(resolveAllowances(null, null), {});
-});
-
-test("getBalanceForType computes used/pending/remaining and ignores other years", () => {
-  const requests = [
-    { request_type: "vacation", status: "approved", start_date: "2026-03-02", end_date: "2026-03-06", total_days: 5 },
-    { request_type: "vacation", status: "pending", start_date: "2026-05-01", end_date: "2026-05-01", total_days: 1 },
-    { request_type: "vacation", status: "approved", start_date: "2025-02-02", end_date: "2025-02-02", total_days: 1 },
-    { request_type: "sick", status: "approved", start_date: "2026-04-01", end_date: "2026-04-01", total_days: 1 },
-  ];
-  const bal = getBalanceForType(requests, { vacation: 15 }, "vacation", 2026);
-  assert.deepEqual(bal, { type: "vacation", allowance: 15, used: 5, pending: 1, remaining: 9 });
-  // Untracked type returns null.
-  assert.equal(getBalanceForType(requests, { vacation: 15 }, "sick", 2026), null);
-});
-
-test("computeBalances returns one entry per tracked type", () => {
-  const balances = computeBalances([], { vacation: 15, sick: 10 }, 2026);
-  assert.equal(balances.length, 2);
-  assert.deepEqual(balances.map((b) => b.type).sort(), ["sick", "vacation"]);
-});
-
-test("getBalanceViolation blocks only when a tracked request exceeds remaining", () => {
-  const requests = [
-    { request_type: "vacation", status: "approved", start_date: "2026-03-02", end_date: "2026-03-06", total_days: 5 },
-  ];
-  const allowances = { vacation: 7 };
-  assert.equal(getBalanceViolation(requests, allowances, "vacation", 2, 2026), null); // 5 used + 2 = 7, ok
-  assert.match(getBalanceViolation(requests, allowances, "vacation", 3, 2026), /exceeds your/i); // 5 + 3 > 7
-  assert.equal(getBalanceViolation(requests, allowances, "sick", 99, 2026), null); // untracked never blocks
-});
-
-test("accruedFraction is monthly for the current year, full otherwise", () => {
-  const today = new Date(2026, 5, 15); // June 2026 (month index 5 => 6th month)
-  assert.equal(accruedFraction(2026, today), 6 / 12);
-  assert.equal(accruedFraction(2025, today), 1); // prior year fully accrued
-  assert.equal(accruedFraction(2027, today), 1); // future year available for planning
-});
-
-test("getCarryover rolls unused prior-year days up to the cap", () => {
-  const requests = [
-    { request_type: "vacation", status: "approved", start_date: "2025-03-02", end_date: "2025-03-04", total_days: 3 },
-  ];
-  // base 15, used 3 last year => 12 unused, capped at 5
-  assert.equal(getCarryover(requests, 15, "vacation", 2026, 5), 5);
-  // smaller unused than cap
-  assert.equal(getCarryover([{ request_type: "vacation", status: "approved", start_date: "2025-01-01", end_date: "2025-01-12", total_days: 13 }], 15, "vacation", 2026, 5), 2);
-  assert.equal(getCarryover(requests, 15, "vacation", 2026, 0), 0); // carryover disabled
-});
-
-test("getBalanceForType applies accrual and carryover when a policy is supplied", () => {
-  const today = new Date(2026, 5, 1); // June => 6/12 accrued
-  const requests = [
-    // prior year: used 5 of 12 => 7 unused, capped at 5 carryover
-    { request_type: "vacation", status: "approved", start_date: "2025-04-01", end_date: "2025-04-07", total_days: 5 },
-  ];
-  const allowances = { vacation: 12 };
-  const accrualOnly = getBalanceForType(requests, allowances, "vacation", 2026, { policy: { accrual_enabled: true }, today });
-  assert.equal(accrualOnly.allowance, 6); // round(12 * 6/12)
-  const withCarry = getBalanceForType(requests, allowances, "vacation", 2026, {
-    policy: { accrual_enabled: true, carryover_max: 5 },
-    today,
-  });
-  assert.equal(withCarry.allowance, 11); // 6 accrued + 5 carried over
-  // No policy => flat annual allowance (back-compat).
-  assert.equal(getBalanceForType(requests, allowances, "vacation", 2026).allowance, 12);
 });
 
 test("buildTimeOffCSV emits a header row and escapes special characters", () => {

@@ -5,16 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
 
-import { resolveAllowances, computeBalances } from "@/components/timeoff/timeOffUtils";
 import RequestTimeOffForm from "@/components/timeoff/RequestTimeOffForm";
 import MyTimeOffList from "@/components/timeoff/MyTimeOffList";
 import TimeOffSummaryCards from "@/components/timeoff/TimeOffSummaryCards";
-import TimeOffBalances from "@/components/timeoff/TimeOffBalances";
 import PendingApprovalsQueue from "@/components/timeoff/PendingApprovalsQueue";
 import TeamTimeOffCalendar from "@/components/timeoff/TeamTimeOffCalendar";
 import TeamRequestsTable from "@/components/timeoff/TeamRequestsTable";
 import WhoIsOffPanel from "@/components/timeoff/WhoIsOffPanel";
-import TimeOffPolicyEditor from "@/components/timeoff/TimeOffPolicyEditor";
 
 export default function TimeOff() {
   const { data: currentUser } = useQuery({
@@ -62,24 +59,6 @@ export default function TimeOff() {
     enabled: !!currentUser?.email,
   });
 
-  // Agency policy (advance notice, blackout periods, coverage threshold).
-  // Readable by everyone so the request form and calendar can reflect it.
-  const { data: policies = [] } = useQuery({
-    queryKey: ["timeoff", "policy"],
-    queryFn: () => base44.entities.TimeOffPolicy.list("-created_date", 1),
-    initialData: [],
-    enabled: !!currentUser?.email,
-  });
-  const policy = policies[0] || null;
-
-  // Resolve this user's allowances (agency defaults + personal overrides) and
-  // derive their current-year balances for display and request validation.
-  const allowances = useMemo(() => resolveAllowances(policy, currentUser), [policy, currentUser]);
-  const balances = useMemo(
-    () => computeBalances(myRequests, allowances, new Date().getFullYear(), { policy }),
-    [myRequests, allowances, policy]
-  );
-
   // For managers, scope the calendar/who's-off views to requests they oversee
   // (their reports) rather than their own. Admins see all.
   const teamForViews = useMemo(
@@ -110,8 +89,8 @@ export default function TimeOff() {
         </div>
       </div>
 
-      <Tabs defaultValue={isApprover ? "approvals" : "mine"} className="space-y-6">
-        <TabsList className={`grid w-full ${!isApprover ? "grid-cols-1" : isAdmin ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"}`}>
+      <Tabs defaultValue="mine" className="space-y-6">
+        <TabsList className={`grid w-full ${!isApprover ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}>
           <TabsTrigger value="mine" className="min-h-[44px]">
             My Time Off
           </TabsTrigger>
@@ -131,24 +110,15 @@ export default function TimeOff() {
               </TabsTrigger>
             </>
           )}
-          {isAdmin && (
-            <TabsTrigger value="settings" className="min-h-[44px]">
-              Settings
-            </TabsTrigger>
-          )}
         </TabsList>
 
         <TabsContent value="mine" className="space-y-6">
           <TimeOffSummaryCards requests={myRequests} />
-          {balances.length > 0 && <TimeOffBalances balances={balances} />}
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6 items-start">
             <RequestTimeOffForm
               currentUser={currentUser}
               approvers={approvers}
               defaultManagerEmail={currentUser?.manager_email || ""}
-              policy={policy}
-              allowances={allowances}
-              myRequests={myRequests}
             />
             <MyTimeOffList requests={myRequests} />
           </div>
@@ -165,7 +135,7 @@ export default function TimeOff() {
 
             <TabsContent value="calendar">
               <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-6 items-start">
-                <TeamTimeOffCalendar requests={teamForViews} coverageThreshold={Number(policy?.coverage_threshold) || 0} />
+                <TeamTimeOffCalendar requests={teamForViews} />
                 <WhoIsOffPanel requests={teamForViews} />
               </div>
             </TabsContent>
@@ -174,12 +144,6 @@ export default function TimeOff() {
               <TeamRequestsTable requests={teamForViews} />
             </TabsContent>
           </>
-        )}
-
-        {isAdmin && (
-          <TabsContent value="settings">
-            <TimeOffPolicyEditor policy={policy} />
-          </TabsContent>
         )}
       </Tabs>
     </div>
