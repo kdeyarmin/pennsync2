@@ -1206,16 +1206,11 @@ export const NAV_MAP = Object.fromEntries(NAV_MANIFEST.map(e => [e.page, e]));
  * routes.jsx (instead of a hand-kept list) means the two can't drift: route a
  * page and it becomes navigable; unroute it and it drops out of nav automatically.
  */
-export const ROUTED_PAGES = new Set(PAGE_NAMES);
-
-// Redirect aliases resolve to a real page, so a *link* to them is safe (used for
-// breadcrumb ancestors), but they're not offered in the palette because they'd
-// duplicate their canonical destination.
-const REDIRECTED_PAGES = new Set(REDIRECTS.map(r => r.from.replace(/^\//, "")));
-
 /** True if navigating to this page renders something (direct route or redirect). */
 export function isLinkablePage(page) {
-  return ROUTED_PAGES.has(page) || REDIRECTED_PAGES.has(page);
+  const routed = new Set(PAGE_NAMES);
+  const redirected = new Set(REDIRECTS.map(r => r.from.replace(/^\//, "")));
+  return routed.has(page) || redirected.has(page);
 }
 
 /**
@@ -1228,9 +1223,10 @@ export function buildNavCategories(manifest) {
     "Resources", "My Learning", "Tools",
   ];
   const map = {};
+  const routed = new Set(PAGE_NAMES);
   for (const entry of manifest) {
     if (!entry.category || entry.adminOnly) continue;
-    if (!ROUTED_PAGES.has(entry.page)) continue;  // never link to an unrouted page
+    if (!routed.has(entry.page)) continue;  // never link to an unrouted page
     if (!map[entry.category]) map[entry.category] = [];
     map[entry.category].push({
       name: entry.navLabel ?? entry.label,
@@ -1252,9 +1248,10 @@ export function buildNavCategories(manifest) {
 export function buildAdminItems(manifest) {
   const categoryOrder = ["Admin", "Manage", "Analytics", "Configuration"];
   const map = {};
+  const routed = new Set(PAGE_NAMES);
   for (const entry of manifest) {
     if (!entry.category || !entry.adminOnly) continue;
-    if (!ROUTED_PAGES.has(entry.page)) continue;  // never link to an unrouted page
+    if (!routed.has(entry.page)) continue;  // never link to an unrouted page
     if (!map[entry.category]) map[entry.category] = [];
     map[entry.category].push({
       name: entry.navLabel ?? entry.label,
@@ -1304,7 +1301,8 @@ export function buildBreadcrumbs(pageName, navMap = NAV_MAP) {
  * avoid duplicate entries for the same destination.
  */
 export function buildPaletteEntries(manifest, isAdmin) {
-  return manifest.filter(e => (!e.adminOnly || isAdmin) && ROUTED_PAGES.has(e.page));
+  const routed = new Set(PAGE_NAMES);
+  return manifest.filter(e => (!e.adminOnly || isAdmin) && routed.has(e.page));
 }
 
 /**
