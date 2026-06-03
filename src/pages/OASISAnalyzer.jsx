@@ -2460,27 +2460,33 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               </Button>
             </CardHeader>
             <CardContent>
+              <Alert className="bg-amber-50 border-amber-300 mb-4">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <AlertDescription className="text-amber-800 text-sm">
+                  <span className="font-semibold">AI-generated estimates.</span> These scores are produced by an AI model from the assessment text — they are not an official OASIS/PDGM determination and do not guarantee coverage or reimbursement. A clinician must verify every M-item before submission.
+                </AlertDescription>
+              </Alert>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.overall_score)}`}>
-                  <p className="text-xs text-slate-600 mb-1">Overall Score</p>
+                  <p className="text-xs text-slate-600 mb-1">Overall Score (est.)</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.overall_score)}`}>
                     {analysisResults.overall_score}%
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.accuracy_score)}`}>
-                  <p className="text-xs text-slate-600 mb-1">Accuracy</p>
+                  <p className="text-xs text-slate-600 mb-1">Accuracy (est.)</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.accuracy_score)}`}>
                     {analysisResults.accuracy_score}%
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.compliance_score)}`}>
-                  <p className="text-xs text-slate-600 mb-1">Compliance</p>
+                  <p className="text-xs text-slate-600 mb-1">Compliance (est.)</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.compliance_score)}`}>
                     {analysisResults.compliance_score}%
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.revenue_optimization_score)}`}>
-                  <p className="text-xs text-slate-600 mb-1">Revenue Optimization</p>
+                  <p className="text-xs text-slate-600 mb-1">Revenue Optimization (est.)</p>
                   <p className={`text-3xl font-bold ${getScoreColor(analysisResults.revenue_optimization_score)}`}>
                     {analysisResults.revenue_optimization_score}%
                   </p>

@@ -29,6 +29,17 @@ fixed the clear, safe ones.
   table. (Earlier in this effort, `OASISAnalyzer`'s fabricated `data_quality_score: 80`
   when validation is skipped was already removed.)
 
+## Follow-up fixes (2026-06-03)
+
+- **#3 — OASIS analysis scores are now labeled AI estimates.** `OASISAnalyzer`
+  rendered the LLM-generated `overall / accuracy / compliance / revenue` scores
+  as authoritative percentages. Added an amber "AI-generated estimates — not an
+  official OASIS/PDGM determination; a clinician must verify every M-item" banner
+  above the scores, marked each card `(est.)`, and added the same disclaimer to
+  the exported PDF report (`generateOASISReportPDF`). This is the interim
+  honest-labeling fix; the full fix (a deterministic validation engine producing
+  pass/fail + an issue list, separate from "AI insights") remains deferred.
+
 ## Verified — already adequately gated (no change)
 
 - **AI-generated OASIS answers** (`AIGeneratedOASISAssessment`): sets
@@ -43,7 +54,7 @@ fixed the clear, safe ones.
 | # | Item | Why deferred |
 | --- | --- | --- |
 | #2 | Hardcoded CMS base rate (`$2031.64` fallback / FY2024) | Needs an admin-updatable, dated CMS rate config + effective-date checks — a feature. Mitigated the worst (the prompt pin) above. |
-| #3 | OASISAnalyzer `overall/accuracy/compliance` scores are LLM-generated, shown as authoritative | The honest fix is a deterministic OASIS validation engine (pass/fail + issue list) separate from "AI insights"; large. Interim: relabel as "AI estimate" in the UI. |
+| #3 | OASISAnalyzer `overall/accuracy/compliance` scores are LLM-generated, shown as authoritative | **Interim relabel shipped** (see "Follow-up fixes" above): AI-estimate banner on-screen + disclaimer in the exported PDF. The full fix — a deterministic OASIS validation engine (pass/fail + issue list) separate from "AI insights" — remains (large). |
 | #10 | No deterministic PDGM clinical-group / HIPPS / case-mix-weight computation (relies on LLM `estimated_pdgm_group`) | Requires implementing the CMS grouper logic tables — a substantial, high-value build (the natural next step, and now unit-testable like the scoring engine). |
 | #8 | 3162-line `OASISAnalyzer.jsx` mega-component | Refactor into upload / extract / analyze / merge / save with testable boundaries — large, risky, no runtime test here. |
 | #6, #9 | Advisory (non-blocking) review flags; heuristic patient-match auto-merge at 85% | UX/safety changes; warrant product input on how strict to gate. |
