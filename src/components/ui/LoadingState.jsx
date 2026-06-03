@@ -17,7 +17,7 @@ export default function LoadingState({ label, className }) {
       role="status"
       aria-live="polite"
     >
-      <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+      <Loader2 className="w-6 h-6 animate-spin text-indigo-600" aria-hidden="true" />
       {label ? (
         <p className="text-sm text-slate-500">{label}</p>
       ) : (
