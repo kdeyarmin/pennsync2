@@ -38,7 +38,7 @@ const GROUPS = [
     icon: GraduationCap,
     color: "text-indigo-600 bg-indigo-50",
     pages: [
-      "AdminTraining", "TrainingManagement", "AdminTrainingAnalytics",
+      "AdminTraining", "AdminTrainingAnalytics",
       "LearningReports", "AITrainingGenerator", "AIComplianceInServices",
     ],
   },
@@ -78,7 +78,7 @@ const GROUPS = [
     icon: Database,
     color: "text-amber-600 bg-amber-50",
     pages: [
-      "PatientDataManagement", "DataQualityMonitor", "DuplicatePatients",
+      "PatientDataManagement", "DuplicatePatients",
       "BulkDischargeImport", "TemplateManagement",
     ],
   },
@@ -95,8 +95,7 @@ const GROUPS = [
     icon: Settings,
     color: "text-slate-600 bg-slate-100",
     pages: [
-      "AgencySettings", "ManageNewFeatures", "SystemMonitoring",
-      "SystemHealthMonitor", "SystemJobMonitor",
+      "AgencySettings", "ManageNewFeatures", "SystemJobMonitor",
     ],
   },
 ];

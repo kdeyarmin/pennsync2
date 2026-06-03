@@ -76,7 +76,18 @@ export const REDIRECTS = [
   // Compliance Center, so send links there instead of an empty page.
   { from: '/QualityDashboard', to: '/ComplianceCenter' },
   // MedicareComplianceDashboard duplicates ComplianceCenter's audit metrics.
+  // (Removed from the manifest so this redirect is no longer shadowed by a route.)
   { from: '/MedicareComplianceDashboard', to: '/ComplianceCenter' },
+
+  // ─── Admin console consolidation ───────────────────────────────────────────
+  // These standalone admin pages were thin wrappers/duplicates of tools that now
+  // live inside an existing hub. Redirect old links/bookmarks to the canonical
+  // home (deep-linking the exact Admin Console tab where applicable).
+  { from: '/TrainingManagement', to: '/AdminTraining' },
+  { from: '/ComplianceRegulatory', to: '/ComplianceCenter' },
+  { from: '/DataQualityMonitor', to: '/AdminOperations?tab=data-quality' },
+  { from: '/SystemHealthMonitor', to: '/AdminOperations?tab=system-health' },
+  { from: '/SystemMonitoring', to: '/AdminOperations?tab=system-jobs' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';

@@ -1,22 +1,39 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldAlert, Activity, Database, Settings, Zap } from "lucide-react";
+import { ShieldAlert, Activity, Database, Settings, Zap, Clock } from "lucide-react";
 import AdminConsoleDirectory from "@/components/admin/AdminConsoleDirectory";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import UserActivityDashboard from "@/components/admin/UserActivityDashboard";
 import DataQualityDashboard from "@/components/admin/DataQualityDashboard";
 import SystemHealthPanel from "@/components/admin/SystemHealthPanel";
 import SystemSettings from "@/components/admin/SystemSettings";
+import SystemJobMonitor from "./SystemJobMonitor";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+
+// Console tab keys, kept in sync with the TabsTrigger values below. Used to
+// validate the ?tab= deep-link so the retired standalone pages (System Health,
+// Data Quality, System Monitoring) can redirect straight to the right tab.
+const TAB_KEYS = ["overview", "activity", "data-quality", "system-health", "system-jobs", "settings"];
 
 export default function AdminOperations() {
   const { data: currentUser, isLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "overview";
+  // Reflect the active tab in the URL so console tabs are shareable/bookmarkable
+  // and redirects from the retired pages deep-link correctly. "overview" is the
+  // default, so it stays a clean /AdminOperations with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "overview" ? {} : { tab: value });
+  };
 
   if (isLoading) return null;
 
@@ -44,7 +61,7 @@ export default function AdminOperations() {
         favoritePage="AdminOperations"
       />
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
             <TabsTrigger value="overview" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
@@ -62,6 +79,10 @@ export default function AdminOperations() {
             <TabsTrigger value="system-health" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Zap className="h-4 w-4 mr-2" />
               System Health
+            </TabsTrigger>
+            <TabsTrigger value="system-jobs" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Clock className="h-4 w-4 mr-2" />
+              Background Jobs
             </TabsTrigger>
             <TabsTrigger value="settings" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Settings className="h-4 w-4 mr-2" />
@@ -85,6 +106,10 @@ export default function AdminOperations() {
 
         <TabsContent value="system-health">
           <SystemHealthPanel />
+        </TabsContent>
+
+        <TabsContent value="system-jobs">
+          <SystemJobMonitor />
         </TabsContent>
 
         <TabsContent value="settings">
