@@ -61,7 +61,7 @@ export default function QuickHealthOverview() {
             {incompletePatients > 0 && (
               <div className="flex items-center justify-between text-sm bg-white p-2 rounded">
                 <span>{incompletePatients} patients missing emergency info</span>
-                <Link to="/DataQualityMonitor">
+                <Link to="/AdminOperations?tab=data-quality">
                   <Button size="sm" variant="outline">View</Button>
                 </Link>
               </div>
@@ -70,7 +70,7 @@ export default function QuickHealthOverview() {
             {incompleteUsers > 0 && (
               <div className="flex items-center justify-between text-sm bg-white p-2 rounded">
                 <span>{incompleteUsers} incomplete user profiles</span>
-                <Link to="/DataQualityMonitor">
+                <Link to="/AdminOperations?tab=data-quality">
                   <Button size="sm" variant="outline">View</Button>
                 </Link>
               </div>
@@ -95,7 +95,7 @@ export default function QuickHealthOverview() {
             )}
           </div>
 
-          <Link to="/SystemHealthMonitor">
+          <Link to="/AdminOperations?tab=system-health">
             <Button size="sm" className="w-full mt-2 gap-2">
               <Database className="h-4 w-4" />
               Run Data Migration & Quality Update

@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,11 +14,36 @@ import SystemSettings from "@/components/admin/SystemSettings";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 
+// Console tab keys, kept in sync with the TabsTrigger values below. Used to
+// validate the ?tab= deep-link so the retired standalone pages (System Health,
+// Data Quality) can redirect straight to the right tab.
+const TAB_KEYS = ["overview", "activity", "data-quality", "system-health", "settings"];
+
 export default function AdminOperations() {
   const { data: currentUser, isLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "overview";
+  // Reflect the active tab in the URL so console tabs are shareable/bookmarkable
+  // and redirects from the retired pages deep-link correctly. "overview" is the
+  // default, so it stays a clean /AdminOperations with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "overview" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= (e.g. a
+  // bookmarked ?tab=overview, or a stale tab key from an old link) so the default
+  // tab is plain /AdminOperations. Only fires when the param resolved to the
+  // default tab, so a valid deep-link like ?tab=data-quality is left untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "overview") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
 
   if (isLoading) return null;
 
@@ -44,7 +71,7 @@ export default function AdminOperations() {
         favoritePage="AdminOperations"
       />
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
             <TabsTrigger value="overview" className="min-h-[44px] px-4 text-sm whitespace-nowrap">

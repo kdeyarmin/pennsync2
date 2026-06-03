@@ -61,9 +61,14 @@ export default function SystemHealthPanel() {
     );
   }
 
-  const passedCount = healthResults?.functions?.filter(f => f.status === 'passed').length || 0;
-  const totalCount = healthResults?.functions?.length || 0;
-  const allPassed = passedCount === totalCount;
+  // testAutomations returns { summary: { total_tests, successful, failed }, details: [...] }
+  // where each detail is { function, status: 'success' | 'error', error? }. Read that
+  // exact shape so a failed automation check is surfaced (not silently reported as
+  // "all operational").
+  const checks = healthResults?.details ?? [];
+  const totalCount = healthResults?.summary?.total_tests ?? checks.length;
+  const failedCount = healthResults?.summary?.failed ?? checks.filter(f => f.status === 'error').length;
+  const allPassed = totalCount > 0 && failedCount === 0;
 
   return (
     <div className="space-y-6">
@@ -88,35 +93,37 @@ export default function SystemHealthPanel() {
           ) : (
             <>
               <AlertTriangle className="w-5 h-5 text-red-600" />
-              <span className="text-red-800 font-semibold">{totalCount - passedCount} function(s) failing</span>
+              <span className="text-red-800 font-semibold">{failedCount} function(s) failing</span>
             </>
           )}
         </AlertDescription>
       </Alert>
 
       <div className="space-y-3">
-        {healthResults?.functions?.map((func, idx) => (
-          <Card key={idx} className={func.status === 'passed' ? 'border-green-200' : 'border-red-200'}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-slate-900">{func.name}</h3>
-                    <Badge className={func.status === 'passed' ? 'bg-green-600' : 'bg-red-600'}>
-                      {func.status}
-                    </Badge>
+        {checks.map((func, idx) => {
+          const passed = func.status === 'success';
+          return (
+            <Card key={idx} className={passed ? 'border-green-200' : 'border-red-200'}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-slate-900">{func.function}</h3>
+                      <Badge className={passed ? 'bg-green-600' : 'bg-red-600'}>
+                        {passed ? 'passed' : 'failed'}
+                      </Badge>
+                    </div>
+                    {func.error && (
+                      <pre className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2 overflow-x-auto">
+                        {func.error}
+                      </pre>
+                    )}
                   </div>
-                  {func.message && <p className="text-sm text-slate-600">{func.message}</p>}
-                  {func.error && (
-                    <pre className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2 overflow-x-auto">
-                      {func.error}
-                    </pre>
-                  )}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

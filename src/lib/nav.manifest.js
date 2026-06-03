@@ -802,15 +802,9 @@ export const NAV_MANIFEST = [
   },
 
   // ─── Compliance ───────────────────────────────────────────────────────────────
-  {
-    page: "MedicareComplianceDashboard",
-    label: "Medicare Compliance",
-    icon: Shield,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["medicare", "compliance", "dashboard"],
-  },
+  // NOTE: MedicareComplianceDashboard is intentionally absent — its audit metrics
+  // duplicate the Compliance Center, so /MedicareComplianceDashboard redirects
+  // there (see REDIRECTS in src/routes.jsx).
   {
     page: "RegulatoryCompliance",
     label: "Regulatory Compliance",
@@ -856,15 +850,10 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "ComplianceCenter",
     keywords: ["compliance", "real time", "live"],
   },
-  {
-    page: "ComplianceRegulatory",
-    label: "Compliance & Regulatory",
-    icon: Shield,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["compliance", "regulatory"],
-  },
+  // NOTE: ComplianceRegulatory was a thin wrapper that merely composed
+  // RealTimeComplianceDashboard + RegulatoryCompliance (both reachable from the
+  // Compliance Center). Its name also collided with RegulatoryCompliance, so it
+  // now redirects to /ComplianceCenter (see REDIRECTS in src/routes.jsx).
 
   // ─── Administration (admin hub + management) ─────────────────────────────────
   {
@@ -904,15 +893,9 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "AdminOperations",
     keywords: ["training manager", "assign training", "admin training"],
   },
-  {
-    page: "TrainingManagement",
-    label: "Training Management",
-    icon: GraduationCap,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminTraining",
-    keywords: ["training", "management", "admin"],
-  },
+  // NOTE: TrainingManagement was a strict subset of AdminTraining (same Course /
+  // Learning-Plan / In-Service managers), so /TrainingManagement redirects to
+  // /AdminTraining (see REDIRECTS in src/routes.jsx).
   {
     page: "AdminTrainingAnalytics",
     label: "Training Analytics",
@@ -932,10 +915,14 @@ export const NAV_MANIFEST = [
     keywords: ["skill gap", "training gap", "competency"],
   },
   {
+    // Reached from the Admin Console directory ("Users & Staff") and the command
+    // palette. category is null: the old "Manage" section was never rendered
+    // (buildAdminItems only emits Administration / Analytics / Configuration), so
+    // labelling it that way only created a phantom heading.
     page: "NursePerformanceDashboard",
     label: "Nurse Performance",
     icon: TrendingUp,
-    category: "Manage",
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["nurse", "performance", "metrics"],
@@ -976,15 +963,9 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "AdminOperations",
     keywords: ["data", "management", "import", "patients"],
   },
-  {
-    page: "DataQualityMonitor",
-    label: "Data Quality Monitor",
-    icon: Monitor,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "PatientDataManagement",
-    keywords: ["data quality", "monitor", "validation"],
-  },
+  // NOTE: DataQualityMonitor was a one-component wrapper around the same
+  // DataQualityDashboard that is already the Admin Console "Data Quality" tab, so
+  // /DataQualityMonitor redirects to /AdminOperations?tab=data-quality.
   {
     page: "BulkDischargeImport",
     label: "Bulk Discharge Import",
@@ -1081,32 +1062,19 @@ export const NAV_MANIFEST = [
   },
 
   // ─── System / Admin Config ───────────────────────────────────────────────────
-  {
-    page: "SystemMonitoring",
-    label: "System Monitoring",
-    icon: Monitor,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["system", "monitoring", "health"],
-  },
-  {
-    page: "SystemHealthMonitor",
-    label: "System Health Monitor",
-    icon: Monitor,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["system", "health", "monitor"],
-  },
+  // NOTE: The retired SystemMonitoring (a User Activity + Jobs wrapper) and
+  // SystemHealthMonitor (a System Health panel duplicate) are consolidated — User
+  // Activity and System Health are Admin Console tabs (see /AdminOperations?tab=…
+  // in REDIRECTS), and the job monitor stays its own page below. SystemMonitoring
+  // redirects here, to the job monitor.
   {
     page: "SystemJobMonitor",
-    label: "System Job Monitor",
+    label: "Background Jobs",
     icon: Monitor,
     category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
-    keywords: ["system", "jobs", "monitor"],
+    keywords: ["system", "jobs", "monitor", "background", "scheduled", "tasks", "system monitoring"],
   },
   {
     page: "AgencySettings",
