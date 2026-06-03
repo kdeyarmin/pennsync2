@@ -62,6 +62,7 @@ import { todayEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
+import { validateReferralFile, getDocumentType } from "../components/referral/referralUploadUtils";
 import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
@@ -116,9 +117,9 @@ export default function ReferralIntake() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a PDF, PNG, JPG, or TIFF file');
+    const { valid, error } = validateReferralFile(file);
+    if (!valid) {
+      toast.error(error);
       return;
     }
 
@@ -126,7 +127,9 @@ export default function ReferralIntake() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFile(file_url);
-      
+      // Auto-classify the document type (pdf vs scanned image) from the file.
+      setNewReferral(prev => ({ ...prev, document_type: getDocumentType(file) }));
+
       // If it's a PDF, check for multiple referrals
       if (file.type === 'application/pdf') {
         setMultiReferralDetection({ fileUrl: file_url, fileName: file.name });

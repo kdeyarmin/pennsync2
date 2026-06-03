@@ -1,16 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { runWithRetry } from "@/lib/aiCall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import AIFieldIndicator from "@/components/ui/ai-field-indicator";
 import ProgressFeedback from "@/components/ui/progress-feedback";
 import {
+  validateReferralFile,
+  isImageReferral,
+  formatBytes,
+  REFERRAL_ACCEPT_ATTR,
+} from "./referralUploadUtils";
+import {
   FileText,
-  Upload,
+  UploadCloud,
   CheckCircle2,
   Copy,
   ArrowRight,
@@ -19,8 +26,12 @@ import {
   Activity,
   Stethoscope,
   AlertCircle,
+  AlertTriangle,
   Download,
-  Brain
+  Brain,
+  RefreshCw,
+  ShieldAlert,
+  XCircle,
 } from "lucide-react";
 import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
 import AIAdmissionNoteGenerator from "./AIAdmissionNoteGenerator";
@@ -44,7 +55,16 @@ export default function ReferralPDFSummarizer({
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState(0);
   const [_fileUrl, setFileUrl] = useState(externalFileUrl);
+  const [fileName, setFileName] = useState(null);
   const [extractedData, setExtractedData] = useState(null);
+  const [processingError, setProcessingError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
+  const [oasisResults, setOasisResults] = useState(null);
+  const fileInputRef = useRef(null);
+  // Remember the last document we processed so "Try again" can re-run without re-upload.
+  const lastProcessedRef = useRef({ url: externalFileUrl, mime: "application/pdf" });
 
   const processingStages = [
     "Analyzing document structure...",
@@ -67,31 +87,68 @@ export default function ReferralPDFSummarizer({
   React.useEffect(() => {
     if (externalFileUrl && !extractedData && !isProcessing) {
       setFileUrl(externalFileUrl);
+      lastProcessedRef.current = { url: externalFileUrl, mime: "application/pdf" };
       processReferral(externalFileUrl);
     }
   }, [externalFileUrl]);
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+  // Shared entry point for both the file picker and drag-and-drop.
+  const handleFile = async (file) => {
     if (!file) return;
 
-    // Support multiple formats
-    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/tiff'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Please upload a PDF, PNG, JPG, or TIFF file (common for faxes)');
+    const { valid, error } = validateReferralFile(file);
+    if (!valid) {
+      toast.error(error);
       return;
     }
 
+    setProcessingError(null);
+    setFileName(file.name);
     setIsUploading(true);
     try {
       const result = await base44.integrations.Core.UploadFile({ file });
+      const mime = isImageReferral(file) ? "image/tiff" : file.type || "application/pdf";
       setFileUrl(result.file_url);
-      await processReferral(result.file_url, file.type);
+      lastProcessedRef.current = { url: result.file_url, mime };
+      setIsUploading(false);
+      await processReferral(result.file_url, mime);
     } catch (error) {
-      console.error('Error uploading file:', error);
-      alert('Failed to upload file. Please try again.');
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload file. Please check your connection and try again.");
+      setIsUploading(false);
     }
-    setIsUploading(false);
+  };
+
+  const handleFileUpload = (e) => {
+    handleFile(e.target.files?.[0]);
+    // Allow re-selecting the same file after a reset or error.
+    e.target.value = "";
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (isUploading || isProcessing) return;
+    handleFile(e.dataTransfer?.files?.[0]);
+  };
+
+  const handleReset = () => {
+    setExtractedData(null);
+    setProcessingError(null);
+    setFileUrl(null);
+    setFileName(null);
+    setGeneratedPdfUrl(null);
+    setOasisResults(null);
+    lastProcessedRef.current = { url: null, mime: "application/pdf" };
+  };
+
+  const retryProcessing = () => {
+    const { url, mime } = lastProcessedRef.current;
+    if (url) {
+      processReferral(url, mime);
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   const processReferral = async (url, fileType = 'application/pdf') => {
@@ -108,7 +165,8 @@ export default function ReferralPDFSummarizer({
         ? 'This is a scanned/faxed document image. Extract text carefully, accounting for potential OCR errors or handwriting.' 
         : 'This is a PDF document.';
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await runWithRetry(
+        () => base44.integrations.Core.InvokeLLM({
         prompt: `You are an expert home health intake coordinator with advanced document reading capabilities. ${fileTypeContext}
 
 CRITICAL DOCUMENT READING INSTRUCTIONS:
@@ -668,79 +726,113 @@ HANDWRITTEN NOTES HANDLING:
             }
           }
         }
-      });
+        }),
+        // Document extraction is a long, heavy call; give it room and retry
+        // transient network/timeout/5xx failures with backoff.
+        { retries: 2, timeoutMs: 120000, backoffMs: 800 }
+      );
 
       clearInterval(progressInterval);
       setProcessingStage(processingStages.length - 1);
-      
+      setProcessingError(null);
+
       setExtractedData(result);
       onDataExtracted?.(result);
-      
-      // Auto-generate PDF after extraction
-      const pdfUrl = await generateAdmissionPacket();
-      
+
+      // Silently generate + store the admission packet so external workflows
+      // (e.g. referral intake) get a permanent URL. The browser download only
+      // happens when the user explicitly clicks "Admission Packet PDF".
+      let pdfUrl = null;
+      try {
+        pdfUrl = await buildAdmissionPacket(result, { download: false });
+      } catch (pdfError) {
+        console.error("Error generating admission packet:", pdfError);
+      }
+
       // Callback for external workflows (referral intake)
       if (onExtractionComplete) {
         onExtractionComplete(result, result, pdfUrl);
       }
+      toast.success("Referral processed successfully.");
     } catch (error) {
       clearInterval(progressInterval);
       console.error('Error processing referral:', error);
-      alert('Failed to process referral. Please try again.');
+      const message = error?.code === "AI_TIMEOUT"
+        ? "Processing timed out. The document may be large or the service is busy — try again."
+        : "Failed to process referral. Please try again.";
+      setProcessingError(message);
+      toast.error(message);
     } finally {
       setIsProcessing(false);
       setProcessingStage(0);
     }
   };
 
-  const copySection = (text) => {
-    navigator.clipboard.writeText(text);
+  const copySection = (text, label = "Section") => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success(`${label} copied to clipboard`))
+      .catch(() => toast.error("Unable to copy to clipboard"));
   };
 
   const copyAll = () => {
     const allText = JSON.stringify(extractedData, null, 2);
-    navigator.clipboard.writeText(allText);
+    copySection(allText, "All referral data");
   };
 
-  const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [_generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
-  const [oasisResults, setOasisResults] = useState(null);
+  /**
+   * Generate the admission packet PDF and upload it to obtain a permanent URL.
+   * The browser download is opt-in via `download` so embedded/auto flows don't
+   * spam the user with surprise downloads on every extraction.
+   */
+  const buildAdmissionPacket = async (data = extractedData, { download = false } = {}) => {
+    if (!data) return null;
 
-  const generateAdmissionPacket = async () => {
-    if (!extractedData) return;
-    
     setGeneratingPDF(true);
     try {
       const response = await base44.functions.invoke('generateReferralOASISPacket', {
-        referralData: extractedData
+        referralData: data
       });
-      
+
       // Convert blob to file and upload to get permanent URL
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      const file = new File([blob], `admission_packet_${extractedData.demographics?.full_name?.replace(/\s+/g, '_') || 'patient'}_${Date.now()}.pdf`, { type: 'application/pdf' });
-      
+      const file = new File([blob], `admission_packet_${data.demographics?.full_name?.replace(/\s+/g, '_') || 'patient'}_${Date.now()}.pdf`, { type: 'application/pdf' });
+
       // Upload to get permanent URL
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setGeneratedPdfUrl(file_url);
-      
-      // Also trigger download
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
-      
+
+      if (download) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        toast.success("Admission packet downloaded.");
+      }
+
       return file_url;
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate admission packet. Please try again.');
+      if (download) {
+        toast.error('Failed to generate admission packet. Please try again.');
+      }
       return null;
     } finally {
       setGeneratingPDF(false);
     }
+  };
+
+  // Explicit user-initiated download (button click).
+  const downloadAdmissionPacket = async () => {
+    if (generatedPdfUrl) {
+      // Already generated during extraction — just open it, no re-generation.
+      window.open(generatedPdfUrl, "_blank", "noopener");
+      return;
+    }
+    await buildAdmissionPacket(extractedData, { download: true });
   };
 
   return (
@@ -757,26 +849,52 @@ HANDWRITTEN NOTES HANDLING:
             Upload a patient referral PDF to automatically extract all relevant information for admission assessment and OASIS completion.
           </p>
 
-          <div className="flex items-center gap-2">
-            <Input
-              type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.tiff"
-              onChange={handleFileUpload}
-              disabled={isUploading || isProcessing}
-              className="flex-1"
-            />
-            <Button disabled={isUploading || isProcessing}>
-              {isUploading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-              ) : (
-                <Upload className="w-4 h-4 mr-2" />
-              )}
-              Upload
-            </Button>
-          </div>
-          <p className="text-xs text-slate-500">
-            Supports PDFs, faxed images (PNG, JPG, TIFF), and scanned documents
-          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={REFERRAL_ACCEPT_ATTR}
+            onChange={handleFileUpload}
+            disabled={isUploading || isProcessing}
+            className="sr-only"
+          />
+
+          <button
+            type="button"
+            onClick={() => !isUploading && !isProcessing && fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); if (!isUploading && !isProcessing) setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            disabled={isUploading || isProcessing}
+            aria-label="Upload referral document"
+            className={`w-full rounded-lg border-2 border-dashed p-6 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+              isDragging
+                ? "border-blue-500 bg-blue-50"
+                : "border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50"
+            } ${(isUploading || isProcessing) ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+          >
+            {isUploading ? (
+              <div className="flex items-center justify-center gap-2 text-blue-700">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
+                <span className="text-sm font-medium">Uploading{fileName ? ` ${fileName}` : ""}…</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <UploadCloud className="w-8 h-8 text-blue-500 mb-1" />
+                <p className="text-sm font-medium text-slate-700">
+                  {isDragging ? "Drop the file to upload" : "Drag & drop a referral here, or click to browse"}
+                </p>
+                <p className="text-xs text-slate-500">
+                  PDFs and faxed images (PNG, JPG, TIFF) · up to {formatBytes(25 * 1024 * 1024)}
+                </p>
+              </div>
+            )}
+          </button>
+
+          {fileName && !isUploading && !processingError && (
+            <p className="text-xs text-slate-600 flex items-center gap-1">
+              <FileText className="w-3 h-3" /> {fileName}
+            </p>
+          )}
 
           {isProcessing && (
             <ProgressFeedback
@@ -785,6 +903,19 @@ HANDWRITTEN NOTES HANDLING:
               message="Analyzing referral with AI"
             />
           )}
+
+          {processingError && !isProcessing && (
+            <Alert className="bg-red-50 border-red-300">
+              <XCircle className="w-4 h-4 text-red-600" />
+              <AlertDescription className="flex items-center justify-between gap-3 text-red-900">
+                <span>{processingError}</span>
+                <Button size="sm" variant="outline" onClick={retryProcessing} className="shrink-0">
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Try Again
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
@@ -792,19 +923,25 @@ HANDWRITTEN NOTES HANDLING:
         <div className="space-y-4">
           <Card className="border-2 border-green-300 bg-green-50">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                   <p className="font-medium text-green-900">Referral Processed Successfully</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {!externalFileUrl && (
+                    <Button size="sm" variant="outline" onClick={handleReset}>
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Process Another
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={copyAll}>
                     <Copy className="w-4 h-4 mr-1" />
                     Copy All
                   </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={generateAdmissionPacket}
+                  <Button
+                    size="sm"
+                    onClick={downloadAdmissionPacket}
                     disabled={generatingPDF}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
@@ -825,6 +962,37 @@ HANDWRITTEN NOTES HANDLING:
               </div>
             </CardContent>
           </Card>
+
+          {/* Trustworthiness: remind clinicians to verify AI output and surface
+              the model's own self-reported items needing verification. */}
+          <Alert className="bg-amber-50 border-amber-300">
+            <ShieldAlert className="w-4 h-4 text-amber-600" />
+            <AlertDescription className="text-amber-900">
+              <p className="font-semibold mb-1">AI-extracted — verify before clinical or billing use</p>
+              <p className="text-sm">
+                This summary was generated from the uploaded document and may contain
+                transcription or interpretation errors. Confirm medications, diagnoses,
+                and clinical values against the source before acting on them.
+              </p>
+              {extractedData.oasis_assessment?.items_needing_verification?.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs font-semibold flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> Items the AI flagged for verification:
+                  </p>
+                  <ul className="list-disc list-inside text-sm mt-1">
+                    {extractedData.oasis_assessment.items_needing_verification.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {extractedData.oasis_assessment?.confidence_notes && (
+                <p className="text-xs mt-2 italic">
+                  AI confidence notes: {extractedData.oasis_assessment.confidence_notes}
+                </p>
+              )}
+            </AlertDescription>
+          </Alert>
 
           <Accordion type="multiple" className="space-y-2">
             {/* Demographics */}
