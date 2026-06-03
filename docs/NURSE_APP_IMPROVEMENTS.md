@@ -166,12 +166,14 @@ recommendation carries a `file:line` reference so it can be picked up directly.
 
 ## P3 — Code health & long-term reliability
 
-21. **Add a shared AI-call hook** **[verified: none exists]**.
-    Only `src/hooks/use-mobile.jsx` and `src/components/hooks/useScrollPosition.jsx` exist; 213
-    files call `InvokeLLM` with no shared timeout/retry/error/PHI-logging policy. Introduce
-    `useAICall` (timeout, retry, error surface, schema validation) and adopt it incrementally,
-    starting with the compliance/medication/care-plan call sites above. Add the
-    `useWorkflowExecution` hook already recommended in `COMPREHENSIVE_APP_REVIEW.md`.
+21. **Add a shared AI-call hook** **[foundation implemented]**.
+    ~200 files called `InvokeLLM` with no shared timeout/retry/error policy. Added
+    `src/lib/aiCall.js` (pure, unit-tested timeout + exponential-backoff retry with a sensible
+    "don't retry auth/credit/4xx" classifier) and the `src/hooks/useAICall.js` hook on top
+    (loading/error/data state, stale-response guarding). Tests live in `src/lib/aiCall.test.js`
+    and run under `npm run test:utils`. **Next:** adopt it incrementally at existing call sites,
+    starting with the compliance/medication/care-plan flows. Still open: the `useWorkflowExecution`
+    hook recommended in `COMPREHENSIVE_APP_REVIEW.md`.
 
 22. **Decompose mega-components.**
     `src/components/visit/OASISScrubber.jsx` (4,146 lines), `src/pages/OASISAnalyzer.jsx` (3,162),
