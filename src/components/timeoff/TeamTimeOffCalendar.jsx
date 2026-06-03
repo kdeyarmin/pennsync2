@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, CalendarDays, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import TimeOffStatusBadge from "./TimeOffStatusBadge";
 import { toISODate, requestsCoveringDate, typeLabel } from "./timeOffUtils";
 
@@ -39,7 +39,7 @@ const TYPE_DOT = {
   other: "bg-slate-400",
 };
 
-export default function TeamTimeOffCalendar({ requests = [], coverageThreshold = 0 }) {
+export default function TeamTimeOffCalendar({ requests = [] }) {
   const [cursor, setCursor] = useState(() => new Date());
   const [showPending, setShowPending] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -59,8 +59,6 @@ export default function TeamTimeOffCalendar({ requests = [], coverageThreshold =
       : [];
     return { approved, pending, iso };
   };
-
-  const overThreshold = (approvedCount) => coverageThreshold > 0 && approvedCount >= coverageThreshold;
 
   const selected = selectedDay
     ? requestsCoveringDate(requests, selectedDay, { includePending: true }).sort((a, b) =>
@@ -107,7 +105,6 @@ export default function TeamTimeOffCalendar({ requests = [], coverageThreshold =
             const inMonth = isSameMonth(day, cursor);
             const today = isToday(day);
             const { approved, pending, iso } = peopleOn(day);
-            const flagged = overThreshold(approved.length);
             const total = approved.length + pending.length;
             return (
               <button
@@ -116,13 +113,12 @@ export default function TeamTimeOffCalendar({ requests = [], coverageThreshold =
                 onClick={() => total > 0 && setSelectedDay(iso)}
                 className={`min-h-[88px] p-1.5 text-left align-top transition-colors ${inMonth ? "bg-white" : "bg-slate-50/60"} ${
                   total > 0 ? "hover:bg-blue-50 cursor-pointer" : "cursor-default"
-                } ${today ? "ring-2 ring-inset ring-blue-400" : ""} ${flagged ? "ring-2 ring-inset ring-amber-400 bg-amber-50/40" : ""}`}
+                } ${today ? "ring-2 ring-inset ring-blue-400" : ""}`}
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-medium ${inMonth ? "text-slate-700" : "text-slate-300"} ${today ? "text-blue-600 font-bold" : ""}`}>
                     {format(day, "d")}
                   </span>
-                  {flagged && <AlertTriangle className="w-3 h-3 text-amber-500" title={`${approved.length} people off`} />}
                 </div>
                 <div className="space-y-0.5 mt-1">
                   {approved.slice(0, 3).map((r) => (
@@ -160,11 +156,6 @@ export default function TeamTimeOffCalendar({ requests = [], coverageThreshold =
               {label}
             </span>
           ))}
-          {coverageThreshold > 0 && (
-            <span className="inline-flex items-center gap-1 text-amber-600">
-              <AlertTriangle className="w-3 h-3" /> {coverageThreshold}+ off
-            </span>
-          )}
         </div>
       </CardContent>
 
