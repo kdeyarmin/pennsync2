@@ -27,7 +27,7 @@ import {
   User,
   PenSquare,
 } from "lucide-react";
-import { format, formatDistanceToNowStrict } from "date-fns";
+import { format } from "date-fns";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -36,22 +36,9 @@ import PageContainer from "@/components/ui/PageContainer";
 import PhoneFrame, { PhoneEmptyState } from "@/components/phone/PhoneFrame";
 import PhoneTopBar from "@/components/phone/PhoneTopBar";
 import ContactAvatar from "@/components/phone/ContactAvatar";
+import { shortAgo } from "@/components/phone/timeUtils";
 
 const PRIORITY_DOT = { urgent: "bg-red-500", high: "bg-orange-500", normal: "bg-blue-500" };
-
-function shortAgo(date) {
-  try {
-    return formatDistanceToNowStrict(new Date(date))
-      .replace(/ seconds?/, "s")
-      .replace(/ minutes?/, "m")
-      .replace(/ hours?/, "h")
-      .replace(/ days?/, "d")
-      .replace(/ months?/, "mo")
-      .replace(/ years?/, "y");
-  } catch {
-    return "";
-  }
-}
 
 export default function Messages() {
   const queryClient = useQueryClient();
@@ -204,13 +191,25 @@ export default function Messages() {
   const handleReply = () => {
     if (!selectedThread || !replyText.trim()) return;
 
+    const me = currentUser?.email;
     const originalMessage = selectedThread.latestMessage;
+    // Address the reply to the *other* participant(s), never to myself. If the
+    // latest message in the thread was mine (incl. a reply I just sent), reply to
+    // the people I sent it to; otherwise reply to its sender. Without this, a
+    // reply to my own latest row would be addressed back to me.
+    const targets =
+      originalMessage.sender_email === me
+        ? originalMessage.recipients || []
+        : [originalMessage.sender_email];
+    const recipients = [...new Set(targets.filter((email) => email && email !== me))];
+    if (recipients.length === 0) return;
+
     sendMessageMutation.mutate({
       subject: `Re: ${originalMessage.subject}`,
       message_text: replyText.trim(),
       sender_name: currentUser?.full_name,
-      sender_email: currentUser?.email,
-      recipients: [originalMessage.sender_email],
+      sender_email: me,
+      recipients,
       priority: originalMessage.priority,
       patient_id: originalMessage.patient_id,
       thread_id: selectedThread.threadId

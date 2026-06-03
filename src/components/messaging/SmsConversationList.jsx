@@ -3,27 +3,12 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, Info, Ban } from "lucide-react";
-import { formatDistanceToNowStrict } from "date-fns";
 import SmsThreadView from "@/components/messaging/SmsThreadView";
 import PhoneTopBar from "@/components/phone/PhoneTopBar";
 import ContactAvatar from "@/components/phone/ContactAvatar";
 import { PhoneEmptyState } from "@/components/phone/PhoneFrame";
+import { shortAgo } from "@/components/phone/timeUtils";
 import { last10, formatPhoneDisplay } from "@/components/voice/phoneUtils";
-
-/** Compact relative time like a phone inbox shows ("3m", "2h", "4d"). */
-function shortAgo(date) {
-  try {
-    return formatDistanceToNowStrict(new Date(date))
-      .replace(/ seconds?/, "s")
-      .replace(/ minutes?/, "m")
-      .replace(/ hours?/, "h")
-      .replace(/ days?/, "d")
-      .replace(/ months?/, "mo")
-      .replace(/ years?/, "y");
-  } catch {
-    return "";
-  }
-}
 
 /**
  * SmsConversationList — a nurse's text inbox styled like a phone Messages app.
