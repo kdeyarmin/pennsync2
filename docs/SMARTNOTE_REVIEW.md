@@ -270,12 +270,11 @@ carry-forward flags), `factExtraction`, `presenceDetection` (+ `computeCarryForw
 | S2 — offline | **Partial** — scan/value-guard run offline; grounding deferred to reconnect |
 | Pre-fill from chart | **Added** — stable elements carry forward from the last note for confirmation; visit-specific findings never auto-carried (anti-cloning) |
 | Visit Scribe parity | **Done** — extracted shared `ConstrainedNoteReviewer`; `VisitScribe`/`UnifiedDocumentReview` run the same pipeline |
+| Single reviewer (no duplication) | **Done** — `SmartNoteAssistant` Step 2 now renders the same `ConstrainedNoteReviewer` (via a `renderFinalNote` host API that keeps its Save-to-chart + PDF/signature) |
 
-**Deferred (own focused pass, needs runtime test against the backend):**
-migrate `SmartNoteAssistant`'s Step-2 UI onto the shared `ConstrainedNoteReviewer`
-to remove the last presentation-layer duplication (the engine and LLM calls are
-already shared, so the factual guarantees cannot drift). Also still open: C3
-(delete ~122 orphaned components), S3 (consolidate calls), S6/S7 polish, and
-applying the same engine to `MedicalScribe`/`StructuredNoteDrafter`.
+**Still open:** C3 (delete ~122 orphaned components), S3 (consolidate calls),
+S6/S7 polish, and applying the same engine to `MedicalScribe`/`StructuredNoteDrafter`.
+The two LLM calls (generation + grounding) and the chart-save path still warrant a
+manual run against the live Base44 backend.
 
 </content>
