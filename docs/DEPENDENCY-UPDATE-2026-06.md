@@ -84,6 +84,14 @@ test suite (all green):
   `tailwind-merge` 2→3, `lucide-react` 0.x→1 (all icon imports still resolve),
   `pdfjs-dist` 4→6 (worker URL is derived from `pdfjsLib.version`, so it
   auto-matches), `@types/node` 22→25, `eslint-plugin-react-hooks` 5→7.
+- **TypeScript 5→6** — TS 6 no longer auto-includes `@types/node` for bare
+  `tsc` file lists and turns the full `strict` family **on by default**. The
+  `typecheck:utils` script now passes `--types node --strict false` to preserve
+  the project's *existing* (non-strict) TS 5.x check semantics exactly — this is
+  behavior-preserving, not a weakening, since these JS utils were never strict-
+  typed. `jsconfig.json` dropped the now-deprecated `baseUrl` (`paths` resolves
+  without it in TS 6+, and it is removed entirely in TS 7). Migrating the util
+  modules to `strict` is tracked as separate future work (~210 findings).
 
 > **Recommended before merge:** these majors pass build/lint/typecheck/tests,
 > but a few changes have visual/runtime surface that automated checks can't
@@ -91,16 +99,17 @@ test suite (all green):
 > (react-day-picker), **charts** (recharts 3), and **general page styling**
 > (Tailwind 4 preflight differences, e.g. focus-ring width).
 
-## Still deferred (ecosystem not ready)
+## Still deferred (hard upstream blocker)
 
-- **ESLint 10 / `@eslint/js` 10** — `eslint-plugin-react@7.37.5` still caps its
-  peer at `eslint@^9.7`, so ESLint 10 cannot resolve. Kept on latest 9.x until
-  the plugin ships ESLint 10 support.
-- **TypeScript 6** — TS 6 changed defaults (no longer auto-includes `@types/node`
-  for bare `tsc` file lists, and enables strict/`noImplicitAny` by default),
-  which breaks the `--checkJs` util typecheck scripts (the plain-JS utils have
-  unannotated params). Adopting it would mean either disabling the new strictness
-  (pointless) or JSDoc-annotating the util modules (separate effort). Kept on
-  latest 5.x (5.9).
+- **ESLint 10 / `@eslint/js` 10** — blocked by `eslint-plugin-react`. No
+  published version supports ESLint 10 (latest `7.37.5` peer-caps at
+  `eslint@^9.7`), and forcing the install was verified to **crash at lint time**:
+  `TypeError: contextOrFilename.getFilename is not a function` in the
+  `react/no-unknown-property` rule — the plugin calls `context.getFilename()`,
+  an API ESLint 10 removed. Since `react/no-unknown-property` is part of our
+  config, `npm run lint` (a CI gate) breaks. Kept on latest 9.x until
+  `eslint-plugin-react` ships an ESLint 10-compatible release;
+  `eslint-plugin-react-hooks` and `eslint-plugin-unused-imports` already support
+  it.
 
 `@base44/*` packages are vendor-pinned and excluded from the update check.
