@@ -46,26 +46,61 @@ Build, lint, and the 145-case util test suite all stay green after removal.
 
 All `@radix-ui/*`, `@tanstack/react-query`, `cmdk`, `embla-carousel-react`,
 `next-themes`, `react-hook-form`, `react-quill-new`, `sonner`, `twilio-video`,
-plus dev tooling (`autoprefixer`, `baseline-browser-mapping`,
-`eslint-plugin-react`, `eslint-plugin-unused-imports`, `globals`).
+plus dev tooling (`baseline-browser-mapping`, `eslint-plugin-react`,
+`eslint-plugin-unused-imports`, `globals`). `autoprefixer` was removed — Tailwind
+v4's PostCSS plugin handles vendor prefixing internally (see below).
 
-## Deferred: breaking major upgrades (need migration + runtime QA)
+## Breaking major upgrades — completed
 
-These were intentionally **not** bumped — each is a breaking major that requires
-code changes and full runtime testing, which is unsafe to land blindly in a
-clinical app. Track as follow-up work, ideally grouped:
+All of the following breaking majors were migrated and verified with
+`npm run build`, `npm run lint`, `npm run typecheck`, and the 145-case util
+test suite (all green):
 
 - **React 19 cluster** — `react`/`react-dom` 18→19, `@types/react(-dom)` 18→19,
-  `@vitejs/plugin-react` 4→6, `react-day-picker` 8→10, `react-leaflet` (if
-  re-added). Move together.
-- **Build/lint cluster** — `vite` 6→8, `eslint`/`@eslint/js` 9→10,
-  `eslint-plugin-react-hooks` 5→7, `typescript` 5→6.
-- **Tailwind 4** — `tailwindcss` 3→4 is a full config/CSS-engine rewrite
-  (`@tailwindcss/postcss`, CSS-first config). Largest single migration.
-- **Standalone majors** — `zod` 3→4 (if re-introduced), `date-fns` 3→4 (+ keep
-  `date-fns-tz` in lockstep), `recharts` 2→3, `react-router-dom` 6→7,
-  `framer-motion` 11→12, `@stripe/*` (if re-introduced), `react-markdown` 9→10,
-  `react-resizable-panels` 2→4, `tailwind-merge` 2→3, `lucide-react` 0.x→1,
-  `pdfjs-dist` 4→6, `@hello-pangea/dnd` 17→18, `@hookform/resolvers` 4→5.
+  `@vitejs/plugin-react` 4→6, `vite` 6→8. No React 19-removed APIs were in use
+  (no `findDOMNode`, `ReactDOM.render`, string refs, `defaultProps`, or
+  `propTypes`).
+- **`react-day-picker` 8→10** — required rewriting `src/components/ui/calendar.jsx`
+  for the v9+ element API (`caption`→`month_caption`, `nav_button`→
+  `button_previous`/`button_next`, `table`→`month_grid`, `head_cell`→`weekday`,
+  `row`→`week`, `cell`→`day`, `day`→`day_button`, `day_selected`→`selected`, …;
+  `IconLeft`/`IconRight` → a single `Chevron` component). Call sites moved
+  `initialFocus` → `autoFocus`.
+- **Tailwind 4** — `tailwindcss` 3→4 via the `@config` bridge: `index.css` now
+  uses `@import "tailwindcss"; @config "../tailwind.config.js";`, PostCSS uses
+  `@tailwindcss/postcss` (built-in import handling + prefixing, so `autoprefixer`
+  was dropped). The existing JS theme, `darkMode: ["class"]`, content globs, and
+  `tailwindcss-animate` are all consumed through `@config`. Verified the built
+  CSS still emits theme colors (`hsl(var(--…))`), custom component classes,
+  `tailwindcss-animate` keyframes, and responsive/hover variants. The app is
+  light-mode only, so no `dark:` variants are required. The existing
+  `* { @apply border-slate-200 }` base rule pre-empts v4's border-color default
+  change.
+- **Standalone majors** — `date-fns` 3→4 (`date-fns-tz` 3.2 already supports
+  date-fns v4), `recharts` 2→3, `react-router-dom` 6→7 (only stable APIs used:
+  `BrowserRouter`/`Routes`/`Route`/`Navigate`/`Link`/`useLocation`/
+  `useNavigate`/`useSearchParams`), `framer-motion` 11→12, `react-markdown`
+  9→10, `react-resizable-panels` 2→4, `@hello-pangea/dnd` 17→18,
+  `tailwind-merge` 2→3, `lucide-react` 0.x→1 (all icon imports still resolve),
+  `pdfjs-dist` 4→6 (worker URL is derived from `pdfjsLib.version`, so it
+  auto-matches), `@types/node` 22→25, `eslint-plugin-react-hooks` 5→7.
+
+> **Recommended before merge:** these majors pass build/lint/typecheck/tests,
+> but a few changes have visual/runtime surface that automated checks can't
+> fully cover — do a manual smoke test of **calendars/date pickers**
+> (react-day-picker), **charts** (recharts 3), and **general page styling**
+> (Tailwind 4 preflight differences, e.g. focus-ring width).
+
+## Still deferred (ecosystem not ready)
+
+- **ESLint 10 / `@eslint/js` 10** — `eslint-plugin-react@7.37.5` still caps its
+  peer at `eslint@^9.7`, so ESLint 10 cannot resolve. Kept on latest 9.x until
+  the plugin ships ESLint 10 support.
+- **TypeScript 6** — TS 6 changed defaults (no longer auto-includes `@types/node`
+  for bare `tsc` file lists, and enables strict/`noImplicitAny` by default),
+  which breaks the `--checkJs` util typecheck scripts (the plain-JS utils have
+  unannotated params). Adopting it would mean either disabling the new strictness
+  (pointless) or JSDoc-annotating the util modules (separate effort). Kept on
+  latest 5.x (5.9).
 
 `@base44/*` packages are vendor-pinned and excluded from the update check.
