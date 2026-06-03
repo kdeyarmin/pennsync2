@@ -57,3 +57,18 @@ test("returns a presence row for every required element of the visit type", () =
   assert.equal(presence.length, required.length);
   assert.ok(required.length > 0);
 });
+
+test("a structured vitals block (as Document Visit appends) registers the vitals element", () => {
+  const base = "Patient seen for routine visit. Skilled assessment performed.";
+  const withVitals =
+    `${base}\nVital signs:\nBlood Pressure: 128/76 mmHg\nHeart Rate: 72 bpm\n` +
+    `Temperature: 98.4°F\nOxygen Saturation: 97%`;
+  const vitalsPresent = (r) => r.presence.find((p) => p.id === "vitals")?.present === true;
+
+  const without = scoreNoteFromText({ text: base, serviceLine: "home_health", visitType: "routine_visit" });
+  const withV = scoreNoteFromText({ text: withVitals, serviceLine: "home_health", visitType: "routine_visit" });
+
+  assert.equal(vitalsPresent(without), false);
+  assert.equal(vitalsPresent(withV), true);
+  assert.ok(withV.coverageScore > without.coverageScore);
+});

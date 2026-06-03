@@ -932,12 +932,36 @@ Generate the complete clinical narrative based on the audio and context:`;
       const sanitizedNarrative = sanitizeInput(narrativeText);
       
       // Deterministic, offline compliance scoring — the same engine Smart Notes
-      // uses, so a note finalized here is scored and audited identically to one
-      // authored there.
-      const serviceLine = currentUser?.care_scope === 'hospice' ? 'hospice' : 'home_health';
+      // uses, so a note finalized here is scored and audited identically.
+      //
+      // Service line comes from the patient's care_type, the source the rest of
+      // this page already uses for hospice vs. home-health documentation. It is
+      // authoritative per-visit (a clinician whose care_scope is "both" can do
+      // either) and avoids any dependency on the async currentUser query.
+      const serviceLine = patient?.care_type === 'hospice' ? 'hospice' : 'home_health';
       const visitType = visit?.visit_type || 'routine_visit';
+
+      // Vitals captured in the structured form count toward the "vitals" (and
+      // pain) required elements even when the nurse didn't restate them in the
+      // narrative — they are saved on the same visit. Fold them into the SCORED
+      // text only; the persisted nurse_notes stays exactly what the nurse wrote.
+      const vs = vitalSigns || {};
+      const vitalsForScore = [
+        vs.temperature != null && `Temperature: ${vs.temperature}°F`,
+        vs.blood_pressure_systolic != null && vs.blood_pressure_diastolic != null &&
+          `Blood Pressure: ${vs.blood_pressure_systolic}/${vs.blood_pressure_diastolic} mmHg`,
+        vs.heart_rate != null && `Heart Rate: ${vs.heart_rate} bpm`,
+        vs.respiratory_rate != null && `Respiratory Rate: ${vs.respiratory_rate} breaths/min`,
+        vs.oxygen_saturation != null && `Oxygen Saturation: ${vs.oxygen_saturation}%`,
+        vs.pain_level != null && `Pain Level: ${vs.pain_level}/10`,
+        vs.weight != null && `Weight: ${vs.weight} lb`,
+      ].filter(Boolean).join("\n");
+      const scoredText = vitalsForScore
+        ? `${sanitizedNarrative}\nVital signs:\n${vitalsForScore}`
+        : sanitizedNarrative;
+
       const { coverageScore, draftScore, structured } = scoreNoteFromText({
-        text: sanitizedNarrative,
+        text: scoredText,
         serviceLine,
         visitType,
       });
