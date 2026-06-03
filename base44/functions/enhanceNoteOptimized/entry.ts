@@ -237,11 +237,11 @@ Return a JSON object with:
   "placeholders_added": [<list of placeholders inserted for nurse to complete>]
 }`;
 
-    // Run compliance check and note enhancement in parallel using Claude 3.5 Sonnet via Base44 InvokeLLM
+    // Run compliance check and note enhancement in parallel using GPT-5.5 via Base44 InvokeLLM
     const [roughComplianceResult, enhancementResult] = await Promise.all([
       base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: complianceCheckPrompt,
-        model: "gpt_5_4",
+        model: "gpt_5_5",
         response_json_schema: {
           type: "object",
           properties: {
@@ -254,7 +254,7 @@ Return a JSON object with:
       }),
       base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: noteEnhancementPrompt,
-        model: "gpt_5_4",
+        model: "gpt_5_5",
         response_json_schema: {
           type: "object",
           properties: {
@@ -267,9 +267,9 @@ Return a JSON object with:
       })
     ]);
 
-    // Run enhanced note compliance check with Claude 3.5 Sonnet
+    // Run enhanced note compliance check with GPT-5.5
     const enhancedComplianceResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "gpt_5_4",
+      model: "gpt_5_5",
       prompt: `Audit this enhanced home health nursing note for Medicare compliance per 42 CFR 484.
 
 VISIT TYPE: ${visitType}

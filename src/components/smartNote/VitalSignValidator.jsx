@@ -1,35 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-
-// Patterns to extract vitals from free text
-const extractVitals = (text) => {
-  const vitals = {};
-
-  // BP: "BP 180/110" or "148/90"
-  const bpMatch = text.match(/bp\s*(\d{2,3})\/(\d{2,3})/i) || text.match(/(\d{2,3})\/(\d{2,3})/);
-  if (bpMatch) { vitals.bp_sys = parseInt(bpMatch[1]); vitals.bp_dia = parseInt(bpMatch[2]); }
-
-  // HR: "HR 120" or "heart rate 55"
-  const hrMatch = text.match(/(?:hr|heart\s*rate)\s*(\d{2,3})/i);
-  if (hrMatch) vitals.hr = parseInt(hrMatch[1]);
-
-  // O2: "O2 88%" or "SpO2 91%"
-  const o2Match = text.match(/(?:o2|spo2|oxygen)\s*(\d{2,3})\s*%/i) || text.match(/(\d{2,3})\s*%\s*(?:ra|on ra|o2|room air)/i);
-  if (o2Match) vitals.o2 = parseInt(o2Match[1]);
-
-  // Temp: "temp 101.5" or "T 99.8"
-  const tempMatch = text.match(/(?:temp|temperature|t)\s*(\d{2,3}(?:\.\d)?)/i);
-  if (tempMatch) { const t = parseFloat(tempMatch[1]); if (t > 90) vitals.temp = t; }
-
-  // RR: "RR 24"
-  const rrMatch = text.match(/(?:rr|resp(?:iratory)?\s*rate)\s*(\d{1,2})/i);
-  if (rrMatch) vitals.rr = parseInt(rrMatch[1]);
-
-  // Weight: "Wt 210" or "weight 95"
-  const wtMatch = text.match(/(?:wt|weight)\s*(\d{2,3}(?:\.\d)?)\s*(?:lbs?|kg)?/i);
-  if (wtMatch) vitals.weight = parseFloat(wtMatch[1]);
-
-  return vitals;
-};
+import { extractVitals } from "@/components/smartNote/compliance/factExtraction";
 
 const RULES = [
   { key: "bp_sys", label: "Systolic BP", check: v => v > 180, msg: v => `Systolic BP ${v} mmHg — hypertensive urgency threshold. Notify physician.`, severity: "critical" },

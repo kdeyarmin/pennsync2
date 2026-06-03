@@ -1,11 +1,10 @@
 import { useState, useRef } from "react";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Loader2, Copy, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Copy, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import VoiceNoteIntegration from "./VoiceNoteIntegration";
 
 const VISIT_TYPES = [
@@ -21,7 +20,7 @@ const BLANK_VITALS = {
   o2_sat: "", temperature: "", weight: "", pain_level: ""
 };
 
-export default function StructuredNoteDrafter({ patient, onDraftReady }) {
+export default function StructuredNoteDrafter({ onDraftReady }) {
   const [visitType, setVisitType] = useState("routine_visit");
   const [vitals, setVitals] = useState(BLANK_VITALS);
   const [symptoms, setSymptoms] = useState("");
@@ -29,7 +28,6 @@ export default function StructuredNoteDrafter({ patient, onDraftReady }) {
   const [education, setEducation] = useState("");
   const [plan, setPlan] = useState("");
   const [draft, setDraft] = useState("");
-  const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const symptomsRef = useRef(null);
@@ -41,54 +39,31 @@ export default function StructuredNoteDrafter({ patient, onDraftReady }) {
 
   const hasContent = symptoms.trim() || Object.values(vitals).some(v => v.trim());
 
-  const generate = async () => {
+  // Deterministically assemble the nurse's structured input into a rough draft.
+  // No LLM and no fabricated defaults for blank fields — the compliant narrative
+  // and the value-guard/grounding fact-check happen in the Note Builder when
+  // "Use in Note Builder" runs.
+  const generate = () => {
     if (!hasContent) return;
-    setLoading(true);
-    setDraft("");
-    try {
-      const vitalsLine = [
-        vitals.bp_systolic && vitals.bp_diastolic ? `BP ${vitals.bp_systolic}/${vitals.bp_diastolic} mmHg` : null,
-        vitals.heart_rate ? `HR ${vitals.heart_rate} bpm` : null,
-        vitals.resp_rate ? `RR ${vitals.resp_rate} breaths/min` : null,
-        vitals.o2_sat ? `O2 sat ${vitals.o2_sat}%` : null,
-        vitals.temperature ? `Temp ${vitals.temperature}°F` : null,
-        vitals.weight ? `Weight ${vitals.weight} lbs` : null,
-        vitals.pain_level ? `Pain ${vitals.pain_level}/10` : null,
-      ].filter(Boolean).join(", ") || "Not provided";
+    const vitalsLine = [
+      vitals.bp_systolic && vitals.bp_diastolic ? `BP ${vitals.bp_systolic}/${vitals.bp_diastolic} mmHg` : null,
+      vitals.heart_rate ? `HR ${vitals.heart_rate} bpm` : null,
+      vitals.resp_rate ? `RR ${vitals.resp_rate} breaths/min` : null,
+      vitals.o2_sat ? `O2 sat ${vitals.o2_sat}%` : null,
+      vitals.temperature ? `Temp ${vitals.temperature}°F` : null,
+      vitals.weight ? `Weight ${vitals.weight} lbs` : null,
+      vitals.pain_level ? `Pain ${vitals.pain_level}/10` : null,
+    ].filter(Boolean).join(", ");
 
-      const patientCtx = patient
-        ? `Patient: ${patient.first_name} ${patient.last_name}, Dx: ${patient.primary_diagnosis || "Not documented"}, Meds: ${patient.current_medications?.map(m => m.name).join(", ") || "None"}`
-        : "No patient context";
+    const lines = [
+      vitalsLine ? `Vitals: ${vitalsLine}.` : null,
+      symptoms.trim() ? `Symptoms / chief complaint: ${symptoms.trim()}.` : null,
+      interventions.trim() ? `Interventions performed: ${interventions.trim()}.` : null,
+      education.trim() ? `Patient education: ${education.trim()}.` : null,
+      plan.trim() ? `Plan: ${plan.trim()}.` : null,
+    ].filter(Boolean);
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a Medicare home health clinical documentation specialist. Draft a complete, Medicare-compliant nursing note from the structured input below.
-
-RULES:
-1. Only use information provided in the structured input. Do not invent or assume clinical details.
-2. Write in professional past-tense clinical narrative (no bullet points, no headers).
-3. Include: homebound status statement, skilled need justification, vital sign interpretation, assessment findings, interventions performed, patient response, education with comprehension assessment, safety assessment, and plan.
-4. If a section has no input, include a brief standard statement (e.g., "No new complaints reported" for symptoms if blank).
-5. The note must stand alone as a complete legal clinical document.
-
-PATIENT: ${patientCtx}
-VISIT TYPE: ${visitType}
-
-VITAL SIGNS: ${vitalsLine}
-SYMPTOMS / CHIEF COMPLAINT: ${symptoms || "No specific complaints reported by patient."}
-INTERVENTIONS PERFORMED: ${interventions || "Standard skilled nursing assessment performed."}
-PATIENT EDUCATION: ${education || "Patient education provided as appropriate to visit type."}
-PLAN: ${plan || "Continue current plan of care."}
-
-Return ONLY the clinical narrative note text — nothing else.`
-      });
-
-      const noteText = typeof result === "string" ? result : JSON.stringify(result);
-      setDraft(noteText);
-    } catch {
-      alert("Failed to generate draft. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    setDraft(lines.join("\n"));
   };
 
   const copy = async () => {
@@ -125,14 +100,14 @@ Return ONLY the clinical narrative note text — nothing else.`
         <div className="flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-violet-600" />
           <span className="text-sm font-bold text-violet-800">Structured Note Drafter</span>
-          <Badge className="bg-violet-100 text-violet-700 text-xs">AI</Badge>
+          <Badge className="bg-violet-100 text-violet-700 text-xs">Structured</Badge>
         </div>
         {collapsed ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
       </button>
 
       {!collapsed && (
         <div className="p-4 space-y-4">
-          <p className="text-xs text-slate-500">Fill in structured fields to generate a complete clinical note draft.</p>
+          <p className="text-xs text-slate-500">Fill in structured fields to build a rough draft from exactly what you enter, then run the full compliance check in the Note Builder.</p>
 
           {/* Visit Type */}
           <div>
@@ -184,9 +159,9 @@ Return ONLY the clinical narrative note text — nothing else.`
             <div key={f.label}>
               <div className="flex items-center justify-between mb-1.5">
                 <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{f.label}</Label>
-                <VoiceNoteIntegration 
+                <VoiceNoteIntegration
                   onInsertText={(text) => handleInsertVoiceText(f.fieldName, text)}
-                  disabled={loading}
+                  disabled={false}
                 />
               </div>
               <textarea
@@ -201,12 +176,10 @@ Return ONLY the clinical narrative note text — nothing else.`
 
           <Button
             onClick={generate}
-            disabled={!hasContent || loading}
+            disabled={!hasContent}
             className="w-full bg-violet-600 hover:bg-violet-700 h-10 gap-2 font-semibold"
           >
-            {loading
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Drafting Note…</>
-              : <><Sparkles className="w-4 h-4" /> Generate Note Draft</>}
+            <Sparkles className="w-4 h-4" /> Build Draft from Fields
           </Button>
 
           {/* Draft output */}

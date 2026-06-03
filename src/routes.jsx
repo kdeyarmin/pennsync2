@@ -72,6 +72,8 @@ export const REDIRECTS = [
   { from: '/ComplianceDashboard', to: '/ComplianceCenter' },
   { from: '/Reports', to: '/ReportsAnalytics' },
   { from: '/Support', to: '/Help' },
+  // MedicareComplianceDashboard duplicates ComplianceCenter's audit metrics.
+  { from: '/MedicareComplianceDashboard', to: '/ComplianceCenter' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';

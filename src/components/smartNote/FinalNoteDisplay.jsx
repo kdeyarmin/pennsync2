@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Copy, RotateCcw } from "lucide-react";
+import { CheckCircle2, Copy, RotateCcw, Loader2 } from "lucide-react";
 import SmartNotePDFExporterEnhanced from "./SmartNotePDFExporterEnhanced";
 import NoteDiffView from "./NoteDiffView";
 
-export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copied, patient, visitType, analysisScore, currentUser, signatureImage, onReset, originalNote, analysis }) {
+export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copied, patient, visitType, analysisScore, currentUser, signatureImage, onReset, originalNote, analysis, onSave, saving, saved, saveDisabled }) {
 
   return (
     <div className="space-y-4">
@@ -37,7 +37,17 @@ export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copi
             {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy All</>}
           </Button>
           <SmartNotePDFExporterEnhanced finalNote={finalNote} patient={patient} visitType={visitType} analysisScore={analysisScore} currentUser={currentUser} signatureImage={signatureImage} analysis={analysis} />
-          <Button variant="outline" className="h-12 sm:h-10 px-4 text-sm">Save</Button>
+          {onSave && (
+            <Button
+              variant={saved ? "outline" : "default"}
+              onClick={onSave}
+              disabled={saveDisabled}
+              className={`h-12 sm:h-10 px-4 text-sm gap-1.5 font-semibold ${saved ? "" : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
+              title={saveDisabled ? "Select a patient and resolve any fact-check issues to save to the chart" : "Save to the patient's chart so it can seed the next note"}
+            >
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : saved ? <><CheckCircle2 className="w-4 h-4" /> Saved</> : "Save to chart"}
+            </Button>
+          )}
           <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={onReset}><RotateCcw className="w-4 h-4" /></Button>
         </div>
       </div>

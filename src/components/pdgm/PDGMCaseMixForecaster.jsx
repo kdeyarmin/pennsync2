@@ -74,7 +74,7 @@ FORECASTING INSTRUCTIONS:
 3. Calculate expected comorbidity adjustments
 4. Factor in episode timing (early vs late)
 5. Account for admission source patterns
-6. Project revenue based on 2024 Medicare base rates (~$2,100)
+6. Project revenue as a ROUGH ESTIMATE using standard CMS PDGM base rates. Do not present figures as exact payment — CMS base rates change annually and must be verified against the agency's current CMS rate table.
 
 Return JSON:
 {

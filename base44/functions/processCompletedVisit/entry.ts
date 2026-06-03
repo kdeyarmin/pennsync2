@@ -81,7 +81,7 @@ Use proper medical terminology and follow Medicare documentation requirements. B
 
     const narrativeResponse = await base44.integrations.Core.InvokeLLM({
       prompt: narrativePrompt,
-      model: 'gpt_5'
+      model: 'gpt_5_5'
     });
 
     // Generate follow-up tasks

@@ -109,7 +109,7 @@ Return JSON with discrepancies array.`;
 
     const analysis = await base44.integrations.Core.InvokeLLM({
       prompt: analysisPrompt,
-      model: 'gpt_5',
+      model: 'gpt_5_5',
       response_json_schema: {
         type: "object",
         properties: {
