@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Award, BookOpen, CheckCircle2, RefreshCcw, TriangleAlert, Search, Filter, Loader2 } from "lucide-react";
+import { Award, BookOpen, CheckCircle2, RefreshCcw, TriangleAlert, Search, Filter } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import LoadingState from "@/components/ui/LoadingState";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -154,9 +155,7 @@ export default function MyTrainingDashboard({ filterByType }) {
           </div>
 
           {loadingAssignments ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-            </div>
+            <LoadingState />
           ) : sortedAssignments.length === 0 ? (
             <Card>
               <CardContent className="p-10 text-center">

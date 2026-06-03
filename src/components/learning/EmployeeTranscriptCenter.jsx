@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Award, Printer, Search, Loader2 } from "lucide-react";
+import { Award, Printer, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import LoadingState from "@/components/ui/LoadingState";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -74,9 +75,7 @@ export default function EmployeeTranscriptCenter() {
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            </div>
+            <LoadingState />
           ) : filtered.length === 0 ? (
             <div className="text-center py-10">
               <Award className="w-10 h-10 text-slate-300 mx-auto mb-2" />
