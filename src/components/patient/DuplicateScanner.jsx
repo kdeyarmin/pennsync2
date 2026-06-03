@@ -19,30 +19,7 @@ import {
   Database
 } from "lucide-react";
 import { toast } from "sonner";
-
-// Enhanced duplicate detection with multiple algorithms
-const calculateLevenshteinDistance = (str1, str2) => {
-  const matrix = [];
-  for (let i = 0; i <= str2.length; i++) matrix[i] = [i];
-  for (let j = 0; j <= str1.length; j++) matrix[0][j] = j;
-  for (let i = 1; i <= str2.length; i++) {
-    for (let j = 1; j <= str1.length; j++) {
-      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
-      }
-    }
-  }
-  return matrix[str2.length][str1.length];
-};
-
-const calculateSimilarity = (str1, str2) => {
-  if (!str1 || !str2) return 0;
-  const distance = calculateLevenshteinDistance(str1.toLowerCase(), str2.toLowerCase());
-  const maxLength = Math.max(str1.length, str2.length);
-  return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
-};
+import { findDuplicateGroups } from "@/components/patient/patientDuplicateUtils";
 
 export default function DuplicateScanner() {
   const [isScanning, setIsScanning] = useState(false);
@@ -78,164 +55,92 @@ export default function DuplicateScanner() {
         const data = response.data || response;
         setResults(data);
       } else {
-        // Advanced client-side scanning with multiple algorithms and batching
+        // Advanced client-side scanning using the shared matching engine.
         const duplicateGroups = [];
-        const processedIds = new Set();
         const updateBatch = [];
         const BATCH_SIZE = 10;
         const BATCH_DELAY = 1000; // 1 second between batches
-        
+
         // Helper to process batches with delay
         const processBatch = async (batch) => {
           if (batch.length === 0) return;
-          
-          const promises = batch.map(update => 
+
+          const promises = batch.map(update =>
             base44.entities.Patient.update(update.id, update.data)
               .catch(err => console.error(`Failed to update ${update.id}:`, err))
           );
-          
+
           await Promise.all(promises);
-          
+
           // Delay between batches to avoid rate limiting
           if (batch.length === BATCH_SIZE) {
             await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
           }
         };
-        
-        // Phase 1: Identify duplicates (no API calls)
-        for (let i = 0; i < allPatients.length; i++) {
-          if (processedIds.has(allPatients[i].id)) continue;
-          
-          const patient = allPatients[i];
-          const matches = [];
-          
-          for (let j = i + 1; j < allPatients.length; j++) {
-            if (processedIds.has(allPatients[j].id)) continue;
-            
-            const otherPatient = allPatients[j];
-            let matchScore = 0;
-            const matchReasons = [];
-            
-            // 1. MRN exact match (highest priority)
-            if (advancedOptions.matchByMRN && patient.medical_record_number && 
-                otherPatient.medical_record_number &&
-                patient.medical_record_number === otherPatient.medical_record_number) {
-              matchScore += 100;
-              matchReasons.push('MRN match');
-            }
-            
-            // 2. Name and DOB match
-            if (advancedOptions.matchByNameAndDOB && patient.date_of_birth && otherPatient.date_of_birth) {
-              const firstNameSim = calculateSimilarity(patient.first_name || '', otherPatient.first_name || '');
-              const lastNameSim = calculateSimilarity(patient.last_name || '', otherPatient.last_name || '');
-              
-              if (advancedOptions.fuzzyNameMatching) {
-                if (firstNameSim >= 80 && lastNameSim >= 80 && patient.date_of_birth === otherPatient.date_of_birth) {
-                  matchScore += 90;
-                  matchReasons.push('Name+DOB fuzzy match');
+
+        // Map the advanced toggles onto the shared scorer's signal groups.
+        const signals = {
+          name: advancedOptions.matchByNameAndDOB,
+          dob: advancedOptions.matchByNameAndDOB,
+          mrn: advancedOptions.matchByMRN,
+          phone: advancedOptions.matchByPhone,
+          address: advancedOptions.matchByAddress,
+          contact: advancedOptions.matchByEmail,
+        };
+        // This flow auto-discharges records, so require high confidence.
+        // Fuzzy matching on => catch looser matches; off => stricter.
+        const minScore = advancedOptions.fuzzyNameMatching ? 60 : 80;
+
+        // Phase 1: Identify duplicate groups (no API calls). allPatients is
+        // ordered by -created_date, so each group's primary is the most recent.
+        const groups = findDuplicateGroups(allPatients, {
+          scoreOptions: { signals },
+          minScore,
+        });
+
+        for (const group of groups) {
+          const toKeep = group.primary;
+          const toRemove = group.duplicates.map(d => d.patient);
+
+          // Prepare updates for batching
+          if (advancedOptions.autoMergeData) {
+            const mergedData = { ...toKeep };
+            toRemove.forEach(p => {
+              Object.keys(p).forEach(key => {
+                if (!mergedData[key] && p[key] && key !== 'id' && key !== 'created_date') {
+                  mergedData[key] = p[key];
                 }
-              } else {
-                if (patient.first_name?.toLowerCase() === otherPatient.first_name?.toLowerCase() &&
-                    patient.last_name?.toLowerCase() === otherPatient.last_name?.toLowerCase() &&
-                    patient.date_of_birth === otherPatient.date_of_birth) {
-                  matchScore += 95;
-                  matchReasons.push('Name+DOB exact match');
-                }
-              }
-            }
-            
-            // 3. Phone match with last name
-            if (advancedOptions.matchByPhone && patient.phone && otherPatient.phone) {
-              const normalizePhone = (p) => p.replace(/\D/g, '');
-              if (normalizePhone(patient.phone) === normalizePhone(otherPatient.phone) &&
-                  patient.last_name?.toLowerCase() === otherPatient.last_name?.toLowerCase()) {
-                matchScore += 70;
-                matchReasons.push('Phone+LastName match');
-              }
-            }
-            
-            // 4. Email match with last name
-            if (advancedOptions.matchByEmail && patient.email && otherPatient.email) {
-              if (patient.email.toLowerCase() === otherPatient.email.toLowerCase() &&
-                  patient.last_name?.toLowerCase() === otherPatient.last_name?.toLowerCase()) {
-                matchScore += 75;
-                matchReasons.push('Email+LastName match');
-              }
-            }
-            
-            // 5. Address match with name similarity
-            if (advancedOptions.matchByAddress && patient.address && otherPatient.address) {
-              const addressSim = calculateSimilarity(patient.address || '', otherPatient.address || '');
-              const nameSim = (calculateSimilarity(patient.first_name || '', otherPatient.first_name || '') +
-                             calculateSimilarity(patient.last_name || '', otherPatient.last_name || '')) / 2;
-              
-              if (addressSim >= 85 && nameSim >= 70) {
-                matchScore += 60;
-                matchReasons.push('Address+Name similarity');
-              }
-            }
-            
-            if (matchScore >= 70) {
-              matches.push({
-                patient: otherPatient,
-                matchScore,
-                matchReasons
               });
-            }
-          }
-          
-          if (matches.length > 0) {
-            // Keep the most recent record
-            const allRecords = [patient, ...matches.map(m => m.patient)]
-              .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-            
-            const toKeep = allRecords[0];
-            const toRemove = allRecords.slice(1);
-            
-            // Mark as processed
-            processedIds.add(toKeep.id);
-            toRemove.forEach(p => processedIds.add(p.id));
-            
-            // Prepare updates for batching
-            if (advancedOptions.autoMergeData) {
-              const mergedData = { ...toKeep };
-              toRemove.forEach(p => {
-                Object.keys(p).forEach(key => {
-                  if (!mergedData[key] && p[key] && key !== 'id' && key !== 'created_date') {
-                    mergedData[key] = p[key];
-                  }
-                });
-              });
-              
-              updateBatch.push({ id: toKeep.id, data: mergedData });
-            }
-            
-            // Add duplicate closures to batch
-            toRemove.forEach(dup => {
-              if (!advancedOptions.closeInactiveOnly || dup.status !== 'active') {
-                updateBatch.push({ id: dup.id, data: { status: 'discharged' } });
-              }
             });
-            
-            duplicateGroups.push({
-              kept: {
-                name: `${toKeep.first_name} ${toKeep.last_name}`,
-                mrn: toKeep.medical_record_number,
-                id: toKeep.id
-              },
-              removed: toRemove.map(r => ({
-                name: `${r.first_name} ${r.last_name}`,
-                mrn: r.medical_record_number,
-                match_score: matches.find(m => m.patient.id === r.id)?.matchScore || 0,
-                match_reasons: matches.find(m => m.patient.id === r.id)?.matchReasons || []
-              })),
-              average_match_score: Math.round(
-                toRemove.reduce((sum, r) => sum + (matches.find(m => m.patient.id === r.id)?.matchScore || 0), 0) / toRemove.length
-              )
-            });
+
+            updateBatch.push({ id: toKeep.id, data: mergedData });
           }
+
+          // Add duplicate closures to batch
+          toRemove.forEach(dup => {
+            if (!advancedOptions.closeInactiveOnly || dup.status !== 'active') {
+              updateBatch.push({ id: dup.id, data: { status: 'discharged' } });
+            }
+          });
+
+          duplicateGroups.push({
+            kept: {
+              name: `${toKeep.first_name} ${toKeep.last_name}`,
+              mrn: toKeep.medical_record_number,
+              id: toKeep.id
+            },
+            removed: group.duplicates.map(d => ({
+              name: `${d.patient.first_name} ${d.patient.last_name}`,
+              mrn: d.patient.medical_record_number,
+              match_score: d.confidencePercent,
+              match_reasons: d.matches
+            })),
+            average_match_score: Math.round(
+              group.duplicates.reduce((sum, d) => sum + d.confidencePercent, 0) / group.duplicates.length
+            )
+          });
         }
-        
+
         // Phase 2: Process updates in batches
         toast.info(`Processing ${updateBatch.length} updates in batches...`);
         for (let i = 0; i < updateBatch.length; i += BATCH_SIZE) {

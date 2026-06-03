@@ -361,11 +361,31 @@ function scoreContact(p1, p2, add) {
 }
 
 /**
+ * Which signal groups participate in scoring. All enabled by default so the
+ * standard scan behaves identically; callers (e.g. the configurable scanner)
+ * can disable groups to restrict matching.
+ */
+export const DEFAULT_SIGNALS = {
+  name: true,
+  dob: true,
+  mrn: true,
+  phone: true,
+  address: true,
+  // email / middle name / emergency / caregiver / physician
+  contact: true,
+};
+
+/**
  * Score how likely two patient records are the same person.
  * Returns { score, matches } where `matches` is a de-duplicated list of reasons.
  * Symmetric: scorePatientPair(a, b) === scorePatientPair(b, a).
+ *
+ * @param {object} p1
+ * @param {object} p2
+ * @param {{ signals?: Partial<typeof DEFAULT_SIGNALS> }} [options]
  */
-export function scorePatientPair(p1, p2) {
+export function scorePatientPair(p1, p2, options = {}) {
+  const signals = { ...DEFAULT_SIGNALS, ...(options.signals || {}) };
   let score = 0;
   const matches = [];
   const add = (points, reason) => {
@@ -374,16 +394,16 @@ export function scorePatientPair(p1, p2) {
     matches.push(reason);
   };
 
-  const nameMatched = scoreNames(p1, p2, add);
-  scoreDob(p1, p2, add);
-  scoreMrn(p1, p2, add);
-  scorePhone(p1, p2, add);
-  scoreAddress(p1, p2, add);
-  scoreContact(p1, p2, add);
+  const nameMatched = signals.name ? scoreNames(p1, p2, add) : false;
+  if (signals.dob) scoreDob(p1, p2, add);
+  if (signals.mrn) scoreMrn(p1, p2, add);
+  if (signals.phone) scorePhone(p1, p2, add);
+  if (signals.address) scoreAddress(p1, p2, add);
+  if (signals.contact) scoreContact(p1, p2, add);
 
   // Name-variation cross-check only when no other name signal fired, so we
   // never double-count the name.
-  if (!nameMatched) {
+  if (signals.name && !nameMatched) {
     const variations = (p) => {
       const set = new Set();
       const first = normalizeName(p.first_name);
@@ -488,11 +508,20 @@ export function effectiveThreshold(matches, base = 35) {
  * symmetric so a forward-only scan is exhaustive.
  *
  * @param {Array} patients
- * @param {{ visitsByPatient?: Map, threshold?: number }} [opts]
+ * @param {{
+ *   visitsByPatient?: Map,
+ *   threshold?: number,
+ *   minScore?: number | null,
+ *   scoreOptions?: object,
+ * }} [opts]
+ *   - `minScore`, when provided, is a hard floor that overrides the adaptive
+ *     threshold (used by destructive scans that should only act on high
+ *     confidence matches).
+ *   - `scoreOptions` is forwarded to `scorePatientPair` (e.g. `{ signals }`).
  * @returns {Array<{ primary: object, duplicates: Array }>}
  */
 export function findDuplicateGroups(patients, opts = {}) {
-  const { visitsByPatient = null, threshold = 35 } = opts;
+  const { visitsByPatient = null, threshold = 35, minScore = null, scoreOptions = undefined } = opts;
   const groups = [];
   const processed = new Set();
 
@@ -505,11 +534,12 @@ export function findDuplicateGroups(patients, opts = {}) {
       const other = patients[j];
       if (processed.has(other.id)) continue;
 
-      const base = scorePatientPair(primary, other);
+      const base = scorePatientPair(primary, other, scoreOptions);
       const related = relatedEntityScore(primary, other, visitsByPatient);
       const totalScore = base.score + related.score;
+      const cutoff = minScore != null ? minScore : effectiveThreshold(base.matches, threshold);
 
-      if (totalScore >= effectiveThreshold(base.matches, threshold)) {
+      if (totalScore >= cutoff) {
         duplicates.push({
           patient: other,
           score: totalScore,

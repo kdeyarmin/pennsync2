@@ -29,6 +29,7 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react";
+import { findDuplicateGroups } from "@/components/patient/patientDuplicateUtils";
 
 export default function DuplicatePatientManager() {
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -51,96 +52,26 @@ export default function DuplicatePatientManager() {
     }
   });
 
-  // Find duplicate groups based on matching criteria
+  // Find duplicate groups using the shared, unit-tested matching engine so this
+  // widget stays consistent with the main Duplicate Patients page.
   const duplicateGroups = useMemo(() => {
     if (!patients.length) return [];
 
-    const groups = [];
-    const processed = new Set();
-
-    patients.forEach((patient, i) => {
-      if (processed.has(patient.id)) return;
-
-      const duplicates = patients.filter((other, j) => {
-        if (i === j || processed.has(other.id)) return false;
-        
-        // Calculate match score
-        let score = 0;
-        let matchReasons = [];
-
-        // Exact MRN match (strongest indicator)
-        if (patient.medical_record_number && other.medical_record_number &&
-            patient.medical_record_number === other.medical_record_number) {
-          score += 50;
-          matchReasons.push("Same MRN");
-        }
-
-        // Exact name match
-        const name1 = `${patient.first_name} ${patient.last_name}`.toLowerCase().trim();
-        const name2 = `${other.first_name} ${other.last_name}`.toLowerCase().trim();
-        if (name1 === name2) {
-          score += 30;
-          matchReasons.push("Same name");
-        } else {
-          // Similar name (Levenshtein-like check)
-          const lastName1 = patient.last_name?.toLowerCase() || '';
-          const lastName2 = other.last_name?.toLowerCase() || '';
-          const firstName1 = patient.first_name?.toLowerCase() || '';
-          const firstName2 = other.first_name?.toLowerCase() || '';
-          
-          if (lastName1 === lastName2 && firstName1.charAt(0) === firstName2.charAt(0)) {
-            score += 15;
-            matchReasons.push("Similar name");
-          }
-        }
-
-        // Exact DOB match
-        if (patient.date_of_birth && other.date_of_birth &&
-            patient.date_of_birth === other.date_of_birth) {
-          score += 25;
-          matchReasons.push("Same DOB");
-        }
-
-        // Same address
-        if (patient.address && other.address &&
-            patient.address.toLowerCase().trim() === other.address.toLowerCase().trim()) {
-          score += 10;
-          matchReasons.push("Same address");
-        }
-
-        // Same phone
-        const phone1 = patient.phone?.replace(/\D/g, '') || '';
-        const phone2 = other.phone?.replace(/\D/g, '') || '';
-        if (phone1 && phone2 && phone1 === phone2) {
-          score += 10;
-          matchReasons.push("Same phone");
-        }
-
-        return score >= 40 ? { patient: other, score, matchReasons } : null;
-      }).filter(d => d && d.patient);
-
-      if (duplicates.length > 0) {
-        const group = {
-          id: `group-${patient.id}`,
-          patients: [
-            { patient, score: 100, matchReasons: ["Primary"] },
-            ...duplicates
-          ],
-          highestScore: Math.max(...duplicates.map(d => d.score)),
-          matchReasons: [...new Set(duplicates.flatMap(d => d.matchReasons))]
-        };
-        
-        groups.push(group);
-        duplicates.forEach(d => {
-          if (d && d.patient && d.patient.id) {
-            processed.add(d.patient.id);
-          }
-        });
-        processed.add(patient.id);
-      }
-    });
-
-    return groups.filter(g => !dismissedGroups.has(g.id));
+    return findDuplicateGroups(patients)
+      .map((group) => ({
+        id: `group-${group.primary.id}`,
+        patients: [
+          { patient: group.primary, score: 100, matchReasons: ["Primary"] },
+          ...group.duplicates.map((d) => ({
+            patient: d.patient,
+            score: d.confidencePercent,
+            matchReasons: d.matches,
+          })),
+        ],
+        highestScore: Math.max(...group.duplicates.map((d) => d.confidencePercent)),
+        matchReasons: [...new Set(group.duplicates.flatMap((d) => d.matches))],
+      }))
+      .filter((g) => !dismissedGroups.has(g.id));
   }, [patients, dismissedGroups]);
 
   const _handleDeleteDuplicate = async (patientId) => {
