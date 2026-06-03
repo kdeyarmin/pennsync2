@@ -117,6 +117,67 @@ export const ROUTES = [
   { name: 'FaxContacts', Component: lazyPage(() => import('@/pages/FaxContacts')) },
   { name: 'FaxAddressBook', Component: lazyPage(() => import('@/pages/FaxAddressBook')) },
   { name: 'FaxAnalytics', Component: lazyPage(() => import('@/pages/FaxAnalytics')) },
+
+  // Remaining real pages that were documented in the nav manifest but unrouted,
+  // so they were unreachable and absent from the command palette. Routed so the
+  // whole feature set is navigable. Admin-only pages (per the manifest) are
+  // guarded at the route level in App.jsx, so a routed URL can't expose an admin
+  // screen to non-admins. (Empty placeholder pages are intentionally left
+  // unrouted: Home, PatientTriage, ProductivityDashboard, ScheduleOptimizer,
+  // SurveyPreparation, PopulationHealthAnalytics, QualityDashboard.)
+  // Patient care
+  { name: 'PatientRecordDashboard', Component: lazyPage(() => import('@/pages/PatientRecordDashboard')) },
+  { name: 'DuplicatePatients', Component: lazyPage(() => import('@/pages/DuplicatePatients')) },
+  { name: 'MedicationReconciliation', Component: lazyPage(() => import('@/pages/MedicationReconciliation')) },
+  { name: 'CarePlanBuilder', Component: lazyPage(() => import('@/pages/CarePlanBuilder')) },
+  { name: 'AutomaticCarePlans', Component: lazyPage(() => import('@/pages/AutomaticCarePlans')) },
+  { name: 'PatientEducation', Component: lazyPage(() => import('@/pages/PatientEducation')) },
+  { name: 'PatientEducationPortal', Component: lazyPage(() => import('@/pages/PatientEducationPortal')) },
+  // Documentation & clinical
+  { name: 'MedicalScribe', Component: lazyPage(() => import('@/pages/MedicalScribe')) },
+  { name: 'OfflineDocumentation', Component: lazyPage(() => import('@/pages/OfflineDocumentation')) },
+  { name: 'OfflineVisitDocumentation', Component: lazyPage(() => import('@/pages/OfflineVisitDocumentation')) },
+  { name: 'IncidentReportingModule', Component: lazyPage(() => import('@/pages/IncidentReportingModule')) },
+  { name: 'ReferralProcessor', Component: lazyPage(() => import('@/pages/ReferralProcessor')) },
+  { name: 'ReferralTriage', Component: lazyPage(() => import('@/pages/ReferralTriage')) },
+  { name: 'BulkSignatureRequests', Component: lazyPage(() => import('@/pages/BulkSignatureRequests')) },
+  // Resources & learning
+  { name: 'ClinicalLibrary', Component: lazyPage(() => import('@/pages/ClinicalLibrary')) },
+  { name: 'MedicareGuidelinesLibrary', Component: lazyPage(() => import('@/pages/MedicareGuidelinesLibrary')) },
+  { name: 'UserGuides', Component: lazyPage(() => import('@/pages/UserGuides')) },
+  { name: 'EducationLibrary', Component: lazyPage(() => import('@/pages/EducationLibrary')) },
+  { name: 'NurseEducationVideos', Component: lazyPage(() => import('@/pages/NurseEducationVideos')) },
+  { name: 'DocumentationTraining', Component: lazyPage(() => import('@/pages/DocumentationTraining')) },
+  { name: 'NurseTrainingHub', Component: lazyPage(() => import('@/pages/NurseTrainingHub')) },
+  { name: 'AITrainingGenerator', Component: lazyPage(() => import('@/pages/AITrainingGenerator')) },
+  { name: 'TrainingManagement', Component: lazyPage(() => import('@/pages/TrainingManagement')) },
+  { name: 'AdminTrainingAnalytics', Component: lazyPage(() => import('@/pages/AdminTrainingAnalytics')) },
+  { name: 'LearningReports', Component: lazyPage(() => import('@/pages/LearningReports')) },
+  // Compliance & security
+  { name: 'MedicareComplianceDashboard', Component: lazyPage(() => import('@/pages/MedicareComplianceDashboard')) },
+  { name: 'ComplianceMonitoringDashboard', Component: lazyPage(() => import('@/pages/ComplianceMonitoringDashboard')) },
+  { name: 'RealTimeComplianceDashboard', Component: lazyPage(() => import('@/pages/RealTimeComplianceDashboard')) },
+  { name: 'ComplianceRegulatory', Component: lazyPage(() => import('@/pages/ComplianceRegulatory')) },
+  { name: 'SecurityPolicy', Component: lazyPage(() => import('@/pages/SecurityPolicy')) },
+  // Analytics
+  { name: 'AgencyAnalytics', Component: lazyPage(() => import('@/pages/AgencyAnalytics')) },
+  { name: 'AnalyticsDashboard', Component: lazyPage(() => import('@/pages/AnalyticsDashboard')) },
+  { name: 'PredictiveAnalytics', Component: lazyPage(() => import('@/pages/PredictiveAnalytics')) },
+  { name: 'ClinicalInsightsDashboard', Component: lazyPage(() => import('@/pages/ClinicalInsightsDashboard')) },
+  { name: 'CustomizableDashboard', Component: lazyPage(() => import('@/pages/CustomizableDashboard')) },
+  // Admin & system
+  { name: 'AdminUserSetup', Component: lazyPage(() => import('@/pages/AdminUserSetup')) },
+  { name: 'PersonnelFile', Component: lazyPage(() => import('@/pages/PersonnelFile')) },
+  { name: 'UserActivityLog', Component: lazyPage(() => import('@/pages/UserActivityLog')) },
+  { name: 'UserActivityReport', Component: lazyPage(() => import('@/pages/UserActivityReport')) },
+  { name: 'SystemMonitoring', Component: lazyPage(() => import('@/pages/SystemMonitoring')) },
+  { name: 'SystemJobMonitor', Component: lazyPage(() => import('@/pages/SystemJobMonitor')) },
+  { name: 'ManageNewFeatures', Component: lazyPage(() => import('@/pages/ManageNewFeatures')) },
+  { name: 'PullRequests', Component: lazyPage(() => import('@/pages/PullRequests')) },
+  // Tools, settings & info
+  { name: 'NotificationSettings', Component: lazyPage(() => import('@/pages/NotificationSettings')) },
+  { name: 'About', Component: lazyPage(() => import('@/pages/About')) },
+  { name: 'Features', Component: lazyPage(() => import('@/pages/Features')) },
 ];
 
 /**

@@ -51,6 +51,27 @@ now inherits the nearest ancestor's category, so OASIS sub-pages group with OASI
 Fax sub-pages under Communication, document tools under Documentation. The empty
 `PatientTriage` stub is intentionally left unrouted (nothing links to it).
 
+### Slice 3 — routed every remaining real page + a shared admin route guard
+
+Completed the consolidation: routed the remaining ~46 real, standalone pages that
+were documented in the manifest but unrouted (patient-care, documentation,
+resources/learning, compliance, analytics, admin/system, and tools areas), plus
+`CustomizableDashboard` (which also gained a manifest entry). **Every routed page
+now appears in the command palette and resolves; the only pages left unrouted are
+intentional:** empty placeholders (`Home`, `PatientTriage`, `ProductivityDashboard`,
+`ScheduleOptimizer`, `SurveyPreparation`, `PopulationHealthAnalytics`,
+`QualityDashboard`), the public token-gated pages (`JoinTelehealth`, `SignerPortal`),
+and pages already consolidated behind redirects (`AdminDashboard`, `ComplianceDashboard`,
+`Reports`, `Support`, `StaffTrainingHub`, `IncidentReporting`). Reachable pages: 77 → 123.
+
+**Security — route-level admin guard.** Routing the admin-only pages surfaced a
+real authorization gap (raised by PR review): several `adminOnly` pages had no
+internal role check, so once routed they'd be reachable by any authenticated user
+via direct URL. Added an `AdminRoute` guard in `App.jsx` that reads the manifest's
+`adminOnly` flag (single source) and redirects non-admins to the Dashboard — so
+every admin page is protected at the route, independent of whether the page also
+self-guards. This is defense-in-depth on top of the backend's own access control.
+
 Original review below.
 
 ---

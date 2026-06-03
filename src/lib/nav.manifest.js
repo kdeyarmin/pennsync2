@@ -49,6 +49,15 @@ export const NAV_MANIFEST = [
     breadcrumbParent: null,
     keywords: ["home", "main", "overview", "welcome"],
   },
+  {
+    page: "CustomizableDashboard",
+    label: "Customizable Dashboard",
+    icon: PieChart,
+    category: null,
+    adminOnly: false,
+    breadcrumbParent: "Dashboard",
+    keywords: ["dashboard", "customize", "widgets", "personalize"],
+  },
 
   // ─── Patient Care ────────────────────────────────────────────────────────────
   {

@@ -18,6 +18,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import ErrorBoundary from '@/components/utils/ErrorBoundary';
 import { ROUTES, REDIRECTS, MAIN_PAGE } from '@/routes';
+import { NAV_MAP } from '@/lib/nav.manifest';
 
 // Public (no-login) patient telehealth join page.
 const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
@@ -25,6 +26,19 @@ const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
+
+// Route-level authorization for admin-only pages. The nav manifest is the single
+// source for which pages are `adminOnly` (it already hides them from the sidebar
+// and palette); this enforces the same policy at the route so a non-admin can't
+// reach an admin screen by typing/deep-linking the URL — defense-in-depth that
+// doesn't depend on each page remembering to add its own role check.
+const AdminRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.role !== 'admin') {
+    return <Navigate to={`/${MAIN_PAGE}`} replace />;
+  }
+  return children;
+};
 
 const AuthenticatedApp = () => {
   const location = useLocation();
@@ -86,13 +100,17 @@ const AuthenticatedApp = () => {
     }>
       <Routes>
         <Route path="/" element={<Navigate to={`/${MAIN_PAGE}`} replace />} />
-        {ROUTES.map(({ name, Component }) => (
-          <Route
-            key={name}
-            path={`/${name}`}
-            element={<LayoutWrapper currentPageName={name}><Component /></LayoutWrapper>}
-          />
-        ))}
+        {ROUTES.map(({ name, Component }) => {
+          const page = <LayoutWrapper currentPageName={name}><Component /></LayoutWrapper>;
+          const adminOnly = NAV_MAP[name]?.adminOnly === true;
+          return (
+            <Route
+              key={name}
+              path={`/${name}`}
+              element={adminOnly ? <AdminRoute>{page}</AdminRoute> : page}
+            />
+          );
+        })}
         {REDIRECTS.map(({ from, to }) => (
           <Route key={from} path={from} element={<Navigate to={to} replace />} />
         ))}
