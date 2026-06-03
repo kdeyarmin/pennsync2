@@ -26,9 +26,24 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+// Shown when a non-admin navigates directly to an admin-only route. Admin pages
+// are hidden from the sidebar/palette for non-admins, but routes are reachable
+// by URL, so this is the client-side authorization gate (server RLS is the real
+// boundary). Rendered inside the layout so the user keeps their navigation.
+const AdminOnlyFallback = () => (
+  <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+    <h1 className="text-2xl font-bold text-slate-900">Administrator access required</h1>
+    <p className="mt-2 max-w-md text-slate-600">
+      You don’t have permission to view this page. If you believe this is a mistake,
+      contact your agency administrator.
+    </p>
+  </div>
+);
+
 const AuthenticatedApp = () => {
   const location = useLocation();
-  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const { user, isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   // Public patient join/signer routes render WITHOUT authentication — they are
   // gated by capability tokens in the link, not by an app login. This is
@@ -86,11 +101,15 @@ const AuthenticatedApp = () => {
     }>
       <Routes>
         <Route path="/" element={<Navigate to={`/${MAIN_PAGE}`} replace />} />
-        {ROUTES.map(({ name, Component }) => (
+        {ROUTES.map(({ name, Component, adminOnly }) => (
           <Route
             key={name}
             path={`/${name}`}
-            element={<LayoutWrapper currentPageName={name}><Component /></LayoutWrapper>}
+            element={
+              <LayoutWrapper currentPageName={name}>
+                {adminOnly && !isAdmin ? <AdminOnlyFallback /> : <Component />}
+              </LayoutWrapper>
+            }
           />
         ))}
         {REDIRECTS.map(({ from, to }) => (

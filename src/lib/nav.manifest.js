@@ -7,7 +7,7 @@
  *  3. Command palette       (CommandPalette.jsx  — Ctrl/Cmd+K)
  *
  * Schema:
- *  page             – matches a PAGES key in pages.config.js
+ *  page             – matches a page file in src/pages, routed via src/routes.jsx
  *  label            – human-readable name used in breadcrumbs & palette
  *  navLabel         – shorter sidebar label (falls back to label when omitted)
  *  icon             – Lucide icon component
@@ -104,15 +104,6 @@ export const NAV_MANIFEST = [
     keywords: ["duplicate", "merge", "deduplicate"],
   },
   {
-    page: "PatientTriage",
-    label: "Patient Triage",
-    icon: Stethoscope,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Patients",
-    keywords: ["triage", "priority", "acuity"],
-  },
-  {
     page: "CarePlanManagement",
     label: "Care Plans",
     icon: Target,
@@ -156,15 +147,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["incident", "report", "safety", "event"],
-  },
-  {
-    page: "IncidentReporting",
-    label: "Incident Reporting",
-    icon: AlertTriangle,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Incidents",
-    keywords: ["incident", "report", "file report"],
   },
   {
     page: "IncidentReportingModule",
@@ -376,15 +358,6 @@ export const NAV_MANIFEST = [
     keywords: ["sign", "signature"],
   },
   {
-    page: "SignerPortal",
-    label: "Signer Portal",
-    icon: Pen,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "DocumentSignatures",
-    keywords: ["sign", "portal", "signer"],
-  },
-  {
     page: "BulkSignatureRequests",
     label: "Bulk Signature Requests",
     icon: Pen,
@@ -462,15 +435,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["telehealth", "video", "call", "virtual visit"],
-  },
-  {
-    page: "JoinTelehealth",
-    label: "Join Telehealth",
-    icon: Video,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Telehealth",
-    keywords: ["telehealth", "join", "video call"],
   },
   {
     page: "FaxDashboard",
@@ -870,15 +834,6 @@ export const NAV_MANIFEST = [
     keywords: ["security", "policy"],
   },
   {
-    page: "ComplianceDashboard",
-    label: "Compliance Dashboard",
-    icon: Shield,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["compliance", "dashboard"],
-  },
-  {
     page: "ComplianceMonitoringDashboard",
     label: "Compliance Monitoring",
     icon: Monitor,
@@ -905,24 +860,6 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "ComplianceCenter",
     keywords: ["compliance", "regulatory"],
   },
-  {
-    page: "SurveyPreparation",
-    label: "Survey Preparation",
-    icon: ClipboardList,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["survey", "preparation", "inspection"],
-  },
-  {
-    page: "QualityDashboard",
-    label: "Quality Dashboard",
-    icon: Star,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["quality", "dashboard", "metrics"],
-  },
 
   // ─── Admin ────────────────────────────────────────────────────────────────────
   {
@@ -933,15 +870,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: null,
     keywords: ["admin", "operations", "manage", "control"],
-  },
-  {
-    page: "AdminDashboard",
-    label: "Admin Dashboard",
-    icon: BarChart3,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["admin", "dashboard"],
   },
   {
     page: "UserManagement",
@@ -969,15 +897,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["training manager", "assign training", "admin training"],
-  },
-  {
-    page: "StaffTrainingHub",
-    label: "Staff Training Hub",
-    icon: GraduationCap,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminTraining",
-    keywords: ["staff", "training", "hub"],
   },
   {
     page: "TrainingManagement",
@@ -1099,15 +1018,6 @@ export const NAV_MANIFEST = [
     keywords: ["reports", "analytics", "metrics", "export", "data"],
   },
   {
-    page: "Reports",
-    label: "Reports",
-    icon: FileText,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "ReportsAnalytics",
-    keywords: ["reports", "export"],
-  },
-  {
     page: "AgencyAnalytics",
     label: "Agency Analytics",
     icon: BarChart3,
@@ -1126,15 +1036,6 @@ export const NAV_MANIFEST = [
     keywords: ["analytics", "dashboard"],
   },
   {
-    page: "PopulationHealthAnalytics",
-    label: "Population Health",
-    icon: Globe,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ReportsAnalytics",
-    keywords: ["population", "health", "analytics"],
-  },
-  {
     page: "PredictiveAnalytics",
     label: "Predictive Analytics",
     icon: TrendingUp,
@@ -1142,24 +1043,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: "ReportsAnalytics",
     keywords: ["predictive", "analytics", "ai", "forecast"],
-  },
-  {
-    page: "ProductivityDashboard",
-    label: "Productivity Dashboard",
-    icon: Zap,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ReportsAnalytics",
-    keywords: ["productivity", "dashboard", "performance"],
-  },
-  {
-    page: "ScheduleOptimizer",
-    label: "Schedule Optimizer",
-    icon: Calendar,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ReportsAnalytics",
-    keywords: ["schedule", "optimizer", "routing"],
   },
 
   // ─── Compliance Center (Admin Analytics) ─────────────────────────────────────
@@ -1223,6 +1106,15 @@ export const NAV_MANIFEST = [
 
   // ─── Tools / Settings ────────────────────────────────────────────────────────
   {
+    page: "TimeOff",
+    label: "Time Off",
+    icon: Calendar,
+    category: null,
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["time off", "pto", "leave", "vacation", "request"],
+  },
+  {
     page: "UserSettings",
     label: "Settings",
     icon: Settings,
@@ -1259,15 +1151,6 @@ export const NAV_MANIFEST = [
     keywords: ["help", "support", "guide", "faq"],
   },
   {
-    page: "Support",
-    label: "Support",
-    icon: LifeBuoy,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Help",
-    keywords: ["support", "contact", "ticket"],
-  },
-  {
     page: "Features",
     label: "Features",
     icon: Zap,
@@ -1284,15 +1167,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["about", "version", "info"],
-  },
-  {
-    page: "Home",
-    label: "Home",
-    icon: Home,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["home", "landing"],
   },
 ];
 

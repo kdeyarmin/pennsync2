@@ -188,7 +188,7 @@ export default function ComplianceAlertAggregator() {
         title: 'Incomplete Visit Documentation',
         message: `${incompleteVisits.length} completed visit(s) have minimal documentation`,
         count: incompleteVisits.length,
-        link: createPageUrl("QualityDashboard"),
+        link: createPageUrl("ComplianceCenter"),
         linkText: 'Review Quality',
         category: 'Quality Measures'
       });

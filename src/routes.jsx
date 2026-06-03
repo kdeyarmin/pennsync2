@@ -1,103 +1,62 @@
 import { lazy } from 'react';
+import { NAV_MANIFEST } from '@/lib/nav.manifest';
 
 // Single source of truth for the app's authenticated routes.
 //
-// App.jsx renders these and NavigationTracker reads PAGE_NAMES for analytics,
-// so the route table and the analytics page-name list can never drift apart.
+// Routes are DERIVED from the navigation manifest (src/lib/nav.manifest.js) so
+// the route table, the sidebar, the command palette and breadcrumbs can never
+// drift apart: a page is reachable iff it has a manifest entry. App.jsx renders
+// ROUTES and NavigationTracker reads PAGE_NAMES for analytics.
 //
-// IMPORTANT (bundle size): NavigationTracker is always mounted. Importing the
-// auto-generated `pages.config.js` there used to pull EVERY page component into
-// the main bundle, which defeated the route-level code splitting below and
-// produced a ~7.8 MB initial chunk. This module only ships lazy() references
-// (which do not import a page module until it is actually rendered) plus the
-// eager landing page, so the always-loaded code stays small.
+// IMPORTANT (bundle size): NavigationTracker is always mounted and imports this
+// module, so this file must never eagerly import page components. Every page is
+// wired through `import.meta.glob` in lazy mode — Vite turns each match into its
+// own dynamically-imported chunk that is not fetched until the route renders, so
+// the always-loaded code stays small. (Eagerly importing the old auto-generated
+// page map here is what previously produced a ~7.8 MB initial chunk.)
 
 // Dashboard is the landing page, so it is eager (no extra round-trip on first
-// paint). Every other page is lazy and ships as its own chunk.
+// paint). Every other page is lazy.
 import Dashboard from '@/pages/Dashboard';
 
-const lazyPage = (factory) => lazy(factory);
+// Lazy factory per page file. Keys look like './pages/Patients.jsx'.
+const pageModules = import.meta.glob('./pages/*.jsx');
+const factoryFor = (name) => pageModules[`./pages/${name}.jsx`];
+
+// Pages that are NOT authenticated, manifest-driven routes:
+//  - Dashboard is added eagerly above.
+//  - JoinTelehealth / SignerPortal are public, token-gated pages rendered
+//    without an app login directly in App.jsx, so they are intentionally absent
+//    from the manifest and handled there.
+const NON_MANIFEST_ROUTES = new Set(['Dashboard']);
 
 /**
  * Authenticated routes. `name` is both the path segment (routes are PascalCase,
- * e.g. /Dashboard) and the analytics page name. Keep names in PascalCase so the
- * case-insensitive matching in NavigationTracker and createPageUrl stays valid.
+ * e.g. /Dashboard) and the analytics page name. React Router matches paths
+ * case-insensitively, so createPageUrl()'s lowercase output still resolves here.
  */
 export const ROUTES = [
-  { name: 'Dashboard', Component: Dashboard },
-  { name: 'Patients', Component: lazyPage(() => import('@/pages/Patients')) },
-  { name: 'PatientDetails', Component: lazyPage(() => import('@/pages/PatientDetails')) },
-  { name: 'ClinicalDocumentation', Component: lazyPage(() => import('@/pages/ClinicalDocumentation')) },
-  { name: 'DocumentHub', Component: lazyPage(() => import('@/pages/DocumentHub')) },
-  { name: 'Messages', Component: lazyPage(() => import('@/pages/Messages')) },
-  { name: 'PhoneCenter', Component: lazyPage(() => import('@/pages/PhoneCenter')) },
-  { name: 'AdminOperations', Component: lazyPage(() => import('@/pages/AdminOperations')) },
-  { name: 'UserManagement', Component: lazyPage(() => import('@/pages/UserManagement')) },
-  { name: 'AdminTraining', Component: lazyPage(() => import('@/pages/AdminTraining')) },
-  { name: 'CarePlanManagement', Component: lazyPage(() => import('@/pages/CarePlanManagement')) },
-  { name: 'SmartOASISAssessment', Component: lazyPage(() => import('@/pages/SmartOASISAssessment')) },
-  { name: 'SendFax', Component: lazyPage(() => import('@/pages/SendFax')) },
-  { name: 'PhysicianDirectory', Component: lazyPage(() => import('@/pages/PhysicianDirectory')) },
-  { name: 'Telehealth', Component: lazyPage(() => import('@/pages/Telehealth')) },
-  { name: 'ResourceLibrary', Component: lazyPage(() => import('@/pages/ResourceLibrary')) },
-  { name: 'ComplianceCenter', Component: lazyPage(() => import('@/pages/ComplianceCenter')) },
-  { name: 'Incidents', Component: lazyPage(() => import('@/pages/Incidents')) },
-  { name: 'ReferralIntake', Component: lazyPage(() => import('@/pages/ReferralIntake')) },
-  { name: 'OfflineMode', Component: lazyPage(() => import('@/pages/OfflineMode')) },
-  { name: 'Help', Component: lazyPage(() => import('@/pages/Help')) },
-  { name: 'ReportsAnalytics', Component: lazyPage(() => import('@/pages/ReportsAnalytics')) },
-  { name: 'SecurityCompliance', Component: lazyPage(() => import('@/pages/SecurityCompliance')) },
-  { name: 'PatientDataManagement', Component: lazyPage(() => import('@/pages/PatientDataManagement')) },
-  { name: 'UserSettings', Component: lazyPage(() => import('@/pages/UserSettings')) },
-  { name: 'ClinicalPathwayManager', Component: lazyPage(() => import('@/pages/ClinicalPathwayManager')) },
-  { name: 'MyLearning', Component: lazyPage(() => import('@/pages/MyLearning')) },
-  { name: 'LearningCenter', Component: lazyPage(() => import('@/pages/LearningCenter')) },
-  { name: 'ClinicalSkillsChecklist', Component: lazyPage(() => import('@/pages/ClinicalSkillsChecklist')) },
-  { name: 'TrainingCoursePlayer', Component: lazyPage(() => import('@/pages/TrainingCoursePlayer')) },
-  { name: 'EventReport', Component: lazyPage(() => import('@/pages/EventReport')) },
-  { name: 'SmartNoteAssistant', Component: lazyPage(() => import('@/pages/SmartNoteAssistant')) },
-  { name: 'PatientEducationHub', Component: lazyPage(() => import('@/pages/PatientEducationHub')) },
-  { name: 'VisitScribe', Component: lazyPage(() => import('@/pages/VisitScribe')) },
-  { name: 'ClinicalChart', Component: lazyPage(() => import('@/pages/ClinicalChart')) },
-  { name: 'RegulatoryCompliance', Component: lazyPage(() => import('@/pages/RegulatoryCompliance')) },
-
-  // Real features that are linked from already-routed pages (patient chart,
-  // document hub, admin operations, learning center) but had lost their route,
-  // so those links dead-ended on PageNotFound. Re-routed so navigation works.
-  { name: 'SignDocument', Component: lazyPage(() => import('@/pages/SignDocument')) },
-  { name: 'DocumentSignatures', Component: lazyPage(() => import('@/pages/DocumentSignatures')) },
-  { name: 'DocumentVisit', Component: lazyPage(() => import('@/pages/DocumentVisit')) },
-  { name: 'PatientAlerts', Component: lazyPage(() => import('@/pages/PatientAlerts')) },
-  { name: 'ReferralAdmissionNote', Component: lazyPage(() => import('@/pages/ReferralAdmissionNote')) },
-  { name: 'AIComplianceInServices', Component: lazyPage(() => import('@/pages/AIComplianceInServices')) },
-  { name: 'AnnualEducationTranscript', Component: lazyPage(() => import('@/pages/AnnualEducationTranscript')) },
-  { name: 'EmployeeTranscript', Component: lazyPage(() => import('@/pages/EmployeeTranscript')) },
-  { name: 'MyAnnualEducation', Component: lazyPage(() => import('@/pages/MyAnnualEducation')) },
-  { name: 'MyTraining', Component: lazyPage(() => import('@/pages/MyTraining')) },
-  { name: 'AnnualMandatoryEducation', Component: lazyPage(() => import('@/pages/AnnualMandatoryEducation')) },
-  { name: 'ManagerSkillGapDashboard', Component: lazyPage(() => import('@/pages/ManagerSkillGapDashboard')) },
-  // Reachable via navigate('/X') from routed screens (DocumentHub, AdminOperations).
-  { name: 'CreateSignatureRequest', Component: lazyPage(() => import('@/pages/CreateSignatureRequest')) },
-  { name: 'DataQualityMonitor', Component: lazyPage(() => import('@/pages/DataQualityMonitor')) },
-  { name: 'SystemHealthMonitor', Component: lazyPage(() => import('@/pages/SystemHealthMonitor')) },
-  { name: 'TimeOff', Component: lazyPage(() => import('@/pages/TimeOff')) },
-
-  // Pages linked from the sidebar / command palette (navConfig) and from routed
-  // screens, but missing a route — so those links dead-ended on PageNotFound.
-  // Routed here so navigation resolves. (Consolidating the duplicate
-  // OASIS / dashboard families into fewer canonical pages is a separate product
-  // decision — see docs/UI_UX_REVIEW.md.)
-  { name: 'OASISAnalyzer', Component: lazyPage(() => import('@/pages/OASISAnalyzer')) },
-  { name: 'OASISComplianceReview', Component: lazyPage(() => import('@/pages/OASISComplianceReview')) },
-  { name: 'OASISDocumentationReview', Component: lazyPage(() => import('@/pages/OASISDocumentationReview')) },
-  { name: 'OASISRevenueAnalysis', Component: lazyPage(() => import('@/pages/OASISRevenueAnalysis')) },
-  { name: 'QualityDashboard', Component: lazyPage(() => import('@/pages/QualityDashboard')) },
-  { name: 'NursePerformanceDashboard', Component: lazyPage(() => import('@/pages/NursePerformanceDashboard')) },
-  { name: 'NurseTraining', Component: lazyPage(() => import('@/pages/NurseTraining')) },
-  { name: 'FaxAnalytics', Component: lazyPage(() => import('@/pages/FaxAnalytics')) },
-  { name: 'DocumentAuditLogs', Component: lazyPage(() => import('@/pages/DocumentAuditLogs')) },
-  { name: 'BulkSignatureRequests', Component: lazyPage(() => import('@/pages/BulkSignatureRequests')) },
-  { name: 'TemplateManagement', Component: lazyPage(() => import('@/pages/TemplateManagement')) },
+  { name: 'Dashboard', Component: Dashboard, adminOnly: false },
+  ...NAV_MANIFEST
+    .filter((entry) => !NON_MANIFEST_ROUTES.has(entry.page))
+    .map((entry) => ({ name: entry.page, factory: factoryFor(entry.page), adminOnly: !!entry.adminOnly }))
+    .filter((entry, index, all) => {
+      // Guard against a manifest entry whose page file does not exist (lazy()
+      // would crash). Surface it in dev so the mismatch is fixed at the source.
+      if (!entry.factory) {
+        if (import.meta.env?.DEV) {
+          // eslint-disable-next-line no-console
+          console.warn(`[routes] manifest page "${entry.name}" has no src/pages/${entry.name}.jsx — skipping route`);
+        }
+        return false;
+      }
+      // De-dupe defensively in case a page appears twice in the manifest.
+      return all.findIndex((e) => e.name === entry.name) === index;
+    })
+    // `adminOnly` mirrors the manifest so App.jsx can gate admin routes at the
+    // router level (non-admins typing the URL get blocked, not just hidden from
+    // the sidebar). Client-side defense in depth; server RLS is the real gate.
+    .map((entry) => ({ name: entry.name, Component: lazy(entry.factory), adminOnly: entry.adminOnly })),
 ];
 
 /**
