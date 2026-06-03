@@ -19,6 +19,7 @@ import AssignmentWizard from "@/components/training/AssignmentWizard";
 import AnnualEducationTemplateLibrary from "@/components/training/AnnualEducationTemplateLibrary";
 import AnnualLearningPlanPanel from "@/components/training/AnnualLearningPlanPanel";
 import TrainingAttachmentManager from "@/components/training/TrainingAttachmentManager";
+import AccessDeniedState from "@/components/ui/AccessDeniedState";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -173,7 +174,9 @@ export default function AnnualMandatoryEducationHub() {
   };
 
   if (currentUser && !isAdminUser) {
-    return <div className="max-w-3xl mx-auto p-6 text-slate-600">This Penn annual education builder is available to Agency Admin and Super Admin users only.</div>;
+    return (
+      <AccessDeniedState description="This Penn annual education builder is available to Agency Admin and Super Admin users only." />
+    );
   }
 
   return (

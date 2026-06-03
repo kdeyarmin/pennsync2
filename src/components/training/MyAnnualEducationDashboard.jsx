@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Award, Printer, Loader2, CheckCircle2, AlertTriangle, BookOpen, RefreshCcw } from "lucide-react";
+import { Award, Printer, CheckCircle2, AlertTriangle, BookOpen, RefreshCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import LoadingState from "@/components/ui/LoadingState";
 import LearningPathProgress from "./LearningPathProgress";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
@@ -139,9 +140,7 @@ export default function MyAnnualEducationDashboard() {
 
         <TabsContent value="assignments" className="space-y-4">
           {loadingAssignments ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            </div>
+            <LoadingState />
           ) : assignments.length === 0 ? (
             <Card>
               <CardContent className="p-10 text-center">
