@@ -437,7 +437,7 @@ export default function AnnouncementManager() {
                           setFormData({...formData, scheduled_for: null});
                         }
                       }}
-                      initialFocus
+                      autoFocus
                     />
                     {formData.scheduled_for && (
                       <div className="p-3 border-t">
@@ -490,7 +490,7 @@ export default function AnnouncementManager() {
                           setFormData({...formData, expires_at: null});
                         }
                       }}
-                      initialFocus
+                      autoFocus
                     />
                     {formData.expires_at && (
                       <div className="p-3 border-t">
