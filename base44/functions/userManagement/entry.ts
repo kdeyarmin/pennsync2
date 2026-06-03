@@ -6,6 +6,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * Replaces: createUserWithTempPassword, resetUserPassword, resendInvitation, checkExpiredInvitations
  */
 
+// Cryptographically strong temporary password: fixed length, mixed character
+// classes, drawn from a CSPRNG (not Math.random).
+function generateTempPassword(length = 16) {
+  const charset = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < length; i++) out += charset[bytes[i] % charset.length];
+  return out;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -26,6 +37,11 @@ Deno.serve(async (req) => {
         return await resetPassword(base44, currentUser, params, isAdmin);
       
       case 'check_expired_invitations':
+        // Gate like every other action: this reads all invitations and emails
+        // all admins, so it must not be callable by a non-admin.
+        if (!isAdmin) {
+          return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
+        }
         return await checkExpiredInvitations(base44);
       
       case 'cancel_invitation':
@@ -170,8 +186,11 @@ async function resetPassword(base44, currentUser, params, isAdmin) {
     return Response.json({ error: 'User email is required' }, { status: 400 });
   }
 
-  // Generate temporary password
-  const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+  // Generate a temporary password from a CSPRNG with a guaranteed length and
+  // character mix. `Math.random().toString(36).slice(-8)` is non-cryptographic
+  // and can yield far fewer than 8 chars (e.g. when the fraction is short),
+  // producing a weak, short credential.
+  const tempPassword = generateTempPassword();
 
   const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
   if (!users || users.length === 0) {

@@ -50,3 +50,38 @@ test("getSentencesContaining returns the matching sentence", () => {
   assert.equal(hits.length, 1);
   assert.match(hits[0], /right heel/);
 });
+
+// ── Regression tests for audit fixes ────────────────────────────────────────
+
+test("getSentencesContaining returns ALL matches with a global-flag pattern", () => {
+  const text = "Wound to heel. Dressing changed today. Patient stable. Incision clean. Vitals normal.";
+  const hits = getSentencesContaining(text, /wound|dressing|incision/gi);
+  // The /g flag must not make .test() stateful and skip matching sentences.
+  assert.equal(hits.length, 3);
+  assert.ok(hits.some((s) => /Dressing changed today/.test(s)));
+  assert.ok(hits.some((s) => /Incision clean/.test(s)));
+});
+
+test("extractVitals 't' shorthand does not match the trailing t of other words", () => {
+  assert.equal(extractVitals("weight 150").temp, undefined);
+  assert.equal(extractVitals("last visit 98.6").temp, undefined);
+  assert.equal(extractVitals("T 99.1").temp, 99.1);
+});
+
+test("extractVitals does not read a date as a blood pressure", () => {
+  const v = extractVitals("follow up 11/20 for recheck");
+  assert.equal(v.bp_sys, undefined);
+  assert.equal(v.bp_dia, undefined);
+});
+
+test("temperature with and without the degree sign normalize to one token", () => {
+  const withSign = extractNumbersAndMeasurements("Temperature was 98.6°F");
+  const without = extractNumbersAndMeasurements("Temp 98.6 F");
+  assert.deepEqual(withSign, without);
+});
+
+test("extractMedications does not return case-duplicated canonical names", () => {
+  const meds = extractMedications("patient on atorvastatin");
+  const lowered = meds.map((m) => m.toLowerCase());
+  assert.equal(new Set(lowered).size, lowered.length);
+});

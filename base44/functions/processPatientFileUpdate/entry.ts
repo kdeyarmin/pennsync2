@@ -208,13 +208,16 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      results.matchedExisting++;
-
+      // Check the in-file duplicate BEFORE counting matchedExisting, so a row
+      // that resolves to an already-queued patient (via a different match key)
+      // is tallied once as a duplicate rather than in both buckets.
       if (queuedDischargeIds.has(matchResult.match.id)) {
         results.skippedInFileDuplicates++;
         results.plan.push({ row: rawRow.rowNumber, action: 'in_file_duplicate', patient: patient.patientLabel, detail: 'Same patient already queued for discharge from an earlier row' });
         continue;
       }
+
+      results.matchedExisting++;
 
       if (matchResult.match.status === 'discharged' && matchResult.match.is_archived) {
         results.noChanges++;

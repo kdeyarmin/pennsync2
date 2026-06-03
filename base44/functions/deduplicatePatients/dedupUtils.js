@@ -276,9 +276,17 @@ export const calculateMatchScore = (p1, p2) => {
       score += 30;
       matches.push('dob_exact');
     } else {
-      // Parse date components
-      const dob1 = parseDateComponents(p1.date_of_birth);
-      const dob2 = parseDateComponents(p2.date_of_birth);
+      // Parse date components. Prefer the canonical ISO (handles 2-digit years
+      // and slash formats) so the variation checks below aren't silently
+      // skipped for the messy data this fuzzy layer exists to catch; fall back
+      // to the raw 8-digit heuristic only when normalization failed.
+      const isoToComponents = (iso) => {
+        if (!iso) return null;
+        const [year, month, day] = iso.split('-');
+        return { year, month, day };
+      };
+      const dob1 = isoToComponents(iso1) || parseDateComponents(p1.date_of_birth);
+      const dob2 = isoToComponents(iso2) || parseDateComponents(p2.date_of_birth);
 
       if (dob1 && dob2) {
         // Check for month/day reversal (common data entry error)

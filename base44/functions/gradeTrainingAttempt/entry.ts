@@ -9,9 +9,12 @@ const normalizeValue = (value) => JSON.stringify(value ?? '').toLowerCase().repl
 const gradeObjectiveQuestion = (question, answer) => {
   const correct = question.correct_answer_json?.answer;
   if (question.type === 'multi_select') {
-    const actual = Array.isArray(answer) ? [...answer].sort() : [];
-    const expected = Array.isArray(correct) ? [...correct].sort() : [];
-    return normalizeValue(actual) === normalizeValue(expected);
+    // Normalize each element (case/space-insensitive) BEFORE sorting. Sorting
+    // raw values then lowercasing is order-unstable across case differences
+    // (UTF-16 sorts 'B' before 'a'), which marked correct answers wrong.
+    const norm = (arr) =>
+      (Array.isArray(arr) ? arr.map((v) => String(v).toLowerCase().replace(/\s+/g, '')) : []).sort();
+    return JSON.stringify(norm(answer)) === JSON.stringify(norm(correct));
   }
   if (question.type === 'matching') {
     return normalizeValue(answer) === normalizeValue(correct);
@@ -76,7 +79,11 @@ ${JSON.stringify(questionsForGrading)}`;
     parsed = JSON.parse(completion.choices[0].message.content || '{"evaluations":[]}');
   } catch (e) {
     console.error('Failed to parse AI grading response:', e);
-    return [];
+    // Don't return [] — that would score every subjective question as 0 while
+    // still counting them in the denominator, failing a learner because of an
+    // AI hiccup. Surface the error so the attempt is NOT recorded and the
+    // learner can retry without consuming an attempt.
+    throw new Error('AI grading is temporarily unavailable. Your attempt was not recorded — please try again.');
   }
   return parsed.evaluations || [];
 };
@@ -136,7 +143,7 @@ Deno.serve(async (req) => {
 
     for (const question of questions) {
       const answer = responseMap.get(question.id);
-      if (answer === undefined || answer === null || answer === '') {
+      if (answer === undefined || answer === null || answer === '' || (Array.isArray(answer) && answer.length === 0)) {
         return Response.json({ error: 'All questions must be answered before submission' }, { status: 400 });
       }
 
@@ -168,6 +175,19 @@ Deno.serve(async (req) => {
     }
 
     const subjectiveEvaluations = await gradeSubjectiveQuestions(subjectivePayload);
+
+    // Every subjective question must receive an evaluation; otherwise the
+    // missing ones silently score 0 yet stay in the denominator, producing a
+    // false failing score. Reject so the attempt isn't recorded on a partial
+    // AI result (the learner can retry).
+    if (subjectivePayload.length > 0) {
+      const gradedIds = new Set(subjectiveEvaluations.map((e) => e.questionId));
+      const ungraded = subjectivePayload.filter((q) => !gradedIds.has(q.questionId));
+      if (ungraded.length > 0) {
+        throw new Error('AI grading did not return results for all questions. Your attempt was not recorded — please try again.');
+      }
+    }
+
     for (const evaluation of subjectiveEvaluations) {
       const question = questions.find((item) => item.id === evaluation.questionId);
       const maxPoints = question?.points || 1;

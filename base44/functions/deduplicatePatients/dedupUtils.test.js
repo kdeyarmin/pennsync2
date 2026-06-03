@@ -93,6 +93,16 @@ test("reversed month/day is still detected via parseDateComponents", () => {
   assert.ok(matches.includes("dob_reversed"), `got ${matches.join(",")}`);
 });
 
+test("fuzzy DOB variation checks still fire when a date uses a 2-digit year", () => {
+  // "04/05/50" canonicalizes to 1950-04-05; reversed vs "05/04/50". The old
+  // variation path used parseDateComponents (8-digit only) and skipped these.
+  const { matches } = calculateMatchScore(
+    { first_name: "Sam", last_name: "Lee", date_of_birth: "04/05/50" },
+    { first_name: "Sam", last_name: "Lee", date_of_birth: "05/04/50" },
+  );
+  assert.ok(matches.includes("dob_reversed"), `got ${matches.join(",")}`);
+});
+
 test("calculateSimilarity returns 100 for identical strings and scales down", () => {
   assert.equal(calculateSimilarity("smith", "smith"), 100);
   assert.ok(calculateSimilarity("smith", "smyth") < 100);

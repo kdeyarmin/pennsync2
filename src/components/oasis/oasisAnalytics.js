@@ -20,15 +20,16 @@ export function aggregateDemographics(uploads = []) {
     else genderCount.Unknown++;
 
     const dob = upload.pdgm_data?.patient_info?.dob;
-    if (dob && dob !== "Not found") {
-      const age = new Date().getFullYear() - new Date(dob).getFullYear();
-      if (age < 65) ageRanges["0-64"]++;
-      else if (age < 75) ageRanges["65-74"]++;
-      else if (age < 85) ageRanges["75-84"]++;
-      else ageRanges["85+"]++;
-    } else {
-      ageRanges.Unknown++;
-    }
+    const age = dob && dob !== "Not found"
+      ? new Date().getFullYear() - new Date(dob).getFullYear()
+      : NaN;
+    // An unparseable dob yields NaN; every `age < N` test is false, so without
+    // this guard it would silently fall through to "85+" instead of "Unknown".
+    if (!Number.isFinite(age)) ageRanges.Unknown++;
+    else if (age < 65) ageRanges["0-64"]++;
+    else if (age < 75) ageRanges["65-74"]++;
+    else if (age < 85) ageRanges["75-84"]++;
+    else ageRanges["85+"]++;
   });
 
   return {

@@ -322,3 +322,24 @@ test('findDuplicateGroups attaches capped confidence percentages', () => {
   assert.equal(groups[0].duplicates[0].confidencePercent, 100);
   assert.equal(groups[0].duplicates[0].confidenceLevel, 'high');
 });
+
+// ── Regression tests for audit fixes ────────────────────────────────────────
+
+test('parseDob handles 2-digit-year US dates, pivoting into the past', () => {
+  assert.deepEqual(parseDob('04/15/45'), { year: '1945', month: '04', day: '15' });
+  assert.deepEqual(parseDob('3/7/50'), { year: '1950', month: '03', day: '07' });
+});
+
+test('same DOB written in different formats is an exact DOB match', () => {
+  const a = { id: 'a', first_name: 'A', last_name: 'B', date_of_birth: '1945-04-15' };
+  const b = { id: 'b', first_name: 'A', last_name: 'B', date_of_birth: '04/15/1945' };
+  const { matches } = scorePatientPair(a, b);
+  assert.ok(matches.includes(REASON.DOB));
+});
+
+test('different streets sharing a number and direction do NOT score a street-address match', () => {
+  const a = { id: 'a', first_name: 'A', last_name: 'A', address: '100 N Main St' };
+  const b = { id: 'b', first_name: 'B', last_name: 'B', address: '100 N Oak St' };
+  const { matches } = scorePatientPair(a, b);
+  assert.ok(!matches.includes(REASON.STREET_ADDRESS));
+});

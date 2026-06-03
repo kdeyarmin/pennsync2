@@ -33,15 +33,36 @@ export function smsSegments(text) {
   const single = gsm ? 160 : 70;
   const multi = gsm ? 153 : 67;
 
-  let units = 0;
-  if (gsm) {
-    for (const ch of str) units += GSM7_EXTENDED.includes(ch) ? 2 : 1;
-  } else {
-    // UCS-2 bills per UTF-16 code unit, so astral chars (emoji) cost two.
-    for (const ch of str) units += ch.codePointAt(0) > 0xffff ? 2 : 1;
-  }
+  const costOf = (ch) =>
+    gsm
+      ? GSM7_EXTENDED.includes(ch) ? 2 : 1
+      // UCS-2 bills per UTF-16 code unit, so astral chars (emoji) cost two.
+      : ch.codePointAt(0) > 0xffff ? 2 : 1;
 
-  const segments = units === 0 ? 0 : units <= single ? 1 : Math.ceil(units / multi);
+  let units = 0;
+  for (const ch of str) units += costOf(ch);
+
+  // A 2-unit char (GSM-7 escape pair / surrogate pair) can't be split across a
+  // segment boundary: if it doesn't fit in the current segment it pads it and
+  // moves whole to the next. So simulate packing rather than dividing units,
+  // which would otherwise undercount segments at the boundary.
+  let segments;
+  if (units === 0) {
+    segments = 0;
+  } else if (units <= single) {
+    segments = 1;
+  } else {
+    segments = 1;
+    let used = 0;
+    for (const ch of str) {
+      const cost = costOf(ch);
+      if (used + cost > multi) {
+        segments += 1;
+        used = 0;
+      }
+      used += cost;
+    }
+  }
   const capacity = segments <= 1 ? single : segments * multi;
   return {
     chars: units,
