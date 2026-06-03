@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
-  Mic, Square
+  Mic, Square, HelpCircle
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -424,16 +424,23 @@ Return ONLY the final note text.`
     }
   };
 
+  const setAnswer = (id, value) => setAnswers(prev => ({ ...prev, [id]: value }));
+
   const proceedToBuild = () => {
     if (analysis) {
       const updatedFindings = (analysis.findings || []).map(f => {
-        if (f.needs_clarification && answers[f.id]) {
-          return { ...f, needs_clarification: false, suggestion: answers[f.id] };
+        if (f.needs_clarification && answers[f.id]?.trim()) {
+          return { ...f, needs_clarification: false, suggestion: answers[f.id].trim() };
         }
         return f;
       });
       setAnalysis({ ...analysis, findings: updatedFindings });
-      const selectedSet = new Set(updatedFindings.filter(f => f.suggestion).map(f => f.id));
+      // Only merge findings that are complete: concrete suggestions or answered
+      // clarifications. Findings still needing clarification are skipped so their
+      // [bracketed placeholder] text can never reach the final note.
+      const selectedSet = new Set(
+        updatedFindings.filter(f => f.suggestion && !f.needs_clarification).map(f => f.id)
+      );
       setSelected(selectedSet);
       autoBuild({ ...analysis, findings: updatedFindings }, selectedSet);
     }
@@ -522,7 +529,7 @@ Return ONLY the final note text.`
   const _urgentAlerts = alerts.filter(a => a.urgency === "immediate");
   const _criticalFindings = analysis?.findings?.filter(f => f.severity === "critical") || [];
   const needsClarificationFindings = analysis?.findings?.filter(f => f.needs_clarification) || [];
-  const _answeredCount = needsClarificationFindings.filter(f => answers[f.id]?.trim()).length;
+  const answeredCount = needsClarificationFindings.filter(f => answers[f.id]?.trim()).length;
   const _complianceFindings = analysis?.findings?.filter(f => f.category === "compliance") || [];
   const _qualityFindings = analysis?.findings?.filter(f => f.category === "quality") || [];
   const _totalRevenueImpact = calculateTotalRevenueImpact();
@@ -756,10 +763,45 @@ Return ONLY the final note text.`
                     )}
                   </div>
 
-
+                  {/* Clarifying questions the note needs — required Medicare elements
+                      missing from the draft that only the nurse can supply */}
+                  {needsClarificationFindings.length > 0 && (
+                    <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-sm">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                          <HelpCircle className="w-4 h-4 text-amber-500" /> Questions to Complete Your Note
+                        </h3>
+                        <span className="text-xs text-slate-500 shrink-0">{answeredCount}/{needsClarificationFindings.length} answered</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-3">
+                        These details are required for Medicare compliance but weren't in your draft. Answer what applies — anything left blank is skipped, never inserted as a placeholder.
+                      </p>
+                      <div className="space-y-3">
+                        {needsClarificationFindings.map(f => (
+                          <div key={f.id} className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <Badge className={`shrink-0 text-xs ${f.severity === 'critical' ? 'bg-red-100 text-red-800' : f.severity === 'high' ? 'bg-orange-100 text-orange-800' : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {f.severity}
+                              </Badge>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-900">{f.question || f.issue}</p>
+                                {f.rationale && <p className="text-xs text-slate-500 mt-0.5">{f.rationale}</p>}
+                              </div>
+                            </div>
+                            <textarea
+                              value={answers[f.id] || ""}
+                              onChange={e => setAnswer(f.id, e.target.value)}
+                              placeholder="Type your answer — it will be written into the note in compliant language…"
+                              className="mt-2 w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none resize-none min-h-[60px] leading-relaxed"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Medicare Compliance Suggestions */}
-                  {analysis?.findings?.filter(f => f.category === 'compliance' && f.suggestion).length > 0 && (
+                  {analysis?.findings?.filter(f => f.category === 'compliance' && f.suggestion && !f.needs_clarification).length > 0 && (
                     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-4">
                         <div>
@@ -767,18 +809,28 @@ Return ONLY the final note text.`
                           <p className="text-xs text-slate-500 mt-0.5">Check items to add to your final note</p>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set(analysis.findings.filter(f => f.category === 'compliance' && f.suggestion).map(f => f.id)))}>Select All</Button>
+                          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set(analysis.findings.filter(f => f.category === 'compliance' && f.suggestion && !f.needs_clarification).map(f => f.id)))}>Select All</Button>
                           <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set())}>Clear</Button>
                         </div>
                       </div>
                       <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {analysis.findings.filter(f => f.category === 'compliance' && f.suggestion).map(f => (
-                          <div key={f.id} className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => toggle(f.id)}>
-                            <input 
-                              type="checkbox" 
-                              checked={selected.has(f.id)} 
-                              onChange={() => toggle(f.id)}
-                              className="w-5 h-5 mt-0.5 text-indigo-600 rounded cursor-pointer"
+                        {analysis.findings.filter(f => f.category === 'compliance' && f.suggestion && !f.needs_clarification).map(f => (
+                          <div
+                            key={f.id}
+                            role="checkbox"
+                            aria-checked={selected.has(f.id)}
+                            tabIndex={0}
+                            className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer"
+                            onClick={() => toggle(f.id)}
+                            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(f.id); } }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected.has(f.id)}
+                              readOnly
+                              tabIndex={-1}
+                              aria-hidden="true"
+                              className="w-5 h-5 mt-0.5 text-indigo-600 rounded pointer-events-none"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-slate-900">{f.issue}</p>
