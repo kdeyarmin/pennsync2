@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Loader2, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, FileText } from 'lucide-react';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function TemplateManagement() {
   const queryClient = useQueryClient();
@@ -90,13 +92,19 @@ export default function TemplateManagement() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Document Templates</h1>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> New Template
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Documentation"
+        title="Template Management"
+        description="Create and manage document templates for patient records"
+        favoritePage="TemplateManagement"
+        actions={
+          <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> New Template
+          </Button>
+        }
+      />
 
       {showForm && (
         <Card className="p-6 space-y-4">
@@ -197,6 +205,6 @@ export default function TemplateManagement() {
           No templates yet. Create one to get started.
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

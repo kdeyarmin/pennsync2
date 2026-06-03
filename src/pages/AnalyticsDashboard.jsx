@@ -34,7 +34,10 @@ import {
   Clock,
   Download,
   Target,
+  PieChart,
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { format, subDays } from "date-fns";
 
 import PerformanceMetricsCard from "../components/analytics/PerformanceMetricsCard";
@@ -417,25 +420,28 @@ export default function AnalyticsDashboard() {
   const _COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Performance Analytics</h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 hidden sm:block">Track metrics, trends, and outcomes</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto">
-            <Download className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Export PDF</span>
-            <span className="sm:hidden">PDF</span>
-          </Button>
-          <Button onClick={handleExportReport} variant="outline" className="min-h-[44px] w-full sm:w-auto">
-            <Download className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Export JSON</span>
-            <span className="sm:hidden">JSON</span>
-          </Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={PieChart}
+        eyebrow="Analytics"
+        title="Performance Analytics"
+        description="Track metrics, trends, and outcomes"
+        favoritePage="AnalyticsDashboard"
+        actions={
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto">
+              <Download className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Export PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </Button>
+            <Button onClick={handleExportReport} variant="outline" className="min-h-[44px] w-full sm:w-auto">
+              <Download className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Export JSON</span>
+              <span className="sm:hidden">JSON</span>
+            </Button>
+          </div>
+        }
+      />
 
       {/* Filters */}
       <Card className="mb-4 sm:mb-6">
@@ -578,6 +584,6 @@ export default function AnalyticsDashboard() {
       )}
 
 
-    </div>
+    </PageContainer>
   );
 }

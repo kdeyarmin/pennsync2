@@ -2,7 +2,9 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, Shield, Zap, BarChart3, FileText, Users, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Brain, Shield, Zap, BarChart3, FileText, Users, ArrowRight, CheckCircle2, Globe } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function About() {
   const features = [
@@ -48,16 +50,14 @@ export default function About() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Hero Section */}
-      <div className="mb-12">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl p-8 md:p-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Penn Sync</h1>
-          <p className="text-xl text-blue-100 max-w-2xl">
-            The intelligent home health and hospice management platform that combines AI-powered documentation with comprehensive clinical operations.
-          </p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Globe}
+        eyebrow="PennSync"
+        title="About"
+        description="The intelligent home health and hospice management platform that combines AI-powered documentation with comprehensive clinical operations."
+        favoritePage="About"
+      />
 
       {/* Overview Section */}
       <div className="mb-12">
@@ -136,6 +136,6 @@ export default function About() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

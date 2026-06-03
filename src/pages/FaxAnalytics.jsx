@@ -2,12 +2,14 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, differenceInMinutes } from 'date-fns';
-import { FileText, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
+import { BarChart3, FileText, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 
 const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
@@ -113,13 +115,14 @@ export default function FaxAnalytics() {
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Fax Analytics</h1>
-                    <p className="text-slate-500 mt-1">Monitor operational performance and transmission metrics</p>
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                icon={BarChart3}
+                eyebrow="Communication"
+                title="Fax Analytics"
+                description="Monitor operational performance and transmission metrics"
+                favoritePage="FaxAnalytics"
+            />
 
             {/* Top Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -241,6 +244,6 @@ export default function FaxAnalytics() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </PageContainer>
     );
 }

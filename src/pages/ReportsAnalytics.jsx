@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, TrendingUp, Activity, Brain, RefreshCw } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import ReferralVolumeReport from "@/components/reports/ReferralVolumeReport";
 import PatientOutcomesReport from "@/components/reports/PatientOutcomesReport";
 import NursePerformanceReport from "@/components/reports/NursePerformanceReport";
@@ -83,10 +84,9 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={BarChart3}
-        iconColor="bg-indigo-600"
         eyebrow="Analytics"
         title="Reports & Analytics"
         description="KPIs, outcomes, performance metrics, and AI-powered population health insights"
@@ -234,6 +234,6 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
           )}
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

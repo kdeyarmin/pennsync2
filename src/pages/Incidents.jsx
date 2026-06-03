@@ -2,6 +2,8 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import IncidentForm from "@/components/incident/IncidentForm";
 import StateReportableForm from "@/components/incident/StateReportableForm";
 import IncidentRecentList from "@/components/incident/IncidentRecentList";
@@ -33,20 +35,14 @@ export default function Incidents() {
   const _isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="modern-card border-l-4 border-l-red-500 p-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center border border-red-100 flex-shrink-0">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Incident Reporting</h1>
-            <p className="text-sm sm:text-base text-slate-500 mt-1">
-              Capture wound photos, report safety events, and notify clinical admins immediately
-            </p>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={AlertTriangle}
+        eyebrow="Patient Care"
+        title="Incidents"
+        description="Capture wound photos, report safety events, and notify clinical admins immediately"
+        favoritePage="Incidents"
+      />
 
       <Tabs defaultValue="report" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
@@ -94,6 +90,6 @@ export default function Incidents() {
           <IncidentRecentList incidents={incidents} detailed />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

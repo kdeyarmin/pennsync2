@@ -2,14 +2,16 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BookOpen, Download, Search, MessageCircle, 
+import {
+  BookOpen, Download, Search, MessageCircle,
   FileText, Lightbulb, Award, Sparkles, Users,
-  ClipboardList, Phone, Mail
+  ClipboardList, Phone, Mail, HelpCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { generateUserManual } from "@/functions/generateUserManual";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function Help() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,32 +126,24 @@ export default function Help() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 sm:p-4 md:p-6 lg:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Hero Header */}
-        <div className="mb-6 sm:mb-8 bg-gradient-to-r from-[#0F204A] to-[#1a3a6b] rounded-3xl p-6 sm:p-8 text-white shadow-xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#FFC107] rounded-2xl flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-[#0F204A]" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Help & Resources</h1>
-                  <p className="text-blue-100 text-sm sm:text-base">Everything you need to master PennSync</p>
-                </div>
-              </div>
-            </div>
-            <Button
-              onClick={handleDownloadManual}
-              disabled={downloading}
-              className="bg-[#FFC107] hover:bg-[#FFD54F] text-[#0F204A] font-semibold shadow-lg min-h-[48px] px-6"
-            >
-              <Download className="w-5 h-5 mr-2" />
-              {downloading ? 'Generating...' : 'Download Full Manual'}
-            </Button>
-          </div>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={HelpCircle}
+        eyebrow="Tools"
+        title="Help & Resources"
+        description="Everything you need to master PennSync"
+        favoritePage="Help"
+        actions={
+          <Button
+            onClick={handleDownloadManual}
+            disabled={downloading}
+            className="bg-[#FFC107] hover:bg-[#FFD54F] text-[#0F204A] font-semibold shadow-lg min-h-[48px] px-6"
+          >
+            <Download className="w-5 h-5 mr-2" />
+            {downloading ? 'Generating...' : 'Download Full Manual'}
+          </Button>
+        }
+      />
 
         <Tabs defaultValue="quickstart" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 h-auto p-1">
@@ -466,7 +460,6 @@ export default function Help() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

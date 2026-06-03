@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Users, Activity } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { Input } from "@/components/ui/input";
 import VitalsChart from "@/components/clinical/VitalsChart";
 import CarePlanInteractive from "@/components/clinical/CarePlanInteractive";
@@ -35,15 +37,14 @@ export default function ClinicalChart() {
   const selectedPatient = patients.find((p) => p.id === selectedPatientId);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-r from-teal-700 via-cyan-700 to-slate-800 text-white p-6 shadow-xl">
-        <div className="flex items-center gap-3 mb-2">
-          <Activity className="w-8 h-8 text-teal-200" />
-          <h1 className="text-3xl font-bold">Clinical Charting</h1>
-        </div>
-        <p className="text-teal-100">Interactive care plans, OASIS updates, and historical vitals at a glance.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Activity}
+        eyebrow="Patient Care"
+        title="Clinical Chart"
+        description="Interactive care plans, OASIS updates, and historical vitals at a glance."
+        favoritePage="ClinicalChart"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
         {/* Patient list */}
@@ -121,6 +122,6 @@ export default function ClinicalChart() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

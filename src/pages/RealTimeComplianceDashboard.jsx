@@ -25,8 +25,11 @@ import {
   ClipboardList,
   Activity,
   Zap,
-  Download
+  Download,
+  Radio
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import GranularComplianceGapAnalyzer from "../components/compliance/GranularComplianceGapAnalyzer";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
@@ -581,25 +584,20 @@ export default function RealTimeComplianceDashboard() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-2">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Real-Time Compliance</h1>
-              <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Aggregated insights across all features</p>
-            </div>
-          </div>
+    <PageContainer>
+      <PageHeader
+        icon={Radio}
+        eyebrow="Analytics"
+        title="Real-Time Compliance"
+        description="Aggregated insights across all features"
+        favoritePage="RealTimeComplianceDashboard"
+        actions={
           <Button onClick={exportComplianceData} variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
             <Download className="w-4 h-4" />
             <span>Export</span>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filters */}
       <Card className="mb-4 sm:mb-6">
@@ -1091,6 +1089,6 @@ export default function RealTimeComplianceDashboard() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -7,6 +7,8 @@ import { WifiOff, Wifi, Users, FileText, Database } from "lucide-react";
 import OfflinePatientSelector from "../components/mobile/OfflinePatientSelector";
 import OfflineSyncManager from "../components/mobile/OfflineSyncManager";
 import OfflineTaskManager from "../components/mobile/OfflineTaskManager";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function OfflineMode() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -34,36 +36,30 @@ export default function OfflineMode() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 ${
-            isOnline ? 'bg-green-500' : 'bg-orange-500'
-          }`}>
-            {isOnline ? <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <WifiOff className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Offline Mode</h1>
-            <p className="text-xs sm:text-sm text-slate-600">Work without internet, sync when ready</p>
-          </div>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={WifiOff}
+        eyebrow="Tools"
+        title="Offline Mode"
+        description="Work without internet, sync when ready"
+        favoritePage="OfflineMode"
+      />
 
-        <Alert className={isOnline ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'}>
-          <AlertDescription className="text-sm flex items-center gap-2">
-            {isOnline ? (
-              <>
-                <Wifi className="w-4 h-4 text-green-600" />
-                <span className="text-green-800">✅ Connected - Data will sync automatically</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-4 h-4 text-orange-600" />
-                <span className="text-orange-800">⚠️ Offline - Using cached data</span>
-              </>
-            )}
-          </AlertDescription>
-        </Alert>
-      </div>
+      <Alert className={isOnline ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'}>
+        <AlertDescription className="text-sm flex items-center gap-2">
+          {isOnline ? (
+            <>
+              <Wifi className="w-4 h-4 text-green-600" />
+              <span className="text-green-800">✅ Connected - Data will sync automatically</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="w-4 h-4 text-orange-600" />
+              <span className="text-orange-800">⚠️ Offline - Using cached data</span>
+            </>
+          )}
+        </AlertDescription>
+      </Alert>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
         <Card className="border-blue-200">
@@ -174,6 +170,6 @@ export default function OfflineMode() {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

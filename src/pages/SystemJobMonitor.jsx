@@ -37,9 +37,12 @@ import {
   Eye,
   Activity,
   Calendar,
-  FileText
+  FileText,
+  Monitor
 } from "lucide-react";
 import { format } from "date-fns";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function SystemJobMonitor() {
   const queryClient = useQueryClient();
@@ -143,24 +146,27 @@ export default function SystemJobMonitor() {
   const lastGuidelineSync = logs.find(l => l.job_type === 'medicare_guideline_sync');
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">System Job Monitor</h1>
-          <p className="text-slate-600">Monitor scheduled jobs and automated processes</p>
-        </div>
-        <Button
-          onClick={handleRunSync}
-          disabled={isRunning}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {isRunning ? (
-            <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Running...</>
-          ) : (
-            <><Play className="w-4 h-4 mr-2" /> Run Guideline Sync Now</>
-          )}
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Monitor}
+        eyebrow="Admin"
+        title="System Job Monitor"
+        description="Monitor scheduled jobs and automated processes"
+        favoritePage="SystemJobMonitor"
+        actions={
+          <Button
+            onClick={handleRunSync}
+            disabled={isRunning}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isRunning ? (
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Running...</>
+            ) : (
+              <><Play className="w-4 h-4 mr-2" /> Run Guideline Sync Now</>
+            )}
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -418,6 +424,6 @@ export default function SystemJobMonitor() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

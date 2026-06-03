@@ -17,6 +17,8 @@ import {
   RefreshCw,
   Zap
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
 import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
 import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
@@ -99,17 +101,14 @@ export default function NurseTraining() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <GraduationCap className="w-8 h-8 text-indigo-600" />
-          <h1 className="text-3xl font-bold text-slate-900">Nurse Training Hub</h1>
-        </div>
-        <p className="text-slate-600">
-          Improve your documentation skills with AI-powered training and practice scenarios
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={GraduationCap}
+        eyebrow="My Learning"
+        title="Nurse Training Hub"
+        description="Improve your documentation skills with AI-powered training and practice scenarios"
+        favoritePage="NurseTraining"
+      />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -291,6 +290,6 @@ export default function NurseTraining() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

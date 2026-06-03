@@ -1,16 +1,19 @@
 import PDFSearchInterface from "../components/documents/PDFSearchInterface";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
+import { Search } from "lucide-react";
 
 export default function PDFSearch() {
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">PDF Search</h1>
-        <p className="text-slate-600">
-          Search within all indexed PDF documents with fuzzy matching and advanced filters
-        </p>
-      </div>
-
+    <PageContainer>
+      <PageHeader
+        icon={Search}
+        eyebrow="Documentation"
+        title="PDF Search"
+        description="Search within all indexed PDF documents with fuzzy matching and advanced filters"
+        favoritePage="PDFSearch"
+      />
       <PDFSearchInterface />
-    </div>
+    </PageContainer>
   );
 }

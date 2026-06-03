@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RefreshCw, CheckCircle2, XCircle, AlertTriangle, Activity } from "lucide-react";
+import { RefreshCw, CheckCircle2, XCircle, AlertTriangle, Activity, Monitor } from "lucide-react";
 import { testAutomations } from "@/functions/testAutomations";
 import SystemHealthPanel from "@/components/admin/SystemHealthPanel";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function SystemHealthMonitor() {
   const { data: currentUser } = useQuery({
@@ -38,19 +40,22 @@ export default function SystemHealthMonitor() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <PageContainer>
+      <PageHeader
+        icon={Monitor}
+        eyebrow="Admin"
+        title="System Health Monitor"
+        description="Test automations and monitor system functions"
+        favoritePage="SystemHealthMonitor"
+        actions={
+          <Button onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Test All Functions
+          </Button>
+        }
+      />
+
       <SystemHealthPanel />
-      
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">System Health Monitor</h1>
-          <p className="text-slate-500">Test automations and monitor system functions</p>
-        </div>
-        <Button onClick={() => refetch()} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Test All Functions
-        </Button>
-      </div>
 
       {automationTest && (
         <>
@@ -137,6 +142,6 @@ export default function SystemHealthMonitor() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -2,8 +2,9 @@ import { useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import OASISDocumentationQualityScorer from "../components/oasis/OASISDocumentationQualityScorer";
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";
@@ -33,26 +34,22 @@ export default function OASISDocumentationReview() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="min-w-0 flex-1">
+    <PageContainer>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Patient Care"
+        title="OASIS Documentation Review"
+        description={patientName ? `Patient: ${patientName}` : undefined}
+        favoritePage="OASISDocumentationReview"
+        actions={
           <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="ghost" size="sm" className="min-h-[44px]">
+            <Button variant="ghost" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Back to Analyzer</span>
-              <span className="sm:hidden">Back</span>
+              Back to Analyzer
             </Button>
           </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mt-2 truncate">OASIS Documentation Review</h1>
-          {patientName && <p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">Patient: {patientName}</p>}
-        </div>
-        <Badge className="bg-purple-600 text-white text-sm sm:text-base md:text-lg px-3 sm:px-4 py-2 flex items-center gap-2">
-          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-          <span className="hidden sm:inline">AI-Powered Documentation Support</span>
-          <span className="sm:hidden">AI</span>
-        </Badge>
-      </div>
+        }
+      />
 
       {/* Documentation Quality Score */}
       <OASISDocumentationQualityScorer
@@ -84,6 +81,6 @@ export default function OASISDocumentationReview() {
         analysisResults={analysisResults}
         pdgmData={pdgmData}
       />
-    </div>
+    </PageContainer>
   );
 }

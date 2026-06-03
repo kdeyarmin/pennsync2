@@ -83,7 +83,9 @@ import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentRev
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import OASISDataEntryAssistant from "../components/oasis/OASISDataEntryAssistant";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Search } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
 import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
 import PDGMTrendDashboard from "../components/oasis/PDGMTrendDashboard";
@@ -1675,11 +1677,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto pb-12 sm:pb-20">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">OASIS Analyzer</h1>
-        <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Search}
+        eyebrow="Patient Care"
+        title="OASIS Analyzer"
+        description="Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips"
+        favoritePage="OASISAnalyzer"
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 sm:mb-6">
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
@@ -3094,6 +3099,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       )}
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

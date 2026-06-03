@@ -1,7 +1,9 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Clock, CheckCircle2, GraduationCap } from "lucide-react";
+import { BookOpen, Clock, CheckCircle2, Video } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 const educationalVideos = [
   {
@@ -113,17 +115,14 @@ export default function NurseEducationVideos() {
   }, {});
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header with Progress */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <GraduationCap className="w-8 h-8 text-indigo-600" />
-          <h1 className="text-3xl font-bold text-slate-900">Nurse Education Videos</h1>
-        </div>
-        <p className="text-slate-600">
-          Comprehensive training on OASIS, documentation, infection control, and clinical best practices
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Video}
+        eyebrow="My Learning"
+        title="Nurse Education Videos"
+        description="Comprehensive training on OASIS, documentation, infection control, and clinical best practices"
+        favoritePage="NurseEducationVideos"
+      />
 
       <Card className="mb-6 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
         <CardContent className="p-6">
@@ -224,6 +223,6 @@ export default function NurseEducationVideos() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

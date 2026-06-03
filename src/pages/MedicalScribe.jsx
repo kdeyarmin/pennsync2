@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Mic } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 const VISIT_TYPES = [
   "skilled_nursing",
@@ -125,15 +127,14 @@ export default function VisitScribePage() {
   const isReadyToRecord = selectedPatient && visitType && diagnosis;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-slate-900">Visit Scribe</h1>
-          <p className="text-slate-600">
-            Record your patient interaction and let AI generate your clinical documentation
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={Mic}
+        eyebrow="Documentation"
+        title="Medical Scribe"
+        description="Record your patient interaction and let AI generate your clinical documentation"
+        favoritePage="MedicalScribe"
+      />
 
         {saveSuccess && (
           <Alert className="bg-green-50 border-green-200">
@@ -265,7 +266,6 @@ export default function VisitScribePage() {
             )}
           />
         )}
-      </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import CourseManager from "@/components/training/CourseManager";
 import LearningPlanManager from "@/components/training/LearningPlanManager";
 import AIComplianceInServicesHub from "@/components/training/AIComplianceInServicesHub";
@@ -192,16 +194,14 @@ export default function AdminTraining() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-          <GraduationCap className="w-8 h-8 text-indigo-600" />
-          Training & Education Management
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-2">
-          Manage courses, assign learning paths, monitor skill gaps, and generate AI-powered training
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={GraduationCap}
+        eyebrow="Manage"
+        title="Training & Education Management"
+        description="Manage courses, assign learning paths, monitor skill gaps, and generate AI-powered training"
+        favoritePage="AdminTraining"
+      />
 
       <Tabs defaultValue="courses" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
@@ -335,6 +335,6 @@ export default function AdminTraining() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

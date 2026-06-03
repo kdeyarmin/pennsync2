@@ -13,6 +13,7 @@ import { callbackCount } from "@/components/voice/callbackQueue";
 import { isOffDutyNow } from "@/components/voice/dutyUtils";
 import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 import { cn } from "@/lib/utils";
+import PageContainer from "@/components/ui/PageContainer";
 
 /**
  * PhoneCenter — a nurse's hub for patient texting, masked call history,
@@ -66,10 +67,9 @@ export default function PhoneCenter() {
     "min-h-[44px] px-4 text-sm whitespace-nowrap data-[state=active]:bg-slate-900 data-[state=active]:text-white";
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 pb-24 max-w-6xl mx-auto animate-fade-in">
+    <PageContainer>
       <PageHeader
         icon={Phone}
-        iconColor="bg-blue-600"
         eyebrow="Communication"
         title="Phone Center"
         description="Text and call patients privately through your work number — your personal cell stays hidden."
@@ -126,6 +126,6 @@ export default function PhoneCenter() {
           <DutyStatusCard />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

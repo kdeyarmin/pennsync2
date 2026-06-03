@@ -4,6 +4,7 @@ import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -315,11 +316,10 @@ export default function ComplianceCenter() {
   const _COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <PageContainer>
       <PageHeader
         icon={Shield}
-iconColor="bg-indigo-600"
-        eyebrow="Quality & Compliance"
+        eyebrow="Analytics"
         title="Compliance Center"
         description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
         favoritePage="ComplianceCenter"
@@ -674,6 +674,6 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           <RegulatoryCompliance />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

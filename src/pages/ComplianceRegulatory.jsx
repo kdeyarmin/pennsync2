@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, BookOpen, ShieldAlert } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
 import RealTimeComplianceDashboard from "./RealTimeComplianceDashboard";
 import RegulatoryCompliance from "./RegulatoryCompliance";
 
@@ -47,7 +48,7 @@ export default function ComplianceRegulatory() {
   }
 
   return (
-    <div className="min-h-screen">
+    <PageContainer>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
@@ -72,6 +73,6 @@ export default function ComplianceRegulatory() {
           <RegulatoryCompliance />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

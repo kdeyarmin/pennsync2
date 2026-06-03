@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Mic } from "lucide-react";
+import { Sparkles, Mic, Brain } from "lucide-react";
 import SmartNoteAssistant from "@/pages/SmartNoteAssistant";
 import RealTimeDictationScribe from "@/components/visit/RealTimeDictationScribe";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function ClinicalDocumentation() {
   const [activeMethod, setActiveMethod] = useState("smart-notes");
@@ -16,16 +18,14 @@ export default function ClinicalDocumentation() {
   });
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-          <Sparkles className="w-8 h-8" />
-          Clinical Documentation
-        </h1>
-        <p className="text-indigo-100">AI-powered note generation, voice dictation, and compliance checking</p>
-      </div>
-
-      <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
+    <PageContainer>
+      <PageHeader
+        icon={Brain}
+        eyebrow="Documentation"
+        title="Clinical Notes"
+        description="AI-powered note generation, voice dictation, and compliance checking"
+        favoritePage="ClinicalDocumentation"
+      />
         <Tabs value={activeMethod} onValueChange={setActiveMethod} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 gap-2">
             <TabsTrigger value="smart-notes" className="min-h-[44px] font-semibold">Smart Notes</TabsTrigger>
@@ -85,7 +85,6 @@ export default function ClinicalDocumentation() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

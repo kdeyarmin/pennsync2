@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Search, Plus, BookOpen, Send, Eye, Edit, Copy, TrendingUp, Clock, FileText, Star
 } from 'lucide-react';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -122,12 +124,14 @@ export default function EducationLibrary() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Patient Education Library</h1>
-        <p className="text-slate-600">Create, manage, and send personalized education materials to patients</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={BookOpen}
+        eyebrow="My Learning"
+        title="Education Library"
+        description="Create, manage, and send personalized education materials to patients"
+        favoritePage="EducationLibrary"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -413,6 +417,6 @@ export default function EducationLibrary() {
           }}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

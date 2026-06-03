@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Activity, 
-  User, 
-  FileText, 
+import {
+  Activity,
+  User,
+  FileText,
   Search,
   Download,
   Eye,
@@ -34,9 +34,12 @@ import {
   UserX,
   Key,
   Mail,
-  Send
+  Send,
+  Archive
 } from "lucide-react";
 import { formatEastern } from "../components/utils/timezone";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function UserActivityLog() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -183,11 +186,14 @@ export default function UserActivityLog() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">User Activity Log</h1>
-        <p className="text-sm text-slate-600">Monitor all user actions across the system</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Archive}
+        eyebrow="Admin"
+        title="User Activity Log"
+        description="Monitor all user actions across the system"
+        favoritePage="UserActivityLog"
+      />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
@@ -512,6 +518,6 @@ export default function UserActivityLog() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import PageContainer from "@/components/ui/PageContainer";
 import {
   ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2,
   Loader2, AlertCircle, AlertTriangle, Brain, Activity, ShieldAlert, Lightbulb
@@ -288,6 +289,7 @@ export default function SmartOASISAssessment() {
   if (patientsLoading) return <AssessmentSkeleton />;
 
   return (
+    <PageContainer>
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
@@ -378,5 +380,6 @@ export default function SmartOASISAssessment() {
         onClose={() => setGuidanceOpen(false)}
       />
     </div>
+    </PageContainer>
   );
 }

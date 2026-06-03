@@ -54,6 +54,7 @@ const getVisitTypes = (careScope) => {
 
 import StepIndicator from "../components/smartNote/StepIndicator";
 import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function SmartNoteAssistant() {
   const [patientId, setPatientId] = useState("");
@@ -355,7 +356,7 @@ export default function SmartNoteAssistant() {
   const ready = note.trim().length >= 20;
 
   return (
-    <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3 sm:space-y-4">
+    <PageContainer>
 
       <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
 
@@ -577,6 +578,6 @@ export default function SmartNoteAssistant() {
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

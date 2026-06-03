@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, FileText, Award, Sparkles, Calendar, Loader2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -26,11 +27,10 @@ export default function MyLearning() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-<PageHeader
+    <PageContainer>
+      <PageHeader
         icon={GraduationCap}
-        iconColor="bg-indigo-600"
-        eyebrow="Learning"
+        eyebrow="My Learning"
         title="My Learning"
         description="All your training, courses, transcripts, and continuing education"
         favoritePage="MyLearning"
@@ -89,6 +89,6 @@ export default function MyLearning() {
           <AnnualTranscriptCenter />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

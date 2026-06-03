@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Combine, Settings, FileText, Upload } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { toast } from "sonner";
 
 export default function PDFTools() {
@@ -31,13 +33,14 @@ export default function PDFTools() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">PDF Tools</h1>
-        <p className="text-slate-600">
-          Edit, merge, and manage PDF documents with powerful tools
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Documentation"
+        title="PDF Tools"
+        description="Edit, merge, and manage PDF documents with powerful tools"
+        favoritePage="PDFTools"
+      />
 
       <Tabs defaultValue="edit" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -152,6 +155,6 @@ export default function PDFTools() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

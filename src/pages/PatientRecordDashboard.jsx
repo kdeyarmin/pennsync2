@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Users,
-  LayoutDashboard,
+  Clipboard,
   Activity,
   TrendingUp,
   AlertCircle,
   FileText,
   Calendar
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import PatientSearchBar from "../components/dashboard/PatientSearchBar";
 import PatientQuickActions from "../components/dashboard/PatientQuickActions";
 import PatientOverviewCard from "../components/dashboard/PatientOverviewCard";
@@ -141,22 +143,20 @@ export default function PatientRecordDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 md:gap-3">
-              <LayoutDashboard className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
-              Patient Record Dashboard
-            </h1>
-            <p className="text-sm md:text-base text-slate-600 mt-1">Comprehensive patient management and overview</p>
-          </div>
+    <PageContainer>
+      <PageHeader
+        icon={Clipboard}
+        eyebrow="Patient Care"
+        title="Patient Record Dashboard"
+        description="Comprehensive patient management and overview"
+        favoritePage="PatientRecordDashboard"
+        actions={
           <PatientQuickActions onActionComplete={() => {
             // Refresh data
             window.location.reload();
           }} />
-        </div>
+        }
+      />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
@@ -337,7 +337,6 @@ export default function PatientRecordDashboard() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

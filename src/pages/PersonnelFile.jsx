@@ -8,6 +8,9 @@ import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialF
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
 import AdminCredentialApproval from "@/components/personnel/AdminCredentialApproval";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
+import { Users } from "lucide-react";
 
 const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
@@ -24,11 +27,14 @@ export default function PersonnelFile() {
   }, [items, currentUser]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">Personnel File</h1>
-        <p className="text-blue-100">Track expiring licenses, certifications, and insurance documents, upload renewals, and manage agency approval.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Users}
+        eyebrow="Manage"
+        title="Personnel File"
+        description="Track expiring licenses, certifications, and insurance documents, upload renewals, and manage agency approval."
+        favoritePage="PersonnelFile"
+      />
 
       <Tabs defaultValue="my-file" className="space-y-6">
         <TabsList>
@@ -90,6 +96,6 @@ export default function PersonnelFile() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

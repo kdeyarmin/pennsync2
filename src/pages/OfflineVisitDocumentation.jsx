@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   CheckCircle2
 } from 'lucide-react';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import OfflineVisitNoteCapture from '../components/offline/OfflineVisitNoteCapture';
@@ -67,27 +69,23 @@ export default function OfflineVisitDocumentation() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <Button
-        variant="outline"
-        onClick={() => navigate(createPageUrl('Dashboard'))}
-        className="mb-6"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Dashboard
-      </Button>
-
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-            <WifiOff className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Offline Visit Documentation</h1>
-            <p className="text-slate-600">Document patient visits with or without internet connection</p>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={WifiOff}
+        eyebrow="Tools"
+        title="Offline Visit Documentation"
+        description="Document patient visits with or without internet connection"
+        favoritePage="OfflineVisitDocumentation"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => navigate(createPageUrl('Dashboard'))}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        }
+      />
 
       {/* Connection & Sync Status */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
@@ -211,6 +209,6 @@ export default function OfflineVisitDocumentation() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { 
-  BookOpen, 
-  Download, 
-  Mail, 
-  Heart, 
-  Activity, 
-  Droplet, 
+import {
+  BookOpen,
+  Download,
+  Mail,
+  Heart,
+  Activity,
+  Droplet,
   Brain,
   Bandage,
   Shield,
@@ -22,6 +22,8 @@ import {
   CheckCircle2,
   Settings
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import HandoutCustomizer from "../components/education/HandoutCustomizer";
@@ -359,17 +361,14 @@ export default function PatientEducationHub() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 truncate">Patient Education Hub</h1>
-        </div>
-        <p className="text-xs sm:text-sm md:text-base text-slate-600">
-          Generate personalized, AI-powered educational materials for your patients
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Heart}
+        eyebrow="Patient Care"
+        title="Patient Education Hub"
+        description="Generate personalized, AI-powered educational materials for your patients"
+        favoritePage="PatientEducationHub"
+      />
 
       {/* AI Personalized Generator for Selected Patient */}
       {selectedPatient && (
@@ -669,6 +668,6 @@ export default function PatientEducationHub() {
           handleEmail();
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

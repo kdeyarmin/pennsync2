@@ -55,6 +55,7 @@ import {
   Database
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import PageContainer from "@/components/ui/PageContainer";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { formatEastern } from "../components/utils/timezone";
@@ -287,7 +288,7 @@ export default function PatientDataManagement() {
   }
 
   return (
-    <div className="min-h-screen">
+    <PageContainer>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
@@ -307,11 +308,10 @@ export default function PatientDataManagement() {
         </div>
 
         <TabsContent value="overview" className="m-0">
-          <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+          <div>
 <PageHeader
               icon={Users}
-              iconColor="bg-blue-600"
-              eyebrow="Administration"
+              eyebrow="Configuration"
               title="Patient Data Management"
               description="Comprehensive overview and management of all patients"
               favoritePage="PatientDataManagement"
@@ -642,7 +642,7 @@ export default function PatientDataManagement() {
           <ImportPatientsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
 

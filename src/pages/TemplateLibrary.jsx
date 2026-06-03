@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ClipboardList, User, Sparkles, FileText, Copy, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, Sparkles, FileText, Copy, CheckCircle2 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ClinicalTemplateLibrary from "../components/templates/ClinicalTemplateLibrary";
@@ -46,25 +48,23 @@ export default function TemplateLibrary() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <Button
-        variant="outline"
-        onClick={() => navigate(createPageUrl("Dashboard"))}
-        className="mb-6"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Dashboard
-      </Button>
-
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
-          <ClipboardList className="w-10 h-10 text-blue-600" />
-          Clinical Template Library
-        </h1>
-        <p className="text-slate-600">
-          AI-intelligent documentation templates for various visit types and conditions
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Documentation"
+        title="Template Library"
+        description="AI-intelligent documentation templates for various visit types and conditions"
+        favoritePage="TemplateLibrary"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => navigate(createPageUrl("Dashboard"))}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        }
+      />
 
       {/* Patient Selection */}
       <Card className="mb-6">
@@ -202,6 +202,6 @@ export default function TemplateLibrary() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

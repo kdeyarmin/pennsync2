@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import DataQualityDashboard from "@/components/admin/DataQualityDashboard";
 import { Card, CardContent } from "@/components/ui/card";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function DataQualityMonitor() {
   const { data: currentUser } = useQuery({
@@ -22,8 +23,8 @@ export default function DataQualityMonitor() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <PageContainer>
       <DataQualityDashboard />
-    </div>
+    </PageContainer>
   );
 }

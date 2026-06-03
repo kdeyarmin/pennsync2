@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
 import EnhancedPDGMCaseMixAnalyzer from "../components/oasis/EnhancedPDGMCaseMixAnalyzer";
 import AutomatedPDGMNavigator from "../components/oasis/AutomatedPDGMNavigator";
@@ -34,34 +36,23 @@ export default function OASISRevenueAnalysis() {
   const revenueScore = analysisResults.revenue_optimization_score || 0;
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="min-w-0 flex-1">
+    <PageContainer>
+      <PageHeader
+        icon={TrendingUp}
+        eyebrow="Patient Care"
+        title="OASIS Revenue Analysis"
+        description={patientName ? `Patient: ${patientName}` : "PDGM revenue analysis and optimization opportunities"}
+        favoritePage="OASISRevenueAnalysis"
+        badges={[{ label: `Revenue Optimization Score: ${revenueScore}`, className: "bg-green-100 text-green-800 hover:bg-green-100" }]}
+        actions={
           <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="ghost" size="sm" className="min-h-[44px]">
+            <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Back to Analyzer</span>
-              <span className="sm:hidden">Back</span>
+              Back to Analyzer
             </Button>
           </Link>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mt-2 truncate">PDGM Revenue Analysis</h1>
-          {patientName && <p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">Patient: {patientName}</p>}
-        </div>
-        <div className="text-center sm:text-right">
-          <p className="text-sm text-slate-600">Revenue Optimization Score</p>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="text-3xl font-bold text-green-600">{revenueScore}%</div>
-            <Badge className={`${
-              revenueScore >= 90 ? 'bg-green-600' :
-              revenueScore >= 70 ? 'bg-yellow-600' :
-              'bg-red-600'
-            } text-white`}>
-              {revenueScore >= 90 ? 'Excellent' : revenueScore >= 70 ? 'Good' : 'Needs Improvement'}
-            </Badge>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Revenue Comparison */}
       <PDGMRevenueComparison 
@@ -121,6 +112,6 @@ export default function OASISRevenueAnalysis() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

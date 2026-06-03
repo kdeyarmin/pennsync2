@@ -36,6 +36,8 @@ import {
   Edit,
   Grid3x3
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function FeaturesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -1310,44 +1312,41 @@ export default function FeaturesPage() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6 md:mb-8 text-center">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 sm:mb-3">
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Penn Sync Features
-          </span>
-        </h1>
-        <p className="text-base sm:text-lg md:text-xl text-slate-600 mb-3 sm:mb-4">
-          AI-powered home health documentation, OASIS analytics, and clinical decision support
-        </p>
-        
-        {/* Download Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 justify-center mb-4 sm:mb-6">
-          <Button 
-            onClick={generateFeaturesPDF}
-            disabled={isGeneratingPDF}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 min-h-[44px] w-full sm:w-auto"
-          >
-            {isGeneratingPDF ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-            ) : (
-              <><Download className="w-4 h-4 mr-2" /> Features Guide</>
-            )}
-          </Button>
-          
-          <Button 
-            onClick={generateUserManual}
-            disabled={isGeneratingManual}
-            className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 min-h-[44px] w-full sm:w-auto"
-          >
-            {isGeneratingManual ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-            ) : (
-              <><BookOpen className="w-4 h-4 mr-2" /> User Manual</>
-            )}
-          </Button>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={Zap}
+        eyebrow="PennSync"
+        title="Penn Sync Features"
+        description="AI-powered home health documentation, OASIS analytics, and clinical decision support"
+        favoritePage="Features"
+        actions={
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
+            <Button
+              onClick={generateFeaturesPDF}
+              disabled={isGeneratingPDF}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 min-h-[44px] w-full sm:w-auto"
+            >
+              {isGeneratingPDF ? (
+                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+              ) : (
+                <><Download className="w-4 h-4 mr-2" /> Features Guide</>
+              )}
+            </Button>
+
+            <Button
+              onClick={generateUserManual}
+              disabled={isGeneratingManual}
+              className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 min-h-[44px] w-full sm:w-auto"
+            >
+              {isGeneratingManual ? (
+                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+              ) : (
+                <><BookOpen className="w-4 h-4 mr-2" /> User Manual</>
+              )}
+            </Button>
+          </div>
+        }
+      />
         
         {/* Time Saved Hero Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto mb-4 sm:mb-6 md:mb-8">
@@ -1383,7 +1382,6 @@ export default function FeaturesPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
 
       {/* Category Filter */}
       <div className="mb-4 sm:mb-6 md:mb-8">
@@ -1499,6 +1497,6 @@ export default function FeaturesPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

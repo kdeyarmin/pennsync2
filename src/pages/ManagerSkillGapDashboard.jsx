@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { Sparkles, BarChart3 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import ManagerSkillGapSummary from "@/components/training/ManagerSkillGapSummary";
 import ManagerSkillGapAreas from "@/components/training/ManagerSkillGapAreas";
 import ManagerSkillGapPeople from "@/components/training/ManagerSkillGapPeople";
@@ -76,17 +78,24 @@ export default function ManagerSkillGapDashboard() {
   if (currentUser && !isManager(currentUser)) return <div className="max-w-3xl mx-auto p-6 text-slate-600">This dashboard is available to managers, supervisors, and admins only.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">Team Skill Gap Dashboard</h1>
-        <p className="text-indigo-100">Identify team-wide clinical and operational skill gaps based on competency test performance and failed attempts.</p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link to={createPageUrl('AIComplianceInServices')} className="inline-flex items-center rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20"><Sparkles className="w-4 h-4 mr-2" /> Open AI Compliance In-Services</Link>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={BarChart3}
+        eyebrow="Manage"
+        title="Skill Gap Dashboard"
+        description="Identify team-wide clinical and operational skill gaps based on competency test performance and failed attempts."
+        favoritePage="ManagerSkillGapDashboard"
+        actions={
+          <Link to={createPageUrl('AIComplianceInServices')}>
+            <button className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <Sparkles className="w-4 h-4 mr-2" /> Open AI Compliance In-Services
+            </button>
+          </Link>
+        }
+      />
       <ManagerSkillGapSummary stats={analysis.stats} />
       <ManagerSkillGapAreas areas={analysis.areas} />
       <ManagerSkillGapPeople people={analysis.people} missedTopics={analysis.missedTopics} />
-    </div>
+    </PageContainer>
   );
 }

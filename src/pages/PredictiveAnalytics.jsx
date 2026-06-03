@@ -17,6 +17,8 @@ import {
   Users,
   Filter
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 import PatientRiskScorecard from "../components/predictive/PatientRiskScorecard";
 import RehospitalizationPredictor from "../components/predictive/RehospitalizationPredictor";
@@ -56,46 +58,45 @@ export default function PredictiveAnalytics() {
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 flex-shrink-0" />
-            <span className="truncate">Predictive Analytics</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">AI-powered patient outcome forecasting and risk assessment</p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={TrendingUp}
+        eyebrow="Analytics"
+        title="Predictive Analytics"
+        description="AI-powered patient outcome forecasting and risk assessment"
+        favoritePage="PredictiveAnalytics"
+        actions={
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <Select value={riskFilter} onValueChange={setRiskFilter}>
+              <SelectTrigger className="w-full sm:w-36 h-11 touch-target">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Risk Levels</SelectItem>
+                <SelectItem value="high">High Risk</SelectItem>
+                <SelectItem value="medium">Medium Risk</SelectItem>
+                <SelectItem value="low">Low Risk</SelectItem>
+              </SelectContent>
+            </Select>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <Select value={riskFilter} onValueChange={setRiskFilter}>
-            <SelectTrigger className="w-full sm:w-36 h-11 touch-target">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Risk Levels</SelectItem>
-              <SelectItem value="high">High Risk</SelectItem>
-              <SelectItem value="medium">Medium Risk</SelectItem>
-              <SelectItem value="low">Low Risk</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedPatientId || "all"} onValueChange={(v) => setSelectedPatientId(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-full sm:w-48 h-11 touch-target">
-              <Users className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Select Patient" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Patients</SelectItem>
-              {patients.map(p => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.first_name} {p.last_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+            <Select value={selectedPatientId || "all"} onValueChange={(v) => setSelectedPatientId(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-full sm:w-48 h-11 touch-target">
+                <Users className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Select Patient" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Patients</SelectItem>
+                {patients.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.first_name} {p.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        }
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
@@ -165,6 +166,6 @@ export default function PredictiveAnalytics() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

@@ -10,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Heart, Stethoscope, Activity, Pill, ClipboardList, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Heart, Stethoscope, Activity, Pill, ClipboardList, ExternalLink, Users } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 import { logSecurityEvent, sanitizeInput } from "@/components/utils/security";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
@@ -26,10 +28,7 @@ import PatientRiskStratification from "../components/patient/PatientRiskStratifi
 import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
 import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
-import PatientChartExporter from "../components/documents/PatientChartExporter";
-import SecureDocumentShare from "../components/documents/SecureDocumentShare";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
-import FavoriteButton from "../components/navigation/FavoriteButton";
 import PredictiveRiskAnalyzer from "../components/analytics/PredictiveRiskAnalyzer";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import ReferralLetterGenerator from "../components/documents/ReferralLetterGenerator";
@@ -145,11 +144,8 @@ export default function PatientDetails() {
   const [_detectedCarePlanGaps, _setDetectedCarePlanGaps] = useState(null);
   const [_detectedMedicationIssues, _setDetectedMedicationIssues] = useState(null);
 
-  // Calculate critical indicators
+  // Critical alerts drive the banner styling below the header.
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
-  const hasHighAlerts = activeAlerts.some(a => a.severity === 'high');
-  const criticalAlertCount = activeAlerts.filter(a => a.severity === 'critical').length;
-  const highAlertCount = activeAlerts.filter(a => a.severity === 'high').length;
 
   const createCarePlanMutation = useMutation({
     mutationFn: (carePlanData) => base44.entities.CarePlan.create({ ...carePlanData, patient_id: patientId }),
@@ -234,108 +230,25 @@ export default function PatientDetails() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <Button
-        variant="outline"
-        onClick={() => navigate(createPageUrl("Patients"))}
-        className="mb-4 sm:mb-6"
-        size="sm"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        <span className="hidden sm:inline">Back to Patients</span>
-        <span className="sm:hidden">Back</span>
-      </Button>
-
-      <Card className={`mb-4 sm:mb-6 ${hasCriticalAlerts ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-300' : hasHighAlerts ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-300' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'}`}>
-        <CardContent className="p-3 sm:p-4 md:p-6">
-          <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-            <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 relative ${hasCriticalAlerts ? 'bg-gradient-to-br from-red-500 to-orange-500' : hasHighAlerts ? 'bg-gradient-to-br from-orange-500 to-yellow-500' : 'bg-gradient-to-br from-blue-500 to-indigo-500'}`}>
-              <User className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
-              {(hasCriticalAlerts || hasHighAlerts) && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-600 rounded-full border-2 border-white animate-pulse flex items-center justify-center">
-                  <AlertTriangle className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0 w-full">
-              <div className="flex flex-col gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-start gap-2">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 break-words flex-1">
-                      {sanitizeInput(patient.first_name)} {sanitizeInput(patient.last_name)}
-                    </h1>
-                    <FavoriteButton 
-                      type="patient" 
-                      id={patient.id} 
-                      name={`${patient.first_name} ${patient.last_name}`} 
-                    />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600">
-                    <span>MRN: {sanitizeInput(patient.medical_record_number) || 'N/A'}</span>
-                    <span className="hidden sm:inline">•</span>
-                    <span className="block sm:inline w-full sm:w-auto">DOB: {patient.date_of_birth && isValid(new Date(patient.date_of_birth)) ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-start gap-2">
-                  <Badge 
-                    className={`flex-shrink-0 ${patient.care_type === 'hospice' 
-                      ? 'bg-purple-100 text-purple-800 border-purple-200' 
-                      : 'bg-blue-100 text-blue-800 border-blue-200'
-                    }`}
-                  >
-                    {patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
-                  </Badge>
-                  {patient.primary_diagnosis && (
-                    <Badge className="bg-green-100 text-green-800 border-green-200">
-                      {sanitizeInput(patient.primary_diagnosis)}
-                    </Badge>
-                  )}
-                  {patient.secondary_diagnoses && patient.secondary_diagnoses.length > 0 && (
-                    <>
-                      {patient.secondary_diagnoses.slice(0, 2).map((dx, idx) => (
-                        <Badge key={idx} variant="outline" className="bg-slate-50 text-slate-700">
-                          {sanitizeInput(dx)}
-                        </Badge>
-                      ))}
-                      {patient.secondary_diagnoses.length > 2 && (
-                        <Badge variant="outline" className="bg-slate-50 text-slate-500">
-                          +{patient.secondary_diagnoses.length - 2} more
-                        </Badge>
-                      )}
-                    </>
-                  )}
-                  {hasCriticalAlerts && (
-                    <Badge className="bg-red-600 text-white animate-pulse">
-                      <AlertTriangle className="w-3 h-3 mr-1" />
-                      {criticalAlertCount} Critical Alert{criticalAlertCount !== 1 ? 's' : ''}
-                    </Badge>
-                  )}
-                  {hasHighAlerts && !hasCriticalAlerts && (
-                    <Badge className="bg-orange-600 text-white">
-                      <AlertTriangle className="w-3 h-3 mr-1" />
-                      {highAlertCount} High Alert{highAlertCount !== 1 ? 's' : ''}
-                    </Badge>
-                  )}
-                  <PatientChartExporter
-                    patientId={patientId} 
-                    patientName={`${patient.first_name} ${patient.last_name}`}
-                  />
-                  <SecureDocumentShare 
-                    documentName={`${patient.first_name} ${patient.last_name} Medical Chart`}
-                    documentData={patient}
-                  />
-                  {patient.status !== 'discharged' && (
-                    <DischargeSummaryGenerator 
-                      patientId={patientId} 
-                      onComplete={() => queryClient.invalidateQueries({ queryKey: ['patient', patientId] })}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <PageContainer>
+      <PageHeader
+        icon={Users}
+        eyebrow="Patient Care"
+        title={`${sanitizeInput(patient.first_name)} ${sanitizeInput(patient.last_name)}`}
+        description={`MRN: ${sanitizeInput(patient.medical_record_number) || 'N/A'} · DOB: ${patient.date_of_birth && isValid(new Date(patient.date_of_birth)) ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}`}
+        favoritePage="PatientDetails"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => navigate(createPageUrl("Patients"))}
+            size="sm"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Back to Patients</span>
+            <span className="sm:hidden">Back</span>
+          </Button>
+        }
+      />
 
       {/* Critical Alerts Banner */}
       {activeAlerts.length > 0 && (
@@ -1037,6 +950,6 @@ export default function PatientDetails() {
           queryClient.invalidateQueries({ queryKey: ['patient-documents', patientId] });
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

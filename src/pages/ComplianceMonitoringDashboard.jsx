@@ -15,8 +15,11 @@ import {
   TrendingDown,
   Users,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Monitor
 } from "lucide-react";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import {
   Select,
   SelectContent,
@@ -334,28 +337,24 @@ Compliance Management System`;
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
-            <AlertTriangle className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Compliance Monitoring</h1>
-            <p className="text-sm text-slate-600">Real-time compliance tracking and alerts</p>
-          </div>
+    <PageContainer>
+      <PageHeader
+        icon={Monitor}
+        eyebrow="Analytics"
+        title="Compliance Monitoring"
+        description="Real-time compliance tracking and alerts"
+        favoritePage="ComplianceMonitoringDashboard"
+        actions={
           <Button
             variant="outline"
             size="sm"
             onClick={handleRefreshAll}
-            className="ml-auto"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
@@ -563,6 +562,6 @@ Compliance Management System`;
           })}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
