@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     doc.setFontSize(8);
     doc.setTextColor(146, 64, 14); // Amber
     addWrappedText(
-      'AI-generated estimates from the assessment text — not an official OASIS/PDGM determination. A clinician must verify all M-items before submission; scores do not guarantee coverage or reimbursement.',
+      'AI-generated estimates from the assessment text - not an official OASIS/PDGM determination. A clinician must verify all M-items before submission; scores do not guarantee coverage or reimbursement.',
       margin, y, contentWidth, 4
     );
     y += 8;
