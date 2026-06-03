@@ -1,5 +1,39 @@
 # UI / UX Review — Navigation, Organization & Formatting
 
+Date: 2026-06-02 (navigation reachability pass added 2026-06-03)
+
+## Update — 2026-06-03: navigation now can't dead-end
+
+A follow-up pass closed the most user-visible part of the route/feature drift
+called out in finding #4, and finished the single-source-of-truth consolidation
+from finding #5:
+
+- **Nav is now reachability-aware.** The sidebar and the `Ctrl/Cmd+K` command
+  palette previously offered ~130 manifest pages while only ~52 were actually
+  routed, so most palette results — and the sidebar's **Agency Settings** —
+  dead-ended on PageNotFound. `nav.manifest.js` now derives a `ROUTED_PAGES` set
+  directly from `src/routes.jsx` and filters the sidebar, palette, and
+  breadcrumb *links* to pages that actually render. Route a page and it appears;
+  unroute it and it drops out — they can't drift.
+- **Restored dead-ended routes.** Pages that were already linked from routed
+  screens but had lost their route are routed again: `AgencySettings` (sidebar),
+  `OASISAnalyzer` / `OASISComplianceReview` / `OASISDocumentationReview` /
+  `OASISRevenueAnalysis` (OASIS assessment), `NursePerformanceDashboard`,
+  `NurseTraining`. The empty `QualityDashboard` placeholder now redirects to the
+  Compliance Center where the real quality metrics live.
+- **Time Off is discoverable.** `TimeOff` was routed but absent from the nav, so
+  the whole PTO feature was unreachable except by typing the URL. Added it to the
+  Tools section, and wired its previously-dead "pending approvals" badge so
+  managers/admins see a count of requests awaiting their review.
+- **Removed the duplicate nav manifest.** `src/components/navigation/navConfig.js`
+  (the old `NAV_PAGES`/`getPageMeta` source) was orphaned — nothing imported it,
+  yet it still described itself as the source of truth. Deleted; `nav.manifest.js`
+  is the sole nav manifest.
+
+Original review below.
+
+---
+
 Date: 2026-06-02
 
 ## Purpose

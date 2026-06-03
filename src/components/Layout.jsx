@@ -93,8 +93,10 @@ export default function Layout({ children, currentPageName }) {
       : base44.entities.TimeOffRequest.filter({ manager_email: currentUser.email, status: 'pending' }, '-created_date', 100),
     initialData: [], refetchInterval: 120000, enabled: !!currentUser?.email && isTimeOffApprover,
   });
-  // Exclude the reviewer's own requests — they can't approve those.
-  const _pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
+  // Exclude the reviewer's own requests — they can't approve those. Drives the
+  // "Time Off" nav badge (only approvers run the query above, so non-approvers
+  // naturally see 0).
+  const pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
 
   // Fetch charted visits to filter alerts
   const { data: chartedVisits = [] } = useQuery({
@@ -151,7 +153,8 @@ export default function Layout({ children, currentPageName }) {
     messages: unreadMessageCount,
     sms: unreadSmsCount,
     notifications: unreadNotificationCount,
-  }), [unreadMessageCount, unreadSmsCount, unreadNotificationCount]);
+    timeOffApprovals: pendingTimeOffCount,
+  }), [unreadMessageCount, unreadSmsCount, unreadNotificationCount, pendingTimeOffCount]);
 
   // Action map — keys match the `action` field in nav.manifest entries
   const actionHandlers = useMemo(() => ({

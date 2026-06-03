@@ -81,6 +81,17 @@ export const ROUTES = [
   { name: 'DataQualityMonitor', Component: lazyPage(() => import('@/pages/DataQualityMonitor')) },
   { name: 'SystemHealthMonitor', Component: lazyPage(() => import('@/pages/SystemHealthMonitor')) },
   { name: 'TimeOff', Component: lazyPage(() => import('@/pages/TimeOff')) },
+
+  // Pages that are linked from routed screens (sidebar, OASIS assessment, admin
+  // operations, learning center) but had no route, so those links dead-ended on
+  // PageNotFound. Re-routed so the navigation that already points here works.
+  { name: 'AgencySettings', Component: lazyPage(() => import('@/pages/AgencySettings')) },
+  { name: 'NursePerformanceDashboard', Component: lazyPage(() => import('@/pages/NursePerformanceDashboard')) },
+  { name: 'NurseTraining', Component: lazyPage(() => import('@/pages/NurseTraining')) },
+  { name: 'OASISAnalyzer', Component: lazyPage(() => import('@/pages/OASISAnalyzer')) },
+  { name: 'OASISComplianceReview', Component: lazyPage(() => import('@/pages/OASISComplianceReview')) },
+  { name: 'OASISDocumentationReview', Component: lazyPage(() => import('@/pages/OASISDocumentationReview')) },
+  { name: 'OASISRevenueAnalysis', Component: lazyPage(() => import('@/pages/OASISRevenueAnalysis')) },
 ];
 
 /**
@@ -96,6 +107,9 @@ export const REDIRECTS = [
   { from: '/ComplianceDashboard', to: '/ComplianceCenter' },
   { from: '/Reports', to: '/ReportsAnalytics' },
   { from: '/Support', to: '/Help' },
+  // QualityDashboard is an empty placeholder; its quality metrics live in the
+  // Compliance Center, so send links there instead of an empty page.
+  { from: '/QualityDashboard', to: '/ComplianceCenter' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';

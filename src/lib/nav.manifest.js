@@ -29,8 +29,10 @@ import {
   Calendar, Clipboard, Download, Eye, Filter, Globe, MessageSquare,
   Monitor, PieChart, Radio, RefreshCw, Search, Star, Stethoscope,
   Tablet, TrendingUp, Upload, UserCheck, Zap, Package, Archive,
-  LifeBuoy, Map, Mic, Pen, Printer
+  LifeBuoy, Map, Mic, Pen, Printer, CalendarDays
 } from "lucide-react";
+
+import { PAGE_NAMES, REDIRECTS } from "@/routes";
 
 /**
  * The manifest.  Order within the same category determines sidebar order.
@@ -1241,6 +1243,16 @@ export const NAV_MANIFEST = [
     keywords: ["notifications", "settings", "alerts"],
   },
   {
+    page: "TimeOff",
+    label: "Time Off",
+    icon: CalendarDays,
+    category: "Tools",
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["time off", "pto", "leave", "vacation", "request", "schedule"],
+    badge: "timeOffApprovals",
+  },
+  {
     page: "OfflineMode",
     label: "Offline Mode",
     icon: WifiOff,
@@ -1302,6 +1314,28 @@ export const NAV_MANIFEST = [
 export const NAV_MAP = Object.fromEntries(NAV_MANIFEST.map(e => [e.page, e]));
 
 /**
+ * Reachability set, derived from the real route table (src/routes.jsx).
+ *
+ * The manifest intentionally documents many pages (for breadcrumb labels and
+ * search keywords) that aren't all routed. Surfacing an unrouted page as a
+ * clickable destination sends the user to PageNotFound, so the sidebar and
+ * command palette must only offer pages that actually render. Deriving this from
+ * routes.jsx (instead of a hand-kept list) means the two can't drift: route a
+ * page and it becomes navigable; unroute it and it drops out of nav automatically.
+ */
+export const ROUTED_PAGES = new Set(PAGE_NAMES);
+
+// Redirect aliases resolve to a real page, so a *link* to them is safe (used for
+// breadcrumb ancestors), but they're not offered in the palette because they'd
+// duplicate their canonical destination.
+const REDIRECTED_PAGES = new Set(REDIRECTS.map(r => r.from.replace(/^\//, "")));
+
+/** True if navigating to this page renders something (direct route or redirect). */
+export function isLinkablePage(page) {
+  return ROUTED_PAGES.has(page) || REDIRECTED_PAGES.has(page);
+}
+
+/**
  * Build sidebar navCategories array for non-admin users.
  * Dynamic badge values are injected by Layout after this call.
  */
@@ -1313,6 +1347,7 @@ export function buildNavCategories(manifest) {
   const map = {};
   for (const entry of manifest) {
     if (!entry.category || entry.adminOnly) continue;
+    if (!ROUTED_PAGES.has(entry.page)) continue;  // never link to an unrouted page
     if (!map[entry.category]) map[entry.category] = [];
     map[entry.category].push({
       name: entry.navLabel ?? entry.label,
@@ -1336,6 +1371,7 @@ export function buildAdminItems(manifest) {
   const map = {};
   for (const entry of manifest) {
     if (!entry.category || !entry.adminOnly) continue;
+    if (!ROUTED_PAGES.has(entry.page)) continue;  // never link to an unrouted page
     if (!map[entry.category]) map[entry.category] = [];
     map[entry.category].push({
       name: entry.navLabel ?? entry.label,
@@ -1369,16 +1405,21 @@ export function buildBreadcrumbs(pageName, navMap = NAV_MAP) {
     cursor = cursor.breadcrumbParent ? navMap[cursor.breadcrumbParent] : null;
   }
 
-  // Build crumb objects — all but the last are links, last is plain text
+  // Build crumb objects — ancestors are links (but only when they actually
+  // resolve to a page, so a crumb never dead-ends on PageNotFound); the last
+  // crumb is always plain text.
   return trail.map((entry, i, arr) => ({
     label: entry.label,
-    page: i < arr.length - 1 ? entry.page : undefined,
+    page: i < arr.length - 1 && isLinkablePage(entry.page) ? entry.page : undefined,
   }));
 }
 
 /**
- * Build the flat list used by CommandPalette, filtered by admin access.
+ * Build the flat list used by CommandPalette, filtered by admin access and to
+ * pages that are actually routed — so every palette result opens a real page
+ * instead of dead-ending on PageNotFound. Redirect aliases are excluded to
+ * avoid duplicate entries for the same destination.
  */
 export function buildPaletteEntries(manifest, isAdmin) {
-  return manifest.filter(e => !e.adminOnly || isAdmin);
+  return manifest.filter(e => (!e.adminOnly || isAdmin) && ROUTED_PAGES.has(e.page));
 }
