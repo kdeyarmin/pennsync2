@@ -15,7 +15,7 @@
  *  adminOnly        – hide from non-admin users
  *  breadcrumbParent – page key of the logical parent (builds the crumb chain)
  *  keywords         – extra search terms for the command palette
- *  badge            – runtime badge key resolved in Layout: "messages" | "sms" | "notifications"
+ *  badge            – runtime badge key resolved in Layout: "messages" | "sms" | "notifications" | "timeOffApprovals"
  *  action           – runtime action key resolved in Layout: "openNotifications"
  *
  * Adding a new page: add ONE entry here — sidebar, breadcrumbs and palette all update.
@@ -26,7 +26,7 @@ import {
   BarChart3, Settings, Brain, Target, Bell, BookOpen, WifiOff,
   Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2,
   Phone, Send, Heart, Activity, Layers, Database, Lock, Award,
-  Calendar, Clipboard, Download, Eye, Filter, Globe, MessageSquare,
+  Clipboard, Download, Eye, Filter, Globe, MessageSquare,
   Monitor, PieChart, Radio, RefreshCw, Search, Star, Stethoscope,
   Tablet, TrendingUp, Upload, UserCheck, Zap, Package, Archive,
   LifeBuoy, Map, Mic, Pen, Printer, CalendarDays
@@ -48,15 +48,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["home", "main", "overview", "welcome"],
-  },
-  {
-    page: "CustomizableDashboard",
-    label: "Customizable Dashboard",
-    icon: PieChart,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Dashboard",
-    keywords: ["dashboard", "customize", "widgets", "personalize"],
   },
 
   // ─── Patient Care ────────────────────────────────────────────────────────────
@@ -206,6 +197,26 @@ export const NAV_MANIFEST = [
   },
 
   // ─── Documentation ───────────────────────────────────────────────────────────
+  // Sidebar order follows the visit lifecycle: intake → chart the visit →
+  // note tools → document repository.
+  {
+    page: "ReferralIntake",
+    label: "Referrals",
+    icon: FileText,
+    category: "Documentation",
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["referral", "intake", "admission"],
+  },
+  {
+    page: "DocumentVisit",
+    label: "Document Visit",
+    icon: FileText,
+    category: "Documentation",
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["document visit", "visit note"],
+  },
   {
     page: "ClinicalDocumentation",
     label: "Clinical Notes",
@@ -213,15 +224,18 @@ export const NAV_MANIFEST = [
     category: "Documentation",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["clinical", "documentation", "notes", "charting"],
+    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation"],
   },
   {
+    // Smart Notes is the default tab *inside* the Clinical Notes hub
+    // (ClinicalDocumentation), so it is not a separate sidebar entry — but it
+    // stays routed + searchable and remains the mobile bottom-nav "Notes" shortcut.
     page: "SmartNoteAssistant",
     label: "Smart Notes",
     icon: Brain,
-    category: "Documentation",
+    category: null,
     adminOnly: false,
-    breadcrumbParent: null,
+    breadcrumbParent: "ClinicalDocumentation",
     keywords: ["smart note", "ai note", "documentation", "ai"],
   },
   {
@@ -232,15 +246,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["scribe", "dictation", "voice", "visit"],
-  },
-  {
-    page: "DocumentVisit",
-    label: "Document Visit",
-    icon: FileText,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["document visit", "visit note"],
   },
   {
     page: "DocumentHub",
@@ -385,17 +390,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "DocumentSignatures",
     keywords: ["create", "signature", "request"],
-  },
-
-  // ─── Referrals ───────────────────────────────────────────────────────────────
-  {
-    page: "ReferralIntake",
-    label: "Referrals",
-    icon: FileText,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["referral", "intake", "admission"],
   },
 
   // ─── Communication ───────────────────────────────────────────────────────────
@@ -614,12 +608,12 @@ export const NAV_MANIFEST = [
     keywords: ["template", "management"],
   },
 
-  // ─── Resources ───────────────────────────────────────────────────────────────
+  // ─── Learning & Resources: reference library ─────────────────────────────────
   {
     page: "ResourceLibrary",
     label: "Library",
     icon: BookOpen,
-    category: "Resources",
+    category: "Learning & Resources",
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["library", "resources", "guidelines", "reference"],
@@ -652,12 +646,12 @@ export const NAV_MANIFEST = [
     keywords: ["guide", "user guide", "help"],
   },
 
-  // ─── My Learning ─────────────────────────────────────────────────────────────
+  // ─── Learning & Resources: training ──────────────────────────────────────────
   {
     page: "LearningCenter",
     label: "Learning Center",
     icon: GraduationCap,
-    category: "My Learning",
+    category: "Learning & Resources",
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["learning", "courses", "catalog", "browse", "education"],
@@ -666,7 +660,7 @@ export const NAV_MANIFEST = [
     page: "MyLearning",
     label: "My Courses",
     icon: BookOpen,
-    category: "My Learning",
+    category: "Learning & Resources",
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["training", "my courses", "progress", "education"],
@@ -675,7 +669,7 @@ export const NAV_MANIFEST = [
     page: "ClinicalSkillsChecklist",
     label: "Skills Checklists",
     icon: CheckCircle2,
-    category: "My Learning",
+    category: "Learning & Resources",
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["skills", "checklist", "competency", "evaluation"],
@@ -872,13 +866,13 @@ export const NAV_MANIFEST = [
     keywords: ["compliance", "regulatory"],
   },
 
-  // ─── Admin ────────────────────────────────────────────────────────────────────
+  // ─── Administration (admin hub + management) ─────────────────────────────────
   {
     page: "AdminOperations",
     label: "Admin Console",
     navLabel: "Admin Console",
     icon: BarChart3,
-    category: "Admin",
+    category: "Administration",
     adminOnly: true,
     breadcrumbParent: null,
     keywords: ["admin", "console", "operations", "manage", "control", "command center", "tools"],
@@ -887,7 +881,7 @@ export const NAV_MANIFEST = [
     page: "UserManagement",
     label: "Users",
     icon: Users,
-    category: "Manage",
+    category: "Administration",
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["users", "accounts", "roles", "staff"],
@@ -905,7 +899,7 @@ export const NAV_MANIFEST = [
     page: "AdminTraining",
     label: "Training Manager",
     icon: GraduationCap,
-    category: "Manage",
+    category: "Administration",
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["training manager", "assign training", "admin training"],
@@ -959,7 +953,7 @@ export const NAV_MANIFEST = [
     page: "ClinicalPathwayManager",
     label: "Clinical Pathways",
     icon: ClipboardList,
-    category: "Manage",
+    category: "Administration",
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["pathways", "clinical pathways", "protocols"],
@@ -1144,15 +1138,6 @@ export const NAV_MANIFEST = [
 
   // ─── Tools / Settings ────────────────────────────────────────────────────────
   {
-    page: "TimeOff",
-    label: "Time Off",
-    icon: Calendar,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["time off", "pto", "leave", "vacation", "request"],
-  },
-  {
     page: "UserSettings",
     label: "Settings",
     icon: Settings,
@@ -1247,7 +1232,7 @@ export function isLinkablePage(page) {
 export function buildNavCategories(manifest) {
   const categoryOrder = [
     "Overview", "Patient Care", "Documentation", "Communication",
-    "Resources", "My Learning", "Tools",
+    "Learning & Resources", "Tools",
   ];
   const map = {};
   const routed = new Set(PAGE_NAMES);
@@ -1273,7 +1258,7 @@ export function buildNavCategories(manifest) {
  * Dynamic badge/action values are injected by Layout after this call.
  */
 export function buildAdminItems(manifest) {
-  const categoryOrder = ["Admin", "Manage", "Analytics", "Configuration"];
+  const categoryOrder = ["Administration", "Analytics", "Configuration"];
   const map = {};
   const routed = new Set(PAGE_NAMES);
   for (const entry of manifest) {
