@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, User, FileText, ArrowUpDown } from "lucide-react";
+import { Plus, User, FileText, ArrowUpDown, Users } from "lucide-react";
 import { format } from 'date-fns';
 import { secureDelete, handleSecureError } from "../components/utils/security";
 import {
@@ -22,7 +22,7 @@ import BulkPatientActions from "../components/patient/BulkPatientActions";
 import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import PaginatedPatientList from "../components/patient/PaginatedPatientList";
 import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
-import PatientsPageHeader from "../components/patient/PatientsPageHeader";
+import PageHeader from "@/components/ui/PageHeader";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
 import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
@@ -365,13 +365,23 @@ export default function Patients() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <PatientsPageHeader
-        patientCount={patients.length}
-        activeCount={patients.filter(patient => patient.status === 'active').length}
-        onAdd={() => {
-          setEditingPatient(null);
-          setShowForm(true);
-        }}
+      <PageHeader
+        icon={Users}
+        iconColor="bg-blue-600"
+        eyebrow="Roster workspace"
+        title="Patient Management"
+        description="Manage the active roster, review duplicates, and keep imported census data clean and organized."
+        badges={[
+          { label: `${patients.length} patients`, className: "bg-blue-100 text-blue-800 hover:bg-blue-100" },
+          { label: `${patients.filter(patient => patient.status === 'active').length} active`, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" },
+        ]}
+        favoritePage="Patients"
+        actions={
+          <Button onClick={() => { setEditingPatient(null); setShowForm(true); }} className="bg-blue-600 hover:bg-blue-700 min-h-[46px] px-5">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Patient
+          </Button>
+        }
       />
 
       {showForm && (

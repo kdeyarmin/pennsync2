@@ -159,14 +159,32 @@ import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import AdminOperations from './pages/AdminOperations';
 import AdminTraining from './pages/AdminTraining';
+import BulkSignatureRequests from './pages/BulkSignatureRequests';
 import ClinicalChart from './pages/ClinicalChart';
 import ClinicalDocumentation from './pages/ClinicalDocumentation';
 import ClinicalSkillsChecklist from './pages/ClinicalSkillsChecklist';
+import ComplianceMonitoringDashboard from './pages/ComplianceMonitoringDashboard';
+import CreateSignatureRequest from './pages/CreateSignatureRequest';
+import DataQualityMonitor from './pages/DataQualityMonitor';
+import DocumentAuditLogs from './pages/DocumentAuditLogs';
 import EventReport from './pages/EventReport';
+import FaxAnalytics from './pages/FaxAnalytics';
+import IncidentReportingModule from './pages/IncidentReportingModule';
 import Incidents from './pages/Incidents';
 import MyLearning from './pages/MyLearning';
+import PatientTriage from './pages/PatientTriage';
+import PersonnelFile from './pages/PersonnelFile';
+import PhoneCenter from './pages/PhoneCenter';
+import ProductivityDashboard from './pages/ProductivityDashboard';
+import PullRequests from './pages/PullRequests';
+import QualityDashboard from './pages/QualityDashboard';
 import ReportsAnalytics from './pages/ReportsAnalytics';
 import ResourceLibrary from './pages/ResourceLibrary';
+import ScheduleOptimizer from './pages/ScheduleOptimizer';
+import SignerPortal from './pages/SignerPortal';
+import SurveyPreparation from './pages/SurveyPreparation';
+import SystemHealthMonitor from './pages/SystemHealthMonitor';
+import TemplateManagement from './pages/TemplateManagement';
 
 import __Layout from './Layout.jsx';
 
@@ -284,14 +302,32 @@ export const PAGES = {
     "VisitScribe": VisitScribe,
     "AdminOperations": AdminOperations,
     "AdminTraining": AdminTraining,
+    "BulkSignatureRequests": BulkSignatureRequests,
     "ClinicalChart": ClinicalChart,
     "ClinicalDocumentation": ClinicalDocumentation,
     "ClinicalSkillsChecklist": ClinicalSkillsChecklist,
+    "ComplianceMonitoringDashboard": ComplianceMonitoringDashboard,
+    "CreateSignatureRequest": CreateSignatureRequest,
+    "DataQualityMonitor": DataQualityMonitor,
+    "DocumentAuditLogs": DocumentAuditLogs,
     "EventReport": EventReport,
+    "FaxAnalytics": FaxAnalytics,
+    "IncidentReportingModule": IncidentReportingModule,
     "Incidents": Incidents,
     "MyLearning": MyLearning,
+    "PatientTriage": PatientTriage,
+    "PersonnelFile": PersonnelFile,
+    "PhoneCenter": PhoneCenter,
+    "ProductivityDashboard": ProductivityDashboard,
+    "PullRequests": PullRequests,
+    "QualityDashboard": QualityDashboard,
     "ReportsAnalytics": ReportsAnalytics,
     "ResourceLibrary": ResourceLibrary,
+    "ScheduleOptimizer": ScheduleOptimizer,
+    "SignerPortal": SignerPortal,
+    "SurveyPreparation": SurveyPreparation,
+    "SystemHealthMonitor": SystemHealthMonitor,
+    "TemplateManagement": TemplateManagement,
 
 }
 

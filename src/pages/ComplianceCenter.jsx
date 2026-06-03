@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +15,6 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
-import PageHeader from "@/components/ui/PageHeader";
 import ComplianceReportGenerator from "@/components/compliance/ComplianceReportGenerator";
 import AIComplianceAssistant from "@/components/compliance/AIComplianceAssistant";
 import RegulatoryCompliance from "@/pages/RegulatoryCompliance";
@@ -317,8 +317,11 @@ export default function ComplianceCenter() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <PageHeader
         icon={Shield}
+iconColor="bg-indigo-600"
+        eyebrow="Quality & Compliance"
         title="Compliance Center"
         description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
+        favoritePage="ComplianceCenter"
       />
 
       <Tabs defaultValue="medicare" className="space-y-6">

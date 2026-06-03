@@ -83,10 +83,13 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <PageHeader
+<PageHeader
         icon={BarChart3}
+        iconColor="bg-indigo-600"
+        eyebrow="Analytics"
         title="Reports & Analytics"
         description="KPIs, outcomes, performance metrics, and AI-powered population health insights"
+        favoritePage="ReportsAnalytics"
       />
 
       <Tabs defaultValue="kpi" className="space-y-6">

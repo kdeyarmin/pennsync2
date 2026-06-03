@@ -8,6 +8,7 @@ import UserActivityDashboard from "@/components/admin/UserActivityDashboard";
 import DataQualityDashboard from "@/components/admin/DataQualityDashboard";
 import SystemHealthPanel from "@/components/admin/SystemHealthPanel";
 import SystemSettings from "@/components/admin/SystemSettings";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function AdminOperations() {
   const { data: currentUser, isLoading } = useQuery({
@@ -33,15 +34,14 @@ export default function AdminOperations() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-          <Settings className="w-8 h-8 text-indigo-600" />
-          Admin Operations
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-2">
-          System monitoring, data quality, user activity, and operational oversight
-        </p>
-      </div>
+<PageHeader
+        icon={Settings}
+        iconColor="bg-indigo-600"
+        eyebrow="Administration"
+        title="Admin Operations"
+        description="System monitoring, data quality, user activity, and operational oversight"
+        favoritePage="AdminOperations"
+      />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">

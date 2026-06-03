@@ -47,10 +47,13 @@ export default function DocumentHub() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-      <PageHeader
+<PageHeader
         icon={FileText}
+        iconColor="bg-indigo-600"
+        eyebrow="Documentation"
         title="Document Hub"
         description="Manage signatures, templates, and patient documents"
+        favoritePage="DocumentHub"
         actions={activeTab === "signatures" && (
           <>
             <Button

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
+import { buildNavCategories, buildAdminItems, NAV_MANIFEST } from "@/lib/nav.manifest";
 
 import DesktopSidebar from "@/components/layout/DesktopSidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -20,15 +21,6 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 import CommandPalette from "@/components/navigation/CommandPalette";
-import { getPageMeta } from "@/components/navigation/navConfig";
-
-// Build a sidebar item from the shared navConfig manifest so label + icon stay
-// in sync with the command palette and breadcrumbs. `extra` carries the
-// sidebar-only bits (dynamic unread badges, etc.).
-const navItem = (page, extra = {}) => {
-  const meta = getPageMeta(page);
-  return { name: meta.label, icon: meta.icon, page, ...extra };
-};
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -102,7 +94,7 @@ export default function Layout({ children, currentPageName }) {
     initialData: [], refetchInterval: 120000, enabled: !!currentUser?.email && isTimeOffApprover,
   });
   // Exclude the reviewer's own requests — they can't approve those.
-  const pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
+  const _pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
 
   // Fetch charted visits to filter alerts
   const { data: chartedVisits = [] } = useQuery({
@@ -154,90 +146,62 @@ export default function Layout({ children, currentPageName }) {
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
-  const navCategories = useMemo(() => [
-    { category: "Overview", items: [navItem("Dashboard")] },
-    {
-      category: "Patient Care",
-      items: [
-        navItem("Patients"),
-        navItem("CarePlanManagement"),
-        navItem("SmartOASISAssessment"),
-        navItem("Incidents"),
-      ],
-    },
-    {
-      category: "Documentation",
-      items: [
-        navItem("ClinicalDocumentation"),
-        navItem("DocumentHub"),
-        navItem("ReferralIntake"),
-      ],
-    },
-    {
-      category: "Communication",
-      items: [
-        navItem("Messages", { badge: unreadMessageCount }),
-        navItem("PhoneCenter", { badge: unreadSmsCount }),
-        navItem("SendFax"),
-        navItem("PhysicianDirectory"),
-        navItem("Telehealth"),
-      ],
-    },
-    {
-      category: "Resources",
-      items: [navItem("ResourceLibrary")],
-    },
-    {
-      category: "My Learning",
-      items: [
-        navItem("LearningCenter"),
-        navItem("MyLearning"),
-        navItem("ClinicalSkillsChecklist"),
-      ],
-    },
-    {
-      category: "Workplace",
-      items: [
-        navItem("TimeOff", { badge: pendingTimeOffCount }),
-      ],
-    },
-    {
-      category: "Tools",
-      items: [
-        navItem("UserSettings"),
-        navItem("OfflineMode"),
-        navItem("Help"),
-      ],
-    },
-  ], [unreadMessageCount, unreadSmsCount, pendingTimeOffCount]);
+// Badge value map — keys match the `badge` field in nav.manifest entries
+  const badgeValues = useMemo(() => ({
+    messages: unreadMessageCount,
+    sms: unreadSmsCount,
+    notifications: unreadNotificationCount,
+  }), [unreadMessageCount, unreadSmsCount, unreadNotificationCount]);
 
-  const adminItems = useMemo(() => [
-    { category: "Admin", items: [navItem("AdminOperations")] },
-    {
-      category: "Manage",
-      items: [
-        navItem("UserManagement"),
-        navItem("AdminTraining"),
-        navItem("ClinicalPathwayManager"),
-      ]
-    },
-    { 
-      category: "Analytics", 
-      items: [
-        navItem("ReportsAnalytics"),
-        navItem("ComplianceCenter"),
-        { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
-      ] 
-    },
-    {
-      category: "Configuration",
-      items: [
-        navItem("PatientDataManagement"),
-        navItem("SecurityCompliance"),
-      ]
-    },
+  // Action map — keys match the `action` field in nav.manifest entries
+  const actionHandlers = useMemo(() => ({
+    openNotifications: () => setNotificationCenterOpen(true),
+  }), []);
 
-  ], [totalNotificationCount, isAdmin]);
+  // Build nav arrays from manifest, then inject runtime badges/actions
+  const navCategories = useMemo(() => {
+    const cats = buildNavCategories(NAV_MANIFEST);
+    return cats.map(cat => ({
+      ...cat,
+      items: cat.items.map(({ _badgeKey, ...item }) => ({
+        ...item,
+        badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
+      })),
+    }));
+  }, [badgeValues]);
+
+  const adminItems = useMemo(() => {
+    const cats = buildAdminItems(NAV_MANIFEST);
+    // Append the special Alerts action item to the Analytics category
+    const withAlerts = cats.map(cat => {
+      if (cat.category !== "Analytics") {
+        return {
+          ...cat,
+          items: cat.items.map(({ _badgeKey, _actionKey, ...item }) => ({
+            ...item,
+            badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
+          })),
+        };
+      }
+      return {
+        ...cat,
+        items: [
+          ...cat.items.map(({ _badgeKey, _actionKey, ...item }) => ({
+            ...item,
+            badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
+          })),
+          {
+            name: "Alerts",
+            icon: Bell,
+            page: null,
+            badge: unreadNotificationCount,
+            action: actionHandlers.openNotifications,
+          },
+        ],
+      };
+    });
+    return withAlerts;
+  }, [badgeValues, actionHandlers, unreadNotificationCount]);
 
   const handleLogout = useCallback(async () => {
     try {

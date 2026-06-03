@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PageHeader from "@/components/ui/PageHeader";
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { Search, CheckCircle2, XCircle, Clock, AlertTriangle, ClipboardList } from "lucide-react";
 import OASISComparisonView from "../components/oasis/OASISComparisonView";
 import OASISApprovalWorkflow from "../components/oasis/OASISApprovalWorkflow";
 
@@ -97,10 +98,14 @@ export default function OASISReview() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">OASIS Review Center</h1>
-        <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Review and approve AI-generated OASIS suggestions</p>
-      </div>
+<PageHeader
+        icon={ClipboardList}
+        iconColor="bg-blue-600"
+        eyebrow="Clinical Assessment"
+        title="OASIS Review Center"
+        description="Review and approve AI-generated OASIS suggestions"
+        favoritePage="OASISReview"
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">

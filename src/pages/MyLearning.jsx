@@ -27,10 +27,13 @@ export default function MyLearning() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <PageHeader
+<PageHeader
         icon={GraduationCap}
+        iconColor="bg-indigo-600"
+        eyebrow="Learning"
         title="My Learning"
         description="All your training, courses, transcripts, and continuing education"
+        favoritePage="MyLearning"
         actions={
           <Link to={createPageUrl('LearningCenter')}>
             <Button variant="outline" size="sm">

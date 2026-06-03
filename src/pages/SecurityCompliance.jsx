@@ -254,10 +254,13 @@ export default function SecurityCompliance() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <PageHeader
+<PageHeader
         icon={Shield}
+        iconColor="bg-blue-600"
+        eyebrow="Security"
         title="Security & HIPAA Compliance"
         description="Monitor security status, compliance metrics, and audit trail"
+        favoritePage="SecurityCompliance"
         actions={
           <Badge className="bg-green-600 text-lg px-4 py-2">
             <CheckCircle2 className="w-5 h-5 mr-2" />

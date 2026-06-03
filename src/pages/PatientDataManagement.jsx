@@ -308,9 +308,13 @@ export default function PatientDataManagement() {
 
         <TabsContent value="overview" className="m-0">
           <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
-            <PageHeader
+<PageHeader
+              icon={Users}
+              iconColor="bg-blue-600"
+              eyebrow="Administration"
               title="Patient Data Management"
               description="Comprehensive overview and management of all patients"
+              favoritePage="PatientDataManagement"
             />
 
             {/* Stats Cards */}

@@ -40,6 +40,7 @@ import {
   RefreshCw,
   Sparkles,
   ClipboardCheck,
+  ClipboardList,
   Target,
   Trash2,
   UserCheck
@@ -1025,9 +1026,12 @@ Actions available:
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <PageHeader
-        icon={FileText}
+icon={ClipboardList}
+        iconColor="bg-blue-600"
+        eyebrow="Admissions"
         title="Referral Intake"
         description="Streamlined workflow for processing incoming referrals"
+        favoritePage="ReferralIntake"
         actions={
           <Button
             onClick={() => setUploadDialogOpen(true)}
