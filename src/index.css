@@ -401,6 +401,23 @@
       min-height: 48px;
       white-space: nowrap;
     }
+    /* Many pages render tab bars as `grid grid-cols-N w-full`, which crams N
+       equal columns onto one row regardless of screen width — on a phone the
+       triggers shrink below their (whitespace-nowrap) label width, so the text
+       clips or spills. Override grid tab bars to a content-sized, wrapping flex
+       row on small screens: each trigger keeps at least its label width
+       (min-width: max-content) and grows to share leftover space, so few tabs
+       fill the row and many tabs wrap to additional rows instead of clipping. */
+    [role="tablist"].grid {
+      display: flex !important;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      height: auto;
+    }
+    [role="tablist"].grid > * {
+      flex: 1 1 auto;
+      min-width: max-content;
+    }
     /* Dialogs take full screen on mobile */
     [data-radix-dialog-content] {
       max-height: 95dvh;
