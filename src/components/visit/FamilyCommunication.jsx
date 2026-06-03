@@ -41,7 +41,6 @@ export default function FamilyCommunication({ patient, visit, vitalSigns, narrat
   const [summary, setSummary] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [sendMethod, _setSendMethod] = useState("email");
   const [previewMode, setPreviewMode] = useState(false);
   const [includeOptions, setIncludeOptions] = useState({
     vitals: true,
@@ -177,43 +176,78 @@ Generate the family update now:`;
 
     try {
       const subject = `Update on ${patient.first_name} ${patient.last_name} - ${format(new Date(visit.visit_date), 'MMMM d, yyyy')}`;
-      
-      // Send email to each recipient
-      for (const recipient of recipients) {
-        if (sendMethod === "email" && recipient.email) {
-          const personalizedMessage = `Dear ${recipient.name},\n\n${summary}\n\nWarm regards,\n${(await base44.auth.me()).full_name}\nHome Health Nurse\nPenn Sync Home Health\n\nQuestions? Call us at: [Your agency number]\nEmail: [Your agency email]`;
 
-          await base44.integrations.Core.SendEmail({
-            to: recipient.email,
-            subject: subject,
-            body: personalizedMessage,
-            from_name: 'Penn Sync Home Health'
-          });
+      // Pull real agency contact details and the sending nurse once up front.
+      const settingsList = await base44.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+      const settings = settingsList[0] || {};
+      const me = await base44.auth.me();
+      const agencyName = settings.office_name || 'Penn Sync Home Health';
+
+      const contactLines = [];
+      if (settings.office_phone) contactLines.push(`Call us at: ${settings.office_phone}`);
+      if (settings.office_email) contactLines.push(`Email: ${settings.office_email}`);
+      const contactFooter = contactLines.length ? `\n\n${contactLines.join('\n')}` : '';
+
+      let emailCount = 0;
+      let smsCount = 0;
+      const failures = [];
+
+      // Reach each recipient through their best available channel: email when an
+      // address is on file, otherwise SMS through the nurse's work number (the
+      // sendSms function enforces TCPA consent server-side).
+      for (const recipient of recipients) {
+        try {
+          if (recipient.email) {
+            const personalizedMessage = `Dear ${recipient.name},\n\n${summary}\n\nWarm regards,\n${me.full_name}\nHome Health Nurse\n${agencyName}${contactFooter}`;
+            await base44.integrations.Core.SendEmail({
+              to: recipient.email,
+              subject,
+              body: personalizedMessage,
+              from_name: agencyName,
+            });
+            emailCount += 1;
+          } else if (recipient.phone) {
+            const smsBody = `${agencyName}: Update on ${patient.first_name} from today's visit.\n\n${summary}`;
+            await base44.functions.invoke('sendSms', {
+              to_number: recipient.phone,
+              body: smsBody.slice(0, 1500),
+              patient_id: patient.id,
+            });
+            smsCount += 1;
+          } else {
+            failures.push(recipient.name);
+          }
+        } catch (err) {
+          console.error(`Failed to send update to ${recipient.name}:`, err);
+          failures.push(recipient.name);
         }
-        
-        // TODO: SMS functionality would go here if phone number and SMS integration available
-        // For now, we'll just do email
       }
 
-      // Log the communication
-      await base44.entities.Visit.update(visit.id, {
-        family_update_sent: true,
-        family_update_date: new Date().toISOString(),
-        family_update_text: summary
-      });
+      const sentTotal = emailCount + smsCount;
 
-      toast.success(`Family update sent successfully to ${recipients.length} recipient(s)!`);
-      setShowDialog(false);
-      
-      // Reset form
-      setSummary("");
-      setPreviewMode(false);
+      if (sentTotal > 0) {
+        // Log the communication on the visit only when something actually went out.
+        await base44.entities.Visit.update(visit.id, {
+          family_update_sent: true,
+          family_update_date: new Date().toISOString(),
+          family_update_text: summary
+        });
 
+        toast.success(
+          `Family update sent to ${sentTotal} recipient(s)` +
+          (failures.length ? ` — ${failures.length} could not be reached.` : '.')
+        );
+        setShowDialog(false);
+        setSummary("");
+        setPreviewMode(false);
+      } else {
+        toast.error('No updates could be sent. Ensure recipients have an email or phone number.');
+      }
     } catch (error) {
       console.error("Error sending updates:", error);
       toast.error("Error sending updates. Please try again.");
     }
-    
+
     setIsSending(false);
   };
 

@@ -194,8 +194,89 @@ Return JSON:
     });
   };
 
+  // Map a RegulatoryUpdate.category / source to a valid ComplianceRule.rule_category.
+  const mapRuleCategory = (update) => {
+    switch (update?.category) {
+      case 'oasis': return 'oasis';
+      case 'hipaa': return 'hipaa';
+      case 'quality': return 'quality_measure';
+      case 'billing':
+      case 'documentation': return 'medicare_cop';
+      default:
+        return update?.source === 'State' ? 'state_regulation' : 'agency_policy';
+    }
+  };
+
   const handleImplement = async () => {
     if (!selectedUpdate) return;
+
+    // 1. Apply compliance-check changes by upserting ComplianceRule records so the
+    //    documentation auditors immediately enforce the new requirement.
+    const appliedChecks = [];
+    try {
+      for (const change of (selectedUpdate.compliance_check_updates || [])) {
+        if (!change?.check_name) continue;
+        const existing = await base44.entities.ComplianceRule
+          .filter({ rule_name: change.check_name }, '-created_date', 1)
+          .catch(() => []);
+        const description = change.new_requirement || existing[0]?.description || selectedUpdate.summary;
+        const severity = ['critical', 'high', 'medium', 'low'].includes(selectedUpdate.impact_level)
+          ? selectedUpdate.impact_level
+          : 'medium';
+        if (existing[0]) {
+          await base44.entities.ComplianceRule.update(existing[0].id, {
+            description,
+            severity,
+            is_active: true,
+            ...(selectedUpdate.effective_date ? { effective_date: selectedUpdate.effective_date } : {}),
+          });
+        } else {
+          await base44.entities.ComplianceRule.create({
+            rule_name: change.check_name,
+            rule_category: mapRuleCategory(selectedUpdate),
+            description,
+            severity,
+            is_active: true,
+            ...(selectedUpdate.effective_date ? { effective_date: selectedUpdate.effective_date } : {}),
+          });
+        }
+        appliedChecks.push(change.check_name);
+      }
+    } catch (err) {
+      console.error('Failed to apply compliance updates:', err);
+    }
+
+    // 2. Queue staff training as an admin task rather than auto-enrolling everyone
+    //    (suggested_training are free-text topics, not specific course ids).
+    let trainingTaskCreated = false;
+    try {
+      const topics = selectedUpdate.suggested_training || [];
+      if (topics.length > 0 && currentUser?.email) {
+        await base44.entities.Task.create({
+          title: `Assign staff training: ${selectedUpdate.title}`,
+          description:
+            `Regulatory update "${selectedUpdate.title}" (${selectedUpdate.source}) requires staff training on:\n` +
+            topics.map((t) => `- ${t}`).join('\n'),
+          type: 'coordinate',
+          priority: (selectedUpdate.impact_level === 'critical' || selectedUpdate.impact_level === 'high')
+            ? 'high'
+            : 'medium',
+          status: 'pending',
+          assigned_to: currentUser.email,
+          source: 'manual',
+        });
+        trainingTaskCreated = true;
+      }
+    } catch (err) {
+      console.error('Failed to create training task:', err);
+    }
+
+    // 3. Record what was actually applied in the implementation notes.
+    const summaryNote = [
+      implementationNotes,
+      appliedChecks.length ? `Compliance checks updated: ${appliedChecks.join(', ')}.` : '',
+      trainingTaskCreated ? `Training task created for: ${(selectedUpdate.suggested_training || []).join(', ')}.` : '',
+    ].filter(Boolean).join('\n');
 
     await updateMutation.mutateAsync({
       id: selectedUpdate.id,
@@ -203,15 +284,9 @@ Return JSON:
         status: 'implemented',
         reviewed_by: currentUser?.email,
         reviewed_at: new Date().toISOString(),
-        implementation_notes: implementationNotes
+        implementation_notes: summaryNote,
       }
     });
-
-    // Here you would trigger actual compliance check updates and training assignments
-    // For now we log it
-    console.log('Implementing regulatory update:', selectedUpdate.title);
-    console.log('Compliance checks to update:', selectedUpdate.compliance_check_updates);
-    console.log('Training to assign:', selectedUpdate.suggested_training);
   };
 
   const handleDismiss = async () => {

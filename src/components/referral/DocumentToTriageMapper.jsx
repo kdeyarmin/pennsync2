@@ -1,11 +1,19 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle, Loader2, ArrowRight } from "lucide-react";
 import DocumentIngestionUploader from "../documents/DocumentIngestionUploader";
+import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 
 export default function DocumentToTriageMapper({ onTriageCreated }) {
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients-for-triage-mapper'],
+    queryFn: () => base44.entities.Patient.list('-created_date', 1000),
+    initialData: [],
+  });
+
   const [extractedData, setExtractedData] = useState(null);
   const [mapping, setMapping] = useState({
     createPatient: false,
@@ -236,11 +244,23 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
             </div>
 
             {mapping.updatePatient && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-slate-600 mb-2">Patient Selection Coming Soon</p>
-                <p className="text-xs text-slate-500">
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+                <p className="text-xs font-medium text-slate-700">
                   Select an existing patient to map clinical data
                 </p>
+                <SearchablePatientSelect
+                  patients={patients}
+                  value={mapping.patientId}
+                  onValueChange={(patientId) =>
+                    setMapping((prev) => ({ ...prev, patientId }))
+                  }
+                  placeholder="Search and select patient..."
+                />
+                {!mapping.patientId && (
+                  <p className="text-xs text-amber-600">
+                    A patient must be selected before clinical data can be mapped.
+                  </p>
+                )}
               </div>
             )}
 
@@ -275,6 +295,7 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
               disabled={
                 processing ||
                 (!mapping.createPatient && !mapping.updatePatient) ||
+                (mapping.updatePatient && !mapping.patientId) ||
                 !mapping.createTriage
               }
               className="flex-1 gap-2"

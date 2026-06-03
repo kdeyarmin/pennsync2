@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,8 @@ import {
   AlertTriangle,
   Lightbulb,
   Award,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from "lucide-react";
 
 export default function InteractiveSimulation({ scenario, onComplete }) {
@@ -22,6 +24,8 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
   const [feedback, setFeedback] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evalError, setEvalError] = useState(null);
 
   const steps = scenario?.steps || [];
   
@@ -37,36 +41,70 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
   }
   const currentStepData = steps[currentStep];
 
-  const handleResponseSubmit = () => {
-    const _response = responses[currentStep];
-    
-    // Simulate AI evaluation
-    const isCorrect = Math.random() > 0.3; // Placeholder - would use AI in production
-    const stepFeedback = {
-      correct: isCorrect,
-      message: isCorrect 
-        ? "Excellent! Your documentation meets Medicare standards."
-        : "This could be improved. Consider adding more specific details about the patient's condition.",
-      suggestions: isCorrect ? [] : [
-        "Include baseline measurements",
-        "Document specific skilled nursing interventions",
-        "Note changes from previous visit"
-      ]
-    };
+  const handleResponseSubmit = async () => {
+    const response = responses[currentStep];
+    if (!response || isEvaluating) return;
 
-    setFeedback({ ...feedback, [currentStep]: stepFeedback });
+    setIsEvaluating(true);
+    setEvalError(null);
 
-    if (currentStep < steps.length - 1) {
-      setTimeout(() => {
-        setCurrentStep(prev => prev + 1);
-      }, 2000);
-    } else {
-      // Calculate final score
-      const correctCount = Object.values({ ...feedback, [currentStep]: stepFeedback })
-        .filter(f => f.correct).length;
-      const finalScore = Math.round((correctCount / steps.length) * 100);
-      setScore(finalScore);
-      setShowResults(true);
+    try {
+      // Evaluate the nurse's response against Medicare home health documentation
+      // standards using the LLM integration (replaces the prior random placeholder).
+      const evaluation = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a Medicare home health documentation expert evaluating a nurse's response in a clinical documentation training simulation.
+
+SCENARIO: ${scenario.title || "Clinical documentation simulation"}
+SCENARIO CONTEXT: ${scenario.description || "N/A"}
+
+STEP: ${currentStepData?.title || ""}
+TASK GIVEN TO NURSE: ${currentStepData?.prompt || ""}
+
+NURSE'S RESPONSE:
+"""${response}"""
+
+Evaluate whether the response meets Medicare home health documentation standards. Assess: skilled-need justification, clinical specificity, objective/measurable findings, homebound support where relevant, and overall accuracy. Pass the step only when the response is clinically adequate and audit-defensible. Provide concrete, educational feedback.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            correct: { type: "boolean" },
+            message: { type: "string" },
+            suggestions: { type: "array", items: { type: "string" } }
+          },
+          required: ["correct", "message"]
+        }
+      });
+
+      const stepFeedback = {
+        correct: !!evaluation?.correct,
+        message:
+          evaluation?.message ||
+          (evaluation?.correct
+            ? "Your documentation meets Medicare standards."
+            : "This could be improved. Consider adding more specific clinical detail."),
+        suggestions: Array.isArray(evaluation?.suggestions) ? evaluation.suggestions : []
+      };
+
+      const updatedFeedback = { ...feedback, [currentStep]: stepFeedback };
+      setFeedback(updatedFeedback);
+
+      if (currentStep < steps.length - 1) {
+        setTimeout(() => {
+          setCurrentStep(prev => prev + 1);
+        }, 2000);
+      } else {
+        // Calculate final score from the AI evaluations of every step.
+        const correctCount = Object.values(updatedFeedback).filter(f => f.correct).length;
+        const finalScore = Math.round((correctCount / steps.length) * 100);
+        setScore(finalScore);
+        setShowResults(true);
+      }
+    } catch (error) {
+      // Don't fabricate a result on failure — let the learner retry.
+      console.error("Error evaluating simulation response:", error);
+      setEvalError("We couldn't evaluate your response just now. Please try submitting again.");
+    } finally {
+      setIsEvaluating(false);
     }
   };
 
@@ -223,14 +261,29 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
             </Alert>
           )}
 
+          {/* Evaluation Error */}
+          {evalError && !currentFeedback && (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+              <AlertDescription className="text-red-800">{evalError}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Action Button */}
           {!currentFeedback && (
             <Button
               onClick={handleResponseSubmit}
-              disabled={!responses[currentStep]}
+              disabled={!responses[currentStep] || isEvaluating}
               className="w-full"
             >
-              Submit Response
+              {isEvaluating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Evaluating Response…
+                </>
+              ) : (
+                "Submit Response"
+              )}
             </Button>
           )}
         </div>
