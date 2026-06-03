@@ -22,3 +22,17 @@ import { runWithRetry } from "@/lib/aiCall";
 export function invokeLLM(params, options) {
   return runWithRetry(() => base44.integrations.Core.InvokeLLM(params), options);
 }
+
+/**
+ * Variant of {@link invokeLLM} for long-running, file-based AI calls — audio
+ * transcription, PDF/image OCR — which can legitimately run far longer than the
+ * 30s default and previously ran as unbounded direct SDK calls. Applies a
+ * generous single-attempt budget (5 min, no retry) so a slow-but-valid request
+ * isn't prematurely cut off and re-run. Same call signature; override via the
+ * optional second argument.
+ *
+ *   await invokeLLMWithFile({ prompt, file_urls });
+ */
+export function invokeLLMWithFile(params, options) {
+  return invokeLLM(params, { timeoutMs: 300000, retries: 0, ...options });
+}
