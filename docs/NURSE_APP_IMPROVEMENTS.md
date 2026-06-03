@@ -55,11 +55,14 @@ recommendation carries a `file:line` reference so it can be picked up directly.
    path: BP >180/120, O2 <88%, pain 10/10 → alert supervisor/physician instead of silently saving.
    Gate the "same as last visit" path so vitals must be re-measured.
 
-6. **Add visit-completion pre-flight checks.**
-   `src/components/visit/VisitCompletionButton.jsx` calls `processCompletedVisit` with no guard
-   that a narrative or vitals exist — AI then generates a note from near-nothing. Require a minimum
-   narrative length + at least BP/HR + homebound answered (home health) before enabling
-   "Complete Visit". Add a null-check on the function result to avoid `undefined.success` crashes.
+6. **Add visit-completion pre-flight checks.** *(result null-check **implemented**; content
+   pre-flight still recommended server-side.)*
+   `src/components/visit/VisitCompletionButton.jsx` called `processCompletedVisit` and dereferenced
+   `result.success` with no guard — a null/5xx response crashed the handler. Now hardened to throw a
+   clear error on an empty response (and default `tasks_created`). The remaining recommendation —
+   require a minimum narrative length + at least BP/HR + homebound answered before completion —
+   belongs in the **`processCompletedVisit` backend function** (server-side validation), since this
+   button component only receives `visitId` and has no access to the visit's narrative/vitals.
 
 7. **Make AI-generated clinical content explicitly "verify-before-use."**
    OASIS suggestions (`src/components/oasis/AIGeneratedOASISAssessment.jsx`, where `ai_suggested: true`
