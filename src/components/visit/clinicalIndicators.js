@@ -1,4 +1,4 @@
-import { extractPhrases, getSentencesContaining } from "../smartNote/compliance/factExtraction.js";
+import { extractPhrases, getSentencesContaining as _getSentencesContaining } from "../smartNote/compliance/factExtraction.js";
 
 /**
  * Deterministic clinical-indicator extraction from a visit narrative — assistive
@@ -7,6 +7,15 @@ import { extractPhrases, getSentencesContaining } from "../smartNote/compliance/
  * phrase/sentence helpers). Extracted from OASISScrubber for reuse + testability.
  */
 export function extractClinicalIndicators(narrativeText) {
+  // factExtraction.getSentencesContaining() uses RegExp#test; avoid stateful `/.../g` patterns.
+  const getSentencesContaining = (text, pattern) => {
+    if (!pattern?.global) return _getSentencesContaining(text, pattern);
+    return _getSentencesContaining(
+      text,
+      new RegExp(pattern.source, pattern.flags.replace("g", ""))
+    );
+  };
+
   return {
     // Assistive Devices - detailed categorization
     assistDevices: {
