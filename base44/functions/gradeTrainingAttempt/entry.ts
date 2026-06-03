@@ -63,8 +63,7 @@ Questions to grade:
 ${JSON.stringify(questionsForGrading)}`;
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    temperature: 0.15,
+    model: 'gpt-5.5',
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: 'You are an experienced healthcare compliance educator and clinical instructor with expertise in CMS Conditions of Participation, OSHA standards, and evidence-based clinical practice. You grade training assessments with clinical accuracy and provide constructive educational feedback. Patient safety is your top priority when evaluating responses. Return valid JSON only.' },

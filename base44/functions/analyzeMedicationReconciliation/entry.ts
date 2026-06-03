@@ -154,7 +154,7 @@ Be thorough and specific. Focus on actionable clinical recommendations.`;
           documentation_summary: { type: 'string' }
         }
       },
-      model: 'claude_sonnet_4_6'
+      model: 'claude_opus_4_7'
     });
 
     // Defensive: the LLM may omit arrays — never assume they exist.
