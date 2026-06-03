@@ -1,16 +1,22 @@
 import { useNavigate } from 'react-router-dom';
 import SignatureRequestCreator from '@/components/signer/SignatureRequestCreator';
+import PageContainer from '@/components/ui/PageContainer';
+import PageHeader from '@/components/ui/PageHeader';
+import { Pen } from 'lucide-react';
 
 export default function CreateSignatureRequest() {
   const navigate = useNavigate();
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900">Create Signature Request</h1>
-        <p className="text-slate-600 mt-1">Upload a document and request secure signatures from recipients.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={Pen}
+        eyebrow="Documentation"
+        title="Create Signature Request"
+        description="Upload a document and request secure signatures from recipients."
+        favoritePage="CreateSignatureRequest"
+      />
       <SignatureRequestCreator onCancel={() => navigate('/DocumentHub')} />
-    </div>
+    </PageContainer>
   );
 }

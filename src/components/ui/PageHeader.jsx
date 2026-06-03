@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export default function PageHeader({
   icon: IconProp,
-  iconColor = "bg-blue-600",
+  iconColor = "bg-gradient-to-br from-blue-600 to-indigo-600",
   iconClassName,
   eyebrow,
   title,
@@ -23,7 +23,7 @@ export default function PageHeader({
   );
 
   return (
-    <Card className={cn("mb-6 border-0 bg-gradient-to-r from-white via-slate-50 to-blue-50/70 shadow-[0_20px_60px_rgba(15,23,42,0.08)]", className)}>
+    <Card className={cn("border border-slate-200/70 bg-gradient-to-r from-white via-slate-50 to-blue-50/70 shadow-[0_20px_60px_rgba(15,23,42,0.08)]", className)}>
       <CardContent className="p-5 sm:p-6 md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">

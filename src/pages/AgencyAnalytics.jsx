@@ -13,9 +13,12 @@ import {
   DollarSign,
   Download,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  BarChart3
 } from "lucide-react";
 import { calculateStats, calculateNurseStats, formatCurrency } from "../components/utils/statsCalculator";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function AgencyAnalytics() {
   const [_dateRange, _setDateRange] = useState("30days");
@@ -127,26 +130,22 @@ export default function AgencyAnalytics() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Agency Analytics & Performance</h1>
-              <p className="text-slate-600 mt-1">Comprehensive overview of agency operations and metrics</p>
-            </div>
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              Export Report
-            </Button>
-          </div>
-        </div>
+    <PageContainer>
+      <PageHeader
+        icon={BarChart3}
+        eyebrow="Analytics"
+        title="Agency Analytics & Performance"
+        description="Comprehensive overview of agency operations and metrics"
+        favoritePage="AgencyAnalytics"
+        actions={
+          <Button variant="outline" className="gap-2">
+            <Download className="w-4 h-4" />
+            Export Report
+          </Button>
+        }
+      />
 
-
-
-        {/* Tabs for detailed metrics */}
-        <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
@@ -453,7 +452,6 @@ export default function AgencyAnalytics() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </PageContainer>
   );
 }
