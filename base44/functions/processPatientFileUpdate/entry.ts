@@ -54,6 +54,10 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const reportType = body.report_type === 'discharge_report' ? 'discharge_report' : 'active_census';
+    // Preview mode: classify every row and return the plan without writing
+    // anything, so an admin can review which patients would be added vs.
+    // matched to existing records before committing the import.
+    const dryRun = body.dry_run === true || body.mode === 'preview';
     let fileContent = cleanValue(body.file_content);
 
     if (!fileContent && body.file_url) {
@@ -87,6 +91,7 @@ Deno.serve(async (req) => {
 
     const results = {
       reportType,
+      dryRun,
       processed: 0,
       created: 0,
       matchedExisting: 0,
@@ -94,7 +99,17 @@ Deno.serve(async (req) => {
       archived: 0,
       skippedInFileDuplicates: 0,
       noChanges: 0,
+      willCreate: 0,
+      willDischarge: 0,
       errors: [],
+      // Per-row outcome for the preview table. action is one of:
+      // create | matched | discharge | no_change | in_file_duplicate | error
+      plan: [],
+    };
+
+    const existingLabel = (p) => {
+      const name = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+      return p.medical_record_number ? `${name} (MRN ${p.medical_record_number})` : name;
     };
 
     const createQueue = [];
@@ -110,32 +125,26 @@ Deno.serve(async (req) => {
       const patient = parseUploadedPatient(rawRow.data, rawRow.rowNumber);
 
       if (!patient.first_name || !patient.last_name) {
-        results.errors.push({
-          row: rawRow.rowNumber,
-          patient: patient.patientLabel,
-          error: 'Missing patient name; first and last name are required for verification.',
-        });
+        const error = 'Missing patient name; first and last name are required for verification.';
+        results.errors.push({ row: rawRow.rowNumber, patient: patient.patientLabel, error });
+        results.plan.push({ row: rawRow.rowNumber, action: 'error', patient: patient.patientLabel, detail: error });
         continue;
       }
 
       const uploadKeys = buildUploadKeys(patient);
 
       if (uploadKeys.length === 0) {
-        results.errors.push({
-          row: rawRow.rowNumber,
-          patient: patient.patientLabel,
-          error: 'Cannot safely verify this patient. Provide an MRN or a name with DOB.',
-        });
+        const error = 'Cannot safely verify this patient. Provide an MRN or a name with DOB.';
+        results.errors.push({ row: rawRow.rowNumber, patient: patient.patientLabel, error });
+        results.plan.push({ row: rawRow.rowNumber, action: 'error', patient: patient.patientLabel, detail: error });
         continue;
       }
 
       if (uploadKeys.some(key => seenUploadKeys.has(key))) {
         results.skippedInFileDuplicates++;
-        results.errors.push({
-          row: rawRow.rowNumber,
-          patient: patient.patientLabel,
-          error: 'This patient appears more than once in the uploaded file.',
-        });
+        const error = 'This patient appears more than once in the uploaded file.';
+        results.errors.push({ row: rawRow.rowNumber, patient: patient.patientLabel, error });
+        results.plan.push({ row: rawRow.rowNumber, action: 'in_file_duplicate', patient: patient.patientLabel, detail: error });
         continue;
       }
 
@@ -143,11 +152,8 @@ Deno.serve(async (req) => {
 
       const matchResult = resolveMatch(patient, existingByMrn, existingByNameDob);
       if (matchResult.error) {
-        results.errors.push({
-          row: rawRow.rowNumber,
-          patient: patient.patientLabel,
-          error: matchResult.error,
-        });
+        results.errors.push({ row: rawRow.rowNumber, patient: patient.patientLabel, error: matchResult.error });
+        results.plan.push({ row: rawRow.rowNumber, action: 'error', patient: patient.patientLabel, detail: matchResult.error });
         continue;
       }
 
@@ -155,9 +161,17 @@ Deno.serve(async (req) => {
         if (matchResult.match) {
           results.matchedExisting++;
           results.noChanges++;
+          results.plan.push({
+            row: rawRow.rowNumber,
+            action: 'matched',
+            patient: patient.patientLabel,
+            detail: `Already in system — matched by ${matchResult.matchedBy} to ${existingLabel(matchResult.match)}`,
+          });
           continue;
         }
 
+        results.willCreate++;
+        results.plan.push({ row: rawRow.rowNumber, action: 'create', patient: patient.patientLabel, detail: 'New patient — will be added' });
         createQueue.push({
           rowNumber: rawRow.rowNumber,
           patientLabel: patient.patientLabel,
@@ -183,15 +197,14 @@ Deno.serve(async (req) => {
 
       if (patient.status !== 'discharged') {
         results.noChanges++;
+        results.plan.push({ row: rawRow.rowNumber, action: 'no_change', patient: patient.patientLabel, detail: 'Not marked discharged in this report — no change' });
         continue;
       }
 
       if (!matchResult.match) {
-        results.errors.push({
-          row: rawRow.rowNumber,
-          patient: patient.patientLabel,
-          error: 'No matching patient was found in the system for this discharged record.',
-        });
+        const error = 'No matching patient was found in the system for this discharged record.';
+        results.errors.push({ row: rawRow.rowNumber, patient: patient.patientLabel, error });
+        results.plan.push({ row: rawRow.rowNumber, action: 'error', patient: patient.patientLabel, detail: error });
         continue;
       }
 
@@ -199,14 +212,23 @@ Deno.serve(async (req) => {
 
       if (queuedDischargeIds.has(matchResult.match.id)) {
         results.skippedInFileDuplicates++;
+        results.plan.push({ row: rawRow.rowNumber, action: 'in_file_duplicate', patient: patient.patientLabel, detail: 'Same patient already queued for discharge from an earlier row' });
         continue;
       }
 
       if (matchResult.match.status === 'discharged' && matchResult.match.is_archived) {
         results.noChanges++;
+        results.plan.push({ row: rawRow.rowNumber, action: 'no_change', patient: patient.patientLabel, detail: 'Already discharged and archived — no change' });
         continue;
       }
 
+      results.willDischarge++;
+      results.plan.push({
+        row: rawRow.rowNumber,
+        action: 'discharge',
+        patient: patient.patientLabel,
+        detail: `Will discharge + archive — matched by ${matchResult.matchedBy} to ${existingLabel(matchResult.match)}`,
+      });
       queuedDischargeIds.add(matchResult.match.id);
       dischargeQueue.push({
         id: matchResult.match.id,
@@ -217,6 +239,11 @@ Deno.serve(async (req) => {
           discharge_date: patient.discharge_date || new Date().toISOString().slice(0, 10),
         },
       });
+    }
+
+    // Preview mode stops here: report the plan and planned counts, write nothing.
+    if (dryRun) {
+      return Response.json({ success: true, results });
     }
 
     await runInBatches(createQueue, 25, async (item) => {
