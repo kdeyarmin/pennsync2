@@ -44,8 +44,14 @@ export function extractVitals(text) {
 
   const bpMatch = text.match(/bp\s*(\d{2,3})\/(\d{2,3})/i) || text.match(/(\d{2,3})\/(\d{2,3})/);
   if (bpMatch) {
-    vitals.bp_sys = parseInt(bpMatch[1]);
-    vitals.bp_dia = parseInt(bpMatch[2]);
+    const sys = parseInt(bpMatch[1]);
+    const dia = parseInt(bpMatch[2]);
+    // Guard the unlabeled "nn/nn" fallback against dates ("11/20") and other
+    // ratios: only accept physiologically plausible systolic/diastolic values.
+    if (sys >= 60 && sys <= 300 && dia >= 30 && dia <= 200 && sys > dia) {
+      vitals.bp_sys = sys;
+      vitals.bp_dia = dia;
+    }
   }
 
   const hrMatch = text.match(/(?:hr|heart\s*rate)\s*(\d{2,3})/i);
@@ -56,7 +62,9 @@ export function extractVitals(text) {
     text.match(/(\d{2,3})\s*%\s*(?:ra|on ra|o2|room air)/i);
   if (o2Match) vitals.o2 = parseInt(o2Match[1]);
 
-  const tempMatch = text.match(/(?:temp|temperature|t)\s*(\d{2,3}(?:\.\d)?)/i);
+  // Anchor the "t" shorthand with word boundaries so it can't match the
+  // trailing "t" of unrelated words ("weight 150" must NOT read as temp 150).
+  const tempMatch = text.match(/(?:\btemp\b|temperature|\bt\b)\s*(\d{2,3}(?:\.\d)?)/i);
   if (tempMatch) {
     const t = parseFloat(tempMatch[1]);
     if (t > 90) vitals.temp = t;
@@ -91,7 +99,10 @@ const MEASUREMENT_PATTERNS = [
 
 /** Normalize a measurement token for set comparison (lowercase, no spaces). */
 function normalizeToken(t) {
-  return t.toLowerCase().replace(/\s+/g, "");
+  // Drop the degree symbol too so "98.6 F" and "98.6°F" reduce to the same
+  // token — otherwise the value-guard flags a faithful °-adding rewrite as a
+  // hallucinated value.
+  return t.toLowerCase().replace(/[\s°]+/g, "");
 }
 
 /** Extract normalized measurement/value tokens from text. */
@@ -120,10 +131,20 @@ const MED_NAMES = [
   ...MEDICAL_TERMS.medications,
   ...Object.values(MEDICAL_TERMS.common_mishears),
 ];
-// De-dupe canonical names, longest first so "atorvastatin" wins over "statin".
-const UNIQUE_MEDS = MED_NAMES.filter((m, i) => MED_NAMES.indexOf(m) === i).sort(
-  (a, b) => b.length - a.length
-);
+// De-dupe canonical names case-insensitively (so "Atorvastatin" and the
+// "statin"→"atorvastatin" mishear entry don't both survive), longest first so
+// "atorvastatin" wins over "statin".
+const UNIQUE_MEDS = (() => {
+  const seen = new Set();
+  const out = [];
+  for (const m of MED_NAMES) {
+    const key = m.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(m);
+  }
+  return out.sort((a, b) => b.length - a.length);
+})();
 
 /** Return the list of known medication names mentioned in `text` (canonical). */
 export function extractMedications(text) {

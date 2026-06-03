@@ -33,21 +33,49 @@ export function smsSegments(text) {
   const single = gsm ? 160 : 70;
   const multi = gsm ? 153 : 67;
 
-  let units = 0;
-  if (gsm) {
-    for (const ch of str) units += GSM7_EXTENDED.includes(ch) ? 2 : 1;
-  } else {
-    // UCS-2 bills per UTF-16 code unit, so astral chars (emoji) cost two.
-    for (const ch of str) units += ch.codePointAt(0) > 0xffff ? 2 : 1;
-  }
+  const costOf = (ch) =>
+    gsm
+      ? GSM7_EXTENDED.includes(ch) ? 2 : 1
+      // UCS-2 bills per UTF-16 code unit, so astral chars (emoji) cost two.
+      : ch.codePointAt(0) > 0xffff ? 2 : 1;
 
-  const segments = units === 0 ? 0 : units <= single ? 1 : Math.ceil(units / multi);
-  const capacity = segments <= 1 ? single : segments * multi;
+  let units = 0;
+  for (const ch of str) units += costOf(ch);
+
+  // A 2-unit char (GSM-7 escape pair / surrogate pair) can't be split across a
+  // segment boundary: if it doesn't fit in the current segment it pads it and
+  // moves whole to the next. So simulate packing rather than dividing units,
+  // which would otherwise undercount segments at the boundary.
+  let segments;
+  let usedInLast; // billable units consumed in the current (last) segment
+  if (units === 0) {
+    segments = 0;
+    usedInLast = 0;
+  } else if (units <= single) {
+    segments = 1;
+    usedInLast = units;
+  } else {
+    segments = 1;
+    let used = 0;
+    for (const ch of str) {
+      const cost = costOf(ch);
+      if (used + cost > multi) {
+        segments += 1;
+        used = 0;
+      }
+      used += cost;
+    }
+    usedInLast = used;
+  }
+  const perSegment = segments <= 1 ? single : multi;
   return {
     chars: units,
     segments,
     encoding,
-    perSegment: segments <= 1 ? single : multi,
-    remaining: capacity - units,
+    perSegment,
+    // Room left in the CURRENT segment before a new one opens — derived from
+    // units used in the last segment, not `capacity - units`: a 2-unit char
+    // that pads a boundary wastes capacity the latter would overstate.
+    remaining: segments === 0 ? single : perSegment - usedInLast,
   };
 }

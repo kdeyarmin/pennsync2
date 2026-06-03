@@ -6,6 +6,45 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * Replaces: createUserWithTempPassword, resetUserPassword, resendInvitation, checkExpiredInvitations
  */
 
+// Cryptographically strong temporary password drawn from a CSPRNG (not
+// Math.random). Guarantees at least one character from each class (upper,
+// lower, digit, symbol) so it satisfies minimum-complexity policies, then
+// shuffles so the guaranteed characters aren't in fixed positions.
+function generateTempPassword(length = 16) {
+  const classes = [
+    'ABCDEFGHJKMNPQRSTUVWXYZ', // upper (no I/O)
+    'abcdefghjkmnpqrstuvwxyz', // lower (no l)
+    '23456789',                // digits (no 0/1)
+    '!@#$%',                   // symbols
+  ];
+  const all = classes.join('');
+  const pick = (set) => set[randomInt(set.length)];
+
+  // One from each class, then fill the remainder from the full set.
+  const chars = classes.map(pick);
+  while (chars.length < Math.max(length, classes.length)) chars.push(pick(all));
+
+  // Fisher–Yates shuffle with CSPRNG-derived indices.
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
+
+// Uniform random integer in [0, max) from a CSPRNG, rejection-sampled to avoid
+// modulo bias.
+function randomInt(max) {
+  const limit = Math.floor(0xffffffff / max) * max;
+  const buf = new Uint32Array(1);
+  let x;
+  do {
+    crypto.getRandomValues(buf);
+    x = buf[0];
+  } while (x >= limit);
+  return x % max;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -26,6 +65,11 @@ Deno.serve(async (req) => {
         return await resetPassword(base44, currentUser, params, isAdmin);
       
       case 'check_expired_invitations':
+        // Gate like every other action: this reads all invitations and emails
+        // all admins, so it must not be callable by a non-admin.
+        if (!isAdmin) {
+          return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
+        }
         return await checkExpiredInvitations(base44);
       
       case 'cancel_invitation':
@@ -170,8 +214,11 @@ async function resetPassword(base44, currentUser, params, isAdmin) {
     return Response.json({ error: 'User email is required' }, { status: 400 });
   }
 
-  // Generate temporary password
-  const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+  // Generate a temporary password from a CSPRNG with a guaranteed length and
+  // character mix. `Math.random().toString(36).slice(-8)` is non-cryptographic
+  // and can yield far fewer than 8 chars (e.g. when the fraction is short),
+  // producing a weak, short credential.
+  const tempPassword = generateTempPassword();
 
   const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
   if (!users || users.length === 0) {

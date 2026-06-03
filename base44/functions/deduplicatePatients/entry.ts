@@ -107,10 +107,18 @@ export function digitsOnly(value) {
 
 const pad2 = (v) => String(v).padStart(2, '0');
 
+/** Expand a 2-digit year into the past (a DOB is never in the future), mirroring
+ *  the import-side normalizer so "04/15/45" → 1945. */
+const pivotYear = (yy) => {
+  const ref = new Date().getFullYear();
+  const candidate = 2000 + Number(yy);
+  return String(candidate > ref ? candidate - 100 : candidate);
+};
+
 /**
  * Parse a date of birth into { year, month, day } string components, handling
- * ISO (YYYY-MM-DD), US (MM/DD/YYYY) and bare 8-digit formats. Returns null when
- * the value can't be confidently parsed.
+ * ISO (YYYY-MM-DD), US (MM/DD/YYYY or MM/DD/YY) and bare 8-digit formats.
+ * Returns null when the value can't be confidently parsed.
  */
 export function parseDob(value) {
   if (!value) return null;
@@ -121,6 +129,9 @@ export function parseDob(value) {
 
   m = s.match(/^(\d{1,2})\D(\d{1,2})\D(\d{4})/); // MM/DD/YYYY
   if (m) return { year: m[3], month: pad2(m[1]), day: pad2(m[2]) };
+
+  m = s.match(/^(\d{1,2})\D(\d{1,2})\D(\d{2})(?!\d)/); // MM/DD/YY
+  if (m) return { year: pivotYear(m[3]), month: pad2(m[1]), day: pad2(m[2]) };
 
   const digits = s.replace(/\D/g, '');
   if (digits.length === 8) {
@@ -243,13 +254,18 @@ function scoreDob(p1, p2, add) {
   const d2 = digitsOnly(p2.date_of_birth);
   if (!d1 || !d2) return;
 
-  if (d1 === d2) {
+  const a = parseDob(p1.date_of_birth);
+  const b = parseDob(p2.date_of_birth);
+
+  // Exact match on identical digits OR the same parsed Y/M/D written in
+  // different formats (e.g. "1945-04-15" vs "04/15/1945" vs "04/15/45"), so a
+  // format/2-digit-year difference doesn't hide a true exact-DOB match.
+  const sameYmd = a && b && a.year === b.year && a.month === b.month && a.day === b.day;
+  if (d1 === d2 || sameYmd) {
     add(30, REASON.DOB);
     return;
   }
 
-  const a = parseDob(p1.date_of_birth);
-  const b = parseDob(p2.date_of_birth);
   if (!a || !b) return;
 
   if (a.year === b.year && a.month === b.day && a.day === b.month) {
@@ -306,8 +322,25 @@ function scoreAddress(p1, p2, add) {
   const bestSim = Math.max(similarity(addr1, addr2), similarity(normalized1, normalized2));
 
   if (streetNum1 && streetNum1 === streetNum2) {
-    const streetName1 = normalized1.split(/\s+/)[1];
-    const streetName2 = normalized2.split(/\s+/)[1];
+    // Build a street key of "[directional] name" from the normalized address.
+    // Taking token[1] blindly picked up the directional itself (so "100 N Main"
+    // vs "100 N Oak" both read as street "n"); dropping the directional instead
+    // over-collapses ("100 W Main" vs "100 E Main" both become "main"). Keep the
+    // directional as PART of the key so same-name/different-direction streets
+    // stay distinct while genuine matches still align.
+    const streetKeyOf = (normalized) => {
+      const tokens = normalized.split(/\s+/).filter(Boolean);
+      let i = 0;
+      while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip house number
+      let dir = '';
+      if (i < tokens.length && /^[nsew]$/.test(tokens[i])) { dir = tokens[i]; i++; }
+      while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip stray numbers
+      const name = tokens[i];
+      if (!name) return undefined;
+      return dir ? `${dir} ${name}` : name;
+    };
+    const streetName1 = streetKeyOf(normalized1);
+    const streetName2 = streetKeyOf(normalized2);
     if (streetName1 && streetName2 && similarity(streetName1, streetName2) >= 85) {
       add(18, REASON.STREET_ADDRESS);
     } else if (streetName1 && streetName2) {

@@ -156,10 +156,15 @@ export function suggestMedicalCorrections(word) {
   if (exactMatches.length > 0) return exactMatches;
   
   // Check for partial matches (starts with or contains)
+  // A term is a candidate when it starts with the typed word (prefix
+  // completion) or the typed word starts with the full term (the user typed
+  // extra trailing chars). The old `lowerWord.startsWith(lower.substring(0,3))`
+  // matched on only the first 3 letters, so "metf" fanned out to Metformin,
+  // Metoprolol, Metronidazole, Metastatic — drop that noisy clause.
   const partialMatches = allTerms
     .filter(t => {
       const lower = t.toLowerCase();
-      return lower.startsWith(lowerWord) || lowerWord.startsWith(lower.substring(0, 3));
+      return lower.startsWith(lowerWord) || lowerWord.startsWith(lower);
     })
     .slice(0, 5); // Limit suggestions
   

@@ -17,6 +17,7 @@ import OverdueRemindersReport from '../components/learning/OverdueRemindersRepor
 import CertificateExpirationReport from '../components/learning/CertificateExpirationReport';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
+import AccessDeniedState from '@/components/ui/AccessDeniedState';
 
 const BUSINESS_LINES = [
   { value: 'home_health', label: 'Home Health' },
@@ -36,11 +37,10 @@ export default function LearningReports() {
 
   if (!isAdmin && !isSuperAdmin) {
     return (
-      <div className="p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h1>
-        <p className="text-slate-600">Only administrators can access learning reports.</p>
-      </div>
+      <AccessDeniedState
+        title="Access Denied"
+        description="Only administrators can access learning reports."
+      />
     );
   }
 

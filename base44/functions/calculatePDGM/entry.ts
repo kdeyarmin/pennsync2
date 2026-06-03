@@ -493,10 +493,15 @@ function validateEpisodeTiming(data) {
     try {
       const soc = new Date(socDate);
       const assessment = new Date(assessmentDate);
-      daysSinceSoc = Math.floor((assessment - soc) / (1000 * 60 * 60 * 24));
+      // Invalid dates produce NaN (no throw), which would leave daysSinceSoc as
+      // NaN and surface "Days since SOC: NaN" in the evidence. Only compute when
+      // both dates parse.
+      if (!Number.isNaN(soc.getTime()) && !Number.isNaN(assessment.getTime())) {
+        daysSinceSoc = Math.floor((assessment - soc) / (1000 * 60 * 60 * 24));
 
-      if (daysSinceSoc > 30) {
-        expectedTiming = 'late';
+        if (daysSinceSoc > 30) {
+          expectedTiming = 'late';
+        }
       }
     } catch (e) {
       // Date parsing failed, ignore
