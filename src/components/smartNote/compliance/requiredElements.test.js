@@ -61,6 +61,17 @@ test("standard negatives only on the intended elements", () => {
   assert.ok(withNegatives.has("allergies"));
 });
 
+test("every service line × visit type has at least one critical gating element", () => {
+  for (const line of Object.keys(REQUIRED_ELEMENTS)) {
+    for (const vt of VISIT_TYPES) {
+      assert.ok(
+        getCriticalElements(line, vt).length >= 1,
+        `${line}/${vt} has no critical element to gate generation`
+      );
+    }
+  }
+});
+
 test("agency overrides take precedence when provided", () => {
   const overrides = {
     home_health: { routine_visit: [{ id: "custom", label: "Custom", severity: "required", question: "q", notDocumentedPhrase: "n", keywords: ["x"] }] },

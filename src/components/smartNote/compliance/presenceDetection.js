@@ -1,7 +1,8 @@
 // Deterministic detection of whether each required element is present in the
 // nurse's draft. Pure + offline. For every element we return whether it was
-// found and, if so, the verbatim evidence sentence (for provenance/UI).
-import { getSentencesContaining, splitSentences } from "./factExtraction.js";
+// found and, if so, a clean single-line evidence sentence (for provenance and
+// for the homebound_justification chart field).
+import { splitSentences } from "./factExtraction.js";
 
 /**
  * @param {string} draftText normalized rough draft
@@ -9,25 +10,26 @@ import { getSentencesContaining, splitSentences } from "./factExtraction.js";
  * @returns {{ id, label, severity, present: boolean, evidence: string|null }[]}
  */
 export function detectPresence(draftText, requiredElements) {
-  const text = draftText || "";
+  // Newline/bullet/sentence-aware segments, trimmed — so a bullet draft (few
+  // periods) yields clean one-line evidence rather than a multi-line chunk.
+  const segments = splitSentences(draftText || "");
   return requiredElements.map((elem) => {
     let evidence = null;
 
-    // 1) strongest signal: an element-specific regex pattern
+    // 1) strongest signal: an element-specific regex pattern (case-insensitive,
+    //    no /g flag, so .test() is stateless across segments)
     if (elem.pattern) {
-      const hits = getSentencesContaining(text, elem.pattern);
-      if (hits.length) evidence = hits[0];
+      const seg = segments.find((s) => elem.pattern.test(s));
+      if (seg) evidence = `${seg}.`;
     }
 
-    // 2) fallback: any keyword appears in a sentence
+    // 2) fallback: any keyword appears in a segment
     if (!evidence && Array.isArray(elem.keywords) && elem.keywords.length) {
-      const lower = text.toLowerCase();
+      const lower = (draftText || "").toLowerCase();
       const matchedKeyword = elem.keywords.find((k) => lower.includes(k.toLowerCase()));
       if (matchedKeyword) {
-        const sentence = splitSentences(text).find((s) =>
-          s.toLowerCase().includes(matchedKeyword.toLowerCase())
-        );
-        evidence = sentence ? sentence + "." : matchedKeyword;
+        const seg = segments.find((s) => s.toLowerCase().includes(matchedKeyword.toLowerCase()));
+        evidence = seg ? `${seg}.` : matchedKeyword;
       }
     }
 

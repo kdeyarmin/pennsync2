@@ -64,3 +64,12 @@ test("carry-forward returns nothing without a prior note", () => {
   const gaps = computeGaps(detectPresence("", reqs), reqs);
   assert.deepEqual(computeCarryForward("", gaps), {});
 });
+
+test("evidence is a clean single line for bullet drafts", () => {
+  const draft = "BP 148/90, HR 82\nhomebound: unable to leave without taxing effort\nskilled wound care performed";
+  const results = detectPresence(draft, reqs);
+  const homebound = results.find((r) => r.id === "homebound");
+  assert.equal(homebound.present, true);
+  assert.ok(!homebound.evidence.includes("\n"), "evidence should not span multiple lines");
+  assert.match(homebound.evidence, /taxing effort/i);
+});

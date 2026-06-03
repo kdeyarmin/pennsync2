@@ -31,3 +31,20 @@ test("does not flag prose reordering without new values", () => {
   const output = "The patient verbalized understanding after being taught about diet.";
   assert.equal(valueGuard(output, input).ok, true);
 });
+
+test("medication match is case-insensitive (no false flag on casing)", () => {
+  const input = "Patient takes metformin daily.";
+  const output = "The patient takes Metformin daily.";
+  assert.equal(valueGuard(output, input).ok, true);
+});
+
+test("flags multiple invented values at once", () => {
+  const input = "Patient stable.";
+  const output = "BP 200/110, O2 84%, gave 250 mg.";
+  const result = valueGuard(output, input);
+  assert.equal(result.ok, false);
+  const flagged = result.unverified.map((u) => u.value);
+  assert.ok(flagged.includes("200/110"));
+  assert.ok(flagged.includes("84%"));
+  assert.ok(flagged.includes("250mg"));
+});
