@@ -1608,25 +1608,11 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
       setUploadProgress(90);
 
-      // Skip validation to speed up analysis
-      const validationResult = {
-        data_quality_score: 80,
-        critical_issues: [],
-        warnings: [],
-        recommendation: 'Validation skipped for speed',
-        pdgm_readiness: { ready_for_grouping: true, missing_critical_elements: [], optimization_opportunities: [] }
-      };
-
-      // Merge validation results into analysis
-      analysisResult.validation_summary = {
-        data_quality_score: validationResult?.data_quality_score || 75,
-        critical_issues_found: validationResult?.critical_issues?.length || 0,
-        warnings_found: validationResult?.warnings?.length || 0,
-        issues: validationResult?.critical_issues || [],
-        warnings: validationResult?.warnings || [],
-        recommendation: validationResult?.recommendation || '',
-        pdgm_readiness: validationResult?.pdgm_readiness || null
-      };
+      // Deterministic data-quality validation is not run in this fast path, so
+      // do NOT fabricate a quality score or PDGM readiness. Omit the summary —
+      // the UI guards on validation_summary and shows nothing, rather than a
+      // fake "Quality: 80% / ready for grouping".
+      analysisResult.validation_summary = null;
 
       // Attach narrative analysis to results
       if (narrativeMatchAnalysis) {

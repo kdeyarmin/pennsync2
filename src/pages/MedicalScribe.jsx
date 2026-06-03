@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 import ScribeNoteRecorder from "@/components/scribe/ScribeNoteRecorder";
-import NoteReviewPanel from "@/components/scribe/NoteReviewPanel";
+import ConstrainedNoteReviewer from "@/components/smartNote/ConstrainedNoteReviewer";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -39,53 +40,64 @@ export default function VisitScribePage() {
   const [generatedNote, setGeneratedNote] = useState(null);
   const [showReview, setShowReview] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => base44.entities.Patient.list("-updated_date", 100),
     initialData: []
   });
+  const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
 
   const handleNoteGenerated = (noteData) => {
     setGeneratedNote(noteData);
     setShowReview(true);
   };
 
-  const handleSaveNote = async (finalNote) => {
+  // Persist the reviewer's verified note with a REAL deterministic coverage score
+  // (replaces the old hardcoded quality_score: 95). Re-verifies edits first.
+  const saveToChart = async (api) => {
+    if (!selectedPatient) { alert("Select a patient first."); return; }
+    setSaving(true);
     try {
-      // Create visit record
-      const visitData = {
+      let result = api.result;
+      if (api.dirty) {
+        result = await api.recheck();
+        if (!result) { setSaving(false); return; } // fact-check failed → reviewer shows the fix panel
+      }
+      const finalNote = result.finalNote;
+      const coverageScore = result.coverageScore;
+
+      await base44.entities.Visit.create({
         patient_id: selectedPatient,
         visit_date: new Date().toISOString().split("T")[0],
         visit_type: visitType,
         nurse_notes: finalNote,
-        status: "completed"
-      };
+        status: "completed",
+        compliance_score: coverageScore,
+      });
 
-      await base44.entities.Visit.create(visitData);
-
-      // Save to patient's enhanced notes history
       const patient = patients.find(p => p.id === selectedPatient);
       if (patient) {
         const enhancedNotesHistory = patient.enhanced_notes_history || [];
         enhancedNotesHistory.push({
           date: new Date().toISOString(),
           visit_type: visitType,
-          diagnosis: diagnosis === "Other" ? customDiagnosis : diagnosis,
+          diagnosis: finalDiagnosis,
           enhanced_note: finalNote,
           rough_note: generatedNote.transcription,
-          quality_score: 95,
-          nurse_email: (await base44.auth.me()).email
+          compliance_score: coverageScore,
+          nurse_email: currentUser?.email,
         });
-
         await base44.entities.Patient.update(selectedPatient, {
-          enhanced_notes_history: enhancedNotesHistory
+          enhanced_notes_history: enhancedNotesHistory,
         });
       }
 
+      setSaved(true);
       setSaveSuccess(true);
       setTimeout(() => {
-        // Reset form
         setSelectedPatient("");
         setVisitType("");
         setDiagnosis("");
@@ -93,16 +105,20 @@ export default function VisitScribePage() {
         setGeneratedNote(null);
         setShowReview(false);
         setSaveSuccess(false);
+        setSaved(false);
       }, 2000);
     } catch (error) {
       console.error("Error saving note:", error);
       alert("Failed to save note. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDiscard = () => {
     setGeneratedNote(null);
     setShowReview(false);
+    setSaved(false);
   };
 
   const finalDiagnosis = diagnosis === "Other" ? customDiagnosis : diagnosis;
@@ -215,15 +231,38 @@ export default function VisitScribePage() {
             )}
           </div>
         ) : (
-          /* Review Section */
-          <NoteReviewPanel
-            transcription={generatedNote.transcription}
-            generatedNote={generatedNote.generatedNote}
-            patientId={selectedPatient}
+          /* Review Section — shared factual constrained-scribe pipeline */
+          <ConstrainedNoteReviewer
+            roughNote={generatedNote.transcription}
+            serviceLine="home_health"
             visitType={visitType}
-            diagnosis={finalDiagnosis}
-            onSave={handleSaveNote}
-            onDiscard={handleDiscard}
+            currentUser={currentUser}
+            onBack={handleDiscard}
+            renderFinalNote={(api) => (
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+                  <span className="text-sm font-semibold text-slate-700">Final Clinical Note</span>
+                  <span className="text-xs text-slate-400">editable · {api.coverage}% coverage</span>
+                </div>
+                <textarea
+                  value={api.finalNote}
+                  onChange={e => api.setFinalNote(e.target.value)}
+                  className="w-full min-h-[280px] font-mono text-sm border-0 px-4 py-3 bg-white resize-none outline-none"
+                />
+                <div className="flex gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50">
+                  <Button onClick={api.copy} className="flex-1 bg-green-600 hover:bg-green-700 h-11 gap-2 font-semibold">
+                    {api.copied ? "Copied!" : "Copy"}
+                  </Button>
+                  <Button
+                    onClick={() => saveToChart(api)}
+                    disabled={saving || saved || !!(api.fixRequired && !api.fixRequired.offlinePending)}
+                    className="h-11 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                  >
+                    {saving ? "Saving…" : saved ? "Saved" : "Save to Chart"}
+                  </Button>
+                </div>
+              </div>
+            )}
           />
         )}
       </div>

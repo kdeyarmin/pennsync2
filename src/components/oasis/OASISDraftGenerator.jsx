@@ -9,7 +9,8 @@ import {
   Loader2,
   Copy,
   Download,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -129,7 +130,11 @@ Make documentation:
   const exportAllDocumentation = () => {
     if (!draftDocumentation) return;
     
-    const fullDoc = `OASIS DRAFT DOCUMENTATION
+    const fullDoc = `OASIS DRAFT DOCUMENTATION — AI-GENERATED, REQUIRES CLINICIAN REVIEW
+*** This is an AI-generated DRAFT. A licensed clinician must verify every item
+*** against the actual assessment before it is used in the medical record.
+*** It is NOT a vetted or attested clinical document. ***
+
 Generated: ${new Date().toLocaleString()}
 Patient: ${patientData?.first_name} ${patientData?.last_name}
 Visit Type: ${visitType}
@@ -227,6 +232,10 @@ ${draftDocumentation.caregiver_support}`;
 
         {draftDocumentation && (
           <div className="space-y-4">
+            <div className="flex items-start gap-2 rounded-lg border-2 border-amber-300 bg-amber-50 px-3 py-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800"><strong>AI-generated draft.</strong> A licensed clinician must verify every item against the actual assessment before it is used in the medical record. This is not a vetted or attested clinical document.</p>
+            </div>
             <div className="flex justify-end gap-2">
               <Button
                 size="sm"
