@@ -14,9 +14,15 @@ import {
   Target,
   ClipboardList,
   AlertCircle,
+  AlertTriangle,
   ListTodo
 } from "lucide-react";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
+import { normalizeDraft } from "@/components/smartNote/compliance/normalize";
+import { getRequiredElements } from "@/components/smartNote/compliance/requiredElements";
+import { detectPresence } from "@/components/smartNote/compliance/presenceDetection";
+import { computeCoverageScore, toNoteConversionFields } from "@/components/smartNote/compliance/coverageScore";
+import { valueGuard } from "@/components/smartNote/compliance/valueGuard";
 import {
   Accordion,
   AccordionContent,
@@ -43,6 +49,7 @@ export default function UnifiedDocumentReview({
   const [syncingTasks, setSyncingTasks] = useState(false);
   const [tasksSynced, setTasksSynced] = useState(false);
   const [syncedTaskCount, setSyncedTaskCount] = useState(0);
+  const [valueWarnings, setValueWarnings] = useState([]);
 
   useEffect(() => {
     if (autoRun && roughNote && roughNote.length >= 50 && !analysis) {
@@ -218,20 +225,30 @@ The enhanced note should be a polished, complete clinical note, not bullet point
         enhancedNote = enhancedNote + '\n\n' + additionalText;
       }
 
-      // Track note enhancement
+      // Fact-check the enhanced note: flag any value/medication it introduced
+      // that isn't in the rough note or an approved suggestion (no silent
+      // hallucination of vitals, doses, or measurements).
+      const approvedSource = [roughNote, ...selectedFindings.map(f => f.suggestion || "")].join(" ");
+      setValueWarnings(valueGuard(enhancedNote, approvedSource).unverified);
+
+      // Track the conversion with a REAL, deterministic coverage delta computed
+      // from the notes themselves — not a hardcoded "+20" — so the analytics
+      // dashboards that read these fields reflect reality.
+      const serviceLine = patientData?.care_type === "hospice" ? "hospice" : "home_health";
+      const required = getRequiredElements(serviceLine, visitType);
+      const roughCoverage = computeCoverageScore({ requiredElements: required, presenceResults: detectPresence(normalizeDraft(roughNote), required) });
+      const enhancedCoverage = computeCoverageScore({ requiredElements: required, presenceResults: detectPresence(normalizeDraft(enhancedNote), required) });
       const currentUser = await base44.auth.me();
-      await base44.entities.NoteConversion.create({
-        nurse_email: currentUser.email,
-        patient_id: patientData?.id,
-        visit_type: visitType,
+      await base44.entities.NoteConversion.create(toNoteConversionFields({
+        coverageScore: enhancedCoverage,
+        draftPresenceScore: roughCoverage,
+        roughLen: roughNote.length,
+        enhancedLen: enhancedNote.length,
+        visitType,
         diagnosis,
-        rough_note_length: roughNote.length,
-        enhanced_note_length: enhancedNote.length,
-        quality_score: analysis.overall_score,
-        rough_note_compliance: analysis.compliance_score < 80 ? Math.max(0, analysis.compliance_score - 20) : analysis.compliance_score - 10,
-        enhanced_note_compliance: analysis.compliance_score,
-        compliance_improvement: analysis.compliance_score < 80 ? 20 : 10
-      });
+        nurseEmail: currentUser.email,
+        patientId: patientData?.id,
+      }));
 
       onEnhancedNoteReady?.({
         enhancedNote,
@@ -433,6 +450,18 @@ The enhanced note should be a polished, complete clinical note, not bullet point
           )}
         </CardContent>
       </Card>
+
+      {/* Hallucination guard: values the enhanced note introduced that aren't sourced */}
+      {valueWarnings.length > 0 && (
+        <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-3">
+          <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" /> Verify these values before using the note
+          </p>
+          <p className="text-xs text-amber-700 mt-1">
+            The enhanced note contains values not found in your rough note or the suggestions you selected: <strong>{valueWarnings.map(v => v.value).join(", ")}</strong>. Confirm each is accurate, or remove it.
+          </p>
+        </div>
+      )}
 
       {/* Sync Follow-up Tasks */}
       <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
