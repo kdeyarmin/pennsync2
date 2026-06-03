@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-
-const cleanValue = (value) => String(value ?? '').replace(/\uFEFF/g, '').trim();
-const normalizeHeader = (value) => cleanValue(value).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-const normalizeText = (value) => cleanValue(value).toLowerCase().replace(/\s+/g, ' ').trim();
-const normalizeName = (value) => normalizeText(value).replace(/[^a-z0-9 ]/g, '');
+import {
+  cleanValue,
+  parseCsv,
+  buildRowObject,
+  buildExistingLookups,
+  parseUploadedPatient,
+  buildUploadKeys,
+  resolveMatch,
+} from './patientImportUtils.js';
 
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
@@ -27,193 +31,6 @@ function isSafeFetchUrl(raw: string): boolean {
   }
   return true;
 }
-const normalizeMrn = (value) => cleanValue(value).toLowerCase().replace(/[^a-z0-9]/g, '');
-
-const toIsoDate = (value) => {
-  const raw = cleanValue(value);
-  if (!raw) return null;
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    const date = new Date(`${raw}T00:00:00Z`);
-    return Number.isNaN(date.getTime()) ? null : raw;
-  }
-
-  const slashMatch = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
-  if (slashMatch) {
-    let [, month, day, year] = slashMatch;
-    if (year.length === 2) year = `20${year}`;
-    const iso = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const date = new Date(`${iso}T00:00:00Z`);
-    return Number.isNaN(date.getTime()) ? null : iso;
-  }
-
-  const parsed = new Date(raw);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toISOString().slice(0, 10);
-};
-
-const parseCsvLine = (line) => {
-  const values = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const next = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && next === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      values.push(current);
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-
-  values.push(current);
-  return values.map(value => cleanValue(value));
-};
-
-const parseFullName = (value) => {
-  const raw = cleanValue(value);
-  if (!raw) return { first_name: '', middle_name: '', last_name: '' };
-
-  if (raw.includes(',')) {
-    const [lastNamePart, firstNamePart] = raw.split(',').map(part => cleanValue(part));
-    const firstParts = firstNamePart.split(/\s+/).filter(Boolean);
-    return {
-      first_name: firstParts[0] || '',
-      middle_name: firstParts.length > 2 ? firstParts.slice(1, -1).join(' ') : firstParts[1] || '',
-      last_name: lastNamePart || (firstParts.length > 1 ? firstParts[firstParts.length - 1] : ''),
-    };
-  }
-
-  const parts = raw.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) {
-    return { first_name: parts[0], middle_name: '', last_name: '' };
-  }
-
-  return {
-    first_name: parts[0] || '',
-    middle_name: parts.length > 2 ? parts.slice(1, -1).join(' ') : '',
-    last_name: parts[parts.length - 1] || '',
-  };
-};
-
-const normalizeStatus = (value) => {
-  const normalized = normalizeText(value);
-  if (!normalized) return 'active';
-  if (normalized.includes('discharg')) return 'discharged';
-  if (normalized.includes('hospital')) return 'hospitalized';
-  return 'active';
-};
-
-const buildAddress = (row) => {
-  const line1 = cleanValue(row.addr_1_care || row.address || row.care_address_1);
-  const line2 = cleanValue(row.addr_2_care || row.care_address_2);
-  const apt = cleanValue(row.apt_care || row.apartment || row.unit);
-  const city = cleanValue(row.city_care || row.city);
-  const state = cleanValue(row.state_care || row.state);
-  const zip = cleanValue(row.zip_code_care || row.zip || row.zip_code);
-
-  const streetParts = [line1, line2, apt ? `Apt ${apt}` : ''].filter(Boolean).join(', ');
-  const localityParts = [city, state, zip].filter(Boolean).join(', ');
-  return [streetParts, localityParts].filter(Boolean).join(' • ');
-};
-
-const buildRowObject = (headers, row) => {
-  const mapped = {};
-  headers.forEach((header, index) => {
-    mapped[normalizeHeader(header) || `column_${index}`] = cleanValue(row[index]);
-  });
-  return mapped;
-};
-
-const getNameDobKey = (patient) => {
-  const first = normalizeName(patient.first_name);
-  const last = normalizeName(patient.last_name);
-  const dob = toIsoDate(patient.date_of_birth);
-  if (!first || !last || !dob) return null;
-  return `${first}|${last}|${dob}`;
-};
-
-const pushToLookup = (map, key, value) => {
-  if (!key) return;
-  const existing = map.get(key) || [];
-  existing.push(value);
-  map.set(key, existing);
-};
-
-const parseUploadedPatient = (row, rowNumber) => {
-  const parsedName = parseFullName(row.patient || `${row.first_name || ''} ${row.last_name || ''}`.trim());
-  const firstName = cleanValue(row.first_name || parsedName.first_name);
-  const lastName = cleanValue(row.last_name || parsedName.last_name);
-  const middleName = cleanValue(row.middle_name || parsedName.middle_name);
-  const dob = toIsoDate(row.dob || row.date_of_birth);
-  const admissionDate = toIsoDate(row.admitted_date || row.admission_date);
-  const medicalRecordNumber = cleanValue(row.mrn || row.medical_record_number);
-  const status = normalizeStatus(row.current_admission_status || row.status);
-  const address = buildAddress(row);
-  const secondaryDiagnoses = cleanValue(row.secondary_diagnosis)
-    .split(/[;,]/)
-    .map(item => cleanValue(item))
-    .filter(Boolean);
-
-  return {
-    rowNumber,
-    patientLabel: cleanValue(row.patient) || `${firstName} ${lastName}`.trim() || `Row ${rowNumber}`,
-    first_name: firstName,
-    middle_name: middleName,
-    last_name: lastName,
-    date_of_birth: dob,
-    medical_record_number: medicalRecordNumber,
-    admission_date: admissionDate,
-    status,
-    payor: cleanValue(row.primary_payor || row.payor),
-    primary_diagnosis: cleanValue(row.primary_diagnosis),
-    secondary_diagnoses: secondaryDiagnoses,
-    phone: cleanValue(row.home_phone || row.phone),
-    address,
-    care_type: 'home_health',
-    is_archived: false,
-  };
-};
-
-const resolveMatch = (patient, existingByMrn, existingByNameDob) => {
-  const mrnKey = normalizeMrn(patient.medical_record_number);
-  const nameDobKey = getNameDobKey(patient);
-  const mrnMatches = mrnKey ? (existingByMrn.get(mrnKey) || []) : [];
-  const nameDobMatches = nameDobKey ? (existingByNameDob.get(nameDobKey) || []) : [];
-  const mrnMatch = mrnMatches[0] || null;
-  const nameDobMatch = nameDobMatches[0] || null;
-
-  if (mrnMatches.length > 1) {
-    return { error: 'Multiple existing patients already share this MRN.' };
-  }
-
-  if (nameDobMatches.length > 1) {
-    return { error: 'Multiple existing patients already share this name and DOB.' };
-  }
-
-  if (mrnMatch && nameDobMatch && mrnMatch.id !== nameDobMatch.id) {
-    return { error: 'MRN matched one patient, but name and DOB matched a different patient.' };
-  }
-
-  return {
-    match: mrnMatch || nameDobMatch || null,
-    matchedBy: mrnMatch ? 'MRN' : nameDobMatch ? 'Name + DOB' : null,
-    lookupKeys: {
-      mrnKey,
-      nameDobKey,
-    },
-  };
-};
 
 const runInBatches = async (items, batchSize, worker) => {
   for (let index = 0; index < items.length; index += batchSize) {
@@ -252,25 +69,21 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'CSV file content is required' }, { status: 400 });
     }
 
-    const lines = fileContent.split(/\r?\n/).filter(line => line.trim());
-    if (lines.length < 2) {
+    // Full CSV parse (handles quoted commas, escaped quotes, and embedded
+    // newlines) so a single logical record never gets split across rows.
+    const records = parseCsv(fileContent);
+    if (records.length < 2) {
       return Response.json({ success: false, error: 'CSV file must include a header row and at least one patient row' }, { status: 400 });
     }
 
-    const headers = parseCsvLine(lines[0]);
-    const rawRows = lines.slice(1).map((line, index) => ({
+    const headers = records[0];
+    const rawRows = records.slice(1).map((cols, index) => ({
       rowNumber: index + 2,
-      data: buildRowObject(headers, parseCsvLine(line)),
+      data: buildRowObject(headers, cols),
     }));
 
     const existingPatients = await base44.asServiceRole.entities.Patient.list('-created_date', 2000);
-    const existingByMrn = new Map();
-    const existingByNameDob = new Map();
-
-    existingPatients.forEach((patient) => {
-      pushToLookup(existingByMrn, normalizeMrn(patient.medical_record_number), patient);
-      pushToLookup(existingByNameDob, getNameDobKey(patient), patient);
-    });
+    const { existingByMrn, existingByNameDob } = buildExistingLookups(existingPatients);
 
     const results = {
       reportType,
@@ -305,10 +118,9 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const verificationHasMrn = !!normalizeMrn(patient.medical_record_number);
-      const verificationHasNameDob = !!getNameDobKey(patient);
+      const uploadKeys = buildUploadKeys(patient);
 
-      if (!verificationHasMrn && !verificationHasNameDob) {
+      if (uploadKeys.length === 0) {
         results.errors.push({
           row: rawRow.rowNumber,
           patient: patient.patientLabel,
@@ -316,10 +128,6 @@ Deno.serve(async (req) => {
         });
         continue;
       }
-
-      const uploadKeys = [];
-      if (verificationHasMrn) uploadKeys.push(`mrn:${normalizeMrn(patient.medical_record_number)}`);
-      if (verificationHasNameDob) uploadKeys.push(`namedob:${getNameDobKey(patient)}`);
 
       if (uploadKeys.some(key => seenUploadKeys.has(key))) {
         results.skippedInFileDuplicates++;
