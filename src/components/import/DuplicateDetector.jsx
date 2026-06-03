@@ -21,32 +21,10 @@ import {
   Settings
 } from "lucide-react";
 
-// Levenshtein distance for fuzzy matching
-const levenshteinDistance = (str1, str2) => {
-  const matrix = [];
-  for (let i = 0; i <= str2.length; i++) matrix[i] = [i];
-  for (let j = 0; j <= str1.length; j++) matrix[0][j] = j;
-  for (let i = 1; i <= str2.length; i++) {
-    for (let j = 1; j <= str1.length; j++) {
-      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
-      }
-    }
-  }
-  return matrix[str2.length][str1.length];
-};
-
-// Calculate string similarity (0-100)
-const _calculateSimilarity = (str1, str2) => {
-  if (!str1 || !str2) return 0;
-  const distance = levenshteinDistance(str1, str2);
-  const maxLength = Math.max(str1.length, str2.length);
-  return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
-};
-
-// MRN-ONLY duplicate matching
+// MRN-ONLY duplicate matching.
+// Imports deliberately match on Medical Record Number only: fuzzy matching on
+// uploaded data is too risky to auto-update/close existing records, so this
+// surface intentionally does NOT use the shared fuzzy scorer.
 const calculateMatchScore = (patient, existingPatient, _sensitivity = 'medium', _criteria = {}) => {
   let score = 0;
   let matches = [];

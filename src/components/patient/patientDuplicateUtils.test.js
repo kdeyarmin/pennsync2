@@ -263,6 +263,56 @@ test('findDuplicateGroups returns [] when there are no duplicates', () => {
   assert.deepEqual(findDuplicateGroups(patients), []);
 });
 
+test('scorePatientPair signals can disable a signal group', () => {
+  const a = { id: 'a', first_name: 'John', last_name: 'Smith', medical_record_number: '555' };
+  const b = { id: 'b', first_name: 'Different', last_name: 'Person', medical_record_number: '555' };
+
+  // MRN enabled (default) -> matches.
+  assert.ok(scorePatientPair(a, b).matches.includes(REASON.MRN));
+
+  // MRN disabled -> the only shared signal is gone, so no match.
+  const { score, matches } = scorePatientPair(a, b, { signals: { mrn: false } });
+  assert.ok(!matches.includes(REASON.MRN));
+  assert.equal(score, 0);
+});
+
+test('findDuplicateGroups respects minScore floor and scoreOptions', () => {
+  // These two records match ONLY on MRN (names are entirely different).
+  const patients = [
+    { id: '1', first_name: 'Aaron', last_name: 'Adams', medical_record_number: 'X1' },
+    { id: '2', first_name: 'Chloe', last_name: 'Dunn', medical_record_number: 'X1' },
+  ];
+
+  // Default: MRN is a strong identifier, so the pair is flagged.
+  assert.equal(findDuplicateGroups(patients).length, 1);
+
+  // A high minScore floor overrides the adaptive threshold and suppresses it.
+  assert.equal(findDuplicateGroups(patients, { minScore: 95 }).length, 0);
+
+  // Disabling the MRN signal removes the only shared signal -> no match.
+  assert.equal(
+    findDuplicateGroups(patients, { scoreOptions: { signals: { mrn: false } } }).length,
+    0
+  );
+});
+
+test('a name-only match never clears a high (destructive) minScore floor', () => {
+  // Two genuinely different people who happen to share a name. EXACT_NAME alone
+  // scores 60, so a 70 floor must not flag them — this guards the backend's
+  // auto-delete path from removing distinct same-name patients.
+  const patients = [
+    { id: '1', first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-01' },
+    { id: '2', first_name: 'John', last_name: 'Smith', date_of_birth: '1988-12-31' },
+  ];
+  assert.equal(findDuplicateGroups(patients, { minScore: 70 }).length, 0);
+  // ...but corroboration (shared DOB) pushes them over the floor.
+  const corroborated = [
+    { id: '1', first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-01' },
+    { id: '2', first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-01' },
+  ];
+  assert.equal(findDuplicateGroups(corroborated, { minScore: 70 }).length, 1);
+});
+
 test('findDuplicateGroups attaches capped confidence percentages', () => {
   const patients = [
     { ...base, id: '1' },
