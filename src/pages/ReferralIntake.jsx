@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLMWithFile } from "@/lib/invokeLLM";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,8 @@ import { todayEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
+import { validateReferralFile, getDocumentType } from "../components/referral/referralUploadUtils";
+import { runReferralQuickScan } from "../components/referral/referralExtraction";
 import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
@@ -117,9 +119,9 @@ export default function ReferralIntake() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a PDF, PNG, JPG, or TIFF file');
+    const { valid, error } = validateReferralFile(file);
+    if (!valid) {
+      toast.error(error);
       return;
     }
 
@@ -127,119 +129,24 @@ export default function ReferralIntake() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFile(file_url);
-      
+      // Auto-classify the document type (pdf vs scanned image) from the file.
+      // Use the resolved type so PDFs from sources that leave file.type empty
+      // (some scanners/fax servers) still take the multi-referral path.
+      const docType = getDocumentType(file);
+      setNewReferral(prev => ({ ...prev, document_type: docType }));
+
       // If it's a PDF, check for multiple referrals
-      if (file.type === 'application/pdf') {
+      if (docType === 'pdf') {
         setMultiReferralDetection({ fileUrl: file_url, fileName: file.name });
         setIsUploading(false);
         return;
       }
       
-      // Immediately extract data from document with enhanced AI categorization
-      const extracted = await invokeLLMWithFile({
-        prompt: `Analyze this referral document and extract key information with automatic categorization.
+      // Immediately extract data for instant form pre-population + urgency triage.
+      // Uses the shared quick-scan definition (single source of truth) wrapped in
+      // the standard retry/timeout policy.
+      const extracted = await runReferralQuickScan(invokeLLM, { fileUrl: file_url });
 
-Extract and categorize:
-
-1. PATIENT INFORMATION:
-- Patient full name
-- Date of birth
-- Contact information
-- Address
-
-2. REFERRAL DETAILS:
-- Referral source (hospital, physician, facility name)
-- Referral date
-- Referring physician name and contact
-
-3. CLINICAL CATEGORIZATION:
-- Primary diagnosis
-- Secondary diagnoses
-- Category classification (cardiac, respiratory, wound_care, orthopedic, neurological, diabetes, post_surgical, general_medical, hospice, palliative)
-- ICD-10 codes if mentioned
-- Medical history highlights
-
-4. URGENCY ASSESSMENT:
-- Urgency indicators (urgent, high priority, stat, emergency, routine)
-- Clinical urgency factors (recent hospitalization, unstable vitals, critical condition)
-- Administrative urgency (insurance requirements, requested start date)
-- Recommended priority level
-
-5. INITIAL CARE NEEDS:
-- Skilled nursing needs
-- Therapy requirements (PT, OT, ST)
-- Medical equipment needs (DME)
-- Medication management requirements
-- Wound care needs
-- IV therapy requirements
-
-6. SUGGESTED INITIAL TASKS:
-- Critical actions needed immediately (within 24 hours)
-- High priority actions (within 48-72 hours)
-- Important follow-ups (within first week)
-
-Return comprehensive structured data for intelligent form pre-population and care planning.`,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            patient_name: { type: "string" },
-            patient_dob: { type: "string" },
-            patient_phone: { type: "string" },
-            patient_address: { type: "string" },
-            referral_source: { type: "string" },
-            referral_date: { type: "string" },
-            referring_physician: { type: "string" },
-            physician_contact: { type: "string" },
-            primary_diagnosis: { type: "string" },
-            secondary_diagnoses: { type: "array", items: { type: "string" } },
-            category: { 
-              type: "string",
-              enum: ["cardiac", "respiratory", "wound_care", "orthopedic", "neurological", "diabetes", "post_surgical", "general_medical", "hospice", "palliative"]
-            },
-            icd10_codes: { type: "array", items: { type: "string" } },
-            urgency_level: { 
-              type: "string",
-              enum: ["urgent", "high", "normal", "low"]
-            },
-            urgency_factors: { type: "array", items: { type: "string" } },
-            clinical_urgency_score: { type: "number" },
-            administrative_urgency_score: { type: "number" },
-            skilled_nursing_needs: { type: "array", items: { type: "string" } },
-            therapy_requirements: { type: "array", items: { type: "string" } },
-            dme_needs: { type: "array", items: { type: "string" } },
-            medication_management: { type: "boolean" },
-            wound_care_needed: { type: "boolean" },
-            iv_therapy_needed: { type: "boolean" },
-            suggested_initial_tasks: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  task: { type: "string" },
-                  priority: { type: "string" },
-                  timeframe: { type: "string" },
-                  reason: { type: "string" }
-                }
-              }
-            },
-            suggested_care_plans: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  problem: { type: "string" },
-                  goal: { type: "string" },
-                  interventions: { type: "array", items: { type: "string" } },
-                  rationale: { type: "string" }
-                }
-              }
-            },
-            confidence_score: { type: "number" }
-          }
-        }
-      });
-      
       setExtractedFormData(extracted);
       
       // Auto-populate form with comprehensive extracted data
