@@ -271,10 +271,12 @@ carry-forward flags), `factExtraction`, `presenceDetection` (+ `computeCarryForw
 | Pre-fill from chart | **Added** — stable elements carry forward from the last note for confirmation; visit-specific findings never auto-carried (anti-cloning) |
 | Visit Scribe parity | **Done** — extracted shared `ConstrainedNoteReviewer`; `VisitScribe`/`UnifiedDocumentReview` run the same pipeline |
 | Single reviewer (no duplication) | **Done** — `SmartNoteAssistant` Step 2 now renders the same `ConstrainedNoteReviewer` (via a `renderFinalNote` host API that keeps its Save-to-chart + PDF/signature) |
+| C3 — orphaned dead code | **Done** — removed 115 unreferenced `smartNote/` components (~35k LOC), build-verified |
+| Other live note paths | **Done** — `StructuredNoteDrafter` now assembles the nurse's fields deterministically (no LLM, no fabricated defaults); `MedicalScribe` routes its transcription through `ConstrainedNoteReviewer` and writes a real coverage score (was a hardcoded `quality_score: 95`) |
 
-**Still open:** C3 (delete ~122 orphaned components), S3 (consolidate calls),
-S6/S7 polish, and applying the same engine to `MedicalScribe`/`StructuredNoteDrafter`.
-The two LLM calls (generation + grounding) and the chart-save path still warrant a
-manual run against the live Base44 backend.
+**Still open:** S3 (consolidate the generation + grounding into fewer calls),
+S6/S7 polish, and consolidating the near-duplicate `MedicalScribe`/`VisitScribe`
+routes (a product decision). The two LLM calls (generation + grounding) and the
+chart-save path still warrant a manual run against the live Base44 backend.
 
 </content>
