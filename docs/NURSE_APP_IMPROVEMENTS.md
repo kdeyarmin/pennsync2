@@ -171,9 +171,10 @@ recommendation carries a `file:line` reference so it can be picked up directly.
     `src/lib/aiCall.js` (pure, unit-tested timeout + exponential-backoff retry with a sensible
     "don't retry auth/credit/4xx" classifier) and the `src/hooks/useAICall.js` hook on top
     (loading/error/data state, stale-response guarding). Tests live in `src/lib/aiCall.test.js`
-    and run under `npm run test:utils`. **Next:** adopt it incrementally at existing call sites,
-    starting with the compliance/medication/care-plan flows. Still open: the `useWorkflowExecution`
-    hook recommended in `COMPREHENSIVE_APP_REVIEW.md`.
+    and run under `npm run test:utils`. First adopter: `MedicationInteractionChecker.jsx` now
+    runs its safety check through `useAICall` (30 s timeout, 2 retries). **Next:** continue
+    incremental adoption at the remaining compliance/care-plan call sites. Still open: the
+    `useWorkflowExecution` hook recommended in `COMPREHENSIVE_APP_REVIEW.md`.
 
 22. **Decompose mega-components.**
     `src/components/visit/OASISScrubber.jsx` (4,146 lines), `src/pages/OASISAnalyzer.jsx` (3,162),

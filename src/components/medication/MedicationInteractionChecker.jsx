@@ -1,45 +1,40 @@
-import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Pill, 
-  AlertTriangle, 
-  Shield, 
+import { useAICall } from "@/hooks/useAICall";
+import {
+  Pill,
+  AlertTriangle,
+  Shield,
   Loader2,
   CheckCircle2,
   XCircle,
   Brain
 } from "lucide-react";
 
-export default function MedicationInteractionChecker({ 
-  medications, 
-  patientDiagnoses, 
+export default function MedicationInteractionChecker({
+  medications,
+  patientDiagnoses,
   patientAge,
   patientAllergies,
-  autoCheck = false 
+  autoCheck = false
 }) {
-  const [isChecking, setIsChecking] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  // Shared timeout/retry policy: this clinical safety check shouldn't hang
+  // indefinitely or fail permanently on a transient network blip.
+  const { run, loading, error } = useAICall({ timeoutMs: 30000, retries: 2 });
 
-  useEffect(() => {
-    if (autoCheck && medications?.length >= 2) {
-      checkInteractions();
-    }
-  }, [autoCheck, medications]);
-
-  const checkInteractions = async () => {
+  const checkInteractions = useCallback(async () => {
     if (!medications || medications.length < 2) return;
 
-    setIsChecking(true);
-    try {
-      const medList = medications.map(m => 
-        typeof m === 'string' ? m : `${m.name} ${m.dosage || ''} ${m.frequency || ''}`
-      ).join(', ');
+    const medList = medications.map(m =>
+      typeof m === 'string' ? m : `${m.name} ${m.dosage || ''} ${m.frequency || ''}`
+    ).join(', ');
 
-      const result = await base44.integrations.Core.InvokeLLM({
+    try {
+      const result = await run({
         prompt: `You are a clinical pharmacist AI. Analyze this medication regimen for interactions, contraindications, and safety concerns.
 
 MEDICATIONS:
@@ -123,12 +118,17 @@ Return comprehensive analysis with:
       });
 
       setAnalysis(result);
-    } catch (error) {
-      console.error('Medication check error:', error);
-      setAnalysis({ error: error.message });
+    } catch (err) {
+      // The hook records the error in `error`; we surface it in the UI below.
+      console.error('Medication check error:', err);
     }
-    setIsChecking(false);
-  };
+  }, [medications, patientDiagnoses, patientAge, patientAllergies, run]);
+
+  useEffect(() => {
+    if (autoCheck && medications?.length >= 2) {
+      checkInteractions();
+    }
+  }, [autoCheck, medications, checkInteractions]);
 
   if (!medications || medications.length === 0) {
     return (
@@ -147,7 +147,7 @@ Return comprehensive analysis with:
         <CardTitle className="text-base flex items-center gap-2">
           <Pill className="w-5 h-5 text-purple-600" />
           AI Medication Safety Analysis
-          {analysis && !analysis.error && (
+          {analysis && (
             <Badge className={`ml-auto ${
               analysis.overall_risk === 'critical' ? 'bg-red-600' :
               analysis.overall_risk === 'high' ? 'bg-orange-600' :
@@ -172,7 +172,7 @@ Return comprehensive analysis with:
           </div>
         </div>
 
-        {!analysis && !isChecking && (
+        {!analysis && !loading && (
           <Button
             onClick={checkInteractions}
             className="w-full bg-purple-600 hover:bg-purple-700"
@@ -182,14 +182,14 @@ Return comprehensive analysis with:
           </Button>
         )}
 
-        {isChecking && (
+        {loading && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-2" />
             <p className="text-sm text-slate-600">Analyzing medication safety...</p>
           </div>
         )}
 
-        {analysis && !analysis.error && (
+        {analysis && (
           <>
             {/* Summary */}
             {analysis.summary && (
@@ -330,11 +330,11 @@ Return comprehensive analysis with:
           </>
         )}
 
-        {analysis?.error && (
+        {error && (
           <Alert className="bg-red-50 border-red-300">
             <AlertTriangle className="w-4 h-4 text-red-600" />
             <AlertDescription className="text-sm text-red-800">
-              Analysis failed: {analysis.error}
+              Analysis failed: {error.message}
             </AlertDescription>
           </Alert>
         )}
