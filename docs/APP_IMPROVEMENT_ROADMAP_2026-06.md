@@ -3,8 +3,19 @@
 **Date:** 2026-06-03
 **Status:** Authoritative, consolidated roadmap. Supersedes the scattered findings in the
 prior review docs (see [§7](#7-relationship-to-prior-docs)).
-**Scope of this pass:** Review and prioritization only — **no code was changed**. Every item
-below is a recommendation with a verified code reference and a suggested sequence.
+
+**Implementation progress (this PR):** the safe, build-verified items have started landing:
+- ✅ **A1** — removed the GitHub developer functions (`createGitHubPR`, `fetchPullRequests`,
+  `fetchLatestRepo`) + the `PullRequests` page/wrapper/nav entry.
+- ✅ **A2** — stopped returning `error.stack` to clients in the 7 functions that did so
+  (server-side `SystemLog` logging preserved).
+- ✅ **E4 (moment)** — removed the unused `moment` dependency.
+- ✅ **D2 (partial)** — `manualChunks` splits the heaviest vendor libs into cacheable chunks.
+- ✅ **F1 (partial)** — added a per-route error boundary so one page crash no longer unmounts the app.
+
+Remaining items below are recommendations with verified code references; several (B1/B2/B4/B5)
+are **deliberate designs or clinical-policy decisions** and some (E1/E2/C1/F2/G) are **large
+refactors that need a test net first** — these are called out inline and should not be applied blindly.
 
 ---
 
@@ -86,13 +97,16 @@ a PR title and `owner='kdeyarmin', repo='pennsync'` defaults, uses a server-side
 not belong in a HIPAA backend.
 → **Delete all three functions** (and any UI/scheduled callers). *(Effort: Low · Risk: Low)*
 
-**A2 — Stop returning `error.stack` to clients (11 functions). — Med-High**
-`generateAIReport/entry.ts:108-110` returns `{ error: error.message, stack: error.stack }`.
-Same pattern in: `analyzeNursePerformance`, `analyzeOASISNarrativeMatch`, `generateComprehensiveReport`,
-`generatePatientHandout`, `generatePersonalizedTraining`, `generateSmartNoteGuide`,
-`generateUserGuidePDF`, `onUserSignup`, `scheduledGuidelineSync`, `transcribeAndExtractClinicalData`.
-Stacks can leak file paths, internal logic, and occasionally PHI in interpolated messages.
-→ Log server-side; return a generic message + correlation id. Consider a shared `jsonError()` helper. *(Low · Low)*
+**A2 — Stop returning `error.stack` to clients (7 functions). — Med-High — ✅ DONE (this PR)**
+Verified the genuinely client-facing leaks were 7 functions returning
+`{ error: error.message, stack: error.stack }` from `Response.json`: `generateAIReport`,
+`analyzeNursePerformance`, `analyzeOASISNarrativeMatch`, `generateComprehensiveReport`,
+`generatePersonalizedTraining`, `generateSmartNoteGuide`, `generateUserGuidePDF`. The `stack`
+field was removed from those responses; `console.error` + server-side `SystemLog` logging is
+preserved. (The other `error_stack:` occurrences — `generatePatientHandout`, `scheduledGuidelineSync`,
+`transcribeAndExtractClinicalData` — only write to a server-side `SystemLog` entity and are fine;
+`onUserSignup` only `console.error`s the stack. No client-facing change needed there.)
+Follow-up (optional): a shared `jsonError()` helper that returns a generic message + correlation id.
 
 **A3 — Bound unbounded `.list()` reads. — Med**
 Report/aggregate functions (`generateAIReport`, `processDischargeReport`, `predictSupplyNeeds`,
@@ -113,13 +127,20 @@ owner/repo. → Source admin recipients from `AgencySettings`; remove GitHub con
 
 ### B. Clinical safety & AI trustworthiness
 
-**B1 — Offline notes are marked "verified" without grounding. — High**
+**B1 — Offline notes skip AI grounding. — Med — ⚠️ NEEDS PRODUCT DECISION (deliberate design)**
 `src/components/smartNote/ConstrainedNoteReviewer.jsx:107-113`: when `!navigator.onLine`,
-`verifyNote()` returns `{ ok: true, offline: true }`, and `applyVerification` sets
-`verifiedNote = text` with only `{ offlinePending: true }`. A note with unverified (possibly
-hallucinated) findings can be treated as final.
-→ Persist offline notes as **"draft — pending grounding"**, block chart submission while pending,
-and re-run `groundNote()` automatically on reconnect before the note can be finalized. *(Med · Med)*
+`verifyNote()` returns `{ ok: true, offline: true }`. On closer review this is **not** simply a
+bug: the component already reports `verified: false` and shows a "Verification pending" banner
+(`fixRequired.offlinePending` is truthy), and the value-guard (deterministic, offline) still runs —
+only the *LLM grounding* pass is deferred. Both hosts then **intentionally allow the save**:
+`MedicalScribe.jsx:258` and `SmartNoteAssistant.jsx:572` keep "Save to Chart" enabled when
+`offlinePending`, and `SmartNoteAssistant.persistNote` has an explicit offline branch ("Saved
+offline. Will sync when reconnected."). This is a deliberate offline-first tradeoff for field
+nurses without connectivity. The genuinely missing piece is that the banner promises grounding
+"will run when you reconnect" but **nothing actually re-runs it on reconnect** (it only re-checks
+if the nurse edits the note). → Recommended (non-breaking): auto re-run `groundNote()` on the
+`online` event for offline-pending notes and surface the result, rather than blocking the save.
+Whether to additionally *block* offline chart submission is a clinical-policy call. *(Med · Med)*
 
 **B2 — Don't auto-append "…was not documented" sentences. — Med**
 `ConstrainedNoteReviewer.jsx:145-146` appends `computeNotDocumented()` phrases to the generated
