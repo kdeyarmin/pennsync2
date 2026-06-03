@@ -197,6 +197,26 @@ export const NAV_MANIFEST = [
   },
 
   // ─── Documentation ───────────────────────────────────────────────────────────
+  // Sidebar order follows the visit lifecycle: intake → chart the visit →
+  // note tools → document repository.
+  {
+    page: "ReferralIntake",
+    label: "Referrals",
+    icon: FileText,
+    category: "Documentation",
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["referral", "intake", "admission"],
+  },
+  {
+    page: "DocumentVisit",
+    label: "Document Visit",
+    icon: FileText,
+    category: "Documentation",
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["document visit", "visit note"],
+  },
   {
     page: "ClinicalDocumentation",
     label: "Clinical Notes",
@@ -204,15 +224,18 @@ export const NAV_MANIFEST = [
     category: "Documentation",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["clinical", "documentation", "notes", "charting"],
+    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation"],
   },
   {
+    // Smart Notes is the default tab *inside* the Clinical Notes hub
+    // (ClinicalDocumentation), so it is not a separate sidebar entry — but it
+    // stays routed + searchable and remains the mobile bottom-nav "Notes" shortcut.
     page: "SmartNoteAssistant",
     label: "Smart Notes",
     icon: Brain,
-    category: "Documentation",
+    category: null,
     adminOnly: false,
-    breadcrumbParent: null,
+    breadcrumbParent: "ClinicalDocumentation",
     keywords: ["smart note", "ai note", "documentation", "ai"],
   },
   {
@@ -223,15 +246,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["scribe", "dictation", "voice", "visit"],
-  },
-  {
-    page: "DocumentVisit",
-    label: "Document Visit",
-    icon: FileText,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["document visit", "visit note"],
   },
   {
     page: "DocumentHub",
@@ -376,17 +390,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "DocumentSignatures",
     keywords: ["create", "signature", "request"],
-  },
-
-  // ─── Referrals ───────────────────────────────────────────────────────────────
-  {
-    page: "ReferralIntake",
-    label: "Referrals",
-    icon: FileText,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["referral", "intake", "admission"],
   },
 
   // ─── Communication ───────────────────────────────────────────────────────────
