@@ -101,11 +101,13 @@ export default function DocumentPackageCreator({ open, onClose }) {
           let pdfUrl = packetDocument.template_file_url;
 
           if (!useExistingPatient) {
+            // Backend requires `pdf_template_url` and returns { prepared_pdf_url }
+            // on .data (functions.invoke yields the axios response, not the body).
             const result = await base44.functions.invoke('preparePDFWithPatientInfo', {
-              template_url: packetDocument.template_file_url,
+              pdf_template_url: packetDocument.template_file_url,
               patient_info: patientData,
             });
-            pdfUrl = result.pdf_url;
+            pdfUrl = result.data?.prepared_pdf_url || pdfUrl;
           }
 
           const documentName = packetDocuments.length > 1
