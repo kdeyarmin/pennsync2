@@ -73,6 +73,10 @@ export default function SmartNoteAssistant() {
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
   const [finalNote, setFinalNote] = useState("");
   const [fixRequired, setFixRequired] = useState(null);
+  const [verifiedNote, setVerifiedNote] = useState(""); // exact text that passed fact-check
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savedVisitId, setSavedVisitId] = useState(null);
   const [step, setStep] = useState(1);
   const [building, setBuilding] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -226,6 +230,9 @@ export default function SmartNoteAssistant() {
     setAnswers({});
     setConfirmedNegatives(new Set());
     setFinalNote("");
+    setVerifiedNote("");
+    setSaved(false);
+    setSavedVisitId(null);
     setFixRequired(null);
     setNoteSections(null);
     setAnalysis({ serviceLine, visitType, normalized, required, presence, gaps, draftScore });
@@ -294,33 +301,19 @@ export default function SmartNoteAssistant() {
       const notDocumented = computeNotDocumented();
       const finalText = notDocumented.length ? `${generated}\n\n${notDocumented.join(" ")}` : generated;
 
-      // 3. fact-check the GENERATED prose against the nurse's own material.
-      //    Deterministic value-guard runs always (offline too); AI grounding when online.
-      const allowedInput = buildAllowedInput();
-      const vg = valueGuard(generated, allowedInput);
-      if (!vg.ok) {
-        setFinalNote(finalText);
-        setNoteSections(parseNoteSections(finalText));
-        setFixRequired({ values: vg.unverified, sentences: [], offlinePending: false });
-        setBuilding(false);
-        return;
-      }
-
-      if (navigator.onLine) {
-        const grounding = await groundNote(generated, allowedInput, { userKey });
-        if (!grounding.ok) {
-          setFinalNote(finalText);
-          setNoteSections(parseNoteSections(finalText));
-          setFixRequired({ values: [], sentences: grounding.unsupported || [], groundingError: grounding.error, offlinePending: false });
-          setBuilding(false);
-          return;
-        }
-        await finalizeNote(finalText);
+      // 3. fact-check the note. This does NOT save anything — the nurse reviews
+      //    the note, then optionally saves it to the chart (see saveToChart).
+      setFinalNote(finalText);
+      setNoteSections(parseNoteSections(finalText));
+      setSaved(false);
+      setSavedVisitId(null);
+      const v = await verifyNote(finalText);
+      if (!v.ok) {
+        setVerifiedNote("");
+        setFixRequired(v.fix);
       } else {
-        // Offline: value-guard passed; defer AI grounding to reconnect but keep the
-        // note usable in the field (finalizeNote queues it for sync).
-        await finalizeNote(finalText);
-        setFixRequired({ offlinePending: true, values: [], sentences: [] });
+        setVerifiedNote(finalText);
+        setFixRequired(v.offline ? { offlinePending: true } : null);
       }
     } catch (err) {
       console.error("generateFinalNote error:", err);
@@ -330,91 +323,129 @@ export default function SmartNoteAssistant() {
     }
   };
 
-  // Re-run the fact-check after the nurse edits the note to remove flagged content
+  // Fact-check `text` against the nurse's material: deterministic value-guard
+  // always, AI grounding when online. Never persists.
+  const verifyNote = async (text) => {
+    const allowedInput = buildAllowedInput();
+    const vg = valueGuard(text, allowedInput);
+    if (!vg.ok) return { ok: false, fix: { values: vg.unverified, sentences: [], offlinePending: false } };
+    if (navigator.onLine) {
+      const grounding = await groundNote(text, allowedInput, { userKey: currentUser?.email || "anon" });
+      if (!grounding.ok) {
+        return { ok: false, fix: { values: [], sentences: grounding.unsupported || [], groundingError: grounding.error, offlinePending: false } };
+      }
+      return { ok: true, offline: false };
+    }
+    return { ok: true, offline: true };
+  };
+
+  // Re-run the fact-check after the nurse edits the note (no save)
   const recheckNote = async () => {
     if (!finalNote.trim() || !analysis) return;
     setBuilding(true);
     try {
-      const allowedInput = buildAllowedInput();
-      const vg = valueGuard(finalNote, allowedInput);
-      if (!vg.ok) {
-        setFixRequired({ values: vg.unverified, sentences: [], offlinePending: false });
-        setBuilding(false);
-        return;
-      }
-      if (navigator.onLine) {
-        const grounding = await groundNote(finalNote, allowedInput, { userKey: currentUser?.email || "anon" });
-        if (!grounding.ok) {
-          setFixRequired({ values: [], sentences: grounding.unsupported || [], groundingError: grounding.error, offlinePending: false });
-          setBuilding(false);
-          return;
-        }
-        await finalizeNote(finalNote);
+      const v = await verifyNote(finalNote);
+      if (!v.ok) {
+        setVerifiedNote("");
+        setFixRequired(v.fix);
       } else {
-        await finalizeNote(finalNote);
-        setFixRequired({ offlinePending: true, values: [], sentences: [] });
+        setVerifiedNote(finalNote);
+        setFixRequired(v.offline ? { offlinePending: true } : null);
       }
     } finally {
       setBuilding(false);
     }
   };
 
-  // Persist the finalized note with a real, deterministic coverage score
-  const finalizeNote = async (finalText) => {
-    setFinalNote(finalText);
-    setNoteSections(parseNoteSections(finalText));
-    setFixRequired(null);
-    if (!analysis) return;
+  // Save to the patient's chart so it can seed the next note. Re-verifies any
+  // edits first (to keep the chart factual), and updates the same Visit on
+  // re-save so editing never creates a duplicate record. Optional — the note is
+  // fully usable (copy/PDF) without saving.
+  const saveToChart = async () => {
+    if (!finalNote.trim() || !analysis) return;
+    if (!patientId || !currentUser?.email) {
+      toast.error("Select a patient to save this note to their chart.");
+      return;
+    }
+    setSaving(true);
+    try {
+      if (finalNote !== verifiedNote) {
+        const v = await verifyNote(finalNote);
+        if (!v.ok) { setVerifiedNote(""); setFixRequired(v.fix); setSaving(false); return; }
+        setVerifiedNote(finalNote);
+        setFixRequired(v.offline ? { offlinePending: true } : null);
+      }
+      await persistNote(finalNote);
+      setSaved(true);
+    } catch (err) {
+      console.error("Save to chart error:", err);
+      toast.error("Saving to the chart failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Create-or-update the chart records with a real, deterministic coverage score.
+  const persistNote = async (finalText) => {
+    if (!analysis || !patientId || !currentUser?.email) return;
     const { required, presence } = analysis;
     const answeredIds = required.filter(e => answers[e.id]?.trim()).map(e => e.id);
     const confirmedNegativeIds = Array.from(confirmedNegatives);
     const coverageScore = computeCoverageScore({ requiredElements: required, presenceResults: presence, answeredIds, confirmedNegativeIds });
+    const structured = deriveStructuredVisitFields(presence, { answeredIds, confirmedNegativeIds, textById: answers });
 
-    if (!patientId || !currentUser?.email) return;
-    try {
-      if (navigator.onLine) {
-        const structured = deriveStructuredVisitFields(presence, { answeredIds, confirmedNegativeIds, textById: answers });
-        const visit = await base44.entities.Visit.create({
-          patient_id: patientId, visit_date: visitDate, visit_type: visitType,
-          status: "completed", nurse_notes: finalText, raw_transcription: note,
-          compliance_score: coverageScore, ...structured,
-        });
-
-        const currentPatient = await base44.entities.Patient.get(patientId);
-        const enhancedHistory = currentPatient.enhanced_notes_history || [];
-        enhancedHistory.push({
-          date: visitDate, visit_type: visitType, note: finalText,
-          compliance_score: coverageScore, created_by: currentUser.email,
-          created_at: new Date().toISOString(),
-        });
-
-        await Promise.all([
-          base44.entities.Patient.update(patientId, { enhanced_notes_history: enhancedHistory, clinical_notes: finalText }),
-          base44.entities.NoteConversion.create(toNoteConversionFields({
-            coverageScore, draftPresenceScore: analysis.draftScore,
-            roughLen: note.length, enhancedLen: finalText.length,
-            visitType, diagnosis: patient?.primary_diagnosis || "",
-            nurseEmail: currentUser.email, patientId,
-          })),
-          base44.entities.ComplianceAudit.create({
-            visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId,
-            audit_date: new Date().toISOString(), compliance_score: coverageScore,
-            status: coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical",
-            audit_type: "automated",
-          }),
-        ]);
-        generateTasksFromNote(finalText, visit.id);
-        analyzeSupplyUsage(finalText, visit.id);
-      } else {
-        const { addToSyncQueue } = await import('@/lib/indexedDB');
-        await addToSyncQueue('CREATE_VISIT', { patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore });
-        toast.success("Saved offline. Will sync when reconnected.");
-      }
+    if (!navigator.onLine) {
+      const { addToSyncQueue } = await import('@/lib/indexedDB');
+      await addToSyncQueue('CREATE_VISIT', { patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured });
+      toast.success("Saved offline. Will sync when reconnected.");
       logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
-    } catch (err) {
-      console.error("Persist error:", err);
-      toast.error("Note generated, but saving to the chart failed.");
+      return;
     }
+
+    // Re-save after an edit → update the same visit, never duplicate.
+    if (savedVisitId) {
+      await Promise.all([
+        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured }),
+        base44.entities.Patient.update(patientId, { clinical_notes: finalText }),
+      ]);
+      toast.success("Chart updated.");
+      return;
+    }
+
+    const visit = await base44.entities.Visit.create({
+      patient_id: patientId, visit_date: visitDate, visit_type: visitType,
+      status: "completed", nurse_notes: finalText, raw_transcription: note,
+      compliance_score: coverageScore, ...structured,
+    });
+    setSavedVisitId(visit.id);
+
+    const currentPatient = await base44.entities.Patient.get(patientId);
+    const enhancedHistory = currentPatient.enhanced_notes_history || [];
+    enhancedHistory.push({
+      date: visitDate, visit_type: visitType, note: finalText,
+      compliance_score: coverageScore, created_by: currentUser.email,
+      created_at: new Date().toISOString(),
+    });
+
+    await Promise.all([
+      base44.entities.Patient.update(patientId, { enhanced_notes_history: enhancedHistory, clinical_notes: finalText }),
+      base44.entities.NoteConversion.create(toNoteConversionFields({
+        coverageScore, draftPresenceScore: analysis.draftScore,
+        roughLen: note.length, enhancedLen: finalText.length,
+        visitType, diagnosis: patient?.primary_diagnosis || "",
+        nurseEmail: currentUser.email, patientId,
+      })),
+      base44.entities.ComplianceAudit.create({
+        visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId,
+        audit_date: new Date().toISOString(), compliance_score: coverageScore,
+        status: coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical",
+        audit_type: "automated",
+      }),
+    ]);
+    generateTasksFromNote(finalText, visit.id);
+    analyzeSupplyUsage(finalText, visit.id);
+    toast.success("Saved to the patient's chart.");
+    logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
   };
 
   const analyzeSupplyUsage = async (noteText, visitId) => {
@@ -451,7 +482,8 @@ export default function SmartNoteAssistant() {
 
   const reset = () => {
     setNote(""); setAnalysis(null); setAnswers({}); setConfirmedNegatives(new Set());
-    setFinalNote(""); setFixRequired(null); setStep(1); setNoteSections(null);
+    setFinalNote(""); setVerifiedNote(""); setSaved(false); setSavedVisitId(null);
+    setFixRequired(null); setStep(1); setNoteSections(null);
     setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
     sessionStorage.removeItem(DRAFT_KEY);
     sessionStorage.removeItem(ANALYSIS_KEY);
@@ -500,6 +532,7 @@ export default function SmartNoteAssistant() {
       })
     : 0;
   const coverageTone = liveCoverage >= 90 ? "green" : liveCoverage >= 70 ? "orange" : "red";
+  const dirty = !!finalNote && finalNote !== verifiedNote; // edited since last verification
   const ready = note.trim().length >= 20;
 
   return (
@@ -800,10 +833,15 @@ export default function SmartNoteAssistant() {
                             <ShieldCheck className="w-4 h-4" /> Re-check
                           </Button>
                         </div>
+                      ) : dirty ? (
+                        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 space-y-1">
+                          <h3 className="font-semibold text-amber-800 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Edited since verification</h3>
+                          <p className="text-sm text-amber-800">You changed the note after it was checked. Saving will re-verify your edits against what you wrote first.</p>
+                        </div>
                       ) : (
                         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
                           <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" />
-                          Every value and statement in this note was verified against what you wrote.
+                          {saved ? "Saved to the patient's chart." : "Every value and statement in this note was verified against what you wrote. Copy it into your EMR, or save it to the chart."}
                         </div>
                       )}
 
@@ -831,6 +869,10 @@ export default function SmartNoteAssistant() {
                         onReset={reset}
                         originalNote={note}
                         noteSections={noteSections}
+                        onSave={saveToChart}
+                        saving={saving}
+                        saved={saved && !dirty}
+                        saveDisabled={saving || !!(fixRequired && !fixRequired.offlinePending) || !patientId}
                       />
                     </>
                   )}
