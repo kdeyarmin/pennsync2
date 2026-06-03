@@ -474,10 +474,12 @@ Next Steps:
 
 For questions, please contact your care team.`;
 
-      const recipientEmail = patient.email || 'caregiver@example.com';
+      // Never send PHI to a placeholder address — require a real email on file.
       if (!patient.email) {
-        console.warn(`Patient email not found for ${patient.first_name} ${patient.last_name}. Sending to default: ${recipientEmail}`);
+        alert(`No email address on file for ${patient.first_name} ${patient.last_name}. Add an email to the patient record before sending a visit summary.`);
+        return;
       }
+      const recipientEmail = patient.email;
 
       await base44.integrations.Core.SendEmail({
         to: recipientEmail,
@@ -958,6 +960,74 @@ Generate the complete clinical narrative based on the audio and context:`;
     setHasUnsavedChanges(true);
   };
 
+  // One-click quick actions — each creates a real record the office/nurse can act on.
+  const handleScheduleFollowUp = async () => {
+    if (!patient || !visit) return;
+    try {
+      const user = await base44.auth.me();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 7);
+      await base44.entities.Task.create({
+        patient_id: patient.id,
+        title: `Schedule follow-up visit for ${patient.first_name} ${patient.last_name}`,
+        description: `Follow-up requested during the ${visit.visit_type?.replace(/_/g, ' ')} visit on ${visit.visit_date}.`,
+        type: 'followup',
+        priority: 'medium',
+        status: 'pending',
+        due_date: dueDate.toISOString().split('T')[0],
+        due_timeframe: 'this_week',
+        assigned_to: user.email,
+        source: 'manual',
+        related_visit_id: visit.id,
+      });
+      alert('Follow-up task added to your task list.');
+    } catch (error) {
+      console.error('Failed to create follow-up task:', error);
+      alert('Could not create the follow-up task. Please try again.');
+    }
+  };
+
+  const handleMarkUrgent = async () => {
+    if (!patient || !visit) return;
+    try {
+      await base44.entities.PatientAlert.create({
+        patient_id: patient.id,
+        alert_type: 'urgent_intervention',
+        severity: 'high',
+        title: `Urgent: ${patient.first_name} ${patient.last_name}`,
+        message: `Flagged as urgent by the visiting nurse during the ${visit.visit_type?.replace(/_/g, ' ')} visit on ${visit.visit_date}. Office review requested.`,
+        status: 'active',
+        flagged_urgent: true,
+      });
+      alert('Patient flagged as urgent — the office will see this in active alerts.');
+    } catch (error) {
+      console.error('Failed to create urgent alert:', error);
+      alert('Could not flag this patient as urgent. Please try again.');
+    }
+  };
+
+  const handleRequestSupplies = async () => {
+    if (!patient || !visit) return;
+    try {
+      const user = await base44.auth.me();
+      await base44.entities.Task.create({
+        patient_id: patient.id,
+        title: `Supply request for ${patient.first_name} ${patient.last_name}`,
+        description: `Supplies requested by the visiting nurse during the ${visit.visit_type?.replace(/_/g, ' ')} visit on ${visit.visit_date}.`,
+        type: 'order',
+        priority: 'medium',
+        status: 'pending',
+        assigned_to: user.email,
+        source: 'manual',
+        related_visit_id: visit.id,
+      });
+      alert('Supply request logged as a task for the office.');
+    } catch (error) {
+      console.error('Failed to create supply request:', error);
+      alert('Could not create the supply request. Please try again.');
+    }
+  };
+
   const handleSave = async () => {
     // Prevent double-submit: a second click would complete the visit twice and
     // double-count visit-completion telemetry.
@@ -1248,9 +1318,9 @@ Generate the complete clinical narrative based on the audio and context:`;
               <OneClickActions
                 patient={patient}
                 visit={visit}
-                onScheduleFollowUp={() => alert('Schedule follow-up feature coming soon')}
-                onMarkUrgent={() => alert('Urgent flag set - office will be notified')}
-                onRequestSupplies={() => alert('Supply request sent to office')}
+                onScheduleFollowUp={handleScheduleFollowUp}
+                onMarkUrgent={handleMarkUrgent}
+                onRequestSupplies={handleRequestSupplies}
               />
 
               <QuickIncidentReporting 

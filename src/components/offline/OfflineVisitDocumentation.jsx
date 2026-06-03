@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { useOfflineSync } from './OfflineSyncService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,13 +80,28 @@ export default function OfflineVisitDocumentation({ patientId, visitId, existing
 
   const saveOnline = async () => {
     try {
-      // This would integrate with your actual API
+      // Strip the local-only placeholder id; the backend assigns the real one.
+      const { visit_id: _visit_id, ...rest } = formData;
+      const hasVitals = rest.vital_signs &&
+        Object.values(rest.vital_signs).some((v) => v !== '' && v != null);
+      const payload = {
+        ...rest,
+        vital_signs: hasVitals ? rest.vital_signs : null,
+        status: 'completed',
+      };
+
+      // Update the existing visit when editing one, otherwise create it.
+      const saved = visitId
+        ? await base44.entities.Visit.update(visitId, payload)
+        : await base44.entities.Visit.create(payload);
+
+      setLastSaved(new Date());
       toast.success('Visit documentation saved');
       if (onSaved) {
-        onSaved(formData);
+        onSaved(saved || formData);
       }
     } catch (error) {
-      toast.error('Failed to save: ' + error.message);
+      toast.error('Failed to save: ' + (error?.message || 'Unknown error'));
     }
   };
 

@@ -12,6 +12,9 @@ import { useQuery } from '@tanstack/react-query';
 import EnrollmentSummaryDashboard from '../components/learning/EnrollmentSummaryDashboard';
 import EmployeeTranscriptCenter from '../components/learning/EmployeeTranscriptCenter';
 import CourseRosterReport from '../components/learning/CourseRosterReport';
+import PlanComplianceReport from '../components/learning/PlanComplianceReport';
+import OverdueRemindersReport from '../components/learning/OverdueRemindersReport';
+import CertificateExpirationReport from '../components/learning/CertificateExpirationReport';
 
 const BUSINESS_LINES = [
   { value: 'home_health', label: 'Home Health' },
@@ -91,21 +94,15 @@ export default function LearningReports() {
         </TabsContent>
 
         <TabsContent value="plan-compliance">
-          <div className="text-center py-12">
-            <p className="text-slate-600">Learning Plan Compliance Report coming soon</p>
-          </div>
+          <PlanComplianceReport />
         </TabsContent>
 
         <TabsContent value="overdue">
-          <div className="text-center py-12">
-            <p className="text-slate-600">Overdue & Reminders Report coming soon</p>
-          </div>
+          <OverdueRemindersReport />
         </TabsContent>
 
         <TabsContent value="expiring">
-          <div className="text-center py-12">
-            <p className="text-slate-600">Certificate Expiration Report coming soon</p>
-          </div>
+          <CertificateExpirationReport />
         </TabsContent>
       </Tabs>
     </div>

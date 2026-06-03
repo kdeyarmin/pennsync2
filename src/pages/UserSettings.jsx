@@ -34,6 +34,7 @@ import {
   Shield
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
+import { logSecurityEvent } from "@/components/utils/security";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
@@ -209,12 +210,31 @@ export default function UserSettings() {
 
     setIsDeleting(true);
     try {
-      // In a real app, you'd call a backend function to delete the account
-      // For now, logout as placeholder
+      // A user cannot hard-delete their own record under RLS, and clinical/PHI
+      // records are subject to retention rules. Submit an audited deletion request
+      // that an administrator processes, then sign the user out.
+      await logSecurityEvent('ACCOUNT_DELETION_REQUESTED', {
+        user_email: currentUser?.email,
+        requested_at: new Date().toISOString(),
+      }, 'warning');
+
+      const admins = await base44.entities.User.filter({ role: 'admin' }).catch(() => []);
+      await Promise.all((admins || []).map((admin) =>
+        base44.functions.invoke('createNotification', {
+          user_email: admin.email,
+          title: 'Account deletion requested',
+          message: `${currentUser?.full_name || currentUser?.email} has requested deletion of their account. Please review and process per your data-retention policy.`,
+          type: 'system_update',
+          priority: 'high',
+          metadata: { requested_by: currentUser?.email },
+        }).catch(() => {})
+      ));
+
+      toast.success('Your account deletion request has been submitted. An administrator will process it. You will be signed out now.');
       await base44.auth.logout();
     } catch (error) {
-      console.error('Error deleting account:', error);
-      toast.error('Failed to delete account. Please contact support.');
+      console.error('Error requesting account deletion:', error);
+      toast.error('Failed to submit account deletion request. Please contact support.');
     } finally {
       setIsDeleting(false);
     }
@@ -787,22 +807,22 @@ export default function UserSettings() {
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="max-w-md">
-                <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+                <AlertDialogTitle>Request Account Deletion?</AlertDialogTitle>
                 <AlertDialogDescription className="space-y-3">
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                     <p className="text-sm text-red-900 font-semibold flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                      This is permanent
+                      This submits a deletion request
                     </p>
                   </div>
                   <p className="text-sm text-slate-700">
-                    You are about to permanently delete your PENNSync account. This action:
+                    You are about to request deletion of your PENNSync account. This action:
                   </p>
                   <ul className="text-sm text-slate-700 space-y-1 ml-4 list-disc">
-                    <li>Cannot be reversed</li>
-                    <li>Deletes all your patient records</li>
-                    <li>Removes all your notes and documents</li>
-                    <li>Logs you out immediately</li>
+                    <li>Notifies your administrators to process the deletion</li>
+                    <li>Is recorded in the security audit log</li>
+                    <li>Signs you out immediately</li>
+                    <li>Retains clinical/PHI records per your agency's data-retention policy</li>
                   </ul>
                   <div className="pt-3 border-t">
                     <label className="text-sm font-medium text-slate-900 block mb-2">
@@ -826,7 +846,7 @@ export default function UserSettings() {
                     disabled={deleteConfirm !== "DELETE" || isDeleting}
                     className="bg-red-600 hover:bg-red-700 text-white"
                   >
-                    {isDeleting ? "Deleting..." : "Delete Account"}
+                    {isDeleting ? "Submitting..." : "Request Deletion"}
                   </AlertDialogAction>
                 </div>
               </AlertDialogContent>
