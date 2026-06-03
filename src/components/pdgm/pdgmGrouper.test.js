@@ -115,3 +115,74 @@ test("groupPeriod: unknown principal Dx is reported, not fabricated", () => {
   assert.equal(result.clinicalGroup, null);
   assert.ok(result.missing.some((m) => /clinical group for principal Dx/.test(m)));
 });
+
+// ── no-guessing hardening (review findings) ──
+
+test("computeFunctionalLevel: malformed thresholds → null, never a fabricated 'high'", () => {
+  assert.equal(computeFunctionalLevel(3, {}), null); // no low/medium
+  assert.equal(computeFunctionalLevel(3, { low: 1 }), null); // medium missing
+  assert.equal(computeFunctionalLevel(3, { low: "1", medium: "4" }), null); // non-numeric
+});
+
+test("computeFunctionalPoints: a present response absent from the table is reported, not zeroed", () => {
+  const fp = computeFunctionalPoints({ m1860: "9", m1830: "1" }, CMS.itemPoints); // "9" not in m1860 table
+  assert.equal(fp.points, 2); // only m1830="1" → 2 scored
+  assert.deepEqual(fp.unmapped, ["m1860=9"]);
+});
+
+test("groupPeriod: functionalThresholds keyed by clinical group resolves per group", () => {
+  const cms = {
+    ...CMS,
+    functionalThresholds: { "MMTA - Cardiac and Circulatory": { low: 1, medium: 4 } },
+  };
+  const result = groupPeriod(
+    { periodNumber: 1, principalDiagnosis: "I50.9", secondaryDiagnoses: ["E11.9"], answers: { m1860: "2", m1830: "1" } },
+    cms
+  );
+  assert.equal(result.complete, true);
+  assert.equal(result.functionalLevel, "medium");
+  assert.equal(result.hipps, "1AA11");
+});
+
+test("groupPeriod: group-keyed thresholds absent for the assigned group → incomplete, not 'high'", () => {
+  const cms = { ...CMS, functionalThresholds: { Wound: { low: 1, medium: 4 } } }; // no cardiac entry
+  const result = groupPeriod(
+    { periodNumber: 1, principalDiagnosis: "I50.9", secondaryDiagnoses: [], answers: { m1860: "2", m1830: "1" } },
+    cms
+  );
+  assert.equal(result.complete, false);
+  assert.equal(result.functionalLevel, null); // NOT "high"
+});
+
+test("groupPeriod: present-but-unmapped functional response forces incomplete", () => {
+  const result = groupPeriod(
+    { periodNumber: 1, principalDiagnosis: "I50.9", secondaryDiagnoses: ["E11.9"], answers: { m1860: "9", m1830: "1" } },
+    CMS
+  );
+  assert.equal(result.complete, false);
+  assert.ok(result.missing.some((m) => /unmapped functional response/.test(m)));
+  assert.ok(result.missing.some((m) => /m1860=9/.test(m)));
+});
+
+test("groupPeriod: absent caseMixTable reports a missing TABLE, not a phantom entry", () => {
+  const cms = { ...CMS };
+  delete cms.caseMixTable;
+  const result = groupPeriod(
+    { periodNumber: 1, principalDiagnosis: "I50.9", secondaryDiagnoses: ["E11.9"], answers: { m1860: "2", m1830: "1" } },
+    cms
+  );
+  assert.equal(result.complete, false);
+  assert.ok(result.missing.some((m) => /case-mix weight\/HIPPS table/.test(m)));
+  assert.ok(!result.missing.some((m) => /entry for this combination/.test(m)));
+});
+
+test("groupPeriod: comorbidity table present but missing subgroups → reported (no 'null' in key)", () => {
+  const cms = { ...CMS, comorbidity: {} }; // malformed: no subgroups
+  const result = groupPeriod(
+    { periodNumber: 1, principalDiagnosis: "I50.9", secondaryDiagnoses: ["E11.9"], answers: { m1860: "2", m1830: "1" } },
+    cms
+  );
+  assert.equal(result.complete, false);
+  assert.equal(result.comorbidityLevel, null);
+  assert.ok(result.missing.some((m) => /comorbidity subgroup table/.test(m)));
+});

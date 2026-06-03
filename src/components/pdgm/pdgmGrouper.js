@@ -58,14 +58,19 @@ export function computeAdmissionSource(opts = {}) {
  * Functional-impairment points, summed from the SUPPLIED CMS response→points
  * table. The set of scored items is defined by the table's keys (so it tracks
  * the official CMS spec, not a hardcoded list).
+ *
+ * No guessing: a present answer whose response code is NOT in the supplied
+ * table is recorded in `unmapped` (rather than silently scored as zero), so
+ * callers can report it as missing instead of under-counting functional points.
  * @param {object} answers { itemId: response, ... }
  * @param {object} itemPoints { itemId: { [response]: points }, ... } (CMS data)
- * @returns {{points:number, items:object}|null} null if itemPoints not supplied
+ * @returns {{points:number, items:object, unmapped:Array<string>}|null} null if itemPoints not supplied
  */
 export function computeFunctionalPoints(answers, itemPoints) {
   if (!itemPoints || !answers) return null;
   let points = 0;
   const items = {};
+  const unmapped = [];
   for (const id of Object.keys(itemPoints)) {
     const resp = answers[id];
     if (resp === undefined || resp === null || resp === "") continue;
@@ -76,18 +81,41 @@ export function computeFunctionalPoints(answers, itemPoints) {
     if (typeof p === "number") {
       points += p;
       items[id] = p;
+    } else {
+      // Present response absent from the CMS table → table miss: reported, not
+      // treated as zero (which would understate points and fabricate a level).
+      unmapped.push(`${id}=${resp}`);
     }
   }
-  return { points, items };
+  return { points, items, unmapped };
 }
 
-/** Functional level from points + SUPPLIED CMS thresholds
- *  ({ low: maxLow, medium: maxMedium } — can vary by clinical group). */
+/** Functional level from points + a SUPPLIED CMS threshold set
+ *  ({ low: maxLow, medium: maxMedium }). Returns null (NOT a guess) when the
+ *  set is missing or malformed (non-numeric low/medium) — otherwise an
+ *  incomplete table would fall through to "high" and fabricate a level. */
 export function computeFunctionalLevel(points, thresholds) {
   if (!thresholds || typeof points !== "number") return null;
+  if (typeof thresholds.low !== "number" || typeof thresholds.medium !== "number") return null;
   if (points <= thresholds.low) return "low";
   if (points <= thresholds.medium) return "medium";
   return "high";
+}
+
+/** Resolve the threshold set that applies to a period. CMS functional
+ *  thresholds vary by clinical group, so `functionalThresholds` may be either a
+ *  flat { low, medium } (one set for all groups) or a table keyed by clinical
+ *  group { [group]: { low, medium } }. Returns null when no set applies, so the
+ *  period is reported incomplete rather than scored against absent thresholds. */
+function resolveThresholds(functionalThresholds, clinicalGroup) {
+  if (!functionalThresholds) return null;
+  if (typeof functionalThresholds.low === "number" || typeof functionalThresholds.medium === "number") {
+    return functionalThresholds; // flat shape: one set for all groups
+  }
+  if (clinicalGroup && functionalThresholds[clinicalGroup]) {
+    return functionalThresholds[clinicalGroup]; // keyed by clinical group
+  }
+  return null;
 }
 
 /** Clinical group from the principal diagnosis using the SUPPLIED CMS map.
@@ -132,7 +160,9 @@ export function lookupCaseMix(variables, caseMixTable) {
  * @param {object} input { periodNumber, hadInstitutionalStay, principalDiagnosis,
  *                         secondaryDiagnoses, answers }
  * @param {object} cmsTables { itemPoints, functionalThresholds, dxToGroup,
- *                             comorbidity, caseMixTable } (from official CMS files)
+ *                             comorbidity, caseMixTable } (from official CMS files).
+ *                 `functionalThresholds` may be flat ({ low, medium }) or keyed
+ *                 by clinical group ({ [group]: { low, medium } }).
  */
 export function groupPeriod(input, cmsTables = {}) {
   const { periodNumber, hadInstitutionalStay, principalDiagnosis, secondaryDiagnoses, answers } = input || {};
@@ -142,7 +172,8 @@ export function groupPeriod(input, cmsTables = {}) {
   const admissionSource = computeAdmissionSource({ hadInstitutionalStay });
   const clinicalGroup = assignClinicalGroup(principalDiagnosis, dxToGroup);
   const fp = computeFunctionalPoints(answers, itemPoints);
-  const functionalLevel = fp ? computeFunctionalLevel(fp.points, functionalThresholds) : null;
+  const thresholds = resolveThresholds(functionalThresholds, clinicalGroup);
+  const functionalLevel = fp ? computeFunctionalLevel(fp.points, thresholds) : null;
   const comorbidityLevel = assignComorbidityAdjustment(secondaryDiagnoses, comorbidity);
 
   const missing = [];
@@ -150,8 +181,12 @@ export function groupPeriod(input, cmsTables = {}) {
   if (!dxToGroup) missing.push("CMS diagnosis→clinical-group table");
   else if (!clinicalGroup) missing.push(`clinical group for principal Dx "${principalDiagnosis || ""}"`);
   if (!itemPoints || !functionalThresholds) missing.push("CMS functional points/thresholds");
-  else if (!functionalLevel) missing.push("functional level");
-  if (!comorbidity) missing.push("CMS comorbidity subgroup table");
+  else if (fp && fp.unmapped.length) missing.push(`unmapped functional response(s): ${fp.unmapped.join(", ")}`);
+  else if (!functionalLevel) missing.push("functional level (no thresholds for this clinical group)");
+  // assignComorbidityAdjustment yields null unless comorbidity.subgroups exists;
+  // guard the same shape so a malformed table can't leak "null" into the key.
+  if (!comorbidity || !comorbidity.subgroups) missing.push("CMS comorbidity subgroup table");
+  if (!caseMixTable) missing.push("CMS case-mix weight/HIPPS table");
 
   let caseMix = null;
   if (missing.length === 0) {
