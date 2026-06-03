@@ -81,6 +81,23 @@ export const ROUTES = [
   { name: 'DataQualityMonitor', Component: lazyPage(() => import('@/pages/DataQualityMonitor')) },
   { name: 'SystemHealthMonitor', Component: lazyPage(() => import('@/pages/SystemHealthMonitor')) },
   { name: 'TimeOff', Component: lazyPage(() => import('@/pages/TimeOff')) },
+
+  // Pages linked from the sidebar / command palette (navConfig) and from routed
+  // screens, but missing a route — so those links dead-ended on PageNotFound.
+  // Routed here so navigation resolves. (Consolidating the duplicate
+  // OASIS / dashboard families into fewer canonical pages is a separate product
+  // decision — see docs/UI_UX_REVIEW.md.)
+  { name: 'OASISAnalyzer', Component: lazyPage(() => import('@/pages/OASISAnalyzer')) },
+  { name: 'OASISComplianceReview', Component: lazyPage(() => import('@/pages/OASISComplianceReview')) },
+  { name: 'OASISDocumentationReview', Component: lazyPage(() => import('@/pages/OASISDocumentationReview')) },
+  { name: 'OASISRevenueAnalysis', Component: lazyPage(() => import('@/pages/OASISRevenueAnalysis')) },
+  { name: 'QualityDashboard', Component: lazyPage(() => import('@/pages/QualityDashboard')) },
+  { name: 'NursePerformanceDashboard', Component: lazyPage(() => import('@/pages/NursePerformanceDashboard')) },
+  { name: 'NurseTraining', Component: lazyPage(() => import('@/pages/NurseTraining')) },
+  { name: 'FaxAnalytics', Component: lazyPage(() => import('@/pages/FaxAnalytics')) },
+  { name: 'DocumentAuditLogs', Component: lazyPage(() => import('@/pages/DocumentAuditLogs')) },
+  { name: 'BulkSignatureRequests', Component: lazyPage(() => import('@/pages/BulkSignatureRequests')) },
+  { name: 'TemplateManagement', Component: lazyPage(() => import('@/pages/TemplateManagement')) },
 ];
 
 /**
