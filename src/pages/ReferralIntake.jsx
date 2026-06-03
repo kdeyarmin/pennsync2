@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -144,7 +145,7 @@ export default function ReferralIntake() {
       // Immediately extract data for instant form pre-population + urgency triage.
       // Uses the shared quick-scan definition (single source of truth) wrapped in
       // the standard retry/timeout policy.
-      const extracted = await runReferralQuickScan(base44, { fileUrl: file_url });
+      const extracted = await runReferralQuickScan(invokeLLM, { fileUrl: file_url });
 
       setExtractedFormData(extracted);
       

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,7 +23,7 @@ export default function ReferralAnalyzer({ referralData, onAnalysisComplete }) {
 
     setIsAnalyzing(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert home health intake coordinator. Analyze this patient referral and provide:
 
 1. MISSING INFORMATION ANALYSIS:

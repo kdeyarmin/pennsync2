@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ export default function NextStepsSummaryGenerator({ patient, educationMaterial, 
   const generateSummary = async () => {
     setIsGenerating(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are creating a personalized "Next Steps" and "What to Watch For" summary for a patient after an education session. This should be simple, actionable, and easy for patients/caregivers to follow at home.
 
 PATIENT: ${patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown'}

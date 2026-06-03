@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -239,7 +240,7 @@ export default function PDGMTrendDashboard() {
       const last3 = chartData.paymentTrend.slice(-3);
       const avg = Math.round(last3.reduce((s, d) => s + d.avgPayment, 0) / 3);
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Last 3 months avg payment: $${avg}. Predict next 3 months.`,
         response_json_schema: {
           type: "object",
@@ -277,7 +278,7 @@ export default function PDGMTrendDashboard() {
       const topGroup = chartData.groupDist[0]?.name || 'N/A';
       const topFunc = chartData.funcDist[0]?.name || 'N/A';
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Top PDGM drivers for $${stats.avgPayment} avg. Top group: ${topGroup}. Top func: ${topFunc}. List 3 key drivers.`,
         response_json_schema: {
           type: "object",
@@ -322,7 +323,7 @@ export default function PDGMTrendDashboard() {
       const complianceData = chartData.complianceTrend.slice(-6);
       const topGroups = chartData.groupDist.slice(0, 3);
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze PDGM trends and forecast next 6 months.
 
 HISTORICAL DATA (Last 6 months):
@@ -420,7 +421,7 @@ Provide:
         estimated_payment: u.estimated_payment
       }));
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze patient assessments to identify at-risk cases requiring proactive intervention.
 
 RECENT ASSESSMENTS:
@@ -492,7 +493,7 @@ For each at-risk patient, provide:
         totalRevenue: stats.totalRevenue
       };
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Simulate the impact of implementing a new care pathway on PDGM outcomes.
 
 CURRENT BASELINE:

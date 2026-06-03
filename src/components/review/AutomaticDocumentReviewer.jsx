@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export default function AutomaticDocumentReviewer({
         rule.category === 'plan_of_care'
       );
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert Medicare home health compliance auditor and clinical documentation specialist for Pennsylvania home health agencies. Perform a comprehensive review of this clinical note.
 
 CLINICAL NOTE TO REVIEW:

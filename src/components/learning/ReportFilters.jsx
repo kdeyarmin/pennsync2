@@ -107,12 +107,12 @@ export default function ReportFilters({
           {showPlan && planOptions.length > 0 && (
             <div>
               <label className="text-sm font-medium text-slate-700">Learning Plan</label>
-              <Select value={filters.plan} onValueChange={(value) => handleFilterChange('plan', value)}>
+              <Select value={filters.plan || "all"} onValueChange={(value) => handleFilterChange('plan', value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>All Plans</SelectItem>
+                  <SelectItem value="all">All Plans</SelectItem>
                   {planOptions.map(opt => (
                     <SelectItem key={opt.id} value={opt.id}>
                       {opt.name}

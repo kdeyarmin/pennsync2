@@ -13,11 +13,14 @@
     "test:dedupe": "node --test src/components/patient/patientDuplicateUtils.test.js base44/functions/deduplicatePatients/engineSync.test.js",
     "typecheck": "tsc -p ./jsconfig.json",
     "typecheck:utils": "npx tsc --noEmit --allowJs --checkJs --esModuleInterop --strict false --types node src/components/oasis/workflowEngineUtils.js src/components/oasis/workflowEngineUtils.test.js src/components/fax/faxTrackerUtils.js src/components/fax/faxTrackerUtils.test.js src/components/voice/phoneUtils.js src/components/voice/phoneUtils.test.js src/components/voice/dutyUtils.js src/components/voice/dutyUtils.test.js src/components/voice/callbackQueue.js src/components/voice/callbackQueue.test.js src/components/messaging/smsUtils.js src/components/messaging/smsUtils.test.js src/components/messaging/smsQuickReplies.js src/components/messaging/smsQuickReplies.test.js src/components/admin/eightxeightSetup.js src/components/admin/eightxeightSetup.test.js src/components/admin/phoneAnalytics.js src/components/admin/phoneAnalytics.test.js src/components/admin/csvExport.js src/components/admin/csvExport.test.js src/components/messaging/smsTemplates.js src/components/messaging/smsTemplates.test.js src/components/messaging/scheduledSms.js src/components/messaging/scheduledSms.test.js src/components/medication/drugInteractions.js src/components/medication/drugInteractions.test.js src/components/timeoff/timeOffUtils.js src/components/timeoff/timeOffUtils.test.js src/components/utils/medicalDictionary.js src/components/smartNote/compliance/factExtraction.js src/components/smartNote/compliance/factExtraction.test.js src/components/smartNote/compliance/requiredElements.js src/components/smartNote/compliance/requiredElements.test.js src/components/smartNote/compliance/presenceDetection.js src/components/smartNote/compliance/presenceDetection.test.js src/components/smartNote/compliance/normalize.js src/components/smartNote/compliance/valueGuard.js src/components/smartNote/compliance/valueGuard.test.js src/components/smartNote/compliance/coverageScore.js src/components/smartNote/compliance/coverageScore.test.js src/components/oasis/oasisScoringEngine.js src/components/oasis/oasisScoringEngine.test.js src/components/pdgm/pdgmGrouper.js src/components/pdgm/pdgmGrouper.test.js",
-    "test:utils": "node --test src/components/oasis/workflowEngineUtils.test.js src/components/fax/faxTrackerUtils.test.js src/components/voice/phoneUtils.test.js src/components/voice/dutyUtils.test.js src/components/voice/callbackQueue.test.js src/components/messaging/smsUtils.test.js src/components/messaging/smsQuickReplies.test.js src/components/admin/eightxeightSetup.test.js src/components/admin/phoneAnalytics.test.js src/components/admin/csvExport.test.js src/components/messaging/smsTemplates.test.js src/components/messaging/scheduledSms.test.js src/components/medication/drugInteractions.test.js src/components/timeoff/timeOffUtils.test.js src/components/smartNote/compliance/factExtraction.test.js src/components/smartNote/compliance/requiredElements.test.js src/components/smartNote/compliance/presenceDetection.test.js src/components/smartNote/compliance/valueGuard.test.js src/components/smartNote/compliance/coverageScore.test.js src/components/oasis/oasisScoringEngine.test.js src/lib/aiCall.test.js src/components/pdgm/pdgmGrouper.test.js src/components/referral/referralUploadUtils.test.js src/components/referral/referralExtraction.test.js base44/functions/processPatientFileUpdate/patientImportUtils.test.js base44/functions/deduplicatePatients/dedupUtils.test.js",
+    "test:utils": "node --test src/components/oasis/workflowEngineUtils.test.js src/components/fax/faxTrackerUtils.test.js src/components/voice/phoneUtils.test.js src/components/voice/dutyUtils.test.js src/components/voice/callbackQueue.test.js src/components/messaging/smsUtils.test.js src/components/messaging/smsQuickReplies.test.js src/components/admin/eightxeightSetup.test.js src/components/admin/phoneAnalytics.test.js src/components/admin/csvExport.test.js src/components/messaging/smsTemplates.test.js src/components/messaging/scheduledSms.test.js src/components/medication/drugInteractions.test.js src/components/timeoff/timeOffUtils.test.js src/components/smartNote/compliance/factExtraction.test.js src/components/smartNote/compliance/requiredElements.test.js src/components/smartNote/compliance/presenceDetection.test.js src/components/smartNote/compliance/valueGuard.test.js src/components/smartNote/compliance/coverageScore.test.js src/components/oasis/oasisScoringEngine.test.js src/lib/aiCall.test.js src/components/pdgm/pdgmGrouper.test.js base44/functions/processPatientFileUpdate/patientImportUtils.test.js base44/functions/deduplicatePatients/dedupUtils.test.js src/components/visit/vitalEscalation.test.js src/components/oasis/oasisAnalytics.test.js src/components/referral/referralUploadUtils.test.js src/components/referral/referralExtraction.test.js",
+    "test": "npm run test:utils && npm run test:components",
+    "test:components": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "check:updates": "node tools-check-updates.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
-    "verify:workflow-quality": "npm run lint:workflow-targets && npm run typecheck:utils && npm run test:utils && npm run build"
+    "verify:workflow-quality": "npm run lint:workflow-targets && npm run typecheck:utils && npm run test:utils && npm run test:components && npm run build"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.31",
@@ -63,7 +66,6 @@
     "jspdf": "^4.2.1",
     "lodash": "^4.18.1",
     "lucide-react": "^1.17.0",
-    "moment": "^2.30.1",
     "next-themes": "^0.4.6",
     "pdfjs-dist": "^6.0.227",
     "react": "^19.2.7",
@@ -88,6 +90,9 @@
   "devDependencies": {
     "@eslint/js": "^9.39.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
@@ -99,9 +104,11 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vitest": "^3.2.6"
   }
 }

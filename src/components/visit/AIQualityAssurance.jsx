@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +58,7 @@ Return a JSON object with this structure:
   "warnings": [{"item": "description", "suggestion": "recommendation"}]
 }`;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt,
         response_json_schema: {
           type: "object",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -253,7 +253,7 @@ Analyze the documentation and return a detailed JSON audit report with this exac
 
 Be thorough and specific. For critical items, provide exact template text the nurse can use.`;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt,
         response_json_schema: {
           type: "object",

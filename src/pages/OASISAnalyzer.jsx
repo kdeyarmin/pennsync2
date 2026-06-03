@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
+import {
+  aggregateDemographics,
+  aggregateTopDiagnoses,
+  aggregateFunctionalScores,
+  aggregatePaymentTrends,
+  computeSummaryStats,
+} from "@/components/oasis/oasisAnalytics";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,90 +105,12 @@ import OASISPDFComparison from "../components/oasis/OASISPDFComparison";
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
-  // Process demographics data
-  const demographicsData = React.useMemo(() => {
-    const genderCount = { Male: 0, Female: 0, Unknown: 0 };
-    const ageRanges = { '0-64': 0, '65-74': 0, '75-84': 0, '85+': 0, Unknown: 0 };
-    
-    savedOASISUploads.forEach(upload => {
-      const gender = upload.pdgm_data?.patient_info?.gender || 'Unknown';
-      if (gender.toLowerCase().includes('m') || gender.toLowerCase() === 'male') genderCount.Male++;
-      else if (gender.toLowerCase().includes('f') || gender.toLowerCase() === 'female') genderCount.Female++;
-      else genderCount.Unknown++;
-
-      const dob = upload.pdgm_data?.patient_info?.dob;
-      if (dob && dob !== 'Not found') {
-        const age = new Date().getFullYear() - new Date(dob).getFullYear();
-        if (age < 65) ageRanges['0-64']++;
-        else if (age < 75) ageRanges['65-74']++;
-        else if (age < 85) ageRanges['75-84']++;
-        else ageRanges['85+']++;
-      } else {
-        ageRanges.Unknown++;
-      }
-    });
-
-    return {
-      gender: Object.entries(genderCount).map(([name, value]) => ({ name, value })),
-      age: Object.entries(ageRanges).map(([name, value]) => ({ name, value }))
-    };
-  }, [savedOASISUploads]);
-
-  // Process diagnoses data
-  const diagnosesData = React.useMemo(() => {
-    const diagnosisCount = {};
-    
-    savedOASISUploads.forEach(upload => {
-      const primaryDx = upload.pdgm_data?.primary_diagnosis || upload.pdgm_data?.primary_diagnosis_description;
-      if (primaryDx && primaryDx !== 'Unknown' && primaryDx !== 'Not found') {
-        const dxKey = primaryDx.substring(0, 50); // Truncate for display
-        diagnosisCount[dxKey] = (diagnosisCount[dxKey] || 0) + 1;
-      }
-    });
-
-    return Object.entries(diagnosisCount)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-  }, [savedOASISUploads]);
-
-  // Process functional scores over time
-  const functionalScoresData = React.useMemo(() => {
-    return savedOASISUploads
-      .filter(u => u.assessment_date && u.pdgm_data?.functional_scores)
-      .sort((a, b) => new Date(a.assessment_date) - new Date(b.assessment_date))
-      .slice(-20) // Last 20 assessments
-      .map(upload => ({
-        date: new Date(upload.assessment_date).toLocaleDateString(),
-        ambulation: upload.pdgm_data?.functional_scores?.m1860_ambulation || 0,
-        transferring: upload.pdgm_data?.functional_scores?.m1850_transferring || 0,
-        bathing: upload.pdgm_data?.functional_scores?.m1830_bathing || 0,
-        patient: upload.patient_name?.substring(0, 15) || 'Unknown'
-      }));
-  }, [savedOASISUploads]);
-
-  // Process PDGM payment trends
-  const paymentTrendsData = React.useMemo(() => {
-    return savedOASISUploads
-      .filter(u => u.assessment_date && u.estimated_payment)
-      .sort((a, b) => new Date(a.assessment_date) - new Date(b.assessment_date))
-      .slice(-15) // Last 15 with payments
-      .map(upload => ({
-        date: new Date(upload.assessment_date).toLocaleDateString(),
-        payment: upload.estimated_payment,
-        patient: upload.patient_name?.substring(0, 15) || 'Unknown'
-      }));
-  }, [savedOASISUploads]);
-
-  // Calculate summary statistics
-  const summaryStats = React.useMemo(() => {
-    const totalAssessments = savedOASISUploads.length;
-    const avgScore = savedOASISUploads.reduce((sum, u) => sum + (u.scores?.overall || 0), 0) / totalAssessments || 0;
-    const avgPayment = savedOASISUploads.filter(u => u.estimated_payment).reduce((sum, u) => sum + u.estimated_payment, 0) / savedOASISUploads.filter(u => u.estimated_payment).length || 0;
-    const totalRevenue = savedOASISUploads.reduce((sum, u) => sum + (u.estimated_payment || 0), 0);
-
-    return { totalAssessments, avgScore, avgPayment, totalRevenue };
-  }, [savedOASISUploads]);
+  // Chart-ready aggregations (pure logic extracted to oasisAnalytics.js, unit-tested).
+  const demographicsData = React.useMemo(() => aggregateDemographics(savedOASISUploads), [savedOASISUploads]);
+  const diagnosesData = React.useMemo(() => aggregateTopDiagnoses(savedOASISUploads), [savedOASISUploads]);
+  const functionalScoresData = React.useMemo(() => aggregateFunctionalScores(savedOASISUploads), [savedOASISUploads]);
+  const paymentTrendsData = React.useMemo(() => aggregatePaymentTrends(savedOASISUploads), [savedOASISUploads]);
+  const summaryStats = React.useMemo(() => computeSummaryStats(savedOASISUploads), [savedOASISUploads]);
 
   if (savedOASISUploads.length === 0) {
     return (
@@ -1162,7 +1092,7 @@ export default function OASISAnalyzer() {
             console.log("Text fallback successful, extracted", textExtract.output.full_text.length, "characters");
             
             // Use AI to parse the raw text for critical fields
-            const parsedData = await base44.integrations.Core.InvokeLLM({
+            const parsedData = await invokeLLM({
               prompt: `Parse this OASIS document text and extract key data fields. Focus on accuracy.
 
 DOCUMENT TEXT:
@@ -1200,7 +1130,7 @@ Return JSON:
                   functional_scores: { type: "object" }
                 }
               }
-            });
+            }, { timeoutMs: 90000, retries: 1 });
             
             // Map parsed data to extraction output format
             extractedData = {
@@ -1560,7 +1490,7 @@ Return JSON:
       let analysisResult;
       try {
         analysisResult = await Promise.race([
-          base44.integrations.Core.InvokeLLM({
+          invokeLLM({
             prompt: `Analyze OASIS document. Extract: diagnosis, functional scores, compliance issues, revenue opportunities.
 
 DATA:
@@ -1592,7 +1522,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 clinician_questions: { type: "array", items: { type: "string" } }
               }
             }
-          }),
+          }, { timeoutMs: 90000, retries: 0 }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Analysis timeout - please try again')), 90000)
           )

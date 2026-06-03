@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,7 +127,7 @@ export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = f
         }
       };
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an advanced predictive analytics AI specialized in home health patient outcomes forecasting using evidence-based clinical algorithms.
 
 **CRITICAL TASK:** Analyze this patient's comprehensive data and generate accurate predictions for clinical deterioration and hospital readmission risks, along with proactive care recommendations.

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export default function AutomatedTaskAssigner({
   const generateTaskAssignments = async () => {
     setIsGenerating(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a care coordination AI. Based on detected gaps and patient changes, generate task assignments for the appropriate care team members.
 
 PATIENT: ${patientName}

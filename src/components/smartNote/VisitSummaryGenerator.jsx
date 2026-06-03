@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +79,7 @@ export default function VisitSummaryGenerator({ patientId }) {
       const ctx = patient
         ? `Patient: ${patient.first_name} ${patient.last_name}, DOB: ${patient.date_of_birth || "?"}, Dx: ${patient.primary_diagnosis || "?"}`
         : "";
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a clinical documentation specialist. Generate a structured patient visit summary from this nursing note/transcript.
 
 VISIT TRANSCRIPT:

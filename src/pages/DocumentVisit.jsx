@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 
 import AudioRecorder from "../components/visit/AudioRecorder";
 import VitalSignsForm from "../components/visit/VitalSignsForm";
+import { detectCriticalVitals } from "../components/visit/vitalEscalation";
 import TemplateGenerator from "../components/visit/TemplateGenerator";
 import VitalSignsComparison from "../components/visit/VitalSignsComparison";
 import ClinicalDecisionSupport from "../components/visit/ClinicalDecisionSupport";
@@ -49,6 +51,8 @@ import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClin
 import AIDocumentationAudit from "../components/audit/AIDocumentationAudit";
 import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
 import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
+import { scoreNoteFromText } from "../components/smartNote/compliance/scoreNoteFromText";
+import { toNoteConversionFields } from "../components/smartNote/compliance/coverageScore";
 import ICD10CodeSuggester from "../components/visit/ICD10CodeSuggester";
 import DischargeVisitSummary from "../components/visit/DischargeVisitSummary";
 import ProactiveRiskIdentifier from "../components/alerts/ProactiveRiskIdentifier";
@@ -150,11 +154,18 @@ export default function DocumentVisit() {
     };
   }, []);
 
+  // Current user → drives the compliance service line (home_health vs hospice)
+  // and the nurse_email stamped on the audit records, mirroring SmartNoteAssistant.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const { data: visit, isLoading } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: () => base44.entities.Visit.filter({ id: visitId }),
     select: (data) => data[0],
-    enabled: !!visitId && hasAccess === true, 
+    enabled: !!visitId && hasAccess === true,
   });
 
   const { data: patient } = useQuery({
@@ -258,6 +269,41 @@ export default function DocumentVisit() {
       }
     };
   }, [narrativeText, vitalSigns, startTime, endTime, visit]);
+
+  // Critical-vital escalation (non-blocking): when an entered vital crosses a
+  // life-threatening threshold, raise a PatientAlert so a supervisor/physician
+  // is looped in. This never blocks saving a genuine abnormal reading. Each
+  // (patient, breach) pair alerts at most once — keys are scoped by patient id
+  // so switching patients can't suppress the new one, and a failed create is
+  // rolled back so it retries on the next change.
+  const escalatedVitalsRef = useRef(new Set());
+  useEffect(() => {
+    const pid = patient?.id;
+    if (!pid) return;
+    const breaches = detectCriticalVitals(vitalSigns).filter((b) => !escalatedVitalsRef.current.has(`${pid}:${b.id}`));
+    if (!breaches.length) return;
+    const keys = breaches.map((b) => `${pid}:${b.id}`);
+    // Optimistically mark as alerted so a rapid re-render can't duplicate an
+    // in-flight create; roll back on failure so it retries next time.
+    keys.forEach((k) => escalatedVitalsRef.current.add(k));
+    const severity = breaches.some((b) => b.severity === "critical") ? "critical" : "high";
+    base44.entities.PatientAlert.create({
+      patient_id: pid,
+      alert_type: "vital_deterioration",
+      severity,
+      title: "Critical vital sign recorded",
+      message: `A vital sign crossed a critical threshold during this visit: ${breaches.map((b) => b.detail).join("; ")}. Notify the supervising clinician/physician.`,
+      contributing_factors: breaches.map((b) => `${b.label}: ${b.detail}`),
+      recommended_actions: [
+        "Notify supervising clinician / physician",
+        "Reassess and document intervention and patient response",
+        "Escalate per agency protocol",
+      ],
+    }).catch((err) => {
+      console.error("Vital escalation alert failed:", err);
+      keys.forEach((k) => escalatedVitalsRef.current.delete(k));
+    });
+  }, [vitalSigns, patient]);
 
   const handleVoiceCommand = async (action, spokenText) => {
     // Track voice command usage
@@ -666,7 +712,7 @@ REQUIRED HOSPICE MEDICARE ELEMENTS (must include these sections with prompts):
 
 Generate the complete template now:`;
 
-      const template = await base44.integrations.Core.InvokeLLM({
+      const template = await invokeLLM({
         prompt: prompt
       });
 
@@ -778,7 +824,7 @@ ${narrativeText}
 
 Generate the complete clinical narrative based on the audio and context:`;
 
-        const llmResult = await base44.integrations.Core.InvokeLLM({
+        const llmResult = await invokeLLM({
           prompt: prompt,
           file_urls: [file_url]
         });
@@ -922,12 +968,49 @@ Generate the complete clinical narrative based on the audio and context:`;
       
       const sanitizedNarrative = sanitizeInput(narrativeText);
       
+      // Deterministic, offline compliance scoring — the same engine Smart Notes
+      // uses, so a note finalized here is scored and audited identically.
+      //
+      // Service line comes from the patient's care_type, the source the rest of
+      // this page already uses for hospice vs. home-health documentation. It is
+      // authoritative per-visit (a clinician whose care_scope is "both" can do
+      // either) and avoids any dependency on the async currentUser query.
+      const serviceLine = patient?.care_type === 'hospice' ? 'hospice' : 'home_health';
+      const visitType = visit?.visit_type || 'routine_visit';
+
+      // Vitals captured in the structured form count toward the "vitals" (and
+      // pain) required elements even when the nurse didn't restate them in the
+      // narrative — they are saved on the same visit. Fold them into the SCORED
+      // text only; the persisted nurse_notes stays exactly what the nurse wrote.
+      const vs = vitalSigns || {};
+      const vitalsForScore = [
+        vs.temperature != null && `Temperature: ${vs.temperature}°F`,
+        vs.blood_pressure_systolic != null && vs.blood_pressure_diastolic != null &&
+          `Blood Pressure: ${vs.blood_pressure_systolic}/${vs.blood_pressure_diastolic} mmHg`,
+        vs.heart_rate != null && `Heart Rate: ${vs.heart_rate} bpm`,
+        vs.respiratory_rate != null && `Respiratory Rate: ${vs.respiratory_rate} breaths/min`,
+        vs.oxygen_saturation != null && `Oxygen Saturation: ${vs.oxygen_saturation}%`,
+        vs.pain_level != null && `Pain Level: ${vs.pain_level}/10`,
+        vs.weight != null && `Weight: ${vs.weight} lb`,
+      ].filter(Boolean).join("\n");
+      const scoredText = vitalsForScore
+        ? `${sanitizedNarrative}\nVital signs:\n${vitalsForScore}`
+        : sanitizedNarrative;
+
+      const { coverageScore, draftScore, structured } = scoreNoteFromText({
+        text: scoredText,
+        serviceLine,
+        visitType,
+      });
+
       const visitData = {
         nurse_notes: sanitizedNarrative,
         vital_signs: vitalSigns,
         start_time: startTime,
         end_time: endTime || now,
-        status: 'completed'
+        status: 'completed',
+        compliance_score: coverageScore,
+        ...structured,
       };
 
       // Add scanned documents if any
@@ -950,10 +1033,58 @@ Generate the complete clinical narrative based on the audio and context:`;
         'Visit'
       );
 
-      await logSecurityEvent('VISIT_DOCUMENTATION_COMPLETED', { 
+      await logSecurityEvent('VISIT_DOCUMENTATION_COMPLETED', {
         visit_id: visitId,
-        patient_id: visit.patient_id 
+        patient_id: visit.patient_id
       });
+
+      // Propagate the finalized note to the patient chart and write the audit
+      // trail (NoteConversion + ComplianceAudit) — parity with Smart Notes
+      // (SmartNoteAssistant.persistNote). Secondary to the visit write: a failure
+      // here must never fail an already-saved, completed visit, and an empty note
+      // must never overwrite the patient's existing clinical_notes.
+      if (visit.patient_id && sanitizedNarrative.trim()) {
+        try {
+          const nurseEmail = currentUser?.email || (await base44.auth.me()).email;
+          const currentPatient = await base44.entities.Patient.get(visit.patient_id);
+          const history = currentPatient?.enhanced_notes_history || [];
+          history.push({
+            date: visit.visit_date,
+            visit_type: visitType,
+            note: sanitizedNarrative,
+            compliance_score: coverageScore,
+            created_by: nurseEmail,
+            created_at: new Date().toISOString(),
+          });
+          await Promise.all([
+            base44.entities.Patient.update(visit.patient_id, {
+              clinical_notes: sanitizedNarrative,
+              enhanced_notes_history: history,
+            }),
+            base44.entities.NoteConversion.create(toNoteConversionFields({
+              coverageScore,
+              draftPresenceScore: draftScore,
+              roughLen: (visit.raw_transcription || sanitizedNarrative).length,
+              enhancedLen: sanitizedNarrative.length,
+              visitType,
+              diagnosis: patient?.primary_diagnosis || "",
+              nurseEmail,
+              patientId: visit.patient_id,
+            })),
+            base44.entities.ComplianceAudit.create({
+              visit_id: visitId,
+              nurse_email: nurseEmail,
+              patient_id: visit.patient_id,
+              audit_date: new Date().toISOString(),
+              compliance_score: coverageScore,
+              status: coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical",
+              audit_type: "automated",
+            }),
+          ]);
+        } catch (auditErr) {
+          console.error("Chart propagation / audit write failed (visit was saved):", auditErr);
+        }
+      }
 
       // Track comprehensive visit completion metrics
       const visitDuration = startTime && endTime ? 
@@ -966,7 +1097,7 @@ Generate the complete clinical narrative based on the audio and context:`;
         visit_type: visit.visit_type,
         duration_minutes: visitDuration,
         documentation_time: docTime,
-        compliance_score: null, // Will be filled by compliance checker
+        compliance_score: coverageScore,
         ai_tools_used: aiToolsUsed,
         template_used: hasGeneratedTemplate,
         voice_dictation_used: aiToolsUsed.includes('voice_dictation'),

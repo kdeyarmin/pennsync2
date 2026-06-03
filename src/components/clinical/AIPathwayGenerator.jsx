@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +65,7 @@ Base recommendations on current Medicare guidelines, evidence-based practice, an
 
 Return ONLY valid JSON without any markdown formatting or explanations.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt,
         response_json_schema: {
           type: "object",

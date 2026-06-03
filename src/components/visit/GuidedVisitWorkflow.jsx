@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,7 +142,7 @@ export default function GuidedVisitWorkflow({
     try {
       const context = buildContextForAI(stepId);
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a home health nursing assistant. Based on the following context, provide 3-5 brief, actionable suggestions for the ${currentStep.title} step.
 
 Context:

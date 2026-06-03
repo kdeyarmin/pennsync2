@@ -1008,16 +1008,6 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "UserManagement",
     keywords: ["personnel", "file", "employee", "hr"],
   },
-  {
-    page: "PullRequests",
-    label: "Pull Requests",
-    icon: RefreshCw,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["pull requests", "updates", "sync"],
-  },
-
   // ─── Analytics ────────────────────────────────────────────────────────────────
   {
     page: "ReportsAnalytics",

@@ -57,47 +57,37 @@ test("quick scan prompt + schema drive form pre-fill and triage", () => {
   assert.deepEqual(props.urgency_level.enum, ["urgent", "high", "normal", "low"]);
 });
 
-// The run helpers take an injected base44 client; verify they invoke the SDK
-// with the right prompt/schema and surface the result (a fake client keeps the
-// test offline and free of the real SDK).
-test("runReferralExtraction calls InvokeLLM with the rich prompt and schema", async () => {
+// The run helpers take an injected `invoke` (the app's invokeLLM, which applies
+// the shared retry/timeout policy); verify they call it with the right
+// prompt/schema/policy and surface the result. A fake keeps the test offline.
+const recordingInvoke = (calls, returnValue) => async (params, options) => {
+  calls.push({ params, options });
+  return returnValue;
+};
+
+test("runReferralExtraction calls invoke with the rich prompt, schema, and policy", async () => {
   const calls = [];
-  const fakeBase44 = {
-    integrations: { Core: { InvokeLLM: async (params) => { calls.push(params); return { ok: true }; } } },
-  };
-  const result = await runReferralExtraction(fakeBase44, { fileUrl: "u://doc.pdf", fileType: "application/pdf" });
+  const result = await runReferralExtraction(recordingInvoke(calls, { ok: true }), {
+    fileUrl: "u://doc.pdf",
+    fileType: "application/pdf",
+  });
   assert.deepEqual(result, { ok: true });
   assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0].file_urls, ["u://doc.pdf"]);
-  assert.equal(calls[0].response_json_schema, REFERRAL_EXTRACTION_SCHEMA);
-  assert.match(calls[0].prompt, /home health intake coordinator/);
+  assert.deepEqual(calls[0].params.file_urls, ["u://doc.pdf"]);
+  assert.equal(calls[0].params.response_json_schema, REFERRAL_EXTRACTION_SCHEMA);
+  assert.match(calls[0].params.prompt, /home health intake coordinator/);
+  // The heavy clinical extraction gets the longer retry/timeout budget.
+  assert.deepEqual(calls[0].options, { retries: 2, timeoutMs: 120000, backoffMs: 800 });
 });
 
-test("runReferralQuickScan calls InvokeLLM with the quick-scan prompt and schema", async () => {
+test("runReferralQuickScan calls invoke with the quick-scan prompt, schema, and policy", async () => {
   const calls = [];
-  const fakeBase44 = {
-    integrations: { Core: { InvokeLLM: async (params) => { calls.push(params); return { scan: true }; } } },
-  };
-  const result = await runReferralQuickScan(fakeBase44, { fileUrl: "u://fax.tiff" });
+  const result = await runReferralQuickScan(recordingInvoke(calls, { scan: true }), {
+    fileUrl: "u://fax.tiff",
+  });
   assert.deepEqual(result, { scan: true });
-  assert.equal(calls[0].response_json_schema, REFERRAL_QUICKSCAN_SCHEMA);
-  assert.match(calls[0].prompt, /automatic categorization/);
-});
-
-test("run helpers retry a transient failure (shared runWithRetry policy)", async () => {
-  let attempts = 0;
-  const fakeBase44 = {
-    integrations: {
-      Core: {
-        InvokeLLM: async () => {
-          attempts += 1;
-          if (attempts === 1) throw new Error("transient network blip");
-          return { ok: true };
-        },
-      },
-    },
-  };
-  const result = await runReferralQuickScan(fakeBase44, { fileUrl: "u://doc.pdf" });
-  assert.deepEqual(result, { ok: true });
-  assert.equal(attempts, 2, "should have retried once after the transient failure");
+  assert.equal(calls[0].params.response_json_schema, REFERRAL_QUICKSCAN_SCHEMA);
+  assert.match(calls[0].params.prompt, /automatic categorization/);
+  // The lightweight scan uses a shorter budget for snappy form pre-fill.
+  assert.deepEqual(calls[0].options, { retries: 1, timeoutMs: 60000, backoffMs: 600 });
 });

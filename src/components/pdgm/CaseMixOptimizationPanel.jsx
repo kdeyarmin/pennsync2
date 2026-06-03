@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ export default function CaseMixOptimizationPanel({
   const analyzeOptimization = async () => {
     setIsLoading(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze PDGM case-mix optimization opportunities for this home health patient.
 
 CURRENT DOCUMENTATION:

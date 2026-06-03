@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +20,7 @@ export default function ClinicalLibraryAIAssistant({
   const startGeneration = async () => {
     setIsProcessing(true);
     try {
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `You are an expert clinical documentation assistant helping create a quick phrase template for home health/hospice nurses.
 
 Ask the user 3-4 focused questions to understand what they want to create:
@@ -58,7 +58,7 @@ Keep your response conversational and ask ONE question at a time. Start with the
       const shouldGenerate = updatedConversation.filter(m => m.role === 'user').length >= 3;
 
       if (shouldGenerate) {
-        const response = await base44.integrations.Core.InvokeLLM({
+        const response = await invokeLLM({
           prompt: `Based on this conversation about creating a clinical template:
 
 ${conversationHistory}
@@ -93,7 +93,7 @@ Respond with ONLY the JSON object, no additional text.`,
           content: 'Great! I\'ve generated a template based on your inputs. Review it below and click "Apply" to use it.'
         }]);
       } else {
-        const response = await base44.integrations.Core.InvokeLLM({
+        const response = await invokeLLM({
           prompt: `Continue this conversation about creating a clinical template:
 
 ${conversationHistory}
@@ -123,7 +123,7 @@ Ask the next relevant question to gather information. Keep it conversational and
         ? currentTemplate.expanded_text 
         : currentTemplate.ai_prompt_instructions;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `Analyze this clinical documentation template and suggest improvements based on Medicare compliance best practices:
 
 **Current Template:**
@@ -158,7 +158,7 @@ Format as a bulleted list of improvements.`
   const refineInstructions = async () => {
     setIsProcessing(true);
     try {
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `You are an expert in clinical documentation best practices for Medicare home health and hospice. Analyze and improve these AI instructions for generating patient-specific clinical documentation.
 
 **Current Instructions:**
@@ -204,7 +204,7 @@ Provide your analysis in this structure:
       }]);
 
       // Also provide a button to directly apply the refined instructions
-      const refinedResponse = await base44.integrations.Core.InvokeLLM({
+      const refinedResponse = await invokeLLM({
         prompt: `Extract ONLY the "REFINED INSTRUCTIONS (READY TO USE)" section from this response and return it as clean, formatted text without any markdown headers or labels:
 
 ${response}`,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ CRITICAL RULES:
 
 Generate the polished version now:`;
 
-      const polishedText = await base44.integrations.Core.InvokeLLM({
+      const polishedText = await invokeLLM({
         prompt
       });
 

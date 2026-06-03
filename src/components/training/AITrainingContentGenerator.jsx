@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,7 +68,7 @@ export default function AITrainingContentGenerator({ onContentGenerated, _nurseE
     setSelectedTopic(topic);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Generate comprehensive training content for home health nurses on: "${topic}"
 
 Category: ${trainingTopics[selectedCategory].label}

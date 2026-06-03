@@ -242,14 +242,14 @@ export default function CustomReportGenerator({
         <div>
           <Label className="text-xs">Nurses (leave empty for all)</Label>
           <Select
-            value={filters.nurses.length === 1 ? filters.nurses[0] : ""}
-            onValueChange={(v) => setFilters({ ...filters, nurses: v ? [v] : [] })}
+            value={filters.nurses.length === 1 ? filters.nurses[0] : "all"}
+            onValueChange={(v) => setFilters({ ...filters, nurses: v && v !== "all" ? [v] : [] })}
           >
             <SelectTrigger>
               <SelectValue placeholder="All Nurses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={null}>All Nurses</SelectItem>
+              <SelectItem value="all">All Nurses</SelectItem>
               {uniqueNurses.map(email => (
                 <SelectItem key={email} value={email}>
                   {email?.split('@')[0]}

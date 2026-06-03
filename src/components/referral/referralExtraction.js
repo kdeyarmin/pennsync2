@@ -8,15 +8,13 @@
  *   2. The full, OASIS-grade clinical extraction at processing time
  *      (ReferralPDFSummarizer).
  *
- * Both are defined here and both run through the shared `runWithRetry` timeout/
- * retry policy so a transient failure no longer discards an extraction. The
- * prompt builders and schemas are plain data (no React, no Base44 SDK) so they
- * can be unit-tested; the `base44` client is injected into the run helpers.
- *
- * Imports `runWithRetry` by relative path (not the `@/` alias) so the colocated
- * Node test can resolve it without Vite's path aliasing.
+ * Both are defined here as plain data (prompt builders + JSON schemas, no React
+ * and no Base44 SDK) so they can be unit-tested in isolation. The LLM call itself
+ * is injected: callers pass the app's standardized `invokeLLM` helper
+ * (src/lib/invokeLLM.js), which applies the shared timeout/retry policy, so a
+ * transient failure no longer discards an extraction. Injection also keeps this
+ * module free of `@/` imports so the colocated Node test resolves without Vite.
  */
-import { runWithRetry } from "../../lib/aiCall.js";
 
 // ---------------------------------------------------------------------------
 // Full clinical extraction (ReferralPDFSummarizer)
@@ -621,16 +619,17 @@ export const REFERRAL_EXTRACTION_SCHEMA = {
 
 /**
  * Run the full clinical extraction on a referral document.
- * @param {object} base44 - authenticated Base44 client
+ * @param {(params: object, options?: object) => Promise<object>} invoke - the
+ *   standardized invokeLLM helper (applies the shared timeout/retry policy)
  * @param {{ fileUrl: string, fileType?: string }} params
  */
-export function runReferralExtraction(base44, { fileUrl, fileType = "application/pdf" }) {
-  return runWithRetry(
-    () => base44.integrations.Core.InvokeLLM({
+export function runReferralExtraction(invoke, { fileUrl, fileType = "application/pdf" }) {
+  return invoke(
+    {
       prompt: buildReferralExtractionPrompt(fileType),
       file_urls: [fileUrl],
       response_json_schema: REFERRAL_EXTRACTION_SCHEMA,
-    }),
+    },
     // Document extraction is a long, heavy call; give it room and retry
     // transient network/timeout/5xx failures with backoff.
     { retries: 2, timeoutMs: 120000, backoffMs: 800 }
@@ -749,16 +748,17 @@ export const REFERRAL_QUICKSCAN_SCHEMA = {
 
 /**
  * Run the quick categorization scan on a referral document.
- * @param {object} base44 - authenticated Base44 client
+ * @param {(params: object, options?: object) => Promise<object>} invoke - the
+ *   standardized invokeLLM helper (applies the shared timeout/retry policy)
  * @param {{ fileUrl: string }} params
  */
-export function runReferralQuickScan(base44, { fileUrl }) {
-  return runWithRetry(
-    () => base44.integrations.Core.InvokeLLM({
+export function runReferralQuickScan(invoke, { fileUrl }) {
+  return invoke(
+    {
       prompt: buildReferralQuickScanPrompt(),
       file_urls: [fileUrl],
       response_json_schema: REFERRAL_QUICKSCAN_SCHEMA,
-    }),
+    },
     { retries: 1, timeoutMs: 60000, backoffMs: 600 }
   );
 }

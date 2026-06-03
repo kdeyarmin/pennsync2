@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ export default function TargetedLessonGenerator({
     setIsGenerating(true);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Generate a comprehensive training lesson for home health nurses on: "${module.title}"
 
 Category: ${module.category}
@@ -128,7 +129,7 @@ Make it practical, specific to home health, and immediately applicable.`,
     setIsEvaluating(true);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Evaluate this nurse's documentation practice response.
 
 SCENARIO:

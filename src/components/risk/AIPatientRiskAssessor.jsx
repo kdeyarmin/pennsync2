@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -118,7 +119,7 @@ export default function AIPatientRiskAssessor({ patientId, autoAnalyze = false }
         }))
       };
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert clinical risk assessment AI specializing in home health patient safety and outcomes prediction.
 
 **CRITICAL TASK:** Perform a comprehensive risk assessment for this patient across multiple risk domains.

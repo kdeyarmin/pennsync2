@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ export default function PDGMPredictiveForecaster({ pdgmData, analysisResults, cu
     setIsPredicting(true);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a PDGM financial forecasting expert. Generate predictive reimbursement scenarios based on potential documentation improvements.
 
 CURRENT OASIS DATA:
@@ -216,7 +217,7 @@ Return JSON:
       });
 
       // Get AI analysis of the grouping changes
-      const analysis = await base44.integrations.Core.InvokeLLM({
+      const analysis = await invokeLLM({
         prompt: `Analyze how these functional score changes impact PDGM grouping and payment.
 
 ORIGINAL SCORES:

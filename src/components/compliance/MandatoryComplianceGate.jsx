@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,7 @@ export default function MandatoryComplianceGate({
     setIsChecking(true);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a STRICT Medicare compliance auditor for ${careType === 'hospice' ? 'Hospice' : 'Home Health'} nursing documentation. Your job is to BLOCK non-compliant notes from being finalized.
 
 VISIT TYPE: ${visitType}

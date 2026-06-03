@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { CheckCircle2, Link, BookOpen, Shield, ChevronDown, ChevronUp, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCategoryForItem } from "./InterventionLibrary";
@@ -52,7 +52,7 @@ export default function InterventionDetailPanel({ item, onLinkPathway, linkedPat
     setLoadingAI(true);
     setExpanded(prev => ({ ...prev, ai: true }));
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a Medicare home health compliance expert. For the clinical intervention "${item.name}" (${item.description}), provide:
 1. A 2-sentence clinical rationale for why this intervention is Medicare-reimbursable
 2. One key documentation tip to ensure compliance

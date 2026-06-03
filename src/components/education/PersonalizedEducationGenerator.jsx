@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -40,7 +41,7 @@ export default function PersonalizedEducationGenerator({ patient, carePlans = []
       const activePlans = carePlans.filter(cp => cp.status === 'active');
       const latestVisit = recentVisits[0];
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a patient education specialist creating easy-to-understand health information for home health patients.
 
 PATIENT INFORMATION:

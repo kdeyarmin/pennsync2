@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ export default function PolicyGuidelineMonitor({ _nurseEmail, onTrainingRecommen
     setIsLoading(true);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a healthcare regulatory compliance AI that monitors and summarizes recent changes to Medicare/Medicaid regulations, CMS guidelines, and home health/hospice compliance requirements.
 
 Generate a realistic summary of current regulatory landscape and any recent updates a home health nurse should be aware of.

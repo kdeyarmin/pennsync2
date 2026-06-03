@@ -204,12 +204,12 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
           {!patientId && (
             <div className="space-y-2">
               <Label>Patient (Optional)</Label>
-              <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+              <Select value={selectedPatientId || "none"} onValueChange={(v) => setSelectedPatientId(v === "none" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>No patient</SelectItem>
+                  <SelectItem value="none">No patient</SelectItem>
                   {allPatients.map(patient => (
                     <SelectItem key={patient.id} value={patient.id}>
                       {patient.first_name} {patient.last_name} - MRN: {patient.medical_record_number}

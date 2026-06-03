@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -103,7 +104,7 @@ export default function OASISAuditReportGenerator({ audit, isOpen, onClose, curr
       };
 
       // Generate PDF report using AI
-      const reportContent = await base44.integrations.Core.InvokeLLM({
+      const reportContent = await invokeLLM({
         prompt: `Generate a professional OASIS audit report in markdown format based on this data:
 
 ${JSON.stringify(reportData, null, 2)}

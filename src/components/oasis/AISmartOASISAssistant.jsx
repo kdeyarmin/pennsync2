@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +72,7 @@ export default function AISmartOASISAssistant({
         recent_visit: visitData
       };
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are an expert home health OASIS-E assessment specialist with deep knowledge of PDGM reimbursement optimization and CMS compliance requirements.
 
 **PRIMARY OBJECTIVE: Maximize PDGM reimbursement while ensuring full Medicare compliance**

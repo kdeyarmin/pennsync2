@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ export default function InteractiveQuizModule({ _nurseEmail, onQuizCompleted }) 
     setStartTime(new Date());
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Generate a professional quiz for home health nurses on: "${category.label}"
 
 Create ${category.questions} multiple-choice questions that test practical knowledge.

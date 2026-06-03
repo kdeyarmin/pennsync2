@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { runReferralExtraction } from "./referralExtraction";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -181,7 +182,7 @@ export default function ReferralPDFSummarizer({
     }, 3000);
 
     try {
-      const result = await runReferralExtraction(base44, { fileUrl: url, fileType });
+      const result = await runReferralExtraction(invokeLLM, { fileUrl: url, fileType });
 
       clearInterval(progressInterval);
       setProcessingStage(processingStages.length - 1);

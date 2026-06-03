@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -63,7 +63,7 @@ Perform a comprehensive review and identify:
 
 Provide actionable, specific feedback for each issue found.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt,
         response_json_schema: {
           type: "object",

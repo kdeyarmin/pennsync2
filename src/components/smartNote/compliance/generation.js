@@ -5,7 +5,7 @@
 //
 // Vite-only module (depends on the base44 client), so it is exercised by the
 // build + manual testing rather than the node unit-test suite.
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { secureAICall } from "@/components/utils/security";
 import { splitSentences } from "./factExtraction";
 import { GenerationResponse, GroundingResponse, safeParseLLM } from "./schemas";
@@ -54,7 +54,7 @@ Return JSON: { "note": "<the final note text>" }`;
 
   const raw = await secureAICall(
     () =>
-      base44.integrations.Core.InvokeLLM({
+      invokeLLM({
         prompt,
         model,
         response_json_schema: {
@@ -100,7 +100,7 @@ Return JSON: { "sentences": [ { "text": "...", "status": "supported"|"unsupporte
   try {
     const raw = await secureAICall(
       () =>
-        base44.integrations.Core.InvokeLLM({
+        invokeLLM({
           prompt,
           model,
           response_json_schema: {

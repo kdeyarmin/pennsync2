@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronUp, ChevronDown, Activity, Target, ClipboardList, BookOpen, Shield } from "lucide-react";
 
@@ -39,7 +39,7 @@ export default function DictationSectionMapper({ transcript, onSectionsMapped })
     setMapping(null);
     
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze this medical dictation and categorize it into distinct clinical sections.
 
 DICTATION: "${transcript}"

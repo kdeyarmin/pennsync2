@@ -1,3 +1,4 @@
+import { isValidElement } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import FavoriteButton from "@/components/navigation/FavoriteButton";
@@ -16,10 +17,16 @@ export default function PageHeader({
   className,
   children,
 }) {
+  // `icon` may be a component *reference* or an already-built element.
+  // Don't gate on `typeof === "function"`: lucide-react icons (and any
+  // forwardRef/memo component) are objects, not functions, so that check
+  // sent them down the "render as-is" path and React threw
+  // "Objects are not valid as a React child ({$$typeof, render})".
+  // Render already-built elements as-is; instantiate everything else.
   const iconEl = IconProp && (
-    typeof IconProp === "function"
-      ? <IconProp className={cn("w-6 h-6", iconClassName)} aria-hidden="true" />
-      : IconProp
+    isValidElement(IconProp)
+      ? IconProp
+      : <IconProp className={cn("w-6 h-6", iconClassName)} aria-hidden="true" />
   );
 
   return (

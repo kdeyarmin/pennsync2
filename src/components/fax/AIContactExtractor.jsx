@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ export default function AIContactExtractor({ onExtracted }) {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `Analyze this document and extract any recipient fax/contact information.
 Return ONLY a JSON object with these keys (use empty string if not found):
 - name: the recipient person's full name

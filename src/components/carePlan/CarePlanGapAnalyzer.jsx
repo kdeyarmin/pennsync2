@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +42,7 @@ export default function CarePlanGapAnalyzer({
         notes: v.nurse_notes?.substring(0, 300)
       })) || [];
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await invokeLLM({
         prompt: `You are a clinical care planning expert. Analyze this patient's care plan for gaps, deviations from best practices, and evidence-based recommendations.
 
 PRIMARY DIAGNOSIS: ${diagnosis}
