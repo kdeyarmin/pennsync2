@@ -6,15 +6,43 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * Replaces: createUserWithTempPassword, resetUserPassword, resendInvitation, checkExpiredInvitations
  */
 
-// Cryptographically strong temporary password: fixed length, mixed character
-// classes, drawn from a CSPRNG (not Math.random).
+// Cryptographically strong temporary password drawn from a CSPRNG (not
+// Math.random). Guarantees at least one character from each class (upper,
+// lower, digit, symbol) so it satisfies minimum-complexity policies, then
+// shuffles so the guaranteed characters aren't in fixed positions.
 function generateTempPassword(length = 16) {
-  const charset = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  let out = '';
-  for (let i = 0; i < length; i++) out += charset[bytes[i] % charset.length];
-  return out;
+  const classes = [
+    'ABCDEFGHJKMNPQRSTUVWXYZ', // upper (no I/O)
+    'abcdefghjkmnpqrstuvwxyz', // lower (no l)
+    '23456789',                // digits (no 0/1)
+    '!@#$%',                   // symbols
+  ];
+  const all = classes.join('');
+  const pick = (set) => set[randomInt(set.length)];
+
+  // One from each class, then fill the remainder from the full set.
+  const chars = classes.map(pick);
+  while (chars.length < Math.max(length, classes.length)) chars.push(pick(all));
+
+  // Fisher–Yates shuffle with CSPRNG-derived indices.
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
+
+// Uniform random integer in [0, max) from a CSPRNG, rejection-sampled to avoid
+// modulo bias.
+function randomInt(max) {
+  const limit = Math.floor(0xffffffff / max) * max;
+  const buf = new Uint32Array(1);
+  let x;
+  do {
+    crypto.getRandomValues(buf);
+    x = buf[0];
+  } while (x >= limit);
+  return x % max;
 }
 
 Deno.serve(async (req) => {

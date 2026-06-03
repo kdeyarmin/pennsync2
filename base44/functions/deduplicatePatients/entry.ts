@@ -322,19 +322,25 @@ function scoreAddress(p1, p2, add) {
   const bestSim = Math.max(similarity(addr1, addr2), similarity(normalized1, normalized2));
 
   if (streetNum1 && streetNum1 === streetNum2) {
-    // The street name is the first token that's neither the house number nor a
-    // single-letter directional (N/S/E/W). Blindly taking token[1] picked up
-    // the direction, so "100 N Main St" vs "100 N Oak St" both read as street
-    // "n" and falsely scored a STREET_ADDRESS (strong-identifier) match.
-    const streetNameOf = (normalized) => {
-      for (const tok of normalized.split(/\s+/)) {
-        if (!tok || /^\d+$/.test(tok) || /^[nsew]$/.test(tok)) continue;
-        return tok;
-      }
-      return undefined;
+    // Build a street key of "[directional] name" from the normalized address.
+    // Taking token[1] blindly picked up the directional itself (so "100 N Main"
+    // vs "100 N Oak" both read as street "n"); dropping the directional instead
+    // over-collapses ("100 W Main" vs "100 E Main" both become "main"). Keep the
+    // directional as PART of the key so same-name/different-direction streets
+    // stay distinct while genuine matches still align.
+    const streetKeyOf = (normalized) => {
+      const tokens = normalized.split(/\s+/).filter(Boolean);
+      let i = 0;
+      while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip house number
+      let dir = '';
+      if (i < tokens.length && /^[nsew]$/.test(tokens[i])) { dir = tokens[i]; i++; }
+      while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip stray numbers
+      const name = tokens[i];
+      if (!name) return undefined;
+      return dir ? `${dir} ${name}` : name;
     };
-    const streetName1 = streetNameOf(normalized1);
-    const streetName2 = streetNameOf(normalized2);
+    const streetName1 = streetKeyOf(normalized1);
+    const streetName2 = streetKeyOf(normalized2);
     if (streetName1 && streetName2 && similarity(streetName1, streetName2) >= 85) {
       add(18, REASON.STREET_ADDRESS);
     } else if (streetName1 && streetName2) {

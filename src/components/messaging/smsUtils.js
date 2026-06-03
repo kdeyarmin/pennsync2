@@ -47,10 +47,13 @@ export function smsSegments(text) {
   // moves whole to the next. So simulate packing rather than dividing units,
   // which would otherwise undercount segments at the boundary.
   let segments;
+  let usedInLast; // billable units consumed in the current (last) segment
   if (units === 0) {
     segments = 0;
+    usedInLast = 0;
   } else if (units <= single) {
     segments = 1;
+    usedInLast = units;
   } else {
     segments = 1;
     let used = 0;
@@ -62,13 +65,17 @@ export function smsSegments(text) {
       }
       used += cost;
     }
+    usedInLast = used;
   }
-  const capacity = segments <= 1 ? single : segments * multi;
+  const perSegment = segments <= 1 ? single : multi;
   return {
     chars: units,
     segments,
     encoding,
-    perSegment: segments <= 1 ? single : multi,
-    remaining: capacity - units,
+    perSegment,
+    // Room left in the CURRENT segment before a new one opens — derived from
+    // units used in the last segment, not `capacity - units`: a 2-unit char
+    // that pads a boundary wastes capacity the latter would overstate.
+    remaining: segments === 0 ? single : perSegment - usedInLast,
   };
 }

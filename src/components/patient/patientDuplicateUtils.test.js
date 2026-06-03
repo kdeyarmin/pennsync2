@@ -342,4 +342,22 @@ test('different streets sharing a number and direction do NOT score a street-add
   const b = { id: 'b', first_name: 'B', last_name: 'B', address: '100 N Oak St' };
   const { matches } = scorePatientPair(a, b);
   assert.ok(!matches.includes(REASON.STREET_ADDRESS));
+  assert.ok(matches.includes(REASON.STREET_NUMBER));
+});
+
+test('same street name with different directionals is NOT a street-address match', () => {
+  // "100 W Main St" vs "100 E Main St": the directional must stay part of the
+  // street key so these aren't collapsed into a strong-identifier match.
+  const a = { id: 'a', first_name: 'A', last_name: 'A', address: '100 W Main St' };
+  const b = { id: 'b', first_name: 'B', last_name: 'B', address: '100 E Main St' };
+  const { matches } = scorePatientPair(a, b);
+  assert.ok(!matches.includes(REASON.STREET_ADDRESS));
+  assert.ok(matches.includes(REASON.STREET_NUMBER));
+});
+
+test('identical directional street addresses still score a street-address match', () => {
+  const a = { id: 'a', first_name: 'A', last_name: 'A', address: '100 W Main St' };
+  const b = { id: 'b', first_name: 'B', last_name: 'B', address: '100 W Main St' };
+  const { matches } = scorePatientPair(a, b);
+  assert.ok(matches.includes(REASON.STREET_ADDRESS));
 });

@@ -141,7 +141,9 @@ Deno.serve(async (req) => {
                 sync_method: 'background_poll',
                 to_number: faxLog.to_number,
               },
-              status: twilioStatus === 'failed' ? 'failure' : 'success',
+              // Base the audit outcome on the stored (mapped) status so a
+              // canceled fax (mapped to 'failed') isn't logged as a success.
+              status: mappedStatus === 'failed' ? 'failure' : 'success',
             }).catch((err) => console.error('Failed to send fax status notification:', err));
           }
         }
