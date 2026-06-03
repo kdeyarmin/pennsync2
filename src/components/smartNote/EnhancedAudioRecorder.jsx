@@ -68,10 +68,12 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
         type: "audio/mp3",
       });
 
-      const data = await base44.functions.invoke("transcribeAudioWithWhisper", {
+      // functions.invoke does not unwrap the response (interceptResponses:
+      // false), so the backend's JSON body lives on response.data.
+      const response = await base44.functions.invoke("transcribeAudioWithWhisper", {
         file: audioFile,
       });
-      const transcriptText = data?.text || "";
+      const transcriptText = response.data?.text || "";
       const enhanced = enhanceTranscription(transcriptText);
       
       setTranscript(enhanced);

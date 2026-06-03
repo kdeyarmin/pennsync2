@@ -113,9 +113,12 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
         type: 'audio/webm',
       });
 
-      const result = await base44.functions.invoke('transcribeAudioWithWhisper', {
+      // functions.invoke does not unwrap the response (interceptResponses:
+      // false), so the backend's JSON body lives on response.data.
+      const response = await base44.functions.invoke('transcribeAudioWithWhisper', {
         file: audioFile,
       });
+      const result = response.data;
 
       if (result?.text) {
         setTranscript(result.text);
