@@ -74,15 +74,57 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 /**
+ * Resolve the single 8x8 API secret (SMS/Voice bearer token): legacy env var
+ * first, then the secret the super admin saved in-app (IntegrationSecret).
+ */
+async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
+  const env = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+  if (env && env.trim()) return env.trim();
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
+    const v = rows?.[0]?.api_secret;
+    return v && String(v).trim() ? String(v).trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve the 8x8 webhook signing secret. Order: dedicated webhook secret (env,
+ * then in-app), else the single API secret (env, then in-app) — so configuring
+ * just the one API secret, by either path, fully verifies webhooks. Fails closed.
+ */
+async function resolveEightXEightWebhookSecret(base44: any): Promise<string | null> {
+  // 1) a dedicated webhook secret always wins (env, then in-app config)...
+  const envWebhook = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
+  if (envWebhook && envWebhook.trim()) return envWebhook.trim();
+  let storedWebhook: string | null = null;
+  let storedApi: string | null = null;
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
+    const rec = rows?.[0] || {};
+    storedWebhook = rec.webhook_secret && String(rec.webhook_secret).trim() ? String(rec.webhook_secret).trim() : null;
+    storedApi = rec.api_secret && String(rec.api_secret).trim() ? String(rec.api_secret).trim() : null;
+  } catch {
+    // best-effort: fall through to the env API-key fallback below
+  }
+  if (storedWebhook) return storedWebhook;
+  // 2) ...otherwise the single API secret verifies webhooks, from EITHER the
+  // dashboard env OR in-app config, so configuring just the one secret is enough.
+  const envApi = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+  if (envApi && envApi.trim()) return envApi.trim();
+  return storedApi;
+}
+
+/**
  * Verifies the webhook came from 8x8. Tries an HMAC-SHA256 signature header
  * first, then falls back to a static shared-secret header. Fails closed.
  * NOTE: confirm the exact header name + signing scheme in 8x8 Connect and
  * adjust SIGNATURE_HEADERS if needed.
  */
-async function verifyWebhook(req: Request, raw: string): Promise<boolean> {
-  const secret = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
+async function verifyWebhook(req: Request, raw: string, secret: string | null): Promise<boolean> {
   if (!secret) {
-    console.error('EIGHT_X_EIGHT_WEBHOOK_SECRET not configured — rejecting webhook');
+    console.error('8x8 webhook secret not configured — rejecting webhook');
     return false;
   }
   const SIGNATURE_HEADERS = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256'];
@@ -157,8 +199,10 @@ function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
+    const base44 = createClientFromRequest(req);
 
-    if (!(await verifyWebhook(req, raw))) {
+    const webhookSecret = await resolveEightXEightWebhookSecret(base44);
+    if (!(await verifyWebhook(req, raw, webhookSecret))) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -176,9 +220,8 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: 'Missing source/destination' });
     }
 
-    const base44 = createClientFromRequest(req);
     const config = await getAgencyConfig(base44);
-    const apiKey = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+    const apiKey = await resolveEightXEightApiKey(base44);
     const host = `https://sms.${config.region}.8x8.com`;
 
     const patientNum = normalizeE164(source) || source;

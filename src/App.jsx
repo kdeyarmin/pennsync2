@@ -18,6 +18,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import ErrorBoundary from '@/components/utils/ErrorBoundary';
 import { ROUTES, REDIRECTS, MAIN_PAGE } from '@/routes';
+import { isSuperAdmin } from '@/lib/superAdmin';
 
 // Public (no-login) patient telehealth join page.
 const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
@@ -43,7 +44,12 @@ const AdminOnlyFallback = () => (
 const AuthenticatedApp = () => {
   const location = useLocation();
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  // The platform super admin (owner email or super_admin account_type) reaches
+  // admin routes even before their `role` is `admin`. This is what lets the
+  // owner land on SuperAdminConfig on first sign-in so its ensureSuperAdmin
+  // self-bootstrap can run — without it, an unpromoted owner hits the
+  // AdminOnlyFallback and the chicken-and-egg never resolves.
+  const isAdmin = user?.role === 'admin' || isSuperAdmin(user);
 
   // Public patient join/signer routes render WITHOUT authentication — they are
   // gated by capability tokens in the link, not by an app login. This is

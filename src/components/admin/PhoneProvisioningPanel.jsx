@@ -19,6 +19,7 @@ import { maskPhone, formatPhoneDisplay, normalizeE164 } from "@/components/voice
 import {
   evaluateAgencyConfig, summarize, WEBHOOK_FUNCTIONS, functionUrlBase,
 } from "@/components/admin/eightxeightSetup";
+import { isAdminLike } from "@/lib/superAdmin";
 
 const STATUS_META = {
   ok: { Icon: CheckCircle2, color: "text-green-600", badge: "bg-green-100 text-green-800" },
@@ -68,7 +69,7 @@ export default function PhoneProvisioningPanel() {
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
-  const isAdmin = currentUser?.role === "admin";
+  const isAdmin = isAdminLike(currentUser);
 
   const { data: users = [] } = useQuery({
     queryKey: ["phone-users"],

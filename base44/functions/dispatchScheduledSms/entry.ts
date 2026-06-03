@@ -42,10 +42,27 @@ async function send8x8(apiKey: string, host: string, subAccountId: string, sourc
   }
 }
 
+/**
+ * Resolve the single 8x8 API secret: prefer the legacy backend env var, then the
+ * secret the super admin saved in-app (IntegrationSecret). Either one configures
+ * the integration, so the Base44 dashboard env is optional.
+ */
+async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
+  const env = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+  if (env && env.trim()) return env.trim();
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
+    const v = rows?.[0]?.api_secret;
+    return v && String(v).trim() ? String(v).trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const apiKey = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+    const apiKey = await resolveEightXEightApiKey(base44);
     const { smsSubAccountId, region, smsEnabled } = await getAgencyConfig(base44);
     const host = `https://sms.${region}.8x8.com`;
 

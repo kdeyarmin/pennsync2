@@ -19,10 +19,36 @@ function timingSafeEqual(a: string, b: string): boolean {
   return out === 0;
 }
 
-async function verifyWebhook(req: Request, raw: string): Promise<boolean> {
-  const secret = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
+/**
+ * Resolve the 8x8 webhook signing secret. Order: dedicated webhook secret (env,
+ * then in-app), else the single API secret (env, then in-app) — so configuring
+ * just the one API secret, by either path, fully verifies webhooks. Fails closed.
+ */
+async function resolveEightXEightWebhookSecret(base44: any): Promise<string | null> {
+  // 1) a dedicated webhook secret always wins (env, then in-app config)...
+  const envWebhook = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
+  if (envWebhook && envWebhook.trim()) return envWebhook.trim();
+  let storedWebhook: string | null = null;
+  let storedApi: string | null = null;
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
+    const rec = rows?.[0] || {};
+    storedWebhook = rec.webhook_secret && String(rec.webhook_secret).trim() ? String(rec.webhook_secret).trim() : null;
+    storedApi = rec.api_secret && String(rec.api_secret).trim() ? String(rec.api_secret).trim() : null;
+  } catch {
+    // best-effort: fall through to the env API-key fallback below
+  }
+  if (storedWebhook) return storedWebhook;
+  // 2) ...otherwise the single API secret verifies webhooks, from EITHER the
+  // dashboard env OR in-app config, so configuring just the one secret is enough.
+  const envApi = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
+  if (envApi && envApi.trim()) return envApi.trim();
+  return storedApi;
+}
+
+async function verifyWebhook(req: Request, raw: string, secret: string | null): Promise<boolean> {
   if (!secret) {
-    console.error('EIGHT_X_EIGHT_WEBHOOK_SECRET not configured — rejecting webhook');
+    console.error('8x8 webhook secret not configured — rejecting webhook');
     return false;
   }
   for (const h of ['x-8x8-signature', 'x-signature', 'x-hub-signature-256']) {
@@ -58,7 +84,9 @@ const SMS_RANK: Record<string, number> = { queued: 1, sent: 2, delivered: 3, fai
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
-    if (!(await verifyWebhook(req, raw))) {
+    const base44 = createClientFromRequest(req);
+    const webhookSecret = await resolveEightXEightWebhookSecret(base44);
+    if (!(await verifyWebhook(req, raw, webhookSecret))) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -71,7 +99,6 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: 'Missing message id' });
     }
 
-    const base44 = createClientFromRequest(req);
     const rows = await base44.asServiceRole.entities.SmsMessage.filter({ provider_message_id: umid });
     if (rows.length === 0) {
       return Response.json({ success: false, message: 'SmsMessage not found' });
