@@ -82,11 +82,12 @@ recommendation carries a `file:line` reference so it can be picked up directly.
 
 ## P1 — Compliance, audit integrity & reliability
 
-10. **Debounce the live compliance checker** **[verified]**.
-    `src/components/compliance/UnifiedComplianceEngine.jsx:58-62` fires an `InvokeLLM` call on every
-    keystroke past 100 chars (deps `[noteContent, autoCheck]`, no debounce). This hammers the LLM
-    API, runs up cost, and flags mid-sentence false positives. Add debounce (~2 s idle) and wrap the
-    five `InvokeLLM` calls (lines 72/121/162/200/269) in try/catch with schema validation.
+10. **Debounce the live compliance checker** **[implemented]**.
+    `src/components/compliance/UnifiedComplianceEngine.jsx:58-62` fired an `InvokeLLM` pass on every
+    keystroke past 100 chars (deps `[noteContent, autoCheck]`, no debounce) — hammering the LLM API,
+    running up cost, and flagging mid-sentence false positives. Now debounced (~1.5 s idle, pending
+    checks cancelled on each change). Error handling was already adequate: each of the four parallel
+    calls has a `.catch` fallback and the whole pass is wrapped in `try/catch`.
 
 11. **Offline + versioned compliance rules.**
     Compliance/audit checks (`src/components/compliance/UnifiedComplianceEngine.jsx`, `src/components/audit/AIDocumentationAudit.jsx`)

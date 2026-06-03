@@ -55,10 +55,13 @@ export default function UnifiedComplianceEngine({
     initialData: [],
   });
 
+  // Debounce auto-check so a full compliance pass (5 LLM calls) fires only once
+  // the nurse pauses typing — not on every keystroke. Pending checks are cancelled
+  // on each change, which avoids hammering the LLM API and flagging mid-sentence text.
   useEffect(() => {
-    if (autoCheck && noteContent && noteContent.length > 100) {
-      analyzeCompliance();
-    }
+    if (!autoCheck || !noteContent || noteContent.length <= 100) return;
+    const timer = setTimeout(() => { analyzeCompliance(); }, 1500);
+    return () => clearTimeout(timer);
   }, [noteContent, autoCheck]);
 
   const analyzeCompliance = async () => {
