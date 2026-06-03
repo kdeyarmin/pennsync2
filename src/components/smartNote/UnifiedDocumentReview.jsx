@@ -25,7 +25,10 @@ function priorNoteOf(patientData) {
 
 export default function UnifiedDocumentReview({ roughNote, visitType, patientData, currentUser, onEnhancedNoteReady }) {
   const [vt, setVt] = useState(visitType || "routine_visit");
-  const serviceLine = patientData?.care_type === "hospice" ? "hospice" : "home_health";
+  // Prefer the patient's care type; fall back to the clinician's scope so a
+  // hospice-only user (e.g. opening this from VisitScribe, which passes no
+  // patientData) gets the hospice checklist, not home-health gates.
+  const serviceLine = (patientData?.care_type || currentUser?.care_scope) === "hospice" ? "hospice" : "home_health";
 
   return (
     <div className="space-y-4">

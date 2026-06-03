@@ -243,11 +243,18 @@ export default function SmartNoteAssistant() {
       return;
     }
 
-    // Re-save after an edit → update the same visit, never duplicate.
+    // Re-save after an edit → update the same visit, never duplicate. Also keep
+    // the appended enhanced_notes_history entry in sync, since getPriorNote()
+    // prefers it for the next note's carry-forward pre-fill.
     if (savedVisitId) {
+      const currentPatient = await base44.entities.Patient.get(patientId);
+      const history = currentPatient.enhanced_notes_history || [];
+      if (history.length) {
+        history[history.length - 1] = { ...history[history.length - 1], note: finalText, compliance_score: coverageScore };
+      }
       await Promise.all([
         base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured }),
-        base44.entities.Patient.update(patientId, { clinical_notes: finalText }),
+        base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
       ]);
       toast.success("Chart updated.");
       return;
