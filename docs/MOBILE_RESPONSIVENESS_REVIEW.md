@@ -59,6 +59,13 @@ The bottom nav and several helpers use `env(safe-area-inset-*)` (`.safe-bottom`,
 
 **Fix** — added `viewport-fit=cover` to the viewport meta in `index.html`, so
 the existing safe-area code actually applies under the home indicator / notch.
+Because `cover` makes the layout extend into the unsafe insets, the fixed
+chrome was updated to match: `MobileHeader` now carries `.safe-top` (so the bar
+fills behind the status bar/notch and its controls sit below it), and `<main>`
+reserves `pt-[calc(4rem + env(safe-area-inset-top))]` /
+`pb-[calc(5rem + env(safe-area-inset-bottom))]` so content clears the now
+inset-aware header and the `.safe-bottom` bottom nav. On non-notched devices the
+insets resolve to `0`, so the offsets stay exactly `pt-16` / `pb-20`.
 
 ### 3. Patient picker popover wider than a phone
 

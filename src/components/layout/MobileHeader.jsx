@@ -7,7 +7,8 @@ const BACK_PAGES = ['PatientDetails', 'DocumentSignatures', 'DocumentVisit', 'Re
 
 export default function MobileHeader({ currentPageName, totalNotificationCount, mobileMenuOpen, onToggleMobileMenu, onOpenNotificationCenter }) {
   return (
-    <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 shadow-lg border-b border-slate-700/60 h-16 flex items-center justify-between px-4 print:hidden">
+    <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 shadow-lg border-b border-slate-700/60 print:hidden safe-top">
+      <div className="h-16 flex items-center justify-between px-4">
       <div className="flex items-center gap-2">
         {BACK_PAGES.includes(currentPageName) && (
           <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800 h-10 w-10 mr-1" onClick={() => window.history.back()}>
@@ -35,6 +36,7 @@ export default function MobileHeader({ currentPageName, totalNotificationCount, 
         <Button variant="ghost" size="icon" onClick={onToggleMobileMenu} className="text-slate-300 hover:text-white hover:bg-slate-800 h-10 w-10">
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
+      </div>
       </div>
     </div>
   );
