@@ -32,6 +32,9 @@ import {
   RefreshCw,
   ShieldAlert,
   XCircle,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
 import AIAdmissionNoteGenerator from "./AIAdmissionNoteGenerator";
@@ -54,7 +57,7 @@ export default function ReferralPDFSummarizer({
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState(0);
-  const [_fileUrl, setFileUrl] = useState(externalFileUrl);
+  const [fileUrl, setFileUrl] = useState(externalFileUrl);
   const [fileName, setFileName] = useState(null);
   const [extractedData, setExtractedData] = useState(null);
   const [processingError, setProcessingError] = useState(null);
@@ -62,9 +65,22 @@ export default function ReferralPDFSummarizer({
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
   const [oasisResults, setOasisResults] = useState(null);
+  const [showPreview, setShowPreview] = useState(true);
   const fileInputRef = useRef(null);
   // Remember the last document we processed so "Try again" can re-run without re-upload.
   const lastProcessedRef = useRef({ url: externalFileUrl, mime: "application/pdf" });
+
+  // Real per-section AI confidence (0-100) self-reported by the extraction model,
+  // falling back to a neutral default for older data that predates the field.
+  const getConfidence = (section, fallback) => {
+    const value = extractedData?.extraction_confidence?.[section];
+    return typeof value === "number" && !Number.isNaN(value) ? Math.round(value) : fallback;
+  };
+
+  // Whether the uploaded source document should render as an image vs. a PDF frame.
+  const previewMime = lastProcessedRef.current?.mime || "";
+  const previewIsImage =
+    previewMime.startsWith("image/") || /\.(png|jpe?g|tiff?|gif|webp)(\?|$)/i.test(fileUrl || "");
 
   const processingStages = [
     "Analyzing document structure...",
@@ -406,7 +422,13 @@ HANDWRITTEN NOTES HANDLING:
 - If you find handwritten notes, include them in the appropriate section with context
 - Create a special "handwritten_notes" field to capture any additional handwritten information that doesn't fit standard categories
 - For illegible handwriting, note "[illegible handwriting - appears to be about X]"
-- Cross-reference handwritten information with typed data to resolve conflicts or fill gaps`,
+- Cross-reference handwritten information with typed data to resolve conflicts or fill gaps
+
+CONFIDENCE SCORING (REQUIRED):
+- Populate "extraction_confidence" with an honest 0-100 score for EACH section.
+- Base the score on how clearly the source supported it: clearly typed and explicit = high (85-100); partially documented or requiring inference = medium (60-84); handwritten, illegible, ambiguous, or largely absent = low (<60).
+- Do NOT default everything to high. Calibrate so a reviewer can trust the numbers to triage what needs verification.
+- List the specific fields you are least sure about in "extraction_confidence.low_confidence_fields".`,
         file_urls: [url],
         response_json_schema: {
           type: "object",
@@ -728,6 +750,29 @@ HANDWRITTEN NOTES HANDLING:
                 unclear_sections: { type: "array", items: { type: "string" } },
                 mixed_content_noted: { type: "boolean" }
               }
+            },
+            extraction_confidence: {
+              type: "object",
+              description: "Honest self-assessed confidence (0-100) for each extracted section, based on document legibility, completeness, and how much had to be inferred. Use lower scores for handwritten, illegible, or inferred content.",
+              properties: {
+                demographics: { type: "number" },
+                admission_details: { type: "number" },
+                diagnoses: { type: "number" },
+                medications: { type: "number" },
+                functional_status: { type: "number" },
+                clinical_info: { type: "number" },
+                nutritional_status: { type: "number" },
+                wound_details: { type: "number" },
+                psychosocial: { type: "number" },
+                skilled_needs: { type: "number" },
+                oasis_assessment: { type: "number" },
+                overall: { type: "number" },
+                low_confidence_fields: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Specific fields/values you are least certain about and that a clinician should verify."
+                }
+              }
             }
           }
         }
@@ -975,12 +1020,31 @@ HANDWRITTEN NOTES HANDLING:
           <Alert className="bg-amber-50 border-amber-300">
             <ShieldAlert className="w-4 h-4 text-amber-600" />
             <AlertDescription className="text-amber-900">
-              <p className="font-semibold mb-1">AI-extracted — verify before clinical or billing use</p>
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <p className="font-semibold">AI-extracted — verify before clinical or billing use</p>
+                {typeof extractedData.extraction_confidence?.overall === "number" && (
+                  <Badge variant="outline" className="bg-white/60 border-amber-400 text-amber-800">
+                    Overall AI confidence: {getConfidence('overall', 0)}%
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm">
                 This summary was generated from the uploaded document and may contain
                 transcription or interpretation errors. Confirm medications, diagnoses,
                 and clinical values against the source before acting on them.
               </p>
+              {extractedData.extraction_confidence?.low_confidence_fields?.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs font-semibold flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> Lowest-confidence fields — confirm against the source:
+                  </p>
+                  <ul className="list-disc list-inside text-sm mt-1">
+                    {extractedData.extraction_confidence.low_confidence_fields.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {extractedData.oasis_assessment?.items_needing_verification?.length > 0 && (
                 <div className="mt-2">
                   <p className="text-xs font-semibold flex items-center gap-1">
@@ -1001,6 +1065,61 @@ HANDWRITTEN NOTES HANDLING:
             </AlertDescription>
           </Alert>
 
+          {/* Source document alongside the extraction so clinicians can verify
+              extracted values against the original referral. On large screens the
+              preview stays pinned while the extraction scrolls. */}
+          <div className="grid xl:grid-cols-2 gap-4 items-start">
+            {fileUrl && (
+              <Card className="border-2 border-slate-200 overflow-hidden xl:sticky xl:top-4 order-first">
+                <CardHeader className="py-3 border-b bg-slate-50">
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-slate-600" />
+                      Source Document
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3" /> Open
+                      </a>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2"
+                        onClick={() => setShowPreview((v) => !v)}
+                        aria-label={showPreview ? "Hide source document" : "Show source document"}
+                      >
+                        {showPreview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                {showPreview && (
+                  <CardContent className="p-0">
+                    {previewIsImage ? (
+                      <div className="max-h-[78vh] overflow-auto bg-slate-100">
+                        <img src={fileUrl} alt="Referral source document" className="w-full h-auto" />
+                      </div>
+                    ) : (
+                      <iframe
+                        src={fileUrl}
+                        title="Referral source document"
+                        className="w-full h-[78vh] border-0 bg-slate-100"
+                      />
+                    )}
+                    <p className="text-[11px] text-slate-500 p-2 border-t bg-white">
+                      Compare the AI extraction against this source before clinical or billing use.
+                    </p>
+                  </CardContent>
+                )}
+              </Card>
+            )}
+
+          <div className={fileUrl ? "min-w-0" : "xl:col-span-2 min-w-0"}>
           <Accordion type="multiple" className="space-y-2">
             {/* Demographics */}
             <AccordionItem value="demographics">
@@ -1008,7 +1127,7 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-blue-600" />
                   <span className="font-semibold">Demographics & Contact Information</span>
-                  <AIFieldIndicator confidence={95} source="AI" />
+                  <AIFieldIndicator confidence={getConfidence('demographics', 95)} source="AI" showValue />
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
@@ -1061,7 +1180,7 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-red-600" />
                   <span className="font-semibold">Diagnoses & Medical History</span>
-                  <AIFieldIndicator confidence={92} source="AI" />
+                  <AIFieldIndicator confidence={getConfidence('diagnoses', 92)} source="AI" showValue />
                   {isAdmin && extractedData.diagnoses?.pdgm_clinical_group && (
                     <Badge className="bg-green-600 text-white">PDGM: {extractedData.diagnoses.pdgm_clinical_group}</Badge>
                   )}
@@ -1131,7 +1250,8 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <Pill className="w-4 h-4 text-green-600" />
                   <span className="font-semibold">Medications ({extractedData.medications?.length || 0})</span>
-                  <AIFieldIndicator confidence={88} source="AI" needsVerification={true} tooltip="Verify all medications with patient/caregiver" />
+                  <AIFieldIndicator confidence={getConfidence('medications', 88)} source="AI" showValue />
+                  <AIFieldIndicator needsVerification={true} tooltip="Verify all medications with patient/caregiver" />
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
@@ -1264,7 +1384,7 @@ HANDWRITTEN NOTES HANDLING:
                   <div className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-green-600" />
                     <span className="font-semibold">Nutritional Status & Assessment</span>
-                    <AIFieldIndicator confidence={88} source="AI" />
+                    <AIFieldIndicator confidence={getConfidence('nutritional_status', 88)} source="AI" showValue />
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
@@ -1342,7 +1462,8 @@ HANDWRITTEN NOTES HANDLING:
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-orange-600" />
                     <span className="font-semibold">Detailed Wound Assessment ({extractedData.wound_details.length})</span>
-                    <AIFieldIndicator confidence={90} source="AI" needsVerification={true} />
+                    <AIFieldIndicator confidence={getConfidence('wound_details', 90)} source="AI" showValue />
+                    <AIFieldIndicator needsVerification={true} />
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
@@ -1439,7 +1560,7 @@ HANDWRITTEN NOTES HANDLING:
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-teal-600" />
                     <span className="font-semibold">Psychosocial & Social Determinants of Health</span>
-                    <AIFieldIndicator confidence={85} source="AI" />
+                    <AIFieldIndicator confidence={getConfidence('psychosocial', 85)} source="AI" showValue />
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
@@ -1736,6 +1857,8 @@ HANDWRITTEN NOTES HANDLING:
               </AccordionItem>
             )}
           </Accordion>
+          </div>
+          </div>
 
           {/* AI Admission Note Generator */}
           <AIAdmissionNoteGenerator
