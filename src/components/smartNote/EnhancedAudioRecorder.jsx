@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 import { Mic, MicOff, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { enhanceTranscription } from "../utils/medicalDictionary";
 import DictationSectionMapper from "./DictationSectionMapper";
@@ -60,22 +61,17 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
   const transcribeAudio = async (blob) => {
     setTranscribing(true);
     try {
-      const formData = new FormData();
-      formData.append("file", blob, "audio.mp3");
-      
-      // Call backend Whisper transcriber
-      const response = await fetch("/api/transcribeAudioWithWhisper", {
-        method: "POST",
-        body: formData,
+      // Wrap the recorded Blob in a File so the SDK uploads it as
+      // multipart/form-data (with auth) to the backend function, which reads
+      // the `file` field via req.formData() and returns { text }.
+      const audioFile = new File([blob], `recording-${Date.now()}.mp3`, {
+        type: "audio/mp3",
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Transcription failed");
-      }
-
-      const data = await response.json();
-      const transcriptText = data.text || "";
+      const data = await base44.functions.invoke("transcribeAudioWithWhisper", {
+        file: audioFile,
+      });
+      const transcriptText = data?.text || "";
       const enhanced = enhanceTranscription(transcriptText);
       
       setTranscript(enhanced);

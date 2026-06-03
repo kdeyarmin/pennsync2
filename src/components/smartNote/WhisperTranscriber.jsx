@@ -3,6 +3,7 @@ import { Mic, MicOff, Loader, AlertCircle, Copy, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { base44 } from '@/api/base44Client';
 
 /**
  * Real-time audio transcription component using OpenAI Whisper
@@ -104,50 +105,30 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
     setError(null);
 
     try {
-      // Combine audio chunks into single blob
+      // Combine audio chunks into a single File. The SDK detects the File and
+      // uploads it as multipart/form-data (with auth) to the backend function,
+      // which reads the `file` field via req.formData() and returns { text }.
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      const audioFile = new File([audioBlob], `whisper-recording-${Date.now()}.webm`, {
+        type: 'audio/webm',
+      });
 
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = reader.result.split(',')[1];
+      const result = await base44.functions.invoke('transcribeAudioWithWhisper', {
+        file: audioFile,
+      });
 
-        try {
-          const response = await fetch('/functions/transcribeAudioWithWhisper', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              audioData: base64Audio,
-              mimeType: 'audio/webm',
-            }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Transcription failed');
-          }
-
-          const result = await response.json();
-
-          if (result.success && result.text) {
-            setTranscript(result.text);
-            onTranscribe?.(result.text);
-            toast.success('Transcription complete');
-          } else {
-            setError('Could not transcribe audio. Please try again.');
-          }
-        } catch (err) {
-          setError(err.message || 'Transcription error');
-          console.error('Transcription error:', err);
-        } finally {
-          setIsTranscribing(false);
-        }
-      };
-      reader.readAsDataURL(audioBlob);
+      if (result?.text) {
+        setTranscript(result.text);
+        onTranscribe?.(result.text);
+        toast.success('Transcription complete');
+      } else {
+        setError('Could not transcribe audio. Please try again.');
+      }
     } catch (err) {
-      setError(err.message || 'Recording error');
+      setError(err.message || 'Transcription error');
+      console.error('Transcription error:', err);
+    } finally {
       setIsTranscribing(false);
-      console.error('Recording error:', err);
     }
   };
 
