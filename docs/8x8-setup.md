@@ -244,3 +244,17 @@ by POSTing sample 8x8 payloads with a correctly computed signature header (and a
 bad-signature request to confirm a 401). After each event, check the
 `SmsMessage` / `CallLog` / `SmsConsent` row, the `UserActivity` audit row (no PHI),
 and any nurse `Notification`.
+
+**Webhook smoke test (scripted).** Instead of hand-crafting those requests, run
+the bundled harness, which signs realistic sample payloads for the three signed
+handlers (inbound SMS, DLR, voice call), asserts a `2xx`, then re-sends each with
+a tampered signature and asserts a `401`:
+
+```
+EIGHT_X_EIGHT_WEBHOOK_SECRET=<your secret> \
+  npm run smoke:8x8-webhooks -- --base https://<your-app>/functions
+```
+
+Add `--only <functionName>` to test a single handler. Prefer a staging app — a
+valid inbound-SMS/voice POST triggers the same side effects a real webhook would.
+The signing logic (`tools-8x8-webhook-smoke.mjs`) is unit-tested.
