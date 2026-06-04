@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
     }
 
-    const users = await base44.asServiceRole.entities.User.list();
+    const users = await base44.asServiceRole.entities.User.list('-created_date', 5000);
 
     const doc = new jsPDF('landscape');
     let y = 20;
