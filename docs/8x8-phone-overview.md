@@ -63,6 +63,10 @@ See `8x8-entities.md`.
     disposition + notes.
   - `DutyStatusCard` — on/off duty + scheduled time off + off-duty message.
 - **Patient detail** — `PatientContactActions` (Text/Call, templates, schedule).
+- **Admin → User Management** — expanding a user shows `UserActivityPanel`, which
+  now includes that user's **call log** and texts (metadata only) alongside their
+  activity feed. Data comes from the service-role `getUserActivityLog` function,
+  which masks phone numbers to last-4 and never returns message bodies.
 - **Admin → System Settings** — `PhoneProvisioningPanel` (setup health,
   connection test, test send, webhook reference, provisioning, agency settings,
   templates, voicemail) and `PhoneAnalyticsPanel` (metrics + CSV export).
