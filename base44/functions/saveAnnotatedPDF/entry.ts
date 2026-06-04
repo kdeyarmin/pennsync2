@@ -1,6 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { PDFDocument, rgb } from 'npm:pdf-lib@1.17.1';
 
+// Parse a "#RRGGBB" string into a pdf-lib color, defaulting to black. A missing
+// or malformed annotation.color previously threw (slice on undefined) or fed NaN
+// into rgb() — either aborting the whole request with a 500.
+const hexToRgb = (hex) => {
+  const h = String(hex || '').replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return rgb(0, 0, 0);
+  return rgb(
+    parseInt(h.slice(0, 2), 16) / 255,
+    parseInt(h.slice(2, 4), 16) / 255,
+    parseInt(h.slice(4, 6), 16) / 255
+  );
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -36,11 +49,7 @@ Deno.serve(async (req) => {
           x: annotation.x,
           y: height - annotation.y,
           size: annotation.fontSize || 16,
-          color: rgb(
-            parseInt(annotation.color.slice(1, 3), 16) / 255,
-            parseInt(annotation.color.slice(3, 5), 16) / 255,
-            parseInt(annotation.color.slice(5, 7), 16) / 255
-          ),
+          color: hexToRgb(annotation.color),
         });
       } else if (annotation.type === 'highlight') {
         page.drawRectangle({
@@ -48,11 +57,7 @@ Deno.serve(async (req) => {
           y: height - annotation.y - annotation.height,
           width: annotation.width,
           height: annotation.height,
-          color: rgb(
-            parseInt(annotation.color.slice(1, 3), 16) / 255,
-            parseInt(annotation.color.slice(3, 5), 16) / 255,
-            parseInt(annotation.color.slice(5, 7), 16) / 255
-          ),
+          color: hexToRgb(annotation.color),
           opacity: 0.3,
         });
       } else if (annotation.type === 'draw') {
@@ -65,11 +70,7 @@ Deno.serve(async (req) => {
             start: { x: from.x, y: height - from.y },
             end: { x: to.x, y: height - to.y },
             thickness: annotation.lineWidth || 2,
-            color: rgb(
-              parseInt(annotation.color.slice(1, 3), 16) / 255,
-              parseInt(annotation.color.slice(3, 5), 16) / 255,
-              parseInt(annotation.color.slice(5, 7), 16) / 255
-            ),
+            color: hexToRgb(annotation.color),
           });
         }
       }

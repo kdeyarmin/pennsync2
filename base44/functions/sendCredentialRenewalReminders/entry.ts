@@ -22,21 +22,29 @@ Deno.serve(async (req) => {
       const expirationDate = new Date(cred.expiration_date);
       const daysUntilExpiry = Math.floor((expirationDate - today) / (1000 * 60 * 60 * 24));
 
-      // Send renewal request at 60, 30, 14, and 7 days before expiration
+      // Send renewal request at 60, 30, 14, and 7 days before expiration.
+      // Determine which tiers are newly crossed in ONE pass. Iterating and
+      // updating per-offset previously read a stale local `remindersSent`, so a
+      // credential first seen at <=7 days fired all four tiers at once (and the
+      // per-iteration write overwrote the tracking, causing repeats every run).
       const reminderOffsets = [60, 30, 14, 7];
       const remindersSent = cred.reminder_offsets_sent || [];
+      const dueOffsets = reminderOffsets.filter(
+        (offset) => daysUntilExpiry <= offset && !remindersSent.includes(offset)
+      );
 
-      for (const offset of reminderOffsets) {
-        if (daysUntilExpiry <= offset && !remindersSent.includes(offset)) {
-          const userRecord = await base44.asServiceRole.entities.User.filter({ email: cred.user_id });
+      if (dueOffsets.length > 0) {
+        const userRecord = await base44.asServiceRole.entities.User.filter({ email: cred.user_id });
 
-          if (userRecord && userRecord.length > 0) {
-            const userName = userRecord[0].full_name || cred.user_id;
+        if (userRecord && userRecord.length > 0) {
+          const userName = userRecord[0].full_name || cred.user_id;
 
-            await base44.asServiceRole.integrations.Core.SendEmail({
-              to: cred.user_id,
-              subject: `🔔 Credential Renewal Required: ${cred.title}`,
-              body: `Dear ${userName},
+          // One consolidated email per run; the body already shows the real
+          // days remaining.
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: cred.user_id,
+            subject: `🔔 Credential Renewal Required: ${cred.title}`,
+            body: `Dear ${userName},
 
 Your ${cred.title} is expiring soon and requires renewal.
 
@@ -56,21 +64,20 @@ If you need assistance, please contact your supervisor.
 
 Thank you,
 Credential Management System`
-            });
+          });
 
-            // Update reminder tracking
-            await base44.asServiceRole.entities.PersonnelCredential.update(cred.id, {
-              reminder_offsets_sent: [...remindersSent, offset],
-              last_reminder_sent_at: new Date().toISOString()
-            });
+          // Record every newly-crossed tier so they are never re-sent.
+          await base44.asServiceRole.entities.PersonnelCredential.update(cred.id, {
+            reminder_offsets_sent: [...remindersSent, ...dueOffsets],
+            last_reminder_sent_at: new Date().toISOString()
+          });
 
-            notificationsSent.push({
-              user_id: cred.user_id,
-              credential: cred.title,
-              days_until_expiry: daysUntilExpiry,
-              offset
-            });
-          }
+          notificationsSent.push({
+            user_id: cred.user_id,
+            credential: cred.title,
+            days_until_expiry: daysUntilExpiry,
+            offsets: dueOffsets
+          });
         }
       }
     }

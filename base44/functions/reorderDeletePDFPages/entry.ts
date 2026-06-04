@@ -20,14 +20,24 @@ Deno.serve(async (req) => {
 
     // Fetch original PDF
     const response = await fetch(pdf_url);
+    if (!response.ok) {
+      return Response.json({ error: 'Failed to fetch PDF' }, { status: 400 });
+    }
     const pdfBytes = await response.arrayBuffer();
     const originalPdf = await PDFDocument.load(pdfBytes);
+    const pageCount = originalPdf.getPageCount();
 
     // Create new PDF with reordered/filtered pages
     const newPdf = await PDFDocument.create();
 
     for (const pageNum of page_order) {
-      const [copiedPage] = await newPdf.copyPages(originalPdf, [pageNum - 1]);
+      // page_order is caller-supplied: validate before copyPages, which throws a
+      // generic 500 on an out-of-range/non-integer index.
+      const idx = pageNum - 1;
+      if (!Number.isInteger(idx) || idx < 0 || idx >= pageCount) {
+        return Response.json({ error: `Invalid page number: ${pageNum}` }, { status: 400 });
+      }
+      const [copiedPage] = await newPdf.copyPages(originalPdf, [idx]);
       newPdf.addPage(copiedPage);
     }
 
