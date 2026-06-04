@@ -60,6 +60,12 @@ and `AgencySettings`. See `8x8-entities.md`.
 - **Admin → System Settings** — `PhoneProvisioningPanel` (setup health,
   connection test, test send, webhook reference, provisioning, agency settings,
   templates, voicemail) and `PhoneAnalyticsPanel` (metrics + CSV export).
+- **Administration → Super Admin** (`pages/SuperAdminConfig.jsx`, super-admin
+  only) — the one-page control center: the `EightXEightSetupProgress` command
+  center (guided checklist + percent-complete + "next step" that jumps to the
+  right card), the single-secret `EightXEightSecretPanel`, and the full
+  `PhoneProvisioningPanel`. Setup-step readiness math lives in the unit-tested
+  `admin/eightxeightSetup` (`buildIntegrationSteps` / `summarizeSteps`).
 
 ## Tested utils (`node --test`, wired into `verify:workflow-quality`)
 

@@ -38,6 +38,19 @@ No environment variables — an admin sets these in the app:
 | `default_off_duty_template` | Default off-duty message |
 | `sms_messaging_enabled` | Agency-wide SMS kill switch |
 
+### Super Admin command center (easiest path)
+
+**Administration → Super Admin** is the one-stop page for the platform owner. The
+**8x8 Integration Setup** card at the top is a guided checklist: it shows a
+percent-complete bar over the required steps (API secret → sub-accounts/agency
+settings → at least one provisioned nurse), highlights the single **next step**,
+and each step has a **Go** button that scrolls straight to the card that
+completes it. A **Test live connection** button runs the read-only health probe
+without leaving the page. Below it sit the single-secret panel and the full
+provisioning/health/agency-settings surface. The step readiness is computed by
+the unit-tested `buildIntegrationSteps` / `summarizeSteps` helpers in
+`src/components/admin/eightxeightSetup.js`.
+
 ### Verify the setup (no test message needed)
 
 Admin → Settings → **8x8 Phone** now shows a **Setup & Health** card:

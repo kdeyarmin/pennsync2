@@ -64,6 +64,8 @@ Deno.serve(async (req) => {
       webhook_secret_configured: webhookConfigured,
       webhook_source: webhookSource,
       updated_by_email: rec.updated_by_email || null,
+      // When the in-app secret was last written (audit/freshness display).
+      updated_at: apiSource === 'config' ? rec.updated_date || null : null,
     });
   } catch (error) {
     console.error('getEightXEightSecretStatus error:', error);

@@ -86,8 +86,13 @@ export default function EightXEightSecretPanel() {
             <ShieldCheck className="w-4 h-4 text-green-600" />
             <AlertDescription className="text-green-900 text-sm">
               An 8x8 API secret is active (source: {sourceLabel}).
-              {status?.updated_by_email ? ` Last set by ${status.updated_by_email}.` : ""} Enter a new value below
-              to rotate it.
+              {status?.updated_by_email ? ` Last set by ${status.updated_by_email}` : ""}
+              {status?.updated_at
+                ? `${status?.updated_by_email ? " on" : " Last set"} ${new Date(status.updated_at).toLocaleDateString()}.`
+                : status?.updated_by_email
+                  ? "."
+                  : ""}{" "}
+              Enter a new value below to rotate it.
             </AlertDescription>
           </Alert>
         )}

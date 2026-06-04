@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import EightXEightSecretPanel from "@/components/admin/EightXEightSecretPanel";
+import EightXEightSetupProgress from "@/components/admin/EightXEightSetupProgress";
 import PhoneProvisioningPanel from "@/components/admin/PhoneProvisioningPanel";
 import { isSuperAdmin, isSuperAdminEmail, SUPER_ADMIN_EMAIL } from "@/lib/superAdmin";
 
@@ -135,8 +136,13 @@ export default function SuperAdminConfig() {
           </CardContent>
         </Card>
 
+        {/* Guided setup command center — progress + "what's next", links below */}
+        <EightXEightSetupProgress />
+
         {/* The single 8x8 API secret */}
-        <EightXEightSecretPanel />
+        <div id="ex8-secret" className="scroll-mt-24">
+          <EightXEightSecretPanel />
+        </div>
 
         {/* Easy 8x8 provisioning + health + agency settings */}
         <PhoneProvisioningPanel />

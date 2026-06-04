@@ -196,7 +196,7 @@ export default function PhoneProvisioningPanel() {
   return (
     <div className="space-y-6">
       {/* Setup & Health — readiness checklist + live connection test */}
-      <Card>
+      <Card id="ex8-health" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export default function PhoneProvisioningPanel() {
       </Card>
 
       {/* Webhook endpoints to register in 8x8 Connect */}
-      <Card>
+      <Card id="ex8-webhooks" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Webhook className="w-5 h-5 text-indigo-600" />
@@ -334,15 +334,15 @@ export default function PhoneProvisioningPanel() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="ex8-settings" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />
             8x8 Phone — Agency Settings
           </CardTitle>
           <CardDescription>
-            Main office number, off-duty defaults, and 8x8 sub-account configuration. API keys and the
-            webhook secret are set as backend secrets in the Base44 dashboard, not here.
+            Main office number, off-duty defaults, and 8x8 sub-account configuration. The 8x8 API secret is
+            set in the “8x8 API Secret” card above (or in the Base44 dashboard env) — not here.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -504,7 +504,7 @@ export default function PhoneProvisioningPanel() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="ex8-nurses" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />
