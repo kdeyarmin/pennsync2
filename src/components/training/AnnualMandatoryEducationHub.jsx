@@ -6,6 +6,7 @@ import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
 import { assignAnnualLearningPlan } from "@/functions/assignAnnualLearningPlan";
 import { duplicateInService } from "@/functions/duplicateInService";
+import { seedYearlyRequiredInServices } from "@/functions/seedYearlyRequiredInServices";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,8 @@ export default function AnnualMandatoryEducationHub() {
   });
   const [manualDraft, setManualDraft] = useState({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
   const [generating, setGenerating] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState(null);
   const [retakeSettings, setRetakeSettings] = useState({
     passingScoreRequired: 80,
     maxAttempts: 3,
@@ -141,6 +144,21 @@ export default function AnnualMandatoryEducationHub() {
     }
   };
 
+  const seedRequiredInServices = async () => {
+    setSeeding(true);
+    setSeedResult(null);
+    try {
+      const result = await seedYearlyRequiredInServices({});
+      setSeedResult(result?.data || result);
+      queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
+      queryClient.invalidateQueries({ queryKey: ["annual-plans"] });
+    } catch (error) {
+      setSeedResult({ error: error?.message || "Failed to create yearly required in-services." });
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const confirmModuleAssignment = async () => {
     await assignInService({ courseId: selectedCourseId, dueDate, settings: retakeSettings, userEmails: pendingAssignmentPayload?.userEmails || [], filters: pendingAssignmentPayload?.filters || {}, annualCycleYear: year });
     setPendingAssignmentPayload(null);
@@ -185,6 +203,35 @@ export default function AnnualMandatoryEducationHub() {
         <h1 className="text-3xl font-bold mb-2">Penn Annual Education & Competencies</h1>
         <p className="text-indigo-100">Build yearly required education bundles for Penn Hospice, Penn Home Health, office staff, and leadership while tracking competency, certificates, and renewal compliance.</p>
       </div>
+
+      <Card className="border-indigo-200 bg-indigo-50/40">
+        <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-semibold text-slate-900">Create {year} Yearly Required In-Services</h2>
+              <p className="text-sm text-slate-600">
+                Publishes the full library of yearly required in-services for Home Health and Hospice staff and nurses, with role-based annual plans, so they appear in each employee&apos;s My Learning. Safe to run more than once — existing items for {year} are reused, not duplicated.
+              </p>
+              {seedResult && !seedResult.error && (
+                <p className="text-sm text-emerald-700 mt-2">
+                  Done. {seedResult.created_courses?.length || 0} new in-service{(seedResult.created_courses?.length || 0) === 1 ? '' : 's'} created
+                  {seedResult.reused_courses?.length ? `, ${seedResult.reused_courses.length} already existed` : ''}.
+                  {seedResult.created_plans?.length ? ` ${seedResult.created_plans.length} annual plan${seedResult.created_plans.length === 1 ? '' : 's'} created.` : ''}
+                </p>
+              )}
+              {seedResult?.error && (
+                <p className="text-sm text-red-600 mt-2">{seedResult.error}</p>
+              )}
+            </div>
+          </div>
+          <Button className="flex-shrink-0" onClick={seedRequiredInServices} disabled={seeding}>
+            {seeding ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : <><Shield className="w-4 h-4 mr-2" />Create Required In-Services</>}
+          </Button>
+        </CardContent>
+      </Card>
 
       <AnnualMandatoryStats stats={{ ...stats, annualCompliancePercentage: stats.totalAssigned ? Math.round((stats.passed / stats.totalAssigned) * 100) : 0 }} />
 

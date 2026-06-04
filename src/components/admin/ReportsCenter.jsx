@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { CHART_COLORS } from "@/constants/chartColors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -878,7 +879,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     };
   };
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+  const COLORS = CHART_COLORS;
 
   const selectedReportType = reportTypes.find(r => r.value === reportType);
 

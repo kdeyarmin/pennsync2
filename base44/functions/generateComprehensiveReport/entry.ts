@@ -22,15 +22,15 @@ Deno.serve(async (req) => {
     // Fetch comprehensive data
     const [visits, patients, incidents, users, carePlans, complianceAudits, trainingCompletions, noteConversions, oasisUploads, alerts] = await Promise.all([
       base44.asServiceRole.entities.Visit.list('-visit_date', 1000),
-      base44.asServiceRole.entities.Patient.list(),
+      base44.asServiceRole.entities.Patient.list('-created_date', 5000),
       base44.asServiceRole.entities.Incident.list('-incident_date', 500),
-      base44.asServiceRole.entities.User.list(),
-      base44.asServiceRole.entities.CarePlan.list(),
+      base44.asServiceRole.entities.User.list('-created_date', 5000),
+      base44.asServiceRole.entities.CarePlan.list('-created_date', 5000),
       base44.asServiceRole.entities.ComplianceAudit.list('-audit_date', 500),
-      base44.asServiceRole.entities.TrainingCompletion.list(),
-      base44.asServiceRole.entities.NoteConversion.list(),
+      base44.asServiceRole.entities.TrainingCompletion.list('-created_date', 5000),
+      base44.asServiceRole.entities.NoteConversion.list('-created_date', 5000),
       base44.asServiceRole.entities.OASISUpload.list('-created_date', 200),
-      base44.asServiceRole.entities.PatientAlert.list()
+      base44.asServiceRole.entities.PatientAlert.list('-created_date', 5000)
     ]);
 
     // Filter by date range

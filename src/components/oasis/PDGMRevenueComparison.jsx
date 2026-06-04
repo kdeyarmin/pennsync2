@@ -30,7 +30,7 @@ import { generatePDGMComparisonPDF } from "@/functions/generatePDGMComparisonPDF
 import { Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import PDGMWhatIfBuilder from "./PDGMWhatIfBuilder";
 import TopOptimizationOpportunities from "./TopOptimizationOpportunities";
-import debounce from "lodash/debounce";
+import { debounce } from "@/lib/debounce";
 
 function DataValidationWarnings({ validation }) {
   if (!validation?.hasDiscrepancies) return null;
