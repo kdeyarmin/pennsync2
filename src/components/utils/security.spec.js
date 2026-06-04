@@ -13,7 +13,6 @@ describe('isSafeExternalUrl', () => {
   });
 
   it('rejects dangerous schemes (XSS via href)', () => {
-    // eslint-disable-next-line no-script-url
     expect(isSafeExternalUrl('javascript:alert(1)')).toBe(false);
     expect(isSafeExternalUrl('JavaScript:alert(1)')).toBe(false);
     expect(isSafeExternalUrl('data:text/html;base64,PHNjcmlwdD4=')).toBe(false);
