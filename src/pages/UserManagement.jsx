@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -306,16 +306,25 @@ export default function UserManagement() {
     return true;
   });
 
-  // Calculate user activity stats
-  const getUserActivityCount = (email) => {
-    return userActivities.filter(a => a.user_email === email).length;
-  };
+  // Index activity by user in one pass instead of scanning all (up to 1000)
+  // activities per table row on every render/keystroke (was O(users × activities)).
+  // userActivities is fetched '-created_date', so the first row seen per email is
+  // the most recent.
+  const activityByEmail = useMemo(() => {
+    const m = new Map();
+    for (const a of userActivities) {
+      const entry = m.get(a.user_email);
+      if (entry) {
+        entry.count += 1;
+      } else {
+        m.set(a.user_email, { count: 1, last: a.created_date });
+      }
+    }
+    return m;
+  }, [userActivities]);
 
-  const getUserLastActivity = (email) => {
-    const activities = userActivities.filter(a => a.user_email === email);
-    if (activities.length === 0) return null;
-    return activities[0].created_date;
-  };
+  const getUserActivityCount = (email) => activityByEmail.get(email)?.count || 0;
+  const getUserLastActivity = (email) => activityByEmail.get(email)?.last || null;
 
   // Stats
   const now = new Date();

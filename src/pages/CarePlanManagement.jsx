@@ -638,10 +638,11 @@ export default function CarePlanManagement() {
               try {
                 const newPlan = await base44.entities.CarePlan.create(carePlanData);
                 
-                // Auto-assign education materials
+                // Auto-assign education materials (independent inserts — create
+                // concurrently after the care plan exists).
                 if (educationTopics?.length > 0) {
-                  for (const topic of educationTopics) {
-                    await base44.entities.PatientEducationAssignment.create({
+                  await Promise.all(educationTopics.map((topic) =>
+                    base44.entities.PatientEducationAssignment.create({
                       patient_id: selectedPatient.id,
                       care_plan_id: newPlan.id,
                       topic: topic,
@@ -651,8 +652,8 @@ export default function CarePlanManagement() {
                       assigned_date: new Date().toISOString().split('T')[0],
                       assigned_by: 'AI Care Plan System',
                       priority: 'high'
-                    });
-                  }
+                    })
+                  ));
                 }
                 
                 queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });

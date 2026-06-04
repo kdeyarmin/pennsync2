@@ -178,8 +178,9 @@ export default function ReferralIntake() {
       // Create referrals for each selected document
       const referralsToProcess = analysis.referrals.filter(r => selectedIndices.includes(r.index));
       
-      for (const referral of referralsToProcess) {
-        await base44.entities.Referral.create({
+      // Independent inserts — create concurrently rather than one-by-one.
+      await Promise.all(referralsToProcess.map((referral) =>
+        base44.entities.Referral.create({
           patient_name: referral.patient_name || '',
           referral_source: referral.referral_source || '',
           referral_date: referral.referral_date || todayEastern(),
@@ -190,8 +191,8 @@ export default function ReferralIntake() {
           page_range: `${referral.estimated_start_page}-${referral.estimated_end_page}`,
           detection_confidence: referral.confidence,
           notes: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}. Pages ${referral.estimated_start_page}-${referral.estimated_end_page}`
-        });
-      }
+        })
+      ));
 
       // Reset form
       setMultiReferralDetection(null);

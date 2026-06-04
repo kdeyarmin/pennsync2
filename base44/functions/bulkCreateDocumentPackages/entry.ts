@@ -23,15 +23,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Due date required' }, { status: 400 });
     }
 
+    // Fetch all patients and templates up front in one batched read each,
+    // instead of re-fetching the template inside the patient loop (P×T gets) and
+    // fetching each patient serially.
+    const [patients, templates] = await Promise.all([
+      base44.asServiceRole.entities.Patient.filter({ id: { $in: patient_ids } }),
+      base44.asServiceRole.entities.DocumentTemplate.filter({ id: { $in: template_ids } }),
+    ]);
+    const patientMap = new Map(patients.map((p) => [p.id, p]));
+    const templateMap = new Map(templates.map((t) => [t.id, t]));
+
     const createdPackages = [];
 
     // Create a package for each patient-template combination
     for (const patientId of patient_ids) {
-      const patient = await base44.asServiceRole.entities.Patient.get(patientId);
+      const patient = patientMap.get(patientId);
       if (!patient) continue;
 
       for (const templateId of template_ids) {
-        const template = await base44.asServiceRole.entities.DocumentTemplate.get(templateId);
+        const template = templateMap.get(templateId);
         if (!template) continue;
 
         // Create document signature from template

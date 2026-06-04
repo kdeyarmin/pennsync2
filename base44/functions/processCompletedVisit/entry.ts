@@ -31,18 +31,18 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Fetch patient data for context
-    const patient = await base44.entities.Patient.get(visit.patient_id);
-    
+    // Patient and active care plans are independent reads — fetch concurrently.
+    const [patient, carePlans] = await Promise.all([
+      base44.entities.Patient.get(visit.patient_id),
+      base44.entities.CarePlan.filter({
+        patient_id: visit.patient_id,
+        status: 'active'
+      })
+    ]);
+
     if (!patient) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
-
-    // Fetch care plans for context
-    const carePlans = await base44.entities.CarePlan.filter({
-      patient_id: visit.patient_id,
-      status: 'active'
-    });
 
     // Generate Medicare-compliant narrative
     const narrativePrompt = `You are a clinical documentation specialist. Generate a Medicare-compliant visit narrative based on the following information:
@@ -79,7 +79,10 @@ Generate a comprehensive, Medicare-compliant narrative that includes:
 
 Use proper medical terminology and follow Medicare documentation requirements. Be specific and objective.`;
 
-    const narrativeResponse = await base44.integrations.Core.InvokeLLM({
+    // Kick off the narrative call now; it runs concurrently with the follow-up
+    // tasks call below (both use the same inputs and are independent), roughly
+    // halving the clinician's wait on visit completion.
+    const narrativePromise = base44.integrations.Core.InvokeLLM({
       prompt: narrativePrompt,
       model: 'gpt_5_5'
     });
@@ -118,7 +121,7 @@ Consider:
 
 Only suggest tasks that are clinically necessary. If no follow-up is needed, return empty array.`;
 
-    const tasksResponse = await base44.integrations.Core.InvokeLLM({
+    const tasksPromise = base44.integrations.Core.InvokeLLM({
       prompt: tasksPrompt,
       response_json_schema: {
         type: 'object',
@@ -140,6 +143,11 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
         }
       }
     });
+
+    const [narrativeResponse, tasksResponse] = await Promise.all([
+      narrativePromise,
+      tasksPromise
+    ]);
 
     // Update visit with enhanced narrative
     const narrativeText = typeof narrativeResponse === 'string' ? narrativeResponse : JSON.stringify(narrativeResponse);

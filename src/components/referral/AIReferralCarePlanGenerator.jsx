@@ -81,11 +81,13 @@ export default function AIReferralCarePlanGenerator({
     try {
       const _today = new Date().toISOString().split('T')[0];
       
-      for (const plan of generatedPlans) {
+      // Independent inserts — create concurrently so the save isn't N serial
+      // round-trips while the user waits.
+      await Promise.all(generatedPlans.map((plan) => {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + (plan.target_days || 60));
-        
-        await base44.entities.CarePlan.create({
+
+        return base44.entities.CarePlan.create({
           patient_id: patientId,
           problem: plan.problem,
           goal: plan.goal,
@@ -95,7 +97,7 @@ export default function AIReferralCarePlanGenerator({
           target_date: targetDate.toISOString().split('T')[0],
           status: 'active'
         });
-      }
+      }));
 
       alert(`Successfully created ${generatedPlans.length} care plans!`);
       setGeneratedPlans([]);
