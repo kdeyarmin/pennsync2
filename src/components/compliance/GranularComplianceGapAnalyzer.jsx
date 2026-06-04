@@ -121,8 +121,14 @@ Provide detailed analysis with:
     visitTypes.forEach(type => {
       const typeVisits = visits.filter(v => v.visit_type === type);
       const issues = [];
+      // A single visit can fail several checks below, so count DISTINCT
+      // incomplete visits for the rate — using issues.length let one visit
+      // contribute multiple "incomplete" counts and drove completion_rate
+      // negative (e.g. 2 visits with 3 issues each => 1 - 6/2 = -200%).
+      const incompleteVisitIds = new Set();
 
       typeVisits.forEach(visit => {
+        const before = issues.length;
         // Check for missing critical documentation elements
         if (!visit.nurse_notes || visit.nurse_notes.length < 100) {
           issues.push({ visit_id: visit.id, issue: 'Insufficient documentation', patient_id: visit.patient_id });
@@ -136,13 +142,17 @@ Provide detailed analysis with:
         if (type === 'recertification' && !visit.nurse_notes?.toLowerCase().includes('progress')) {
           issues.push({ visit_id: visit.id, issue: 'Missing progress documentation', patient_id: visit.patient_id });
         }
+        if (issues.length > before) incompleteVisitIds.add(visit.id);
       });
 
       if (issues.length > 0) {
+        const incompleteCount = incompleteVisitIds.size;
         gaps[type] = {
           total_visits: typeVisits.length,
-          incomplete_visits: issues.length,
-          completion_rate: Math.round((1 - issues.length / typeVisits.length) * 100),
+          incomplete_visits: incompleteCount,
+          completion_rate: typeVisits.length > 0
+            ? Math.round((1 - incompleteCount / typeVisits.length) * 100)
+            : 100,
           issues: issues
         };
       }

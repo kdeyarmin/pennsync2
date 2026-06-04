@@ -65,9 +65,16 @@ export default function NurseComplianceRiskIndicator({ users = [] }) {
         .slice(0, 3)
         .map(([issue]) => issue);
       
-      // Calculate trend
-      const recentAvg = nurse.recentScores.slice(-5).reduce((a, b) => a + b, 0) / Math.min(5, nurse.recentScores.length);
-      const olderAvg = nurse.recentScores.slice(0, -5).reduce((a, b) => a + b, 0) / Math.max(1, nurse.recentScores.length - 5);
+      // Calculate trend. recentScores[0] is the NEWEST audit (query orders by
+      // '-audit_date'), so the newest 5 are slice(0,5) and the rest are older.
+      // The previous slice(-5)/slice(0,-5) had these reversed, inverting the
+      // trend sign and showing improving nurses with a declining arrow.
+      const recent = nurse.recentScores.slice(0, 5);
+      const older = nurse.recentScores.slice(5);
+      const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+      const olderAvg = older.length > 0
+        ? older.reduce((a, b) => a + b, 0) / older.length
+        : recentAvg;
       const trend = recentAvg - olderAvg;
 
       // Risk score: lower avg score + higher fail rate + critical issues = higher risk

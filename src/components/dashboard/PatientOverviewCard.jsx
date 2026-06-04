@@ -13,7 +13,9 @@ import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 
 export default function PatientOverviewCard({ patient, visits, carePlans, alerts, isSelected, onSelect, view }) {
-  const recentVisit = visits.sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date))[0];
+  // Copy before sorting — sort() mutates in place, and `visits` is a prop owned
+  // by the parent; reordering it as a render side effect corrupts the caller.
+  const recentVisit = [...visits].sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date))[0];
   const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
   const criticalAlerts = alerts.filter(a => a.severity === 'critical' || a.severity === 'high');
 

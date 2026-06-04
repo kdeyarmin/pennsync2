@@ -115,10 +115,13 @@ export default function OfflineSyncManager() {
   // Auto-sync when coming online
   useEffect(() => {
     if (isOnline && pendingDrafts.length > 0 && !isSyncing) {
-      // Wait 2 seconds to ensure connection is stable
-      setTimeout(() => {
+      // Wait 2 seconds to ensure connection is stable. Clear on cleanup so a
+      // flapping connection or an unmount within the window doesn't fire a sync
+      // (and setState) after the effect is torn down.
+      const timer = setTimeout(() => {
         syncOfflineData();
       }, 2000);
+      return () => clearTimeout(timer);
     }
   }, [isOnline]);
 
@@ -130,6 +133,10 @@ export default function OfflineSyncManager() {
     let successCount = 0;
     let errorCount = 0;
     const errors = [];
+    // Track failures by index, not patient name: two drafts can share a name,
+    // and reconstructing "remaining" via find(d => d.patient_name === e.patient)
+    // collapsed duplicates and could drop a failed draft (data loss).
+    const failedIndices = new Set();
 
     try {
       for (let i = 0; i < pendingDrafts.length; i++) {
@@ -152,6 +159,7 @@ export default function OfflineSyncManager() {
         } catch (error) {
           console.error('Sync error for draft:', draft, error);
           errorCount++;
+          failedIndices.add(i);
           errors.push({
             patient: draft.patient_name,
             error: error.message
@@ -159,12 +167,9 @@ export default function OfflineSyncManager() {
         }
       }
 
-      // Clear synced drafts
+      // Keep only the drafts that actually failed (by index), drop the synced.
       if (successCount > 0) {
-        const remaining = errors.map(e => 
-          pendingDrafts.find(d => d.patient_name === e.patient)
-        ).filter(Boolean);
-        
+        const remaining = pendingDrafts.filter((_, i) => failedIndices.has(i));
         localStorage.setItem('offline_visit_drafts', JSON.stringify(remaining));
         loadPendingDrafts();
       }

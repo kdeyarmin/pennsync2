@@ -21,7 +21,8 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 export default function PredictiveRiskScoring({ patients = [], visits = [], carePlans = [], incidents = [], compact = false }) {
-  const [riskScores, setRiskScores] = useState([]);
+  // Object shape: every consumer reads riskScores.risk_assessments / .critical_alerts.
+  const [riskScores, setRiskScores] = useState({});
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 

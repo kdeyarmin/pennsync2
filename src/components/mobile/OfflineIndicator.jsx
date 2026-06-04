@@ -37,7 +37,13 @@ export default function OfflineIndicator() {
 
     const handleOnline = async () => {
       setIsOnline(true);
-      if (syncStatus.pending > 0) {
+      // Read the live pending count — this handler is registered once (empty
+      // deps), so closing over syncStatus.pending captured the initial 0 and the
+      // reconnect auto-sync never fired.
+      const pending = typeof offlineStorage.getPendingCount === 'function'
+        ? offlineStorage.getPendingCount()
+        : 0;
+      if (pending > 0) {
         await performSync();
       }
     };
@@ -61,7 +67,9 @@ export default function OfflineIndicator() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('offline-change-added', handleChangeAdded);
-    window.addEventListener('offline-sync-complete', handleSyncComplete);
+    // OfflineStorage.syncPendingData dispatches 'sync-complete' (not
+    // 'offline-sync-complete'), so the old name never fired.
+    window.addEventListener('sync-complete', handleSyncComplete);
 
     // Update status every 3 seconds
     const interval = setInterval(updateStatus, 3000);
@@ -71,7 +79,7 @@ export default function OfflineIndicator() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('offline-change-added', handleChangeAdded);
-      window.removeEventListener('offline-sync-complete', handleSyncComplete);
+      window.removeEventListener('sync-complete', handleSyncComplete);
       clearInterval(interval);
       clearTimeout(syncResultTimer);
     };
