@@ -1,17 +1,65 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * Exponential backoff retry schedule: attempt 1 → 5 min, attempt 2 → 15 min, attempt 3 → 60 min
- * Called every 5 minutes by a scheduled automation.
- * Sends a final failure email/notification ONLY when all retries are exhausted.
+ * Re-dispatches failed faxes whose config-aware backoff window (set by the
+ * status webhook) has elapsed. Called every few minutes by a scheduled
+ * automation; enable ONE schedule. Honors the admin's FaxRetryConfig (max
+ * retries / auto-retry switch) and claims each fax with a per-run token before
+ * re-sending, so overlapping runs can't double-send the same document (the
+ * Twilio Fax API has no idempotency key). Sends a final-failure notice only when
+ * retries are exhausted.
  */
 
-const BACKOFF_MINUTES = [5, 15, 60]; // delay before each retry attempt
-const MAX_RETRIES = BACKOFF_MINUTES.length;
+// ---- fax retry policy (mirrors src/components/fax/faxRetry.js) ----
+const PERMANENT_FAILURE_PATTERNS = [
+  /invalid/i, /not a fax/i, /no fax machine/i, /incompatible/i, /unsupported/i,
+  /rejected/i, /blocked/i, /do not call/i, /unallocated/i, /disconnected/i,
+  /forbidden/i, /not in service/i, /no such number/i, /malformed/i,
+];
+function classifyFaxFailure(errorCode: any, errorMessage: any): string {
+  const s = `${errorCode ?? ''} ${errorMessage ?? ''}`.trim();
+  if (!s) return 'transient';
+  return PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s)) ? 'permanent' : 'transient';
+}
+function faxRetryConfig(config: any) {
+  const c = config || {};
+  return {
+    enabled: c.auto_retry_enabled !== false,
+    maxRetries: Number.isFinite(c.max_retries) ? Math.max(0, c.max_retries) : 3,
+    baseDelayMinutes: Number.isFinite(c.retry_delay_minutes) && c.retry_delay_minutes > 0 ? c.retry_delay_minutes : 15,
+    notifyOnFinalFailure: c.notify_on_final_failure !== false,
+    priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
+  };
+}
+function nextRetryDelayMinutes(attempt: number, config: any, priority = 'normal', factor = 2, maxMinutes = 360): number {
+  const c = faxRetryConfig(config);
+  const a = Math.max(0, Number(attempt) || 0);
+  const mult = Number.isFinite(c.priorityMultiplier[priority]) ? c.priorityMultiplier[priority] : 1;
+  const minutes = c.baseDelayMinutes * factor ** a * mult;
+  return Math.max(1, Math.min(maxMinutes, Math.round(minutes)));
+}
+function isFaxRetryDue(fax: any, now: number, config: any): boolean {
+  const c = faxRetryConfig(config);
+  if (!c.enabled) return false;
+  if (!fax || fax.status !== 'failed') return false;
+  if (!fax.next_retry_at) return false;
+  if (!fax.document_url) return false;
+  if ((Number(fax.retry_count) || 0) > c.maxRetries) return false;
+  const t = new Date(fax.next_retry_at).getTime();
+  return Number.isFinite(t) && now >= t;
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const runId = crypto.randomUUID();
+
+    const cfgRows = await base44.asServiceRole.entities.FaxRetryConfig.list('-created_date', 1).catch(() => []);
+    const cfg = cfgRows[0] || {};
+    const c = faxRetryConfig(cfg);
+    if (!c.enabled) {
+      return Response.json({ success: true, retried: 0, skipped: 0, note: 'Auto-retry disabled in FaxRetryConfig.' });
+    }
 
     // Get all faxes that are failed and have a scheduled next_retry_at
     const allFailed = await base44.asServiceRole.entities.FaxLog.filter(
@@ -33,26 +81,30 @@ Deno.serve(async (req) => {
     }
 
     for (const fax of allFailed) {
-      // Skip if no retry is scheduled
-      if (!fax.next_retry_at) {
+      if (!isFaxRetryDue(fax, now.getTime(), cfg)) {
         skippedCount++;
         continue;
       }
 
-      // Skip if it's not time yet
-      if (now < new Date(fax.next_retry_at)) {
+      // Claim with a per-run token, then RE-READ to confirm we own it. Flipping
+      // to 'queued' also removes it from a second run's failed-filter, so two
+      // overlapping runs can't both re-send the same document.
+      try {
+        await base44.asServiceRole.entities.FaxLog.update(fax.id, {
+          status: 'queued', retry_claimed_by: runId, next_retry_at: null,
+        });
+      } catch {
+        skippedCount++;
+        continue;
+      }
+      const check = await base44.asServiceRole.entities.FaxLog.filter({ id: fax.id }, '-updated_date', 1).catch(() => []);
+      if (!check[0] || check[0].retry_claimed_by !== runId) {
         skippedCount++;
         continue;
       }
 
       // Attempt the retry via Twilio
       try {
-        if (!fax.document_url) {
-          console.error(`Fax ${fax.id} has no document_url, skipping retry`);
-          skippedCount++;
-          continue;
-        }
-
         const formBody = new URLSearchParams();
         formBody.append('From', fromNumber);
         formBody.append('To', fax.to_number);
@@ -75,19 +127,32 @@ Deno.serve(async (req) => {
             status: 'queued',
             telnyx_fax_id: twilioData.sid,
             next_retry_at: null,
-            failure_reason: null
+            failure_reason: null,
+            retry_claimed_by: null,
           });
           retriedCount++;
           console.log(`Retry attempt ${fax.retry_count} dispatched for fax ${fax.id} → new SID ${twilioData.sid}`);
         } else {
           const errText = await twilioResp.text();
           console.error(`Twilio error on retry for fax ${fax.id}:`, errText);
-          // Twilio itself rejected — treat as a failed attempt
-          await handleRetryExhausted(base44, fax, `Twilio rejected retry: ${errText}`);
+          // Twilio rejected the re-send — a permanent rejection, so stop now.
+          await base44.asServiceRole.entities.FaxLog.update(fax.id, { status: 'failed', retry_claimed_by: null }).catch(() => {});
+          await handleRetryExhausted(base44, fax, `Twilio rejected retry: ${errText}`, c.maxRetries, c.notifyOnFinalFailure);
         }
       } catch (err) {
         console.error(`Network error retrying fax ${fax.id}:`, err.message);
-        await handleRetryExhausted(base44, fax, err.message);
+        // Transient: restore to failed and reschedule (within budget) using the
+        // SAME config-aware, priority-scaled backoff as the webhook; otherwise
+        // exhaust + notify.
+        const attempts = Number(fax.retry_count) || 0;
+        const within = attempts < c.maxRetries;
+        const delayMin = nextRetryDelayMinutes(attempts, cfg, fax.priority || 'normal');
+        await base44.asServiceRole.entities.FaxLog.update(fax.id, {
+          status: 'failed',
+          retry_claimed_by: null,
+          next_retry_at: within ? new Date(now.getTime() + delayMin * 60000).toISOString() : null,
+        }).catch(() => {});
+        if (!within) await handleRetryExhausted(base44, fax, err.message, c.maxRetries, c.notifyOnFinalFailure);
       }
     }
 
@@ -107,8 +172,14 @@ Deno.serve(async (req) => {
 /**
  * Mark fax as permanently failed and notify user (only called when all retries exhausted).
  */
-async function handleRetryExhausted(base44, fax, reason) {
-  if (fax.final_failure_notified) return;
+async function handleRetryExhausted(base44, fax, reason, maxRetries = 3, notify = true) {
+  if (fax.final_failure_notified || !notify) {
+    await base44.asServiceRole.entities.FaxLog.update(fax.id, {
+      next_retry_at: null, final_failure_notified: true, failure_reason: reason || fax.failure_reason,
+    }).catch(() => {});
+    return;
+  }
+  const MAX_RETRIES = maxRetries;
 
   await base44.asServiceRole.entities.FaxLog.update(fax.id, {
     next_retry_at: null,

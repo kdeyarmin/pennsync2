@@ -20,6 +20,8 @@ import {
   evaluateAgencyConfig, summarize, WEBHOOK_FUNCTIONS, functionUrlBase,
 } from "@/components/admin/eightxeightSetup";
 import { isAdminLike } from "@/lib/superAdmin";
+import CallingHoursPanel from "@/components/admin/CallingHoursPanel";
+import NumberPoolPanel from "@/components/admin/NumberPoolPanel";
 
 const STATUS_META = {
   ok: { Icon: CheckCircle2, color: "text-green-600", badge: "bg-green-100 text-green-800" },
@@ -196,7 +198,7 @@ export default function PhoneProvisioningPanel() {
   return (
     <div className="space-y-6">
       {/* Setup & Health — readiness checklist + live connection test */}
-      <Card>
+      <Card id="ex8-health" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
@@ -298,7 +300,7 @@ export default function PhoneProvisioningPanel() {
       </Card>
 
       {/* Webhook endpoints to register in 8x8 Connect */}
-      <Card>
+      <Card id="ex8-webhooks" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Webhook className="w-5 h-5 text-indigo-600" />
@@ -331,18 +333,27 @@ export default function PhoneProvisioningPanel() {
               </div>
             );
           })}
+          <Alert className="bg-slate-50 border-slate-200">
+            <Info className="w-4 h-4 text-slate-600" />
+            <AlertDescription className="text-slate-700 text-xs">
+              <strong>Webhooks failing signature checks?</strong> Set the function secret{" "}
+              <code className="bg-white border border-slate-200 rounded px-1">EIGHT_X_EIGHT_WEBHOOK_DEBUG=1</code>{" "}
+              in the Base44 dashboard to log which signature header names 8x8 sends and whether each verifies
+              (header <em>names</em> only — never secret values). Check the function logs, then turn it off.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="ex8-settings" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />
             8x8 Phone — Agency Settings
           </CardTitle>
           <CardDescription>
-            Main office number, off-duty defaults, and 8x8 sub-account configuration. API keys and the
-            webhook secret are set as backend secrets in the Base44 dashboard, not here.
+            Main office number, off-duty defaults, and 8x8 sub-account configuration. The 8x8 API secret is
+            set in the “8x8 API Secret” card above (or in the Base44 dashboard env) — not here.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -504,7 +515,13 @@ export default function PhoneProvisioningPanel() {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Global calling & texting hours + after-hours auto-handling */}
+      <CallingHoursPanel />
+
+      {/* Easy provisioning: a pool of numbers assignable in one click */}
+      <NumberPoolPanel />
+
+      <Card id="ex8-nurses" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />

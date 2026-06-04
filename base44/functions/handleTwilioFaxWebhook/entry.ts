@@ -4,7 +4,46 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * Twilio Fax Status Webhook Handler
  * Receives real-time fax status updates from Twilio and updates FaxLog records.
  */
-const BACKOFF_MINUTES = [5, 15, 60];
+
+// ---- fax retry policy (mirrors src/components/fax/faxRetry.js) ----
+const PERMANENT_FAILURE_PATTERNS = [
+  /invalid/i, /not a fax/i, /no fax machine/i, /incompatible/i, /unsupported/i,
+  /rejected/i, /blocked/i, /do not call/i, /unallocated/i, /disconnected/i,
+  /forbidden/i, /not in service/i, /no such number/i, /malformed/i,
+];
+function classifyFaxFailure(errorCode: any, errorMessage: any): string {
+  const s = `${errorCode ?? ''} ${errorMessage ?? ''}`.trim();
+  if (!s) return 'transient';
+  return PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s)) ? 'permanent' : 'transient';
+}
+function faxRetryConfig(config: any) {
+  const c = config || {};
+  return {
+    enabled: c.auto_retry_enabled !== false,
+    maxRetries: Number.isFinite(c.max_retries) ? Math.max(0, c.max_retries) : 3,
+    baseDelayMinutes: Number.isFinite(c.retry_delay_minutes) && c.retry_delay_minutes > 0 ? c.retry_delay_minutes : 15,
+    notifyOnFinalFailure: c.notify_on_final_failure !== false,
+    priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
+  };
+}
+function nextRetryDelayMinutes(attempt: number, config: any, priority = 'normal', factor = 2, maxMinutes = 360): number {
+  const c = faxRetryConfig(config);
+  const a = Math.max(0, Number(attempt) || 0);
+  const mult = Number.isFinite(c.priorityMultiplier[priority]) ? c.priorityMultiplier[priority] : 1;
+  const minutes = c.baseDelayMinutes * factor ** a * mult;
+  return Math.max(1, Math.min(maxMinutes, Math.round(minutes)));
+}
+function planFaxRetry(opts: any) {
+  const { retryCount = 0, errorCode, errorMessage, priority = 'normal', config, now = Date.now() } = opts || {};
+  const c = faxRetryConfig(config);
+  const classification = classifyFaxFailure(errorCode, errorMessage);
+  const attempts = Number(retryCount) || 0;
+  if (!c.enabled || classification === 'permanent' || attempts >= c.maxRetries) {
+    return { willRetry: false, classification, exhausted: true, nextRetryAt: null, nextRetryCount: attempts, delayMinutes: 0 };
+  }
+  const delayMinutes = nextRetryDelayMinutes(attempts, config, priority);
+  return { willRetry: true, classification, exhausted: false, nextRetryAt: new Date(now + delayMinutes * 60000).toISOString(), nextRetryCount: attempts + 1, delayMinutes };
+}
 
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -90,18 +129,27 @@ Deno.serve(async (req) => {
       next_retry_at: null,
     };
 
+    let exhaustedNow = false;
     if (mappedStatus === 'failed') {
       const failureReason = `${errorCode || 'failed'}: ${errorMessage || 'Unknown error'}`;
-      const retryCount = faxLog.retry_count || 0;
-
-      if (retryCount < BACKOFF_MINUTES.length) {
-        const delayMs = BACKOFF_MINUTES[retryCount] * 60 * 1000;
-        updateData.next_retry_at = new Date(Date.now() + delayMs).toISOString();
-        updateData.retry_count = retryCount + 1;
+      // Honor the admin's FaxRetryConfig; classify the failure so a PERMANENT
+      // error (bad number, not a fax machine) gives up immediately instead of
+      // wasting the whole backoff schedule.
+      const cfgRows = await base44.asServiceRole.entities.FaxRetryConfig.list('-created_date', 1).catch(() => []);
+      const plan = planFaxRetry({
+        retryCount: faxLog.retry_count || 0,
+        errorCode, errorMessage,
+        priority: faxLog.priority || 'normal',
+        config: cfgRows[0] || {},
+      });
+      if (plan.willRetry) {
+        updateData.next_retry_at = plan.nextRetryAt;
+        updateData.retry_count = plan.nextRetryCount;
       } else {
-        updateData.final_failure_notified = false;
+        // No more retries — leave it failed and notify the sender once.
+        exhaustedNow = !faxLog.final_failure_notified;
+        updateData.final_failure_notified = true;
       }
-
       updateData.failure_reason = failureReason;
     }
 
@@ -109,6 +157,23 @@ Deno.serve(async (req) => {
 
     if (mappedStatus === 'delivered') {
       await sendStatusNotification(base44, faxLog, mappedStatus, updateData.pages).catch((err) => console.error('Failed to send status notification:', err));
+    }
+
+    // Tell the sender when a fax has permanently failed (no retries left), so it
+    // doesn't fail silently — mirrors the SMS failed-delivery notification.
+    if (exhaustedNow && faxLog.sent_by) {
+      const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+      await base44.asServiceRole.entities.Notification.create({
+        user_email: faxLog.sent_by,
+        title: '❌ Fax failed',
+        message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${updateData.failure_reason}). Verify the number and resend.`,
+        type: 'fax_failed',
+        priority: 'high',
+        related_entity: 'FaxLog',
+        related_entity_id: faxLog.id,
+        is_read: false,
+        action_url: `/send-fax?fax_id=${faxLog.id}`,
+      }).catch((err) => console.error('Failed to send fax failure notification:', err));
     }
 
     if (faxLog.sent_by) {

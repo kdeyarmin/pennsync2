@@ -181,6 +181,8 @@ export default function PhoneAnalyticsPanel() {
             <Stat label="Completed" value={stats.calls.completed} />
             <Stat label="Missed" value={stats.calls.missed} sub={`${stats.calls.missedRate}% of calls`} />
             <Stat label="Avg duration" value={formatDuration(stats.calls.avgDurationSec)} />
+            <Stat label="After-hours transfers" value={stats.calls.afterHoursTransfers} sub={`${stats.calls.autoTransferRate}% of inbound auto-handled`} />
+            <Stat label="Off-duty transfers" value={stats.calls.offDutyTransfers} />
           </div>
         </div>
 
@@ -192,6 +194,8 @@ export default function PhoneAnalyticsPanel() {
             <div className="grid grid-cols-2 gap-2">
               <Stat label="Opted in" value={stats.consent.optedIn} />
               <Stat label="Opted out" value={stats.consent.optedOut} sub={`${stats.consent.tracked} numbers tracked`} />
+              <Stat label="New opt-outs" value={stats.consent.recentOptOuts} sub="in window" />
+              <Stat label="New opt-ins" value={stats.consent.recentOptIns} sub="in window" />
             </div>
           </div>
           <div>

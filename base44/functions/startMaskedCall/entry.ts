@@ -48,6 +48,48 @@ async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
   }
 }
 
+// ---- transient-failure retry policy (mirrors src/components/voice/eightxeightRetry.js) ----
+// Call origination is NOT idempotent (no clientMessageId), so a thrown network
+// error is NOT retried (the call might already be placed — a blind retry could
+// double-dial the patient). Only explicit retryable HTTP statuses, where 8x8
+// told us the request failed, are retried.
+const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+function isRetryableStatus(status: number): boolean {
+  return RETRYABLE_STATUSES.has(Number(status));
+}
+function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
+  if (headerValue == null) return null;
+  const raw = String(headerValue).trim();
+  if (raw === '') return null;
+  if (/^\d+$/.test(raw)) return Number(raw) * 1000;
+  const dateMs = Date.parse(raw);
+  if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - nowMs);
+  return null;
+}
+function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
+  const n = Math.max(1, Number(attempt) || 1);
+  const exp = Math.min(maxMs, baseMs * 2 ** (n - 1));
+  return Math.round(exp / 2 + Math.random() * (exp / 2));
+}
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+async function originateWithRetry(
+  attemptFn: (attempt: number) => Promise<{ ok: boolean; status: number; data: any; retryAfter?: string | null }>,
+  maxAttempts = 3,
+) {
+  // Note: thrown errors are intentionally NOT caught here — they propagate to
+  // the caller after a single attempt (non-idempotent origination).
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const result = await attemptFn(attempt);
+    if (result.ok || !isRetryableStatus(result.status) || attempt === maxAttempts) {
+      return { ...result, attempts: attempt };
+    }
+    const fromHeader = parseRetryAfter(result.retryAfter ?? null);
+    await sleep(fromHeader != null ? Math.min(fromHeader, 4000) : backoffDelayMs(attempt));
+  }
+  // Unreachable (loop returns on the last attempt).
+  throw new Error('originateWithRetry exhausted attempts');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -101,30 +143,40 @@ Deno.serve(async (req) => {
     });
 
     // Originate: ring the nurse's cell first, then bridge to the patient with
-    // the work number as the presented caller ID. Bound the request with an
-    // AbortController timeout so a slow host can't hang the function.
+    // the work number as the presented caller ID. Each attempt is bounded by an
+    // AbortController timeout so a slow host can't hang the function; an explicit
+    // transient 5xx/429 is retried with backoff (a thrown network error is not,
+    // since the call may already be in flight).
     const url = `${voiceBase}/subaccounts/${voiceSubAccountId}/callflows`;
     const ORIGINATE_TIMEOUT_MS = 15000;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), ORIGINATE_TIMEOUT_MS);
-    let resp: Response;
+    let result: { ok: boolean; status: number; data: any };
     try {
-      resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callflow: [
-            {
-              action: 'makeCall',
-              params: {
-                source: { type: 'phoneNumber', phoneNumber: nurseCell },
-                destination: { type: 'phoneNumber', phoneNumber: destination },
-                callerId: workNumber,
-              },
-            },
-          ],
-        }),
-        signal: controller.signal,
+      result = await originateWithRetry(async () => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), ORIGINATE_TIMEOUT_MS);
+        try {
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              callflow: [
+                {
+                  action: 'makeCall',
+                  params: {
+                    source: { type: 'phoneNumber', phoneNumber: nurseCell },
+                    destination: { type: 'phoneNumber', phoneNumber: destination },
+                    callerId: workNumber,
+                  },
+                },
+              ],
+            }),
+            signal: controller.signal,
+          });
+          const data = await resp.json().catch(() => ({}));
+          return { ok: resp.ok, status: resp.status, data, retryAfter: resp.headers.get('retry-after') };
+        } finally {
+          clearTimeout(timer);
+        }
       });
     } catch (netErr) {
       // Network/DNS failure or timeout: don't leave the CallLog stuck in 'initiated'.
@@ -140,17 +192,15 @@ Deno.serve(async (req) => {
         { error: aborted ? '8x8 Voice API timed out' : 'Failed to reach 8x8 Voice API', details: netErr.message },
         { status: aborted ? 504 : 502 },
       );
-    } finally {
-      clearTimeout(timer);
     }
 
-    const data = await resp.json().catch(() => ({}));
-    if (!resp.ok) {
+    const data = result.data || {};
+    if (!result.ok) {
       await base44.entities.CallLog.update(callLog.id, {
         status: 'failed',
-        failure_reason: data?.message || data?.error || `8x8 Voice API error (${resp.status})`,
+        failure_reason: data?.message || data?.error || `8x8 Voice API error (${result.status})`,
       });
-      return Response.json({ error: '8x8 Voice API error', details: data }, { status: resp.status });
+      return Response.json({ error: '8x8 Voice API error', details: data }, { status: result.status });
     }
 
     const providerCallId = data?.callId || data?.sessionId || data?.id || null;

@@ -38,6 +38,7 @@ async function getAgencyConfig(base44: any) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return {
+    settings: s,
     smsSubAccountId: s.eight_x_eight_sms_subaccount_id,
     region: s.eight_x_eight_region || 'us',
     smsEnabled: s.sms_messaging_enabled ?? true,
@@ -69,6 +70,164 @@ async function resolvePatientId(base44: any, e164: string): Promise<string | nul
   return null;
 }
 
+// ---- transient-failure retry policy (mirrors src/components/voice/eightxeightRetry.js) ----
+// A 429/502/503/504 or a dropped connection to 8x8 is usually transient; one
+// quick retry beats stranding the patient. Retries are double-send safe because
+// every send reuses the same clientMessageId, which 8x8 treats as an
+// idempotency key. Permanent 4xx (bad number/credentials/opt-out) is not retried.
+const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+function isRetryableStatus(status: number): boolean {
+  return RETRYABLE_STATUSES.has(Number(status));
+}
+function isRetryableError(err: any): boolean {
+  if (!err) return false;
+  const name = err.name || '';
+  if (name === 'AbortError' || name === 'TimeoutError' || name === 'TypeError') return true;
+  return /network|timeout|timed out|fetch failed|socket|ECONN|ETIMEDOUT|EAI_AGAIN|dns/i.test(err.message || '');
+}
+function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
+  if (headerValue == null) return null;
+  const raw = String(headerValue).trim();
+  if (raw === '') return null;
+  if (/^\d+$/.test(raw)) return Number(raw) * 1000;
+  const dateMs = Date.parse(raw);
+  if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - nowMs);
+  return null;
+}
+function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
+  const n = Math.max(1, Number(attempt) || 1);
+  const exp = Math.min(maxMs, baseMs * 2 ** (n - 1));
+  return Math.round(exp / 2 + Math.random() * (exp / 2));
+}
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+async function sendWithRetry(
+  attemptFn: (attempt: number) => Promise<{ ok: boolean; status: number; data: any; retryAfter?: string | null }>,
+  maxAttempts = 3,
+) {
+  let lastError: any;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let result;
+    try {
+      result = await attemptFn(attempt);
+    } catch (err) {
+      if (attempt === maxAttempts || !isRetryableError(err)) throw err;
+      lastError = err;
+      await sleep(backoffDelayMs(attempt));
+      continue;
+    }
+    if (result.ok || !isRetryableStatus(result.status) || attempt === maxAttempts) {
+      return { ...result, attempts: attempt };
+    }
+    const fromHeader = parseRetryAfter(result.retryAfter ?? null);
+    await sleep(fromHeader != null ? Math.min(fromHeader, 4000) : backoffDelayMs(attempt));
+  }
+  throw lastError || new Error('sendWithRetry exhausted attempts');
+}
+
+// ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
+const AREA_CODE_TIMEZONE: Record<number, string> = {
+  // Eastern
+  201: "America/New_York", 202: "America/New_York", 203: "America/New_York", 207: "America/New_York",
+  212: "America/New_York", 215: "America/New_York", 216: "America/New_York", 220: "America/New_York",
+  223: "America/New_York", 234: "America/New_York", 239: "America/New_York", 240: "America/New_York",
+  267: "America/New_York", 272: "America/New_York", 276: "America/New_York", 290: "America/New_York",
+  301: "America/New_York", 302: "America/New_York", 304: "America/New_York", 305: "America/New_York",
+  321: "America/New_York", 324: "America/New_York", 330: "America/New_York", 339: "America/New_York",
+  347: "America/New_York", 351: "America/New_York", 352: "America/New_York", 386: "America/New_York",
+  401: "America/New_York", 404: "America/New_York", 407: "America/New_York", 410: "America/New_York",
+  412: "America/New_York", 413: "America/New_York", 419: "America/New_York", 434: "America/New_York",
+  440: "America/New_York", 443: "America/New_York", 470: "America/New_York", 475: "America/New_York",
+  478: "America/New_York", 484: "America/New_York", 502: "America/New_York", 508: "America/New_York",
+  513: "America/New_York", 516: "America/New_York", 517: "America/New_York", 518: "America/New_York",
+  540: "America/New_York", 551: "America/New_York", 561: "America/New_York", 564: "America/New_York",
+  567: "America/New_York", 570: "America/New_York", 571: "America/New_York", 585: "America/New_York",
+  607: "America/New_York", 610: "America/New_York", 614: "America/New_York", 617: "America/New_York",
+  631: "America/New_York", 646: "America/New_York", 667: "America/New_York", 678: "America/New_York",
+  680: "America/New_York", 689: "America/New_York", 703: "America/New_York", 716: "America/New_York",
+  717: "America/New_York", 718: "America/New_York", 724: "America/New_York", 727: "America/New_York",
+  732: "America/New_York", 740: "America/New_York", 743: "America/New_York", 754: "America/New_York",
+  757: "America/New_York", 770: "America/New_York", 772: "America/New_York", 774: "America/New_York",
+  781: "America/New_York", 786: "America/New_York", 803: "America/New_York", 804: "America/New_York",
+  810: "America/New_York", 813: "America/New_York", 814: "America/New_York", 828: "America/New_York",
+  843: "America/New_York", 845: "America/New_York", 848: "America/New_York", 856: "America/New_York",
+  857: "America/New_York", 859: "America/New_York", 862: "America/New_York", 863: "America/New_York",
+  864: "America/New_York", 878: "America/New_York", 904: "America/New_York", 908: "America/New_York",
+  910: "America/New_York", 912: "America/New_York", 914: "America/New_York", 919: "America/New_York",
+  929: "America/New_York", 934: "America/New_York", 937: "America/New_York", 941: "America/New_York",
+  947: "America/New_York", 954: "America/New_York", 959: "America/New_York", 980: "America/New_York",
+  984: "America/New_York", 989: "America/New_York",
+  // Central
+  205: "America/Chicago", 210: "America/Chicago", 214: "America/Chicago", 217: "America/Chicago",
+  218: "America/Chicago", 224: "America/Chicago", 225: "America/Chicago", 228: "America/Chicago",
+  251: "America/Chicago", 254: "America/Chicago", 256: "America/Chicago", 262: "America/Chicago",
+  281: "America/Chicago", 309: "America/Chicago", 312: "America/Chicago", 314: "America/Chicago",
+  316: "America/Chicago", 318: "America/Chicago", 319: "America/Chicago", 320: "America/Chicago",
+  331: "America/Chicago", 334: "America/Chicago", 337: "America/Chicago", 346: "America/Chicago",
+  361: "America/Chicago", 402: "America/Chicago", 405: "America/Chicago", 409: "America/Chicago",
+  414: "America/Chicago", 417: "America/Chicago", 430: "America/Chicago", 432: "America/Chicago",
+  447: "America/Chicago", 469: "America/Chicago", 479: "America/Chicago", 501: "America/Chicago",
+  504: "America/Chicago", 507: "America/Chicago", 512: "America/Chicago", 515: "America/Chicago",
+  563: "America/Chicago", 573: "America/Chicago", 580: "America/Chicago", 601: "America/Chicago",
+  605: "America/Chicago", 608: "America/Chicago", 612: "America/Chicago", 618: "America/Chicago",
+  620: "America/Chicago", 630: "America/Chicago", 636: "America/Chicago", 641: "America/Chicago",
+  651: "America/Chicago", 660: "America/Chicago", 682: "America/Chicago", 708: "America/Chicago",
+  712: "America/Chicago", 713: "America/Chicago", 715: "America/Chicago", 731: "America/Chicago",
+  737: "America/Chicago", 763: "America/Chicago", 769: "America/Chicago", 773: "America/Chicago",
+  779: "America/Chicago", 785: "America/Chicago", 815: "America/Chicago", 816: "America/Chicago",
+  817: "America/Chicago", 830: "America/Chicago", 832: "America/Chicago", 847: "America/Chicago",
+  870: "America/Chicago", 872: "America/Chicago", 901: "America/Chicago", 903: "America/Chicago",
+  913: "America/Chicago", 915: "America/Chicago", 918: "America/Chicago", 920: "America/Chicago",
+  936: "America/Chicago", 940: "America/Chicago", 952: "America/Chicago",
+  956: "America/Chicago", 972: "America/Chicago", 979: "America/Chicago",
+  // Mountain
+  208: "America/Denver", 303: "America/Denver", 307: "America/Denver", 385: "America/Denver",
+  406: "America/Denver", 435: "America/Denver", 505: "America/Denver", 575: "America/Denver",
+  719: "America/Denver", 720: "America/Denver", 801: "America/Denver", 970: "America/Denver",
+  // Arizona (no DST)
+  480: "America/Phoenix", 520: "America/Phoenix", 602: "America/Phoenix", 623: "America/Phoenix", 928: "America/Phoenix",
+  // Pacific
+  206: "America/Los_Angeles", 209: "America/Los_Angeles", 213: "America/Los_Angeles", 253: "America/Los_Angeles",
+  279: "America/Los_Angeles", 310: "America/Los_Angeles", 323: "America/Los_Angeles", 341: "America/Los_Angeles",
+  360: "America/Los_Angeles", 408: "America/Los_Angeles", 415: "America/Los_Angeles", 424: "America/Los_Angeles",
+  425: "America/Los_Angeles", 442: "America/Los_Angeles", 503: "America/Los_Angeles", 509: "America/Los_Angeles",
+  510: "America/Los_Angeles", 530: "America/Los_Angeles", 541: "America/Los_Angeles", 559: "America/Los_Angeles",
+  562: "America/Los_Angeles", 619: "America/Los_Angeles", 626: "America/Los_Angeles", 628: "America/Los_Angeles",
+  650: "America/Los_Angeles", 657: "America/Los_Angeles", 661: "America/Los_Angeles", 669: "America/Los_Angeles",
+  707: "America/Los_Angeles", 714: "America/Los_Angeles", 747: "America/Los_Angeles", 760: "America/Los_Angeles",
+  775: "America/Los_Angeles", 805: "America/Los_Angeles", 818: "America/Los_Angeles", 820: "America/Los_Angeles",
+  831: "America/Los_Angeles", 858: "America/Los_Angeles", 909: "America/Los_Angeles", 916: "America/Los_Angeles",
+  925: "America/Los_Angeles", 949: "America/Los_Angeles", 951: "America/Los_Angeles", 971: "America/Los_Angeles",
+  // Alaska / Hawaii
+  907: "America/Anchorage", 808: "Pacific/Honolulu",
+};
+function tzForNumber(raw: string): string | null {
+  const d = String(raw || '').replace(/[^\d]/g, '');
+  const ten = d.length === 11 && d.startsWith('1') ? d.slice(1) : d;
+  if (ten.length !== 10) return null;
+  return AREA_CODE_TIMEZONE[Number(ten.slice(0, 3))] || null;
+}
+function hourInZone(date: Date, timeZone: string): number | null {
+  try {
+    const h = new Intl.DateTimeFormat('en-US', { timeZone, hour12: false, hour: '2-digit' }).format(date);
+    let n = parseInt(h, 10);
+    if (n === 24) n = 0;
+    return Number.isNaN(n) ? null : n;
+  } catch {
+    return null;
+  }
+}
+/** TCPA quiet-hours check in the RECIPIENT's timezone. Fails open when unknown. */
+function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed: boolean; reason: string } {
+  const startHour = Number(settings?.tcpa_quiet_start_hour ?? 8);
+  const endHour = Number(settings?.tcpa_quiet_end_hour ?? 21);
+  const tz = tzForNumber(toNumber);
+  if (!tz) return { allowed: true, reason: 'unknown_timezone' };
+  const h = hourInZone(now, tz);
+  if (h == null) return { allowed: true, reason: 'unknown_timezone' };
+  const allowed = h >= startHour && h < endHour;
+  return { allowed, reason: allowed ? 'within_hours' : 'quiet_hours' };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -98,7 +257,7 @@ Deno.serve(async (req) => {
     }
 
     const apiKey = await resolveEightXEightApiKey(base44);
-    const { smsSubAccountId, region, smsEnabled } = await getAgencyConfig(base44);
+    const { settings, smsSubAccountId, region, smsEnabled } = await getAgencyConfig(base44);
     if (!apiKey || !smsSubAccountId) {
       return Response.json({ error: '8x8 SMS credentials not configured' }, { status: 500 });
     }
@@ -112,6 +271,18 @@ Deno.serve(async (req) => {
     const consentStatus = consents[0]?.consent_status || 'unknown';
     if (consentStatus === 'opted_out') {
       return Response.json({ error: 'This patient has opted out of text messages (replied STOP).' }, { status: 403 });
+    }
+
+    // TCPA quiet hours (recipient timezone). Hard block when enabled — the nurse
+    // can schedule the text for daytime instead. Fails open for unknown zones.
+    if (settings?.tcpa_quiet_hours_enabled === true) {
+      const q = quietHoursCheck(destination, new Date(), settings);
+      if (!q.allowed) {
+        return Response.json(
+          { error: "It's outside the recipient's allowed texting hours (TCPA quiet hours). Schedule this text for daytime in their timezone instead.", reason: q.reason },
+          { status: 403 },
+        );
+      }
     }
 
     const resolvedPatientId = patient_id || await resolvePatientId(base44, destination);
@@ -133,32 +304,41 @@ Deno.serve(async (req) => {
       consent_checked: consentStatus === 'opted_in',
     });
 
-    // Send via 8x8 SMS API. Bound the request with an AbortController timeout so
-    // a slow/blackholed host can't hang the function (and leave the row queued).
+    // Send via 8x8 SMS API. Each attempt is bounded by an AbortController timeout
+    // so a slow/blackholed host can't hang the function; transient failures are
+    // retried with backoff (safe: the same clientMessageId de-dups at 8x8).
     const host = `https://sms.${region}.8x8.com`;
     const url = `${host}/api/v1/subaccounts/${smsSubAccountId}/messages`;
     const SEND_TIMEOUT_MS = 15000;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
-    let resp: Response;
+    let result: { ok: boolean; status: number; data: any };
     try {
-      resp = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          source: fromNumber,
-          destination,
-          text: body,
-          encoding: 'AUTO',
-          clientMessageId,
-        }),
-        signal: controller.signal,
+      result = await sendWithRetry(async () => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
+        try {
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              source: fromNumber,
+              destination,
+              text: body,
+              encoding: 'AUTO',
+              clientMessageId,
+            }),
+            signal: controller.signal,
+          });
+          const data = await resp.json().catch(() => ({}));
+          return { ok: resp.ok, status: resp.status, data, retryAfter: resp.headers.get('retry-after') };
+        } finally {
+          clearTimeout(timer);
+        }
       });
     } catch (netErr) {
-      // Network/DNS failure or timeout: don't leave the row stuck in 'queued'.
+      // Network/DNS failure or timeout (after retries): don't leave the row stuck in 'queued'.
       const aborted = netErr?.name === 'AbortError';
       const reason = aborted
         ? `Timed out after ${SEND_TIMEOUT_MS} ms reaching 8x8`
@@ -171,18 +351,16 @@ Deno.serve(async (req) => {
         { error: aborted ? '8x8 SMS API timed out' : 'Failed to reach 8x8 SMS API', details: netErr.message },
         { status: aborted ? 504 : 502 },
       );
-    } finally {
-      clearTimeout(timer);
     }
 
-    const data = await resp.json().catch(() => ({}));
+    const data = result.data || {};
 
-    if (!resp.ok) {
+    if (!result.ok) {
       await base44.entities.SmsMessage.update(smsRow.id, {
         status: 'failed',
-        failure_reason: data?.message || data?.error || `8x8 API error (${resp.status})`,
+        failure_reason: data?.message || data?.error || `8x8 API error (${result.status})`,
       });
-      return Response.json({ error: '8x8 SMS API error', details: data }, { status: resp.status });
+      return Response.json({ error: '8x8 SMS API error', details: data }, { status: result.status });
     }
 
     const providerStatus = (data?.status?.code || '').toUpperCase();

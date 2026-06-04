@@ -155,6 +155,151 @@ export function evaluateAgencyConfig(settings) {
 }
 
 /**
+ * Roll the whole 8x8 integration up into an ordered, friendly setup checklist
+ * for the super admin "command center". Pure (no UI/network): pass in the data
+ * the page already has and get back ordered steps with a clear status and the
+ * single best next action. Verification/manual steps are kept separate from the
+ * required ones so they never block the "ready to go live" signal.
+ *
+ * All inputs are optional:
+ *   - secretStatus   getEightXEightSecretStatus result
+ *                    ({ configured, source, secret_last_four, ... })
+ *   - agencySettings the AgencySettings row (or undefined)
+ *   - provisioning   { total, withWorkNumber, missingBridgeCell }
+ *   - liveResult     testEightXEightConnection result ({ checks, ... }) or null
+ *
+ * Each step: { id, title, detail, status: 'done'|'todo'|'attention',
+ *   kind: 'required'|'verify'|'manual', anchor }.
+ *   - required → must be 'done' before the integration is ready.
+ *   - verify   → a recommended check (live test); never blocks readiness.
+ *   - manual   → a step we can't auto-detect (webhook registration).
+ *
+ * @param {{ secretStatus?: any, agencySettings?: any,
+ *   provisioning?: { total?: number, withWorkNumber?: number, missingBridgeCell?: number },
+ *   liveResult?: any }} [inputs]
+ */
+export function buildIntegrationSteps({ secretStatus, agencySettings, provisioning, liveResult } = {}) {
+  const steps = [];
+
+  // 1. The single 8x8 API secret (required).
+  const secretConfigured = Boolean(secretStatus && secretStatus.configured);
+  const secretSuffix =
+    secretStatus?.source === "env"
+      ? " (Base44 dashboard env)"
+      : secretStatus?.secret_last_four
+        ? ` ••••${secretStatus.secret_last_four}`
+        : "";
+  steps.push({
+    id: "api_secret",
+    title: "Add the 8x8 API secret",
+    kind: "required",
+    anchor: "ex8-secret",
+    status: secretConfigured ? "done" : "todo",
+    detail: secretConfigured
+      ? `Configured${secretSuffix}.`
+      : "Paste your 8x8 Connect API token so SMS, voice, and webhook verification can run.",
+  });
+
+  // 2. Agency configuration (required) — reuse the detailed checklist so the
+  // roll-up and the granular panel can never disagree.
+  const configSummary = summarize(evaluateAgencyConfig(agencySettings || {}));
+  steps.push({
+    id: "agency_config",
+    title: "Configure sub-accounts & agency settings",
+    kind: "required",
+    anchor: "ex8-settings",
+    status: configSummary.fail > 0 ? "attention" : "done",
+    detail:
+      configSummary.fail > 0
+        ? `${configSummary.fail} required setting${configSummary.fail > 1 ? "s" : ""} still missing (SMS/voice sub-account or voice API base).`
+        : configSummary.warn > 0
+          ? `Configured — ${configSummary.warn} optional item${configSummary.warn > 1 ? "s" : ""} could be improved.`
+          : "SMS/voice sub-accounts, region, and office number are set.",
+  });
+
+  // 3. Provision at least one nurse work number (required).
+  const total = provisioning?.total ?? 0;
+  const withWork = provisioning?.withWorkNumber ?? 0;
+  const missingCell = provisioning?.missingBridgeCell ?? 0;
+  let provStatus = "done";
+  let provDetail = `${withWork}${total ? ` of ${total}` : ""} user${withWork === 1 ? "" : "s"} fully provisioned.`;
+  if (withWork === 0) {
+    provStatus = "todo";
+    provDetail = "No nurse has a work number yet — assign at least one.";
+  } else if (missingCell > 0) {
+    provStatus = "attention";
+    provDetail = `${withWork} provisioned, but ${missingCell} ${missingCell === 1 ? "has" : "have"} no bridge cell, so masked calling won't connect for ${missingCell === 1 ? "that nurse" : "them"}.`;
+  }
+  steps.push({
+    id: "provisioning",
+    title: "Provision a nurse work number",
+    kind: "required",
+    anchor: "ex8-nurses",
+    status: provStatus,
+    detail: provDetail,
+  });
+
+  // 4. Register the webhooks (manual — there's no API to read this back).
+  steps.push({
+    id: "webhooks",
+    title: "Register the webhooks in 8x8 Connect",
+    kind: "manual",
+    anchor: "ex8-webhooks",
+    status: "todo",
+    detail:
+      "Point each 8x8 callback at the matching function. This can't be auto-detected — confirm it in 8x8 Connect.",
+  });
+
+  // 5. Verify end to end with the live connection test (recommended).
+  const liveSummary =
+    liveResult && Array.isArray(liveResult.checks) && liveResult.checks.length
+      ? summarize(liveResult.checks)
+      : null;
+  steps.push({
+    id: "live_test",
+    title: "Verify the live connection",
+    kind: "verify",
+    anchor: "ex8-health",
+    status: !liveSummary ? "todo" : liveSummary.fail > 0 ? "attention" : "done",
+    detail: !liveSummary
+      ? "Run the live test to confirm your key, region, and sub-account actually authenticate."
+      : liveSummary.fail > 0
+        ? `Last run found ${liveSummary.fail} problem${liveSummary.fail > 1 ? "s" : ""} — see the Setup & Health checklist.`
+        : liveSummary.warn > 0
+          ? "Reachable; send a real test text for the definitive end-to-end check."
+          : "Authenticated and reachable.",
+  });
+
+  return steps;
+}
+
+/**
+ * Summarize a steps array (from `buildIntegrationSteps`) into a progress
+ * headline. `percent`/`ready` track only the REQUIRED steps (the bar to going
+ * live); `nextStep` is the single most useful thing to do next — the first
+ * unfinished required step, else the first unfinished verify/manual step.
+ */
+export function summarizeSteps(steps) {
+  const list = Array.isArray(steps) ? steps : [];
+  const required = list.filter((s) => s && s.kind === "required");
+  const requiredDone = required.filter((s) => s.status === "done").length;
+  const nextStep =
+    required.find((s) => s.status !== "done") ||
+    list.find((s) => s && s.kind !== "required" && s.status !== "done") ||
+    null;
+  return {
+    total: list.length,
+    done: list.filter((s) => s && s.status === "done").length,
+    attention: list.filter((s) => s && s.status === "attention").length,
+    requiredTotal: required.length,
+    requiredDone,
+    percent: required.length === 0 ? 0 : Math.round((requiredDone / required.length) * 100),
+    ready: required.length > 0 && requiredDone === required.length,
+    nextStep,
+  };
+}
+
+/**
  * Roll a checks array up into counts and an overall readiness flag. `ready` is
  * true only when nothing is failing (warnings are allowed). Severity is the
  * worst status present, for a single headline badge.

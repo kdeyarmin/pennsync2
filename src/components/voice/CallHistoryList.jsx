@@ -184,6 +184,11 @@ export default function CallHistoryList() {
                   {call.has_voicemail && call.voicemail_url && (
                     <audio controls preload="none" src={call.voicemail_url} className="mb-2 h-8 w-[calc(100%-1.5rem)] px-3" />
                   )}
+                  {call.voicemail_transcription && (
+                    <p className="mb-2 px-3 pl-[4.25rem] text-[13px] italic text-slate-600">
+                      “{call.voicemail_transcription}”
+                    </p>
+                  )}
                   {(call.disposition || call.note) && (
                     <div className="flex items-start gap-2 px-3 pb-2 pl-[4.25rem]">
                       {call.disposition && (

@@ -6,11 +6,29 @@ import {
   functionUrlBase,
   smsHostForRegion,
   WEBHOOK_FUNCTIONS,
+  buildIntegrationSteps,
+  summarizeSteps,
 } from "./eightxeightSetup.js";
 
 function byId(checks, id) {
   return checks.find((c) => c.id === id);
 }
+
+// A fully wired set of inputs, reused/tweaked by the step tests below.
+const READY_INPUTS = {
+  secretStatus: { configured: true, source: "config", secret_last_four: "9abc" },
+  agencySettings: {
+    eight_x_eight_sms_subaccount_id: "sms-sub",
+    eight_x_eight_voice_subaccount_id: "voice-sub",
+    eight_x_eight_voice_api_base: "https://voice.wavecell.com/api/v1",
+    eight_x_eight_region: "us",
+    main_office_number_e164: "+12155550100",
+    default_off_duty_template: "We are closed; call {office}.",
+    sms_messaging_enabled: true,
+  },
+  provisioning: { total: 5, withWorkNumber: 3, missingBridgeCell: 0 },
+  liveResult: { checks: [{ id: "a", status: "ok" }, { id: "b", status: "ok" }] },
+};
 
 test("a fully empty config fails the required sub-account/voice checks", () => {
   const checks = evaluateAgencyConfig({});
@@ -115,6 +133,111 @@ test("functionUrlBase extracts the origin, or null when unparseable", () => {
   assert.equal(functionUrlBase(""), null);
   assert.equal(functionUrlBase(null), null);
   assert.equal(functionUrlBase("not a url"), null);
+});
+
+// ---- buildIntegrationSteps / summarizeSteps -------------------------------
+
+test("buildIntegrationSteps returns the ordered setup steps", () => {
+  const steps = buildIntegrationSteps({});
+  assert.deepEqual(
+    steps.map((s) => s.id),
+    ["api_secret", "agency_config", "provisioning", "webhooks", "live_test"],
+  );
+  // Every step carries a status, kind, and a jump anchor.
+  for (const s of steps) {
+    assert.ok(["done", "todo", "attention"].includes(s.status));
+    assert.ok(["required", "verify", "manual"].includes(s.kind));
+    assert.ok(s.anchor && s.title && s.detail);
+  }
+});
+
+test("buildIntegrationSteps with empty inputs leaves required steps undone", () => {
+  const steps = buildIntegrationSteps({});
+  assert.equal(byId(steps, "api_secret").status, "todo");
+  // No sub-accounts → the agency config step needs attention.
+  assert.equal(byId(steps, "agency_config").status, "attention");
+  assert.equal(byId(steps, "provisioning").status, "todo");
+  assert.equal(byId(steps, "live_test").status, "todo");
+});
+
+test("buildIntegrationSteps reflects a fully wired, verified integration", () => {
+  const steps = buildIntegrationSteps(READY_INPUTS);
+  assert.equal(byId(steps, "api_secret").status, "done");
+  assert.match(byId(steps, "api_secret").detail, /9abc/);
+  assert.equal(byId(steps, "agency_config").status, "done");
+  assert.equal(byId(steps, "provisioning").status, "done");
+  assert.equal(byId(steps, "live_test").status, "done");
+});
+
+test("a dashboard-env secret reads as configured without a last-four", () => {
+  const steps = buildIntegrationSteps({ secretStatus: { configured: true, source: "env" } });
+  const s = byId(steps, "api_secret");
+  assert.equal(s.status, "done");
+  assert.match(s.detail, /dashboard env/);
+});
+
+test("provisioned nurses missing a bridge cell raise an attention step", () => {
+  const steps = buildIntegrationSteps({
+    ...READY_INPUTS,
+    provisioning: { total: 5, withWorkNumber: 3, missingBridgeCell: 2 },
+  });
+  const s = byId(steps, "provisioning");
+  assert.equal(s.status, "attention");
+  assert.match(s.detail, /bridge cell/);
+});
+
+test("a failing live test surfaces as attention, never blocks readiness", () => {
+  const steps = buildIntegrationSteps({
+    ...READY_INPUTS,
+    liveResult: { checks: [{ id: "a", status: "fail" }, { id: "b", status: "ok" }] },
+  });
+  assert.equal(byId(steps, "live_test").status, "attention");
+  // live_test is a 'verify' step, so the required set is still complete.
+  assert.equal(summarizeSteps(steps).ready, true);
+});
+
+test("webhooks is a manual step we never auto-complete", () => {
+  const steps = buildIntegrationSteps(READY_INPUTS);
+  const w = byId(steps, "webhooks");
+  assert.equal(w.kind, "manual");
+  assert.equal(w.status, "todo");
+});
+
+test("summarizeSteps tracks required progress and percent", () => {
+  const empty = summarizeSteps(buildIntegrationSteps({}));
+  assert.equal(empty.requiredTotal, 3);
+  assert.equal(empty.requiredDone, 0);
+  assert.equal(empty.percent, 0);
+  assert.equal(empty.ready, false);
+
+  const ready = summarizeSteps(buildIntegrationSteps(READY_INPUTS));
+  assert.equal(ready.requiredDone, 3);
+  assert.equal(ready.percent, 100);
+  assert.equal(ready.ready, true);
+});
+
+test("summarizeSteps points nextStep at the first unfinished required step", () => {
+  // Secret done, but no sub-accounts yet → next is the agency config step.
+  const steps = buildIntegrationSteps({
+    secretStatus: { configured: true, source: "config", secret_last_four: "1234" },
+  });
+  const sum = summarizeSteps(steps);
+  assert.equal(sum.nextStep.id, "agency_config");
+});
+
+test("summarizeSteps falls through to verify/manual once required steps are done", () => {
+  // All required done, no live test run yet → next is a non-required step.
+  const steps = buildIntegrationSteps({ ...READY_INPUTS, liveResult: null });
+  const sum = summarizeSteps(steps);
+  assert.equal(sum.ready, true);
+  assert.ok(sum.nextStep && sum.nextStep.kind !== "required");
+});
+
+test("summarizeSteps handles a non-array input safely", () => {
+  const sum = summarizeSteps(undefined);
+  assert.equal(sum.total, 0);
+  assert.equal(sum.ready, false);
+  assert.equal(sum.nextStep, null);
 });
 
 test("WEBHOOK_FUNCTIONS lists the four handlers with their 8x8 events", () => {

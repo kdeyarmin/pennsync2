@@ -37,6 +37,96 @@ No environment variables — an admin sets these in the app:
 | `main_office_number_e164` | Off-duty transfer / referral number |
 | `default_off_duty_template` | Default off-duty message |
 | `sms_messaging_enabled` | Agency-wide SMS kill switch |
+| `business_hours_enabled` | Master switch for global calling/texting hours (off = always open) |
+| `business_hours_timezone` | IANA timezone the schedule is interpreted in (e.g. `America/New_York`) |
+| `business_hours` | Per-day `{ enabled, open, close }` schedule (keys `sun`…`sat`, `HH:MM` 24h) |
+| `after_hours_call_action` | When closed: `transfer` (default) / `voicemail` / `hangup` |
+| `after_hours_transfer_number_e164` | When closed + transfer: number to ring (defaults to main office) |
+| `after_hours_call_greeting` | Spoken before an after-hours transfer/voicemail (`{office}` merge) |
+| `after_hours_sms_auto_reply_enabled` | Auto-reply to inbound texts while closed (default on) |
+| `after_hours_sms_auto_reply` | The after-hours text auto-reply body (`{office}` merge) |
+| `business_hours_holidays` | Array of `YYYY-MM-DD` dates the practice is closed all day |
+| `tcpa_quiet_hours_enabled` | Block outbound texts outside the recipient's local window (default off) |
+| `tcpa_quiet_start_hour` / `tcpa_quiet_end_hour` | Allowed window hours (default 8 / 21) |
+| `urgent_escalation_enabled` | Escalate red-flag inbound texts (default on) |
+| `urgent_keywords` | Extra agency-specific urgent keywords (array) |
+| `eight_x_eight_numbers_api_base` | Base URL for the 8x8 number search/order API (defaults to voice API base) |
+| `webhook_debug_enabled` | (reserved) in-app webhook diagnostics flag |
+
+### Super Admin command center (easiest path)
+
+**Administration → Super Admin** is the one-stop page for the platform owner. The
+**8x8 Integration Setup** card at the top is a guided checklist: it shows a
+percent-complete bar over the required steps (API secret → sub-accounts/agency
+settings → at least one provisioned nurse), highlights the single **next step**,
+and each step has a **Go** button that scrolls straight to the card that
+completes it. A **Test live connection** button runs the read-only health probe
+without leaving the page. Below it sit the single-secret panel and the full
+provisioning/health/agency-settings surface. The step readiness is computed by
+the unit-tested `buildIntegrationSteps` / `summarizeSteps` helpers in
+`src/components/admin/eightxeightSetup.js`.
+
+### Provisioning numbers (the number pool)
+
+Instead of retyping a work number for each nurse, add your purchased 8x8 numbers
+to the **Number Pool** once (Super Admin → Number Pool), then **assign** one to a
+nurse from a dropdown — and **release** it later to free it for someone else.
+Pool entries live in the `PhoneNumber` entity; all writes go through the
+`managePhoneNumberPool` backend function, which keeps the pool status and the
+nurse's `User.work_phone_number` (the value webhooks resolve against) in sync and
+enforces one-number-per-nurse uniqueness. Personal bridge cells are still set in
+the **Nurse Work Numbers** card. You can also **Find & buy** numbers directly from
+8x8 in the Number Pool card (via `searchPurchase8x8Numbers`) — the search/order
+REST shapes are account-dependent, so validate them against your 8x8 account and
+set `eight_x_eight_numbers_api_base` if it differs from the voice API base.
+
+### Global calling & texting hours (automatic transfer / auto-reply)
+
+The **Calling & Texting Hours** card sets a single weekly schedule (per-day
+open/close in a chosen timezone). When the practice is **closed**:
+
+- **Inbound calls** are auto-handled before any per-nurse routing —
+  `transfer` to the after-hours number (default; falls back to the main office),
+  `voicemail`, or a polite `hangup`.
+- **Inbound texts** get an automatic after-hours reply (unless the patient opted
+  out or the SMS kill switch is on).
+- **Nurse-initiated outbound** texts/calls are **warned, not blocked** — the
+  patient-detail Contact card shows an "outside hours" notice but the send still
+  goes through.
+
+When the master switch is off, behavior is unchanged (always open; only
+per-nurse duty status applies). The logic is the unit-tested
+`src/components/voice/businessHours.js`, mirrored inline into the inbound voice
+and SMS webhook handlers.
+
+### TCPA quiet hours, holidays, urgent escalation & reliability
+
+Also configurable in the **Calling & Texting Hours** card (and via cron):
+
+- **Holiday closures** — list dates (YYYY-MM-DD) the practice is closed all day,
+  interpreted in the business timezone. Inbound calls/texts auto-handle as
+  after-hours on those dates.
+- **TCPA quiet hours** — a separate toggle that blocks outbound texts landing
+  outside the allowed window (default 8:00am–9:00pm) in the **recipient's** local
+  time, derived from their area code. Fails open for unknown/non-US numbers.
+- **Urgent-keyword escalation** — inbound texts matching red-flag terms (chest
+  pain, fell, can't breathe, …, plus any agency-supplied `urgent_keywords`) fire
+  a high-priority nurse notification in addition to the normal one.
+- **Failed-text recovery** — schedule the `redriveFailedSms` cron (e.g. every
+  10 min, one schedule only) to automatically re-send texts that failed for a
+  transient reason, reusing the original `clientMessageId` so 8x8 de-dups. A
+  delivery failure (DLR) also notifies the sending nurse.
+- **Scheduler safety** — `dispatchScheduledSms` now claims rows with a per-run
+  token and sends with a deterministic `clientMessageId`, so overlapping runs
+  can't double-send (still prefer a single schedule).
+
+### Webhook signature troubleshooting
+
+If inbound calls/texts are rejected with a 401, set the function secret
+`EIGHT_X_EIGHT_WEBHOOK_DEBUG=1` in the Base44 dashboard. Each webhook then logs
+which signature header **names** arrived and whether verification passed (never
+any secret or signature value). Read the function logs, fix the
+header/scheme mismatch, then unset it.
 
 ### Verify the setup (no test message needed)
 
@@ -83,6 +173,19 @@ parseable timestamp is present (idempotency on `provider_message_id` /
 `provider_call_id` already de-dups genuine retries). Confirm the timestamp field
 name 8x8 sends and tune `isReplayStale` / the skew if needed. Only body fields
 are trusted (the HMAC covers the raw body); header timestamps are not.
+
+### Transient failures & retries
+Every outbound call to 8x8 (SMS send, scheduled-SMS dispatch, click-to-call) is
+bounded by a per-attempt timeout **and** retried with jittered exponential
+backoff when 8x8 returns a transient error (`408`/`425`/`429`/`5xx`) or the
+connection drops. A `Retry-After` header is honored (clamped) when 8x8 sends
+one. Texts are retried safely because each send reuses one `clientMessageId`,
+which 8x8 de-dups; **voice origination has no idempotency key**, so it is only
+retried on an explicit server-rejection status — never after an ambiguous
+network error — to avoid double-dialing. The shared policy lives in
+`src/components/voice/eightxeightRetry.js` (unit-tested) and is mirrored inline
+in each backend function. Tune `RETRYABLE_STATUSES`, the attempt count, or the
+backoff there and in the function copies if your account's behavior differs.
 
 ### Callflow / API shape caveats
 8x8 callflow action names (`makeCall`, `say`) and the outbound voice
@@ -141,3 +244,17 @@ by POSTing sample 8x8 payloads with a correctly computed signature header (and a
 bad-signature request to confirm a 401). After each event, check the
 `SmsMessage` / `CallLog` / `SmsConsent` row, the `UserActivity` audit row (no PHI),
 and any nurse `Notification`.
+
+**Webhook smoke test (scripted).** Instead of hand-crafting those requests, run
+the bundled harness, which signs realistic sample payloads for the three signed
+handlers (inbound SMS, DLR, voice call), asserts a `2xx`, then re-sends each with
+a tampered signature and asserts a `401`:
+
+```
+EIGHT_X_EIGHT_WEBHOOK_SECRET=<your secret> \
+  npm run smoke:8x8-webhooks -- --base https://<your-app>/functions
+```
+
+Add `--only <functionName>` to test a single handler. Prefer a staging app — a
+valid inbound-SMS/voice POST triggers the same side effects a real webhook would.
+The signing logic (`tools-8x8-webhook-smoke.mjs`) is unit-tested.
