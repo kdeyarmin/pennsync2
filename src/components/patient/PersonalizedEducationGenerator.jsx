@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -345,7 +346,7 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
                       </div>
                       {resource.link && (
                         <a
-                          href={resource.link}
+                          href={isSafeExternalUrl(resource.link) ? resource.link : undefined}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ml-2 text-blue-600 hover:text-blue-800"

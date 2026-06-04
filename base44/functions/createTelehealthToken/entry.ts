@@ -102,7 +102,16 @@ Deno.serve(async (req) => {
       }
     };
 
-    const encode = (obj) => btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    // UTF-8 safe base64url: btoa() throws on non-Latin1 characters, so a
+    // participant name with an accent/non-Latin script (e.g. "José") would
+    // crash token minting (500) and block their telehealth join. Encode the
+    // JSON as UTF-8 bytes first.
+    const encode = (obj) => {
+      const bytes = new TextEncoder().encode(JSON.stringify(obj));
+      let bin = '';
+      for (const b of bytes) bin += String.fromCharCode(b);
+      return btoa(bin).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    };
     const headerB64 = encode(header);
     const payloadB64 = encode(payload);
     const signingInput = `${headerB64}.${payloadB64}`;

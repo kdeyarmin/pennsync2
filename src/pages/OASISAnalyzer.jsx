@@ -437,7 +437,8 @@ export default function OASISAnalyzer() {
         const bestMatch = matchedPatients[0];
         if (bestMatch && bestMatch.confidence >= 85) {
           setSelectedPatientId(bestMatch.patient.id);
-          console.log(`Auto-matched patient with ${bestMatch.confidence}% confidence:`, bestMatch.patient.first_name, bestMatch.patient.last_name);
+          // Avoid logging patient name (PHI) to the browser console.
+          console.log(`Auto-matched patient with ${bestMatch.confidence}% confidence`);
           
           // Auto-save to patient chart
           setTimeout(() => {
@@ -924,7 +925,7 @@ Return JSON:
           const match = output.full_text.match(pattern);
           if (match && match[1]) {
             extractedPatientName = match[1].trim();
-            console.log("Extracted name from text:", extractedPatientName);
+            // Do not log the extracted patient name (PHI) to the console.
             break;
           }
         }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -323,7 +324,7 @@ Be specific and actionable. Use actual data trends.`,
                         </div>
                         {prediction.guideline_link && (
                           <a
-                            href={prediction.guideline_link}
+                            href={isSafeExternalUrl(prediction.guideline_link) ? prediction.guideline_link : undefined}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="ml-2 text-blue-600 hover:text-blue-800"
