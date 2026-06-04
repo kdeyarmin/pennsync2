@@ -624,7 +624,9 @@ Deno.serve(async (req) => {
 
     console.log('Starting deduplication...');
 
-    const patients = await base44.asServiceRole.entities.Patient.list();
+    // Bounded to the SDK's 5000/request max; omitting a limit silently caps at
+    // the SDK default of 50. Re-run the scan if more patients remain.
+    const patients = await base44.asServiceRole.entities.Patient.list('-created_date', 5000);
     console.log(`Loaded ${patients.length} patients in ${Date.now() - startTime}ms`);
 
     // Quick candidate bucketing by exact MRN and exact normalized name.

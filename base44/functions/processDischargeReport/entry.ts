@@ -53,8 +53,9 @@ Deno.serve(async (req) => {
     const dischargedPatientsData = extractResponse.output.discharged_patients;
     console.log(`Extracted ${dischargedPatientsData.length} discharged patients`);
 
-    // Fetch all active patients
-    const allPatients = await base44.asServiceRole.entities.Patient.list();
+    // Fetch active patients (bounded to the SDK's 5000/request max; omitting a
+    // limit silently caps at the SDK default of 50).
+    const allPatients = await base44.asServiceRole.entities.Patient.list('-created_date', 5000);
     
     const results = {
       total_processed: dischargedPatientsData.length,

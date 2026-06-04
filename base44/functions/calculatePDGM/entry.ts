@@ -550,7 +550,7 @@ Deno.serve(async (req) => {
     // Fetch agency settings for wage index
     let appliedWageIndex = wageIndex || 1.0;
     try {
-      const agencySettings = await base44.asServiceRole.entities.AgencySettings.list();
+      const agencySettings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1);
       if (agencySettings && agencySettings.length > 0 && agencySettings[0].wage_index) {
         appliedWageIndex = agencySettings[0].wage_index;
       }

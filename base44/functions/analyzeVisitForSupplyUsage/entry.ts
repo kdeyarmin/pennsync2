@@ -56,8 +56,8 @@ Return ONLY valid JSON array, no other text.`;
 
     const extractedSupplies = analysisResult?.supplies || [];
 
-    // Look up each supply in SupplyItem entity
-    const allSupplies = await base44.asServiceRole.entities.SupplyItem.list();
+    // Look up each supply in SupplyItem entity (bounded to the SDK's 5000/request max)
+    const allSupplies = await base44.asServiceRole.entities.SupplyItem.list('-created_date', 5000);
     const usageLogs = [];
     const alertsToCreate = [];
 
