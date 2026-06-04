@@ -13,9 +13,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle, FileText, ChevronDown } from "lucide-react";
+import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle, FileText, ChevronDown, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeE164 } from "@/components/voice/phoneUtils";
+import { isWithinBusinessHours, agencyHoursConfig } from "@/components/voice/businessHours";
 import { smsSegments } from "@/components/messaging/smsUtils";
 import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
 import { getTemplates, renderTemplate, buildTemplateContext } from "@/components/messaging/smsTemplates";
@@ -48,6 +49,10 @@ export default function PatientContactActions({ patient, currentUser }) {
     staleTime: 5 * 60 * 1000,
     initialData: [],
   });
+  // Warn (don't block) when the agency is outside its global calling/texting
+  // hours — the send still goes through, but the patient may get an after-hours
+  // auto-reply or transfer.
+  const afterHours = !isWithinBusinessHours(new Date(), agencyHoursConfig(settingsArr[0])).open;
   const quickReplies = getQuickReplies(settingsArr[0]);
   const templates = getTemplates(settingsArr[0]);
   const templateContext = buildTemplateContext({ patient, user: currentUser, settings: settingsArr[0] });
@@ -117,6 +122,15 @@ export default function PatientContactActions({ patient, currentUser }) {
           <Badge className="bg-green-100 text-green-800 text-xs">
             <ShieldCheck className="w-3 h-3 mr-1" /> Texting consent on file
           </Badge>
+        )}
+        {afterHours && (
+          <Alert className="bg-amber-50 border-amber-200 py-2">
+            <Clock className="w-4 h-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 text-xs">
+              Outside the agency's calling &amp; texting hours. Your message still sends, but the patient may
+              receive an after-hours auto-reply or be transferred if they call back.
+            </AlertDescription>
+          </Alert>
         )}
 
         <div className="flex gap-2">

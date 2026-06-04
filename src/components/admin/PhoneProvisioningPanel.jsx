@@ -20,6 +20,8 @@ import {
   evaluateAgencyConfig, summarize, WEBHOOK_FUNCTIONS, functionUrlBase,
 } from "@/components/admin/eightxeightSetup";
 import { isAdminLike } from "@/lib/superAdmin";
+import CallingHoursPanel from "@/components/admin/CallingHoursPanel";
+import NumberPoolPanel from "@/components/admin/NumberPoolPanel";
 
 const STATUS_META = {
   ok: { Icon: CheckCircle2, color: "text-green-600", badge: "bg-green-100 text-green-800" },
@@ -503,6 +505,12 @@ export default function PhoneProvisioningPanel() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Global calling & texting hours + after-hours auto-handling */}
+      <CallingHoursPanel />
+
+      {/* Easy provisioning: a pool of numbers assignable in one click */}
+      <NumberPoolPanel />
 
       <Card id="ex8-nurses" className="scroll-mt-24">
         <CardHeader>

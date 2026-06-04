@@ -60,6 +60,42 @@ function isOffDutyNow(user: any, now = new Date()): boolean {
   return t >= s && t <= e;
 }
 
+// ---- Global business hours (mirrors src/components/voice/businessHours.js) ----
+// Agency-wide "are we open?" gate. When closed, an inbound text gets an
+// automatic after-hours reply in addition to the per-nurse off-duty reply.
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+function parseHHMM(value: any): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
+  if (!m) return null;
+  const h = Number(m[1]); const min = Number(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+function wallClockInTimeZone(date: Date, timeZone?: string): { weekday: number | null; minutes: number } {
+  const dtf = new Intl.DateTimeFormat('en-US', { timeZone: timeZone || undefined, hour12: false, weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  const parts: Record<string, string> = {};
+  for (const p of dtf.formatToParts(date)) parts[p.type] = p.value;
+  let hour = parseInt(parts.hour, 10);
+  if (hour === 24) hour = 0;
+  const minute = parseInt(parts.minute, 10);
+  const weekday = WEEKDAY_INDEX[parts.weekday];
+  return { weekday: weekday ?? null, minutes: hour * 60 + minute };
+}
+function isAgencyOpen(settings: any, now = new Date()): boolean {
+  const s = settings || {};
+  if (s.business_hours_enabled !== true) return true; // not enforced
+  let wc;
+  try { wc = wallClockInTimeZone(now, s.business_hours_timezone); }
+  catch { wc = wallClockInTimeZone(now, undefined); }
+  const day = (s.business_hours || {})[DAY_KEYS[wc.weekday as number]];
+  if (!day || day.enabled === false) return false;
+  const open = parseHHMM(day.open); const close = parseHHMM(day.close);
+  if (open == null || close == null) return false;
+  const m = wc.minutes;
+  return open <= close ? (m >= open && m < close) : (m >= open || m < close);
+}
+
 async function hmacHex(secret: string, raw: string): Promise<string> {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
@@ -146,11 +182,15 @@ async function getAgencyConfig(base44: any) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return {
+    settings: s,
     smsSubAccountId: s.eight_x_eight_sms_subaccount_id,
     region: s.eight_x_eight_region || 'us',
     mainOffice: s.main_office_number_e164 || '',
     defaultOffDuty: s.default_off_duty_template || '',
     smsEnabled: s.sms_messaging_enabled ?? true,
+    // Automatic after-hours reply when the practice is closed (global hours).
+    afterHoursReplyEnabled: s.after_hours_sms_auto_reply_enabled !== false,
+    afterHoursReply: s.after_hours_sms_auto_reply || '',
   };
 }
 
@@ -323,9 +363,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // --- Off-duty auto-reply (only when on the books: not opted out + SMS on) ---
+    // --- Automatic after-hours / off-duty reply (not opted out + SMS on) ---
+    // Global calling hours win: if the practice is closed, send the after-hours
+    // reply. Otherwise fall back to the per-nurse off-duty reply. Only ever one
+    // automatic reply, so a patient isn't double-texted.
     const offDuty = isOffDutyNow(nurse);
-    if (offDuty && !priorOptedOut && smsEnabled) {
+    const agencyClosed = !isAgencyOpen(config.settings);
+    if (agencyClosed && config.afterHoursReplyEnabled && !priorOptedOut && smsEnabled) {
+      const office = config.mainOffice || 'the main office';
+      const msg = (config.afterHoursReply || config.defaultOffDuty ||
+        `Thanks for your message. Our office is currently closed. For anything urgent, please call ${office}. We'll reply during business hours.`)
+        .replace(/\{office\}/gi, office);
+      await sendReply(msg);
+    } else if (offDuty && !priorOptedOut && smsEnabled) {
       const office = config.mainOffice || 'the main office';
       const msg = (nurse.off_duty_message || config.defaultOffDuty ||
         `Your nurse is currently off duty. For assistance, please call the main office at ${office}.`)
@@ -359,6 +409,7 @@ Deno.serve(async (req) => {
         thread_id: inboundRow.thread_id,
         body_length: text.length,
         off_duty: offDuty,
+        agency_closed: agencyClosed,
       },
       status: 'success',
     }).catch(() => {});

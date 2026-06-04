@@ -36,6 +36,31 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `sms_templates` | array (object) | Optional reusable templates `{ label, body }` with merge fields (`{first_name}`, `{last_name}`, `{nurse_name}`, `{office}`). Falls back to built-in defaults when empty. |
 | `voicemail_enabled` | boolean | Optional (default false). When true, an unanswered on-duty masked call captures a voicemail (requires the recording action in the 8x8 callflow + the voicemail webhook). |
 | `voicemail_greeting` | text | Optional voicemail prompt; `{office}` inserts the main office number. |
+| `business_hours_enabled` | boolean | Optional (default false). Master switch for global calling/texting hours; off = always open. |
+| `business_hours_timezone` | string | IANA timezone the schedule is interpreted in (e.g. `America/New_York`). |
+| `business_hours` | object | Per-day schedule keyed `sun`…`sat`, each `{ enabled: boolean, open: "HH:MM", close: "HH:MM" }` (24h; `close <= open` = overnight wrap). |
+| `after_hours_call_action` | string enum | `transfer` (default) \| `voicemail` \| `hangup` — how inbound calls are handled while closed. |
+| `after_hours_transfer_number_e164` | string | When closed + `transfer`: target number (defaults to `main_office_number_e164`). |
+| `after_hours_call_greeting` | text | Optional spoken greeting before an after-hours transfer/voicemail; `{office}` merge. |
+| `after_hours_sms_auto_reply_enabled` | boolean | Optional (default true). Auto-reply to inbound texts received while closed. |
+| `after_hours_sms_auto_reply` | text | The after-hours text auto-reply body; `{office}` merge. Falls back to `default_off_duty_template`, then a built-in message. |
+
+## New `PhoneNumber` (the assignable number pool)
+
+Inventory of purchased 8x8 numbers so an admin can add a number once and
+assign/reassign it from a dropdown. All writes go through the
+`managePhoneNumberPool` backend function (service role), which keeps this in sync
+with `User.work_phone_number`. Read is open to authenticated users (numbers are
+not PHI); write is service-role only.
+
+| Field | Type | Notes |
+|---|---|---|
+| `e164` | string (required) | The number in E.164. Unique across the pool. |
+| `label` | string | Optional friendly label (e.g. "Nurse line 1"). |
+| `status` | string enum | `available` \| `assigned` (default `available`). |
+| `assigned_to_email` | string | The user currently holding it as their work number (when assigned). |
+| `eight_x_eight_voice_endpoint_id` | string | Optional 8x8 voice endpoint id, copied to the nurse on assign. |
+| `notes` | string | Optional admin notes. |
 
 ## New `SmsMessage`
 
@@ -66,7 +91,7 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `displayed_number` | string | Work number shown as caller ID (masking proof) |
 | `nurse_email` | string | |
 | `patient_id` | string | Nullable |
-| `call_mode` | string enum | `masked_bridge` \| `off_duty_transfer` \| `outbound_clicktocall` |
+| `call_mode` | string enum | `masked_bridge` \| `off_duty_transfer` \| `after_hours_transfer` \| `outbound_clicktocall` |
 | `status` | string enum | `initiated` \| `ringing` \| `bridged` \| `completed` \| `no_answer` \| `failed` \| `forwarded_office` |
 | `provider_call_id` | string | 8x8 call/session id |
 | `duration_seconds` | number | Nullable |

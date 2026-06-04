@@ -37,6 +37,14 @@ No environment variables — an admin sets these in the app:
 | `main_office_number_e164` | Off-duty transfer / referral number |
 | `default_off_duty_template` | Default off-duty message |
 | `sms_messaging_enabled` | Agency-wide SMS kill switch |
+| `business_hours_enabled` | Master switch for global calling/texting hours (off = always open) |
+| `business_hours_timezone` | IANA timezone the schedule is interpreted in (e.g. `America/New_York`) |
+| `business_hours` | Per-day `{ enabled, open, close }` schedule (keys `sun`…`sat`, `HH:MM` 24h) |
+| `after_hours_call_action` | When closed: `transfer` (default) / `voicemail` / `hangup` |
+| `after_hours_transfer_number_e164` | When closed + transfer: number to ring (defaults to main office) |
+| `after_hours_call_greeting` | Spoken before an after-hours transfer/voicemail (`{office}` merge) |
+| `after_hours_sms_auto_reply_enabled` | Auto-reply to inbound texts while closed (default on) |
+| `after_hours_sms_auto_reply` | The after-hours text auto-reply body (`{office}` merge) |
 
 ### Super Admin command center (easiest path)
 
@@ -50,6 +58,36 @@ without leaving the page. Below it sit the single-secret panel and the full
 provisioning/health/agency-settings surface. The step readiness is computed by
 the unit-tested `buildIntegrationSteps` / `summarizeSteps` helpers in
 `src/components/admin/eightxeightSetup.js`.
+
+### Provisioning numbers (the number pool)
+
+Instead of retyping a work number for each nurse, add your purchased 8x8 numbers
+to the **Number Pool** once (Super Admin → Number Pool), then **assign** one to a
+nurse from a dropdown — and **release** it later to free it for someone else.
+Pool entries live in the `PhoneNumber` entity; all writes go through the
+`managePhoneNumberPool` backend function, which keeps the pool status and the
+nurse's `User.work_phone_number` (the value webhooks resolve against) in sync and
+enforces one-number-per-nurse uniqueness. Personal bridge cells are still set in
+the **Nurse Work Numbers** card.
+
+### Global calling & texting hours (automatic transfer / auto-reply)
+
+The **Calling & Texting Hours** card sets a single weekly schedule (per-day
+open/close in a chosen timezone). When the practice is **closed**:
+
+- **Inbound calls** are auto-handled before any per-nurse routing —
+  `transfer` to the after-hours number (default; falls back to the main office),
+  `voicemail`, or a polite `hangup`.
+- **Inbound texts** get an automatic after-hours reply (unless the patient opted
+  out or the SMS kill switch is on).
+- **Nurse-initiated outbound** texts/calls are **warned, not blocked** — the
+  patient-detail Contact card shows an "outside hours" notice but the send still
+  goes through.
+
+When the master switch is off, behavior is unchanged (always open; only
+per-nurse duty status applies). The logic is the unit-tested
+`src/components/voice/businessHours.js`, mirrored inline into the inbound voice
+and SMS webhook handlers.
 
 ### Verify the setup (no test message needed)
 

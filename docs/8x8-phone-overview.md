@@ -22,11 +22,12 @@ reduced to a length; numbers are masked to last-4).
 | `cancelScheduledSms` | nurse/admin | Cancel a still-pending scheduled text. |
 | `setNurseDutyStatus` | nurse/admin | On/off duty, scheduled time-off window, off-duty message. |
 | `provisionNurseWorkNumber` | admin | Assign a work number + private bridge cell. |
+| `managePhoneNumberPool` | admin | Add/remove numbers in the pool and assign/release them to nurses (keeps `PhoneNumber` + `User.work_phone_number` in sync). |
 | `testEightXEightConnection` | admin | Read-only health probe (secrets, live SMS API, provisioning). |
 | `sendTestSms` | admin | Definitive end-to-end check: one real, non-PHI test text. |
-| `handleEightXEightInboundSms` | webhook | Inbound text; STOP/HELP/START, off-duty auto-reply, notify nurse. |
+| `handleEightXEightInboundSms` | webhook | Inbound text; STOP/HELP/START, after-hours/off-duty auto-reply, notify nurse. |
 | `handleEightXEightSmsStatus` | webhook | Delivery receipts → `SmsMessage.status` (monotonic). |
-| `handleEightXEightVoiceCall` | webhook | Inbound call → masked bridge (on duty) / office transfer (off duty) / opt-in voicemail. |
+| `handleEightXEightVoiceCall` | webhook | Inbound call → after-hours auto-handling when the agency is closed (transfer / voicemail / hangup), else masked bridge (on duty) / office transfer (off duty) / opt-in voicemail. |
 | `handleEightXEightCallStatus` | webhook | Call CDR → `CallLog.status`/duration; missed-call notification. |
 | `handleEightXEightVoicemail` | webhook | Attach a voicemail recording to its `CallLog`; notify nurse. |
 
@@ -42,8 +43,10 @@ each backend function (single-file deploy model).
 
 ## Entities
 
-`SmsMessage`, `ScheduledSms`, `CallLog`, `SmsConsent`, plus 8x8 fields on `User`
-and `AgencySettings`. See `8x8-entities.md`.
+`SmsMessage`, `ScheduledSms`, `CallLog`, `SmsConsent`, `PhoneNumber` (the
+assignable number pool), plus 8x8 fields on `User` and `AgencySettings`
+(including the global `business_hours*` / `after_hours_*` calling-hours config).
+See `8x8-entities.md`.
 
 ## UI surfaces
 
@@ -64,14 +67,18 @@ and `AgencySettings`. See `8x8-entities.md`.
   only) — the one-page control center: the `EightXEightSetupProgress` command
   center (guided checklist + percent-complete + "next step" that jumps to the
   right card), the single-secret `EightXEightSecretPanel`, and the full
-  `PhoneProvisioningPanel`. Setup-step readiness math lives in the unit-tested
-  `admin/eightxeightSetup` (`buildIntegrationSteps` / `summarizeSteps`).
+  `PhoneProvisioningPanel`, which now also hosts `CallingHoursPanel` (global
+  calling/texting hours + after-hours call/text handling) and `NumberPoolPanel`
+  (add numbers once, assign/release to nurses from a dropdown). Setup-step
+  readiness math lives in the unit-tested `admin/eightxeightSetup`
+  (`buildIntegrationSteps` / `summarizeSteps`); the global-hours logic lives in
+  the unit-tested `voice/businessHours`.
 
 ## Tested utils (`node --test`, wired into `verify:workflow-quality`)
 
 `voice/phoneUtils`, `voice/dutyUtils`, `voice/callbackQueue`,
-`voice/eightxeightRetry`, `messaging/smsUtils`, `messaging/smsQuickReplies`,
-`messaging/smsTemplates`,
+`voice/eightxeightRetry`, `voice/businessHours`, `messaging/smsUtils`,
+`messaging/smsQuickReplies`, `messaging/smsTemplates`,
 `messaging/scheduledSms`, `admin/eightxeightSetup`, `admin/phoneAnalytics`,
 `admin/csvExport`. These are the source of truth; the single-file backend
 functions keep inline copies of the shared algorithms.
