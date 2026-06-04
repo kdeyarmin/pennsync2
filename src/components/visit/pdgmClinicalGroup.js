@@ -24,7 +24,8 @@ export function determineClinicalGroup(primaryDx, secondaryDx = []) {
   const allDx = [primaryDx, ...secondaryDx].filter(Boolean).map(d => d.toLowerCase());
   const dxText = allDx.join(' ');
 
-  // MMTA Clinical Groups based on ICD-10 patterns
+  // MMTA clinical groups, matched against diagnosis-text patterns/keywords
+  // (free-text regexes such as /fracture/ — not ICD-10 codes).
   const clinicalGroups = {
     // Musculoskeletal Rehabilitation
     'MMTA-01': {

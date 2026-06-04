@@ -34,11 +34,14 @@ test('determineClinicalGroup: tolerates empty/undefined inputs', () => {
   assert.equal(r.confidence, 'low');
 });
 
-test('determineClinicalGroup: a single keyword match yields low confidence (score 1)', () => {
-  // "respiratory" is an MMTA-05 keyword only (no pattern), so score 1 -> low,
-  // but since the default is already MMTA-05 we assert via a single-keyword group.
-  const r = determineClinicalGroup('patient is independent');
+test('determineClinicalGroup: a lone keyword (no pattern) match scores 1 -> low confidence', () => {
+  // "HTN" is an MMTA-05 keyword with no corresponding regex pattern (the pattern
+  // is /hypertension/), so it exercises the keyword-only score=1 branch — proven
+  // by the keyword appearing in matchedPatterns rather than the empty default.
+  const r = determineClinicalGroup('HTN');
+  assert.equal(r.group, 'MMTA-05');
   assert.equal(r.confidence, 'low');
+  assert.ok(r.matchedPatterns.includes('HTN'));
 });
 
 test('identifyComorbidities: a single high-impact comorbidity yields a high adjustment', () => {
