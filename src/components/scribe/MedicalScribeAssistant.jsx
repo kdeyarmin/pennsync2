@@ -285,14 +285,14 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
               <TabsContent value="structured" className="space-y-3">
                 <ScrollArea className="h-[400px] border rounded-lg p-4">
                   <div className="space-y-4">
-                    {transcriptionResult.structured_data.chief_complaint && (
+                    {transcriptionResult.structured_data?.chief_complaint && (
                       <div>
                         <Label className="text-purple-700">Chief Complaint</Label>
                         <p className="text-sm mt-1">{transcriptionResult.structured_data.chief_complaint}</p>
                       </div>
                     )}
 
-                    {transcriptionResult.structured_data.vital_signs && (
+                    {transcriptionResult.structured_data?.vital_signs && (
                       <div>
                         <Label className="text-purple-700">Vital Signs</Label>
                         <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
@@ -307,7 +307,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                       </div>
                     )}
 
-                    {transcriptionResult.structured_data.assessment?.length > 0 && (
+                    {transcriptionResult.structured_data?.assessment?.length > 0 && (
                       <div>
                         <Label className="text-purple-700">Assessment</Label>
                         <ul className="list-disc ml-5 mt-1 text-sm space-y-1">
@@ -318,7 +318,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                       </div>
                     )}
 
-                    {transcriptionResult.structured_data.new_medications?.length > 0 && (
+                    {transcriptionResult.structured_data?.new_medications?.length > 0 && (
                       <div>
                         <Label className="text-purple-700">New Medications</Label>
                         <div className="space-y-2 mt-1">
@@ -333,7 +333,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                       </div>
                     )}
 
-                    {transcriptionResult.structured_data.action_items?.length > 0 && (
+                    {transcriptionResult.structured_data?.action_items?.length > 0 && (
                       <div>
                         <Label className="text-purple-700">Action Items</Label>
                         <ul className="list-disc ml-5 mt-1 text-sm space-y-1">
@@ -344,7 +344,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                       </div>
                     )}
 
-                    {transcriptionResult.structured_data.plan && (
+                    {transcriptionResult.structured_data?.plan && (
                       <div>
                         <Label className="text-purple-700">Plan</Label>
                         <p className="text-sm mt-1">{transcriptionResult.structured_data.plan}</p>
