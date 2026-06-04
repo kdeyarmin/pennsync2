@@ -39,11 +39,47 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const accountSid = typeof body.account_sid === 'string' ? body.account_sid.trim() : '';
     const authToken = typeof body.auth_token === 'string' ? body.auth_token.trim() : '';
+    const hasWebhookField = 'webhook_secret' in body;
+
+    // Webhook-secret-only update: neither credential was supplied but a
+    // webhook_secret change was requested (e.g. clearing the optional shared
+    // secret from the config UI without re-entering the Account SID + Auth
+    // Token). Requires an existing row — credentials must be set first.
+    if (!accountSid && !authToken && hasWebhookField) {
+      const existing = await base44.asServiceRole.entities.IntegrationSecret
+        .filter({ provider: 'twilio' })
+        .catch(() => []);
+      if (!existing[0]?.id) {
+        return Response.json({ error: 'Set your Twilio Account SID and Auth Token first.' }, { status: 400 });
+      }
+      const ws = body.webhook_secret == null ? '' : String(body.webhook_secret).trim();
+      const saved = await base44.asServiceRole.entities.IntegrationSecret.update(existing[0].id, {
+        webhook_secret: ws,
+        is_active: true,
+        updated_by_email: user.email,
+      });
+      await base44.asServiceRole.entities.SecurityLog.create({
+        timestamp: new Date().toISOString(),
+        user_email: user.email,
+        user_role: user.role,
+        action: 'twilio_webhook_secret_updated',
+        details: { webhook_secret_set: Boolean(ws) },
+      }).catch(() => {});
+      return Response.json({
+        success: true,
+        provider: 'twilio',
+        configured: Boolean(existing[0].account_sid && existing[0].auth_token),
+        webhook_secret_set: Boolean(saved?.webhook_secret),
+        updated_by_email: user.email,
+      });
+    }
 
     if (!accountSid) {
       return Response.json({ error: 'account_sid is required.' }, { status: 400 });
     }
-    if (!accountSid.startsWith('AC') || accountSid.length < 10) {
+    // Twilio Account SIDs start with "AC" (matched case-insensitively to mirror
+    // the in-app validation; the SID itself is stored exactly as entered).
+    if (!/^AC/i.test(accountSid) || accountSid.length < 10) {
       return Response.json({ error: "That doesn't look like a valid Twilio Account SID (must start with \"AC\" and be at least 10 characters)." }, { status: 400 });
     }
     if (!authToken) {

@@ -37,12 +37,13 @@ export default function TwilioSecretPanel() {
 
   const save = useMutation({
     mutationFn: (payload) => base44.functions.invoke("saveTwilioSecret", payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["twilio-secret-status"] });
       setAccountSid("");
       setAuthToken("");
       setWebhookSecret("");
-      toast.success("Twilio credentials saved");
+      // A payload without credentials is a webhook-secret-only update (clear).
+      toast.success(variables?.account_sid ? "Twilio credentials saved" : "Webhook secret updated");
     },
     onError: (err) => toast.error(err?.message || "Failed to save the Twilio credentials"),
   });
@@ -63,6 +64,11 @@ export default function TwilioSecretPanel() {
     if (showAdvanced && webhookSecret.trim()) payload.webhook_secret = webhookSecret.trim();
     save.mutate(payload);
   };
+
+  // Clear a stored webhook shared-secret without re-entering credentials (the
+  // backend supports a webhook-secret-only update). Only offered when a stored
+  // secret actually exists to remove.
+  const handleRemoveWebhookSecret = () => save.mutate({ webhook_secret: "" });
 
   return (
     <Card>
@@ -170,7 +176,7 @@ export default function TwilioSecretPanel() {
             <div className="mt-2">
               <Input
                 type="password"
-                placeholder="Optional — leave blank to verify with the Auth Token"
+                placeholder="Optional — leave blank to keep the current setting"
                 value={webhookSecret}
                 onChange={(e) => setWebhookSecret(e.target.value)}
                 autoComplete="off"
@@ -178,9 +184,21 @@ export default function TwilioSecretPanel() {
               <p className="text-xs text-slate-500 mt-1 flex items-start gap-1">
                 <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                 Only needed for a custom webhook shared-secret test path. Twilio normally verifies
-                inbound webhooks with your Auth Token.
-                {status?.webhook_secret_configured ? " A webhook secret is currently active." : ""}
+                inbound webhooks with your Auth Token. A blank field leaves any existing secret unchanged.
+                {status?.webhook_source === "config" ? " A custom webhook secret is currently active." : ""}
               </p>
+              {status?.webhook_source === "config" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 h-7 px-2 text-red-600 hover:text-red-700"
+                  disabled={save.isPending}
+                  onClick={handleRemoveWebhookSecret}
+                >
+                  Remove stored webhook secret
+                </Button>
+              )}
             </div>
           )}
         </div>
