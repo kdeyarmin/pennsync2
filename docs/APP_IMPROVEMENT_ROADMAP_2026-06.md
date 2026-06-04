@@ -252,8 +252,10 @@ logger gives intent + future redaction). *(Low · Low)*
 `src/components/utils/ErrorBoundary.jsx` is a single app-root boundary whose `componentDidCatch`
 only `console.error`s; any render error drops the whole app to a "Reload Page" screen and is
 invisible to the team in production. → Add route-/section-level boundaries so one widget failure
-doesn't unmount the app, and report caught errors to a telemetry sink. Replace toast-only fax/SMS
-failures with a persisted retry queue + backoff. *(Med · Low-Med)*
+doesn't unmount the app, and report caught errors to a telemetry sink. ~~Replace toast-only fax/SMS
+failures with a persisted retry queue + backoff.~~ — ✅ Done for SMS: send-time retry/backoff plus a
+`redriveFailedSms` outbox cron (transient-only, attempt-capped, idempotent) and a nurse notification
+on delivery failure. (Fax still pending.) *(Med · Low-Med)*
 
 **F2 — Accessibility audit + remediation. — Med**
 No `eslint-plugin-jsx-a11y`; `role`/`alt`/label coverage is sparse across ~850 components; the
@@ -300,7 +302,9 @@ Confirm in the Base44 dashboard / environment — these are operational, not cod
       (webhooks fail-closed without them — inbound SMS/fax silently dropped).
 - [ ] RLS policies in the dashboard match `docs/SECURITY-RLS-CHECKLIST.md` (verify client-writable
       entities like `TrainingCertificate` are gated).
-- [ ] Only one scheduler instance runs `dispatchScheduledSms` (non-atomic claim → double-send risk).
+- [ ] Prefer one scheduler instance for `dispatchScheduledSms` / `redriveFailedSms`. (Double-send risk
+      is now mitigated: a per-run claim token + a deterministic `clientMessageId` make 8x8 de-dup
+      overlapping sends — a single schedule is still recommended.)
 
 ---
 

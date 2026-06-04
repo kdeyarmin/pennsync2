@@ -333,6 +333,15 @@ export default function PhoneProvisioningPanel() {
               </div>
             );
           })}
+          <Alert className="bg-slate-50 border-slate-200">
+            <Info className="w-4 h-4 text-slate-600" />
+            <AlertDescription className="text-slate-700 text-xs">
+              <strong>Webhooks failing signature checks?</strong> Set the function secret{" "}
+              <code className="bg-white border border-slate-200 rounded px-1">EIGHT_X_EIGHT_WEBHOOK_DEBUG=1</code>{" "}
+              in the Base44 dashboard to log which signature header names 8x8 sends and whether each verifies
+              (header <em>names</em> only — never secret values). Check the function logs, then turn it off.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
 

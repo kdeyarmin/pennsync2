@@ -86,7 +86,12 @@ Deno.serve(async (req) => {
     const raw = await req.text();
     const base44 = createClientFromRequest(req);
     const webhookSecret = await resolveEightXEightWebhookSecret(base44);
-    if (!(await verifyWebhook(req, raw, webhookSecret))) {
+    const verified = await verifyWebhook(req, raw, webhookSecret);
+    if (Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_DEBUG')) {
+      const present = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256', 'x-webhook-secret'].filter((h) => req.headers.get(h));
+      console.log('[webhook-debug] handleEightXEightSmsStatus ' + JSON.stringify({ verified, signature_headers_present: present, content_type: req.headers.get('content-type') }));
+    }
+    if (!verified) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -114,6 +119,21 @@ Deno.serve(async (req) => {
       status: mapped,
       failure_reason: mapped === 'failed' ? (errorDescription || 'Delivery failed') : null,
     });
+
+    // Tell the nurse when a text they sent failed to deliver, so it doesn't fail
+    // silently. (Delivery success is the norm and isn't notified.)
+    if (mapped === 'failed' && row.nurse_email) {
+      await base44.asServiceRole.entities.Notification.create({
+        user_email: row.nurse_email,
+        title: '⚠️ Text not delivered',
+        message: `A text to ${row.to_number} couldn't be delivered${errorDescription ? `: ${errorDescription}` : ''}. It will retry automatically if the failure was temporary.`,
+        type: 'sms_failed',
+        priority: 'high',
+        related_entity: 'SmsMessage',
+        related_entity_id: row.id,
+        is_read: false,
+      }).catch((err) => console.error('failed-delivery notification failed:', err));
+    }
 
     if (row.sent_by) {
       await base44.asServiceRole.entities.UserActivity.create({

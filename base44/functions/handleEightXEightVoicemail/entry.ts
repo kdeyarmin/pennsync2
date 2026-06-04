@@ -72,7 +72,12 @@ Deno.serve(async (req) => {
     const raw = await req.text();
     const base44 = createClientFromRequest(req);
     const webhookSecret = await resolveEightXEightWebhookSecret(base44);
-    if (!(await verifyWebhook(req, raw, webhookSecret))) {
+    const verified = await verifyWebhook(req, raw, webhookSecret);
+    if (Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_DEBUG')) {
+      const present = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256', 'x-webhook-secret'].filter((h) => req.headers.get(h));
+      console.log('[webhook-debug] handleEightXEightVoicemail ' + JSON.stringify({ verified, signature_headers_present: present, content_type: req.headers.get('content-type') }));
+    }
+    if (!verified) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -80,6 +85,9 @@ Deno.serve(async (req) => {
     const providerCallId = payload.callId || payload.sessionId || payload.id;
     const recordingUrl = payload.recordingUrl || payload.recording_url || payload.url || payload.mediaUrl || null;
     const duration = payload.duration ?? payload.recordingDuration ?? null;
+    // Optional transcription, when 8x8 (or a transcription add-on) provides it.
+    // Field name is account-dependent — validate against your callflow payload.
+    const transcription = payload.transcription || payload.transcript || payload.recordingTranscription || null;
 
     if (!providerCallId || !recordingUrl) {
       return Response.json({ success: false, message: 'Missing call id or recording URL' });
@@ -100,13 +108,16 @@ Deno.serve(async (req) => {
       has_voicemail: true,
       voicemail_url: recordingUrl,
       voicemail_duration_seconds: duration != null ? Number(duration) : null,
+      voicemail_transcription: transcription ? String(transcription).slice(0, 4000) : null,
     });
 
     if (row.nurse_email) {
       await base44.asServiceRole.entities.Notification.create({
         user_email: row.nurse_email,
         title: '📩 New voicemail',
-        message: `You have a new voicemail from ${row.from_number}.`,
+        message: transcription
+          ? `New voicemail from ${row.from_number}: "${String(transcription).slice(0, 140)}"`
+          : `You have a new voicemail from ${row.from_number}.`,
         type: 'voicemail_received',
         priority: 'high',
         related_entity: 'CallLog',

@@ -78,12 +78,16 @@ function wallClockInTimeZone(date: Date, timeZone?: string): { weekday: number |
   const weekday = WEEKDAY_INDEX[parts.weekday];
   return { weekday: weekday ?? null, minutes: hour * 60 + minute };
 }
+function dateKeyInTimeZone(date: Date, timeZone?: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || undefined, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
 function isAgencyOpen(settings: any, now = new Date()): boolean {
   const s = settings || {};
   if (s.business_hours_enabled !== true) return true; // not enforced
-  let wc;
-  try { wc = wallClockInTimeZone(now, s.business_hours_timezone); }
-  catch { wc = wallClockInTimeZone(now, undefined); }
+  let wc; let dateKey;
+  try { wc = wallClockInTimeZone(now, s.business_hours_timezone); dateKey = dateKeyInTimeZone(now, s.business_hours_timezone); }
+  catch { wc = wallClockInTimeZone(now, undefined); dateKey = dateKeyInTimeZone(now, undefined); }
+  if (Array.isArray(s.business_hours_holidays) && s.business_hours_holidays.includes(dateKey)) return false;
   const day = (s.business_hours || {})[DAY_KEYS[wc.weekday as number]];
   if (!day || day.enabled === false) return false;
   const open = parseHHMM(day.open); const close = parseHHMM(day.close);
@@ -200,7 +204,12 @@ function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
-    if (!(await verifyWebhook(req, raw))) {
+    const verified = await verifyWebhook(req, raw);
+    if (Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_DEBUG')) {
+      const present = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256', 'x-webhook-secret'].filter((h) => req.headers.get(h));
+      console.log('[webhook-debug] handleEightXEightVoiceCall ' + JSON.stringify({ verified, signature_headers_present: present, content_type: req.headers.get('content-type') }));
+    }
+    if (!verified) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 

@@ -57,6 +57,9 @@ export function summarizePhoneActivity({ smsMessages = [], callLogs = [], consen
   const avgDurationSec = durations.length
     ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
     : 0;
+  // Auto-handled inbound: global after-hours transfers vs per-nurse off-duty.
+  const afterHoursTransfers = calls.filter((c) => c.call_mode === "after_hours_transfer").length;
+  const offDutyTransfers = calls.filter((c) => c.call_mode === "off_duty_transfer").length;
   const callStats = {
     total: calls.length,
     inbound: inboundCalls.length,
@@ -65,6 +68,9 @@ export function summarizePhoneActivity({ smsMessages = [], callLogs = [], consen
     completed,
     missedRate: pct(missed, calls.length),
     avgDurationSec,
+    afterHoursTransfers,
+    offDutyTransfers,
+    autoTransferRate: pct(afterHoursTransfers + offDutyTransfers, inboundCalls.length),
   };
 
   // --- Consent (latest status per phone; ledger assumed newest-first) ---
@@ -74,10 +80,18 @@ export function summarizePhoneActivity({ smsMessages = [], callLogs = [], consen
     if (k && !(k in latestByPhone)) latestByPhone[k] = c.consent_status;
   }
   const statuses = Object.values(latestByPhone);
+  // New opt-in/opt-out events within the window (the ledger is append-only, so
+  // count rows by captured_at/created_date rather than the latest-per-phone view).
+  const recentConsents = withinWindow(
+    consents.map((c) => ({ ...c, created_date: c.created_date || c.captured_at })),
+    sinceDays,
+  );
   const consentStats = {
     optedIn: statuses.filter((s) => s === "opted_in").length,
     optedOut: statuses.filter((s) => s === "opted_out").length,
     tracked: statuses.length,
+    recentOptOuts: recentConsents.filter((c) => c.consent_status === "opted_out").length,
+    recentOptIns: recentConsents.filter((c) => c.consent_status === "opted_in").length,
   };
 
   // --- Provisioning coverage ---

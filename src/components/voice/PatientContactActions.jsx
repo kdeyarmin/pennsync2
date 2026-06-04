@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,8 +28,11 @@ import ScheduleSendDialog from "@/components/messaging/ScheduleSendDialog";
  * never exposed. Disabled (with explanation) when the nurse has no work number.
  */
 export default function PatientContactActions({ patient, currentUser }) {
+  const queryClient = useQueryClient();
   const [textOpen, setTextOpen] = useState(false);
   const [draft, setDraft] = useState("");
+  const [consentOpen, setConsentOpen] = useState(false);
+  const [consentNote, setConsentNote] = useState("");
 
   const e164 = normalizeE164(patient?.phone);
   const hasWorkNumber = !!currentUser?.work_phone_number;
@@ -70,6 +73,20 @@ export default function PatientContactActions({ patient, currentUser }) {
     mutationFn: () => base44.functions.invoke("startMaskedCall", { patient_id: patient.id }),
     onSuccess: () => toast.success("Connecting… your phone will ring shortly, then we'll dial the patient."),
     onError: (err) => toast.error(err?.message || "Failed to start call"),
+  });
+
+  const recordConsent = useMutation({
+    mutationFn: (consent_status) =>
+      base44.functions.invoke("recordSmsConsent", {
+        phone_e164: patient.phone, consent_status, patient_id: patient.id, notes: consentNote,
+      }),
+    onSuccess: (_res, consent_status) => {
+      queryClient.invalidateQueries({ queryKey: ["patient-consent", e164] });
+      toast.success(consent_status === "opted_in" ? "Texting consent recorded" : "Marked opted out");
+      setConsentOpen(false);
+      setConsentNote("");
+    },
+    onError: (err) => toast.error(err?.message || "Failed to record consent"),
   });
 
   const disabledReason = !hasWorkNumber
@@ -123,6 +140,15 @@ export default function PatientContactActions({ patient, currentUser }) {
             <ShieldCheck className="w-3 h-3 mr-1" /> Texting consent on file
           </Badge>
         )}
+        {e164 && (
+          <button
+            type="button"
+            onClick={() => setConsentOpen(true)}
+            className="text-xs text-blue-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
+          >
+            {consentStatus === "opted_in" ? "Update texting consent" : optedOut ? "Update consent status" : "Record texting consent"}
+          </button>
+        )}
         {afterHours && (
           <Alert className="bg-amber-50 border-amber-200 py-2">
             <Clock className="w-4 h-4 text-amber-600" />
@@ -153,6 +179,42 @@ export default function PatientContactActions({ patient, currentUser }) {
           )}
         </div>
       </CardContent>
+
+      <Dialog open={consentOpen} onOpenChange={setConsentOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Texting consent — {patient?.first_name} {patient?.last_name}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-slate-500">
+            Record the patient's texting consent (e.g. captured verbally or on a signed form). TCPA requires
+            consent on file before texting. This is logged with your name and time.
+          </p>
+          <Textarea
+            value={consentNote}
+            onChange={(e) => setConsentNote(e.target.value)}
+            rows={2}
+            placeholder="Optional note (e.g. 'Verbal consent during 6/4 visit')"
+            className="resize-none"
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="text-red-700 border-red-200 hover:bg-red-50"
+              disabled={recordConsent.isPending}
+              onClick={() => recordConsent.mutate("opted_out")}
+            >
+              Mark opted out
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              disabled={recordConsent.isPending}
+              onClick={() => recordConsent.mutate("opted_in")}
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" /> Record consent
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={textOpen} onOpenChange={setTextOpen}>
         <DialogContent>

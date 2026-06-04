@@ -145,6 +145,42 @@ test("an invalid timezone falls back to local time without throwing", () => {
   assert.ok(["open", "after_hours", "closed_day", "no_hours_set"].includes(r.reason));
 });
 
+test("a holiday closes the practice even on an open weekday", () => {
+  // 2026-06-04 is a Thursday inside the 9–5 window, but listed as a holiday.
+  const r = isWithinBusinessHours(new Date("2026-06-04T13:00:00Z"), {
+    enabled: true,
+    timeZone: TZ,
+    days: NINE_TO_FIVE,
+    holidays: ["2026-06-04"],
+  });
+  assert.equal(r.open, false);
+  assert.equal(r.reason, "holiday");
+  assert.equal(r.date, "2026-06-04");
+});
+
+test("holiday matching uses the date in the configured timezone", () => {
+  // 2026-06-05T02:00:00Z is still 2026-06-04 (22:00) in New York.
+  const r = isWithinBusinessHours(new Date("2026-06-05T02:00:00Z"), {
+    enabled: true,
+    timeZone: TZ,
+    days: NINE_TO_FIVE,
+    holidays: ["2026-06-04"],
+  });
+  // It's after hours anyway, but the reason should reflect the holiday date.
+  assert.equal(r.reason, "holiday");
+  assert.equal(r.date, "2026-06-04");
+});
+
+test("a non-holiday day is unaffected by the holiday list", () => {
+  const r = isWithinBusinessHours(new Date("2026-06-04T13:00:00Z"), {
+    enabled: true,
+    timeZone: TZ,
+    days: NINE_TO_FIVE,
+    holidays: ["2026-12-25"],
+  });
+  assert.equal(r.open, true);
+});
+
 test("agencyHoursConfig maps the flat AgencySettings fields", () => {
   const cfg = agencyHoursConfig({
     business_hours_enabled: true,
@@ -154,10 +190,15 @@ test("agencyHoursConfig maps the flat AgencySettings fields", () => {
   assert.equal(cfg.enabled, true);
   assert.equal(cfg.timeZone, TZ);
   assert.equal(cfg.days, NINE_TO_FIVE);
+  assert.deepEqual(
+    agencyHoursConfig({ business_hours_holidays: ["2026-12-25"] }).holidays,
+    ["2026-12-25"],
+  );
   // Defensive defaults for an empty settings object.
   const empty = agencyHoursConfig(undefined);
   assert.equal(empty.enabled, false);
   assert.deepEqual(empty.days, {});
+  assert.deepEqual(empty.holidays, []);
 });
 
 test("isAgencyOpen reads straight from AgencySettings", () => {

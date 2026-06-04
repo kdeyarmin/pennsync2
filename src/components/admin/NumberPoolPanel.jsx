@@ -9,7 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Hash, Plus, Loader2, Trash2, UserPlus, UserMinus, CheckCircle2 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { Hash, Plus, Loader2, Trash2, UserPlus, UserMinus, CheckCircle2, Search, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils";
 import { isAdminLike } from "@/lib/superAdmin";
@@ -70,6 +73,29 @@ export default function NumberPoolPanel() {
     onError: (err) => toast.error(err?.message || "Failed to remove number"),
   });
 
+  // --- Find & buy numbers from 8x8 directly ---
+  const [buyOpen, setBuyOpen] = useState(false);
+  const [searchArea, setSearchArea] = useState("");
+  const [found, setFound] = useState([]);
+  const search = useMutation({
+    mutationFn: () => base44.functions.invoke("searchPurchase8x8Numbers", { action: "search", area_code: searchArea }),
+    onSuccess: (res) => {
+      const data = res?.data || res;
+      setFound(data?.numbers || []);
+      if (!data?.numbers?.length) toast("No available numbers found for that search.");
+    },
+    onError: (err) => toast.error(err?.message || "Number search failed"),
+  });
+  const purchase = useMutation({
+    mutationFn: (e164) => base44.functions.invoke("searchPurchase8x8Numbers", { action: "purchase", e164 }),
+    onSuccess: (res, e164) => {
+      invalidate();
+      setFound((prev) => prev.filter((n) => n.e164 !== e164));
+      toast.success("Number purchased and added to the pool");
+    },
+    onError: (err) => toast.error(err?.message || "Purchase failed"),
+  });
+
   if (!isAdmin) return null;
 
   const userName = (email) => {
@@ -97,6 +123,56 @@ export default function NumberPoolPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Find & buy numbers directly from 8x8 */}
+        <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
+          <p className="text-xs text-slate-600">
+            Don't have numbers yet? Search 8x8 and buy one straight into the pool.
+          </p>
+          <Dialog open={buyOpen} onOpenChange={setBuyOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Search className="w-3.5 h-3.5 mr-1.5" /> Find &amp; buy numbers
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Find &amp; buy an 8x8 number</DialogTitle></DialogHeader>
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs text-slate-500">Area code (optional)</Label>
+                  <Input placeholder="e.g. 215" value={searchArea} onChange={(e) => setSearchArea(e.target.value)} className="mt-1" />
+                </div>
+                <Button onClick={() => search.mutate()} disabled={search.isPending} className="bg-indigo-600 hover:bg-indigo-700">
+                  {search.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+                  Search
+                </Button>
+              </div>
+              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                {found.length === 0 ? (
+                  <p className="text-sm text-slate-500 py-6 text-center">
+                    Search to see available numbers. Buying adds the number to your pool, ready to assign.
+                  </p>
+                ) : (
+                  found.map((n) => (
+                    <div key={n.e164} className="flex items-center justify-between py-2">
+                      <span className="text-sm font-medium text-slate-800">{formatPhoneDisplay(n.e164)}</span>
+                      <Button
+                        size="sm" variant="outline"
+                        disabled={purchase.isPending}
+                        onClick={() => purchase.mutate(n.e164)}
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5 mr-1.5" /> Buy
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Uses your 8x8 numbers API (validate the endpoint shape for your account). You're billed by 8x8 for purchased numbers.
+              </p>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         {/* Add a number */}
         <div className="flex flex-col sm:flex-row gap-2 items-start">
           <div className="flex-1 w-full">

@@ -45,6 +45,13 @@ No environment variables — an admin sets these in the app:
 | `after_hours_call_greeting` | Spoken before an after-hours transfer/voicemail (`{office}` merge) |
 | `after_hours_sms_auto_reply_enabled` | Auto-reply to inbound texts while closed (default on) |
 | `after_hours_sms_auto_reply` | The after-hours text auto-reply body (`{office}` merge) |
+| `business_hours_holidays` | Array of `YYYY-MM-DD` dates the practice is closed all day |
+| `tcpa_quiet_hours_enabled` | Block outbound texts outside the recipient's local window (default off) |
+| `tcpa_quiet_start_hour` / `tcpa_quiet_end_hour` | Allowed window hours (default 8 / 21) |
+| `urgent_escalation_enabled` | Escalate red-flag inbound texts (default on) |
+| `urgent_keywords` | Extra agency-specific urgent keywords (array) |
+| `eight_x_eight_numbers_api_base` | Base URL for the 8x8 number search/order API (defaults to voice API base) |
+| `webhook_debug_enabled` | (reserved) in-app webhook diagnostics flag |
 
 ### Super Admin command center (easiest path)
 
@@ -68,7 +75,10 @@ Pool entries live in the `PhoneNumber` entity; all writes go through the
 `managePhoneNumberPool` backend function, which keeps the pool status and the
 nurse's `User.work_phone_number` (the value webhooks resolve against) in sync and
 enforces one-number-per-nurse uniqueness. Personal bridge cells are still set in
-the **Nurse Work Numbers** card.
+the **Nurse Work Numbers** card. You can also **Find & buy** numbers directly from
+8x8 in the Number Pool card (via `searchPurchase8x8Numbers`) — the search/order
+REST shapes are account-dependent, so validate them against your 8x8 account and
+set `eight_x_eight_numbers_api_base` if it differs from the voice API base.
 
 ### Global calling & texting hours (automatic transfer / auto-reply)
 
@@ -88,6 +98,35 @@ When the master switch is off, behavior is unchanged (always open; only
 per-nurse duty status applies). The logic is the unit-tested
 `src/components/voice/businessHours.js`, mirrored inline into the inbound voice
 and SMS webhook handlers.
+
+### TCPA quiet hours, holidays, urgent escalation & reliability
+
+Also configurable in the **Calling & Texting Hours** card (and via cron):
+
+- **Holiday closures** — list dates (YYYY-MM-DD) the practice is closed all day,
+  interpreted in the business timezone. Inbound calls/texts auto-handle as
+  after-hours on those dates.
+- **TCPA quiet hours** — a separate toggle that blocks outbound texts landing
+  outside the allowed window (default 8:00am–9:00pm) in the **recipient's** local
+  time, derived from their area code. Fails open for unknown/non-US numbers.
+- **Urgent-keyword escalation** — inbound texts matching red-flag terms (chest
+  pain, fell, can't breathe, …, plus any agency-supplied `urgent_keywords`) fire
+  a high-priority nurse notification in addition to the normal one.
+- **Failed-text recovery** — schedule the `redriveFailedSms` cron (e.g. every
+  10 min, one schedule only) to automatically re-send texts that failed for a
+  transient reason, reusing the original `clientMessageId` so 8x8 de-dups. A
+  delivery failure (DLR) also notifies the sending nurse.
+- **Scheduler safety** — `dispatchScheduledSms` now claims rows with a per-run
+  token and sends with a deterministic `clientMessageId`, so overlapping runs
+  can't double-send (still prefer a single schedule).
+
+### Webhook signature troubleshooting
+
+If inbound calls/texts are rejected with a 401, set the function secret
+`EIGHT_X_EIGHT_WEBHOOK_DEBUG=1` in the Base44 dashboard. Each webhook then logs
+which signature header **names** arrived and whether verification passed (never
+any secret or signature value). Read the function logs, fix the
+header/scheme mismatch, then unset it.
 
 ### Verify the setup (no test message needed)
 

@@ -57,11 +57,15 @@ export default function CallingHoursPanel() {
     business_hours_enabled: false,
     business_hours_timezone: guessTimeZone(),
     business_hours: defaultBusinessHours(),
+    business_hours_holidays: [],
     after_hours_call_action: "transfer",
     after_hours_transfer_number_e164: "",
     after_hours_call_greeting: "",
     after_hours_sms_auto_reply_enabled: true,
     after_hours_sms_auto_reply: "",
+    tcpa_quiet_hours_enabled: false,
+    tcpa_quiet_start_hour: 8,
+    tcpa_quiet_end_hour: 21,
   });
 
   useEffect(() => {
@@ -73,11 +77,15 @@ export default function CallingHoursPanel() {
         settings.business_hours && typeof settings.business_hours === "object"
           ? { ...defaultBusinessHours(), ...settings.business_hours }
           : defaultBusinessHours(),
+      business_hours_holidays: Array.isArray(settings.business_hours_holidays) ? settings.business_hours_holidays : [],
       after_hours_call_action: settings.after_hours_call_action || "transfer",
       after_hours_transfer_number_e164: settings.after_hours_transfer_number_e164 || "",
       after_hours_call_greeting: settings.after_hours_call_greeting || "",
       after_hours_sms_auto_reply_enabled: settings.after_hours_sms_auto_reply_enabled !== false,
       after_hours_sms_auto_reply: settings.after_hours_sms_auto_reply || "",
+      tcpa_quiet_hours_enabled: settings.tcpa_quiet_hours_enabled === true,
+      tcpa_quiet_start_hour: settings.tcpa_quiet_start_hour ?? 8,
+      tcpa_quiet_end_hour: settings.tcpa_quiet_end_hour ?? 21,
     });
   }, [settings]);
 
@@ -212,6 +220,28 @@ export default function CallingHoursPanel() {
               })}
             </div>
 
+            <div>
+              <Label className="text-sm font-medium">Holiday closures</Label>
+              <Textarea
+                rows={2}
+                placeholder={"One date per line, YYYY-MM-DD\n2026-12-25\n2027-01-01"}
+                value={(form.business_hours_holidays || []).join("\n")}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    business_hours_holidays: e.target.value
+                      .split(/[\n,]/)
+                      .map((s) => s.trim())
+                      .filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s)),
+                  }))
+                }
+                className="mt-1 resize-none font-mono text-xs"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                The practice is treated as closed all day on these dates (interpreted in the time zone above).
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">After-hours call handling</Label>
@@ -276,6 +306,49 @@ export default function CallingHoursPanel() {
             </div>
           </>
         )}
+
+        {/* TCPA quiet hours — independent of business hours; keyed to the
+            recipient's own timezone (by area code). */}
+        <div className="p-3 bg-slate-50 rounded-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-sm font-semibold">Enforce TCPA quiet hours</Label>
+              <p className="text-xs text-slate-600">
+                Block outbound texts that would land outside the allowed window in the <strong>recipient's</strong>{" "}
+                timezone (derived from their area code). A separate legal floor from the agency hours above.
+              </p>
+            </div>
+            <Switch
+              checked={form.tcpa_quiet_hours_enabled}
+              onCheckedChange={(v) => setForm((f) => ({ ...f, tcpa_quiet_hours_enabled: v }))}
+            />
+          </div>
+          {form.tcpa_quiet_hours_enabled && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <div>
+                <Label className="text-xs text-slate-500">Earliest (hour, 0–23)</Label>
+                <Input
+                  type="number" min={0} max={23}
+                  value={form.tcpa_quiet_start_hour}
+                  onChange={(e) => setForm((f) => ({ ...f, tcpa_quiet_start_hour: Number(e.target.value) }))}
+                  className="mt-1 w-24"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-slate-500">Latest (hour, 0–23)</Label>
+                <Input
+                  type="number" min={0} max={23}
+                  value={form.tcpa_quiet_end_hour}
+                  onChange={(e) => setForm((f) => ({ ...f, tcpa_quiet_end_hour: Number(e.target.value) }))}
+                  className="mt-1 w-24"
+                />
+              </div>
+              <p className="text-[11px] text-slate-500 max-w-xs">
+                Default 8–21 (8:00am–9:00pm). Texts to numbers whose timezone can't be determined are allowed.
+              </p>
+            </div>
+          )}
+        </div>
 
         <div className="flex justify-end">
           <Button onClick={() => save.mutate()} disabled={save.isPending} className="bg-indigo-600 hover:bg-indigo-700">

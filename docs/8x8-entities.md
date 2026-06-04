@@ -44,6 +44,12 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `after_hours_call_greeting` | text | Optional spoken greeting before an after-hours transfer/voicemail; `{office}` merge. |
 | `after_hours_sms_auto_reply_enabled` | boolean | Optional (default true). Auto-reply to inbound texts received while closed. |
 | `after_hours_sms_auto_reply` | text | The after-hours text auto-reply body; `{office}` merge. Falls back to `default_off_duty_template`, then a built-in message. |
+| `business_hours_holidays` | array (string) | `YYYY-MM-DD` dates the practice is closed all day (interpreted in the business timezone). |
+| `tcpa_quiet_hours_enabled` | boolean | Optional (default false). Block outbound texts outside the recipient-local window. |
+| `tcpa_quiet_start_hour` / `tcpa_quiet_end_hour` | number | Allowed texting window in the recipient's timezone (default 8 / 21). |
+| `urgent_escalation_enabled` | boolean | Optional (default true). Escalate inbound texts matching urgent keywords. |
+| `urgent_keywords` | array (string) | Extra agency-specific red-flag keywords merged with the built-in list. |
+| `eight_x_eight_numbers_api_base` | string | Base URL for the 8x8 number search/order API (defaults to the voice API base). |
 
 ## New `PhoneNumber` (the assignable number pool)
 
@@ -80,6 +86,9 @@ not PHI); write is service-role only.
 | `is_read` | boolean | Nurse-inbox unread flag |
 | `sent_by` | string | Nurse email (outbound) |
 | `consent_checked` | boolean | Opt-in confirmed at send time |
+| `retry_count` | number | Nullable. Failed-send re-drive attempts (`redriveFailedSms`). |
+| `last_retry_at` | string (ISO) | Nullable. When the last re-drive attempt ran. |
+| `redrive_claimed_by` | string | Nullable. Per-run claim token used by the re-drive cron. |
 
 ## New `CallLog`
 
@@ -102,6 +111,7 @@ not PHI); write is service-role only.
 | `has_voicemail` | boolean | Set by the voicemail webhook when a recording is attached. |
 | `voicemail_url` | string | Nullable. Recording URL from 8x8. |
 | `voicemail_duration_seconds` | number | Nullable. |
+| `voicemail_transcription` | text | Nullable. Transcription when 8x8 (or an add-on) provides one. |
 
 ## New `SmsConsent` (append-only TCPA ledger)
 
@@ -110,7 +120,7 @@ not PHI); write is service-role only.
 | `patient_id` | string | Nullable |
 | `phone_e164` | string | |
 | `consent_status` | string enum | `opted_in` \| `opted_out` \| `unknown` |
-| `consent_source` | string enum | `verbal_documented` \| `written_form` \| `inbound_text` \| `keyword_stop` \| `keyword_start` |
+| `consent_source` | string enum | `verbal_documented` \| `written_form` \| `inbound_text` \| `keyword_stop` \| `keyword_start` \| `manual_opt_in` \| `manual_opt_out` |
 | `captured_by` | string | Nurse/admin email; null for patient keyword events |
 | `captured_at` | string (ISO) | |
 | `notes` | text | |
@@ -133,6 +143,8 @@ not PHI); write is service-role only.
 | `failure_reason` | string | Nullable |
 | `attempts` | number | Send attempts |
 | `sent_at` | string (ISO) | Nullable |
+| `claimed_by` | string | Nullable. Per-run claim token (overlap-safe dispatch). |
+| `claimed_at` | string (ISO) | Nullable. When the row was claimed. |
 | `created_by` | string | Nurse email |
 | `canceled_by` | string | Nullable |
 | `canceled_at` | string (ISO) | Nullable |

@@ -50,6 +50,18 @@ export function wallClockInTimeZone(date, timeZone) {
   return { weekday: weekday ?? null, minutes: hour * 60 + minute };
 }
 
+/** Calendar date as "YYYY-MM-DD" in an IANA timezone (for holiday matching). */
+export function dateKeyInTimeZone(date, timeZone) {
+  const dtf = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timeZone || undefined,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  // en-CA formats as YYYY-MM-DD.
+  return dtf.format(date);
+}
+
 /**
  * A sensible default weekly schedule: Mon–Fri 08:00–17:00 open, weekend closed.
  * Used to seed the admin UI so the schedule is never blank.
@@ -74,6 +86,7 @@ export function agencyHoursConfig(settings) {
     enabled: s.business_hours_enabled === true,
     timeZone: s.business_hours_timezone || undefined,
     days: s.business_hours && typeof s.business_hours === "object" ? s.business_hours : {},
+    holidays: Array.isArray(s.business_hours_holidays) ? s.business_hours_holidays : [],
   };
 }
 
@@ -92,12 +105,20 @@ export function isWithinBusinessHours(now = new Date(), config) {
   if (!cfg.enabled) return { open: true, reason: "not_enforced" };
 
   let wc;
+  let dateKey;
   try {
     wc = wallClockInTimeZone(now, cfg.timeZone);
+    dateKey = dateKeyInTimeZone(now, cfg.timeZone);
   } catch {
     // Invalid/unsupported timezone → fall back to the host's local time rather
     // than crashing the webhook.
     wc = wallClockInTimeZone(now, undefined);
+    dateKey = dateKeyInTimeZone(now, undefined);
+  }
+
+  // A holiday closes the practice all day, regardless of the weekday schedule.
+  if (Array.isArray(cfg.holidays) && cfg.holidays.includes(dateKey)) {
+    return { open: false, reason: "holiday", date: dateKey, minutes: wc.minutes };
   }
 
   const key = DAY_KEYS[wc.weekday];

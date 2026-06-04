@@ -50,6 +50,34 @@ test("call stats count missed, completed, and average duration of real calls", (
   assert.equal(r.calls.avgDurationSec, 90); // (60+120)/2, zero/absent excluded
 });
 
+test("call stats count after-hours and off-duty auto-transfers", () => {
+  const r = summarizePhoneActivity({
+    callLogs: [
+      { direction: "inbound", status: "forwarded_office", call_mode: "after_hours_transfer", created_date: iso(1) },
+      { direction: "inbound", status: "forwarded_office", call_mode: "after_hours_transfer", created_date: iso(1) },
+      { direction: "inbound", status: "forwarded_office", call_mode: "off_duty_transfer", created_date: iso(1) },
+      { direction: "inbound", status: "bridged", call_mode: "masked_bridge", created_date: iso(1) },
+    ],
+  });
+  assert.equal(r.calls.afterHoursTransfers, 2);
+  assert.equal(r.calls.offDutyTransfers, 1);
+  assert.equal(r.calls.autoTransferRate, 75); // 3 of 4 inbound auto-handled
+});
+
+test("consent tracks recent opt-in/opt-out events within the window", () => {
+  const r = summarizePhoneActivity({
+    consents: [
+      { phone_e164: "+12155550100", consent_status: "opted_out", created_date: iso(1) },
+      { phone_e164: "+12155550111", consent_status: "opted_out", created_date: iso(2) },
+      { phone_e164: "+12155550122", consent_status: "opted_in", created_date: iso(3) },
+      { phone_e164: "+12155550133", consent_status: "opted_out", created_date: iso(40) }, // out of window
+    ],
+    sinceDays: 7,
+  });
+  assert.equal(r.consent.recentOptOuts, 2);
+  assert.equal(r.consent.recentOptIns, 1);
+});
+
 test("consent uses the latest status per phone (ledger newest-first)", () => {
   const r = summarizePhoneActivity({
     consents: [

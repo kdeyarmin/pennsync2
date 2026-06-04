@@ -82,12 +82,16 @@ function wallClockInTimeZone(date: Date, timeZone?: string): { weekday: number |
   const weekday = WEEKDAY_INDEX[parts.weekday];
   return { weekday: weekday ?? null, minutes: hour * 60 + minute };
 }
+function dateKeyInTimeZone(date: Date, timeZone?: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || undefined, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
 function isAgencyOpen(settings: any, now = new Date()): boolean {
   const s = settings || {};
   if (s.business_hours_enabled !== true) return true; // not enforced
-  let wc;
-  try { wc = wallClockInTimeZone(now, s.business_hours_timezone); }
-  catch { wc = wallClockInTimeZone(now, undefined); }
+  let wc; let dateKey;
+  try { wc = wallClockInTimeZone(now, s.business_hours_timezone); dateKey = dateKeyInTimeZone(now, s.business_hours_timezone); }
+  catch { wc = wallClockInTimeZone(now, undefined); dateKey = dateKeyInTimeZone(now, undefined); }
+  if (Array.isArray(s.business_hours_holidays) && s.business_hours_holidays.includes(dateKey)) return false;
   const day = (s.business_hours || {})[DAY_KEYS[wc.weekday as number]];
   if (!day || day.enabled === false) return false;
   const open = parseHHMM(day.open); const close = parseHHMM(day.close);
@@ -191,7 +195,32 @@ async function getAgencyConfig(base44: any) {
     // Automatic after-hours reply when the practice is closed (global hours).
     afterHoursReplyEnabled: s.after_hours_sms_auto_reply_enabled !== false,
     afterHoursReply: s.after_hours_sms_auto_reply || '',
+    // Urgent-keyword escalation.
+    urgentEscalationEnabled: s.urgent_escalation_enabled !== false,
+    urgentKeywords: Array.isArray(s.urgent_keywords) ? s.urgent_keywords : [],
+    webhookDebug: s.webhook_debug_enabled === true,
   };
+}
+
+// ---- urgent-keyword detection (mirrors src/components/voice/urgentKeywords.js) ----
+const DEFAULT_URGENT_KEYWORDS = [
+  'emergency', 'urgent', '911', 'chest pain', "can't breathe", 'cant breathe',
+  'trouble breathing', 'short of breath', 'suicidal', 'kill myself', 'overdose',
+  'bleeding', 'blood', 'fell', 'fall', 'fallen', 'passed out', 'unconscious',
+  'stroke', 'seizure', 'severe pain', 'help me', 'not breathing', 'unresponsive',
+];
+function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function detectUrgency(text: string, extra: string[] = []): { urgent: boolean; matches: string[] } {
+  const s = String(text || '');
+  if (!s.trim()) return { urgent: false, matches: [] };
+  const extras = (Array.isArray(extra) ? extra : []).map((k) => String(k || '').toLowerCase().trim()).filter(Boolean);
+  const all = [...new Set([...DEFAULT_URGENT_KEYWORDS, ...extras])];
+  const matches: string[] = [];
+  for (const kw of all) {
+    if (!kw) continue;
+    if (new RegExp(`\\b${escapeRe(kw)}\\b`, 'i').test(s)) matches.push(kw);
+  }
+  return { urgent: matches.length > 0, matches };
 }
 
 async function sendSms8x8(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string) {
@@ -242,7 +271,14 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     const webhookSecret = await resolveEightXEightWebhookSecret(base44);
-    if (!(await verifyWebhook(req, raw, webhookSecret))) {
+    const verified = await verifyWebhook(req, raw, webhookSecret);
+    // Diagnostic mode (EIGHT_X_EIGHT_WEBHOOK_DEBUG=1): log which signature header
+    // NAMES arrived and whether verification passed — never any secret/value.
+    if (Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_DEBUG')) {
+      const present = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256', 'x-webhook-secret'].filter((h) => req.headers.get(h));
+      console.log('[webhook-debug] handleEightXEightInboundSms ' + JSON.stringify({ verified, signature_headers_present: present, content_type: req.headers.get('content-type') }));
+    }
+    if (!verified) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -383,6 +419,22 @@ Deno.serve(async (req) => {
       await sendReply(msg);
     }
 
+    // --- Urgent-keyword escalation: a possibly-clinical text shouldn't wait in
+    // the inbox. Fire a high-priority notification (in addition to the normal one).
+    const urgency = config.urgentEscalationEnabled ? detectUrgency(text, config.urgentKeywords) : { urgent: false, matches: [] };
+    if (urgency.urgent) {
+      await base44.asServiceRole.entities.Notification.create({
+        user_email: nurse.email,
+        title: '🚨 Possibly urgent patient text',
+        message: `A text from ${patientNum} may need immediate attention (flagged: ${urgency.matches.slice(0, 3).join(', ')}). Review now.`,
+        type: 'sms_urgent',
+        priority: 'urgent',
+        related_entity: 'SmsMessage',
+        related_entity_id: inboundRow.id,
+        is_read: false,
+      }).catch((err) => console.error('urgent notification failed:', err));
+    }
+
     // --- Notify the nurse in-app ---
     await base44.asServiceRole.entities.Notification.create({
       user_email: nurse.email,
@@ -410,6 +462,7 @@ Deno.serve(async (req) => {
         body_length: text.length,
         off_duty: offDuty,
         agency_closed: agencyClosed,
+        urgent: urgency.urgent,
       },
       status: 'success',
     }).catch(() => {});
