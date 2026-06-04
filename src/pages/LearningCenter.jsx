@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,10 @@ import {
   LayoutDashboard,
   PlayCircle,
   ShieldCheck,
-  ArrowRight
+  ArrowRight,
+  CalendarClock,
+  UserPlus,
+  Check
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -35,6 +39,8 @@ import PageHeader from '@/components/ui/PageHeader';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CertificateDownloadButton from '@/components/training/CertificateDownloadButton';
+import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel';
+import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
 const daysUntil = (date) => {
@@ -53,6 +59,7 @@ export default function LearningCenter() {
   const [businessLineFilter, setBusinessLineFilter] = useState('all');
   const [requiredOnly, setRequiredOnly] = useState(false);
   const [catalogLimit, setCatalogLimit] = useState(12);
+  const queryClient = useQueryClient();
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -163,6 +170,58 @@ export default function LearningCenter() {
       (a, b) => new Date(b.last_accessed || b.started_date || 0) - new Date(a.last_accessed || a.started_date || 0)
     )[0] || null;
   }, [assignments]);
+
+  // CEU hours earned from completed courses, with a per-category breakdown
+  const ceu = useMemo(() => {
+    let total = 0;
+    const byCategory = {};
+    completedAssignments.forEach(a => {
+      const course = courseById[a.course_id];
+      const hours = Number(course?.ceu_hours) || 0;
+      if (hours <= 0) return;
+      total += hours;
+      const cat = course?.category || 'general';
+      byCategory[cat] = (byCategory[cat] || 0) + hours;
+    });
+    const breakdown = Object.entries(byCategory)
+      .map(([category, hours]) => ({ category, hours }))
+      .sort((x, y) => y.hours - x.hours);
+    return { total: Math.round(total * 10) / 10, breakdown };
+  }, [completedAssignments, courseById]);
+
+  // Courses the user already has an assignment for (to gate self-enrollment)
+  const assignedCourseIds = useMemo(
+    () => new Set(assignments.map(a => a.course_id)),
+    [assignments]
+  );
+
+  // Upcoming renewals: certificate expirations + scheduled training renewals
+  const renewals = useMemo(() => {
+    const items = [];
+    certificates.forEach(c => {
+      if (c.expiration_date) {
+        items.push({ id: `cert-${c.id}`, title: c.course_title, kind: 'Certificate expiration', date: c.expiration_date });
+      }
+    });
+    assignments.forEach(a => {
+      if (a.renewal_due_date) {
+        items.push({ id: `asg-${a.id}`, title: a.course_title, kind: 'Training renewal', date: a.renewal_due_date });
+      }
+    });
+    return items.sort((x, y) => new Date(x.date) - new Date(y.date));
+  }, [certificates, assignments]);
+
+  // Self-enrollment for elective (non-required) catalog courses
+  const [enrollFeedback, setEnrollFeedback] = useState({});
+  const enrollMutation = useMutation({
+    mutationFn: (courseId) => selfEnrollCourse({ courseId }),
+    onMutate: (courseId) => setEnrollFeedback(prev => ({ ...prev, [courseId]: 'loading' })),
+    onSuccess: (_data, courseId) => {
+      setEnrollFeedback(prev => ({ ...prev, [courseId]: 'done' }));
+      queryClient.invalidateQueries({ queryKey: ['lc-assignments', user?.email] });
+    },
+    onError: (_err, courseId) => setEnrollFeedback(prev => ({ ...prev, [courseId]: 'error' })),
+  });
 
   // Sort active assignments: overdue first, then due soonest
   const sortedActive = useMemo(() => {
@@ -414,6 +473,41 @@ export default function LearningCenter() {
         </Card>
       )}
 
+      {/* Continuing Education (CEU) earned */}
+      {ceu.total > 0 && (
+        <Card className="border-purple-200 bg-purple-50/30">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">Continuing Education Earned</h3>
+                  <p className="text-sm text-slate-600">CEU hours from your completed courses</p>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-3xl font-bold text-purple-600">{ceu.total}</p>
+                <p className="text-xs text-slate-500">CEU hours</p>
+              </div>
+            </div>
+            {ceu.breakdown.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {ceu.breakdown.map(b => (
+                  <Badge key={b.category} variant="outline" className="capitalize text-xs">
+                    {b.category.replace(/_/g, ' ')}: {b.hours} hr{b.hours === 1 ? '' : 's'}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Educator / admin team readiness */}
+      {isEducatorOrAdmin && <EducatorReadinessPanel />}
+
       {/* Overdue Alert Banner */}
       {overdueAssignments.length > 0 && (
         <Card className="border-2 border-red-300 bg-red-50 shadow-sm">
@@ -499,6 +593,10 @@ export default function LearningCenter() {
             <TabsTrigger value="certificates" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Award className="w-4 h-4 mr-2" />
               Certificates ({certificates.length})
+            </TabsTrigger>
+            <TabsTrigger value="renewals" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <CalendarClock className="w-4 h-4 mr-2" />
+              Renewals ({renewals.length})
             </TabsTrigger>
           </TabsList>
         </div>
@@ -746,13 +844,47 @@ export default function LearningCenter() {
                         </span>
                       )}
                     </div>
-                    {isEducatorOrAdmin && (
-                      <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${course.id}&preview=true`}>
-                        <Button variant="outline" size="sm" className="w-full mt-2">
-                          Preview Course
-                        </Button>
-                      </Link>
-                    )}
+                    <div className="space-y-2 pt-1">
+                      {(() => {
+                        const state = enrollFeedback[course.id];
+                        if (assignedCourseIds.has(course.id) || state === 'done') {
+                          return (
+                            <div className="flex items-center justify-center gap-1.5 text-sm text-emerald-600 font-medium py-1.5">
+                              <Check className="w-4 h-4" /> Enrolled
+                            </div>
+                          );
+                        }
+                        if (!isRequiredCourse(course)) {
+                          return (
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              disabled={state === 'loading'}
+                              onClick={() => enrollMutation.mutate(course.id)}
+                            >
+                              {state === 'loading' ? (
+                                <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Enrolling...</>
+                              ) : (
+                                <><UserPlus className="w-4 h-4 mr-1.5" /> Enroll</>
+                              )}
+                            </Button>
+                          );
+                        }
+                        return (
+                          <p className="text-xs text-slate-400 text-center py-1.5">Assigned by your administrator</p>
+                        );
+                      })()}
+                      {enrollFeedback[course.id] === 'error' && (
+                        <p className="text-xs text-red-600 text-center">Could not enroll. Please try again.</p>
+                      )}
+                      {isEducatorOrAdmin && (
+                        <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${course.id}&preview=true`}>
+                          <Button variant="outline" size="sm" className="w-full">
+                            Preview Course
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -865,6 +997,57 @@ export default function LearningCenter() {
                 View All Certificates
               </Button>
             </Link>
+          )}
+        </TabsContent>
+
+        {/* Renewals Tab */}
+        <TabsContent value="renewals" className="space-y-3">
+          {renewals.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <CalendarClock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-slate-800">No upcoming renewals</h3>
+                <p className="text-slate-500 mt-1">Certificate expirations and training renewal dates will appear here.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            (() => {
+              let lastMonth = null;
+              return renewals.map(item => {
+                const monthLabel = new Date(item.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+                const showHeader = monthLabel !== lastMonth;
+                lastMonth = monthLabel;
+                const days = daysUntil(item.date);
+                const isPast = days < 0;
+                const isSoon = days >= 0 && days <= 30;
+                return (
+                  <div key={item.id}>
+                    {showHeader && (
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mt-4 mb-1.5 first:mt-0">{monthLabel}</p>
+                    )}
+                    <Card className={`border ${isPast ? 'border-red-200 bg-red-50/30' : isSoon ? 'border-amber-200 bg-amber-50/20' : 'border-slate-200'}`}>
+                      <CardContent className="p-3.5 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${isPast ? 'bg-red-100' : isSoon ? 'bg-amber-100' : 'bg-slate-100'}`}>
+                            <CalendarClock className={`w-4.5 h-4.5 ${isPast ? 'text-red-600' : isSoon ? 'text-amber-600' : 'text-slate-500'}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 truncate">{item.title}</p>
+                            <p className="text-xs text-slate-500">{item.kind}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className={`text-sm font-medium ${isPast ? 'text-red-600' : isSoon ? 'text-amber-700' : 'text-slate-700'}`}>{formatDate(item.date)}</p>
+                          <p className={`text-xs ${isPast ? 'text-red-500' : 'text-slate-400'}`}>
+                            {isPast ? `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue` : days === 0 ? 'Due today' : `in ${days} day${days === 1 ? '' : 's'}`}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              });
+            })()
           )}
         </TabsContent>
       </Tabs>
