@@ -77,7 +77,7 @@ current state (verified against code on 2026-06-03).
 | Readmission `ReferenceError` (`NURSE_APP_IMPROVEMENTS` P0-1) | Open | ✅ Resolved — `HospitalReadmissionRisk.jsx:134/149` consistent |
 | `functional_baseline` carry-forward cloning (`NURSE_APP_IMPROVEMENTS` P0-3) | Open | ✅ Resolved — excluded from `CARRY_FORWARD` (`requiredElements.js:299`) |
 | Major dep upgrades + dead-dep removal (`DEPENDENCY-UPDATE`) | In progress | ✅ Resolved — React 19 / Vite 8 / Tailwind 4 / date-fns 4 etc. |
-| Webhook signature verification (`SECURITY-RLS-CHECKLIST`) | Concern | ✅ Implemented (8x8 + Twilio/Telnyx) |
+| Webhook signature verification (`SECURITY-RLS-CHECKLIST`) | Concern | ✅ Implemented (Twilio X-Twilio-Signature + fax) |
 | Offline note saved as "verified" w/o grounding (`NURSE_APP_IMPROVEMENTS` P0-2) | Open | ⚠️ **Open** — see [B1](#b-clinical-safety--ai-trustworthiness) |
 | "…was not documented" auto-append (`NURSE_APP_IMPROVEMENTS` P0-4) | Open | ⚠️ **Open** — see [B2](#b-clinical-safety--ai-trustworthiness) |
 | Critical-vital escalation (`NURSE_APP_IMPROVEMENTS` P0-5) | Partial | ⚠️ **Open** — plausibility added; escalation missing |
@@ -124,7 +124,7 @@ large agency will hit memory/timeout. → Add explicit `limit` + pagination; pre
 **A4 — Make SSRF allowlist + required secrets fail-safe by default. — Med**
 `processPatientFileUpdate` blocks private ranges but only fully restricts when
 `FILE_URL_ALLOWED_HOSTS` is set; if unset, any public host is fetchable. Likewise
-`EIGHT_X_EIGHT_WEBHOOK_SECRET` and `INTERNAL_FN_SECRET` are required for safety but unverified at
+`TWILIO_AUTH_TOKEN` and `INTERNAL_FN_SECRET` are required for safety but unverified at
 runtime. → Treat the allowlist as mandatory, and add a startup/health-check that asserts required
 secrets are present (fail loud, not silent). *(Med · Low)*
 
@@ -302,12 +302,12 @@ Confirm in the Base44 dashboard / environment — these are operational, not cod
 
 - [ ] `INTERNAL_FN_SECRET` set (locks down `issueCertificate`; otherwise certificate issuance is forgeable).
 - [ ] `FILE_URL_ALLOWED_HOSTS` set (otherwise A4 SSRF surface stays open).
-- [ ] `EIGHT_X_EIGHT_API_KEY` / `EIGHT_X_EIGHT_WEBHOOK_SECRET` and all Twilio secrets present
-      (webhooks fail-closed without them — inbound SMS/fax silently dropped).
+- [ ] `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` and all Twilio secrets present
+      (webhooks fail-closed without them — inbound SMS/voice/fax silently dropped).
 - [ ] RLS policies in the dashboard match `docs/SECURITY-RLS-CHECKLIST.md` (verify client-writable
       entities like `TrainingCertificate` are gated).
 - [ ] Prefer one scheduler instance for `dispatchScheduledSms` / `redriveFailedSms`. (Double-send risk
-      is now mitigated: a per-run claim token + a deterministic `clientMessageId` make 8x8 de-dup
+      is now mitigated: a per-run claim token + a deterministic idempotency key make Twilio de-dup
       overlapping sends — a single schedule is still recommended.)
 
 ---

@@ -1,6 +1,6 @@
 /**
  * superAdmin — single source of truth for who the platform super administrator
- * is and the helpers used to gate the super-admin-only surfaces (the 8x8 /
+ * is and the helpers used to gate the super-admin-only surfaces (the Twilio
  * integration configuration page).
  *
  * The super admin is identified two ways, and EITHER is sufficient:
@@ -11,7 +11,7 @@
  *      app — Learning Center, skill dashboards — already keys off of).
  *
  * This is the single source of truth for the owner email on the FRONTEND. The
- * Base44 backend functions (ensureSuperAdmin, saveEightXEightSecret, etc.) run
+ * Base44 backend functions (ensureSuperAdmin, saveTwilioSecret, etc.) run
  * as standalone Deno modules that can't import this file, so each mirrors the
  * same literal; keep them in sync when changing the owner.
  */

@@ -5,7 +5,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * off-duty message editor. A nurse updates their own status; an admin may target
  * another user.
  *
- * No 8x8 call is needed: the inbound VCA/SMS webhooks read duty_status and the
+ * No Twilio call is needed: the inbound VCA/SMS webhooks read duty_status and the
  * scheduled_off_duty_* window live at call/message time, so changes take effect
  * immediately and a schedule expires on its own (no cron).
  */

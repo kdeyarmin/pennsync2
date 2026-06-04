@@ -1,5 +1,5 @@
 /**
- * businessHours — global "calling & texting hours" for the 8x8 integration.
+ * businessHours — global "calling & texting hours" for the Twilio integration.
  *
  * Per-nurse duty (dutyUtils) answers "is THIS nurse reachable right now?".
  * This module answers the agency-wide question "is the practice OPEN right

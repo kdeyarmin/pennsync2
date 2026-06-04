@@ -1,12 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * provisionNurseWorkNumber — admin-only. Assigns a nurse their dedicated 8x8
+ * provisionNurseWorkNumber — admin-only. Assigns a nurse their dedicated Twilio
  * work number and stores their PRIVATE personal cell (the masked bridge target).
  *
- * The 8x8 virtual number itself must already be purchased/allocated in 8x8
- * Connect and have its inbound-SMS + VCA webhooks pointed at this app's
- * functions. This call records the mapping in PennSync.
+ * The Twilio number must already be purchased in your Twilio account with its
+ * SMS/Voice webhooks pointed at this app's functions. This call records the
+ * mapping in PennSync.
  */
 
 function normalizeE164(raw: string | null | undefined): string | null {
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Only administrators can provision work numbers' }, { status: 403 });
     }
 
-    const { target_user_email, work_phone_number, personal_cell_e164, eight_x_eight_voice_endpoint_id } = await req.json();
+    const { target_user_email, work_phone_number, personal_cell_e164, twilio_phone_number_sid } = await req.json();
     if (!target_user_email) {
       return Response.json({ error: 'Missing required field: target_user_email' }, { status: 400 });
     }
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     const update: Record<string, unknown> = {};
     if (workNum) update.work_phone_number = workNum;
     if (cellNum) update.personal_cell_e164 = cellNum;
-    if (eight_x_eight_voice_endpoint_id !== undefined) update.eight_x_eight_voice_endpoint_id = eight_x_eight_voice_endpoint_id;
+    if (twilio_phone_number_sid !== undefined) update.twilio_phone_number_sid = twilio_phone_number_sid;
     // Default new nurses to off duty so they aren't bridged before they're ready.
     if (target.duty_status === undefined || target.duty_status === null) update.duty_status = 'off_duty';
 

@@ -1,20 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * saveEightXEightSecret — super-admin-only. Stores the SINGLE 8x8 Connect API
- * secret (bearer token) used for SMS and Voice, so the integration can be
- * configured entirely in-app without touching the Base44 dashboard env.
+ * saveTwilioSecret — super-admin-only. Stores the Twilio Account SID and Auth
+ * Token used for SMS and Voice, so the integration can be configured entirely
+ * in-app without touching the Base44 dashboard env.
  *
- * The secret is written to the backend-only IntegrationSecret entity via the
- * service role and is NEVER returned to the client — the response only ever
+ * Both values are written to the backend-only IntegrationSecret entity via the
+ * service role and are NEVER returned to the client — the response only ever
  * carries presence + the last 4 characters so the UI can confirm what is set.
  *
- * A dedicated webhook signing secret is optional: when omitted, inbound webhook
- * verification falls back to the api_secret, so one secret fully configures 8x8.
+ * A dedicated webhook signing secret is optional: Twilio normally verifies
+ * inbound webhooks with the Auth Token, so this field is only needed for a
+ * custom shared-secret test path.
  *
- * Body: { api_secret: string, webhook_secret?: string|null }
+ * Body: { account_sid: string, auth_token: string, webhook_secret?: string|null }
  *   - webhook_secret undefined → leave the existing value unchanged
- *   - webhook_secret "" / null → clear it (fall back to api_secret)
+ *   - webhook_secret "" / null → clear it (fall back to auth_token verification)
  */
 
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
@@ -36,18 +37,27 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const apiSecret = typeof body.api_secret === 'string' ? body.api_secret.trim() : '';
-    if (!apiSecret) {
-      return Response.json({ error: 'api_secret is required.' }, { status: 400 });
+    const accountSid = typeof body.account_sid === 'string' ? body.account_sid.trim() : '';
+    const authToken = typeof body.auth_token === 'string' ? body.auth_token.trim() : '';
+
+    if (!accountSid) {
+      return Response.json({ error: 'account_sid is required.' }, { status: 400 });
     }
-    if (apiSecret.length < 8) {
-      return Response.json({ error: "That doesn't look like a valid 8x8 API secret (too short)." }, { status: 400 });
+    if (!accountSid.startsWith('AC') || accountSid.length < 10) {
+      return Response.json({ error: "That doesn't look like a valid Twilio Account SID (must start with \"AC\" and be at least 10 characters)." }, { status: 400 });
+    }
+    if (!authToken) {
+      return Response.json({ error: 'auth_token is required.' }, { status: 400 });
+    }
+    if (authToken.length < 16) {
+      return Response.json({ error: "That doesn't look like a valid Twilio Auth Token (too short — must be at least 16 characters)." }, { status: 400 });
     }
 
     const update: Record<string, unknown> = {
-      provider: 'eight_x_eight',
-      api_secret: apiSecret,
-      secret_last_four: lastFour(apiSecret),
+      provider: 'twilio',
+      account_sid: accountSid,
+      auth_token: authToken,
+      secret_last_four: lastFour(authToken),
       is_active: true,
       updated_by_email: user.email,
     };
@@ -58,7 +68,7 @@ Deno.serve(async (req) => {
     }
 
     const existing = await base44.asServiceRole.entities.IntegrationSecret
-      .filter({ provider: 'eight_x_eight' })
+      .filter({ provider: 'twilio' })
       .catch(() => []);
 
     let saved;
@@ -72,24 +82,26 @@ Deno.serve(async (req) => {
       timestamp: new Date().toISOString(),
       user_email: user.email,
       user_role: user.role,
-      action: 'eight_x_eight_secret_saved',
+      action: 'twilio_secret_saved',
       details: {
-        secret_last_four: lastFour(apiSecret),
+        account_sid_last_four: lastFour(accountSid),
+        secret_last_four: lastFour(authToken),
         webhook_secret_set: 'webhook_secret' in body ? Boolean(update.webhook_secret) : undefined,
       },
     }).catch(() => {});
 
-    // Never echo the secret back.
+    // Never echo the secrets back.
     return Response.json({
       success: true,
-      provider: 'eight_x_eight',
+      provider: 'twilio',
       configured: true,
-      secret_last_four: lastFour(apiSecret),
+      account_sid_last_four: lastFour(accountSid),
+      secret_last_four: lastFour(authToken),
       webhook_secret_set: Boolean(saved?.webhook_secret),
       updated_by_email: user.email,
     });
   } catch (error) {
-    console.error('saveEightXEightSecret error:', error);
+    console.error('saveTwilioSecret error:', error);
     return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 });

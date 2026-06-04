@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { maskPhone, formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils";
 import {
   evaluateAgencyConfig, summarize, WEBHOOK_FUNCTIONS, functionUrlBase,
-} from "@/components/admin/eightxeightSetup";
+} from "@/components/admin/twilioSetup";
 import { isAdminLike } from "@/lib/superAdmin";
 import CallingHoursPanel from "@/components/admin/CallingHoursPanel";
 import NumberPoolPanel from "@/components/admin/NumberPoolPanel";
@@ -64,8 +64,8 @@ function CopyButton({ value, label }) {
 }
 
 /**
- * PhoneProvisioningPanel — admin-only. Assigns 8x8 work numbers + private cell
- * bridge targets to nurses and configures agency-wide phone settings.
+ * PhoneProvisioningPanel — admin-only. Assigns Twilio work numbers + private
+ * cell bridge targets to nurses and configures agency-wide phone settings.
  */
 export default function PhoneProvisioningPanel() {
   const queryClient = useQueryClient();
@@ -93,10 +93,6 @@ export default function PhoneProvisioningPanel() {
 
   const [agency, setAgency] = useState({
     main_office_number_e164: "",
-    eight_x_eight_sms_subaccount_id: "",
-    eight_x_eight_voice_subaccount_id: "",
-    eight_x_eight_voice_api_base: "",
-    eight_x_eight_region: "us",
     default_off_duty_template: "",
     sms_messaging_enabled: true,
     sms_quick_replies: [],
@@ -110,10 +106,6 @@ export default function PhoneProvisioningPanel() {
     if (settings) {
       setAgency({
         main_office_number_e164: settings.main_office_number_e164 || "",
-        eight_x_eight_sms_subaccount_id: settings.eight_x_eight_sms_subaccount_id || "",
-        eight_x_eight_voice_subaccount_id: settings.eight_x_eight_voice_subaccount_id || "",
-        eight_x_eight_voice_api_base: settings.eight_x_eight_voice_api_base || "",
-        eight_x_eight_region: settings.eight_x_eight_region || "us",
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
         sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
@@ -146,17 +138,17 @@ export default function PhoneProvisioningPanel() {
     onError: (err) => toast.error(err?.message || "Failed to provision number"),
   });
 
-  // Live 8x8 connection test (backend probe of secrets + SMS API + provisioning).
+  // Live Twilio connection test (backend probe of secrets + SMS API + provisioning).
   const [liveResult, setLiveResult] = useState(null);
   const testConnection = useMutation({
-    mutationFn: () => base44.functions.invoke("testEightXEightConnection", {}),
+    mutationFn: () => base44.functions.invoke("testTwilioConnection", {}),
     onSuccess: (res) => {
       const data = res?.data || res;
       setLiveResult(data);
       const sev = summarize(data?.checks || []).severity;
       if (sev === "fail") toast.error("Connection test found problems — see the checklist.");
       else if (sev === "warn") toast("Connection test passed with warnings.");
-      else toast.success("8x8 connection looks healthy.");
+      else toast.success("Twilio connection looks healthy.");
     },
     onError: (err) => toast.error(err?.message || "Connection test failed"),
   });
@@ -198,12 +190,12 @@ export default function PhoneProvisioningPanel() {
   return (
     <div className="space-y-6">
       {/* Setup & Health — readiness checklist + live connection test */}
-      <Card id="ex8-health" className="scroll-mt-24">
+      <Card id="twilio-health" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-indigo-600" />
-              8x8 Setup &amp; Health
+              Twilio Setup &amp; Health
             </span>
             <Badge className={sevMeta.badge}>
               {configSummary.ready
@@ -214,8 +206,8 @@ export default function PhoneProvisioningPanel() {
             </Badge>
           </CardTitle>
           <CardDescription>
-            A quick readiness check of your 8x8 configuration. Edit values below and save, then run the
-            live test to confirm your API key, region, and sub-account actually work.
+            A quick readiness check of your Twilio configuration. Edit values below and save, then run
+            the live test to confirm your Account SID and Auth Token actually work.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -244,7 +236,7 @@ export default function PhoneProvisioningPanel() {
               </div>
               {liveChecks.length === 0 ? (
                 <p className="text-sm text-slate-500 py-3">
-                  Run the test to probe backend secrets, reach the 8x8 SMS API, and check nurse provisioning.
+                  Run the test to probe backend secrets, reach the Twilio API, and check nurse provisioning.
                   Nothing is sent — it's a read-only health check.
                 </p>
               ) : (
@@ -255,7 +247,7 @@ export default function PhoneProvisioningPanel() {
                   {liveResult?.stats && (
                     <p className="text-[11px] text-slate-500 mt-2">
                       {liveResult.stats.nurses_with_work_number}/{liveResult.stats.total_users} users have a work number ·
-                      {" "}host {liveResult.sms_host} · checked {new Date(liveResult.generated_at).toLocaleTimeString()}
+                      {" "}checked {new Date(liveResult.generated_at).toLocaleTimeString()}
                     </p>
                   )}
                 </>
@@ -299,17 +291,18 @@ export default function PhoneProvisioningPanel() {
         </CardContent>
       </Card>
 
-      {/* Webhook endpoints to register in 8x8 Connect */}
-      <Card id="ex8-webhooks" className="scroll-mt-24">
+      {/* Webhook endpoints to register in Twilio */}
+      <Card id="twilio-webhooks" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Webhook className="w-5 h-5 text-indigo-600" />
-            8x8 Webhook Endpoints
+            Twilio Webhook Endpoints
           </CardTitle>
           <CardDescription>
-            Point these 8x8 callbacks at the matching deployed function. All handlers verify the signing
-            secret and fail closed. Copy each function name (and confirm its exact deployed URL in the Base44
-            dashboard) when configuring 8x8 Connect.
+            In the Twilio Console, open each phone number and set its Voice and Messaging webhooks
+            (and the StatusCallback for each) to the matching deployed function URL. All handlers
+            verify the X-Twilio-Signature and fail closed. Copy each function name (and confirm its
+            exact deployed URL in the Base44 dashboard) when configuring the Twilio number.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -337,23 +330,24 @@ export default function PhoneProvisioningPanel() {
             <Info className="w-4 h-4 text-slate-600" />
             <AlertDescription className="text-slate-700 text-xs">
               <strong>Webhooks failing signature checks?</strong> Set the function secret{" "}
-              <code className="bg-white border border-slate-200 rounded px-1">EIGHT_X_EIGHT_WEBHOOK_DEBUG=1</code>{" "}
-              in the Base44 dashboard to log which signature header names 8x8 sends and whether each verifies
+              <code className="bg-white border border-slate-200 rounded px-1">TWILIO_WEBHOOK_DEBUG=1</code>{" "}
+              in the Base44 dashboard to log which signature header names Twilio sends and whether each verifies
               (header <em>names</em> only — never secret values). Check the function logs, then turn it off.
             </AlertDescription>
           </Alert>
         </CardContent>
       </Card>
 
-      <Card id="ex8-settings" className="scroll-mt-24">
+      <Card id="twilio-settings" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />
-            8x8 Phone — Agency Settings
+            Twilio Phone — Agency Settings
           </CardTitle>
           <CardDescription>
-            Main office number, off-duty defaults, and 8x8 sub-account configuration. The 8x8 API secret is
-            set in the “8x8 API Secret” card above (or in the Base44 dashboard env) — not here.
+            Main office number, off-duty defaults, templates, and voicemail. The Twilio credentials are
+            set in the Twilio Credentials card above (or via TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN in
+            the dashboard env) — not here.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -367,41 +361,6 @@ export default function PhoneProvisioningPanel() {
                 className="mt-1"
               />
               <p className="text-xs text-slate-500 mt-1">Off-duty calls transfer here; texts reference it.</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">8x8 region</Label>
-              <Input
-                placeholder="us"
-                value={agency.eight_x_eight_region}
-                onChange={(e) => setAgency((a) => ({ ...a, eight_x_eight_region: e.target.value }))}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium">SMS sub-account ID</Label>
-              <Input
-                value={agency.eight_x_eight_sms_subaccount_id}
-                onChange={(e) => setAgency((a) => ({ ...a, eight_x_eight_sms_subaccount_id: e.target.value }))}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Voice sub-account ID</Label>
-              <Input
-                value={agency.eight_x_eight_voice_subaccount_id}
-                onChange={(e) => setAgency((a) => ({ ...a, eight_x_eight_voice_subaccount_id: e.target.value }))}
-                className="mt-1"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label className="text-sm font-medium">Voice API base URL</Label>
-              <Input
-                placeholder="https://voice.wavecell.com/api/v1"
-                value={agency.eight_x_eight_voice_api_base}
-                onChange={(e) => setAgency((a) => ({ ...a, eight_x_eight_voice_api_base: e.target.value }))}
-                className="mt-1"
-              />
-              <p className="text-xs text-slate-500 mt-1">Used for outbound click-to-call origination (from your 8x8 voice sub-account).</p>
             </div>
           </div>
           <div>
@@ -484,7 +443,7 @@ export default function PhoneProvisioningPanel() {
                 <Label className="text-sm font-semibold">Voicemail capture</Label>
                 <p className="text-xs text-slate-600">
                   Record a voicemail when a patient's masked call to an on-duty nurse goes unanswered.
-                  Requires the recording action in your 8x8 callflow and the voicemail webhook.
+                  Requires your Twilio number's voice webhook to be configured and the voicemail webhook.
                 </p>
               </div>
               <Switch
@@ -521,15 +480,15 @@ export default function PhoneProvisioningPanel() {
       {/* Easy provisioning: a pool of numbers assignable in one click */}
       <NumberPoolPanel />
 
-      <Card id="ex8-nurses" className="scroll-mt-24">
+      <Card id="twilio-nurses" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />
             Nurse Work Numbers
           </CardTitle>
           <CardDescription>
-            Assign each nurse a dedicated 8x8 work number and the private cell it bridges to. The virtual
-            number must already be purchased in 8x8 Connect with its webhooks pointed at this app.
+            Assign each nurse a dedicated Twilio work number and the private cell it bridges to. The
+            number must already be purchased in Twilio and its webhooks pointed at this app.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

@@ -24,7 +24,7 @@ import ScheduleSendDialog from "@/components/messaging/ScheduleSendDialog";
 
 /**
  * PatientContactActions — Text / Call buttons on the patient detail page.
- * Routes through the nurse's 8x8 work number so the nurse's personal cell is
+ * Routes through the nurse's Twilio work number so the nurse's personal cell is
  * never exposed. Disabled (with explanation) when the nurse has no work number.
  */
 export default function PatientContactActions({ patient, currentUser }) {

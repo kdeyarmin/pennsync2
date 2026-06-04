@@ -1,10 +1,10 @@
 /**
- * eightxeightSetup — pure helpers for the admin "8x8 Setup & Health" panel.
+ * twilioSetup — pure helpers for the admin "Twilio Setup & Health" panel.
  *
  * This is the unit-tested source of truth for the *configuration readiness*
- * checklist an admin sees in Admin → Settings → 8x8 Phone. It evaluates only
+ * checklist an admin sees in Admin → Settings → Twilio Phone. It evaluates only
  * the AgencySettings an admin can see/edit; the live connectivity probe and the
- * backend-secret presence checks live in the testEightXEightConnection backend
+ * backend-secret presence checks live in the testTwilioConnection backend
  * function (which merges its own checks into the same shape). Keeping the logic
  * here — with no UI or network dependency — means it can be exercised in
  * isolation, like smsUtils / dutyUtils.
@@ -21,27 +21,19 @@ function looksLikePhone(value) {
   return digits.length >= 10 && digits.length <= 15;
 }
 
-/** True when `value` parses as an absolute URL. */
-function looksLikeUrl(value) {
-  try {
-    return Boolean(new URL(String(value)));
-  } catch {
-    return false;
-  }
-}
-
 const isBlank = (v) => v == null || String(v).trim() === "";
 
 /**
- * The four 8x8 webhooks an admin must register, mapped to the Base44 function
- * that handles each and the 8x8 sub-account the callback is configured on. Used
- * to render a copy-able reference so setup doesn't require digging through docs.
+ * The four Twilio webhooks an admin must register, mapped to the Base44 function
+ * that handles each and where on the Twilio phone number / call the callback is
+ * configured. Used to render a copy-able reference so setup doesn't require
+ * digging through docs.
  */
 export const WEBHOOK_FUNCTIONS = [
-  { fn: "handleEightXEightInboundSms", event: "Inbound SMS (MO)", configuredOn: "SMS sub-account" },
-  { fn: "handleEightXEightSmsStatus", event: "SMS delivery receipt (DLR)", configuredOn: "SMS sub-account" },
-  { fn: "handleEightXEightVoiceCall", event: "Voice Call Action (VCA)", configuredOn: "Voice sub-account / virtual numbers" },
-  { fn: "handleEightXEightCallStatus", event: "Call status / CDR", configuredOn: "Voice sub-account" },
+  { fn: "handleTwilioInboundSms", event: "Inbound SMS", configuredOn: "Phone number Messaging webhook" },
+  { fn: "handleTwilioSmsStatus", event: "SMS delivery status callback", configuredOn: "StatusCallback on sends" },
+  { fn: "handleTwilioVoiceCall", event: "Incoming voice call", configuredOn: "Phone number Voice webhook" },
+  { fn: "handleTwilioCallStatus", event: "Call status callback", configuredOn: "StatusCallback on the number/call" },
 ];
 
 /**
@@ -59,62 +51,18 @@ export function functionUrlBase(serverUrl) {
   }
 }
 
-/** Resolve the SMS host the integration will use for a region (mirrors backend). */
-export function smsHostForRegion(region) {
-  const r = (region && String(region).trim()) || "us";
-  return `sms.${r}.8x8.com`;
-}
-
 /**
- * Evaluate the agency-editable 8x8 configuration into an ordered checklist.
+ * Evaluate the agency-editable Twilio configuration into an ordered checklist.
  * Network/secret checks are intentionally excluded — the backend test merges
  * those in. Returns an array of checks (see module doc for the shape).
+ *
+ * Twilio credentials (Account SID + Auth Token) live in the secret panel, not
+ * in agency settings — so there are no required provider fields here. The
+ * office/template checks remain at warn-level.
  */
 export function evaluateAgencyConfig(settings) {
   const s = settings || {};
   const checks = [];
-
-  checks.push({
-    id: "sms_subaccount",
-    label: "SMS sub-account ID",
-    status: isBlank(s.eight_x_eight_sms_subaccount_id) ? "fail" : "ok",
-    detail: isBlank(s.eight_x_eight_sms_subaccount_id)
-      ? "Required to send and receive patient texts."
-      : "Configured.",
-  });
-
-  checks.push({
-    id: "voice_subaccount",
-    label: "Voice sub-account ID",
-    status: isBlank(s.eight_x_eight_voice_subaccount_id) ? "fail" : "ok",
-    detail: isBlank(s.eight_x_eight_voice_subaccount_id)
-      ? "Required for masked inbound bridging and click-to-call."
-      : "Configured.",
-  });
-
-  if (isBlank(s.eight_x_eight_voice_api_base)) {
-    checks.push({
-      id: "voice_api_base",
-      label: "Voice API base URL",
-      status: "fail",
-      detail: "Required for outbound click-to-call origination.",
-    });
-  } else {
-    const ok = looksLikeUrl(s.eight_x_eight_voice_api_base);
-    checks.push({
-      id: "voice_api_base",
-      label: "Voice API base URL",
-      status: ok ? "ok" : "warn",
-      detail: ok ? "Configured." : "Doesn't look like a valid URL — double-check it.",
-    });
-  }
-
-  checks.push({
-    id: "region",
-    label: "8x8 region",
-    status: "ok",
-    detail: `Texts will route through ${smsHostForRegion(s.eight_x_eight_region)}.`,
-  });
 
   if (isBlank(s.main_office_number_e164)) {
     checks.push({
@@ -155,18 +103,19 @@ export function evaluateAgencyConfig(settings) {
 }
 
 /**
- * Roll the whole 8x8 integration up into an ordered, friendly setup checklist
+ * Roll the whole Twilio integration up into an ordered, friendly setup checklist
  * for the super admin "command center". Pure (no UI/network): pass in the data
  * the page already has and get back ordered steps with a clear status and the
  * single best next action. Verification/manual steps are kept separate from the
  * required ones so they never block the "ready to go live" signal.
  *
  * All inputs are optional:
- *   - secretStatus   getEightXEightSecretStatus result
- *                    ({ configured, source, secret_last_four, ... })
+ *   - secretStatus   getTwilioSecretStatus result
+ *                    ({ configured, source, account_sid_last_four, secret_last_four, ... })
+ *                    source is 'env' | 'config' | 'none'; secret_last_four is from Auth Token.
  *   - agencySettings the AgencySettings row (or undefined)
  *   - provisioning   { total, withWorkNumber, missingBridgeCell }
- *   - liveResult     testEightXEightConnection result ({ checks, ... }) or null
+ *   - liveResult     testTwilioConnection result ({ checks, ... }) or null
  *
  * Each step: { id, title, detail, status: 'done'|'todo'|'attention',
  *   kind: 'required'|'verify'|'manual', anchor }.
@@ -181,8 +130,9 @@ export function evaluateAgencyConfig(settings) {
 export function buildIntegrationSteps({ secretStatus, agencySettings, provisioning, liveResult } = {}) {
   const steps = [];
 
-  // 1. The single 8x8 API secret (required).
+  // 1. Twilio Account SID + Auth Token (required).
   const secretConfigured = Boolean(secretStatus && secretStatus.configured);
+  // suffix shows Auth Token last-four when saved in-app, or "(Base44 dashboard env)" when from env
   const secretSuffix =
     secretStatus?.source === "env"
       ? " (Base44 dashboard env)"
@@ -191,13 +141,13 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
         : "";
   steps.push({
     id: "api_secret",
-    title: "Add the 8x8 API secret",
+    title: "Add your Twilio credentials",
     kind: "required",
-    anchor: "ex8-secret",
+    anchor: "twilio-secret",
     status: secretConfigured ? "done" : "todo",
     detail: secretConfigured
       ? `Configured${secretSuffix}.`
-      : "Paste your 8x8 Connect API token so SMS, voice, and webhook verification can run.",
+      : "Paste your Twilio Account SID and Auth Token so SMS, voice, and webhook verification can run.",
   });
 
   // 2. Agency configuration (required) — reuse the detailed checklist so the
@@ -205,16 +155,16 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
   const configSummary = summarize(evaluateAgencyConfig(agencySettings || {}));
   steps.push({
     id: "agency_config",
-    title: "Configure sub-accounts & agency settings",
+    title: "Configure agency phone settings",
     kind: "required",
-    anchor: "ex8-settings",
+    anchor: "twilio-settings",
     status: configSummary.fail > 0 ? "attention" : "done",
     detail:
       configSummary.fail > 0
-        ? `${configSummary.fail} required setting${configSummary.fail > 1 ? "s" : ""} still missing (SMS/voice sub-account or voice API base).`
+        ? `${configSummary.fail} required setting${configSummary.fail > 1 ? "s" : ""} still missing.`
         : configSummary.warn > 0
           ? `Configured — ${configSummary.warn} optional item${configSummary.warn > 1 ? "s" : ""} could be improved.`
-          : "SMS/voice sub-accounts, region, and office number are set.",
+          : "Office number and message templates are set.",
   });
 
   // 3. Provision at least one nurse work number (required).
@@ -234,7 +184,7 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
     id: "provisioning",
     title: "Provision a nurse work number",
     kind: "required",
-    anchor: "ex8-nurses",
+    anchor: "twilio-nurses",
     status: provStatus,
     detail: provDetail,
   });
@@ -242,12 +192,12 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
   // 4. Register the webhooks (manual — there's no API to read this back).
   steps.push({
     id: "webhooks",
-    title: "Register the webhooks in 8x8 Connect",
+    title: "Point your Twilio number's webhooks at this app",
     kind: "manual",
-    anchor: "ex8-webhooks",
+    anchor: "twilio-webhooks",
     status: "todo",
     detail:
-      "Point each 8x8 callback at the matching function. This can't be auto-detected — confirm it in 8x8 Connect.",
+      "Set each Twilio phone number's Voice & Messaging webhooks (and status callbacks) to the matching function. This can't be auto-detected — confirm it in the Twilio Console.",
   });
 
   // 5. Verify end to end with the live connection test (recommended).
@@ -259,10 +209,10 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
     id: "live_test",
     title: "Verify the live connection",
     kind: "verify",
-    anchor: "ex8-health",
+    anchor: "twilio-health",
     status: !liveSummary ? "todo" : liveSummary.fail > 0 ? "attention" : "done",
     detail: !liveSummary
-      ? "Run the live test to confirm your key, region, and sub-account actually authenticate."
+      ? "Run the live test to confirm your Twilio Account SID and Auth Token actually authenticate."
       : liveSummary.fail > 0
         ? `Last run found ${liveSummary.fail} problem${liveSummary.fail > 1 ? "s" : ""} — see the Setup & Health checklist.`
         : liveSummary.warn > 0

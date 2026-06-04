@@ -71,7 +71,7 @@ export const ActivityActions = {
   // Admin actions
   SETTINGS_UPDATED: 'settings_updated',
   ROLE_PERMISSION_CHANGED: 'role_permission_changed',
-  // 8x8 phone / messaging actions
+  // Twilio phone / messaging actions
   SMS_SENT: 'sms_sent',
   SMS_RECEIVED: 'sms_received',
   SMS_STATUS_UPDATED: 'sms_status_updated',

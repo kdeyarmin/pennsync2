@@ -1,65 +1,73 @@
 #!/usr/bin/env node
-// Smoke-tests the deployed 8x8 webhook functions end to end: it POSTs realistic
-// sample payloads with a CORRECTLY computed HMAC-SHA256 signature and asserts a
-// 200, then re-sends with a tampered signature and asserts a 401 (fail-closed).
-// This is the scripted version of the manual check in docs/8x8-setup.md §6.
+// Smoke-tests the deployed Twilio webhook functions end to end: it POSTs
+// realistic form-encoded sample payloads with a CORRECTLY computed
+// X-Twilio-Signature and asserts a 200, then re-sends with a tampered signature
+// and asserts a 401 (fail-closed). This is the scripted version of the manual
+// check in docs/twilio-setup.md §6.
 //
-//   EIGHT_X_EIGHT_WEBHOOK_SECRET=… \
-//     node tools-8x8-webhook-smoke.mjs --base https://<your-app>/functions
+//   TWILIO_AUTH_TOKEN=… \
+//     node tools-twilio-webhook-smoke.mjs --base https://<your-app>/functions
 //
-//   # or pass the secret explicitly, and a single function:
-//   node tools-8x8-webhook-smoke.mjs --base <url> --secret <s> --only handleEightXEightInboundSms
+//   # or pass the token explicitly, and a single function:
+//   node tools-twilio-webhook-smoke.mjs --base <url> --secret <authToken> --only handleTwilioInboundSms
 //
-// The signature scheme mirrors the backend verifyWebhook: hex(HMAC-SHA256(secret,
-// rawBody)) in the `x-8x8-signature` header. Nothing is written to your data
-// beyond what a genuine inbound webhook would do, so prefer a staging app.
+// The signature scheme mirrors the backend verifyTwilioSignature:
+// base64(HMAC-SHA1(authToken, url + sorted concatenated POST params)) in the
+// `X-Twilio-Signature` header. Nothing is written to your data beyond what a
+// genuine inbound webhook would do, so prefer a staging app.
 
 import { createHmac } from 'node:crypto';
 
-/** hex(HMAC-SHA256(secret, raw)) — matches the backend's hmacHex(). */
-export function hmacSha256Hex(secret, raw) {
-  return createHmac('sha256', String(secret ?? '')).update(String(raw ?? '')).digest('hex');
+/** base64(HMAC-SHA1(authToken, data)) — matches Twilio's request signature. */
+export function twilioSignature(authToken, data) {
+  return createHmac('sha1', String(authToken ?? '')).update(String(data ?? ''), 'utf8').digest('base64');
 }
 
-const recentTs = () => new Date().toISOString();
+/**
+ * The string Twilio signs: the full request URL followed by each POST param
+ * name+value, with the param names sorted alphabetically.
+ */
+export function signatureBaseString(url, params) {
+  let data = String(url);
+  for (const key of Object.keys(params).sort()) data += key + params[key];
+  return data;
+}
 
-// ---- sample payloads (shapes mirror what the handlers parse defensively) ----
+// ---- sample payloads (form params the handlers parse) ----
 export function sampleInboundSms(o = {}) {
   return {
-    source: o.from ?? '+12155550123',
-    destination: o.to ?? '+12155550100',
-    text: o.text ?? 'Smoke test inbound message',
-    umid: o.umid ?? `smoke-mo-${Date.now()}`,
-    timestamp: o.timestamp ?? recentTs(),
+    From: o.from ?? '+12155550123',
+    To: o.to ?? '+12155550100',
+    Body: o.text ?? 'Smoke test inbound message',
+    MessageSid: o.sid ?? `SM${Date.now()}smoke`,
   };
 }
 export function sampleSmsStatus(o = {}) {
   return {
-    umid: o.umid ?? `smoke-dlr-${Date.now()}`,
-    status: { code: o.status ?? 'DELIVERED' },
-    timestamp: o.timestamp ?? recentTs(),
+    MessageSid: o.sid ?? `SM${Date.now()}smoke`,
+    MessageStatus: o.status ?? 'delivered',
   };
 }
 export function sampleVoiceCall(o = {}) {
   return {
-    called: o.called ?? '+12155550100',
-    callerNumber: o.caller ?? '+12155550123',
-    callId: o.callId ?? `smoke-call-${Date.now()}`,
-    timestamp: o.timestamp ?? recentTs(),
+    To: o.called ?? '+12155550100',
+    From: o.caller ?? '+12155550123',
+    CallSid: o.sid ?? `CA${Date.now()}smoke`,
   };
 }
 
-/** Build the raw body + signed headers for a payload. */
-export function buildSignedRequest(payload, secret, { header = 'x-8x8-signature' } = {}) {
-  const raw = JSON.stringify(payload);
-  return { raw, headers: { 'Content-Type': 'application/json', [header]: hmacSha256Hex(secret, raw) } };
+/** Build the form-encoded raw body + signed headers for a payload at `url`. */
+export function buildSignedRequest(params, authToken, url) {
+  const raw = new URLSearchParams(params).toString();
+  const signature = twilioSignature(authToken, signatureBaseString(url, params));
+  return { raw, headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Twilio-Signature': signature } };
 }
 
 /** The webhook functions exercised, with a sample-payload factory for each. */
 export const SMOKE_TARGETS = [
-  { fn: 'handleEightXEightInboundSms', sample: sampleInboundSms },
-  { fn: 'handleEightXEightSmsStatus', sample: sampleSmsStatus },
-  { fn: 'handleEightXEightVoiceCall', sample: sampleVoiceCall },
+  { fn: 'handleTwilioInboundSms', sample: sampleInboundSms },
+  { fn: 'handleTwilioSmsStatus', sample: sampleSmsStatus },
+  { fn: 'handleTwilioVoiceCall', sample: sampleVoiceCall },
 ];
 
 /**
@@ -68,7 +76,7 @@ export const SMOKE_TARGETS = [
  */
 export async function runSmoke({ base, secret, only, fetchImpl = fetch, log = console.log } = {}) {
   if (!base) throw new Error('Missing --base <functions URL>');
-  if (!secret) throw new Error('Missing webhook secret (EIGHT_X_EIGHT_WEBHOOK_SECRET or --secret)');
+  if (!secret) throw new Error('Missing Twilio auth token (TWILIO_AUTH_TOKEN or --secret)');
   const origin = String(base).replace(/\/+$/, '');
   const targets = SMOKE_TARGETS.filter((t) => !only || t.fn === only);
   if (targets.length === 0) throw new Error(`No matching function for --only ${only}`);
@@ -82,7 +90,7 @@ export async function runSmoke({ base, secret, only, fetchImpl = fetch, log = co
 
   for (const t of targets) {
     const url = `${origin}/${t.fn}`;
-    const { raw, headers } = buildSignedRequest(t.sample(), secret);
+    const { raw, headers } = buildSignedRequest(t.sample(), secret, url);
 
     // 1) Valid signature → expect 2xx.
     let okStatus = 0;
@@ -98,7 +106,7 @@ export async function runSmoke({ base, secret, only, fetchImpl = fetch, log = co
     log(`${validPass ? '✓' : '✗'} ${t.fn}  valid signature → ${okStatus} (expect 2xx)`);
 
     // 2) Tampered signature → expect 401 (fail-closed).
-    const badHeaders = { ...headers, 'x-8x8-signature': `${headers['x-8x8-signature']}00` };
+    const badHeaders = { ...headers, 'X-Twilio-Signature': `${headers['X-Twilio-Signature']}00` };
     let badStatus = 0;
     try {
       badStatus = await post(url, raw, badHeaders);
@@ -130,13 +138,13 @@ function parseArgs(argv) {
 // CLI entry (skipped when imported by the test).
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = parseArgs(process.argv.slice(2));
-  const secret = args.secret || process.env.EIGHT_X_EIGHT_WEBHOOK_SECRET || process.env.EIGHT_X_EIGHT_API_KEY;
+  const secret = args.secret || process.env.TWILIO_AUTH_TOKEN;
   try {
     const { failed } = await runSmoke({ base: args.base, secret, only: args.only });
     process.exit(failed === 0 ? 0 : 1);
   } catch (err) {
     console.error(`Error: ${err.message}`);
-    console.error('Usage: EIGHT_X_EIGHT_WEBHOOK_SECRET=… node tools-8x8-webhook-smoke.mjs --base https://<app>/functions [--only <fn>]');
+    console.error('Usage: TWILIO_AUTH_TOKEN=… node tools-twilio-webhook-smoke.mjs --base https://<app>/functions [--only <fn>]');
     process.exit(2);
   }
 }

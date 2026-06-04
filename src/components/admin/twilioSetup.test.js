@@ -4,24 +4,21 @@ import {
   evaluateAgencyConfig,
   summarize,
   functionUrlBase,
-  smsHostForRegion,
   WEBHOOK_FUNCTIONS,
   buildIntegrationSteps,
   summarizeSteps,
-} from "./eightxeightSetup.js";
+} from "./twilioSetup.js";
 
 function byId(checks, id) {
   return checks.find((c) => c.id === id);
 }
 
 // A fully wired set of inputs, reused/tweaked by the step tests below.
+// Twilio credentials live in the secret panel, not in agency settings, so
+// READY_INPUTS only carries office/template settings for agencySettings.
 const READY_INPUTS = {
   secretStatus: { configured: true, source: "config", secret_last_four: "9abc" },
   agencySettings: {
-    eight_x_eight_sms_subaccount_id: "sms-sub",
-    eight_x_eight_voice_subaccount_id: "voice-sub",
-    eight_x_eight_voice_api_base: "https://voice.wavecell.com/api/v1",
-    eight_x_eight_region: "us",
     main_office_number_e164: "+12155550100",
     default_off_duty_template: "We are closed; call {office}.",
     sms_messaging_enabled: true,
@@ -30,19 +27,16 @@ const READY_INPUTS = {
   liveResult: { checks: [{ id: "a", status: "ok" }, { id: "b", status: "ok" }] },
 };
 
-test("a fully empty config fails the required sub-account/voice checks", () => {
+test("an empty config produces only warn checks (no required fields removed)", () => {
   const checks = evaluateAgencyConfig({});
-  assert.equal(byId(checks, "sms_subaccount").status, "fail");
-  assert.equal(byId(checks, "voice_subaccount").status, "fail");
-  assert.equal(byId(checks, "voice_api_base").status, "fail");
+  // All checks should be warn or ok — no required provider fields in Twilio setup
+  for (const c of checks) {
+    assert.ok(c.status === "warn" || c.status === "ok", `unexpected fail status for ${c.id}`);
+  }
 });
 
 test("a complete config is ready (no failures)", () => {
   const checks = evaluateAgencyConfig({
-    eight_x_eight_sms_subaccount_id: "sms-sub",
-    eight_x_eight_voice_subaccount_id: "voice-sub",
-    eight_x_eight_voice_api_base: "https://voice.wavecell.com/api/v1",
-    eight_x_eight_region: "us",
     main_office_number_e164: "+12155550100",
     default_off_duty_template: "We are closed; call {office}.",
     sms_messaging_enabled: true,
@@ -53,29 +47,11 @@ test("a complete config is ready (no failures)", () => {
   assert.equal(sum.severity, "ok");
 });
 
-test("blank/whitespace sub-account id counts as missing", () => {
-  const checks = evaluateAgencyConfig({ eight_x_eight_sms_subaccount_id: "   " });
-  assert.equal(byId(checks, "sms_subaccount").status, "fail");
-});
-
 test("missing main office is a warning, not a failure", () => {
-  const checks = evaluateAgencyConfig({
-    eight_x_eight_sms_subaccount_id: "a",
-    eight_x_eight_voice_subaccount_id: "b",
-    eight_x_eight_voice_api_base: "https://x.example/api",
-  });
+  const checks = evaluateAgencyConfig({});
   assert.equal(byId(checks, "main_office").status, "warn");
-  // No main office is degraded but the integration is still "ready".
+  // No failures → the integration config is still "ready"
   assert.equal(summarize(checks).ready, true);
-});
-
-test("a malformed voice API base is a warning, not a hard fail", () => {
-  const checks = evaluateAgencyConfig({
-    eight_x_eight_sms_subaccount_id: "a",
-    eight_x_eight_voice_subaccount_id: "b",
-    eight_x_eight_voice_api_base: "not a url",
-  });
-  assert.equal(byId(checks, "voice_api_base").status, "warn");
 });
 
 test("a malformed main office number warns", () => {
@@ -84,12 +60,7 @@ test("a malformed main office number warns", () => {
 });
 
 test("the SMS kill switch surfaces as a warning when off", () => {
-  const checks = evaluateAgencyConfig({
-    eight_x_eight_sms_subaccount_id: "a",
-    eight_x_eight_voice_subaccount_id: "b",
-    eight_x_eight_voice_api_base: "https://x.example/api",
-    sms_messaging_enabled: false,
-  });
+  const checks = evaluateAgencyConfig({ sms_messaging_enabled: false });
   assert.equal(byId(checks, "sms_enabled").status, "warn");
 });
 
@@ -98,12 +69,12 @@ test("missing off-duty template warns", () => {
   assert.equal(byId(checks, "off_duty_template").status, "warn");
 });
 
-test("region defaults to us in the host string", () => {
-  assert.equal(smsHostForRegion(undefined), "sms.us.8x8.com");
-  assert.equal(smsHostForRegion(""), "sms.us.8x8.com");
-  assert.equal(smsHostForRegion("sg"), "sms.sg.8x8.com");
+test("no sms_subaccount / voice_subaccount / region checks exist (removed)", () => {
   const checks = evaluateAgencyConfig({});
-  assert.match(byId(checks, "region").detail, /sms\.us\.8x8\.com/);
+  assert.equal(byId(checks, "sms_subaccount"), undefined);
+  assert.equal(byId(checks, "voice_subaccount"), undefined);
+  assert.equal(byId(checks, "voice_api_base"), undefined);
+  assert.equal(byId(checks, "region"), undefined);
 });
 
 test("summarize picks the worst severity and counts statuses", () => {
@@ -151,11 +122,18 @@ test("buildIntegrationSteps returns the ordered setup steps", () => {
   }
 });
 
+test("buildIntegrationSteps anchors use twilio- prefix", () => {
+  const steps = buildIntegrationSteps({});
+  for (const s of steps) {
+    assert.ok(s.anchor.startsWith("twilio-"), `anchor should start with twilio-: ${s.anchor}`);
+  }
+});
+
 test("buildIntegrationSteps with empty inputs leaves required steps undone", () => {
   const steps = buildIntegrationSteps({});
   assert.equal(byId(steps, "api_secret").status, "todo");
-  // No sub-accounts → the agency config step needs attention.
-  assert.equal(byId(steps, "agency_config").status, "attention");
+  // No credentials → secret step is todo; agency config has only warn → done
+  assert.equal(byId(steps, "agency_config").status, "done");
   assert.equal(byId(steps, "provisioning").status, "todo");
   assert.equal(byId(steps, "live_test").status, "todo");
 });
@@ -203,11 +181,26 @@ test("webhooks is a manual step we never auto-complete", () => {
   assert.equal(w.status, "todo");
 });
 
+test("step 1 wording says Twilio credentials", () => {
+  const steps = buildIntegrationSteps({});
+  const s = byId(steps, "api_secret");
+  assert.match(s.title, /Twilio/i);
+  assert.match(s.detail, /Account SID/i);
+  assert.match(s.detail, /Auth Token/i);
+});
+
+test("step 4 wording says Twilio Console", () => {
+  const steps = buildIntegrationSteps({});
+  const w = byId(steps, "webhooks");
+  assert.match(w.title, /Twilio/i);
+  assert.match(w.detail, /Twilio Console/);
+});
+
 test("summarizeSteps tracks required progress and percent", () => {
   const empty = summarizeSteps(buildIntegrationSteps({}));
   assert.equal(empty.requiredTotal, 3);
-  assert.equal(empty.requiredDone, 0);
-  assert.equal(empty.percent, 0);
+  // With empty inputs: secret=todo, agency_config=done (only warns), provisioning=todo → 1 done
+  assert.equal(empty.requiredDone, 1);
   assert.equal(empty.ready, false);
 
   const ready = summarizeSteps(buildIntegrationSteps(READY_INPUTS));
@@ -217,12 +210,10 @@ test("summarizeSteps tracks required progress and percent", () => {
 });
 
 test("summarizeSteps points nextStep at the first unfinished required step", () => {
-  // Secret done, but no sub-accounts yet → next is the agency config step.
-  const steps = buildIntegrationSteps({
-    secretStatus: { configured: true, source: "config", secret_last_four: "1234" },
-  });
+  // Secret not done → next is the secret step.
+  const steps = buildIntegrationSteps({});
   const sum = summarizeSteps(steps);
-  assert.equal(sum.nextStep.id, "agency_config");
+  assert.equal(sum.nextStep.id, "api_secret");
 });
 
 test("summarizeSteps falls through to verify/manual once required steps are done", () => {
@@ -240,14 +231,23 @@ test("summarizeSteps handles a non-array input safely", () => {
   assert.equal(sum.nextStep, null);
 });
 
-test("WEBHOOK_FUNCTIONS lists the four handlers with their 8x8 events", () => {
+test("WEBHOOK_FUNCTIONS lists the four Twilio handlers", () => {
   assert.equal(WEBHOOK_FUNCTIONS.length, 4);
   const fns = WEBHOOK_FUNCTIONS.map((w) => w.fn);
-  assert.ok(fns.includes("handleEightXEightInboundSms"));
-  assert.ok(fns.includes("handleEightXEightSmsStatus"));
-  assert.ok(fns.includes("handleEightXEightVoiceCall"));
-  assert.ok(fns.includes("handleEightXEightCallStatus"));
+  assert.ok(fns.includes("handleTwilioInboundSms"));
+  assert.ok(fns.includes("handleTwilioSmsStatus"));
+  assert.ok(fns.includes("handleTwilioVoiceCall"));
+  assert.ok(fns.includes("handleTwilioCallStatus"));
   for (const w of WEBHOOK_FUNCTIONS) {
     assert.ok(w.event && w.configuredOn, "each entry has an event + where it's configured");
+  }
+});
+
+test("WEBHOOK_FUNCTIONS configuredOn references Twilio concepts (no legacy sub-account references)", () => {
+  for (const w of WEBHOOK_FUNCTIONS) {
+    assert.ok(
+      !w.configuredOn.includes("sub-account"),
+      `configuredOn should not mention sub-account: ${w.configuredOn}`,
+    );
   }
 });

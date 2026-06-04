@@ -1,18 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * handleEightXEightVoiceCall — 8x8 Voice Call Action (VCA) webhook for inbound
- * calls to a nurse's work number. This is the heart of number masking.
+ * handleTwilioVoiceCall — Twilio inbound-voice webhook for calls to a nurse's
+ * work number. This is the heart of number masking.
  *
- * Unlike the other functions, the RESPONSE BODY is an 8x8 callflow (a JSON list
- * of actions), not the usual {success} envelope.
- *  - Nurse on duty  -> bridge the caller to the nurse's personal cell, presenting
- *    the work number as caller ID (the cell is never revealed).
- *  - Nurse off duty -> speak the off-duty greeting, then transfer to the main office.
+ * Twilio POSTs application/x-www-form-urlencoded. The response is TwiML XML,
+ * not a JSON envelope. The X-Twilio-Signature header is verified before any
+ * application logic runs.
  *
- * NOTE: 8x8 callflow action/parameter names depend on the provisioned voice
- * subaccount. Validate the shapes in `buildSay`/`buildMakeCall` against 8x8
- * Connect for your account and adjust if needed.
+ *  - Agency closed (global hours) → after_hours_action: transfer/voicemail/hangup
+ *  - Nurse off duty → speak off-duty greeting, transfer to main office
+ *  - Nurse on duty, no cell → transfer to main office or hangup
+ *  - Nurse on duty, cell on file → masked bridge (caller ID = work number);
+ *    if Dial falls through (no answer), optionally record a voicemail
  */
 
 function normalizeE164(raw: string | null | undefined): string | null {
@@ -96,12 +96,7 @@ function isAgencyOpen(settings: any, now = new Date()): boolean {
   return open <= close ? (m >= open && m < close) : (m >= open || m < close);
 }
 
-async function hmacHex(secret: string, raw: string): Promise<string> {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
-  return [...new Uint8Array(sig)].map((x) => x.toString(16).padStart(2, '0')).join('');
-}
-
+// ---- Twilio signature verification (HMAC-SHA1, same scheme as fax handler) ----
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let out = 0;
@@ -109,53 +104,84 @@ function timingSafeEqual(a: string, b: string): boolean {
   return out === 0;
 }
 
-async function verifyWebhook(req: Request, raw: string): Promise<boolean> {
-  const secret = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
-  if (!secret) {
-    console.error('EIGHT_X_EIGHT_WEBHOOK_SECRET not configured — rejecting webhook');
-    return false;
-  }
-  for (const h of ['x-8x8-signature', 'x-signature', 'x-hub-signature-256']) {
-    const provided = req.headers.get(h);
-    if (provided) {
-      const expected = await hmacHex(secret, raw);
-      if (timingSafeEqual(provided.replace(/^sha256=/i, '').trim().toLowerCase(), expected)) return true;
-    }
-  }
-  const staticHeader = req.headers.get('x-webhook-secret');
-  return !!staticHeader && timingSafeEqual(staticHeader, secret);
+async function hmacSha1Base64(key: string, msg: string): Promise<string> {
+  const cryptoKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(msg));
+  return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
 
-// ---- 8x8 callflow builders (validate against your 8x8 account schema) ----
-function buildSay(text: string) {
-  // Defense in depth: strip markup/control chars and cap length before TTS, so
-  // even a legacy/unsanitized off_duty_message can't inject SSML/markup.
-  const safe = String(text || '').replace(/[<>]/g, '').replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, 320);
-  return { action: 'say', params: { text: safe, language: 'en-US', voiceProfile: 'en-US-female' } };
+async function verifyTwilioSignature(req: Request, params: Record<string, string>, authToken: string | null): Promise<boolean> {
+  const sharedSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET');
+  const headerSecret = req.headers.get('x-webhook-secret');
+  if (sharedSecret && headerSecret && timingSafeEqual(headerSecret, sharedSecret)) return true;
+  const provided = req.headers.get('x-twilio-signature');
+  if (!authToken || !provided) return false;
+  const url = Deno.env.get('TWILIO_WEBHOOK_URL') || req.url;
+  let data = url;
+  for (const k of Object.keys(params).sort()) data += k + params[k];
+  const expected = await hmacSha1Base64(authToken, data);
+  return timingSafeEqual(provided.trim(), expected);
 }
-function buildMakeCall(destination: string, callerId: string) {
-  return {
-    action: 'makeCall',
-    params: {
-      source: { type: 'phoneNumber', phoneNumber: callerId },
-      destination: { type: 'phoneNumber', phoneNumber: destination },
-    },
-  };
+
+/**
+ * Resolve Twilio credentials: prefer env vars, then fall back to the
+ * IntegrationSecret row saved by the super admin in-app.
+ */
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
+  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let sid = envSid && envSid.trim() ? envSid.trim() : null;
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  if (!sid || !token) {
+    try {
+      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+      const rec = rows?.[0] || {};
+      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
+      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    } catch { /* ignore */ }
+  }
+  return { accountSid: sid, authToken: token };
 }
-function buildHangup() {
-  return { action: 'sayAndHangup', params: { text: 'We are unable to connect your call at this time. Please try again later.', language: 'en-US' } };
+
+// ---- TwiML helpers ----
+function escapeXml(s: string): string {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
-// Voicemail capture appended after the on-duty bridge so an UNANSWERED masked
-// call falls through to a recording. NOTE: whether subsequent actions run on
-// no-answer (vs. only after a completed leg) is account-dependent — validate
-// this against your 8x8 callflow before relying on it. Gated by voicemail_enabled.
-function buildVoicemail(prompt: string) {
-  const safe = String(prompt || 'Please leave a message after the tone and we will return your call.')
-    .replace(/[<>]/g, '').replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, 320);
-  return { action: 'record', params: { prompt: { text: safe, language: 'en-US' }, maxDurationSeconds: 120, beep: true } };
+
+function safeSpeakText(text: string): string {
+  return String(text || '').replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, 320);
 }
-function callflow(actions: unknown[]) {
-  return { callflow: actions };
+
+function twimlSay(text: string): string {
+  return `<Say voice="Polly.Joanna" language="en-US">${escapeXml(safeSpeakText(text))}</Say>`;
+}
+
+function twimlDial(destination: string, callerId: string): string {
+  return `<Dial callerId="${escapeXml(callerId)}" timeout="20"><Number>${escapeXml(destination)}</Number></Dial>`;
+}
+
+function twimlHangup(message?: string): string {
+  const sayPart = message ? twimlSay(message) : twimlSay('We are unable to connect your call at this time. Please try again later.');
+  return `${sayPart}<Hangup/>`;
+}
+
+function twimlVoicemail(greeting: string, callbackBase: string | undefined): string {
+  const sayCbAttrs = callbackBase
+    ? ` recordingStatusCallback="${escapeXml(callbackBase)}/handleTwilioVoicemail" transcribeCallback="${escapeXml(callbackBase)}/handleTwilioVoicemail"`
+    : '';
+  return `${twimlSay(greeting)}<Record maxLength="120" playBeep="true" transcribe="true"${sayCbAttrs}/>`;
+}
+
+function twimlResponse(body: string): Response {
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`,
+    { headers: { 'Content-Type': 'text/xml' } },
+  );
 }
 
 async function getCallConfig(base44: any): Promise<{
@@ -183,51 +209,34 @@ async function getCallConfig(base44: any): Promise<{
   };
 }
 
-/**
- * Replay defense: reject calls whose provider timestamp is far from now. Only a
- * timestamp in the SIGNED body is trusted (HMAC covers the raw body). Fails
- * OPEN when absent/unparseable. Confirm 8x8's field name for your account.
- */
-function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
-  const raw = payload?.timestamp ?? payload?.eventTime ?? payload?.time ?? payload?.createdTime ?? payload?.ts;
-  if (raw == null) return false;
-  let ms: number;
-  if (typeof raw === 'number') ms = raw < 1e12 ? raw * 1000 : raw;
-  else {
-    const parsed = Date.parse(String(raw));
-    if (Number.isNaN(parsed)) return false;
-    ms = parsed;
-  }
-  return Math.abs(Date.now() - ms) > maxSkewMs;
-}
-
 Deno.serve(async (req) => {
   try {
-    const raw = await req.text();
-    const verified = await verifyWebhook(req, raw);
-    if (Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_DEBUG')) {
-      const present = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256', 'x-webhook-secret'].filter((h) => req.headers.get(h));
-      console.log('[webhook-debug] handleEightXEightVoiceCall ' + JSON.stringify({ verified, signature_headers_present: present, content_type: req.headers.get('content-type') }));
-    }
-    if (!verified) {
-      return Response.json({ error: 'Invalid signature' }, { status: 401 });
-    }
+    const formData = await req.formData();
+    const params: Record<string, string> = {};
+    for (const [k, v] of formData.entries()) params[k] = String(v);
 
-    const payload = JSON.parse(raw || '{}');
-    if (isReplayStale(payload)) {
-      return Response.json({ error: 'Stale webhook (possible replay)' }, { status: 401 });
+    if (Deno.env.get('TWILIO_WEBHOOK_DEBUG')) {
+      console.log('[webhook-debug] handleTwilioVoiceCall ' + JSON.stringify({ params, content_type: req.headers.get('content-type') }));
     }
-    const calledRaw = payload.called || payload.destination || payload.to;
-    const callerRaw = payload.callerNumber || payload.source || payload.from || payload.caller;
-    const providerCallId = payload.callId || payload.sessionId || payload.id || null;
 
     const base44 = createClientFromRequest(req);
+    const { authToken } = await resolveTwilioCreds(base44);
+    if (!(await verifyTwilioSignature(req, params, authToken))) {
+      return new Response('<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Joanna" language="en-US">Unauthorized</Say><Hangup/></Response>', { status: 401, headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    // Parse Twilio inbound-voice params.
+    const callerRaw = params.From;
+    const calledRaw = params.To;
+    const providerCallId = params.CallSid || null;
+
     const { settings, mainOffice, voicemailEnabled, voicemailGreeting, afterHoursAction, afterHoursTransfer, afterHoursGreeting } = await getCallConfig(base44);
     // Global calling hours win over any individual nurse's duty status.
     const agencyClosed = !isAgencyOpen(settings);
 
     const workNum = normalizeE164(calledRaw) || calledRaw;
     const callerNum = normalizeE164(callerRaw) || callerRaw;
+    const functionsBase = Deno.env.get('FUNCTIONS_BASE_URL');
 
     const nurses = workNum ? await base44.asServiceRole.entities.User.filter({ work_phone_number: workNum }).catch(() => []) : [];
     const nurse = nurses[0];
@@ -238,8 +247,10 @@ Deno.serve(async (req) => {
         user_email: 'system', action: 'inbound_call_unresolved',
         details: { called: workNum, provider_call_id: providerCallId }, status: 'failure',
       }).catch(() => {});
-      const fallback = mainOffice ? [buildMakeCall(mainOffice, workNum || mainOffice)] : [buildHangup()];
-      return Response.json(callflow(fallback));
+      if (mainOffice) {
+        return twimlResponse(twimlDial(mainOffice, workNum || mainOffice));
+      }
+      return twimlResponse(twimlHangup());
     }
 
     // Best-effort patient resolution for the log.
@@ -266,8 +277,8 @@ Deno.serve(async (req) => {
         ? mainOffice
         : nurse.personal_cell_e164;
 
-    // Idempotency: 8x8 may retry the VCA webhook. Only create the CallLog +
-    // audit row once per provider call id; the callflow returned below is
+    // Idempotency: Twilio may retry the inbound-voice webhook. Only create the
+    // CallLog + audit row once per provider call id; the TwiML returned below is
     // deterministic, so re-returning it on a retry is safe.
     const existingCall = providerCallId
       ? await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: providerCallId }, '-created_date', 1).catch(() => [])
@@ -304,18 +315,19 @@ Deno.serve(async (req) => {
         const vmGreeting = (afterHoursGreeting || voicemailGreeting ||
           `Our office is currently closed. Please leave a message after the tone and we will return your call.`)
           .replace(/\{office\}/gi, office);
-        return Response.json(callflow([buildVoicemail(vmGreeting)]));
+        return twimlResponse(twimlVoicemail(vmGreeting, functionsBase));
       }
       if (afterHoursAction === 'hangup' || (!afterHoursTransfer && !mainOffice)) {
         const msg = (afterHoursGreeting || `Our office is currently closed. Please call back during business hours.`)
           .replace(/\{office\}/gi, office);
-        return Response.json(callflow([{ action: 'sayAndHangup', params: { text: String(msg).replace(/[<>]/g, '').slice(0, 320), language: 'en-US' } }]));
+        return twimlResponse(twimlHangup(msg));
       }
       const greeting = (afterHoursGreeting ||
         `Our office is currently closed. Please hold while we connect you.`)
         .replace(/\{office\}/gi, office);
       const target = afterHoursTransfer || mainOffice;
-      return Response.json(callflow(target ? [buildSay(greeting), buildMakeCall(target, workNum)] : [buildHangup()]));
+      if (!target) return twimlResponse(twimlHangup());
+      return twimlResponse(`${twimlSay(greeting)}${twimlDial(target, workNum)}`);
     }
 
     // Off duty: greet, then transfer to the main office.
@@ -324,30 +336,30 @@ Deno.serve(async (req) => {
       const greeting = (nurse.off_duty_message ||
         `Your nurse is currently off duty. Please hold while we connect you to our main office.`)
         .replace(/\{office\}/gi, office);
-      const actions: unknown[] = [buildSay(greeting)];
-      if (mainOffice) actions.push(buildMakeCall(mainOffice, workNum));
-      else actions.push(buildHangup());
-      return Response.json(callflow(actions));
+      if (mainOffice) {
+        return twimlResponse(`${twimlSay(greeting)}${twimlDial(mainOffice, workNum)}`);
+      }
+      return twimlResponse(twimlHangup(greeting));
     }
 
     // On duty: masked bridge to the nurse's personal cell (caller ID = work number).
     if (!nurse.personal_cell_e164) {
-      const actions: unknown[] = [];
-      if (mainOffice) actions.push(buildMakeCall(mainOffice, workNum));
-      else actions.push(buildHangup());
-      return Response.json(callflow(actions));
+      if (mainOffice) return twimlResponse(twimlDial(mainOffice, workNum));
+      return twimlResponse(twimlHangup());
     }
-    const bridge: unknown[] = [buildMakeCall(nurse.personal_cell_e164, workNum)];
-    // Opt-in: capture a voicemail if the masked bridge isn't answered. The
-    // call-recording webhook (handleEightXEightVoicemail) attaches it to the log.
+
+    // Twilio's <Dial> automatically continues to subsequent verbs if the dialed
+    // party doesn't answer, so emit the <Dial> then the voicemail verbs after it.
+    let body = twimlDial(nurse.personal_cell_e164, workNum);
     if (voicemailEnabled) {
       const greeting = (voicemailGreeting || `You've reached your care team. Please leave a message after the tone and we will return your call.`)
         .replace(/\{office\}/gi, mainOffice || 'the main office');
-      bridge.push(buildVoicemail(greeting));
+      body += twimlVoicemail(greeting, functionsBase);
     }
-    return Response.json(callflow(bridge));
+    return twimlResponse(body);
   } catch (error) {
-    console.error('handleEightXEightVoiceCall error:', error);
-    return Response.json(callflow([buildHangup()]));
+    console.error('handleTwilioVoiceCall error:', error);
+    // On any error return a safe TwiML hangup so Twilio doesn't retry forever.
+    return twimlResponse(twimlHangup());
   }
 });

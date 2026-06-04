@@ -1,8 +1,8 @@
 {
   "name": "PhoneNumber",
   "type": "object",
-  // Pool of 8x8 virtual numbers the agency has purchased, so an admin can add a
-  // number once and then assign/reassign it to nurses from a dropdown instead of
+  // Pool of Twilio virtual numbers the agency has purchased, so an admin can add
+  // a number once and then assign/reassign it to nurses from a dropdown instead of
   // retyping it every time. The number itself isn't PHI; the actual masking
   // mapping still lives on User.work_phone_number (the source of truth a webhook
   // resolves against). This entity is the admin-facing inventory + assignment
@@ -11,7 +11,7 @@
   "properties": {
     "e164": {
       "type": "string",
-      "description": "The 8x8 virtual number in E.164 form, e.g. +12155550100. Unique across the pool."
+      "description": "The Twilio virtual number in E.164 form, e.g. +12155550100. Unique across the pool."
     },
     "label": {
       "type": "string",
@@ -27,9 +27,9 @@
       "type": "string",
       "description": "Email of the user this number is currently assigned to as their work number (when status is 'assigned')."
     },
-    "eight_x_eight_voice_endpoint_id": {
+    "twilio_phone_number_sid": {
       "type": "string",
-      "description": "Optional 8x8 voice endpoint/virtual-number id used for outbound origination."
+      "description": "Twilio IncomingPhoneNumber SID (PN…) for this number, used for provisioning/config."
     },
     "notes": {
       "type": "string",

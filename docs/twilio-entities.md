@@ -1,7 +1,7 @@
-# 8x8 Phone Integration — Base44 Entity Setup
+# Twilio Phone Integration — Base44 Entity Setup
 
 Base44 entity schemas are defined in the **Base44 dashboard**, not in code. Before
-deploying the 8x8 functions, an admin must create/extend the entities below.
+deploying the Twilio functions, an admin must create/extend the entities below.
 Field naming follows existing conventions (snake_case, `*_email`, `patient_id`,
 lowercase string enums) as used by `FaxLog` and `Message`.
 
@@ -12,29 +12,24 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 
 | Field | Type | Notes |
 |---|---|---|
-| `work_phone_number` | string | Assigned 8x8 virtual number, E.164. Null until provisioned. |
+| `work_phone_number` | string | Assigned Twilio number, E.164. Null until provisioned. |
 | `personal_cell_e164` | string | **PRIVATE** masked-bridge target. Restrict read access to service role / admin — never expose to patient-facing surfaces. |
 | `duty_status` | string enum | `on_duty` \| `off_duty` (default `off_duty`). |
 | `off_duty_message` | text | Per-nurse off-duty greeting; overrides agency default. |
 | `scheduled_off_duty_start` | string (ISO) | Optional. Start of a scheduled time-off window (e.g. the weekend). Nullable. |
 | `scheduled_off_duty_end` | string (ISO) | Optional. End of the scheduled window; the nurse is treated as off duty between start and end, then automatically back on duty. Nullable. |
 | `scheduled_off_duty_recurring` | boolean | Optional (default false). When true the window repeats weekly on the same day/time (e.g. every weekend). |
-| `eight_x_eight_voice_endpoint_id` | string | Optional 8x8 voice endpoint id. |
 
 ## Extend `AgencySettings` (single-row entity)
 
 | Field | Type | Notes |
 |---|---|---|
 | `main_office_number_e164` | string | Off-duty call transfer target / referral number. |
-| `eight_x_eight_sms_subaccount_id` | string | |
-| `eight_x_eight_voice_subaccount_id` | string | |
-| `eight_x_eight_voice_api_base` | string | Voice API base URL for outbound click-to-call origination. |
-| `eight_x_eight_region` | string | e.g. `us` → builds `sms.us.8x8.com`. |
 | `default_off_duty_template` | text | Default off-duty message when a nurse hasn't set one. |
 | `sms_messaging_enabled` | boolean | Agency-wide kill switch (default true). |
 | `sms_quick_replies` | array (string) | Optional one-tap PHI-safe text snippets for the compose box. Falls back to built-in defaults when empty. |
 | `sms_templates` | array (object) | Optional reusable templates `{ label, body }` with merge fields (`{first_name}`, `{last_name}`, `{nurse_name}`, `{office}`). Falls back to built-in defaults when empty. |
-| `voicemail_enabled` | boolean | Optional (default false). When true, an unanswered on-duty masked call captures a voicemail (requires the recording action in the 8x8 callflow + the voicemail webhook). |
+| `voicemail_enabled` | boolean | Optional (default false). When true, an unanswered on-duty masked call captures a voicemail (requires the `<Record>` action in the TwiML call flow + the voicemail webhook). |
 | `voicemail_greeting` | text | Optional voicemail prompt; `{office}` inserts the main office number. |
 | `business_hours_enabled` | boolean | Optional (default false). Master switch for global calling/texting hours; off = always open. |
 | `business_hours_timezone` | string | IANA timezone the schedule is interpreted in (e.g. `America/New_York`). |
@@ -49,11 +44,10 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `tcpa_quiet_start_hour` / `tcpa_quiet_end_hour` | number | Allowed texting window in the recipient's timezone (default 8 / 21). |
 | `urgent_escalation_enabled` | boolean | Optional (default true). Escalate inbound texts matching urgent keywords. |
 | `urgent_keywords` | array (string) | Extra agency-specific red-flag keywords merged with the built-in list. |
-| `eight_x_eight_numbers_api_base` | string | Base URL for the 8x8 number search/order API (defaults to the voice API base). |
 
 ## New `PhoneNumber` (the assignable number pool)
 
-Inventory of purchased 8x8 numbers so an admin can add a number once and
+Inventory of purchased Twilio numbers so an admin can add a number once and
 assign/reassign it from a dropdown. All writes go through the
 `managePhoneNumberPool` backend function (service role), which keeps this in sync
 with `User.work_phone_number`. Read is open to authenticated users (numbers are
@@ -65,7 +59,6 @@ not PHI); write is service-role only.
 | `label` | string | Optional friendly label (e.g. "Nurse line 1"). |
 | `status` | string enum | `available` \| `assigned` (default `available`). |
 | `assigned_to_email` | string | The user currently holding it as their work number (when assigned). |
-| `eight_x_eight_voice_endpoint_id` | string | Optional 8x8 voice endpoint id, copied to the nurse on assign. |
 | `notes` | string | Optional admin notes. |
 
 ## New `SmsMessage`
@@ -80,7 +73,7 @@ not PHI); write is service-role only.
 | `patient_id` | string | Nullable; resolved from phone |
 | `thread_id` | string | Deterministic `min\|max` of the two numbers |
 | `status` | string enum | `queued` \| `sent` \| `delivered` \| `failed` \| `received` |
-| `provider_message_id` | string | 8x8 `umid` |
+| `provider_message_id` | string | Twilio message SID |
 | `client_message_id` | string | Idempotency key |
 | `failure_reason` | string | Nullable |
 | `is_read` | boolean | Nurse-inbox unread flag |
@@ -102,16 +95,16 @@ not PHI); write is service-role only.
 | `patient_id` | string | Nullable |
 | `call_mode` | string enum | `masked_bridge` \| `off_duty_transfer` \| `after_hours_transfer` \| `outbound_clicktocall` |
 | `status` | string enum | `initiated` \| `ringing` \| `bridged` \| `completed` \| `no_answer` \| `failed` \| `forwarded_office` |
-| `provider_call_id` | string | 8x8 call/session id |
+| `provider_call_id` | string | Twilio call SID |
 | `duration_seconds` | number | Nullable |
 | `failure_reason` | string | Nullable |
 | `sent_by` | string | Initiating nurse (outbound) |
 | `note` | text | Nullable. Nurse's free-text call note (keep PHI-free). |
 | `disposition` | string enum | Nullable. `resolved` \| `follow_up_needed` \| `callback_requested` \| `left_voicemail` \| `no_action` |
 | `has_voicemail` | boolean | Set by the voicemail webhook when a recording is attached. |
-| `voicemail_url` | string | Nullable. Recording URL from 8x8. |
+| `voicemail_url` | string | Nullable. Recording URL from Twilio. |
 | `voicemail_duration_seconds` | number | Nullable. |
-| `voicemail_transcription` | text | Nullable. Transcription when 8x8 (or an add-on) provides one. |
+| `voicemail_transcription` | text | Nullable. Transcription when Twilio (or an add-on) provides one. |
 
 ## New `SmsConsent` (append-only TCPA ledger)
 
@@ -138,7 +131,7 @@ not PHI); write is service-role only.
 | `send_at` | string (ISO) | When to send |
 | `status` | string enum | `pending` \| `sending` \| `sent` \| `failed` \| `canceled` |
 | `template_label` | string | Nullable; the template the message came from |
-| `provider_message_id` | string | Nullable; 8x8 `umid` once sent |
+| `provider_message_id` | string | Nullable; Twilio message SID once sent |
 | `sms_message_id` | string | Nullable; the `SmsMessage` row created on send |
 | `failure_reason` | string | Nullable |
 | `attempts` | number | Send attempts |

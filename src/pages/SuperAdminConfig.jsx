@@ -9,8 +9,8 @@ import { Loader2, ShieldCheck, Crown, RefreshCw, CheckCircle2 } from "lucide-rea
 import { toast } from "sonner";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
-import EightXEightSecretPanel from "@/components/admin/EightXEightSecretPanel";
-import EightXEightSetupProgress from "@/components/admin/EightXEightSetupProgress";
+import TwilioSecretPanel from "@/components/admin/TwilioSecretPanel";
+import TwilioSetupProgress from "@/components/admin/TwilioSetupProgress";
 import PhoneProvisioningPanel from "@/components/admin/PhoneProvisioningPanel";
 import { isSuperAdmin, isSuperAdminEmail, SUPER_ADMIN_EMAIL } from "@/lib/superAdmin";
 
@@ -18,8 +18,8 @@ import { isSuperAdmin, isSuperAdminEmail, SUPER_ADMIN_EMAIL } from "@/lib/superA
  * SuperAdminConfig — the single, easy-to-use control panel for the platform
  * super admin (kdeyarmin@comcast.net). It does three things:
  *   1. Confirms / self-heals the super admin account (ensureSuperAdmin).
- *   2. Manages the SINGLE 8x8 API secret (EightXEightSecretPanel).
- *   3. Surfaces the full 8x8 provisioning + health surface (PhoneProvisioningPanel),
+ *   2. Manages the Twilio credentials (TwilioSecretPanel).
+ *   3. Surfaces the full Twilio provisioning + health surface (PhoneProvisioningPanel),
  *      so number assignment, agency settings, webhooks, and the live test all
  *      live behind one page.
  *
@@ -86,7 +86,7 @@ export default function SuperAdminConfig() {
     <PageContainer>
       <PageHeader
         title="Super Admin"
-        description="Platform-owner controls: 8x8 integration secret and phone provisioning, all in one place."
+        description="Platform-owner controls: Twilio integration secret and phone provisioning, all in one place."
         icon={Crown}
       />
 
@@ -137,14 +137,14 @@ export default function SuperAdminConfig() {
         </Card>
 
         {/* Guided setup command center — progress + "what's next", links below */}
-        <EightXEightSetupProgress />
+        <TwilioSetupProgress />
 
-        {/* The single 8x8 API secret */}
-        <div id="ex8-secret" className="scroll-mt-24">
-          <EightXEightSecretPanel />
+        {/* Twilio Account SID + Auth Token */}
+        <div id="twilio-secret" className="scroll-mt-24">
+          <TwilioSecretPanel />
         </div>
 
-        {/* Easy 8x8 provisioning + health + agency settings */}
+        {/* Twilio provisioning + health + agency settings */}
         <PhoneProvisioningPanel />
       </div>
     </PageContainer>

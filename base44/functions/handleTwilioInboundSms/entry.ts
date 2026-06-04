@@ -1,15 +1,20 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * handleEightXEightInboundSms — webhook for inbound (patient -> nurse) SMS.
+ * handleTwilioInboundSms — webhook for inbound (patient -> nurse) SMS from Twilio.
  *
- * Flow: verify signature -> resolve nurse (by the work number that was texted)
- * and patient (by sender) -> handle STOP/HELP/START keywords FIRST (TCPA) ->
- * store the inbound message -> if the nurse is off duty, auto-reply with their
- * off-duty message + the main office number -> notify the nurse in-app.
+ * Flow: verify Twilio signature -> resolve nurse (by the work number that was
+ * texted) and patient (by sender) -> handle STOP/HELP/START keywords FIRST
+ * (TCPA) -> store the inbound message -> if the nurse is off duty, auto-reply
+ * with their off-duty message + the main office number -> notify the nurse
+ * in-app.
  *
- * After a verified webhook is processed it returns 200 so 8x8 does not retry
- * indefinitely. An invalid signature is rejected with 401 (before processing).
+ * All Twilio webhooks are application/x-www-form-urlencoded; parsed with
+ * req.formData(). Signature verification uses HMAC-SHA1 over the URL +
+ * sorted POST params, matching Twilio's scheme exactly.
+ *
+ * After a verified webhook is processed it returns an empty TwiML body so
+ * Twilio does not retry indefinitely. An invalid signature is rejected with 401.
  */
 
 const STOP_WORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
@@ -100,12 +105,6 @@ function isAgencyOpen(settings: any, now = new Date()): boolean {
   return open <= close ? (m >= open && m < close) : (m >= open || m < close);
 }
 
-async function hmacHex(secret: string, raw: string): Promise<string> {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
-  return [...new Uint8Array(sig)].map((x) => x.toString(16).padStart(2, '0')).join('');
-}
-
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let out = 0;
@@ -113,73 +112,51 @@ function timingSafeEqual(a: string, b: string): boolean {
   return out === 0;
 }
 
-/**
- * Resolve the single 8x8 API secret (SMS/Voice bearer token): legacy env var
- * first, then the secret the super admin saved in-app (IntegrationSecret).
- */
-async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
-  const env = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
-  if (env && env.trim()) return env.trim();
-  try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
-    const v = rows?.[0]?.api_secret;
-    return v && String(v).trim() ? String(v).trim() : null;
-  } catch {
-    return null;
-  }
+async function hmacSha1Base64(key: string, msg: string): Promise<string> {
+  const cryptoKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(msg));
+  return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
 
 /**
- * Resolve the 8x8 webhook signing secret. Order: dedicated webhook secret (env,
- * then in-app), else the single API secret (env, then in-app) — so configuring
- * just the one API secret, by either path, fully verifies webhooks. Fails closed.
+ * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'twilio'. Either path configures the integration, so the
+ * Base44 dashboard env is optional.
  */
-async function resolveEightXEightWebhookSecret(base44: any): Promise<string | null> {
-  // 1) a dedicated webhook secret always wins (env, then in-app config)...
-  const envWebhook = Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_SECRET');
-  if (envWebhook && envWebhook.trim()) return envWebhook.trim();
-  let storedWebhook: string | null = null;
-  let storedApi: string | null = null;
-  try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
-    const rec = rows?.[0] || {};
-    storedWebhook = rec.webhook_secret && String(rec.webhook_secret).trim() ? String(rec.webhook_secret).trim() : null;
-    storedApi = rec.api_secret && String(rec.api_secret).trim() ? String(rec.api_secret).trim() : null;
-  } catch {
-    // best-effort: fall through to the env API-key fallback below
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
+  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let sid = envSid && envSid.trim() ? envSid.trim() : null;
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  if (!sid || !token) {
+    try {
+      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+      const rec = rows?.[0] || {};
+      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
+      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    } catch { /* ignore */ }
   }
-  if (storedWebhook) return storedWebhook;
-  // 2) ...otherwise the single API secret verifies webhooks, from EITHER the
-  // dashboard env OR in-app config, so configuring just the one secret is enough.
-  const envApi = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
-  if (envApi && envApi.trim()) return envApi.trim();
-  return storedApi;
+  return { accountSid: sid, authToken: token };
 }
 
 /**
- * Verifies the webhook came from 8x8. Tries an HMAC-SHA256 signature header
- * first, then falls back to a static shared-secret header. Fails closed.
- * NOTE: confirm the exact header name + signing scheme in 8x8 Connect and
- * adjust SIGNATURE_HEADERS if needed.
+ * Verify Twilio's X-Twilio-Signature: base64(HMAC-SHA1(authToken, url + sorted
+ * concatenated POST params)). Fails closed. If your deployment sits behind a
+ * proxy that rewrites host/path, set TWILIO_WEBHOOK_URL to the exact URL Twilio
+ * is configured to call. An optional TWILIO_WEBHOOK_SECRET + x-webhook-secret
+ * header is supported for manual testing only.
  */
-async function verifyWebhook(req: Request, raw: string, secret: string | null): Promise<boolean> {
-  if (!secret) {
-    console.error('8x8 webhook secret not configured — rejecting webhook');
-    return false;
-  }
-  const SIGNATURE_HEADERS = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256'];
-  for (const h of SIGNATURE_HEADERS) {
-    const provided = req.headers.get(h);
-    if (provided) {
-      const expected = await hmacHex(secret, raw);
-      const cleaned = provided.replace(/^sha256=/i, '').trim();
-      if (timingSafeEqual(cleaned.toLowerCase(), expected)) return true;
-    }
-  }
-  // Fallback: static shared secret header
-  const staticHeader = req.headers.get('x-webhook-secret');
-  if (staticHeader && timingSafeEqual(staticHeader, secret)) return true;
-  return false;
+async function verifyTwilioSignature(req: Request, params: Record<string, string>, authToken: string | null): Promise<boolean> {
+  const sharedSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET');
+  const headerSecret = req.headers.get('x-webhook-secret');
+  if (sharedSecret && headerSecret && timingSafeEqual(headerSecret, sharedSecret)) return true;
+  const provided = req.headers.get('x-twilio-signature');
+  if (!authToken || !provided) return false;
+  const url = Deno.env.get('TWILIO_WEBHOOK_URL') || req.url;
+  let data = url;
+  for (const k of Object.keys(params).sort()) data += k + params[k];
+  const expected = await hmacSha1Base64(authToken, data);
+  return timingSafeEqual(provided.trim(), expected);
 }
 
 async function getAgencyConfig(base44: any) {
@@ -187,8 +164,6 @@ async function getAgencyConfig(base44: any) {
   const s = settings[0] || {};
   return {
     settings: s,
-    smsSubAccountId: s.eight_x_eight_sms_subaccount_id,
-    region: s.eight_x_eight_region || 'us',
     mainOffice: s.main_office_number_e164 || '',
     defaultOffDuty: s.default_off_duty_template || '',
     smsEnabled: s.sms_messaging_enabled ?? true,
@@ -198,7 +173,6 @@ async function getAgencyConfig(base44: any) {
     // Urgent-keyword escalation.
     urgentEscalationEnabled: s.urgent_escalation_enabled !== false,
     urgentKeywords: Array.isArray(s.urgent_keywords) ? s.urgent_keywords : [],
-    webhookDebug: s.webhook_debug_enabled === true,
   };
 }
 
@@ -223,17 +197,23 @@ function detectUrgency(text: string, extra: string[] = []): { urgent: boolean; m
   return { urgent: matches.length > 0, matches };
 }
 
-async function sendSms8x8(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string) {
-  // Bound the auto-reply with a timeout: this is awaited before we return 200,
-  // so a hung send would delay the ack and trigger 8x8 webhook retries.
-  const url = `${host}/api/v1/subaccounts/${subAccountId}/messages`;
+/**
+ * Send an SMS auto-reply via Twilio Messages API. Bounded by a 10 s timeout so
+ * a hung send doesn't delay the TwiML ack and trigger Twilio webhook retries.
+ */
+async function sendAutoReply(accountSid: string, authToken: string, from: string, to: string, text: string) {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
+    const params = new URLSearchParams({ To: to, From: from, Body: text });
     return await fetch(url, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source, destination, text, encoding: 'AUTO', clientMessageId: crypto.randomUUID() }),
+      headers: {
+        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
       signal: controller.signal,
     });
   } catch (err) {
@@ -244,61 +224,37 @@ async function sendSms8x8(apiKey: string, host: string, subAccountId: string, so
   }
 }
 
-/**
- * Replay defense: reject events whose provider timestamp is far from now. We
- * only trust a timestamp in the SIGNED body (the HMAC covers the raw body, so a
- * body field is tamper-proof; header timestamps are not signed). Fails OPEN
- * when no parseable timestamp is present — idempotency already de-dups true
- * retries, so this is belt-and-suspenders. Confirm 8x8's field name and widen/
- * narrow the skew as needed for your account.
- */
-function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
-  const raw = payload?.timestamp ?? payload?.eventTime ?? payload?.time ?? payload?.createdTime ?? payload?.ts;
-  if (raw == null) return false;
-  let ms: number;
-  if (typeof raw === 'number') ms = raw < 1e12 ? raw * 1000 : raw;
-  else {
-    const parsed = Date.parse(String(raw));
-    if (Number.isNaN(parsed)) return false;
-    ms = parsed;
-  }
-  return Math.abs(Date.now() - ms) > maxSkewMs;
-}
-
 Deno.serve(async (req) => {
   try {
-    const raw = await req.text();
-    const base44 = createClientFromRequest(req);
+    const formData = await req.formData();
+    const params: Record<string, string> = {};
+    for (const [k, v] of formData.entries()) params[k] = String(v);
 
-    const webhookSecret = await resolveEightXEightWebhookSecret(base44);
-    const verified = await verifyWebhook(req, raw, webhookSecret);
-    // Diagnostic mode (EIGHT_X_EIGHT_WEBHOOK_DEBUG=1): log which signature header
-    // NAMES arrived and whether verification passed — never any secret/value.
-    if (Deno.env.get('EIGHT_X_EIGHT_WEBHOOK_DEBUG')) {
-      const present = ['x-8x8-signature', 'x-signature', 'x-hub-signature-256', 'x-webhook-secret'].filter((h) => req.headers.get(h));
-      console.log('[webhook-debug] handleEightXEightInboundSms ' + JSON.stringify({ verified, signature_headers_present: present, content_type: req.headers.get('content-type') }));
+    const base44 = createClientFromRequest(req);
+    const { accountSid, authToken } = await resolveTwilioCreds(base44);
+
+    const verified = await verifyTwilioSignature(req, params, authToken);
+    // Diagnostic mode (TWILIO_WEBHOOK_DEBUG): log which signature headers are
+    // PRESENT and whether verification passed — never any secret/value.
+    if (Deno.env.get('TWILIO_WEBHOOK_DEBUG')) {
+      const present = ['x-twilio-signature', 'x-webhook-secret'].filter((h) => req.headers.get(h));
+      console.log('[webhook-debug] handleTwilioInboundSms ' + JSON.stringify({ verified, signature_headers_present: present, content_type: req.headers.get('content-type') }));
     }
     if (!verified) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    const payload = JSON.parse(raw || '{}');
-    if (isReplayStale(payload)) {
-      return Response.json({ error: 'Stale webhook (possible replay)' }, { status: 401 });
-    }
-    // 8x8 inbound payload field names can vary by product; parse defensively.
-    const source = payload.source || payload.from || payload.msisdn || payload.sender;
-    const destination = payload.destination || payload.to || payload.recipient;
-    const text = (payload.text || payload.message || payload.body || '').toString();
-    const providerMessageId = payload.umid || payload.messageId || payload.id || null;
+    // Parse Twilio inbound SMS form fields.
+    const source = params.From;
+    const destination = params.To;
+    const text = (params.Body || '').toString();
+    const providerMessageId = params.MessageSid || null;
 
     if (!source || !destination) {
-      return Response.json({ success: false, message: 'Missing source/destination' });
+      return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
     const config = await getAgencyConfig(base44);
-    const apiKey = await resolveEightXEightApiKey(base44);
-    const host = `https://sms.${config.region}.8x8.com`;
 
     const patientNum = normalizeE164(source) || source;
     const workNum = normalizeE164(destination) || destination;
@@ -314,17 +270,17 @@ Deno.serve(async (req) => {
         details: { destination: workNum, timestamp: new Date().toISOString() },
         status: 'failure',
       }).catch(() => {});
-      return Response.json({ success: true });
+      return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    // Idempotency: 8x8 retries webhooks. If we already stored this provider
-    // message id, acknowledge without creating a duplicate row, re-notifying,
-    // or (critically for TCPA) re-sending an auto-reply.
+    // Idempotency: Twilio retries webhooks. If we already stored this MessageSid,
+    // acknowledge without creating a duplicate row, re-notifying, or (critically
+    // for TCPA) re-sending an auto-reply.
     if (providerMessageId) {
       const dup = await base44.asServiceRole.entities.SmsMessage
         .filter({ provider_message_id: providerMessageId }, '-created_date', 1).catch(() => []);
       if (dup.length > 0) {
-        return Response.json({ success: true, deduped: true });
+        return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
       }
     }
 
@@ -337,7 +293,7 @@ Deno.serve(async (req) => {
 
     const keyword = text.trim().toUpperCase();
     const sendReply = (msg: string) =>
-      apiKey && config.smsSubAccountId ? sendSms8x8(apiKey, host, config.smsSubAccountId, workNum, patientNum, msg) : Promise.resolve(null);
+      accountSid && authToken ? sendAutoReply(accountSid, authToken, workNum, patientNum, msg) : Promise.resolve(null);
 
     const recordConsent = (status: string, sourceTag: string) =>
       base44.asServiceRole.entities.SmsConsent.create({
@@ -386,7 +342,7 @@ Deno.serve(async (req) => {
         user_email: 'system', action: 'sms_opt_out', entity_type: 'SmsMessage', entity_id: inboundRow.id,
         details: { phone: patientNum, nurse_email: nurse.email, patient_id: patientId }, status: 'success',
       }).catch(() => {});
-      return Response.json({ success: true });
+      return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
     if (START_WORDS.includes(keyword)) {
       await recordConsent('opted_in', 'keyword_start');
@@ -467,10 +423,10 @@ Deno.serve(async (req) => {
       status: 'success',
     }).catch(() => {});
 
-    return Response.json({ success: true });
+    return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
   } catch (error) {
-    console.error('handleEightXEightInboundSms error:', error);
-    // Still return 200 so 8x8 does not hammer retries on a parse error.
-    return Response.json({ success: false, error: error.message });
+    console.error('handleTwilioInboundSms error:', error);
+    // Still return TwiML so Twilio does not hammer retries on a parse error.
+    return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
   }
 });
