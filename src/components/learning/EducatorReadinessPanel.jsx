@@ -1,21 +1,16 @@
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, ShieldCheck, AlertTriangle, Users, Loader2, Download } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { getTeamTrainingReadiness } from '@/functions/getTeamTrainingReadiness';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toCsv, exportTimestamp } from '@/components/admin/csvExport';
 
-const isCompleted = (a) => a.status === 'completed' || a.pass_fail_result === 'passed';
 const readinessColor = (pct) =>
   pct >= 90 ? 'text-emerald-600' : pct >= 70 ? 'text-amber-600' : 'text-red-600';
 const barColor = (pct) =>
   pct >= 90 ? '[&>div]:bg-emerald-500' : pct >= 70 ? '[&>div]:bg-amber-500' : '[&>div]:bg-red-500';
-
-const requiredStatusLabel = (a) =>
-  isCompleted(a) ? 'Complete' : a.status === 'overdue' ? 'Overdue' : 'Outstanding';
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : '');
 
@@ -32,86 +27,24 @@ function downloadCsv(filename, csv) {
   URL.revokeObjectURL(url);
 }
 
-const BUSINESS_LINES = [
-  { key: 'home_health', label: 'Home Health' },
-  { key: 'hospice', label: 'Hospice' },
-];
-
 /**
- * Org-wide required-training readiness for educators and admins. Joins all
- * training assignments to their courses to determine which are required, then
- * rolls up completion by business line and by role.
+ * Org-wide required-training readiness for educators and admins. Data is fetched
+ * through the admin-authorized getTeamTrainingReadiness function (service role)
+ * so non-admin educators see true team rollups rather than RLS-filtered rows.
  */
 export default function EducatorReadinessPanel() {
-  const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
-    queryKey: ['educator-all-assignments'],
-    queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 2000),
-    initialData: [],
-  });
-  const { data: courses = [] } = useQuery({
-    queryKey: ['educator-all-courses'],
-    queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 500),
-    initialData: [],
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['team-training-readiness'],
+    queryFn: async () => {
+      const res = await getTeamTrainingReadiness({});
+      return res?.data || res;
+    },
   });
 
-  const courseById = useMemo(
-    () => Object.fromEntries(courses.map((c) => [c.id, c])),
-    [courses]
-  );
-
-  const requiredAssignments = useMemo(
-    () =>
-      assignments.filter(
-        (a) =>
-          a.required === true ||
-          ['annual_mandatory', 'in_service'].includes(courseById[a.course_id]?.training_type)
-      ),
-    [assignments, courseById]
-  );
-
-  const overall = useMemo(() => {
-    const total = requiredAssignments.length;
-    const done = requiredAssignments.filter(isCompleted).length;
-    const overdue = requiredAssignments.filter((a) => a.status === 'overdue').length;
-    return {
-      total,
-      done,
-      overdue,
-      pct: total ? Math.round((done / total) * 100) : 100,
-      staff: new Set(requiredAssignments.map((a) => a.assigned_to_user_id)).size,
-    };
-  }, [requiredAssignments]);
-
-  const byBusinessLine = useMemo(() => {
-    return BUSINESS_LINES.map(({ key, label }) => {
-      const subset = requiredAssignments.filter((a) => a.assigned_to_business_line === key);
-      const done = subset.filter(isCompleted).length;
-      return {
-        key,
-        label,
-        total: subset.length,
-        done,
-        overdue: subset.filter((a) => a.status === 'overdue').length,
-        pct: subset.length ? Math.round((done / subset.length) * 100) : 100,
-      };
-    }).filter((row) => row.total > 0);
-  }, [requiredAssignments]);
-
-  const rolesNeedingAttention = useMemo(() => {
-    const map = {};
-    requiredAssignments.forEach((a) => {
-      const role = a.assigned_to_role || 'Unspecified role';
-      if (!map[role]) map[role] = { role, total: 0, done: 0, overdue: 0 };
-      map[role].total += 1;
-      if (isCompleted(a)) map[role].done += 1;
-      if (a.status === 'overdue') map[role].overdue += 1;
-    });
-    return Object.values(map)
-      .map((r) => ({ ...r, pct: r.total ? Math.round((r.done / r.total) * 100) : 100 }))
-      .filter((r) => r.total >= 1)
-      .sort((a, b) => a.pct - b.pct)
-      .slice(0, 6);
-  }, [requiredAssignments]);
+  const overall = data?.overall || { total: 0, done: 0, overdue: 0, pct: 100, staff: 0 };
+  const byBusinessLine = data?.byBusinessLine || [];
+  const rolesNeedingAttention = data?.rolesNeedingAttention || [];
+  const rows = data?.rows || [];
 
   const exportReadinessCsv = () => {
     const columns = [
@@ -121,32 +54,28 @@ export default function EducatorReadinessPanel() {
       { key: 'course', label: 'Course' },
       { key: 'category', label: 'Category' },
       { key: 'status', label: 'Required Status' },
-      { key: 'due_date', label: 'Due Date' },
-      { key: 'completion_date', label: 'Completion Date' },
+      { key: 'due_date', label: 'Due Date', format: (v) => formatDate(v) },
+      { key: 'completion_date', label: 'Completion Date', format: (v) => formatDate(v) },
       { key: 'score', label: 'Score (%)' },
     ];
-    const rows = requiredAssignments.map((a) => {
-      const course = courseById[a.course_id];
-      return {
-        employee: a.assigned_to_user_id || '',
-        role: a.assigned_to_role || '',
-        business_line: a.assigned_to_business_line || '',
-        course: a.course_title || course?.title || '',
-        category: course?.category || '',
-        status: requiredStatusLabel(a),
-        due_date: formatDate(a.due_date),
-        completion_date: formatDate(a.completion_date),
-        score: a.score_percentage ?? '',
-      };
-    });
     downloadCsv(`team_required_training_readiness_${exportTimestamp()}.csv`, toCsv(columns, rows));
   };
 
-  if (loadingAssignments) {
+  if (isLoading) {
     return (
       <Card className="border-indigo-200">
         <CardContent className="p-8 flex items-center justify-center">
           <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-indigo-200">
+        <CardContent className="p-6 text-center text-sm text-slate-500">
+          Team readiness is unavailable for your account.
         </CardContent>
       </Card>
     );
@@ -160,12 +89,7 @@ export default function EducatorReadinessPanel() {
             <BarChart3 className="w-5 h-5" />
             Team Required-Training Readiness
           </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportReadinessCsv}
-            disabled={requiredAssignments.length === 0}
-          >
+          <Button variant="outline" size="sm" onClick={exportReadinessCsv} disabled={rows.length === 0}>
             <Download className="w-4 h-4 mr-1.5" />
             Export CSV
           </Button>
@@ -239,7 +163,7 @@ export default function EducatorReadinessPanel() {
           </div>
         )}
 
-        {requiredAssignments.length === 0 && (
+        {overall.total === 0 && (
           <p className="text-sm text-slate-500 text-center py-4">
             No required training assignments yet. Assign annual in-services to see readiness here.
           </p>

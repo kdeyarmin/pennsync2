@@ -1261,19 +1261,21 @@ Deno.serve(async (req) => {
         reusedPlans.push(plan.name);
       }
 
-      const existingItems = await svc.LearningPlanCourse.filter({ plan_id: plan.id }, 'order_index', 100);
-      if (existingItems.length === 0) {
-        for (const [index, key] of template.courseKeys.entries()) {
-          const ref = courseIdByKey[key];
-          if (!ref) continue;
-          await svc.LearningPlanCourse.create({
-            plan_id: plan.id,
-            course_id: ref.id,
-            course_title: ref.title,
-            order_index: index,
-            is_required: true,
-          });
-        }
+      // Reconcile plan items: add any missing courses without duplicating
+      // existing ones, so a partial or manually edited plan is repaired on
+      // re-run rather than skipped.
+      const existingItems = await svc.LearningPlanCourse.filter({ plan_id: plan.id }, 'order_index', 200);
+      const existingCourseIds = new Set(existingItems.map((item) => item.course_id));
+      for (const [index, key] of template.courseKeys.entries()) {
+        const ref = courseIdByKey[key];
+        if (!ref || existingCourseIds.has(ref.id)) continue;
+        await svc.LearningPlanCourse.create({
+          plan_id: plan.id,
+          course_id: ref.id,
+          course_title: ref.title,
+          order_index: index,
+          is_required: true,
+        });
       }
     }
 

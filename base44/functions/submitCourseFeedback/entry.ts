@@ -24,6 +24,34 @@ Deno.serve(async (req) => {
     if (!course) {
       return Response.json({ error: 'Course not found' }, { status: 404 });
     }
+    if (course.status !== 'published') {
+      return Response.json({ error: 'Course is not available for feedback' }, { status: 400 });
+    }
+
+    // Only learners who actually completed the course may rate it, so catalog
+    // averages can't be corrupted by callers who never took the course.
+    const userAssignments = await base44.asServiceRole.entities.TrainingAssignment.filter(
+      { course_id: courseId, assigned_to_user_id: user.email },
+      '-created_date',
+      25
+    );
+    let hasCompleted = userAssignments.some(
+      (a) => a.status === 'completed' || a.pass_fail_result === 'passed'
+    );
+    if (!hasCompleted) {
+      const certs = await base44.asServiceRole.entities.TrainingCertificate.filter(
+        { course_id: courseId, user_id: user.email },
+        '-issued_at',
+        5
+      );
+      hasCompleted = certs.length > 0;
+    }
+    if (!hasCompleted) {
+      return Response.json(
+        { error: 'You can only rate courses you have completed.' },
+        { status: 403 }
+      );
+    }
 
     const payload = {
       course_id: courseId,

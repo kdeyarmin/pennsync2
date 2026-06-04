@@ -31,12 +31,24 @@ Deno.serve(async (req) => {
         { status: 400 }
       );
     }
+    // Honor the course business-line scope: a Home Health user may not self-enroll
+    // in a Hospice-only course and vice versa. Users without a set business line
+    // (e.g. office/leadership) are not blocked.
+    const scope = course.business_line_scope;
+    if (scope && scope !== 'all' && user.business_line && user.business_line !== scope) {
+      return Response.json(
+        { error: `This course is scoped to ${scope.replace(/_/g, ' ')} and is not available for your business line.` },
+        { status: 403 }
+      );
+    }
 
-    // Reuse an existing active assignment rather than duplicating
+    // Reuse an existing active assignment rather than duplicating. Scan the full
+    // history (not just the latest few) so repeated archive/unarchive cycles
+    // can't hide an older active assignment and cause a duplicate.
     const existing = await base44.asServiceRole.entities.TrainingAssignment.filter(
       { course_id: courseId, assigned_to_user_id: user.email },
       '-created_date',
-      10
+      500
     );
     const active = existing.find((a) => !a.archived_status);
     if (active) {

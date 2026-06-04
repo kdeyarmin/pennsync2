@@ -49,6 +49,7 @@ import GamificationDashboard from '@/components/training/GamificationDashboard';
 import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
 import { generateLearningTranscriptPDF } from '@/functions/generateLearningTranscriptPDF';
 import { submitCourseFeedback } from '@/functions/submitCourseFeedback';
+import { getCourseFeedbackSummary } from '@/functions/getCourseFeedbackSummary';
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
 
@@ -115,7 +116,7 @@ function RateStars({ value, onRate, disabled }) {
           type="button"
           disabled={disabled}
           onClick={() => onRate(n)}
-          className="focus:outline-none disabled:opacity-50"
+          className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 disabled:opacity-50"
           aria-label={`Rate ${n} star${n === 1 ? '' : 's'}`}
         >
           <Star className={`w-5 h-5 transition-colors ${n <= (value || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-300 hover:text-amber-300'}`} />
@@ -203,10 +204,14 @@ export default function LearningCenter() {
     initialData: null
   });
 
-  const { data: feedbackList = [] } = useQuery({
-    queryKey: ['lc-course-feedback'],
-    queryFn: () => base44.entities.TrainingFeedback.list('-created_date', 1000),
-    initialData: []
+  const { data: feedbackData = { summaries: {}, mine: {} } } = useQuery({
+    queryKey: ['lc-course-feedback', user?.email],
+    queryFn: async () => {
+      const res = await getCourseFeedbackSummary({});
+      return res?.data || res;
+    },
+    enabled: !!user?.email,
+    initialData: { summaries: {}, mine: {} }
   });
 
   // Derived data
@@ -343,15 +348,16 @@ export default function LearningCenter() {
   // Aggregate course ratings: average, count, and the current user's own rating
   const feedbackByCourse = useMemo(() => {
     const map = {};
-    feedbackList.forEach(f => {
-      if (!map[f.course_id]) map[f.course_id] = { sum: 0, count: 0, mine: null };
-      map[f.course_id].sum += Number(f.rating) || 0;
-      map[f.course_id].count += 1;
-      if (f.user_id === user?.email) map[f.course_id].mine = f.rating;
+    const summaries = feedbackData?.summaries || {};
+    const mine = feedbackData?.mine || {};
+    Object.entries(summaries).forEach(([id, s]) => {
+      map[id] = { avg: s.avg || 0, count: s.count || 0, mine: mine[id] ?? null };
     });
-    Object.values(map).forEach(m => { m.avg = m.count ? m.sum / m.count : 0; });
+    Object.entries(mine).forEach(([id, rating]) => {
+      if (!map[id]) map[id] = { avg: 0, count: 0, mine: rating };
+    });
     return map;
-  }, [feedbackList, user?.email]);
+  }, [feedbackData]);
 
   const [ratingFeedback, setRatingFeedback] = useState({});
   const feedbackMutation = useMutation({
@@ -957,8 +963,9 @@ export default function LearningCenter() {
               </select>
               <button
                 type="button"
+                aria-pressed={requiredOnly}
                 onClick={() => { setRequiredOnly(v => !v); setCatalogLimit(12); }}
-                className={`text-sm rounded-lg px-3 py-2 border transition-colors whitespace-nowrap ${
+                className={`text-sm rounded-lg px-3 py-2 border transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   requiredOnly
                     ? 'bg-indigo-600 text-white border-indigo-600'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'

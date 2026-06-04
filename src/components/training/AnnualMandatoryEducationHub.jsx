@@ -149,7 +149,7 @@ export default function AnnualMandatoryEducationHub() {
     setSeedResult(null);
     try {
       const result = await seedYearlyRequiredInServices({});
-      setSeedResult(result);
+      setSeedResult(result?.data || result);
       queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
       queryClient.invalidateQueries({ queryKey: ["annual-plans"] });
     } catch (error) {
