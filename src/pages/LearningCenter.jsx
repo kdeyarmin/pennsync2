@@ -48,6 +48,7 @@ import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel
 import GamificationDashboard from '@/components/training/GamificationDashboard';
 import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
 import { generateLearningTranscriptPDF } from '@/functions/generateLearningTranscriptPDF';
+import { submitCourseFeedback } from '@/functions/submitCourseFeedback';
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
 
@@ -89,6 +90,40 @@ const downloadBlob = (filename, content, type) => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+
+// Read-only average rating display
+function StarsDisplay({ value, count }) {
+  return (
+    <div className="flex items-center gap-1" title={`${value.toFixed(1)} average from ${count} rating${count === 1 ? '' : 's'}`}>
+      <div className="flex">
+        {[1, 2, 3, 4, 5].map(n => (
+          <Star key={n} className={`w-3.5 h-3.5 ${n <= Math.round(value) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+        ))}
+      </div>
+      <span className="text-xs text-slate-500">{value.toFixed(1)} ({count})</span>
+    </div>
+  );
+}
+
+// Interactive star input for submitting a rating
+function RateStars({ value, onRate, disabled }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(n => (
+        <button
+          key={n}
+          type="button"
+          disabled={disabled}
+          onClick={() => onRate(n)}
+          className="focus:outline-none disabled:opacity-50"
+          aria-label={`Rate ${n} star${n === 1 ? '' : 's'}`}
+        >
+          <Star className={`w-5 h-5 transition-colors ${n <= (value || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-300 hover:text-amber-300'}`} />
+        </button>
+      ))}
+    </div>
+  );
+}
 const daysUntil = (date) => {
   if (!date) return Infinity;
   const target = new Date(date);
@@ -166,6 +201,12 @@ export default function LearningCenter() {
     },
     enabled: !!user?.email,
     initialData: null
+  });
+
+  const { data: feedbackList = [] } = useQuery({
+    queryKey: ['lc-course-feedback'],
+    queryFn: () => base44.entities.TrainingFeedback.list('-created_date', 1000),
+    initialData: []
   });
 
   // Derived data
@@ -298,6 +339,30 @@ export default function LearningCenter() {
     if (!items.length) return;
     downloadBlob(`learning_renewals_${new Date().toISOString().split('T')[0]}.ics`, buildRenewalIcs(items), 'text/calendar;charset=utf-8;');
   };
+
+  // Aggregate course ratings: average, count, and the current user's own rating
+  const feedbackByCourse = useMemo(() => {
+    const map = {};
+    feedbackList.forEach(f => {
+      if (!map[f.course_id]) map[f.course_id] = { sum: 0, count: 0, mine: null };
+      map[f.course_id].sum += Number(f.rating) || 0;
+      map[f.course_id].count += 1;
+      if (f.user_id === user?.email) map[f.course_id].mine = f.rating;
+    });
+    Object.values(map).forEach(m => { m.avg = m.count ? m.sum / m.count : 0; });
+    return map;
+  }, [feedbackList, user?.email]);
+
+  const [ratingFeedback, setRatingFeedback] = useState({});
+  const feedbackMutation = useMutation({
+    mutationFn: ({ courseId, rating }) => submitCourseFeedback({ courseId, rating }),
+    onMutate: ({ courseId }) => setRatingFeedback(prev => ({ ...prev, [courseId]: 'saving' })),
+    onSuccess: (_data, { courseId }) => {
+      setRatingFeedback(prev => ({ ...prev, [courseId]: 'done' }));
+      queryClient.invalidateQueries({ queryKey: ['lc-course-feedback'] });
+    },
+    onError: (_err, { courseId }) => setRatingFeedback(prev => ({ ...prev, [courseId]: 'error' })),
+  });
 
   // Sort active assignments: overdue first, then due soonest
   const sortedActive = useMemo(() => {
@@ -966,6 +1031,9 @@ export default function LearningCenter() {
                         </span>
                       )}
                     </div>
+                    {feedbackByCourse[course.id]?.count > 0 && (
+                      <StarsDisplay value={feedbackByCourse[course.id].avg} count={feedbackByCourse[course.id].count} />
+                    )}
                     <div className="space-y-2 pt-1">
                       {(() => {
                         const state = enrollFeedback[course.id];
@@ -1209,17 +1277,39 @@ export default function LearningCenter() {
           </CardHeader>
           <CardContent className="pb-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {completedAssignments.slice(0, 6).map(a => (
-                <div key={a.id} className="flex items-center gap-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{a.course_title}</p>
-                    <p className="text-xs text-slate-500">
-                      {a.score_percentage != null ? `Score: ${a.score_percentage}%` : 'Completed'}
-                    </p>
+              {completedAssignments.slice(0, 6).map(a => {
+                const fb = feedbackByCourse[a.course_id];
+                const state = ratingFeedback[a.course_id];
+                return (
+                  <div key={a.id} className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-800 truncate">{a.course_title}</p>
+                        <p className="text-xs text-slate-500">
+                          {a.score_percentage != null ? `Score: ${a.score_percentage}%` : 'Completed'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pl-6">
+                      <RateStars
+                        value={fb?.mine || 0}
+                        disabled={state === 'saving'}
+                        onRate={(n) => feedbackMutation.mutate({ courseId: a.course_id, rating: n })}
+                      />
+                      {state === 'done' ? (
+                        <span className="text-xs text-emerald-600">Thanks!</span>
+                      ) : state === 'saving' ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                      ) : fb?.mine ? (
+                        <span className="text-xs text-slate-400">Your rating</span>
+                      ) : (
+                        <span className="text-xs text-slate-400">Rate this</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {completedAssignments.length > 6 && (
               <Link to={createPageUrl('MyLearning')}>
