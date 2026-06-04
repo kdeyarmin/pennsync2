@@ -418,7 +418,7 @@ export async function secureDelete(entity, id, entityName) {
 /**
  * Rate limiter for API calls
  */
-class RateLimiter {
+export class RateLimiter {
   constructor(maxRequests = 10, timeWindow = 60000) {
     this.maxRequests = maxRequests;
     this.timeWindow = timeWindow;
@@ -427,17 +427,18 @@ class RateLimiter {
   
   canMakeRequest(key) {
     const now = Date.now();
-    
-    // Clean old requests
-    this.requests = this.requests.filter(r => 
-      r.key === key && (now - r.timestamp) < this.timeWindow
-    );
-    
-    // Check if under limit
-    if (this.requests.length >= this.maxRequests) {
+
+    // Drop only expired requests. (Previously this also dropped every other
+    // key's in-window history, so a call from one user reset every other user's
+    // count to zero on the shared `aiCallLimiter` instance — letting them blow
+    // past the per-user limit.)
+    this.requests = this.requests.filter(r => (now - r.timestamp) < this.timeWindow);
+
+    // Check this key's usage against the limit.
+    if (this.requests.filter(r => r.key === key).length >= this.maxRequests) {
       return false;
     }
-    
+
     // Add new request
     this.requests.push({ key, timestamp: now });
     return true;
@@ -574,10 +575,14 @@ export function deIdentifyForAI(text) {
  * Session management utilities
  */
 export class SessionManager {
+  static ACTIVITY_EVENTS = ['mousemove', 'keypress', 'click', 'scroll', 'touchstart'];
+
   constructor(timeoutMinutes = 15) {
     this.timeoutDuration = timeoutMinutes * 60 * 1000;
     this.timeoutId = null;
+    this.warningId = null;
     this.warningShown = false;
+    this._activityHandler = null;
   }
   
   /**
@@ -586,30 +591,38 @@ export class SessionManager {
    * @param {Function} onWarning - Callback for warning before timeout
    */
   startMonitoring(onTimeout, onWarning) {
+    // Detach any handler from a previous start so repeated calls don't stack
+    // listeners (and so we hold the exact reference stopMonitoring must remove).
+    this.stopMonitoring();
     this.resetTimeout(onTimeout, onWarning);
-    
-    // Reset on user activity
-    ['mousemove', 'keypress', 'click', 'scroll', 'touchstart'].forEach(event => {
-      window.addEventListener(event, () => this.resetTimeout(onTimeout, onWarning));
+
+    // Reset on user activity. Store the bound handler so the same reference is
+    // both added and removed — previously stopMonitoring tried to remove the
+    // bare `resetTimeout` method, which was never the function registered, so
+    // the listeners leaked and kept re-arming the timers after logout.
+    this._activityHandler = () => this.resetTimeout(onTimeout, onWarning);
+    SessionManager.ACTIVITY_EVENTS.forEach(event => {
+      window.addEventListener(event, this._activityHandler);
     });
   }
-  
+
   /**
    * Reset session timeout
    */
   resetTimeout(onTimeout, onWarning) {
     clearTimeout(this.timeoutId);
+    clearTimeout(this.warningId);
     this.warningShown = false;
-    
+
     // Set warning at 2 minutes before timeout
     const warningTime = this.timeoutDuration - (2 * 60 * 1000);
-    setTimeout(() => {
+    this.warningId = setTimeout(() => {
       if (!this.warningShown && onWarning) {
         this.warningShown = true;
         onWarning();
       }
     }, warningTime);
-    
+
     // Set actual timeout
     this.timeoutId = setTimeout(async () => {
       await logSecurityEvent('SESSION_TIMEOUT', {});
@@ -618,15 +631,19 @@ export class SessionManager {
       }
     }, this.timeoutDuration);
   }
-  
+
   /**
    * Stop monitoring
    */
   stopMonitoring() {
     clearTimeout(this.timeoutId);
-    ['mousemove', 'keypress', 'click', 'scroll', 'touchstart'].forEach(event => {
-      window.removeEventListener(event, this.resetTimeout);
-    });
+    clearTimeout(this.warningId);
+    if (this._activityHandler) {
+      SessionManager.ACTIVITY_EVENTS.forEach(event => {
+        window.removeEventListener(event, this._activityHandler);
+      });
+      this._activityHandler = null;
+    }
   }
 }
 
