@@ -1,14 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-  const user = await base44.auth.me();
-
-  if (!user || user.role !== 'admin') {
-    return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-  }
-
   try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user || user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     const credentials = await base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 5000);
     const today = new Date();
     const sixtyDaysFromNow = new Date(today);
@@ -40,7 +40,9 @@ Deno.serve(async (req) => {
           const userName = userRecord[0].full_name || cred.user_id;
 
           // One consolidated email per run; the body already shows the real
-          // days remaining.
+          // days remaining. Per-credential try/catch so one failed send (bad
+          // address, provider error) doesn't strand every later reminder.
+          try {
           await base44.asServiceRole.integrations.Core.SendEmail({
             to: cred.user_id,
             subject: `🔔 Credential Renewal Required: ${cred.title}`,
@@ -78,6 +80,9 @@ Credential Management System`
             days_until_expiry: daysUntilExpiry,
             offsets: dueOffsets
           });
+          } catch (sendErr) {
+            console.error(`Failed to send renewal reminder for credential ${cred.id}:`, sendErr?.message || sendErr);
+          }
         }
       }
     }
