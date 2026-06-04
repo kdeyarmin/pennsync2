@@ -1,5 +1,33 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RateLimiter, SessionManager } from './security';
+import { RateLimiter, SessionManager, isSafeExternalUrl } from './security';
+
+describe('isSafeExternalUrl', () => {
+  it('accepts http and https URLs', () => {
+    expect(isSafeExternalUrl('https://cms.gov/guideline')).toBe(true);
+    expect(isSafeExternalUrl('http://example.com/x')).toBe(true);
+  });
+
+  it('accepts site- and protocol-relative URLs', () => {
+    expect(isSafeExternalUrl('/Patients')).toBe(true);
+    expect(isSafeExternalUrl('//cdn.example.com/a.png')).toBe(true);
+  });
+
+  it('rejects dangerous schemes (XSS via href)', () => {
+    // eslint-disable-next-line no-script-url
+    expect(isSafeExternalUrl('javascript:alert(1)')).toBe(false);
+    expect(isSafeExternalUrl('JavaScript:alert(1)')).toBe(false);
+    expect(isSafeExternalUrl('data:text/html;base64,PHNjcmlwdD4=')).toBe(false);
+    expect(isSafeExternalUrl('vbscript:msgbox(1)')).toBe(false);
+  });
+
+  it('rejects empty / non-string input', () => {
+    expect(isSafeExternalUrl('')).toBe(false);
+    expect(isSafeExternalUrl('   ')).toBe(false);
+    expect(isSafeExternalUrl(null)).toBe(false);
+    expect(isSafeExternalUrl(undefined)).toBe(false);
+    expect(isSafeExternalUrl(42)).toBe(false);
+  });
+});
 
 describe('RateLimiter', () => {
   it('enforces the limit per key', () => {
