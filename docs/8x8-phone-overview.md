@@ -31,7 +31,14 @@ reduced to a length; numbers are masked to last-4).
 | `handleEightXEightVoicemail` | webhook | Attach a voicemail recording to its `CallLog`; notify nurse. |
 
 All webhook handlers verify the signing secret and **fail closed**. All outbound
-8x8 `fetch`es are bounded by an `AbortController` timeout.
+8x8 `fetch`es are bounded by an `AbortController` timeout **and retried with
+jittered exponential backoff** on transient failures (HTTP 408/425/429/5xx and
+dropped connections), honoring a `Retry-After` header when present. Retries are
+double-send safe because every text reuses one `clientMessageId` (8x8's
+idempotency key); voice origination — which has no idempotency key — retries only
+on explicit server-rejection statuses, never on an ambiguous network error. The
+policy is the unit-tested `voice/eightxeightRetry` module, mirrored inline into
+each backend function (single-file deploy model).
 
 ## Entities
 
@@ -57,7 +64,8 @@ and `AgencySettings`. See `8x8-entities.md`.
 ## Tested utils (`node --test`, wired into `verify:workflow-quality`)
 
 `voice/phoneUtils`, `voice/dutyUtils`, `voice/callbackQueue`,
-`messaging/smsUtils`, `messaging/smsQuickReplies`, `messaging/smsTemplates`,
+`voice/eightxeightRetry`, `messaging/smsUtils`, `messaging/smsQuickReplies`,
+`messaging/smsTemplates`,
 `messaging/scheduledSms`, `admin/eightxeightSetup`, `admin/phoneAnalytics`,
 `admin/csvExport`. These are the source of truth; the single-file backend
 functions keep inline copies of the shared algorithms.

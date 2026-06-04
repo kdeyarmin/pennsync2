@@ -84,6 +84,19 @@ parseable timestamp is present (idempotency on `provider_message_id` /
 name 8x8 sends and tune `isReplayStale` / the skew if needed. Only body fields
 are trusted (the HMAC covers the raw body); header timestamps are not.
 
+### Transient failures & retries
+Every outbound call to 8x8 (SMS send, scheduled-SMS dispatch, click-to-call) is
+bounded by a per-attempt timeout **and** retried with jittered exponential
+backoff when 8x8 returns a transient error (`408`/`425`/`429`/`5xx`) or the
+connection drops. A `Retry-After` header is honored (clamped) when 8x8 sends
+one. Texts are retried safely because each send reuses one `clientMessageId`,
+which 8x8 de-dups; **voice origination has no idempotency key**, so it is only
+retried on an explicit server-rejection status — never after an ambiguous
+network error — to avoid double-dialing. The shared policy lives in
+`src/components/voice/eightxeightRetry.js` (unit-tested) and is mirrored inline
+in each backend function. Tune `RETRYABLE_STATUSES`, the attempt count, or the
+backoff there and in the function copies if your account's behavior differs.
+
 ### Callflow / API shape caveats
 8x8 callflow action names (`makeCall`, `say`) and the outbound voice
 origination endpoint depend on your provisioned sub-account. Validate the JSON

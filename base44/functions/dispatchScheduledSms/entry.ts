@@ -24,7 +24,39 @@ async function getAgencyConfig(base44: any) {
   };
 }
 
-async function send8x8(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string, clientMessageId: string) {
+// ---- transient-failure retry policy (mirrors src/components/voice/eightxeightRetry.js) ----
+// Retries are double-send safe: each send reuses one clientMessageId (8x8
+// idempotency key). Capped at 2 attempts here so a batch of up to BATCH_LIMIT
+// rows stays bounded; a row that still fails is retried on the next cron tick
+// only if re-queued (otherwise it lands in 'failed' as before).
+const MAX_SEND_ATTEMPTS = 2;
+const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+function isRetryableStatus(status: number): boolean {
+  return RETRYABLE_STATUSES.has(Number(status));
+}
+function isRetryableError(err: any): boolean {
+  if (!err) return false;
+  const name = err.name || '';
+  if (name === 'AbortError' || name === 'TimeoutError' || name === 'TypeError') return true;
+  return /network|timeout|timed out|fetch failed|socket|ECONN|ETIMEDOUT|EAI_AGAIN|dns/i.test(err.message || '');
+}
+function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
+  if (headerValue == null) return null;
+  const raw = String(headerValue).trim();
+  if (raw === '') return null;
+  if (/^\d+$/.test(raw)) return Number(raw) * 1000;
+  const dateMs = Date.parse(raw);
+  if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - nowMs);
+  return null;
+}
+function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
+  const n = Math.max(1, Number(attempt) || 1);
+  const exp = Math.min(maxMs, baseMs * 2 ** (n - 1));
+  return Math.round(exp / 2 + Math.random() * (exp / 2));
+}
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function sendOnce(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string, clientMessageId: string) {
   const url = `${host}/api/v1/subaccounts/${subAccountId}/messages`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
@@ -36,10 +68,31 @@ async function send8x8(apiKey: string, host: string, subAccountId: string, sourc
       signal: controller.signal,
     });
     const data = await resp.json().catch(() => ({}));
-    return { ok: resp.ok, status: resp.status, data };
+    return { ok: resp.ok, status: resp.status, data, retryAfter: resp.headers.get('retry-after') };
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function send8x8(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string, clientMessageId: string) {
+  let lastError: any;
+  for (let attempt = 1; attempt <= MAX_SEND_ATTEMPTS; attempt++) {
+    let result;
+    try {
+      result = await sendOnce(apiKey, host, subAccountId, source, destination, text, clientMessageId);
+    } catch (err) {
+      if (attempt === MAX_SEND_ATTEMPTS || !isRetryableError(err)) throw err;
+      lastError = err;
+      await sleep(backoffDelayMs(attempt));
+      continue;
+    }
+    if (result.ok || !isRetryableStatus(result.status) || attempt === MAX_SEND_ATTEMPTS) {
+      return { ok: result.ok, status: result.status, data: result.data };
+    }
+    const fromHeader = parseRetryAfter(result.retryAfter ?? null);
+    await sleep(fromHeader != null ? Math.min(fromHeader, 4000) : backoffDelayMs(attempt));
+  }
+  throw lastError || new Error('send8x8 exhausted attempts');
 }
 
 /**
