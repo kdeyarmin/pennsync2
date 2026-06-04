@@ -253,9 +253,13 @@ logger gives intent + future redaction). *(Low · Low)*
 only `console.error`s; any render error drops the whole app to a "Reload Page" screen and is
 invisible to the team in production. → Add route-/section-level boundaries so one widget failure
 doesn't unmount the app, and report caught errors to a telemetry sink. ~~Replace toast-only fax/SMS
-failures with a persisted retry queue + backoff.~~ — ✅ Done for SMS: send-time retry/backoff plus a
+failures with a persisted retry queue + backoff.~~ — ✅ Done. **SMS:** send-time retry/backoff plus a
 `redriveFailedSms` outbox cron (transient-only, attempt-capped, idempotent) and a nurse notification
-on delivery failure. (Fax still pending.) *(Med · Low-Med)*
+on delivery failure. **Fax:** `autoRetryFailedFaxes` + `handleTwilioFaxWebhook` now honor the
+`FaxRetryConfig` entity, classify transient vs permanent failures (permanent gives up immediately),
+claim each fax with a per-run token before re-sending (no double-send), and notify the sender on
+permanent failure. Logic is the unit-tested `fax/faxRetry.js` with an inline-copy drift guard.
+*(Med · Low-Med)*
 
 **F2 — Accessibility audit + remediation. — Med**
 No `eslint-plugin-jsx-a11y`; `role`/`alt`/label coverage is sparse across ~850 components; the
