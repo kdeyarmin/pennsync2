@@ -16,7 +16,7 @@ import {
   Calculator,
   Loader2
 } from "lucide-react";
-import debounce from "lodash/debounce";
+import { debounce } from "@/lib/debounce";
 
 export default function PDGMDocumentationImpactAnalyzer({
   noteContent,
