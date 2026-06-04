@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +24,18 @@ import {
   Target,
   Loader2,
   BookOpenCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  PlayCircle,
+  ShieldCheck,
+  ArrowRight,
+  CalendarClock,
+  UserPlus,
+  Check,
+  Trophy,
+  Flame,
+  Star,
+  Download,
+  CalendarPlus
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -32,8 +44,87 @@ import PageHeader from '@/components/ui/PageHeader';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CertificateDownloadButton from '@/components/training/CertificateDownloadButton';
+import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel';
+import GamificationDashboard from '@/components/training/GamificationDashboard';
+import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
+import { generateLearningTranscriptPDF } from '@/functions/generateLearningTranscriptPDF';
+import { submitCourseFeedback } from '@/functions/submitCourseFeedback';
+import { getCourseFeedbackSummary } from '@/functions/getCourseFeedbackSummary';
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
+
+// Build an all-day .ics calendar from renewal items (client-side, browser only)
+const icsEscape = (s) => String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+const toIcsDate = (value) => {
+  const d = new Date(value);
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+};
+const buildRenewalIcs = (items) => {
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PENNSync//Learning//EN', 'CALSCALE:GREGORIAN'];
+  items.forEach((item) => {
+    const start = new Date(item.date);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${item.id}@pennsync`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART;VALUE=DATE:${toIcsDate(start)}`,
+      `DTEND;VALUE=DATE:${toIcsDate(end)}`,
+      `SUMMARY:${icsEscape(`${item.kind}: ${item.title}`)}`,
+      `DESCRIPTION:${icsEscape(`${item.kind} for ${item.title}. Tracked in PENNSync My Learning.`)}`,
+      'END:VEVENT'
+    );
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+};
+const downloadBlob = (filename, content, type) => {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+// Read-only average rating display
+function StarsDisplay({ value, count }) {
+  return (
+    <div className="flex items-center gap-1" title={`${value.toFixed(1)} average from ${count} rating${count === 1 ? '' : 's'}`}>
+      <div className="flex">
+        {[1, 2, 3, 4, 5].map(n => (
+          <Star key={n} className={`w-3.5 h-3.5 ${n <= Math.round(value) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+        ))}
+      </div>
+      <span className="text-xs text-slate-500">{value.toFixed(1)} ({count})</span>
+    </div>
+  );
+}
+
+// Interactive star input for submitting a rating
+function RateStars({ value, onRate, disabled }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(n => (
+        <button
+          key={n}
+          type="button"
+          disabled={disabled}
+          onClick={() => onRate(n)}
+          className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 disabled:opacity-50"
+          aria-label={`Rate ${n} star${n === 1 ? '' : 's'}`}
+        >
+          <Star className={`w-5 h-5 transition-colors ${n <= (value || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-300 hover:text-amber-300'}`} />
+        </button>
+      ))}
+    </div>
+  );
+}
 const daysUntil = (date) => {
   if (!date) return Infinity;
   const target = new Date(date);
@@ -47,6 +138,10 @@ const daysUntil = (date) => {
 export default function LearningCenter() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [businessLineFilter, setBusinessLineFilter] = useState('all');
+  const [requiredOnly, setRequiredOnly] = useState(false);
+  const [catalogLimit, setCatalogLimit] = useState(12);
+  const queryClient = useQueryClient();
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -99,6 +194,26 @@ export default function LearningCenter() {
     initialData: []
   });
 
+  const { data: leaderboardEntry = null } = useQuery({
+    queryKey: ['lc-leaderboard', user?.email],
+    queryFn: async () => {
+      const entries = await base44.entities.Leaderboard.filter({ user_id: user.email });
+      return entries[0] || null;
+    },
+    enabled: !!user?.email,
+    initialData: null
+  });
+
+  const { data: feedbackData = { summaries: {}, mine: {} } } = useQuery({
+    queryKey: ['lc-course-feedback', user?.email],
+    queryFn: async () => {
+      const res = await getCourseFeedbackSummary({});
+      return res?.data || res;
+    },
+    enabled: !!user?.email,
+    initialData: { summaries: {}, mine: {} }
+  });
+
   // Derived data
   const activeAssignments = useMemo(() =>
     assignments.filter(a => ['assigned', 'in_progress', 'overdue'].includes(a.status)),
@@ -120,7 +235,140 @@ export default function LearningCenter() {
     [activeAssignments]
   );
 
+  // Lookup of published courses by id for joining assignments to course metadata
+  const courseById = useMemo(
+    () => Object.fromEntries(courses.map(c => [c.id, c])),
+    [courses]
+  );
 
+  // An assignment counts as "required" when the assignment is flagged required,
+  // or its course is an annual mandatory / compliance in-service.
+  const isRequiredAssignment = (a) =>
+    a.required === true ||
+    ['annual_mandatory', 'in_service'].includes(courseById[a.course_id]?.training_type);
+
+  const requiredAssignments = useMemo(
+    () => assignments.filter(isRequiredAssignment),
+    [assignments, courseById]
+  );
+  const requiredCompleted = useMemo(
+    () => requiredAssignments.filter(a => a.status === 'completed' || a.pass_fail_result === 'passed'),
+    [requiredAssignments]
+  );
+  const requiredOutstanding = useMemo(
+    () => requiredAssignments
+      .filter(a => !(a.status === 'completed' || a.pass_fail_result === 'passed'))
+      .sort((a, b) => new Date(a.due_date || '9999') - new Date(b.due_date || '9999')),
+    [requiredAssignments]
+  );
+  const requiredReadiness = requiredAssignments.length > 0
+    ? Math.round((requiredCompleted.length / requiredAssignments.length) * 100)
+    : 100;
+
+  // Most recently touched in-progress course, for a quick "continue" entry point
+  const resumeAssignment = useMemo(() => {
+    const inProgress = assignments.filter(a => a.status === 'in_progress');
+    return [...inProgress].sort(
+      (a, b) => new Date(b.last_accessed || b.started_date || 0) - new Date(a.last_accessed || a.started_date || 0)
+    )[0] || null;
+  }, [assignments]);
+
+  // CEU hours earned from completed courses, with a per-category breakdown
+  const ceu = useMemo(() => {
+    let total = 0;
+    const byCategory = {};
+    completedAssignments.forEach(a => {
+      const course = courseById[a.course_id];
+      const hours = Number(course?.ceu_hours) || 0;
+      if (hours <= 0) return;
+      total += hours;
+      const cat = course?.category || 'general';
+      byCategory[cat] = (byCategory[cat] || 0) + hours;
+    });
+    const breakdown = Object.entries(byCategory)
+      .map(([category, hours]) => ({ category, hours }))
+      .sort((x, y) => y.hours - x.hours);
+    return { total: Math.round(total * 10) / 10, breakdown };
+  }, [completedAssignments, courseById]);
+
+  // Courses the user already has an assignment for (to gate self-enrollment)
+  const assignedCourseIds = useMemo(
+    () => new Set(assignments.map(a => a.course_id)),
+    [assignments]
+  );
+
+  // Upcoming renewals: certificate expirations + scheduled training renewals
+  const renewals = useMemo(() => {
+    const items = [];
+    certificates.forEach(c => {
+      if (c.expiration_date) {
+        items.push({ id: `cert-${c.id}`, title: c.course_title, kind: 'Certificate expiration', date: c.expiration_date });
+      }
+    });
+    assignments.forEach(a => {
+      if (a.renewal_due_date) {
+        items.push({ id: `asg-${a.id}`, title: a.course_title, kind: 'Training renewal', date: a.renewal_due_date });
+      }
+    });
+    return items.sort((x, y) => new Date(x.date) - new Date(y.date));
+  }, [certificates, assignments]);
+
+  // Self-enrollment for elective (non-required) catalog courses
+  const [enrollFeedback, setEnrollFeedback] = useState({});
+  const enrollMutation = useMutation({
+    mutationFn: (courseId) => selfEnrollCourse({ courseId }),
+    onMutate: (courseId) => setEnrollFeedback(prev => ({ ...prev, [courseId]: 'loading' })),
+    onSuccess: (_data, courseId) => {
+      setEnrollFeedback(prev => ({ ...prev, [courseId]: 'done' }));
+      queryClient.invalidateQueries({ queryKey: ['lc-assignments', user?.email] });
+    },
+    onError: (_err, courseId) => setEnrollFeedback(prev => ({ ...prev, [courseId]: 'error' })),
+  });
+
+  // Download the current user's training transcript as a PDF
+  const [downloadingTranscript, setDownloadingTranscript] = useState(false);
+  const downloadTranscript = async () => {
+    if (!user?.email) return;
+    setDownloadingTranscript(true);
+    try {
+      const response = await generateLearningTranscriptPDF({ employeeId: user.email });
+      downloadBlob(`Training_Transcript_${new Date().toISOString().split('T')[0]}.pdf`, response.data, 'application/pdf');
+    } catch (error) {
+      console.error('Failed to download transcript:', error);
+    } finally {
+      setDownloadingTranscript(false);
+    }
+  };
+
+  const exportRenewalsCalendar = (items) => {
+    if (!items.length) return;
+    downloadBlob(`learning_renewals_${new Date().toISOString().split('T')[0]}.ics`, buildRenewalIcs(items), 'text/calendar;charset=utf-8;');
+  };
+
+  // Aggregate course ratings: average, count, and the current user's own rating
+  const feedbackByCourse = useMemo(() => {
+    const map = {};
+    const summaries = feedbackData?.summaries || {};
+    const mine = feedbackData?.mine || {};
+    Object.entries(summaries).forEach(([id, s]) => {
+      map[id] = { avg: s.avg || 0, count: s.count || 0, mine: mine[id] ?? null };
+    });
+    Object.entries(mine).forEach(([id, rating]) => {
+      if (!map[id]) map[id] = { avg: 0, count: 0, mine: rating };
+    });
+    return map;
+  }, [feedbackData]);
+
+  const [ratingFeedback, setRatingFeedback] = useState({});
+  const feedbackMutation = useMutation({
+    mutationFn: ({ courseId, rating }) => submitCourseFeedback({ courseId, rating }),
+    onMutate: ({ courseId }) => setRatingFeedback(prev => ({ ...prev, [courseId]: 'saving' })),
+    onSuccess: (_data, { courseId }) => {
+      setRatingFeedback(prev => ({ ...prev, [courseId]: 'done' }));
+      queryClient.invalidateQueries({ queryKey: ['lc-course-feedback'] });
+    },
+    onError: (_err, { courseId }) => setRatingFeedback(prev => ({ ...prev, [courseId]: 'error' })),
+  });
 
   // Sort active assignments: overdue first, then due soonest
   const sortedActive = useMemo(() => {
@@ -131,6 +379,9 @@ export default function LearningCenter() {
       return new Date(a.due_date || '9999') - new Date(b.due_date || '9999');
     });
   }, [activeAssignments]);
+
+  const isRequiredCourse = (c) =>
+    c.is_mandatory === true || ['annual_mandatory', 'in_service'].includes(c.training_type);
 
   // Filter courses for catalog
   const filteredCourses = useMemo(() => {
@@ -146,8 +397,16 @@ export default function LearningCenter() {
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(c => c.category === categoryFilter);
     }
+    if (businessLineFilter !== 'all') {
+      filtered = filtered.filter(c =>
+        !c.business_line_scope || c.business_line_scope === 'all' || c.business_line_scope === businessLineFilter
+      );
+    }
+    if (requiredOnly) {
+      filtered = filtered.filter(isRequiredCourse);
+    }
     return filtered;
-  }, [courses, searchQuery, categoryFilter]);
+  }, [courses, searchQuery, categoryFilter, businessLineFilter, requiredOnly]);
 
   const categories = useMemo(() => {
     const cats = new Set(courses.map(c => c.category).filter(Boolean));
@@ -196,6 +455,13 @@ export default function LearningCenter() {
         favoritePage="LearningCenter"
         actions={
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={downloadTranscript} disabled={downloadingTranscript || !user?.email}>
+              {downloadingTranscript ? (
+                <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Preparing...</>
+              ) : (
+                <><Download className="w-4 h-4 mr-1.5" /> Transcript PDF</>
+              )}
+            </Button>
             <Link to={createPageUrl('MyLearning')}>
               <Button variant="outline" size="sm">
                 <BookOpen className="w-4 h-4 mr-1.5" />
@@ -257,6 +523,91 @@ export default function LearningCenter() {
         })}
       </div>
 
+      {/* Continue Learning */}
+      {resumeAssignment && (
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <PlayCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Continue Learning</p>
+                <h3 className="font-bold text-slate-900 truncate">{resumeAssignment.course_title}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Progress value={resumeAssignment.progress_percentage || 0} className="h-1.5 w-32 sm:w-48" />
+                  <span className="text-xs text-slate-500 flex-shrink-0">{resumeAssignment.progress_percentage || 0}% complete</span>
+                </div>
+              </div>
+            </div>
+            <Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${resumeAssignment.id}`} className="flex-shrink-0">
+              <Button className="w-full sm:w-auto">
+                Resume
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Required Training Compliance Readiness */}
+      {requiredAssignments.length > 0 && (
+        <Card className={`border-2 ${requiredReadiness === 100 ? 'border-emerald-200 bg-emerald-50/30' : 'border-indigo-200 bg-indigo-50/30'}`}>
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${requiredReadiness === 100 ? 'bg-emerald-100' : 'bg-indigo-100'}`}>
+                  <ShieldCheck className={`w-6 h-6 ${requiredReadiness === 100 ? 'text-emerald-600' : 'text-indigo-600'}`} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-slate-900">Required Training Readiness</h3>
+                  <p className="text-sm text-slate-600">
+                    {requiredReadiness === 100
+                      ? 'All your required in-services are complete. You are survey-ready.'
+                      : `${requiredOutstanding.length} required ${requiredOutstanding.length === 1 ? 'in-service' : 'in-services'} still need your attention.`}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className={`text-3xl font-bold ${requiredReadiness === 100 ? 'text-emerald-600' : 'text-indigo-600'}`}>{requiredReadiness}%</p>
+                <p className="text-xs text-slate-500">{requiredCompleted.length}/{requiredAssignments.length} complete</p>
+              </div>
+            </div>
+            <Progress
+              value={requiredReadiness}
+              className={`h-2.5 mt-3 ${requiredReadiness === 100 ? '[&>div]:bg-emerald-500' : '[&>div]:bg-indigo-600'}`}
+            />
+            {requiredOutstanding.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {requiredOutstanding.slice(0, 3).map(a => {
+                  const overdue = a.status === 'overdue';
+                  return (
+                    <div key={a.id} className="flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border border-slate-200">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-800 truncate">{a.course_title}</p>
+                        <p className={`text-xs ${overdue ? 'text-red-600 font-medium' : 'text-slate-500'}`}>
+                          {overdue ? 'Overdue — ' : 'Due '}{formatDate(a.due_date)}
+                        </p>
+                      </div>
+                      <Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${a.id}`} className="flex-shrink-0">
+                        <Button size="sm" variant={overdue ? 'default' : 'outline'} className={overdue ? 'bg-red-600 hover:bg-red-700' : ''}>
+                          {a.status === 'in_progress' ? 'Continue' : 'Start'}
+                        </Button>
+                      </Link>
+                    </div>
+                  );
+                })}
+                {requiredOutstanding.length > 3 && (
+                  <p className="text-xs text-slate-500 text-center pt-1">
+                    +{requiredOutstanding.length - 3} more required {requiredOutstanding.length - 3 === 1 ? 'in-service' : 'in-services'} outstanding
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Completion Progress Bar */}
       {assignments.length > 0 && (
         <Card className="border-slate-200">
@@ -275,6 +626,76 @@ export default function LearningCenter() {
           </CardContent>
         </Card>
       )}
+
+      {/* Continuing Education (CEU) earned */}
+      {ceu.total > 0 && (
+        <Card className="border-purple-200 bg-purple-50/30">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">Continuing Education Earned</h3>
+                  <p className="text-sm text-slate-600">CEU hours from your completed courses</p>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-3xl font-bold text-purple-600">{ceu.total}</p>
+                <p className="text-xs text-slate-500">CEU hours</p>
+              </div>
+            </div>
+            {ceu.breakdown.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {ceu.breakdown.map(b => (
+                  <Badge key={b.category} variant="outline" className="capitalize text-xs">
+                    {b.category.replace(/_/g, ' ')}: {b.hours} hr{b.hours === 1 ? '' : 's'}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Achievements highlight */}
+      {leaderboardEntry && (
+        (leaderboardEntry.total_points > 0 || leaderboardEntry.badges_earned > 0 || leaderboardEntry.current_streak > 0) && (
+          <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-amber-500" /> Your Achievements
+                </h3>
+                <span className="text-xs text-amber-700 font-medium">Keep the streak going!</span>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: 'Points', value: leaderboardEntry.total_points || 0, icon: Trophy, color: 'text-amber-600' },
+                  { label: 'Badges', value: leaderboardEntry.badges_earned || 0, icon: Award, color: 'text-blue-600' },
+                  { label: 'Day Streak', value: leaderboardEntry.current_streak || 0, icon: Flame, color: 'text-orange-600' },
+                  { label: 'Perfect Scores', value: leaderboardEntry.perfect_scores || 0, icon: Star, color: 'text-purple-600' },
+                ].map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="bg-white rounded-xl border border-amber-100 p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-500">{item.label}</p>
+                        <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
+                      </div>
+                      <Icon className={`w-6 h-6 ${item.color} opacity-70`} />
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      )}
+
+      {/* Educator / admin team readiness */}
+      {isEducatorOrAdmin && <EducatorReadinessPanel />}
 
       {/* Overdue Alert Banner */}
       {overdueAssignments.length > 0 && (
@@ -361,6 +782,14 @@ export default function LearningCenter() {
             <TabsTrigger value="certificates" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Award className="w-4 h-4 mr-2" />
               Certificates ({certificates.length})
+            </TabsTrigger>
+            <TabsTrigger value="renewals" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <CalendarClock className="w-4 h-4 mr-2" />
+              Renewals ({renewals.length})
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Trophy className="w-4 h-4 mr-2" />
+              Achievements
             </TabsTrigger>
           </TabsList>
         </div>
@@ -501,13 +930,13 @@ export default function LearningCenter() {
 
         {/* Course Catalog Tab */}
         <TabsContent value="catalog" className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search courses..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setCatalogLimit(12); }}
                 className="pl-9"
               />
             </div>
@@ -515,7 +944,7 @@ export default function LearningCenter() {
               <Filter className="w-4 h-4 text-slate-400" />
               <select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                onChange={(e) => { setCategoryFilter(e.target.value); setCatalogLimit(12); }}
                 className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Categories</option>
@@ -523,6 +952,28 @@ export default function LearningCenter() {
                   <option key={cat} value={cat}>{cat.replace(/_/g, ' ')}</option>
                 ))}
               </select>
+              <select
+                value={businessLineFilter}
+                onChange={(e) => { setBusinessLineFilter(e.target.value); setCatalogLimit(12); }}
+                className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Lines</option>
+                <option value="home_health">Home Health</option>
+                <option value="hospice">Hospice</option>
+              </select>
+              <button
+                type="button"
+                aria-pressed={requiredOnly}
+                onClick={() => { setRequiredOnly(v => !v); setCatalogLimit(12); }}
+                className={`text-sm rounded-lg px-3 py-2 border transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                  requiredOnly
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                Required only
+              </button>
             </div>
           </div>
 
@@ -540,16 +991,29 @@ export default function LearningCenter() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCourses.slice(0, 12).map(course => (
+              {filteredCourses.slice(0, catalogLimit).map(course => (
                 <Card key={course.id} className="border-slate-200 hover:shadow-md transition-all group">
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <Badge variant="outline" className="text-xs capitalize">
                         {course.category?.replace(/_/g, ' ') || 'General'}
                       </Badge>
-                      {course.training_type === 'annual_mandatory' && (
-                        <Badge className="bg-indigo-100 text-indigo-700 text-xs">Annual</Badge>
-                      )}
+                      <div className="flex items-center gap-1 flex-wrap justify-end">
+                        {course.business_line_scope && course.business_line_scope !== 'all' && (
+                          <Badge variant="outline" className="text-xs">
+                            {course.business_line_scope === 'home_health' ? 'Home Health' : 'Hospice'}
+                          </Badge>
+                        )}
+                        {course.training_type === 'annual_mandatory' && (
+                          <Badge className="bg-indigo-100 text-indigo-700 text-xs">Annual</Badge>
+                        )}
+                        {course.training_type === 'in_service' && (
+                          <Badge className="bg-purple-100 text-purple-700 text-xs">In-Service</Badge>
+                        )}
+                        {isRequiredCourse(course) && (
+                          <Badge className="bg-rose-100 text-rose-700 text-xs">Required</Badge>
+                        )}
+                      </div>
                     </div>
                     <h3 className="font-bold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors">
                       {course.title}
@@ -574,22 +1038,64 @@ export default function LearningCenter() {
                         </span>
                       )}
                     </div>
-                    {isEducatorOrAdmin && (
-                      <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${course.id}&preview=true`}>
-                        <Button variant="outline" size="sm" className="w-full mt-2">
-                          Preview Course
-                        </Button>
-                      </Link>
+                    {feedbackByCourse[course.id]?.count > 0 && (
+                      <StarsDisplay value={feedbackByCourse[course.id].avg} count={feedbackByCourse[course.id].count} />
                     )}
+                    <div className="space-y-2 pt-1">
+                      {(() => {
+                        const state = enrollFeedback[course.id];
+                        if (assignedCourseIds.has(course.id) || state === 'done') {
+                          return (
+                            <div className="flex items-center justify-center gap-1.5 text-sm text-emerald-600 font-medium py-1.5">
+                              <Check className="w-4 h-4" /> Enrolled
+                            </div>
+                          );
+                        }
+                        if (!isRequiredCourse(course)) {
+                          return (
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              disabled={state === 'loading'}
+                              onClick={() => enrollMutation.mutate(course.id)}
+                            >
+                              {state === 'loading' ? (
+                                <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Enrolling...</>
+                              ) : (
+                                <><UserPlus className="w-4 h-4 mr-1.5" /> Enroll</>
+                              )}
+                            </Button>
+                          );
+                        }
+                        return (
+                          <p className="text-xs text-slate-400 text-center py-1.5">Assigned by your administrator</p>
+                        );
+                      })()}
+                      {enrollFeedback[course.id] === 'error' && (
+                        <p className="text-xs text-red-600 text-center">Could not enroll. Please try again.</p>
+                      )}
+                      {isEducatorOrAdmin && (
+                        <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${course.id}&preview=true`}>
+                          <Button variant="outline" size="sm" className="w-full">
+                            Preview Course
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           )}
-          {filteredCourses.length > 12 && (
-            <p className="text-sm text-center text-slate-500">
-              Showing 12 of {filteredCourses.length} courses. Use search to find specific content.
-            </p>
+          {filteredCourses.length > catalogLimit && (
+            <div className="text-center space-y-2">
+              <p className="text-sm text-slate-500">
+                Showing {Math.min(catalogLimit, filteredCourses.length)} of {filteredCourses.length} courses
+              </p>
+              <Button variant="outline" onClick={() => setCatalogLimit(l => l + 12)}>
+                Load more courses
+              </Button>
+            </div>
           )}
         </TabsContent>
 
@@ -690,6 +1196,81 @@ export default function LearningCenter() {
             </Link>
           )}
         </TabsContent>
+
+        {/* Renewals Tab */}
+        <TabsContent value="renewals" className="space-y-3">
+          {renewals.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <CalendarClock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-slate-800">No upcoming renewals</h3>
+                <p className="text-slate-500 mt-1">Certificate expirations and training renewal dates will appear here.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => exportRenewalsCalendar(renewals)}>
+                  <CalendarPlus className="w-4 h-4 mr-1.5" />
+                  Export all to calendar
+                </Button>
+              </div>
+              {(() => {
+              let lastMonth = null;
+              return renewals.map(item => {
+                const monthLabel = new Date(item.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+                const showHeader = monthLabel !== lastMonth;
+                lastMonth = monthLabel;
+                const days = daysUntil(item.date);
+                const isPast = days < 0;
+                const isSoon = days >= 0 && days <= 30;
+                return (
+                  <div key={item.id}>
+                    {showHeader && (
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mt-4 mb-1.5 first:mt-0">{monthLabel}</p>
+                    )}
+                    <Card className={`border ${isPast ? 'border-red-200 bg-red-50/30' : isSoon ? 'border-amber-200 bg-amber-50/20' : 'border-slate-200'}`}>
+                      <CardContent className="p-3.5 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${isPast ? 'bg-red-100' : isSoon ? 'bg-amber-100' : 'bg-slate-100'}`}>
+                            <CalendarClock className={`w-4.5 h-4.5 ${isPast ? 'text-red-600' : isSoon ? 'text-amber-600' : 'text-slate-500'}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 truncate">{item.title}</p>
+                            <p className="text-xs text-slate-500">{item.kind}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="text-right">
+                            <p className={`text-sm font-medium ${isPast ? 'text-red-600' : isSoon ? 'text-amber-700' : 'text-slate-700'}`}>{formatDate(item.date)}</p>
+                            <p className={`text-xs ${isPast ? 'text-red-500' : 'text-slate-400'}`}>
+                              {isPast ? `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue` : days === 0 ? 'Due today' : `in ${days} day${days === 1 ? '' : 's'}`}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-400 hover:text-indigo-600"
+                            title="Add to calendar"
+                            onClick={() => exportRenewalsCalendar([item])}
+                          >
+                            <CalendarPlus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              });
+            })()}
+            </>
+          )}
+        </TabsContent>
+
+        {/* Achievements Tab */}
+        <TabsContent value="achievements" className="space-y-3">
+          {user?.email && <GamificationDashboard userId={user.email} />}
+        </TabsContent>
       </Tabs>
 
       {/* Recently Completed Section */}
@@ -703,17 +1284,39 @@ export default function LearningCenter() {
           </CardHeader>
           <CardContent className="pb-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {completedAssignments.slice(0, 6).map(a => (
-                <div key={a.id} className="flex items-center gap-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{a.course_title}</p>
-                    <p className="text-xs text-slate-500">
-                      {a.score_percentage != null ? `Score: ${a.score_percentage}%` : 'Completed'}
-                    </p>
+              {completedAssignments.slice(0, 6).map(a => {
+                const fb = feedbackByCourse[a.course_id];
+                const state = ratingFeedback[a.course_id];
+                return (
+                  <div key={a.id} className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-800 truncate">{a.course_title}</p>
+                        <p className="text-xs text-slate-500">
+                          {a.score_percentage != null ? `Score: ${a.score_percentage}%` : 'Completed'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pl-6">
+                      <RateStars
+                        value={fb?.mine || 0}
+                        disabled={state === 'saving'}
+                        onRate={(n) => feedbackMutation.mutate({ courseId: a.course_id, rating: n })}
+                      />
+                      {state === 'done' ? (
+                        <span className="text-xs text-emerald-600">Thanks!</span>
+                      ) : state === 'saving' ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                      ) : fb?.mine ? (
+                        <span className="text-xs text-slate-400">Your rating</span>
+                      ) : (
+                        <span className="text-xs text-slate-400">Rate this</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {completedAssignments.length > 6 && (
               <Link to={createPageUrl('MyLearning')}>
