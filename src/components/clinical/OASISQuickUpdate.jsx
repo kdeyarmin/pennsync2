@@ -48,22 +48,30 @@ export default function OASISQuickUpdate({ patient, currentUser }) {
   const handleSave = async () => {
     if (!patient?.id) return;
     setSaving(true);
-    await base44.entities.OASISAssessment.create({
-      patient_id: patient.id,
-      patient_name: `${patient.first_name} ${patient.last_name}`,
-      clinician_email: currentUser?.email,
-      clinician_name: currentUser?.full_name,
-      assessment_date: new Date().toISOString().split("T")[0],
-      functional_status: values,
-      clinical_note: clinicalNote,
-      status: "draft",
-      source: "quick_update",
-    });
-    toast.success("OASIS quick update saved as draft");
-    setValues({});
-    setClinicalNote("");
-    setSaving(false);
-    queryClient.invalidateQueries({ queryKey: ["oasis-assessments", patient?.id] });
+    try {
+      await base44.entities.OASISAssessment.create({
+        patient_id: patient.id,
+        patient_name: `${patient.first_name} ${patient.last_name}`,
+        clinician_email: currentUser?.email,
+        clinician_name: currentUser?.full_name,
+        assessment_date: new Date().toISOString().split("T")[0],
+        functional_status: values,
+        clinical_note: clinicalNote,
+        status: "draft",
+        source: "quick_update",
+      });
+      toast.success("OASIS quick update saved as draft");
+      setValues({});
+      setClinicalNote("");
+      queryClient.invalidateQueries({ queryKey: ["oasis-assessments", patient?.id] });
+    } catch (err) {
+      // Without this, a failed save left the button stuck on "Saving…" with no
+      // feedback and the clinical draft silently lost.
+      console.error("Failed to save OASIS quick update:", err);
+      toast.error("Failed to save OASIS quick update. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const hasChanges = Object.keys(values).length > 0 || clinicalNote.trim().length > 0;

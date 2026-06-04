@@ -117,7 +117,10 @@ Deno.serve(async (req) => {
     const csvContent = [
       headers.join(','),
       ...data.map(row => headers.map(h => {
-        const val = row[h] || '';
+        // Only blank null/undefined — `|| ''` wrongly blanked legitimate 0s
+        // (Days Until Expiry / Days Overdue / Progress % for a cert due today).
+        const raw = row[h];
+        const val = raw === undefined || raw === null ? '' : raw;
         const escaped = String(val).replace(/"/g, '""');
         return `"${escaped}"`;
       }).join(','))

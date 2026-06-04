@@ -24,8 +24,19 @@ Deno.serve(async (req) => {
     const modules = await base44.asServiceRole.entities.TrainingModule.filter({ course_id: courseId }, 'order_index', 500);
     const questions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: courseId }, 'order_index', 500);
 
+    // Strip server-managed fields before re-creating: spreading the source id /
+    // created_date / updated_date into create risks colliding with or aliasing
+    // the original record (the codebase strips id before create elsewhere).
+    const stripMeta = (record) => {
+      const copy = { ...record };
+      delete copy.id;
+      delete copy.created_date;
+      delete copy.updated_date;
+      return copy;
+    };
+
     const duplicatedCourse = await base44.asServiceRole.entities.TrainingCourse.create({
-      ...course,
+      ...stripMeta(course),
       title: `${course.title} (Copy)`,
       status: 'draft',
       published_by: null,
@@ -35,7 +46,7 @@ Deno.serve(async (req) => {
 
     await Promise.all(modules.map((module, index) =>
       base44.asServiceRole.entities.TrainingModule.create({
-        ...module,
+        ...stripMeta(module),
         course_id: duplicatedCourse.id,
         order_index: index
       })
@@ -43,7 +54,7 @@ Deno.serve(async (req) => {
 
     await Promise.all(questions.map((question, index) =>
       base44.asServiceRole.entities.TrainingQuestion.create({
-        ...question,
+        ...stripMeta(question),
         course_id: duplicatedCourse.id,
         order_index: index
       })

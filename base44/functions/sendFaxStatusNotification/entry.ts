@@ -103,14 +103,17 @@ Please log in to your dashboard to view more details.
 
     // Log notification attempt
     try {
+      // Notification requires user_email (RLS reads on it); user_id is not a
+      // field, so the previous create silently failed and the recipient never
+      // saw it. Shape mirrors the working pollFaxStatuses notification.
       await base44.asServiceRole.entities.Notification.create({
-        user_id: user.email,
-        type: 'fax_status',
+        user_email: user.email,
+        type: status === 'failed' ? 'error' : 'success',
         title: subject,
         message: `Fax to ${recipientFax} has been ${status}`,
-        status: 'sent',
-        related_fax_id: data?.id,
-        created_at: new Date().toISOString(),
+        related_entity: 'FaxLog',
+        related_entity_id: data?.id,
+        is_read: false,
       });
     } catch (logError) {
       console.error('Failed to log notification:', logError);

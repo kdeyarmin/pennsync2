@@ -113,7 +113,8 @@ class OfflineStorage {
   // Get count of pending items
   getPendingCount() {
     return this.getPendingVisits().filter(v => !v.synced).length +
-           this.getPendingUpdates().filter(u => !u.synced).length;
+           this.getPendingUpdates().filter(u => !u.synced).length +
+           this.getPendingChanges().filter(c => c.status !== 'synced').length;
   }
 
   // Get sync status summary
@@ -304,6 +305,66 @@ class OfflineStorage {
     }
   }
 
+  // Map a generic change type like "visit_create" / "care_plan_update" to its
+  // entity name ("Visit" / "CarePlan") and action ("create" / "update").
+  parseChangeType(type) {
+    const parts = String(type || '').split('_');
+    const action = parts.pop();
+    const entityName = parts
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join('');
+    return { entityName, action };
+  }
+
+  // Replay the generic offline_pending queue (written by addPendingChange, e.g.
+  // OfflineTaskManager's offline visit notes and incident reports). Previously
+  // nothing drained this queue, so anything saved through addPendingChange was
+  // never uploaded — silent clinical data loss. Successfully-synced changes are
+  // dropped; failures are retained with an incremented retryCount.
+  async syncPendingChanges(base44) {
+    const all = this.getPendingChanges();
+    if (all.length === 0) return { success: 0, failed: 0, errors: [] };
+
+    let success = 0;
+    let failed = 0;
+    const errors = [];
+    const remaining = [];
+
+    for (const change of all) {
+      if (change.status === 'synced') continue;
+      try {
+        const { entityName, action } = this.parseChangeType(change.type);
+        const Entity = base44.entities[entityName];
+        if (!Entity) throw new Error(`No entity mapping for change type "${change.type}"`);
+
+        // Strip local-only bookkeeping before sending to the server.
+        const payload = { ...(change.data || {}) };
+        delete payload.created_offline;
+        delete payload.entityType;
+
+        if (action === 'update' && change.entityId) {
+          await Entity.update(change.entityId, payload);
+        } else {
+          await Entity.create(payload);
+        }
+        success++;
+      } catch (error) {
+        console.error('Error syncing pending change:', error);
+        this.logSyncError(change, error, 'change');
+        failed++;
+        errors.push({ id: change.id, error: error.message });
+        remaining.push({
+          ...change,
+          retryCount: (change.retryCount || 0) + 1,
+          lastError: error.message
+        });
+      }
+    }
+
+    localStorage.setItem('offline_pending', JSON.stringify(remaining));
+    return { success, failed, errors };
+  }
+
   // Enhanced sync with conflict resolution and detailed status
   async syncPendingData() {
     if (!this.isOnline || this.isSyncing) return;
@@ -390,6 +451,12 @@ class OfflineStorage {
           errors.push({ id: update.visitId, error: error.message });
         }
       }
+
+      // Replay the generic offline_pending queue (offline notes/incidents).
+      const changeResult = await this.syncPendingChanges(base44);
+      successCount += changeResult.success;
+      errorCount += changeResult.failed;
+      errors.push(...changeResult.errors);
 
       this.updateSyncStatus({
         isSyncing: false,

@@ -54,7 +54,10 @@ export default function SignatureTracker({ patientId = null }) {
   };
 
   const countSignedSigners = (signers) => {
-    return signers.filter(s => s.signed_date).length;
+    // Count signed among REQUIRED signers so the progress ratio stays consistent
+    // with countRequiredSigners — otherwise an optional signer signing pushed the
+    // numerator above the denominator (e.g. "2/1").
+    return signers.filter(s => s.required && s.signed_date).length;
   };
 
   const countRequiredSigners = (signers) => {

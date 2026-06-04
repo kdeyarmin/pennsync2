@@ -39,15 +39,18 @@ export default function ComplianceRatesChart({ data = [], notes = [], compact = 
       else weeks[weekKey].flagged++;
     });
 
+    // Sort/slice on the ISO weekKey BEFORE formatting to a year-less label —
+    // `new Date("Mar 5")` assumes the current year, so sorting on the label
+    // misorders weeks that straddle a year boundary.
     return Object.values(weeks)
+      .sort((a, b) => new Date(a.week) - new Date(b.week))
+      .slice(-8)
       .map(w => ({
         week: new Date(w.week).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         score: w.count > 0 ? Math.round(w.scoreSum / w.count) : 0,
         passed: w.passed,
         flagged: w.flagged
-      }))
-      .sort((a, b) => new Date(a.week) - new Date(b.week))
-      .slice(-8);
+      }));
   }, [data]);
 
   // Status distribution

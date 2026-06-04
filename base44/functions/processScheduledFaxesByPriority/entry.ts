@@ -48,38 +48,34 @@ Deno.serve(async (req) => {
         console.error(`Could not claim scheduled fax ${scheduledFax.id}; skipping`, claimErr);
         continue;
       }
-      let anyRecipientFailed = false;
       try {
-        // Send to all recipients
-        for (const toNumber of scheduledFax.to_numbers) {
-          try {
-            const sendResult = await base44.functions.invoke('sendFax', {
-              file_url: scheduledFax.document_url,
-              to_number: toNumber,
-              from_number: scheduledFax.from_number,
-              document_name: scheduledFax.document_name,
-              patient_id: scheduledFax.patient_id,
-              cover_page_details: scheduledFax.cover_page_details,
-              priority: scheduledFax.priority
-            });
+        // Send to all recipients via the batch sender, invoked with the service
+        // role. The previous per-recipient base44.functions.invoke('sendFax')
+        // ran user-scoped, but the scheduler has no end user — sendFax returned
+        // 401, so sendResult.data.success was undefined and EVERY scheduled fax
+        // was wrongly marked 'failed'. This mirrors the working
+        // processScheduledFaxes sibling.
+        const sendResult = await base44.asServiceRole.functions.invoke('sendBatchFax', {
+          file_url: scheduledFax.document_url,
+          to_numbers: scheduledFax.to_numbers,
+          from_number: scheduledFax.from_number,
+          document_name: scheduledFax.document_name,
+          patient_id: scheduledFax.patient_id,
+          cover_page_details: scheduledFax.cover_page_details,
+          priority: scheduledFax.priority
+        });
 
-            if (sendResult.data.success) {
-              sentCount++;
-            } else {
-              anyRecipientFailed = true;
-              failedCount++;
-            }
-          } catch (sendError) {
-            console.error(`Failed to send to ${toNumber}:`, sendError);
-            anyRecipientFailed = true;
-            failedCount++;
-          }
-        }
+        const data = sendResult?.data || {};
+        const recipientCount = scheduledFax.to_numbers?.length || 0;
+        const successful = data.successful || 0;
+        const failed = data.failed ?? (recipientCount - successful);
+        sentCount += successful;
+        failedCount += failed;
 
         // Only mark fully 'sent' when every recipient succeeded; otherwise
         // 'failed' so the partial failure is visible and recoverable.
         await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
-          status: anyRecipientFailed ? 'failed' : 'sent'
+          status: failed > 0 ? 'failed' : 'sent'
         });
 
       } catch (error) {

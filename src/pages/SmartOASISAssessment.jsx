@@ -244,40 +244,54 @@ export default function SmartOASISAssessment() {
     const newInterventions = interventionIds.filter(id => !addedToCarePlan.includes(id));
     if (newInterventions.length === 0) return;
     setSaving(true);
-    const allItems = INTERVENTIONS_LIBRARY.flatMap(cat => cat.items);
-    const toAdd = newInterventions.map(id => allItems.find(i => i.id === id)).filter(Boolean);
-    await Promise.all(toAdd.map(item =>
-      base44.entities.CarePlan.create({
-        patient_id: selectedPatientId,
-        problem: item.name,
-        goal: `Achieve and maintain ${item.name.toLowerCase()} goals as documented in the care plan.`,
-        interventions: [item.description],
-        status: "active",
-      })
-    ));
-    setAddedToCarePlan(prev => [...new Set([...prev, ...newInterventions])]);
-    queryClient.invalidateQueries(["care-plans", selectedPatientId]);
-    toast.success(`${newInterventions.length} intervention${newInterventions.length > 1 ? "s" : ""} added to care plan!`);
-    setSaving(false);
+    try {
+      const allItems = INTERVENTIONS_LIBRARY.flatMap(cat => cat.items);
+      const toAdd = newInterventions.map(id => allItems.find(i => i.id === id)).filter(Boolean);
+      await Promise.all(toAdd.map(item =>
+        base44.entities.CarePlan.create({
+          patient_id: selectedPatientId,
+          problem: item.name,
+          goal: `Achieve and maintain ${item.name.toLowerCase()} goals as documented in the care plan.`,
+          interventions: [item.description],
+          status: "active",
+        })
+      ));
+      setAddedToCarePlan(prev => [...new Set([...prev, ...newInterventions])]);
+      queryClient.invalidateQueries(["care-plans", selectedPatientId]);
+      toast.success(`${newInterventions.length} intervention${newInterventions.length > 1 ? "s" : ""} added to care plan!`);
+    } catch (err) {
+      console.error("Failed to add interventions to care plan:", err);
+      toast.error("Failed to add interventions to care plan. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSaveAssessment = async () => {
     if (!selectedPatientId) { toast.error("Please select a patient first."); return; }
     setSaving(true);
-    await base44.entities.Patient.update(selectedPatientId, {
-      care_type: careScope === "hospice" ? "hospice" : "home_health",
-    });
-    await base44.entities.OASISAssessment.create({
-      patient_id: selectedPatientId,
-      visit_type: "Start of Care",
-      oasis_items: Object.entries(answers).map(([item_number, response]) => ({
-        item_number, response: String(response), ai_suggested: false, manually_edited: true,
-      })),
-      status: "completed",
-      completed_date: new Date().toISOString(),
-    });
-    toast.success("OASIS assessment saved successfully.");
-    setSaving(false);
+    try {
+      await base44.entities.Patient.update(selectedPatientId, {
+        care_type: careScope === "hospice" ? "hospice" : "home_health",
+      });
+      await base44.entities.OASISAssessment.create({
+        patient_id: selectedPatientId,
+        visit_type: "Start of Care",
+        oasis_items: Object.entries(answers).map(([item_number, response]) => ({
+          item_number, response: String(response), ai_suggested: false, manually_edited: true,
+        })),
+        status: "completed",
+        completed_date: new Date().toISOString(),
+      });
+      toast.success("OASIS assessment saved successfully.");
+    } catch (err) {
+      // Don't leave the Save button stuck on the spinner with the completed
+      // Start-of-Care assessment silently unsaved.
+      console.error("Failed to save OASIS assessment:", err);
+      toast.error("Failed to save assessment. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const careScopeBadge = {

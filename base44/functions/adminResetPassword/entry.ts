@@ -3,6 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Only an admin / super-admin may force a password reset for another account.
+    // Previously unauthenticated — anyone could trigger reset invites for any user.
+    const currentUser = await base44.auth.me();
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser.account_type !== 'super_admin')) {
+      return Response.json({ error: 'Unauthorized. Admin access required.' }, { status: 403 });
+    }
+
     const { userEmail } = await req.json();
 
     if (!userEmail) {

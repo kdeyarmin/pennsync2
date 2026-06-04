@@ -166,7 +166,17 @@ export default function SmartNoteAssistant() {
   const restoreDraft = () => {
     const saved = sessionStorage.getItem(DRAFT_KEY);
     if (!saved) return;
-    const parsed = JSON.parse(saved);
+    let parsed;
+    try {
+      parsed = JSON.parse(saved);
+    } catch {
+      // Corrupted/partial draft — clear it and inform the user rather than
+      // throwing out of the restore handler with no feedback.
+      sessionStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
+      toast.error("Saved draft could not be restored.");
+      return;
+    }
     setNote(parsed.note || "");
     setVisitType(parsed.visitType || "routine_visit");
     setPatientId(parsed.patientId || "");

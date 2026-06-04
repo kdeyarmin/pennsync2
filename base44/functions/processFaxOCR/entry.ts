@@ -3,7 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
+
+    // Require authentication: previously unauthenticated, so anyone could read
+    // any FaxLog's extracted OCR PHI by id, OCR an arbitrary document_url, and
+    // overwrite FaxLog records.
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { fax_log_id, document_url, use_advanced_ocr = true } = await req.json();
 
     if (!fax_log_id || !document_url) {

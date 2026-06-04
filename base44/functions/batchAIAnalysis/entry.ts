@@ -160,8 +160,11 @@ Return JSON with followup_tasks, care_plan_suggestions, clinical_alerts, documen
       );
     }
 
-    // Wait for all analyses to complete
-    await Promise.all(promises);
+    // Wait for all analyses to settle. allSettled (not all) so one analysis
+    // failing doesn't discard the others that already succeeded — each writes
+    // its own result into `analyses` on success, and a rejected one is simply
+    // omitted rather than 500-ing the whole batch.
+    await Promise.allSettled(promises);
 
     return Response.json({
       success: true,

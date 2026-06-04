@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -345,7 +346,7 @@ For each issue found, provide:
                             <p className="text-xs text-indigo-800 mb-2">{issue.cms_regulation}</p>
                             {issue.cms_reference_link && (
                               <a 
-                                href={issue.cms_reference_link} 
+                                href={isSafeExternalUrl(issue.cms_reference_link) ? issue.cms_reference_link : undefined}
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-xs text-indigo-600 underline hover:text-indigo-800"
@@ -548,7 +549,7 @@ For each issue found, provide:
                           <p className="text-xs text-indigo-800 mb-1">{risk.cms_regulation}</p>
                           {risk.cms_reference_link && (
                             <a 
-                              href={risk.cms_reference_link} 
+                              href={isSafeExternalUrl(risk.cms_reference_link) ? risk.cms_reference_link : undefined}
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-xs text-indigo-600 underline hover:text-indigo-800"
@@ -629,7 +630,7 @@ For each issue found, provide:
                         <p className="text-xs text-indigo-800 mb-1">{exp.cms_requirement}</p>
                         {exp.cms_reference_link && (
                           <a 
-                            href={exp.cms_reference_link} 
+                            href={isSafeExternalUrl(exp.cms_reference_link) ? exp.cms_reference_link : undefined} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-xs text-indigo-600 underline hover:text-indigo-800"

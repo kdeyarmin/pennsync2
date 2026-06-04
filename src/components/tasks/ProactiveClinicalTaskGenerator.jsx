@@ -26,8 +26,11 @@ export default function ProactiveClinicalTaskGenerator({
   const queryClient = useQueryClient();
   const [analyzing, setAnalyzing] = useState(false);
   const [suggestedTasks, setSuggestedTasks] = useState([]);
-  const [expandedTasks, setExpandedTasks] = useState({});
-  const [dismissedTasks, setDismissedTasks] = useState([]);
+  // Keyed by task OBJECT identity, not array index: the rendered list is a
+  // filtered subset of suggestedTasks, so index-based keys desynced after the
+  // first dismissal and approve/dismiss/expand then hit the wrong task.
+  const [expandedTasks, setExpandedTasks] = useState(() => new Set());
+  const [dismissedTasks, setDismissedTasks] = useState(() => new Set());
   const [creatingTasks, setCreatingTasks] = useState(false);
 
   React.useEffect(() => {
@@ -45,12 +48,13 @@ export default function ProactiveClinicalTaskGenerator({
 
       const tasks = response.data?.tasks || [];
       setSuggestedTasks(tasks);
-      
-      // Auto-expand high priority tasks
-      const highPriorityExpanded = {};
-      tasks.forEach((task, index) => {
+      setDismissedTasks(new Set());
+
+      // Auto-expand high priority tasks (keyed by task object).
+      const highPriorityExpanded = new Set();
+      tasks.forEach((task) => {
         if (task.priority === 'high' || task.risk_level === 'critical') {
-          highPriorityExpanded[index] = true;
+          highPriorityExpanded.add(task);
         }
       });
       setExpandedTasks(highPriorityExpanded);
@@ -61,7 +65,7 @@ export default function ProactiveClinicalTaskGenerator({
     setAnalyzing(false);
   };
 
-  const handleApproveTask = async (task, index) => {
+  const handleApproveTask = async (task) => {
     try {
       await base44.entities.Task.create({
         patient_id: patientId,
@@ -76,7 +80,7 @@ export default function ProactiveClinicalTaskGenerator({
         status: 'pending'
       });
 
-      setSuggestedTasks(prev => prev.filter((_, i) => i !== index));
+      setSuggestedTasks(prev => prev.filter(t => t !== task));
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       onTasksCreated?.();
     } catch (error) {
@@ -85,10 +89,10 @@ export default function ProactiveClinicalTaskGenerator({
     }
   };
 
-  const handleDismissTask = (index) => {
-    setDismissedTasks(prev => [...prev, index]);
+  const handleDismissTask = (task) => {
+    setDismissedTasks(prev => new Set(prev).add(task));
     setTimeout(() => {
-      setSuggestedTasks(prev => prev.filter((_, i) => i !== index));
+      setSuggestedTasks(prev => prev.filter(t => t !== task));
     }, 300);
   };
 
@@ -142,14 +146,16 @@ export default function ProactiveClinicalTaskGenerator({
     }
   };
 
-  const toggleExpand = (index) => {
-    setExpandedTasks(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
+  const toggleExpand = (task) => {
+    setExpandedTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(task)) next.delete(task);
+      else next.add(task);
+      return next;
+    });
   };
 
-  const visibleTasks = suggestedTasks.filter((_, index) => !dismissedTasks.includes(index));
+  const visibleTasks = suggestedTasks.filter(task => !dismissedTasks.has(task));
 
   return (
     <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50">
@@ -234,9 +240,9 @@ export default function ProactiveClinicalTaskGenerator({
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => toggleExpand(index)}
+                        onClick={() => toggleExpand(task)}
                       >
-                        {expandedTasks[index] ? (
+                        {expandedTasks.has(task) ? (
                           <ChevronUp className="w-4 h-4" />
                         ) : (
                           <ChevronDown className="w-4 h-4" />
@@ -244,7 +250,7 @@ export default function ProactiveClinicalTaskGenerator({
                       </Button>
                     </div>
 
-                    {expandedTasks[index] && (
+                    {expandedTasks.has(task) && (
                       <div className="mt-3 space-y-2 text-sm">
                         <div>
                           <p className="text-slate-700">{task.description}</p>
@@ -273,7 +279,7 @@ export default function ProactiveClinicalTaskGenerator({
                     <div className="flex gap-2 mt-3">
                       <Button
                         size="sm"
-                        onClick={() => handleApproveTask(task, index)}
+                        onClick={() => handleApproveTask(task)}
                         className="flex-1 bg-green-600 hover:bg-green-700"
                       >
                         <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -282,7 +288,7 @@ export default function ProactiveClinicalTaskGenerator({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDismissTask(index)}
+                        onClick={() => handleDismissTask(task)}
                       >
                         <X className="w-3 h-3 mr-1" />
                         Dismiss

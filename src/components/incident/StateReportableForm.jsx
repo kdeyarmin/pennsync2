@@ -83,6 +83,7 @@ export default function StateReportableForm({ patients = [], currentUser }) {
     setSubmitting(true);
     setSubmitError(null);
 
+    try {
     const patient = patients.find((p) => p.id === form.patient_id);
     const patientName = patient ? `${patient.first_name} ${patient.last_name}` : form.patient_id;
 
@@ -167,8 +168,18 @@ Submitted On: ${new Date().toLocaleString()}
       )
     );
 
-    setSubmitting(false);
     setSubmitted(true);
+    } catch (err) {
+      // Without this, a failed create/notify/email left the button stuck in the
+      // disabled "Submitting..." state and surfaced nothing — dangerous on a
+      // state-mandated compliance report. Surface the error so the nurse can retry.
+      console.error("Failed to submit state reportable event:", err);
+      setSubmitError(
+        err?.message || "Failed to submit the report. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {

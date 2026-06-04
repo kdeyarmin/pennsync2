@@ -14,14 +14,18 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: 'No signer email' });
     }
 
-    // Generate token for this signer
-    const token = await base44.asServiceRole.functions.invoke('generateSignerToken', {
+    // Generate token for this signer. functions.invoke wraps the body under
+    // `.data` (same convention as gradeTrainingAttempt's certResult.data), so
+    // reading token.success/token.token directly was always undefined — the
+    // function 500'd even on success and never emailed the signer.
+    const tokenResult = await base44.asServiceRole.functions.invoke('generateSignerToken', {
       package_id: pkg.id,
       signer_email: pkg.signer_email,
       signer_name: pkg.signer_name,
     });
 
-    if (!token.success) {
+    const tokenData = tokenResult?.data || tokenResult;
+    if (!tokenData?.success || !tokenData?.token) {
       return Response.json({ error: 'Failed to generate signer token' }, { status: 500 });
     }
 
@@ -31,7 +35,7 @@ Deno.serve(async (req) => {
 
     // Send email notification
     const dueDate = pkg.due_date ? new Date(pkg.due_date).toLocaleDateString() : 'soon';
-    const signerPortalLink = `${Deno.env.get('APP_URL') || 'https://app.base44.io'}/signer?token=${token.token}`;
+    const signerPortalLink = `${Deno.env.get('APP_URL') || 'https://app.base44.io'}/signer?token=${tokenData.token}`;
 
     const subject = `${pkg.package_name} - Documents Ready for Signature`;
     const body = `

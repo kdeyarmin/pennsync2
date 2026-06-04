@@ -38,16 +38,19 @@ export default function RevenueImpactAnalysis({ data = [], compact = false }) {
       weeks[weekKey].count += 1;
     });
 
+    // Sort/slice on the ISO weekKey BEFORE formatting to a year-less label —
+    // `new Date("Mar 5")` assumes the current year, so sorting on the label
+    // misorders weeks that straddle a year boundary.
     return Object.values(weeks)
+      .sort((a, b) => new Date(a.week) - new Date(b.week))
+      .slice(-8)
       .map(w => ({
         week: new Date(w.week).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         actual: Math.round(w.actual),
         potential: Math.round(w.potential),
         gap: Math.round(w.potential - w.actual),
         episodes: w.count
-      }))
-      .sort((a, b) => new Date(a.week) - new Date(b.week))
-      .slice(-8);
+      }));
   }, [data]);
 
   // Summary metrics

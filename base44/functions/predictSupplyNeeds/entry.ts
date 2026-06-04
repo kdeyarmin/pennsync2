@@ -82,14 +82,22 @@ Deno.serve(async (req) => {
       // Calculate confidence (based on data consistency)
       const variance = quantities.reduce((sum, q) => sum + Math.pow(q - avgUsage, 2), 0) / quantities.length;
       const stdDev = Math.sqrt(variance);
-      const coeffVar = (stdDev / avgUsage) * 100;
+      const coeffVar = avgUsage > 0 ? (stdDev / avgUsage) * 100 : 0;
       const confidence = Math.max(50, Math.min(95, 100 - (coeffVar / 2)));
 
-      // Predict next order date
+      // Predict next order date. Guard against zero predicted usage: dividing by
+      // it yields Infinity, and setDate(+Infinity) makes an Invalid Date whose
+      // toISOString() throws — 500-ing an otherwise valid request.
       const predictedMonthlyUsage = trend === 'increasing' ? recentAvg : trend === 'decreasing' ? Math.max(avgUsage * 0.8, recentAvg) : avgUsage;
-      const daysUntilReorder = Math.ceil((supply.current_quantity - supply.low_stock_threshold) / (predictedMonthlyUsage / 30));
+      const dailyUsage = predictedMonthlyUsage / 30;
+      const daysUntilReorder = dailyUsage > 0
+        ? Math.ceil((supply.current_quantity - supply.low_stock_threshold) / dailyUsage)
+        : null;
       const nextOrderDate = new Date(now);
-      nextOrderDate.setDate(nextOrderDate.getDate() + daysUntilReorder);
+      const hasReorderDate = daysUntilReorder !== null && Number.isFinite(daysUntilReorder);
+      if (hasReorderDate) {
+        nextOrderDate.setDate(nextOrderDate.getDate() + daysUntilReorder);
+      }
 
       // Recommended 3-month supply
       const recommendedQty = Math.ceil(predictedMonthlyUsage * 3);
@@ -101,10 +109,10 @@ Deno.serve(async (req) => {
         predicted_monthly_usage: Math.round(predictedMonthlyUsage * 10) / 10,
         confidence_score: Math.round(confidence),
         usage_trend: trend,
-        predicted_next_order_date: nextOrderDate.toISOString().split('T')[0],
+        predicted_next_order_date: hasReorderDate ? nextOrderDate.toISOString().split('T')[0] : null,
         recommended_quantity: recommendedQty,
         current_inventory: supply.current_quantity,
-        estimated_days_until_reorder_needed: daysUntilReorder,
+        estimated_days_until_reorder_needed: hasReorderDate ? daysUntilReorder : null,
         analysis_data: {
           monthly_breakdown: monthlyUsage,
           data_points: quantities.length,

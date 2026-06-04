@@ -3,6 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Require an admin: previously unauthenticated, so anyone could send a
+    // "Penn Sync Administration" branded email to any address with
+    // attacker-controlled name content (open relay / phishing).
+    const user = await base44.auth.me();
+    if (!user || (user.role !== 'admin' && user.account_type !== 'super_admin' && user.account_type !== 'agency_admin')) {
+      return Response.json({ error: 'Unauthorized. Admin access required.' }, { status: 403 });
+    }
+
     const { email, full_name } = await req.json();
 
     await base44.asServiceRole.integrations.Core.SendEmail({

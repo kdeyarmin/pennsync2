@@ -3,6 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Require authentication: previously unauthenticated, so any caller could
+    // read a referral's full demographics/clinical PHI by id (IDOR).
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { referral_id } = await req.json();
 
     if (!referral_id) {

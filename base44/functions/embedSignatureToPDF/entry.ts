@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { PDFDocument } from 'npm:pdf-lib@1.17.1';
+import { PDFDocument, rgb } from 'npm:pdf-lib@1.17.1';
 
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
           x: field.x,
           y: height - field.y - field.height - 15,
           size: 8,
-          color: { r: 0.5, g: 0.5, b: 0.5 }
+          color: rgb(0.5, 0.5, 0.5)
         });
       }
     }

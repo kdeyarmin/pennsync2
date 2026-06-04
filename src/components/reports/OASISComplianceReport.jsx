@@ -54,6 +54,10 @@ export default function OASISComplianceReport({ dateRange }) {
   // Monthly trend
   const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
     const date = new Date();
+    // Pin to the 1st before shifting months: on the 29th-31st, subtracting a
+    // month can overflow into a shorter month (e.g. Mar 31 -> "Feb 31" = Mar 3),
+    // which skips and duplicates buckets in the 6-month trend.
+    date.setDate(1);
     date.setMonth(date.getMonth() - (5 - i));
     const monthName = date.toLocaleString('default', { month: 'short' });
     

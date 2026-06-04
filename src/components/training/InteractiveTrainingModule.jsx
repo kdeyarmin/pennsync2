@@ -45,7 +45,9 @@ export default function InteractiveTrainingModule({ trainingData, onComplete, on
       if (quizStep < content.quiz.length - 1) {
         setQuizStep(quizStep + 1);
         setShowFeedback(false);
-        setSelectedAnswers({});
+        // Do NOT clear selectedAnswers here: the final score iterates over every
+        // quiz question's answer (keyed by its index), so wiping between
+        // questions left only the last answer and capped a perfect run at 1/N.
       } else {
         // Calculate final score
         let correctCount = 0;

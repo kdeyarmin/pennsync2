@@ -91,6 +91,7 @@ Deno.serve(async (req) => {
     const results = [];
 
     for (const course of targets) {
+     try {
       const completion = await openai.chat.completions.create({
         model: 'gpt-5.4-mini',
         max_completion_tokens: 7000,
@@ -101,7 +102,16 @@ Deno.serve(async (req) => {
         ]
       });
 
-      const generated = JSON.parse(completion.choices[0].message.content || '{}');
+      // Guard the LLM JSON parse BEFORE any destructive writes: a malformed
+      // response must skip this course, not throw after its existing
+      // modules/questions were already deleted (which left a corrupted course).
+      let generated;
+      try {
+        generated = JSON.parse(completion.choices[0].message.content || '{}');
+      } catch {
+        results.push({ course_id: course.id, title: course.title, error: 'AI returned invalid JSON; left unchanged' });
+        continue;
+      }
 
       const existingModules = await base44.asServiceRole.entities.TrainingModule.filter({ course_id: course.id }, 'order_index', 100);
       const existingQuestions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: course.id }, 'order_index', 200);
@@ -159,6 +169,10 @@ Deno.serve(async (req) => {
       });
 
       results.push({ course_id: course.id, title: course.title, modules: (generated.modules || []).length, questions: (generated.questions || []).length });
+     } catch (e) {
+      // Isolate per-course failures so one bad course doesn't abort the batch.
+      results.push({ course_id: course.id, title: course.title, error: e?.message || 'rebuild failed' });
+     }
     }
 
     return Response.json({ success: true, rebuilt: results });

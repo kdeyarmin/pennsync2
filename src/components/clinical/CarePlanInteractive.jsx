@@ -27,16 +27,24 @@ function CarePlanCard({ plan, currentUser, onUpdated }) {
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.entities.CarePlan.update(plan.id, {
-      status: newStatus,
-      clinical_notes: note
-        ? `[${new Date().toLocaleDateString()} - ${currentUser?.full_name}] ${note}\n\n${plan.clinical_notes || ""}`
-        : plan.clinical_notes,
-    });
-    toast.success("Care plan updated");
-    setSaving(false);
-    setNote("");
-    onUpdated();
+    try {
+      await base44.entities.CarePlan.update(plan.id, {
+        status: newStatus,
+        clinical_notes: note
+          ? `[${new Date().toLocaleDateString()} - ${currentUser?.full_name}] ${note}\n\n${plan.clinical_notes || ""}`
+          : plan.clinical_notes,
+      });
+      toast.success("Care plan updated");
+      setNote("");
+      onUpdated();
+    } catch (err) {
+      // Surface the failure and reset the flag so the Save button doesn't stick
+      // on "Saving…" with the status change silently lost.
+      console.error("Failed to update care plan:", err);
+      toast.error("Failed to update care plan. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
