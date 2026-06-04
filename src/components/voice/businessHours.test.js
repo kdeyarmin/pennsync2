@@ -227,3 +227,12 @@ test("summarizeSchedule describes uniform and custom weeks", () => {
   const custom = { mon: weekday("08:00", "17:00"), tue: weekday("09:00", "15:00") };
   assert.match(summarizeSchedule(custom), /custom hours/);
 });
+
+test("summarizeSchedule ignores days missing a parseable close (matches evaluation)", () => {
+  // open parses but close doesn't → not "open"; must not render "08:00–undefined".
+  assert.equal(summarizeSchedule({ mon: { enabled: true, open: "08:00", close: "" } }), "No open days set");
+  assert.equal(summarizeSchedule({ mon: { enabled: true, open: "08:00" } }), "No open days set");
+  // A valid day alongside an invalid one only counts the valid one.
+  const mixed = { mon: weekday("08:00", "17:00"), tue: { enabled: true, open: "09:00", close: "bad" } };
+  assert.match(summarizeSchedule(mixed), /^Mon: 08:00–17:00$/);
+});

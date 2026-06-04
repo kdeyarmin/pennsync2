@@ -110,6 +110,7 @@ export default function CallingHoursPanel() {
         enabled: form.business_hours_enabled,
         timeZone: form.business_hours_timezone,
         days: form.business_hours,
+        holidays: form.business_hours_holidays,
       }),
     [form],
   );

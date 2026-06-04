@@ -156,7 +156,12 @@ export function isAgencyOpen(settings, now = new Date()) {
  */
 export function summarizeSchedule(days) {
   const d = days || {};
-  const openDays = DAY_KEYS.filter((k) => d[k] && d[k].enabled !== false && parseHHMM(d[k].open) != null);
+  // A day only counts as "open" when BOTH ends parse — same rule
+  // isWithinBusinessHours uses — so the summary never disagrees with reality or
+  // renders a half-open "08:00–undefined" window.
+  const openDays = DAY_KEYS.filter(
+    (k) => d[k] && d[k].enabled !== false && parseHHMM(d[k].open) != null && parseHHMM(d[k].close) != null,
+  );
   if (openDays.length === 0) return "No open days set";
   const sameWindow = openDays.every(
     (k) => d[k].open === d[openDays[0]].open && d[k].close === d[openDays[0]].close,

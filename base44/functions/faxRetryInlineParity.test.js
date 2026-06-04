@@ -52,19 +52,25 @@ test("inline faxRetryConfig matches faxRetry across both functions", async () =>
   }
 });
 
-test("inline nextRetryDelayMinutes + planFaxRetry match (webhook)", async () => {
-  const { mod } = await loadInline("./handleTwilioFaxWebhook/entry.ts", ["nextRetryDelayMinutes", "planFaxRetry"]);
-  for (const cfg of CONFIGS) {
-    for (const attempt of [0, 1, 2, 5]) {
-      for (const pri of ["normal", "urgent", "low"]) {
-        assert.equal(
-          mod.nextRetryDelayMinutes(attempt, cfg, pri),
-          faxRetry.nextRetryDelayMinutes(attempt, cfg, pri),
-          `nextRetryDelayMinutes drift cfg=${JSON.stringify(cfg)} a=${attempt} p=${pri}`,
-        );
+test("inline nextRetryDelayMinutes matches across both functions", async () => {
+  for (const f of ["./handleTwilioFaxWebhook/entry.ts", "./autoRetryFailedFaxes/entry.ts"]) {
+    const { mod } = await loadInline(f, ["nextRetryDelayMinutes"]);
+    for (const cfg of CONFIGS) {
+      for (const attempt of [0, 1, 2, 5]) {
+        for (const pri of ["normal", "urgent", "low"]) {
+          assert.equal(
+            mod.nextRetryDelayMinutes(attempt, cfg, pri),
+            faxRetry.nextRetryDelayMinutes(attempt, cfg, pri),
+            `nextRetryDelayMinutes drift in ${f} cfg=${JSON.stringify(cfg)} a=${attempt} p=${pri}`,
+          );
+        }
       }
     }
   }
+});
+
+test("inline planFaxRetry matches (webhook)", async () => {
+  const { mod } = await loadInline("./handleTwilioFaxWebhook/entry.ts", ["planFaxRetry"]);
   const now = Date.parse("2026-06-04T12:00:00Z");
   for (const [code, msg] of FAILURES) {
     for (const retryCount of [0, 2, 3]) {

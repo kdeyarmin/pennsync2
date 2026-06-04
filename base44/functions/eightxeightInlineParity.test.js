@@ -99,7 +99,7 @@ test("inline quietHoursCheck matches quietHours.isWithinQuietHours", async () =>
     ["+14155550100", new Date("2026-06-04T11:30:00Z")], // 4:30am PT blocked
     ["+442079460958", new Date("2026-06-04T11:30:00Z")], // unknown → allowed
   ];
-  for (const f of ["./sendSms/entry.ts", "./dispatchScheduledSms/entry.ts"]) {
+  for (const f of ["./sendSms/entry.ts", "./dispatchScheduledSms/entry.ts", "./redriveFailedSms/entry.ts"]) {
     const { mod } = await loadInline(f, ["quietHoursCheck"]);
     for (const [num, now] of cases) {
       const inline = mod.quietHoursCheck(num, now, settings).allowed;

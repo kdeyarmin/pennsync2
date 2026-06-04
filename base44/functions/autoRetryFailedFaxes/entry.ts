@@ -31,6 +31,13 @@ function faxRetryConfig(config: any) {
     priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
   };
 }
+function nextRetryDelayMinutes(attempt: number, config: any, priority = 'normal', factor = 2, maxMinutes = 360): number {
+  const c = faxRetryConfig(config);
+  const a = Math.max(0, Number(attempt) || 0);
+  const mult = Number.isFinite(c.priorityMultiplier[priority]) ? c.priorityMultiplier[priority] : 1;
+  const minutes = c.baseDelayMinutes * factor ** a * mult;
+  return Math.max(1, Math.min(maxMinutes, Math.round(minutes)));
+}
 function isFaxRetryDue(fax: any, now: number, config: any): boolean {
   const c = faxRetryConfig(config);
   if (!c.enabled) return false;
@@ -134,14 +141,16 @@ Deno.serve(async (req) => {
         }
       } catch (err) {
         console.error(`Network error retrying fax ${fax.id}:`, err.message);
-        // Transient: restore to failed and reschedule (within budget) so a later
-        // run can pick it up; otherwise exhaust + notify.
+        // Transient: restore to failed and reschedule (within budget) using the
+        // SAME config-aware, priority-scaled backoff as the webhook; otherwise
+        // exhaust + notify.
         const attempts = Number(fax.retry_count) || 0;
         const within = attempts < c.maxRetries;
+        const delayMin = nextRetryDelayMinutes(attempts, cfg, fax.priority || 'normal');
         await base44.asServiceRole.entities.FaxLog.update(fax.id, {
           status: 'failed',
           retry_claimed_by: null,
-          next_retry_at: within ? new Date(now.getTime() + c.baseDelayMinutes * 60000).toISOString() : null,
+          next_retry_at: within ? new Date(now.getTime() + delayMin * 60000).toISOString() : null,
         }).catch(() => {});
         if (!within) await handleRetryExhausted(base44, fax, err.message, c.maxRetries, c.notifyOnFinalFailure);
       }
