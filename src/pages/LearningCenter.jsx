@@ -33,7 +33,9 @@ import {
   Check,
   Trophy,
   Flame,
-  Star
+  Star,
+  Download,
+  CalendarPlus
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -45,8 +47,48 @@ import CertificateDownloadButton from '@/components/training/CertificateDownload
 import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel';
 import GamificationDashboard from '@/components/training/GamificationDashboard';
 import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
+import { generateLearningTranscriptPDF } from '@/functions/generateLearningTranscriptPDF';
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
+
+// Build an all-day .ics calendar from renewal items (client-side, browser only)
+const icsEscape = (s) => String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+const toIcsDate = (value) => {
+  const d = new Date(value);
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+};
+const buildRenewalIcs = (items) => {
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PENNSync//Learning//EN', 'CALSCALE:GREGORIAN'];
+  items.forEach((item) => {
+    const start = new Date(item.date);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${item.id}@pennsync`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART;VALUE=DATE:${toIcsDate(start)}`,
+      `DTEND;VALUE=DATE:${toIcsDate(end)}`,
+      `SUMMARY:${icsEscape(`${item.kind}: ${item.title}`)}`,
+      `DESCRIPTION:${icsEscape(`${item.kind} for ${item.title}. Tracked in PENNSync My Learning.`)}`,
+      'END:VEVENT'
+    );
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+};
+const downloadBlob = (filename, content, type) => {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 const daysUntil = (date) => {
   if (!date) return Infinity;
   const target = new Date(date);
@@ -237,6 +279,26 @@ export default function LearningCenter() {
     onError: (_err, courseId) => setEnrollFeedback(prev => ({ ...prev, [courseId]: 'error' })),
   });
 
+  // Download the current user's training transcript as a PDF
+  const [downloadingTranscript, setDownloadingTranscript] = useState(false);
+  const downloadTranscript = async () => {
+    if (!user?.email) return;
+    setDownloadingTranscript(true);
+    try {
+      const response = await generateLearningTranscriptPDF({ employeeId: user.email });
+      downloadBlob(`Training_Transcript_${new Date().toISOString().split('T')[0]}.pdf`, response.data, 'application/pdf');
+    } catch (error) {
+      console.error('Failed to download transcript:', error);
+    } finally {
+      setDownloadingTranscript(false);
+    }
+  };
+
+  const exportRenewalsCalendar = (items) => {
+    if (!items.length) return;
+    downloadBlob(`learning_renewals_${new Date().toISOString().split('T')[0]}.ics`, buildRenewalIcs(items), 'text/calendar;charset=utf-8;');
+  };
+
   // Sort active assignments: overdue first, then due soonest
   const sortedActive = useMemo(() => {
     const order = { overdue: 0, in_progress: 1, assigned: 2 };
@@ -322,6 +384,13 @@ export default function LearningCenter() {
         favoritePage="LearningCenter"
         actions={
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={downloadTranscript} disabled={downloadingTranscript || !user?.email}>
+              {downloadingTranscript ? (
+                <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Preparing...</>
+              ) : (
+                <><Download className="w-4 h-4 mr-1.5" /> Transcript PDF</>
+              )}
+            </Button>
             <Link to={createPageUrl('MyLearning')}>
               <Button variant="outline" size="sm">
                 <BookOpen className="w-4 h-4 mr-1.5" />
@@ -1064,7 +1133,14 @@ export default function LearningCenter() {
               </CardContent>
             </Card>
           ) : (
-            (() => {
+            <>
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => exportRenewalsCalendar(renewals)}>
+                  <CalendarPlus className="w-4 h-4 mr-1.5" />
+                  Export all to calendar
+                </Button>
+              </div>
+              {(() => {
               let lastMonth = null;
               return renewals.map(item => {
                 const monthLabel = new Date(item.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
@@ -1089,18 +1165,30 @@ export default function LearningCenter() {
                             <p className="text-xs text-slate-500">{item.kind}</p>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className={`text-sm font-medium ${isPast ? 'text-red-600' : isSoon ? 'text-amber-700' : 'text-slate-700'}`}>{formatDate(item.date)}</p>
-                          <p className={`text-xs ${isPast ? 'text-red-500' : 'text-slate-400'}`}>
-                            {isPast ? `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue` : days === 0 ? 'Due today' : `in ${days} day${days === 1 ? '' : 's'}`}
-                          </p>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="text-right">
+                            <p className={`text-sm font-medium ${isPast ? 'text-red-600' : isSoon ? 'text-amber-700' : 'text-slate-700'}`}>{formatDate(item.date)}</p>
+                            <p className={`text-xs ${isPast ? 'text-red-500' : 'text-slate-400'}`}>
+                              {isPast ? `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue` : days === 0 ? 'Due today' : `in ${days} day${days === 1 ? '' : 's'}`}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-400 hover:text-indigo-600"
+                            title="Add to calendar"
+                            onClick={() => exportRenewalsCalendar([item])}
+                          >
+                            <CalendarPlus className="w-4 h-4" />
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
                   </div>
                 );
               });
-            })()
+            })()}
+            </>
           )}
         </TabsContent>
 
