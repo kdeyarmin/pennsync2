@@ -23,7 +23,10 @@ import {
   Target,
   Loader2,
   BookOpenCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  PlayCircle,
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -47,6 +50,9 @@ const daysUntil = (date) => {
 export default function LearningCenter() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [businessLineFilter, setBusinessLineFilter] = useState('all');
+  const [requiredOnly, setRequiredOnly] = useState(false);
+  const [catalogLimit, setCatalogLimit] = useState(12);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -120,7 +126,43 @@ export default function LearningCenter() {
     [activeAssignments]
   );
 
+  // Lookup of published courses by id for joining assignments to course metadata
+  const courseById = useMemo(
+    () => Object.fromEntries(courses.map(c => [c.id, c])),
+    [courses]
+  );
 
+  // An assignment counts as "required" when the assignment is flagged required,
+  // or its course is an annual mandatory / compliance in-service.
+  const isRequiredAssignment = (a) =>
+    a.required === true ||
+    ['annual_mandatory', 'in_service'].includes(courseById[a.course_id]?.training_type);
+
+  const requiredAssignments = useMemo(
+    () => assignments.filter(isRequiredAssignment),
+    [assignments, courseById]
+  );
+  const requiredCompleted = useMemo(
+    () => requiredAssignments.filter(a => a.status === 'completed' || a.pass_fail_result === 'passed'),
+    [requiredAssignments]
+  );
+  const requiredOutstanding = useMemo(
+    () => requiredAssignments
+      .filter(a => !(a.status === 'completed' || a.pass_fail_result === 'passed'))
+      .sort((a, b) => new Date(a.due_date || '9999') - new Date(b.due_date || '9999')),
+    [requiredAssignments]
+  );
+  const requiredReadiness = requiredAssignments.length > 0
+    ? Math.round((requiredCompleted.length / requiredAssignments.length) * 100)
+    : 100;
+
+  // Most recently touched in-progress course, for a quick "continue" entry point
+  const resumeAssignment = useMemo(() => {
+    const inProgress = assignments.filter(a => a.status === 'in_progress');
+    return [...inProgress].sort(
+      (a, b) => new Date(b.last_accessed || b.started_date || 0) - new Date(a.last_accessed || a.started_date || 0)
+    )[0] || null;
+  }, [assignments]);
 
   // Sort active assignments: overdue first, then due soonest
   const sortedActive = useMemo(() => {
@@ -131,6 +173,9 @@ export default function LearningCenter() {
       return new Date(a.due_date || '9999') - new Date(b.due_date || '9999');
     });
   }, [activeAssignments]);
+
+  const isRequiredCourse = (c) =>
+    c.is_mandatory === true || ['annual_mandatory', 'in_service'].includes(c.training_type);
 
   // Filter courses for catalog
   const filteredCourses = useMemo(() => {
@@ -146,8 +191,16 @@ export default function LearningCenter() {
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(c => c.category === categoryFilter);
     }
+    if (businessLineFilter !== 'all') {
+      filtered = filtered.filter(c =>
+        !c.business_line_scope || c.business_line_scope === 'all' || c.business_line_scope === businessLineFilter
+      );
+    }
+    if (requiredOnly) {
+      filtered = filtered.filter(isRequiredCourse);
+    }
     return filtered;
-  }, [courses, searchQuery, categoryFilter]);
+  }, [courses, searchQuery, categoryFilter, businessLineFilter, requiredOnly]);
 
   const categories = useMemo(() => {
     const cats = new Set(courses.map(c => c.category).filter(Boolean));
@@ -256,6 +309,91 @@ export default function LearningCenter() {
           );
         })}
       </div>
+
+      {/* Continue Learning */}
+      {resumeAssignment && (
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <PlayCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Continue Learning</p>
+                <h3 className="font-bold text-slate-900 truncate">{resumeAssignment.course_title}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Progress value={resumeAssignment.progress_percentage || 0} className="h-1.5 w-32 sm:w-48" />
+                  <span className="text-xs text-slate-500 flex-shrink-0">{resumeAssignment.progress_percentage || 0}% complete</span>
+                </div>
+              </div>
+            </div>
+            <Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${resumeAssignment.id}`} className="flex-shrink-0">
+              <Button className="w-full sm:w-auto">
+                Resume
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Required Training Compliance Readiness */}
+      {requiredAssignments.length > 0 && (
+        <Card className={`border-2 ${requiredReadiness === 100 ? 'border-emerald-200 bg-emerald-50/30' : 'border-indigo-200 bg-indigo-50/30'}`}>
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${requiredReadiness === 100 ? 'bg-emerald-100' : 'bg-indigo-100'}`}>
+                  <ShieldCheck className={`w-6 h-6 ${requiredReadiness === 100 ? 'text-emerald-600' : 'text-indigo-600'}`} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-slate-900">Required Training Readiness</h3>
+                  <p className="text-sm text-slate-600">
+                    {requiredReadiness === 100
+                      ? 'All your required in-services are complete. You are survey-ready.'
+                      : `${requiredOutstanding.length} required ${requiredOutstanding.length === 1 ? 'in-service' : 'in-services'} still need your attention.`}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className={`text-3xl font-bold ${requiredReadiness === 100 ? 'text-emerald-600' : 'text-indigo-600'}`}>{requiredReadiness}%</p>
+                <p className="text-xs text-slate-500">{requiredCompleted.length}/{requiredAssignments.length} complete</p>
+              </div>
+            </div>
+            <Progress
+              value={requiredReadiness}
+              className={`h-2.5 mt-3 ${requiredReadiness === 100 ? '[&>div]:bg-emerald-500' : '[&>div]:bg-indigo-600'}`}
+            />
+            {requiredOutstanding.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {requiredOutstanding.slice(0, 3).map(a => {
+                  const overdue = a.status === 'overdue';
+                  return (
+                    <div key={a.id} className="flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border border-slate-200">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-800 truncate">{a.course_title}</p>
+                        <p className={`text-xs ${overdue ? 'text-red-600 font-medium' : 'text-slate-500'}`}>
+                          {overdue ? 'Overdue — ' : 'Due '}{formatDate(a.due_date)}
+                        </p>
+                      </div>
+                      <Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${a.id}`} className="flex-shrink-0">
+                        <Button size="sm" variant={overdue ? 'default' : 'outline'} className={overdue ? 'bg-red-600 hover:bg-red-700' : ''}>
+                          {a.status === 'in_progress' ? 'Continue' : 'Start'}
+                        </Button>
+                      </Link>
+                    </div>
+                  );
+                })}
+                {requiredOutstanding.length > 3 && (
+                  <p className="text-xs text-slate-500 text-center pt-1">
+                    +{requiredOutstanding.length - 3} more required {requiredOutstanding.length - 3 === 1 ? 'in-service' : 'in-services'} outstanding
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Completion Progress Bar */}
       {assignments.length > 0 && (
@@ -501,13 +639,13 @@ export default function LearningCenter() {
 
         {/* Course Catalog Tab */}
         <TabsContent value="catalog" className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search courses..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setCatalogLimit(12); }}
                 className="pl-9"
               />
             </div>
@@ -515,7 +653,7 @@ export default function LearningCenter() {
               <Filter className="w-4 h-4 text-slate-400" />
               <select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                onChange={(e) => { setCategoryFilter(e.target.value); setCatalogLimit(12); }}
                 className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Categories</option>
@@ -523,6 +661,27 @@ export default function LearningCenter() {
                   <option key={cat} value={cat}>{cat.replace(/_/g, ' ')}</option>
                 ))}
               </select>
+              <select
+                value={businessLineFilter}
+                onChange={(e) => { setBusinessLineFilter(e.target.value); setCatalogLimit(12); }}
+                className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Lines</option>
+                <option value="home_health">Home Health</option>
+                <option value="hospice">Hospice</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => { setRequiredOnly(v => !v); setCatalogLimit(12); }}
+                className={`text-sm rounded-lg px-3 py-2 border transition-colors whitespace-nowrap ${
+                  requiredOnly
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                Required only
+              </button>
             </div>
           </div>
 
@@ -540,16 +699,29 @@ export default function LearningCenter() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCourses.slice(0, 12).map(course => (
+              {filteredCourses.slice(0, catalogLimit).map(course => (
                 <Card key={course.id} className="border-slate-200 hover:shadow-md transition-all group">
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <Badge variant="outline" className="text-xs capitalize">
                         {course.category?.replace(/_/g, ' ') || 'General'}
                       </Badge>
-                      {course.training_type === 'annual_mandatory' && (
-                        <Badge className="bg-indigo-100 text-indigo-700 text-xs">Annual</Badge>
-                      )}
+                      <div className="flex items-center gap-1 flex-wrap justify-end">
+                        {course.business_line_scope && course.business_line_scope !== 'all' && (
+                          <Badge variant="outline" className="text-xs">
+                            {course.business_line_scope === 'home_health' ? 'Home Health' : 'Hospice'}
+                          </Badge>
+                        )}
+                        {course.training_type === 'annual_mandatory' && (
+                          <Badge className="bg-indigo-100 text-indigo-700 text-xs">Annual</Badge>
+                        )}
+                        {course.training_type === 'in_service' && (
+                          <Badge className="bg-purple-100 text-purple-700 text-xs">In-Service</Badge>
+                        )}
+                        {isRequiredCourse(course) && (
+                          <Badge className="bg-rose-100 text-rose-700 text-xs">Required</Badge>
+                        )}
+                      </div>
                     </div>
                     <h3 className="font-bold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors">
                       {course.title}
@@ -586,10 +758,15 @@ export default function LearningCenter() {
               ))}
             </div>
           )}
-          {filteredCourses.length > 12 && (
-            <p className="text-sm text-center text-slate-500">
-              Showing 12 of {filteredCourses.length} courses. Use search to find specific content.
-            </p>
+          {filteredCourses.length > catalogLimit && (
+            <div className="text-center space-y-2">
+              <p className="text-sm text-slate-500">
+                Showing {Math.min(catalogLimit, filteredCourses.length)} of {filteredCourses.length} courses
+              </p>
+              <Button variant="outline" onClick={() => setCatalogLimit(l => l + 12)}>
+                Load more courses
+              </Button>
+            </div>
           )}
         </TabsContent>
 
