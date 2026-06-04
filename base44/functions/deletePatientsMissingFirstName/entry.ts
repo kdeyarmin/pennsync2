@@ -9,8 +9,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Fetch all patients
-    const allPatients = await base44.asServiceRole.entities.Patient.list();
+    // Fetch patients (bounded to the SDK's 5000/request max; omitting a limit
+    // silently caps at the SDK default of 50). Re-run if more remain.
+    const allPatients = await base44.asServiceRole.entities.Patient.list('-created_date', 5000);
 
     // Filter patients without first_name
     const patientsToDelete = allPatients.filter(p => !p.first_name || p.first_name.trim() === '');

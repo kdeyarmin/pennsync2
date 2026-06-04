@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { CHART_COLORS } from "@/constants/chartColors";
 import { invokeLLM } from "@/lib/invokeLLM";
 import {
   aggregateDemographics,
@@ -105,7 +106,7 @@ import OASISPDFComparison from "../components/oasis/OASISPDFComparison";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+  const COLORS = CHART_COLORS;
 
   // Chart-ready aggregations (pure logic extracted to oasisAnalytics.js, unit-tested).
   const demographicsData = React.useMemo(() => aggregateDemographics(savedOASISUploads), [savedOASISUploads]);

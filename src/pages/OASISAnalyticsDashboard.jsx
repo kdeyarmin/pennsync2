@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { CHART_COLORS_6 } from "@/constants/chartColors";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -221,7 +222,7 @@ export default function OASISAnalyticsDashboard() {
     return "text-slate-600";
   };
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  const COLORS = CHART_COLORS_6;
 
   if (isLoading) {
     return (
