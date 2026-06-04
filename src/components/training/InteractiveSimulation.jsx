@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +51,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
     try {
       // Evaluate the nurse's response against Medicare home health documentation
       // standards using the LLM integration (replaces the prior random placeholder).
-      const evaluation = await base44.integrations.Core.InvokeLLM({
+      const evaluation = await invokeLLM({
         prompt: `You are a Medicare home health documentation expert evaluating a nurse's response in a clinical documentation training simulation.
 
 SCENARIO: ${scenario.title || "Clinical documentation simulation"}

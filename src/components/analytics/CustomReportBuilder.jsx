@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CHART_COLORS_6 } from "@/constants/chartColors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,7 +114,7 @@ export default function CustomReportBuilder({ patients, visits, incidents, users
     a.remove();
   };
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  const COLORS = CHART_COLORS_6;
 
   const groupedMetrics = availableMetrics.reduce((acc, metric) => {
     if (!acc[metric.category]) acc[metric.category] = [];

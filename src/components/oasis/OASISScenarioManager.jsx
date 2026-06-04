@@ -34,7 +34,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { calculatePDGM } from "@/functions/calculatePDGM";
-import debounce from "lodash/debounce";
+import { debounce } from "@/lib/debounce";
 
 const FUNCTIONAL_ITEMS = [
   { key: 'm1800_grooming', label: 'M1800 Grooming', max: 3 },

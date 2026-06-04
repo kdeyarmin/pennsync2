@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const credentials = await base44.asServiceRole.entities.PersonnelCredential.list();
+    const credentials = await base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 5000);
     const today = new Date();
     const sixtyDaysFromNow = new Date(today);
     sixtyDaysFromNow.setDate(today.getDate() + 60);

@@ -23,9 +23,9 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.TrainingRecommendation.filter({ nurse_email: targetEmail }),
       base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }),
       base44.asServiceRole.entities.Visit.filter({ created_by: targetEmail }),
-      base44.asServiceRole.entities.Patient.list(),
-      base44.asServiceRole.entities.CarePlan.list(),
-      base44.asServiceRole.entities.Incident.list()
+      base44.asServiceRole.entities.Patient.list('-created_date', 5000),
+      base44.asServiceRole.entities.CarePlan.list('-created_date', 5000),
+      base44.asServiceRole.entities.Incident.list('-created_date', 5000)
     ]);
 
     // Calculate metrics

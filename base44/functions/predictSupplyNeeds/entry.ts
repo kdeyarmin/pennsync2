@@ -15,9 +15,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'patientId is required' }, { status: 400 });
     }
 
-    // Get patient data
-    const patient = await base44.asServiceRole.entities.Patient.list();
-    const patientData = patient.find(p => p.id === patientId);
+    // Fetch the requested patient directly by id. (Previously this scanned a
+    // Patient.list() and .find()'d by id, which silently missed records outside
+    // the page once an agency exceeds the SDK's per-request cap.)
+    const patientData = await base44.asServiceRole.entities.Patient.get(patientId).catch(() => null);
 
     if (!patientData) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
@@ -33,8 +34,8 @@ Deno.serve(async (req) => {
       usage_date: { $gte: sixMonthsAgoStr }
     });
 
-    // Get all supplies
-    const allSupplies = await base44.asServiceRole.entities.SupplyItem.list();
+    // Get all supplies (bounded to the SDK's 5000/request max)
+    const allSupplies = await base44.asServiceRole.entities.SupplyItem.list('-created_date', 5000);
 
     // Group usage by supply
     const usageBySupply = {};

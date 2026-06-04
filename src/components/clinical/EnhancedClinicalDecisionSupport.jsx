@@ -24,7 +24,7 @@ import {
   Activity,
   Plus
 } from "lucide-react";
-import { debounce } from "lodash";
+import { debounce } from "@/lib/debounce";
 import PatientRiskPrediction from "./PatientRiskPrediction";
 
 export default function EnhancedClinicalDecisionSupport({
