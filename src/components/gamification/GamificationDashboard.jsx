@@ -14,7 +14,7 @@ import {
   Crown,
   Sparkles
 } from "lucide-react";
-import { differenceInDays } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
 
 const BADGES = [
   { id: 'first_note', name: 'First Note', icon: '📝', description: 'Complete your first documentation', points: 50 },
@@ -297,12 +297,15 @@ export const addGamificationPoints = (userEmail, points, action, badgeId = null)
   const lastDate = stats.lastActivityDate ? new Date(stats.lastActivityDate) : null;
   const today = new Date();
   if (lastDate) {
-    const daysDiff = differenceInDays(today, lastDate);
+    // Compare calendar days, not 24h deltas: activity at 9:00 one day and 8:00
+    // the next is a new day (delta < 24h) and must still extend the streak.
+    const daysDiff = differenceInCalendarDays(today, lastDate);
     if (daysDiff === 1) {
       stats.streak += 1;
     } else if (daysDiff > 1) {
       stats.streak = 1;
     }
+    // daysDiff === 0 (same calendar day): leave streak unchanged.
   } else {
     stats.streak = 1;
   }

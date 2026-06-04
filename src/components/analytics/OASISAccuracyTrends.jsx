@@ -43,7 +43,12 @@ export default function OASISAccuracyTrends({ data = [], compact = false }) {
       weeks[weekKey].count += 1;
     });
 
+    // Sort/slice on the ISO weekKey BEFORE formatting to a year-less label —
+    // `new Date("Mar 5")` assumes the current year, so sorting on the label
+    // misorders weeks that straddle a year boundary.
     return Object.values(weeks)
+      .sort((a, b) => new Date(a.week) - new Date(b.week))
+      .slice(-8)
       .map(w => ({
         week: new Date(w.week).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         accuracy: w.count > 0 ? Math.round(w.accuracySum / w.count) : 0,
@@ -51,9 +56,7 @@ export default function OASISAccuracyTrends({ data = [], compact = false }) {
         compliance: w.count > 0 ? Math.round(w.complianceSum / w.count) : 0,
         revenue: w.count > 0 ? Math.round(w.revenueSum / w.count) : 0,
         count: w.count
-      }))
-      .sort((a, b) => new Date(a.week) - new Date(b.week))
-      .slice(-8);
+      }));
   }, [data]);
 
   // Calculate trend

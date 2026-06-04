@@ -365,7 +365,12 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
           </Alert>
         ) : (
           <div className="space-y-2">
-            {activeAlerts.map((alert, idx) => {
+            {riskAlerts.map((alert, idx) => {
+              // Iterate the ORIGINAL array so `idx` matches the indices stored
+              // in dismissedAlerts/expandedAlerts. Mapping the filtered
+              // activeAlerts re-indexed after each dismissal, so dismiss/expand
+              // then acted on the wrong alert.
+              if (dismissedAlerts.has(idx)) return null;
               const category = riskCategories[alert.category];
               const Icon = category?.icon || AlertTriangle;
               const isExpanded = expandedAlerts.has(idx);

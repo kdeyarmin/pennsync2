@@ -193,27 +193,27 @@ Return comprehensive analysis with actionable coordination alerts.`,
     setIsAnalyzing(false);
   };
 
-  const saveAlert = async (alert) => {
+  const saveAlert = async (alertData) => {
     try {
-      const dueDate = alert.urgency_timeline?.includes('immediate') || alert.urgency_timeline?.includes('urgent') 
+      const dueDate = alertData.urgency_timeline?.includes('immediate') || alertData.urgency_timeline?.includes('urgent')
         ? format(addDays(new Date(), 1), 'yyyy-MM-dd')
-        : alert.urgency_timeline?.includes('week')
+        : alertData.urgency_timeline?.includes('week')
         ? format(addDays(new Date(), 7), 'yyyy-MM-dd')
         : format(addDays(new Date(), 14), 'yyyy-MM-dd');
 
       await base44.entities.CareCoordinationAlert.create({
         patient_id: patientId,
-        alert_type: alert.alert_type,
-        severity: alert.severity,
-        title: alert.title,
-        description: alert.description,
-        identified_gap: alert.identified_gap,
-        affected_providers: alert.affected_providers,
-        recommended_actions: alert.recommended_actions,
-        team_meeting_suggested: alert.team_meeting_suggested,
-        meeting_attendees: alert.meeting_attendees,
-        communication_summary: customNotes[alert.title] || alert.communication_summary,
-        supporting_evidence: alert.supporting_evidence,
+        alert_type: alertData.alert_type,
+        severity: alertData.severity,
+        title: alertData.title,
+        description: alertData.description,
+        identified_gap: alertData.identified_gap,
+        affected_providers: alertData.affected_providers,
+        recommended_actions: alertData.recommended_actions,
+        team_meeting_suggested: alertData.team_meeting_suggested,
+        meeting_attendees: alertData.meeting_attendees,
+        communication_summary: customNotes[alertData.title] || alertData.communication_summary,
+        supporting_evidence: alertData.supporting_evidence,
         status: 'active',
         due_date: dueDate
       });

@@ -30,7 +30,10 @@ export default function RealTimeValidator({
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
-    if (!touched || !value) {
+    // Only suppress validation until the field is touched. An empty value must
+    // still fall through so the `required` check below can flag it — short-
+    // circuiting on `!value` previously reported blank required fields as valid.
+    if (!touched) {
       setErrors([]);
       setWarnings([]);
       if (onValidationChange) onValidationChange({ valid: true, errors: [], warnings: [] });

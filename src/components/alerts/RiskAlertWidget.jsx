@@ -41,11 +41,17 @@ function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }
   });
 
   const acknowledgeMutation = useMutation({
-    mutationFn: (alertId) => base44.entities.PatientAlert.update(alertId, {
-      status: 'acknowledged',
-      acknowledged_by: base44.auth.me().then(u => u.email),
-      acknowledged_at: new Date().toISOString()
-    }),
+    mutationFn: async (alertId) => {
+      // base44.auth.me() is async — awaiting it here records the actual user
+      // email. Previously the unresolved Promise was stored as acknowledged_by,
+      // losing the audit trail of who acknowledged the alert.
+      const user = await base44.auth.me();
+      return base44.entities.PatientAlert.update(alertId, {
+        status: 'acknowledged',
+        acknowledged_by: user?.email,
+        acknowledged_at: new Date().toISOString()
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: showAllPatients ? ['allPatientRiskAlerts'] : ['patientRiskAlerts', patientId] 
