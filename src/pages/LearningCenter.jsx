@@ -30,7 +30,10 @@ import {
   ArrowRight,
   CalendarClock,
   UserPlus,
-  Check
+  Check,
+  Trophy,
+  Flame,
+  Star
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -40,6 +43,7 @@ import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CertificateDownloadButton from '@/components/training/CertificateDownloadButton';
 import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel';
+import GamificationDashboard from '@/components/training/GamificationDashboard';
 import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
@@ -110,6 +114,16 @@ export default function LearningCenter() {
     }),
     enabled: !!user?.role,
     initialData: []
+  });
+
+  const { data: leaderboardEntry = null } = useQuery({
+    queryKey: ['lc-leaderboard', user?.email],
+    queryFn: async () => {
+      const entries = await base44.entities.Leaderboard.filter({ user_id: user.email });
+      return entries[0] || null;
+    },
+    enabled: !!user?.email,
+    initialData: null
   });
 
   // Derived data
@@ -505,6 +519,41 @@ export default function LearningCenter() {
         </Card>
       )}
 
+      {/* Achievements highlight */}
+      {leaderboardEntry && (
+        (leaderboardEntry.total_points > 0 || leaderboardEntry.badges_earned > 0 || leaderboardEntry.current_streak > 0) && (
+          <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-amber-500" /> Your Achievements
+                </h3>
+                <span className="text-xs text-amber-700 font-medium">Keep the streak going!</span>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: 'Points', value: leaderboardEntry.total_points || 0, icon: Trophy, color: 'text-amber-600' },
+                  { label: 'Badges', value: leaderboardEntry.badges_earned || 0, icon: Award, color: 'text-blue-600' },
+                  { label: 'Day Streak', value: leaderboardEntry.current_streak || 0, icon: Flame, color: 'text-orange-600' },
+                  { label: 'Perfect Scores', value: leaderboardEntry.perfect_scores || 0, icon: Star, color: 'text-purple-600' },
+                ].map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="bg-white rounded-xl border border-amber-100 p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-500">{item.label}</p>
+                        <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
+                      </div>
+                      <Icon className={`w-6 h-6 ${item.color} opacity-70`} />
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      )}
+
       {/* Educator / admin team readiness */}
       {isEducatorOrAdmin && <EducatorReadinessPanel />}
 
@@ -597,6 +646,10 @@ export default function LearningCenter() {
             <TabsTrigger value="renewals" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <CalendarClock className="w-4 h-4 mr-2" />
               Renewals ({renewals.length})
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Trophy className="w-4 h-4 mr-2" />
+              Achievements
             </TabsTrigger>
           </TabsList>
         </div>
@@ -1049,6 +1102,11 @@ export default function LearningCenter() {
               });
             })()
           )}
+        </TabsContent>
+
+        {/* Achievements Tab */}
+        <TabsContent value="achievements" className="space-y-3">
+          {user?.email && <GamificationDashboard userId={user.email} />}
         </TabsContent>
       </Tabs>
 

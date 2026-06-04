@@ -1,16 +1,36 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, ShieldCheck, AlertTriangle, Users, Loader2 } from 'lucide-react';
+import { BarChart3, ShieldCheck, AlertTriangle, Users, Loader2, Download } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { toCsv, exportTimestamp } from '@/components/admin/csvExport';
 
 const isCompleted = (a) => a.status === 'completed' || a.pass_fail_result === 'passed';
 const readinessColor = (pct) =>
   pct >= 90 ? 'text-emerald-600' : pct >= 70 ? 'text-amber-600' : 'text-red-600';
 const barColor = (pct) =>
   pct >= 90 ? '[&>div]:bg-emerald-500' : pct >= 70 ? '[&>div]:bg-amber-500' : '[&>div]:bg-red-500';
+
+const requiredStatusLabel = (a) =>
+  isCompleted(a) ? 'Complete' : a.status === 'overdue' ? 'Overdue' : 'Outstanding';
+
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : '');
+
+/** Trigger a client-side CSV file download (browser only). */
+function downloadCsv(filename, csv) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 const BUSINESS_LINES = [
   { key: 'home_health', label: 'Home Health' },
@@ -93,6 +113,35 @@ export default function EducatorReadinessPanel() {
       .slice(0, 6);
   }, [requiredAssignments]);
 
+  const exportReadinessCsv = () => {
+    const columns = [
+      { key: 'employee', label: 'Employee' },
+      { key: 'role', label: 'Role' },
+      { key: 'business_line', label: 'Business Line' },
+      { key: 'course', label: 'Course' },
+      { key: 'category', label: 'Category' },
+      { key: 'status', label: 'Required Status' },
+      { key: 'due_date', label: 'Due Date' },
+      { key: 'completion_date', label: 'Completion Date' },
+      { key: 'score', label: 'Score (%)' },
+    ];
+    const rows = requiredAssignments.map((a) => {
+      const course = courseById[a.course_id];
+      return {
+        employee: a.assigned_to_user_id || '',
+        role: a.assigned_to_role || '',
+        business_line: a.assigned_to_business_line || '',
+        course: a.course_title || course?.title || '',
+        category: course?.category || '',
+        status: requiredStatusLabel(a),
+        due_date: formatDate(a.due_date),
+        completion_date: formatDate(a.completion_date),
+        score: a.score_percentage ?? '',
+      };
+    });
+    downloadCsv(`team_required_training_readiness_${exportTimestamp()}.csv`, toCsv(columns, rows));
+  };
+
   if (loadingAssignments) {
     return (
       <Card className="border-indigo-200">
@@ -106,10 +155,21 @@ export default function EducatorReadinessPanel() {
   return (
     <Card className="border-indigo-200 bg-indigo-50/20">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2 text-indigo-900">
-          <BarChart3 className="w-5 h-5" />
-          Team Required-Training Readiness
-        </CardTitle>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <CardTitle className="text-base flex items-center gap-2 text-indigo-900">
+            <BarChart3 className="w-5 h-5" />
+            Team Required-Training Readiness
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportReadinessCsv}
+            disabled={requiredAssignments.length === 0}
+          >
+            <Download className="w-4 h-4 mr-1.5" />
+            Export CSV
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Headline metrics */}
