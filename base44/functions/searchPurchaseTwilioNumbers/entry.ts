@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       const formParams = new URLSearchParams({ PhoneNumber: e164 });
       const functionsBase = Deno.env.get('FUNCTIONS_BASE_URL');
       if (functionsBase && functionsBase.trim()) {
-        const base = functionsBase.trim();
+        const base = functionsBase.trim().replace(/\/+$/, '');
         formParams.set('SmsUrl', `${base}/handleTwilioInboundSms`);
         formParams.set('SmsMethod', 'POST');
         formParams.set('VoiceUrl', `${base}/handleTwilioVoiceCall`);
