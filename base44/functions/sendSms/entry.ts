@@ -305,7 +305,7 @@ Deno.serve(async (req) => {
     // double-text the patient.
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
     const SEND_TIMEOUT_MS = 15000;
-const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').replace(/\/+$/, '');
+    const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
     const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTwilioSmsStatus` : undefined;
     let result: { ok: boolean; status: number; data: any };
     try {

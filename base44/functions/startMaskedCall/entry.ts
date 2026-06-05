@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
     // thrown network error is not, since the call may already be in flight).
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`;
     const ORIGINATE_TIMEOUT_MS = 15000;
-const functionsBase = (Deno.env.get('FUNCTIONS_BASE_URL') || '').replace(/\/+$/, '');
+    const functionsBase = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
 
     let result: { ok: boolean; status: number; data: any };
     try {

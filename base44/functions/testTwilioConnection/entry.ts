@@ -111,16 +111,18 @@ Deno.serve(async (req) => {
 
     const { accountSid, authToken } = await resolveTwilioCreds(base44);
 
-    // Webhook verification: Twilio signs inbound requests with the Auth Token.
-    // A dedicated TWILIO_WEBHOOK_SECRET (or stored webhook_secret) is also
-    // accepted for a custom shared-secret test path.
+    // Webhook verification: live Twilio webhooks are signed with the Auth Token
+    // (X-Twilio-Signature) — Twilio never sends an x-webhook-secret header, so a
+    // shared secret alone does NOT make real webhooks pass; it only covers the
+    // manual x-webhook-secret test path. Tie readiness to the Auth Token.
     const envWebhookSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET');
     let storedWebhookSecret = '';
     try {
       const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
       storedWebhookSecret = rows?.[0]?.webhook_secret || '';
     } catch { /* ignore */ }
-    const webhookOk = Boolean(authToken) || isSet(envWebhookSecret) || isSet(storedWebhookSecret);
+    const hasSharedSecret = isSet(envWebhookSecret) || isSet(storedWebhookSecret);
+    const webhookOk = Boolean(authToken);
 
     const checks: Array<{ id: string; label: string; status: string; detail: string }> = [];
 
@@ -138,21 +140,17 @@ Deno.serve(async (req) => {
             : 'Twilio Auth Token is missing. Set TWILIO_AUTH_TOKEN or configure it in-app.',
     });
 
-    // --- Webhook signing ---
-    // Twilio signs inbound webhook requests with the Auth Token — no separate
-    // secret is required. A dedicated TWILIO_WEBHOOK_SECRET is accepted for a
-    // custom shared-secret test path but is entirely optional.
+    // --- Webhook signature verification ---
+    // Live Twilio webhooks are verified with the Auth Token via X-Twilio-Signature.
+    // A shared secret only covers the manual x-webhook-secret test path, so it can
+    // never make real inbound webhooks pass on its own.
     checks.push({
       id: 'webhook_secret',
-      label: 'Webhook signing secret',
+      label: 'Webhook signature verification',
       status: webhookOk ? 'ok' : 'fail',
       detail: webhookOk
-        ? isSet(envWebhookSecret)
-          ? 'TWILIO_WEBHOOK_SECRET env var is set; inbound webhooks will be verified with the custom secret.'
-          : isSet(storedWebhookSecret)
-            ? 'A stored webhook_secret is configured; inbound webhooks will be verified with it.'
-            : 'Twilio Auth Token is available; inbound webhooks will be verified using the standard Twilio signing scheme (Auth Token).'
-        : 'No Twilio credentials configured. Inbound calls and texts will be rejected (fail-closed) until the Auth Token (or a dedicated webhook secret) is configured.',
+        ? `Inbound Twilio webhooks are verified with the Auth Token via X-Twilio-Signature.${hasSharedSecret ? ' A custom shared-secret (x-webhook-secret) test path is also configured.' : ''}`
+        : `No Auth Token — live Twilio webhooks (signed with X-Twilio-Signature) will be rejected fail-closed.${hasSharedSecret ? ' (The configured shared secret only covers manual x-webhook-secret test requests, not live Twilio traffic.)' : ''}`,
     });
 
     // --- Live Twilio API probe ---
