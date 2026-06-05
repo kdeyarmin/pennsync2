@@ -41,11 +41,23 @@ Deno.serve(async (req) => {
 
     // Process faxes in priority order
     for (const scheduledFax of dueFaxes) {
-      // Claim before sending so an overlapping run won't also send it.
+      // Claim with a token + RE-READ before sending. A bare status flip isn't
+      // atomic, so two overlapping runs (or this + processScheduledFaxes, which
+      // share the same 'pending' population) both flip and both send. The
+      // claim-token + re-read lets the loser detect it lost and skip.
+      const runId = crypto.randomUUID();
       try {
-        await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, { status: 'processing' });
+        await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
+          status: 'processing', claimed_by: runId, claimed_at: new Date().toISOString(),
+        });
       } catch (claimErr) {
         console.error(`Could not claim scheduled fax ${scheduledFax.id}; skipping`, claimErr);
+        continue;
+      }
+      const claimCheck = await base44.asServiceRole.entities.ScheduledFax
+        .filter({ id: scheduledFax.id }, '-created_date', 1).catch(() => []);
+      if (!claimCheck[0] || claimCheck[0].claimed_by !== runId) {
+        // Another run claimed it first — skip to avoid a duplicate send.
         continue;
       }
       try {

@@ -19,12 +19,25 @@ Deno.serve(async (req) => {
     // double-send. See docs.
 
     for (const scheduledFax of scheduledFaxes) {
-      // Claim the row (pending -> processing) BEFORE sending so an overlapping
-      // run won't also pick it up. Mitigates the duplicate-send race.
+      // Claim the row (pending -> processing) with a token BEFORE sending, then
+      // RE-READ to confirm we own it. A bare status flip isn't atomic: two
+      // overlapping runs (or this processor + processScheduledFaxesByPriority)
+      // both read 'pending' and both flip it, double-sending the fax. The
+      // claim-token + re-read makes the loser detect it lost and skip. (Mirrors
+      // dispatchScheduledSms — Twilio fax has no client idempotency key.)
+      const runId = crypto.randomUUID();
       try {
-        await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, { status: 'processing' });
+        await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
+          status: 'processing', claimed_by: runId, claimed_at: new Date().toISOString(),
+        });
       } catch (claimErr) {
         console.error(`Could not claim scheduled fax ${scheduledFax.id}; skipping`, claimErr);
+        continue;
+      }
+      const claimCheck = await base44.asServiceRole.entities.ScheduledFax
+        .filter({ id: scheduledFax.id }, '-created_date', 1).catch(() => []);
+      if (!claimCheck[0] || claimCheck[0].claimed_by !== runId) {
+        // Another run claimed it first — skip to avoid a duplicate send.
         continue;
       }
       try {
