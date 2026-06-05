@@ -261,6 +261,22 @@ backend `entry.ts` files transpile-checked; mirrored helpers kept in parity):
   P4 (MedicalScribe read-before-write), P5 (PDFAnnotator render-task cancellation), P7-subset
   (referral-generator progress intervals cleared on unmount).
 
+### Round 3
+
+- **B11 (clinical):** OASIS M1020 diabetes mis-trigger — in this form M1020 is a select where
+  1=Diabetes and 2=Heart Failure/CHF, so the `[1,2]` Diabetes rule flagged CHF patients for
+  diabetes management. Now 1→Diabetes, 2→Cardiovascular. Regression test added.
+- **Dedup safety (partial):** added a persisted UserActivity **audit trail** to `deduplicatePatients`
+  capturing kept/removed patient IDs + MRNs + score before the irreversible delete.
+
+> ⚠️ **NEEDS A PRODUCT DECISION — most serious finding.** `deduplicatePatients` **hard-deletes**
+> patient records and cascades to delete their visits, care plans, alerts, incidents, and tasks,
+> with **no soft-delete, no dry-run/confirmation, and survivor = newest (not most-complete)**.
+> It is admin-only and gated at score ≥70 with corroboration, and now writes an audit trail, but
+> the destructive design itself should change: (1) a **dry-run/preview that requires explicit
+> confirmation**, (2) **soft-delete/archive** instead of hard cascade-delete, (3) survivor chosen
+> by **completeness** (B5). These change behavior, so they need sign-off before implementation.
+
 ## 9. Deferred — sequenced follow-ups (with rationale)
 
 Still not done on purpose; each is documented above with a concrete fix. These are the items
