@@ -6,9 +6,19 @@ import {
   aggregateFunctionalScores,
   aggregatePaymentTrends,
   computeSummaryStats,
+  computeAge,
 } from "./oasisAnalytics.js";
 
 const u = (over = {}) => ({ pdgm_data: {}, ...over });
+
+test("computeAge accounts for whether the birthday has occurred (no off-by-one)", () => {
+  const ref = new Date(2026, 5, 5); // 2026-06-05, local
+  assert.equal(computeAge("1961-12-01", ref), 64); // birthday later this year -> 64, not 65
+  assert.equal(computeAge("1961-05-01", ref), 65); // birthday already passed -> 65
+  assert.equal(computeAge("1961-06-05", ref), 65); // birthday today -> 65
+  assert.ok(Number.isNaN(computeAge("Not found", ref)));
+  assert.ok(Number.isNaN(computeAge(undefined, ref)));
+});
 
 test("aggregateDemographics classifies gender and age ranges", () => {
   const { gender, age } = aggregateDemographics([

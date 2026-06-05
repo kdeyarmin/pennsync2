@@ -5,6 +5,36 @@
 // the page left to do only rendering. Behaviour is intentionally identical to
 // the previous inline useMemo blocks.
 
+/**
+ * Completed-years age from a date-of-birth string, accounting for whether the
+ * birthday has occurred this year. Plain year-subtraction counts a pre-birthday
+ * patient one year too old, which can shift them into the wrong Medicare age band
+ * at the 65 boundary. Returns NaN for missing/unparseable input.
+ * @param {string} dob
+ * @returns {number}
+ */
+export function computeAge(dob, now = new Date()) {
+  if (!dob || dob === "Not found") return NaN;
+  // Parse a bare ISO date (YYYY-MM-DD) as PLAIN calendar components — `new
+  // Date("YYYY-MM-DD")` parses as UTC midnight, so in a timezone behind UTC the
+  // local Y/M/D shifts to the previous day (e.g. 1961-12-01 → 1961-11-30 local),
+  // corrupting the birthday comparison this helper exists to get right. Only
+  // fall back to Date parsing for non-ISO formats.
+  let year, month, day;
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(dob).trim());
+  if (iso) {
+    year = Number(iso[1]); month = Number(iso[2]); day = Number(iso[3]);
+  } else {
+    const d = new Date(dob);
+    if (Number.isNaN(d.getTime())) return NaN;
+    year = d.getFullYear(); month = d.getMonth() + 1; day = d.getDate();
+  }
+  let age = now.getFullYear() - year;
+  const monthDelta = (now.getMonth() + 1) - month;
+  if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < day)) age -= 1;
+  return age;
+}
+
 /** @param {any[]} uploads */
 export function aggregateDemographics(uploads = []) {
   const genderCount = { Male: 0, Female: 0, Unknown: 0 };
@@ -20,9 +50,7 @@ export function aggregateDemographics(uploads = []) {
     else genderCount.Unknown++;
 
     const dob = upload.pdgm_data?.patient_info?.dob;
-    const age = dob && dob !== "Not found"
-      ? new Date().getFullYear() - new Date(dob).getFullYear()
-      : NaN;
+    const age = computeAge(dob);
     // An unparseable dob yields NaN; every `age < N` test is false, so without
     // this guard it would silently fall through to "85+" instead of "Unknown".
     if (!Number.isFinite(age)) ageRanges.Unknown++;

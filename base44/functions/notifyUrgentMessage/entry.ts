@@ -26,13 +26,19 @@ Deno.serve(async (req) => {
         
         let notifiedCount = 0;
         
+        // Coerce message_text — an attachment-only or malformed urgent message may
+        // have no body, and an unguarded .substring()/.length would throw, 500 the
+        // handler, and leave the nurse un-notified of an urgent message.
+        const bodyText = String(messageData.message_text || '');
+        const bodyPreview = `${bodyText.substring(0, 100)}${bodyText.length > 100 ? '...' : ''}`;
+
         for (const nurseEmail of nursesToNotify) {
             if (nurseEmail === messageData.sender_email) continue;
-            
+
             await base44.asServiceRole.entities.Notification.create({
                 user_email: nurseEmail,
                 title: `URGENT Message: ${patientName}`,
-                message: `From ${messageData.sender_name}: ${messageData.message_text.substring(0, 100)}${messageData.message_text.length > 100 ? '...' : ''}`,
+                message: `From ${messageData.sender_name}: ${bodyPreview}`,
                 type: "critical_alert",
                 priority: "critical",
                 is_read: false,

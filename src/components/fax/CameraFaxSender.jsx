@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,15 @@ export default function CameraFaxSender() {
       setStream(null);
     }
   };
+
+  // Release the camera when the stream changes or the component unmounts, so it
+  // isn't left live on a shared device after navigating away. (stop() on an
+  // already-stopped track is a no-op.)
+  useEffect(() => {
+    return () => {
+      if (stream) stream.getTracks().forEach((track) => track.stop());
+    };
+  }, [stream]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;

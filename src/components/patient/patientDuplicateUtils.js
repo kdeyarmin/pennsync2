@@ -120,23 +120,36 @@ export function parseDob(value) {
   const s = String(value).trim();
 
   let m = s.match(/^(\d{4})\D(\d{1,2})\D(\d{1,2})/); // YYYY-MM-DD
-  if (m) return { year: m[1], month: pad2(m[2]), day: pad2(m[3]) };
+  if (m) return validComponents({ year: m[1], month: pad2(m[2]), day: pad2(m[3]) });
 
   m = s.match(/^(\d{1,2})\D(\d{1,2})\D(\d{4})/); // MM/DD/YYYY
-  if (m) return { year: m[3], month: pad2(m[1]), day: pad2(m[2]) };
+  if (m) return validComponents({ year: m[3], month: pad2(m[1]), day: pad2(m[2]) });
 
   m = s.match(/^(\d{1,2})\D(\d{1,2})\D(\d{2})(?!\d)/); // MM/DD/YY
-  if (m) return { year: pivotYear(m[3]), month: pad2(m[1]), day: pad2(m[2]) };
+  if (m) return validComponents({ year: pivotYear(m[3]), month: pad2(m[1]), day: pad2(m[2]) });
 
   const digits = s.replace(/\D/g, '');
   if (digits.length === 8) {
     const first4 = parseInt(digits.substring(0, 4), 10);
     if (first4 >= 1900 && first4 <= 2100) {
-      return { year: digits.substring(0, 4), month: digits.substring(4, 6), day: digits.substring(6, 8) };
+      return validComponents({ year: digits.substring(0, 4), month: digits.substring(4, 6), day: digits.substring(6, 8) });
     }
-    return { year: digits.substring(4, 8), month: digits.substring(0, 2), day: digits.substring(2, 4) };
+    return validComponents({ year: digits.substring(4, 8), month: digits.substring(0, 2), day: digits.substring(2, 4) });
   }
   return null;
+}
+
+// Reject impossible month/day values (e.g. an 8-digit "19451304" → month 13, or a
+// reversed value) so the fuzzy variation checks don't treat garbage components as
+// a real date and produce spurious reversed/typo "matches". Returns the
+// components when valid, else null.
+function validComponents(c) {
+  if (!c) return null;
+  const month = parseInt(c.month, 10);
+  const day = parseInt(c.day, 10);
+  if (!Number.isInteger(month) || month < 1 || month > 12) return null;
+  if (!Number.isInteger(day) || day < 1 || day > 31) return null;
+  return c;
 }
 
 // ---------------------------------------------------------------------------

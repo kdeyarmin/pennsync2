@@ -122,7 +122,10 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
   // Strategy 4: Initial matching (e.g., "J. Smith")
   const initials = nameParts.map(p => p.charAt(0)).join('');
   const patientInitials = (firstName.charAt(0) + lastName.charAt(0));
-  if (initials === patientInitials || initials.includes(patientInitials)) {
+  // Require both patient initials to be present. A blank patient record yields
+  // "" (or a 1-char string), and `initials.includes("")` is always true — which
+  // would award an "Initials match" to any extracted name against an empty record.
+  if (patientInitials.length === 2 && (initials === patientInitials || initials.includes(patientInitials))) {
     confidence += 10;
     matchFactors.push('Initials match');
   }

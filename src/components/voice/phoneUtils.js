@@ -12,7 +12,10 @@ export function normalizeE164(raw) {
   const digits = String(raw).replace(/[^\d]/g, "");
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
-  if (String(raw).trim().startsWith("+") && digits.length >= 8) return `+${digits}`;
+  // Already-+ international: bound to a valid E.164 length (8–15 digits) and
+  // reject a leading 0 (no country code starts with 0) so malformed values like
+  // "+1234567890123456789" or "+02155550100" aren't emitted as if valid.
+  if (String(raw).trim().startsWith("+") && digits.length >= 8 && digits.length <= 15 && digits[0] !== "0") return `+${digits}`;
   return null;
 }
 

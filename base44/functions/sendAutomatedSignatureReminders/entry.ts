@@ -32,6 +32,15 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Idempotency: don't re-email the same pending signature on every cron
+        // tick. Skip if a reminder already went out in the last ~20h. Without
+        // this, an overdue document re-emailed the patient (and re-created a
+        // 'critical' notification) on every run until signed.
+        const lastSent = sig.last_reminder_sent_at ? new Date(sig.last_reminder_sent_at).getTime() : 0;
+        if (lastSent && (Date.now() - lastSent) < 20 * 60 * 60 * 1000) {
+          continue;
+        }
+
         // Get patient details
         const patients = await base44.asServiceRole.entities.Patient.filter({ id: sig.patient_id });
         const patient = patients[0];
@@ -89,6 +98,11 @@ Deno.serve(async (req) => {
           }
         });
 
+        // Record that a reminder went out so the next run skips it within the window.
+        await base44.asServiceRole.entities.DocumentSignature.update(sig.id, {
+          last_reminder_sent_at: new Date().toISOString()
+        }).catch(() => {});
+
         remindersSent++;
         results.push({
           signature_id: sig.id,
@@ -119,8 +133,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in automated signature reminders:', error);
-    return Response.json({ 
-      error: error.message || 'Failed to send automated reminders'
+    return Response.json({
+      error: 'Failed to send automated reminders'
     }, { status: 500 });
   }
 });

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { toCsvRows } from "@/components/admin/csvExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -128,8 +129,8 @@ export default function WorkflowMonitoringDashboard() {
     .slice(-14);
 
   const exportData = () => {
-    const csv = [
-      ['Date', 'Patient', 'Rule', 'Status', 'Actions', 'Tasks Created', 'Completion %'].join(','),
+    const csv = toCsvRows([
+      ['Date', 'Patient', 'Rule', 'Status', 'Actions', 'Tasks Created', 'Completion %'],
       ...filteredExecutions.map(exec => [
         new Date(exec.created_date).toLocaleDateString(),
         exec.patient_name || 'N/A',
@@ -138,8 +139,8 @@ export default function WorkflowMonitoringDashboard() {
         exec.actions_executed?.length || 0,
         exec.tasks_created?.length || 0,
         exec.completion_percentage || 0
-      ].join(','))
-    ].join('\n');
+      ])
+    ]);
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

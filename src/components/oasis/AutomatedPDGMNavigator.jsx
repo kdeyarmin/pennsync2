@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { buildPdgmNavigatorCsv } from "./pdgmNavigatorExport";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -345,44 +346,9 @@ Return JSON:
   const exportCSV = () => {
     if (!navigation) return;
 
-    const rows = [
-      ['PDGM Navigator Analysis - Discrepancies & Opportunities'],
-      ['Generated:', new Date().toISOString()],
-      [''],
-      ['DISCREPANCIES'],
-      ['Type', 'Severity', 'Finding', 'Expected', 'Actual', 'Revenue Impact', 'Recommendation']
-    ];
-
-    (navigation.discrepancies || []).forEach(d => {
-      rows.push([
-        d.type || '',
-        d.severity || '',
-        d.finding || '',
-        d.expected || '',
-        d.actual || '',
-        d.revenue_impact || '',
-        d.recommendation || ''
-      ]);
-    });
-
-    rows.push(['']);
-    rows.push(['OPTIMIZATION OPPORTUNITIES']);
-    rows.push(['Area', 'Current State', 'Opportunity', 'Potential Impact', 'Action Required', 'Clinical Justification']);
-
-    (navigation.optimization_opportunities || []).forEach(o => {
-      rows.push([
-        o.area || '',
-        o.current_state || '',
-        o.opportunity || '',
-        o.potential_impact || '',
-        o.action_required || '',
-        o.clinical_justification_needed || ''
-      ]);
-    });
-
-    const csvContent = rows.map(row => 
-      row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
+    // Row layout + escaping extracted to a tested util that also neutralizes
+    // CSV formula injection (the findings/recommendations are AI-generated text).
+    const csvContent = buildPdgmNavigatorCsv(navigation);
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

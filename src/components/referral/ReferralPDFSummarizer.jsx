@@ -68,6 +68,7 @@ export default function ReferralPDFSummarizer({
   const [oasisResults, setOasisResults] = useState(null);
   const [showPreview, setShowPreview] = useState(true);
   const fileInputRef = useRef(null);
+  const progressIntervalRef = useRef(null);
   // Remember the last document we processed so "Try again" can re-run without re-upload.
   const lastProcessedRef = useRef({ url: externalFileUrl, mime: "application/pdf" });
 
@@ -108,6 +109,11 @@ export default function ReferralPDFSummarizer({
       processReferral(externalFileUrl);
     }
   }, [externalFileUrl]);
+
+  // Clear the progress interval if the component unmounts mid-processing.
+  React.useEffect(() => () => {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+  }, []);
 
   // Shared entry point for both the file picker and drag-and-drop.
   const handleFile = async (file) => {
@@ -180,6 +186,7 @@ export default function ReferralPDFSummarizer({
     const progressInterval = setInterval(() => {
       setProcessingStage(prev => Math.min(prev + 1, processingStages.length - 1));
     }, 3000);
+    progressIntervalRef.current = progressInterval;
 
     try {
       const result = await runReferralExtraction(invokeLLM, { fileUrl: url, fileType });

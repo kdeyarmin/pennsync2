@@ -4,7 +4,27 @@ Deno.serve(async (req) => {
   try {
     console.log('=== checkExpiredInvitations started ===');
     const base44 = createClientFromRequest(req);
-    
+
+    // Authorization: this reads ALL pending invitations (PII), emails every admin,
+    // and mutates invitation state, so it must never be triggerable by an
+    // unauthenticated or non-admin caller. Opt-in lockdown (matches
+    // issueCertificate): when INTERNAL_FN_SECRET is set, require an admin user OR
+    // the internal secret (the trusted scheduler sends x-internal-secret) — this
+    // closes the no-identity (me === null) path. When the secret is unset, the
+    // no-identity cron path stays allowed (platform invocation restriction is the
+    // control, see docs/SECURITY-RLS-CHECKLIST.md §4) but an authenticated
+    // non-admin is still rejected.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 

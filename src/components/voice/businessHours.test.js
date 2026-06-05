@@ -37,6 +37,17 @@ test("parseHHMM parses valid times and rejects junk", () => {
   assert.equal(parseHHMM(null), null);
 });
 
+test("a day with equal open/close (00:00-00:00) is open all day, not closed", () => {
+  const config = {
+    enabled: true,
+    timeZone: TZ,
+    days: { ...NINE_TO_FIVE, thu: weekday("00:00", "00:00") },
+  };
+  // Thursday 09:00 EDT and Thursday 21:00 EDT — both must report open.
+  assert.equal(isWithinBusinessHours(new Date("2026-06-04T13:00:00Z"), config).open, true);
+  assert.equal(isWithinBusinessHours(new Date("2026-06-05T01:00:00Z"), config).open, true);
+});
+
 test("wallClockInTimeZone resolves weekday + minutes in the target zone", () => {
   // 2026-06-04T13:00:00Z = 09:00 EDT on Thursday.
   const wc = wallClockInTimeZone(new Date("2026-06-04T13:00:00Z"), TZ);

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function CredentialComplianceReport() {
   const { data: users = [] } = useQuery({
@@ -80,7 +81,7 @@ export default function CredentialComplianceReport() {
       s.status
     ]);
 
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const csv = toCsvRows([headers, ...rows]);
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

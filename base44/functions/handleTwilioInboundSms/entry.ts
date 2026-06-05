@@ -26,7 +26,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
-  if (String(raw).trim().startsWith('+') && digits.length >= 8) return `+${digits}`;
+  if (String(raw).trim().startsWith('+') && digits.length >= 8 && digits.length <= 15 && digits[0] !== '0') return `+${digits}`;
   return null;
 }
 
@@ -102,7 +102,9 @@ function isAgencyOpen(settings: any, now = new Date()): boolean {
   const open = parseHHMM(day.open); const close = parseHHMM(day.close);
   if (open == null || close == null) return false;
   const m = wc.minutes;
-  return open <= close ? (m >= open && m < close) : (m >= open || m < close);
+  // Strict `<` so equal open/close (e.g. 00:00-00:00 "open all day") is treated
+  // as always-open, not always-closed. Mirrors src/components/voice/businessHours.js.
+  return open < close ? (m >= open && m < close) : (m >= open || m < close);
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -185,7 +187,8 @@ async function getAgencyConfig(base44: any) {
 const DEFAULT_URGENT_KEYWORDS = [
   'emergency', 'urgent', '911', 'chest pain', "can't breathe", 'cant breathe',
   'trouble breathing', 'short of breath', 'suicidal', 'kill myself', 'overdose',
-  'bleeding', 'blood', 'fell', 'fall', 'fallen', 'passed out', 'unconscious',
+  // bare 'blood' removed — fired on "blood pressure"/"blood sugar" (alert fatigue).
+  'bleeding', 'fell', 'fall', 'fallen', 'passed out', 'unconscious',
   'stroke', 'seizure', 'severe pain', 'help me', 'not breathing', 'unresponsive',
 ];
 function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }

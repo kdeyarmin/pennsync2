@@ -21,10 +21,19 @@ function readBloodPressure(v) {
   let systolic = toNum(v.blood_pressure_systolic);
   let diastolic = toNum(v.blood_pressure_diastolic);
   if ((systolic === null || diastolic === null) && typeof v.bp === "string") {
-    const m = v.bp.match(/(\d{2,3})\s*\/\s*(\d{2,3})/);
+    // Anchor with digit lookarounds so a fat-fingered "1180/120" is rejected
+    // rather than parsed as 180/120 (which would slip under the >180/120
+    // hypertensive-crisis threshold and miss the escalation).
+    const m = v.bp.match(/(?<!\d)(\d{2,3})\s*\/\s*(\d{2,3})(?!\d)/);
     if (m) {
-      if (systolic === null) systolic = toNum(m[1]);
-      if (diastolic === null) diastolic = toNum(m[2]);
+      const s = toNum(m[1]);
+      const d = toNum(m[2]);
+      // Only accept physiologically plausible readings.
+      const plausible = s !== null && d !== null && s >= 60 && s <= 300 && d >= 30 && d <= 200 && s > d;
+      if (plausible) {
+        if (systolic === null) systolic = s;
+        if (diastolic === null) diastolic = d;
+      }
     }
   }
   return { systolic, diastolic };

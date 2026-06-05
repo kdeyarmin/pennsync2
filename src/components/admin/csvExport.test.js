@@ -1,10 +1,39 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { toCsv, exportTimestamp } from "./csvExport.js";
+import { toCsv, toCsvRows, exportTimestamp } from "./csvExport.js";
+
+test("toCsvRows escapes every cell and neutralizes formula injection", () => {
+  const csv = toCsvRows([
+    ["Name", "Note"],
+    ["Jane", "=cmd|calc"],
+    ["+15551234567", 'has, comma "and quote"'],
+  ]);
+  const lines = csv.split("\r\n");
+  assert.equal(lines[0], "Name,Note");
+  assert.equal(lines[1], "Jane,'=cmd|calc");           // formula prefixed with '
+  assert.equal(lines[2], "'+15551234567,\"has, comma \"\"and quote\"\"\"");
+});
+
+test("toCsvRows tolerates ragged/non-array rows and bad input", () => {
+  assert.equal(toCsvRows([["a"], "b"]), "a\r\nb");
+  assert.equal(toCsvRows(null), "");
+});
 
 test("toCsv writes a header row from column labels", () => {
   const csv = toCsv([{ key: "a", label: "Col A" }, { key: "b", label: "Col B" }], []);
   assert.equal(csv, "Col A,Col B");
+});
+
+test("toCsv neutralizes spreadsheet formula injection", () => {
+  const cols = [{ key: "v", label: "V" }];
+  // A leading =,+,-,@ is prefixed with a single quote so Excel/Sheets treat it
+  // as text instead of evaluating it.
+  assert.ok(toCsv(cols, [{ v: "=1+1" }]).endsWith("'=1+1"));
+  assert.ok(toCsv(cols, [{ v: "+12155550100" }]).endsWith("'+12155550100"));
+  assert.ok(toCsv(cols, [{ v: "@SUM(A1)" }]).endsWith("'@SUM(A1)"));
+  assert.ok(toCsv(cols, [{ v: "-5" }]).endsWith("'-5"));
+  // Ordinary values are untouched.
+  assert.ok(toCsv(cols, [{ v: "Jane Smith" }]).endsWith("Jane Smith"));
 });
 
 test("toCsv emits one CRLF-separated line per record", () => {

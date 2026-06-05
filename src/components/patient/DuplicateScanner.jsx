@@ -102,6 +102,7 @@ const evaluateAdvancedMatch = (a, b, opts) => {
 
 export default function DuplicateScanner() {
   const [isScanning, setIsScanning] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
   const [results, setResults] = useState(null);
   const [scanMode, setScanMode] = useState('standard'); // 'standard' or 'advanced'
   const [advancedOptions, setAdvancedOptions] = useState({
@@ -129,7 +130,9 @@ export default function DuplicateScanner() {
     
     try {
       if (scanMode === 'standard') {
-        // Use backend function for standard scan
+        // Standard scan = DRY-RUN preview only. The backend defaults to a preview
+        // (no deletion) unless called with confirm:true; the admin reviews the
+        // proposed merges and then clicks "Confirm & merge" (applyStandardMerge).
         const response = await base44.functions.invoke('deduplicatePatients');
         const data = response.data || response;
         setResults(data);
@@ -252,10 +255,31 @@ export default function DuplicateScanner() {
       
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
+      // Keep backend/internal detail in logs only — this is an admin tool calling
+      // privileged functions; show a generic message in the UI.
       console.error('Scan error:', error);
-      toast.error('Failed to scan: ' + error.message);
+      toast.error('Failed to scan for duplicates. Please try again.');
     }
     setIsScanning(false);
+  };
+
+  // Apply the previewed standard-mode merges. Calls the backend with
+  // confirm:true, which archives (soft-deletes) the duplicates rather than
+  // hard-deleting them, so a wrong merge is recoverable.
+  const applyStandardMerge = async () => {
+    setIsApplying(true);
+    toast.info('Merging the reviewed duplicates...');
+    try {
+      const response = await base44.functions.invoke('deduplicatePatients', { confirm: true });
+      const data = response.data || response;
+      setResults(data);
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      toast.success(`Merged ${data.patients_removed || 0} duplicate record(s).`);
+    } catch (error) {
+      console.error('Merge error:', error);
+      toast.error('Failed to merge duplicates. Please try again.');
+    }
+    setIsApplying(false);
   };
 
   return (
@@ -456,24 +480,36 @@ export default function DuplicateScanner() {
           </>
         ) : (
           <>
-            {results.patients_removed > 0 ? (
+            {(results.patients_removed > 0 || results.patients_to_remove > 0) ? (
               <>
-                <Alert className="bg-green-50 border-green-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <AlertDescription className="text-green-900">
-                    <strong>✅ Deduplication Complete!</strong>
-                    <div className="mt-2 text-sm">
-                      Found {results.duplicate_groups_found} duplicate group(s) and removed {results.patients_removed} duplicate record(s).
-                      {results.scan_mode === 'advanced' && (
-                        <div className="mt-1 text-xs">
-                          <Badge className="bg-purple-600 text-white text-xs mt-1">
-                            Advanced Multi-Algorithm Scan
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                  </AlertDescription>
-                </Alert>
+                {results.dry_run ? (
+                  <Alert className="bg-amber-50 border-amber-300">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <AlertDescription className="text-amber-900">
+                      <strong>Review required — nothing has been changed yet</strong>
+                      <div className="mt-2 text-sm">
+                        Found {results.duplicate_groups_found} duplicate group(s); {results.patients_to_remove} record(s) would be merged. Merging archives the duplicate (it is hidden from lists but recoverable), keeping the most complete record. Review below, then confirm.
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert className="bg-green-50 border-green-300">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <AlertDescription className="text-green-900">
+                      <strong>✅ Deduplication Complete!</strong>
+                      <div className="mt-2 text-sm">
+                        Found {results.duplicate_groups_found} duplicate group(s) and merged {results.patients_removed} duplicate record(s).
+                        {results.scan_mode === 'advanced' && (
+                          <div className="mt-1 text-xs">
+                            <Badge className="bg-purple-600 text-white text-xs mt-1">
+                              Advanced Multi-Algorithm Scan
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -481,8 +517,8 @@ export default function DuplicateScanner() {
                     <p className="text-2xl font-bold text-blue-900">{results.duplicate_groups_found}</p>
                   </div>
                   <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <p className="text-xs text-red-700 mb-1">Records Closed</p>
-                    <p className="text-2xl font-bold text-red-900">{results.patients_removed}</p>
+                    <p className="text-xs text-red-700 mb-1">{results.dry_run ? 'Would Merge' : 'Records Merged'}</p>
+                    <p className="text-2xl font-bold text-red-900">{results.dry_run ? results.patients_to_remove : results.patients_removed}</p>
                   </div>
                 </div>
 
@@ -557,6 +593,16 @@ export default function DuplicateScanner() {
                       </div>
                     </ScrollArea>
                   </div>
+                )}
+
+                {results.dry_run && (
+                  <Button
+                    onClick={applyStandardMerge}
+                    disabled={isApplying}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    {isApplying ? 'Merging…' : `Confirm & merge ${results.patients_to_remove} duplicate(s)`}
+                  </Button>
                 )}
               </>
             ) : (

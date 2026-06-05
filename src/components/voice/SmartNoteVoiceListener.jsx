@@ -49,6 +49,33 @@ export default function SmartNoteVoiceListener({
   const recognitionRef = useRef(null);
   const analyserRef = useRef(null);
   const animationRef = useRef(null);
+  const streamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  // Mirror isListening into a ref so the recognition.onend handler (created once,
+  // deps []) reads the LIVE value instead of the stale mount-time `false`, which
+  // previously broke continuous-listening auto-restart.
+  const isListeningRef = useRef(false);
+
+  // Stop and release the mic stream, AudioContext, and animation frame.
+  const stopAudioCapture = () => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+  };
+
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
 
   useEffect(() => {
     // Check for Web Speech API support
@@ -79,8 +106,8 @@ export default function SmartNoteVoiceListener({
     };
 
     recognition.onend = () => {
-      // Restart if still meant to be listening
-      if (isListening && recognitionRef.current) {
+      // Restart if still meant to be listening (read the ref, not stale state).
+      if (isListeningRef.current && recognitionRef.current) {
         try {
           recognitionRef.current.start();
         } catch (e) {
@@ -95,9 +122,8 @@ export default function SmartNoteVoiceListener({
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      // Release the mic stream + AudioContext too (previously leaked on unmount).
+      stopAudioCapture();
     };
   }, []);
 
@@ -221,14 +247,15 @@ export default function SmartNoteVoiceListener({
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      // Release the mic + AudioContext (previously left live after "stop").
+      stopAudioCapture();
     } else {
       try {
         // Get audio for visual feedback
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = stream;
         const audioContext = new AudioContext();
+        audioContextRef.current = audioContext;
         const source = audioContext.createMediaStreamSource(stream);
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;

@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, result });
   } catch (error) {
     console.error('fixUserAccount error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    // Generic message — don't leak internals to the client.
+    return Response.json({ error: 'Failed to update user account' }, { status: 500 });
   }
 });

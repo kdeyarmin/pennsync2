@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toCsvRows } from "@/components/admin/csvExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 
@@ -158,17 +159,8 @@ export default function OASISExportManager({
         csvData.push([]);
       }
 
-      // Convert to CSV string
-      const csvString = csvData.map(row => 
-        row.map(cell => {
-          const cellStr = String(cell || '');
-          // Escape quotes and wrap in quotes if contains comma, quote, or newline
-          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
-            return `"${cellStr.replace(/"/g, '""')}"`;
-          }
-          return cellStr;
-        }).join(',')
-      ).join('\n');
+      // Convert to CSV string (escaping + formula-injection neutralization)
+      const csvString = toCsvRows(csvData);
 
       // Download
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });

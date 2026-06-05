@@ -65,6 +65,17 @@ test('identifyComorbidities: a single low-impact comorbidity is not enough (none
   assert.equal(r.low.length, 1);
 });
 
+test('identifyComorbidities: bare "OA" shorthand is detected as osteoarthritis', () => {
+  // Previously the pattern required a trailing space (/oa /), so a dx of exactly
+  // "OA" was missed and under-counted the comorbidity tier.
+  const r = identifyComorbidities('Hypertension', ['OA'], '');
+  assert.equal(r.low.length, 2);
+  assert.equal(r.adjustment, 'low');
+  // And it must not over-match "oa" inside other words.
+  const r2 = identifyComorbidities('Hypertension', ['Oahu trip noted'], '');
+  assert.equal(r2.low.length, 1);
+});
+
 test('identifyComorbidities: high adjustment takes precedence over multiple low ones', () => {
   const r = identifyComorbidities('COPD', ['hypertension', 'osteoarthritis'], '');
   assert.equal(r.adjustment, 'high');

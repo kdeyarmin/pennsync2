@@ -29,6 +29,7 @@ import { BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as Rechar
 import { format, subDays, differenceInDays } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import { useQuery } from "@tanstack/react-query";
+import { escapeCsvField } from "@/components/admin/csvExport";
 
 export default function ReportsCenter({ users: allUsers, patients: allPatients, visits, incidents }) {
   const [reportType, setReportType] = useState("productivity");
@@ -413,7 +414,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     content += `Nurse,Note Enhancements,Time Saved (hours)\n`;
     
     data.nurses.forEach(stats => {
-      content += `${stats.name},${stats.noteEnhancements},${stats.timeSavedHours}\n`;
+      content += `${escapeCsvField(stats.name)},${stats.noteEnhancements},${stats.timeSavedHours}\n`;
     });
 
     content += `\nTOTAL AGENCY PRODUCTIVITY\n`;
@@ -615,7 +616,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     Object.values(nursePerformance)
       .sort((a, b) => b.completionRate - a.completionRate)
       .forEach(perf => {
-        content += `${perf.name},${perf.credentials},${perf.careScope},${perf.totalAssigned},${perf.completed},${perf.completionRate},${perf.docQualityRate}\n`;
+        content += `${escapeCsvField(perf.name)},${escapeCsvField(perf.credentials)},${escapeCsvField(perf.careScope)},${perf.totalAssigned},${perf.completed},${perf.completionRate},${perf.docQualityRate}\n`;
       });
 
     return {
@@ -813,7 +814,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     
     data.forEach(d => {
       const completionRate = d.visitCount > 0 ? Math.round((d.completedVisits / d.visitCount) * 100) : 0;
-      content += `${d.diagnosis},${d.patientCount},${d.visitCount},${d.completedVisits},${d.incidents},${d.falls},${d.hospitalizations},${completionRate}%\n`;
+      content += `${escapeCsvField(d.diagnosis)},${d.patientCount},${d.visitCount},${d.completedVisits},${d.incidents},${d.falls},${d.hospitalizations},${completionRate}%\n`;
     });
 
     return {
@@ -830,7 +831,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     content += `Nurse,Total Visits,Completed,Completion Rate %,Documentation Quality %,Avg Visits/Day,Rank\n`;
     
     data.forEach((d, idx) => {
-      content += `${d.name},${d.totalVisits},${d.completed},${d.completionRate},${d.docQuality},${d.avgVisitsPerDay},${idx + 1}\n`;
+      content += `${escapeCsvField(d.name)},${d.totalVisits},${d.completed},${d.completionRate},${d.docQuality},${d.avgVisitsPerDay},${idx + 1}\n`;
     });
 
     return {

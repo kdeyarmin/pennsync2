@@ -80,9 +80,20 @@ export default function VisitScribePage() {
         compliance_score: coverageScore,
       });
 
-      const patient = patients.find(p => p.id === selectedPatient);
+      // Re-fetch the patient immediately before appending so we don't clobber
+      // history written since the cached list loaded. This is a read-modify-write
+      // on an array; using the (possibly minutes-old) list cache loses entries
+      // from concurrent saves. Fall back to the cached record only if get fails.
+      let patient = null;
+      try {
+        patient = await base44.entities.Patient.get(selectedPatient);
+      } catch {
+        patient = patients.find(p => p.id === selectedPatient) || null;
+      }
       if (patient) {
-        const enhancedNotesHistory = patient.enhanced_notes_history || [];
+        const enhancedNotesHistory = Array.isArray(patient.enhanced_notes_history)
+          ? [...patient.enhanced_notes_history]
+          : [];
         enhancedNotesHistory.push({
           date: new Date().toISOString(),
           visit_type: visitType,

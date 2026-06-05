@@ -33,6 +33,7 @@ import { TrendingUp, Filter, Download, DollarSign, Activity, Loader2, AlertTrian
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
@@ -587,13 +588,13 @@ Provide optimistic, realistic, and conservative scenarios.`,
   };
 
   const exportData = () => {
-    const csv = [
-      ['Month', 'Assessments', 'Avg Payment', 'Avg Case Mix', 'Total Revenue', 'Compliance Rate'].join(','),
+    const csv = toCsvRows([
+      ['Month', 'Assessments', 'Avg Payment', 'Avg Case Mix', 'Total Revenue', 'Compliance Rate'],
       ...chartData.paymentTrend.map((d, idx) => {
         const compliance = chartData.complianceTrend[idx]?.avgCompliance || 0;
-        return [d.month, d.count, d.avgPayment, d.avgCaseMix, d.total, compliance].join(',');
+        return [d.month, d.count, d.avgPayment, d.avgCaseMix, d.total, compliance];
       })
-    ].join('\n');
+    ]);
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

@@ -15,6 +15,13 @@ test("normalizeE164 handles 11-digit and already-E.164 numbers", () => {
   assert.equal(normalizeE164("+44 20 7946 0958"), "+442079460958");
 });
 
+test("normalizeE164 rejects out-of-range + numbers (length and leading zero)", () => {
+  assert.equal(normalizeE164("+1234567890123456789"), null); // 19 digits > E.164 max 15
+  assert.equal(normalizeE164("+02155550100"), null);          // leading 0 after +
+  assert.equal(normalizeE164("+1234567"), null);              // 7 digits < 8
+  assert.equal(normalizeE164("+123456789012345"), "+123456789012345"); // exactly 15 ok
+});
+
 test("normalizeE164 returns null for invalid input", () => {
   assert.equal(normalizeE164(""), null);
   assert.equal(normalizeE164(null), null);

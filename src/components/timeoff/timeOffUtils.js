@@ -219,8 +219,12 @@ export function buildTimeOffCSV(requests = []) {
     "Status", "Manager", "Reviewed By", "Reason",
   ];
   const escape = (value) => {
-    const str = value == null ? "" : String(value);
-    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    let str = value == null ? "" : String(value);
+    // Neutralize spreadsheet formula injection (reason/name fields are free-form
+    // and user-controlled). RFC quoting does not prevent formula evaluation.
+    if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
+    // NOTE: include \r (a lone CR must be quoted too, per RFC 4180).
+    return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
   };
   const rows = requests.map((r) => [
     r.employee_name || "",

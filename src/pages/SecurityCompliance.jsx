@@ -51,6 +51,7 @@ import SecurityAuditScheduler from "../components/security/SecurityAuditSchedule
 import VulnerabilityAssessment from "../components/security/VulnerabilityAssessment";
 import { logActivity } from "@/components/utils/activityLogger";
 import { formatEastern } from "../components/utils/timezone";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function SecurityCompliance() {
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -118,8 +119,8 @@ export default function SecurityCompliance() {
   });
 
   const exportAuditLog = () => {
-    const csv = [
-      ['Timestamp', 'User', 'Email', 'Action', 'Entity Type', 'Entity ID', 'Severity', 'Details'].join(','),
+    const csv = toCsvRows([
+      ['Timestamp', 'User', 'Email', 'Action', 'Entity Type', 'Entity ID', 'Severity', 'Details'],
       ...filteredLogs.map(log => [
         log.created_date,
         log.user_name,
@@ -129,8 +130,8 @@ export default function SecurityCompliance() {
         log.entity_id || '',
         log.severity || 'info',
         JSON.stringify(log.details || {})
-      ].join(','))
-    ].join('\n');
+      ])
+    ]);
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -551,15 +552,15 @@ export default function SecurityCompliance() {
                   size="sm"
                   onClick={() => {
                     const logs = securityLogs.slice(0, 50);
-                    const csv = [
-                      ['Timestamp', 'User', 'Action', 'Details'].join(','),
+                    const csv = toCsvRows([
+                      ['Timestamp', 'User', 'Action', 'Details'],
                       ...logs.map(log => [
                         log.timestamp || log.created_date,
                         log.user_email,
                         log.action,
                         JSON.stringify(log.details || {})
-                      ].join(','))
-                    ].join('\n');
+                      ])
+                    ]);
                     const blob = new Blob([csv], { type: 'text/csv' });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');

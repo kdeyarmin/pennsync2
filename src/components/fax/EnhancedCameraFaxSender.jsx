@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +44,15 @@ export default function EnhancedCameraFaxSender() {
       setStream(null);
     }
   };
+
+  // Release the camera when the stream changes or the component unmounts, so the
+  // camera isn't left live on a shared clinical device after navigating away
+  // without pressing Done. (stop() on an already-stopped track is a no-op.)
+  useEffect(() => {
+    return () => {
+      if (stream) stream.getTracks().forEach((track) => track.stop());
+    };
+  }, [stream]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;

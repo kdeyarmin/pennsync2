@@ -13,6 +13,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { generateSecureToken } from '@/components/utils/security';
 import { Share2, Mail, Link as LinkIcon, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -50,8 +51,10 @@ export default function SecureDocumentShare({ documentName, _documentData }) {
         timestamp: new Date().toISOString()
       });
 
-      // Create a share link (in real implementation, encrypt and store)
-      const shareLink = `${window.location.origin}/shared-document/${Math.random().toString(36).substr(2, 9)}`;
+      // Create a share link. Use a CSPRNG token (not the predictable Math.random)
+      // so the link can't be guessed/enumerated. NOTE: this token is not yet
+      // persisted/validated server-side — see docs/CODE_REVIEW_2026-06-05.md (S11).
+      const shareLink = `${window.location.origin}/shared-document/${generateSecureToken(24)}`;
 
       if (shareMethod === 'email' && recipientEmail) {
         // Send email with document

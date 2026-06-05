@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +55,23 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
       clearInterval(timerRef.current);
     }
   };
+
+  // This recorder mounts/unmounts as the user changes patient/visit selection in
+  // MedicalScribe; stop the mic + timer on unmount so a mid-recording switch
+  // doesn't leave the microphone live.
+  useEffect(() => {
+    return () => {
+      const mr = mediaRecorderRef.current;
+      if (mr) {
+        // Detach onstop so cleanup only releases the mic (its handler setStates
+        // the captured blob otherwise — after unmount).
+        mr.onstop = null;
+        try { if (mr.state !== "inactive") mr.stop(); } catch { /* already stopped */ }
+        mr.stream?.getTracks().forEach((track) => track.stop());
+      }
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];

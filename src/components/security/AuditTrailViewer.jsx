@@ -38,6 +38,7 @@ import {
   Eye,
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function AuditTrailViewer({ filterType = "all" }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -120,8 +121,8 @@ export default function AuditTrailViewer({ filterType = "all" }) {
   });
 
   const exportAuditLog = () => {
-    const csv = [
-      ['Timestamp', 'User', 'Email', 'Action', 'Entity Type', 'Entity ID', 'Severity', 'IP Address', 'Details'].join(','),
+    const csv = toCsvRows([
+      ['Timestamp', 'User', 'Email', 'Action', 'Entity Type', 'Entity ID', 'Severity', 'IP Address', 'Details'],
       ...filteredLogs.map(log => [
         log.created_date || log.timestamp,
         log.user_name || '',
@@ -132,8 +133,8 @@ export default function AuditTrailViewer({ filterType = "all" }) {
         log.severity || 'info',
         log.ip_address || '',
         JSON.stringify(log.details || {})
-      ].join(','))
-    ].join('\n');
+      ])
+    ]);
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

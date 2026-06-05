@@ -11,7 +11,10 @@ import {
 
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
-// storage host(s). (Does not stop DNS rebinding — pair with the allowlist.)
+// storage host(s). Set FILE_URL_STRICT=true to make that allowlist MANDATORY —
+// with strict on and no allowlist configured, all external fetches are rejected
+// (fully closes the SSRF surface) rather than allowing any public host.
+// (Allowlisting also mitigates DNS rebinding.)
 function isSafeFetchUrl(raw: string): boolean {
   let u: URL;
   try { u = new URL(String(raw)); } catch { return false; }
@@ -25,9 +28,12 @@ function isSafeFetchUrl(raw: string): boolean {
     if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
   }
   const allow = Deno.env.get('FILE_URL_ALLOWED_HOSTS');
-  if (allow) {
-    const hosts = allow.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+  const hosts = (allow || '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+  if (hosts.length > 0) {
     if (!hosts.some((h) => host === h || host.endsWith('.' + h))) return false;
+  } else if (Deno.env.get('FILE_URL_STRICT') === 'true') {
+    // Strict mode with no allowlist configured: fail closed (allow nothing).
+    return false;
   }
   return true;
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,12 @@ export default function AICarePlanSuggestionEngine({
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedPlan, setEditedPlan] = useState(null);
   const [generationStage, setGenerationStage] = useState(0);
+  const progressIntervalRef = useRef(null);
+
+  // Clear the progress interval if the component unmounts mid-generation.
+  useEffect(() => () => {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+  }, []);
 
   const generationStages = [
     "Analyzing patient diagnoses and comorbidities...",
@@ -50,6 +56,7 @@ export default function AICarePlanSuggestionEngine({
     const progressInterval = setInterval(() => {
       setGenerationStage(prev => Math.min(prev + 1, generationStages.length - 1));
     }, 2000);
+    progressIntervalRef.current = progressInterval;
 
     try {
       const result = await invokeLLM({

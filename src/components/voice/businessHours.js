@@ -134,7 +134,11 @@ export function isWithinBusinessHours(now = new Date(), config) {
   }
 
   const m = wc.minutes;
-  const within = open <= close ? m >= open && m < close : m >= open || m < close;
+  // Use strict `<` so an equal open/close (e.g. 00:00-00:00, the admin "open all
+  // day" intent documented above) falls into the overnight/always-open branch
+  // instead of the normal branch, where `m >= open && m < open` is always false
+  // and would report the practice closed 24h.
+  const within = open < close ? m >= open && m < close : m >= open || m < close;
   return {
     open: within,
     reason: within ? "open" : "after_hours",

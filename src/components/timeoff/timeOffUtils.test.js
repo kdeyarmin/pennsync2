@@ -193,3 +193,12 @@ test("buildTimeOffCSV emits a header row and escapes special characters", () => 
   assert.match(lines[1], /^Jane Doe,jane@x\.com,Vacation \/ PTO,2026-03-02,2026-03-06,5,Approved,Boss,Boss,/);
   assert.match(lines[1], /"Family trip, ""the big one"""$/); // quotes + comma escaped
 });
+
+test("buildTimeOffCSV neutralizes formula injection and quotes a lone CR", () => {
+  const csv = buildTimeOffCSV([{ employee_name: "=cmd|calc", reason: "line1\rline2" }]);
+  const lines = csv.split("\n");
+  // employee_name (first column): a leading = is prefixed with a quote -> text.
+  assert.ok(lines[1].startsWith("'=cmd|calc"));
+  // A lone CR must force quoting (it was previously missing from the escape class).
+  assert.match(csv, /"line1\rline2"/);
+});

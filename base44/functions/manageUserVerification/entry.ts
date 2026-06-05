@@ -15,35 +15,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    if (action === 'inspect') {
-      return Response.json({
-        config: base44.getConfig ? base44.getConfig() : null,
-        verifyOtpSource: String(base44.auth.verifyOtp),
-        resendOtpSource: String(base44.auth.resendOtp)
-      });
-    }
-
-    if (action === 'raw_resend') {
-      const config = base44.getConfig();
-      const response = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/resend-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const result = await response.json();
-      return Response.json({ success: response.ok, action, status: response.status, result });
-    }
-
-    if (action === 'raw_verify') {
-      const config = base44.getConfig();
-      const response = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp_code: otp })
-      });
-      const result = await response.json();
-      return Response.json({ success: response.ok, action, status: response.status, result });
-    }
+    // NOTE: the debug 'inspect' / 'raw_resend' / 'raw_verify' passthrough actions
+    // were removed — they dumped SDK internals and let an admin hit the raw
+    // OTP verify/resend endpoints unthrottled. Use the supported actions below.
 
     if (action === 'resend') {
       const result = await base44.auth.resendOtp(email);
@@ -55,18 +29,18 @@ Deno.serve(async (req) => {
         const result = await base44.auth.verifyOtp({ email, otpCode: otp });
         return Response.json({ success: true, action, result });
       } catch (error) {
+        // Generic — don't leak the SDK/OTP error internals to the client.
         return Response.json({
-          error: String(error?.message || error),
-          status: error?.status || 500,
-          data: error?.data || null,
-          original: error?.originalError?.response?.data || null
-        }, { status: 500 });
+          error: 'OTP verification failed',
+          status: error?.status || 500
+        }, { status: error?.status || 500 });
       }
     }
 
     return Response.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('manageUserVerification error:', error);
-    return Response.json({ error: String(error?.message || error), details: JSON.stringify(error, Object.getOwnPropertyNames(error || {})) }, { status: 500 });
+    // Generic message — don't serialize/leak the full error object to the client.
+    return Response.json({ error: 'Verification request failed' }, { status: 500 });
   }
 });

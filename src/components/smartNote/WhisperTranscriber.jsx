@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Mic, MicOff, Loader, AlertCircle, Copy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,6 +20,17 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
   const streamRef = useRef(null);
+
+  // Release the mic, timer, and recorder if the component unmounts mid-recording
+  // (navigating away without pressing Stop) so the microphone isn't left live.
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (timerRef.current) clearInterval(timerRef.current);
+      const mr = mediaRecorderRef.current;
+      if (mr && mr.state !== "inactive") { try { mr.stop(); } catch { /* already stopped */ } }
+    };
+  }, []);
 
   // Initialize audio recording
   const startRecording = async () => {

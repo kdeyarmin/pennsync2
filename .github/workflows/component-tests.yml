@@ -48,5 +48,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint (full repo)
+        run: npm run lint
+
       - name: Run component & render tests
         run: npm run test:components

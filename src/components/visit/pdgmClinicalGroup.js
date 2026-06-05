@@ -129,7 +129,7 @@ export function identifyComorbidities(primaryDx, secondaryDx = [], narrativeText
       { name: 'Hypertension', patterns: [/hypertension/, /htn/, /high blood pressure/], icd10: ['I10', 'I11', 'I12'] },
       { name: 'Atrial Fibrillation', patterns: [/atrial fibrillation/, /afib/, /a-fib/], icd10: ['I48'] },
       { name: 'Diabetes (uncomplicated)', patterns: [/diabetes mellitus/, /type 2 diabetes/, /type 1 diabetes/], icd10: ['E11.9', 'E10.9'] },
-      { name: 'Osteoarthritis', patterns: [/osteoarthritis/, /degenerative joint/, /oa /], icd10: ['M15', 'M16', 'M17'] },
+      { name: 'Osteoarthritis', patterns: [/osteoarthritis/, /degenerative joint/, /\boa\b/], icd10: ['M15', 'M16', 'M17'] },
       { name: 'Anxiety/Depression', patterns: [/anxiety/, /depression/, /depressive/], icd10: ['F41', 'F32', 'F33'] },
       { name: 'Obesity', patterns: [/obesity/, /obese/, /bmi.*3[0-9]/, /bmi.*4[0-9]/], icd10: ['E66'] }
     ]

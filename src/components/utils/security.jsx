@@ -156,6 +156,63 @@ export function sanitizeHtml(html) {
 }
 
 /**
+ * Uniform random integer in [0, max) from the Web Crypto CSPRNG, rejection-sampled
+ * to avoid modulo bias. Never use Math.random() for tokens/passwords.
+ * @param {number} max
+ * @returns {number}
+ */
+export function secureRandomInt(max) {
+  // Reject max > 2^32-1: with a 32-bit source, `limit` would floor to 0 and the
+  // rejection-sampling loop below would never terminate. Fail fast instead.
+  if (!Number.isInteger(max) || max <= 0 || max > 0xffffffff) {
+    throw new Error('max must be a positive integer <= 2^32-1');
+  }
+  const limit = Math.floor(0xffffffff / max) * max;
+  const buf = new Uint32Array(1);
+  let x;
+  do {
+    crypto.getRandomValues(buf);
+    x = buf[0];
+  } while (x >= limit);
+  return x % max;
+}
+
+/**
+ * Generate a high-entropy URL-safe token (default ~190 bits over 32 chars).
+ * Use for bearer credentials such as document-signing links — NOT Math.random().
+ * @param {number} length number of characters
+ * @returns {string}
+ */
+export function generateSecureToken(length = 32) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  let out = '';
+  // charset.length === 64 divides 256 evenly, so `byte % 64` is bias-free.
+  for (let i = 0; i < bytes.length; i++) out += charset[bytes[i] % charset.length];
+  return out;
+}
+
+/**
+ * Generate a CSPRNG temporary password with at least one upper/lower/digit/symbol,
+ * shuffled with a Fisher–Yates pass (the `sort(() => Math.random()-0.5)` idiom is
+ * both non-cryptographic and statistically biased).
+ * @param {number} length
+ * @returns {string}
+ */
+export function generateSecurePassword(length = 12) {
+  const classes = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnpqrstuvwxyz', '23456789', '!@#$%^&*'];
+  const all = classes.join('');
+  const chars = classes.map((set) => set[secureRandomInt(set.length)]);
+  while (chars.length < Math.max(length, classes.length)) chars.push(all[secureRandomInt(all.length)]);
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = secureRandomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
+
+/**
  * Sanitize object with all string fields
  * @param {Object} obj - Object to sanitize
  * @returns {Object} - Sanitized object

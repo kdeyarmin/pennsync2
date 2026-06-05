@@ -34,6 +34,7 @@ import {
 } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function ComplianceCalendar() {
   const [filterUrgency, setFilterUrgency] = useState("all");
@@ -231,21 +232,25 @@ export default function ComplianceCalendar() {
 
   // Export function
   const exportComplianceReport = () => {
-    let csvContent = `Penn Sync Medicare Compliance Report\n`;
-    csvContent += `Generated: ${format(new Date(), 'PPpp')}\n`;
-    csvContent += `Total Alerts: ${complianceAlerts.length}\n\n`;
-    csvContent += `Patient,MRN,Alert Type,Description,Due Date,Days Remaining,Urgency,Action Required\n`;
-    
-    complianceAlerts.forEach(alert => {
-      csvContent += `${alert.patient.first_name} ${alert.patient.last_name},`;
-      csvContent += `${alert.patient.medical_record_number || 'N/A'},`;
-      csvContent += `${alert.type},`;
-      csvContent += `${alert.description},`;
-      csvContent += `${format(alert.dueDate, 'MM/dd/yyyy')},`;
-      csvContent += `${alert.daysRemaining},`;
-      csvContent += `${alert.urgency},`;
-      csvContent += `${alert.action}\n`;
-    });
+    // Build via toCsvRows so patient names/descriptions (free text) are escaped
+    // and formula-injection-neutralized rather than raw-interpolated.
+    const csvContent = toCsvRows([
+      ['Penn Sync Medicare Compliance Report'],
+      [`Generated: ${format(new Date(), 'PPpp')}`],
+      [`Total Alerts: ${complianceAlerts.length}`],
+      [],
+      ['Patient', 'MRN', 'Alert Type', 'Description', 'Due Date', 'Days Remaining', 'Urgency', 'Action Required'],
+      ...complianceAlerts.map(alert => [
+        `${alert.patient.first_name} ${alert.patient.last_name}`,
+        alert.patient.medical_record_number || 'N/A',
+        alert.type,
+        alert.description,
+        format(alert.dueDate, 'MM/dd/yyyy'),
+        alert.daysRemaining,
+        alert.urgency,
+        alert.action,
+      ]),
+    ]);
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

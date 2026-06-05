@@ -9,9 +9,16 @@
  * SMS message bodies or recording media — so a compliance export can't leak PHI.
  */
 
-/** Escape a single CSV field per RFC 4180 (quote when it contains , " CR or LF). */
-function escapeField(value) {
-  const s = value == null ? "" : String(value);
+/**
+ * Escape a single CSV field per RFC 4180 (quote when it contains , " CR or LF),
+ * and neutralize spreadsheet formula injection. A field starting with = + - @
+ * (or a control char) is evaluated as a formula by Excel/Sheets — RFC quoting
+ * does NOT prevent that — so we prefix it with a single quote first. This also
+ * makes a phone number like "+12155550100" render as text rather than a formula.
+ */
+export function escapeCsvField(value) {
+  let s = value == null ? "" : String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
@@ -25,17 +32,35 @@ function escapeField(value) {
 export function toCsv(columns, records) {
   const cols = Array.isArray(columns) ? columns : [];
   const rows = Array.isArray(records) ? records : [];
-  const header = cols.map((c) => escapeField(c.label)).join(",");
+  const header = cols.map((c) => escapeCsvField(c.label)).join(",");
   const lines = rows.map((row) =>
     cols
       .map((c) => {
         const raw = row ? row[c.key] : undefined;
         const value = typeof c.format === "function" ? c.format(raw, row) : raw;
-        return escapeField(value);
+        return escapeCsvField(value);
       })
       .join(",")
   );
   return [header, ...lines].join("\r\n");
+}
+
+/**
+ * Join an array of row-arrays into a safe CSV string. Every cell is run through
+ * `escapeCsvField` (RFC 4180 quoting + spreadsheet formula-injection neutralization),
+ * so components that build their own ragged/multi-section row arrays can swap an
+ * unsafe `rows.map(r => r.join(',')).join('\n')` for `toCsvRows(rows)` without
+ * restructuring their data.
+ * Accepts any input and coerces defensively (non-array → [], non-array row →
+ * single-cell row), so the param type is intentionally loose.
+ * @param {any} rows  an array of row-arrays
+ * @param {{ eol?: string }} [opts]
+ * @returns {string}
+ */
+export function toCsvRows(rows, { eol = "\r\n" } = {}) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => (Array.isArray(row) ? row : [row]).map(escapeCsvField).join(","))
+    .join(eol);
 }
 
 /** A filename-safe timestamp like 2026-06-02_1430 for export filenames. */

@@ -10,7 +10,10 @@
 export const DEFAULT_URGENT_KEYWORDS = [
   "emergency", "urgent", "911", "chest pain", "can't breathe", "cant breathe",
   "trouble breathing", "short of breath", "suicidal", "kill myself", "overdose",
-  "bleeding", "blood", "fell", "fall", "fallen", "passed out", "unconscious",
+  // NOTE: bare "blood" was removed — it fired on routine phrases like "blood
+  // pressure", "blood sugar", and "blood test" (alert fatigue). "bleeding"
+  // covers the genuinely urgent case.
+  "bleeding", "fell", "fall", "fallen", "passed out", "unconscious",
   "stroke", "seizure", "severe pain", "help me", "not breathing", "unresponsive",
 ];
 

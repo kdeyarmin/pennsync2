@@ -51,6 +51,7 @@ const RULES = [
     triggers: [
       { questionId: "m1400", values: [3, 4], severity: "high" },  // dyspnea
       { questionId: "m1030", values: [1, 2], severity: "medium" },  // therapy at home
+      { questionId: "m1020", values: [2], severity: "high" },  // primary dx = Heart Failure / CHF
     ],
     reason: () => "Dyspnea or cardiovascular instability noted. Blood pressure and fluid monitoring indicated.",
     interventionIds: ["cv-1", "cv-2", "cv-3"],
@@ -68,7 +69,11 @@ const RULES = [
   {
     domain: "Diabetes Management",
     triggers: [
-      { questionId: "m1020", values: [1, 2], severity: "high" },  // primary diagnosis diabetes
+      // m1020 is this form's primary-diagnosis SELECT: 1 = Diabetes Mellitus.
+      // It previously also matched 2, but 2 = Heart Failure/CHF (see
+      // oasisQuestions.jsx), so a CHF patient was wrongly flagged for diabetes
+      // management. CHF now routes to Cardiovascular Monitoring instead.
+      { questionId: "m1020", values: [1], severity: "high" },  // primary diagnosis = Diabetes Mellitus
       { questionId: "m2020", values: [3], severity: "medium" },
     ],
     reason: () => "Diabetes diagnosis requires structured glucose monitoring, foot care, and diet education.",

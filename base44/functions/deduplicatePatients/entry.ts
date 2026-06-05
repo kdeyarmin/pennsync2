@@ -125,23 +125,36 @@ export function parseDob(value) {
   const s = String(value).trim();
 
   let m = s.match(/^(\d{4})\D(\d{1,2})\D(\d{1,2})/); // YYYY-MM-DD
-  if (m) return { year: m[1], month: pad2(m[2]), day: pad2(m[3]) };
+  if (m) return validComponents({ year: m[1], month: pad2(m[2]), day: pad2(m[3]) });
 
   m = s.match(/^(\d{1,2})\D(\d{1,2})\D(\d{4})/); // MM/DD/YYYY
-  if (m) return { year: m[3], month: pad2(m[1]), day: pad2(m[2]) };
+  if (m) return validComponents({ year: m[3], month: pad2(m[1]), day: pad2(m[2]) });
 
   m = s.match(/^(\d{1,2})\D(\d{1,2})\D(\d{2})(?!\d)/); // MM/DD/YY
-  if (m) return { year: pivotYear(m[3]), month: pad2(m[1]), day: pad2(m[2]) };
+  if (m) return validComponents({ year: pivotYear(m[3]), month: pad2(m[1]), day: pad2(m[2]) });
 
   const digits = s.replace(/\D/g, '');
   if (digits.length === 8) {
     const first4 = parseInt(digits.substring(0, 4), 10);
     if (first4 >= 1900 && first4 <= 2100) {
-      return { year: digits.substring(0, 4), month: digits.substring(4, 6), day: digits.substring(6, 8) };
+      return validComponents({ year: digits.substring(0, 4), month: digits.substring(4, 6), day: digits.substring(6, 8) });
     }
-    return { year: digits.substring(4, 8), month: digits.substring(0, 2), day: digits.substring(2, 4) };
+    return validComponents({ year: digits.substring(4, 8), month: digits.substring(0, 2), day: digits.substring(2, 4) });
   }
   return null;
+}
+
+// Reject impossible month/day values (e.g. an 8-digit "19451304" → month 13, or a
+// reversed value) so the fuzzy variation checks don't treat garbage components as
+// a real date and produce spurious reversed/typo "matches". Returns the
+// components when valid, else null.
+function validComponents(c) {
+  if (!c) return null;
+  const month = parseInt(c.month, 10);
+  const day = parseInt(c.day, 10);
+  if (!Number.isInteger(month) || month < 1 || month > 12) return null;
+  if (!Number.isInteger(day) || day < 1 || day > 31) return null;
+  return c;
 }
 
 // ---------------------------------------------------------------------------
@@ -611,6 +624,34 @@ export function findDuplicateGroups(patients, opts = {}) {
 // function timeout. The interactive UI performs the full fuzzy/phonetic scan.
 const BACKEND_MIN_SCORE = 70;
 
+// Completeness score for survivor selection: when a duplicate group is merged,
+// keep the MORE COMPLETE record rather than just the newest, so a sparse stub
+// can't win over a rich chart and lose identifiers/clinical data. Strong
+// identifiers (MRN, DOB) are weighted because losing those is the worst outcome.
+function isPopulated(v: any): boolean {
+  if (v === undefined || v === null) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === 'object') return Object.keys(v).length > 0;
+  return String(v).trim() !== '';
+}
+function completenessScore(p: any): number {
+  if (!p) return 0;
+  let score = 0;
+  if (isPopulated(p.medical_record_number)) score += 3;
+  if (isPopulated(p.date_of_birth)) score += 2;
+  const fields = [
+    p.first_name, p.last_name, p.middle_name, p.address, p.phone, p.email,
+    p.payor, p.emergency_contact_name, p.emergency_contact_phone,
+    p.physician_name, p.physician_phone, p.caregiver_name, p.caregiver_email,
+    p.primary_diagnosis, p.secondary_diagnoses, p.allergies, p.current_medications,
+    p.insurance_primary, p.insurance_secondary, p.admission_date, p.care_type,
+    p.advance_directives, p.functional_status, p.assigned_nurses,
+    p.enhanced_notes_history, p.clinical_notes, p.goals_of_care,
+  ];
+  for (const f of fields) if (isPopulated(f)) score += 1;
+  return score;
+}
+
 Deno.serve(async (req) => {
   const startTime = Date.now();
 
@@ -622,7 +663,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    console.log('Starting deduplication...');
+    // DRY-RUN BY DEFAULT. The merge is destructive, so callers must explicitly
+    // pass { confirm: true } to apply it; any other invocation only PREVIEWS the
+    // groups that would be merged (no DB changes). The function may be invoked
+    // with no body, so parse defensively.
+    const body = await req.json().catch(() => ({}));
+    const confirm = body?.confirm === true;
+
+    console.log(`Starting deduplication (${confirm ? 'APPLY' : 'dry-run preview'})...`);
 
     // Bounded to the SDK's 5000/request max; omitting a limit silently caps at
     // the SDK default of 50. Re-run the scan if more patients remain.
@@ -710,11 +758,17 @@ Deno.serve(async (req) => {
       const batch = duplicateGroups.slice(i, i + batchSize);
 
       for (const group of batch) {
-        // Sort by status (active first) then by created_date (newest first).
+        // Choose the survivor: active first, then the MOST COMPLETE record, then
+        // newest as a tiebreak. (Previously this kept the newest active record,
+        // so a sparse just-created stub could survive over an older rich chart
+        // and silently lose its identifiers/clinical data.)
         const allInGroup = [group.primary, ...group.duplicates.map((d) => d.patient)];
         allInGroup.sort((a, b) => {
           if (a.status === 'active' && b.status !== 'active') return -1;
           if (a.status !== 'active' && b.status === 'active') return 1;
+          const ca = completenessScore(a);
+          const cb = completenessScore(b);
+          if (cb !== ca) return cb - ca; // keep the more complete record
           const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
           const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
           return dateB - dateA;
@@ -725,36 +779,37 @@ Deno.serve(async (req) => {
 
         const removedFromGroup = [];
         for (const patient of toRemove) {
+          const entry = {
+            id: patient.id,
+            name: `${patient.first_name} ${patient.last_name}`,
+            mrn: patient.medical_record_number || 'N/A',
+            match_score: group.duplicates.find((d) => d.patient.id === patient.id)?.score || 100,
+          };
+
+          if (!confirm) {
+            // Dry-run preview: report what WOULD be merged; change nothing.
+            removedFromGroup.push(entry);
+            continue;
+          }
+
+          // SOFT-delete (archive) — NOT an irreversible hard cascade-delete. The
+          // duplicate is marked merged/archived and pointed at the survivor; the
+          // main patient list filters is_archived, so it disappears from view
+          // while its record and clinical history (visits, care plans, alerts,
+          // incidents, tasks) are preserved and fully recoverable (clear
+          // is_archived/status to restore). The previous Patient.delete() also
+          // cascade-deleted all of that with no recovery.
           try {
-            // Quick deletion; if it fails, clear related records first.
-            await base44.asServiceRole.entities.Patient.delete(patient.id).catch(async () => {
-              const [visits, carePlans, alerts, incidents, tasks] = await Promise.all([
-                base44.asServiceRole.entities.Visit.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.CarePlan.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.Incident.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.Task.filter({ patient_id: patient.id }).catch(() => []),
-              ]);
-
-              await Promise.all([
-                ...visits.map((v) => base44.asServiceRole.entities.Visit.delete(v.id).catch((err) => console.error(`Failed to delete visit ${v.id}:`, err.message))),
-                ...carePlans.map((cp) => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch((err) => console.error(`Failed to delete care plan ${cp.id}:`, err.message))),
-                ...alerts.map((a) => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch((err) => console.error(`Failed to delete alert ${a.id}:`, err.message))),
-                ...incidents.map((inc) => base44.asServiceRole.entities.Incident.delete(inc.id).catch((err) => console.error(`Failed to delete incident ${inc.id}:`, err.message))),
-                ...tasks.map((t) => base44.asServiceRole.entities.Task.delete(t.id).catch((err) => console.error(`Failed to delete task ${t.id}:`, err.message))),
-              ]);
-
-              await base44.asServiceRole.entities.Patient.delete(patient.id);
+            await base44.asServiceRole.entities.Patient.update(patient.id, {
+              status: 'merged',
+              is_archived: true,
+              merged_into_id: keep.id,
+              merged_at: new Date().toISOString(),
+              merged_by: user.email,
             });
-
-            removedFromGroup.push({
-              id: patient.id,
-              name: `${patient.first_name} ${patient.last_name}`,
-              mrn: patient.medical_record_number || 'N/A',
-              match_score: group.duplicates.find((d) => d.patient.id === patient.id)?.score || 100,
-            });
+            removedFromGroup.push(entry);
           } catch (err) {
-            console.error(`Failed to delete ${patient.id}:`, err.message);
+            console.error(`Failed to archive ${patient.id}:`, err.message);
           }
         }
 
@@ -769,6 +824,28 @@ Deno.serve(async (req) => {
           removed: removedFromGroup,
         });
       }
+    }
+
+    // Persist an audit trail of an APPLIED merge (skip for dry-run previews,
+    // which change nothing). Records kept/removed IDs + MRNs (identifiers, not
+    // full PHI bodies) so a wrongful merge can be traced and recovered.
+    if (confirm && removed.length > 0) {
+      await base44.asServiceRole.entities.UserActivity.create({
+        user_email: user.email,
+        user_name: user.full_name,
+        action: 'patients_deduplicated',
+        entity_type: 'Patient',
+        details: {
+          removed_count: removed.length,
+          groups: detailsArray.map((d) => ({
+            kept_id: d.kept.id,
+            kept_mrn: d.kept.mrn,
+            removed: d.removed.map((r) => ({ id: r.id, mrn: r.mrn, match_score: r.match_score })),
+          })),
+          timestamp: new Date().toISOString(),
+        },
+        status: 'success',
+      }).catch((err) => console.error('Failed to write dedup audit:', err));
     }
 
     // Calculate confidence levels for results
@@ -790,15 +867,20 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
+      dry_run: !confirm,
+      // In dry-run these are the groups/records that WOULD be merged; with
+      // confirm:true they are the records actually archived (merged).
       duplicate_groups_found: duplicateGroups.length,
-      patients_removed: removed.length,
+      patients_removed: confirm ? removed.length : 0,
+      patients_to_remove: confirm ? 0 : removed.length,
       removed_patients: removed,
       details: resultsWithConfidence,
     });
   } catch (error) {
     console.error('Deduplication error:', error);
+    // Generic message — don't leak internals to the client.
     return Response.json({
-      error: error.message,
+      error: 'Deduplication failed',
       details: 'Check function logs for more information',
     }, { status: 500 });
   }
