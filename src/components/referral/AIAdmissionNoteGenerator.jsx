@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,13 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
   const [editedNote, setEditedNote] = useState("");
   const [generationStage, setGenerationStage] = useState(0);
   const [showReviewer, setShowReviewer] = useState(false);
+  const progressIntervalRef = useRef(null);
+
+  // Clear the progress interval if the component unmounts mid-generation so it
+  // doesn't keep firing setState on an unmounted component.
+  useEffect(() => () => {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+  }, []);
 
   const generationStages = [
     "Analyzing patient demographics and history...",
@@ -42,6 +49,7 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
     const progressInterval = setInterval(() => {
       setGenerationStage(prev => Math.min(prev + 1, generationStages.length - 1));
     }, 2500);
+    progressIntervalRef.current = progressInterval;
 
     try {
       const result = await invokeLLM({
