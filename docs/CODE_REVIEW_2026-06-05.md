@@ -269,13 +269,28 @@ backend `entry.ts` files transpile-checked; mirrored helpers kept in parity):
 - **Dedup safety (partial):** added a persisted UserActivity **audit trail** to `deduplicatePatients`
   capturing kept/removed patient IDs + MRNs + score before the irreversible delete.
 
-> ⚠️ **NEEDS A PRODUCT DECISION — most serious finding.** `deduplicatePatients` **hard-deletes**
-> patient records and cascades to delete their visits, care plans, alerts, incidents, and tasks,
-> with **no soft-delete, no dry-run/confirmation, and survivor = newest (not most-complete)**.
-> It is admin-only and gated at score ≥70 with corroboration, and now writes an audit trail, but
-> the destructive design itself should change: (1) a **dry-run/preview that requires explicit
-> confirmation**, (2) **soft-delete/archive** instead of hard cascade-delete, (3) survivor chosen
-> by **completeness** (B5). These change behavior, so they need sign-off before implementation.
+> ⚠️ **Most serious finding — now substantially mitigated (see Round 4).** `deduplicatePatients`
+> previously hard-deleted patient records and cascade-deleted their clinical data with no recovery.
+> It now (1) defaults to a **dry-run preview** and only acts on `confirm:true`, (2) **soft-deletes
+> (archives)** instead of hard cascade-deleting — fully recoverable, hidden from lists via the
+> existing `is_archived` filter, and (3) keeps the **most-complete** survivor. The matching
+> algorithm itself (Soundex/thresholds) is intentionally left unchanged — a regression there would
+> delete the wrong patient.
+
+### Round 4 — test net + dedup safety + deploy-config + a refactor (per the four-item go-ahead)
+
+- **Test net (foundation):** unit tests for the CSPRNG security helpers; `src/test/testUtils.jsx`
+  (`renderWithProviders` + `makeBase44Stub`); a `DuplicateScanner` component test proving the
+  preview→confirm flow; `pdgmNavigatorExport` tests. Component suite 74 → 86. _(Full RTL/e2e
+  coverage of all journeys remains a larger ongoing effort; the harness + patterns are now in place.)_
+- **Dedup dry-run + soft-delete (B5 + your pick):** dry-run by default, soft-delete/archive on
+  confirm, most-complete survivor, audit trail, and the preview→confirm UI in DuplicateScanner.
+- **Deploy-config hardening:** opt-in `FILE_URL_STRICT` makes the SSRF allowlist mandatory
+  (fail-closed) without breaking uploads by default; `.env.example` documents the security knobs.
+- **Refactor (representative):** extracted `AutomatedPDGMNavigator`'s CSV export into a tested
+  `pdgmNavigatorExport` util (shrinks the mega-component, adds coverage) and fixed its formula
+  injection by routing through the shared `escapeCsvField`. _(~26 other components still build CSV
+  ad-hoc; migrating them to the safe util is a good next batch.)_
 
 ## 9. Deferred — sequenced follow-ups (with rationale)
 
