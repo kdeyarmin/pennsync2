@@ -8,6 +8,16 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Authorization: this approves accounts and assigns roles under service role,
+    // so it must never be triggerable by a non-admin. The scheduled (cron)
+    // invocation runs with no end-user identity (me === null) and is allowed —
+    // platform-level invocation restriction is the control for that path (see
+    // docs/SECURITY-RLS-CHECKLIST.md §4). An authenticated NON-admin is rejected.
+    const me = await base44.auth.me().catch(() => null);
+    if (me && me.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     // Get all pending invitations with a reasonable limit
     const invitations = await base44.asServiceRole.entities.UserInvitation.filter(
       { status: 'pending' },

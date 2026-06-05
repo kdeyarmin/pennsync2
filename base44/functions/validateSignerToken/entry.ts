@@ -125,8 +125,10 @@ Deno.serve(async (req) => {
       expiresAt: tokenRecord.expires_at,
     });
   } catch (error) {
+    console.error('validateSignerToken error:', error);
+    // Generic message — don't leak internals to an unauthenticated caller.
     return Response.json(
-      { error: error.message, valid: false },
+      { error: 'Unable to validate token', valid: false },
       { status: 500 }
     );
   }

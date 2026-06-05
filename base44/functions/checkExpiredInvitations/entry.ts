@@ -4,7 +4,19 @@ Deno.serve(async (req) => {
   try {
     console.log('=== checkExpiredInvitations started ===');
     const base44 = createClientFromRequest(req);
-    
+
+    // Authorization: this reads ALL pending invitations (PII), emails every admin,
+    // and mutates invitation state, so it must never be triggerable by a non-admin.
+    // The scheduled (cron) invocation runs with no end-user identity (me === null)
+    // and is allowed — platform-level invocation restriction is the control for
+    // that path (see docs/SECURITY-RLS-CHECKLIST.md §4). An authenticated NON-admin
+    // is rejected explicitly. (The unified userManagement.checkExpiredInvitations
+    // gates the identical logic; this standalone copy now matches.)
+    const me = await base44.auth.me().catch(() => null);
+    if (me && me.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 

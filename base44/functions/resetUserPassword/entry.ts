@@ -17,11 +17,18 @@ Deno.serve(async (req) => {
     }
 
     // Generate a cryptographically-secure temporary password. Math.random() is
-    // NOT a CSPRNG and must never be used for credentials.
+    // NOT a CSPRNG and must never be used for credentials. Indices are
+    // rejection-sampled to avoid the modulo bias of `byte % alphabetLength`
+    // (the alphabet length does not divide 256).
     const PW_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-    const pwBytes = new Uint8Array(14);
-    crypto.getRandomValues(pwBytes);
-    const tempPassword = Array.from(pwBytes, (b) => PW_ALPHABET[b % PW_ALPHABET.length]).join('');
+    const randomIndex = (max: number): number => {
+      const limit = Math.floor(256 / max) * max;
+      const buf = new Uint8Array(1);
+      let x: number;
+      do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+      return x % max;
+    };
+    const tempPassword = Array.from({ length: 14 }, () => PW_ALPHABET[randomIndex(PW_ALPHABET.length)]).join('');
 
     // Get user details
     const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
@@ -71,17 +78,17 @@ Penn Sync Team`
       entity_id: targetUser.id
     });
 
+    // SECURITY: do NOT echo the temporary password in the HTTP response. Email is
+    // the only delivery channel; returning it here would expose the credential to
+    // browser/proxy/APM network logs.
     return Response.json({
       success: true,
-      message: 'Password reset successfully. Temporary password sent via email.',
-      tempPassword // Return for admin to see (optional, can be removed for security)
+      message: 'Password reset successfully. Temporary password sent via email.'
     });
 
   } catch (error) {
     console.error('Password reset error:', error);
-    return Response.json({ 
-      error: 'Failed to reset password',
-      details: error.message 
-    }, { status: 500 });
+    // Generic message — don't leak internals to the client.
+    return Response.json({ error: 'Failed to reset password' }, { status: 500 });
   }
 });

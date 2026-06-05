@@ -8,6 +8,7 @@ import { Upload, Plus, Trash2, Send, FileText, LayoutTemplate, Bell, BookOpen } 
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { generateSecureToken } from '@/components/utils/security';
 
 export default function SignatureRequestCreator({ onCancel }) {
   const [step, setStep] = useState(1);
@@ -198,7 +199,9 @@ export default function SignatureRequestCreator({ onCancel }) {
           reminder_days_before: parseInt(reminderInterval)
         });
 
-        const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        // Security: signing tokens are bearer credentials for PHI document access.
+        // Use a CSPRNG (~190 bits), not the predictable Math.random().
+        const token = generateSecureToken(32);
         await base44.entities.DocumentPackageToken.create({
           package_id: pkg.id,
           token: token,

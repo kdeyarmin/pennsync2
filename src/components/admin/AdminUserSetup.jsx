@@ -8,26 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Users, Mail, Eye, EyeOff, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { generateSecurePassword } from "@/components/utils/security";
 
-const generateTemporaryPassword = () => {
-  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const lower = "abcdefghijklmnopqrstuvwxyz";
-  const numbers = "0123456789";
-  const symbols = "!@#$%^&*";
-  const all = upper + lower + numbers + symbols;
-  
-  let password = "";
-  password += upper[Math.floor(Math.random() * upper.length)];
-  password += lower[Math.floor(Math.random() * lower.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += symbols[Math.floor(Math.random() * symbols.length)];
-  
-  for (let i = 4; i < 12; i++) {
-    password += all[Math.floor(Math.random() * all.length)];
-  }
-  
-  return password.split('').sort(() => Math.random() - 0.5).join('');
-};
+// CSPRNG-backed temporary password (replaces the prior Math.random() generator and
+// its biased `sort(() => Math.random()-0.5)` shuffle).
+const generateTemporaryPassword = () => generateSecurePassword(12);
 
 export default function AdminUserSetup() {
   const [formData, setFormData] = useState({

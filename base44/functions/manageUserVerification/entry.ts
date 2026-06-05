@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('manageUserVerification error:', error);
-    return Response.json({ error: String(error?.message || error), details: JSON.stringify(error, Object.getOwnPropertyNames(error || {})) }, { status: 500 });
+    // Generic message — don't serialize/leak the full error object to the client.
+    return Response.json({ error: 'Verification request failed' }, { status: 500 });
   }
 });
