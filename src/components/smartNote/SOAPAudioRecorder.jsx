@@ -46,6 +46,10 @@ export default function SOAPAudioRecorder({ onSOAPGenerated, disabled }) {
     return () => {
       const mr = mediaRecorderRef.current;
       if (!mr) return;
+      // Detach onstop FIRST so cleanup only releases the mic — navigating away
+      // mid-recording must not run handleStop (which uploads the partial audio
+      // to transcribeAndGenerateSOAPNote and setStates after unmount).
+      mr.onstop = null;
       try { if (mr.state !== "inactive") mr.stop(); } catch { /* already stopped */ }
       mr.stream?.getTracks().forEach((t) => t.stop());
     };

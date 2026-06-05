@@ -15,11 +15,23 @@
  */
 export function computeAge(dob, now = new Date()) {
   if (!dob || dob === "Not found") return NaN;
-  const d = new Date(dob);
-  if (Number.isNaN(d.getTime())) return NaN;
-  let age = now.getFullYear() - d.getFullYear();
-  const monthDelta = now.getMonth() - d.getMonth();
-  if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < d.getDate())) age -= 1;
+  // Parse a bare ISO date (YYYY-MM-DD) as PLAIN calendar components — `new
+  // Date("YYYY-MM-DD")` parses as UTC midnight, so in a timezone behind UTC the
+  // local Y/M/D shifts to the previous day (e.g. 1961-12-01 → 1961-11-30 local),
+  // corrupting the birthday comparison this helper exists to get right. Only
+  // fall back to Date parsing for non-ISO formats.
+  let year, month, day;
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(dob).trim());
+  if (iso) {
+    year = Number(iso[1]); month = Number(iso[2]); day = Number(iso[3]);
+  } else {
+    const d = new Date(dob);
+    if (Number.isNaN(d.getTime())) return NaN;
+    year = d.getFullYear(); month = d.getMonth() + 1; day = d.getDate();
+  }
+  let age = now.getFullYear() - year;
+  const monthDelta = (now.getMonth() + 1) - month;
+  if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < day)) age -= 1;
   return age;
 }
 

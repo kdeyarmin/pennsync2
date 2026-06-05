@@ -24,10 +24,14 @@ describe('secureRandomInt', () => {
     expect([...seen].sort()).toEqual([0, 1, 2, 3, 4]);
   });
 
-  it('rejects a non-positive or non-integer max', () => {
+  it('rejects a non-positive, non-integer, or out-of-range max (no infinite loop)', () => {
     expect(() => secureRandomInt(0)).toThrow();
     expect(() => secureRandomInt(-1)).toThrow();
     expect(() => secureRandomInt(2.5)).toThrow();
+    // max > 2^32-1 would make the rejection-sampling limit floor to 0 → infinite
+    // loop; it must fail fast instead.
+    expect(() => secureRandomInt(0x100000000)).toThrow();
+    expect(() => secureRandomInt(2 ** 40)).toThrow();
   });
 });
 

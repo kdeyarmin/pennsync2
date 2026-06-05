@@ -255,8 +255,10 @@ export default function DuplicateScanner() {
       
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
+      // Keep backend/internal detail in logs only — this is an admin tool calling
+      // privileged functions; show a generic message in the UI.
       console.error('Scan error:', error);
-      toast.error('Failed to scan: ' + error.message);
+      toast.error('Failed to scan for duplicates. Please try again.');
     }
     setIsScanning(false);
   };
@@ -275,7 +277,7 @@ export default function DuplicateScanner() {
       toast.success(`Merged ${data.patients_removed || 0} duplicate record(s).`);
     } catch (error) {
       console.error('Merge error:', error);
-      toast.error('Failed to merge: ' + error.message);
+      toast.error('Failed to merge duplicates. Please try again.');
     }
     setIsApplying(false);
   };

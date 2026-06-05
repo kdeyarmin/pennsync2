@@ -63,6 +63,9 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
     return () => {
       const mr = mediaRecorderRef.current;
       if (mr) {
+        // Detach onstop so cleanup only releases the mic (its handler setStates
+        // the captured blob otherwise — after unmount).
+        mr.onstop = null;
         try { if (mr.state !== "inactive") mr.stop(); } catch { /* already stopped */ }
         mr.stream?.getTracks().forEach((track) => track.stop());
       }

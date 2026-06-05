@@ -114,6 +114,9 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
     return () => {
       const mr = mediaRecorderRef.current;
       if (!mr) return;
+      // Detach onstop so cleanup only releases the mic (the handler setStates
+      // after unmount otherwise).
+      mr.onstop = null;
       try { if (mr.state !== "inactive") mr.stop(); } catch { /* already stopped */ }
       mr.stream?.getTracks().forEach((track) => track.stop());
     };

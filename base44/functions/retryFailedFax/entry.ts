@@ -115,37 +115,60 @@ Deno.serve(async (req) => {
       }, { status: twilioResponse.status });
     }
 
-    const faxData = await twilioResponse.json();
+    // Bookkeeping AFTER a successful Twilio send. If any of these steps throws
+    // (json parse, FaxLog.create, the final update), we must NOT fall through to
+    // the outer catch and leave the original stranded in 'retrying' with a live
+    // claim — that orphans an already-sent fax and blocks future retries. The
+    // fax was accepted, so we also must NOT releaseClaim() back to 'failed'
+    // (that would re-send and double-fax). Settle the original to 'retried'.
+    let faxData: any;
+    let newFaxLog: any = null;
+    try {
+      faxData = await twilioResponse.json();
 
-    // Create new FaxLog record for retry
-    const newFaxLog = await base44.entities.FaxLog.create({
-      from_number: originalFax.from_number,
-      to_number: originalFax.to_number,
-      to_name: originalFax.to_name,
-      document_url: originalFax.document_url,
-      document_name: originalFax.document_name + ' (Retry)',
-      status: 'queued',
-      telnyx_fax_id: faxData.sid,
-      pages: originalFax.pages,
-      cover_page_details: originalFax.cover_page_details,
-      patient_id: originalFax.patient_id,
-      sent_by: user.email,
-      priority: originalFax.priority,
-      retry_count: (originalFax.retry_count || 0) + 1,
-      estimated_cost: originalFax.estimated_cost
-    });
+      // Create new FaxLog record for retry
+      newFaxLog = await base44.entities.FaxLog.create({
+        from_number: originalFax.from_number,
+        to_number: originalFax.to_number,
+        to_name: originalFax.to_name,
+        document_url: originalFax.document_url,
+        document_name: originalFax.document_name + ' (Retry)',
+        status: 'queued',
+        telnyx_fax_id: faxData?.sid,
+        pages: originalFax.pages,
+        cover_page_details: originalFax.cover_page_details,
+        patient_id: originalFax.patient_id,
+        sent_by: user.email,
+        priority: originalFax.priority,
+        retry_count: (originalFax.retry_count || 0) + 1,
+        estimated_cost: originalFax.estimated_cost
+      });
 
-    // Update original fax to mark it as retried (clears the transient claim).
-    await base44.entities.FaxLog.update(fax_log_id, {
-      status: 'retried',
-      retry_claimed_by: null,
-      failure_reason: `Retry attempt #${(originalFax.retry_count || 0) + 1} initiated`
-    });
+      // Update original fax to mark it as retried (clears the transient claim).
+      await base44.entities.FaxLog.update(fax_log_id, {
+        status: 'retried',
+        retry_claimed_by: null,
+        failure_reason: `Retry attempt #${(originalFax.retry_count || 0) + 1} initiated`
+      });
+    } catch (postErr) {
+      console.error('retryFailedFax post-send bookkeeping failed:', postErr);
+      // Settle the claim so the already-sent fax isn't orphaned in 'retrying'.
+      await base44.entities.FaxLog.update(fax_log_id, {
+        status: 'retried',
+        retry_claimed_by: null,
+        failure_reason: 'Retry was sent to Twilio, but follow-up logging failed.'
+      }).catch(() => {});
+      return Response.json({
+        success: true,
+        twilio_fax_id: faxData?.sid,
+        warning: 'Fax retry was sent, but recording the new log entry failed.'
+      });
+    }
 
     return Response.json({
       success: true,
       new_fax_log_id: newFaxLog.id,
-      twilio_fax_id: faxData.sid,
+      twilio_fax_id: faxData?.sid,
       retry_count: (originalFax.retry_count || 0) + 1,
       message: `Fax retry #${(originalFax.retry_count || 0) + 1} queued for ${originalFax.to_number}`
     });

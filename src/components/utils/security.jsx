@@ -162,7 +162,11 @@ export function sanitizeHtml(html) {
  * @returns {number}
  */
 export function secureRandomInt(max) {
-  if (!Number.isInteger(max) || max <= 0) throw new Error('max must be a positive integer');
+  // Reject max > 2^32-1: with a 32-bit source, `limit` would floor to 0 and the
+  // rejection-sampling loop below would never terminate. Fail fast instead.
+  if (!Number.isInteger(max) || max <= 0 || max > 0xffffffff) {
+    throw new Error('max must be a positive integer <= 2^32-1');
+  }
   const limit = Math.floor(0xffffffff / max) * max;
   const buf = new Uint32Array(1);
   let x;

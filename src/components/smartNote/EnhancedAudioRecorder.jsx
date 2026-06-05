@@ -105,10 +105,16 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
   // stays live on a shared device and the interval keeps firing setState.
   useEffect(() => {
     return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-        try { mediaRecorderRef.current.stop(); } catch { /* already stopped */ }
+      const mr = mediaRecorderRef.current;
+      if (mr && mr.state !== "inactive") {
+        // Detach onstop FIRST: cleanup must only release the mic, not run the
+        // transcribe/upload side-effect for a recording the user never accepted
+        // (navigating away mid-recording must not upload PHI audio or setState
+        // after unmount).
+        mr.onstop = null;
+        try { mr.stop(); } catch { /* already stopped */ }
       }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
