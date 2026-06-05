@@ -247,25 +247,41 @@ backend `entry.ts` files transpile-checked; mirrored helpers kept in parity):
 - **Process:** Q1 (ESLint scope + exhaustive-deps), Q2 (full lint in CI). Plus regression tests
   for every logic fix above.
 
+### Round 2 (additional follow-ups completed)
+
+- **Backend reliability:** R1 (sendAutomatedSignatureReminders dedup), R2 (atomic claim+re-read
+  for processScheduledFaxes **and** processScheduledFaxesByPriority), R4 (sendExpirationNotifications
+  ascending sort so the soonest-expiring aren't dropped), R6 (scheduleSignatureReminders past-due
+  now creates the reminder instead of a no-op), S6 (handleTelnyxWebhook duplicate final-failure
+  guard), S8 (removed manageUserVerification debug passthroughs), R9-class generic errors.
+- **Clinical/billing:** B1 (PDGM comorbidity negation — skip "No CHF"/"denies COPD" so they don't
+  inflate payment).
+- **Comms:** R11 (normalizeE164 bounded to valid E.164 — source + all 10 backend mirrors, parity-guarded).
+- **React:** P2-remainder (EnhancedVoiceCommands + VoiceCommandListener stale-closure restart),
+  P4 (MedicalScribe read-before-write), P5 (PDFAnnotator render-task cancellation), P7-subset
+  (referral-generator progress intervals cleared on unmount).
+
 ## 9. Deferred — sequenced follow-ups (with rationale)
 
-Not done here on purpose; each is documented above with a concrete fix:
+Still not done on purpose; each is documented above with a concrete fix. These are the items
+that genuinely need a domain expert, a component test net, or deploy coordination — fixing them
+blind would risk a clinical regression.
 
-- **Needs clinical/domain validation (changing matching or clinical logic without a domain
-  expert + tests is unsafe):** B1 (PDGM comorbidity negation — billing), B2 (Soundex), B5 (dedup
-  primary selection), B6 (century-typo — also dead `dedupUtils.js`), B11 (OASIS M1020 diabetes),
-  B12 (drug-interaction matching), B13 (PDGM group mappings), R12-negation (urgent-keyword negation —
-  false-negative risk), B3-wiring (route `CRITICAL_VITAL_RULES` into the vitals form). Loosening
-  any of these risks a wrong-patient merge or a missed/over-fired clinical signal.
-- **Needs deploy coordination / config:** S7 (mandatory onUserSignup secret), S9 (webhook replay),
-  S8 (remove debug actions), Q3 (FILE_URL_ALLOWED_HOSTS / required-secret health check).
-- **Larger backend reliability (same safe-direction pattern as R1/R2; untested env here):**
-  R2 for processScheduledFaxes/ByPriority, R4/R5 (expiration-notification sort + threshold + sent
-  ledger), R6 (scheduleSignatureReminders past-due), R8 (consolidate the 3 fax pollers),
-  sendAutomatedSignatureReminders dedup, R11 (normalizeE164 bounds — 6-mirror update), R13.
-- **Needs the test net first (roadmap C1):** P4 (MedicalScribe lost-update), P5 (PDFAnnotator
-  render race), P6 (RichTextNoteEditor desync), P2-remainder (EnhancedVoiceCommands,
-  VoiceCommandListener), P7/P8, S6 (Telnyx/Twilio fax handler dedup), S13 (frontend asServiceRole
-  audit), Q4 (RTL/e2e), Q5 (useAICall migration + mega-component decomposition).
+- **Needs clinical/domain validation (changing matching or scoring without a domain expert +
+  tests is unsafe):** B2 (Soundex), B5 (dedup primary selection — note: backend auto-delete
+  re-sorts independently, so the impact is the review-UI suggestion), B6 (century-typo — in the
+  dead `dedupUtils.js`), B11 (OASIS M1020 diabetes — needs the M1020 data-contract), B12
+  (drug-interaction matching — a safety net; loosening risks a missed interaction), B13 (PDGM
+  group mappings), R12-negation (urgent-keyword negation — false-negative risk), B3-wiring
+  (route `CRITICAL_VITAL_RULES` into the vitals form).
+- **Needs deploy coordination / config:** S7 (mandatory onUserSignup secret), S9 (webhook replay
+  protection), Q3 (FILE_URL_ALLOWED_HOSTS / required-secret startup health check).
+- **Lower-severity / larger backend:** R5 (sendPersonnelExpirationNotifications threshold + shared
+  sent-ledger field), R8 (consolidate the 3 fax pollers — operational, disables functions), R13,
+  P7-remainder (RealtimeFaxStatusTracker poll/subscribe churn), P8 (PHI-at-rest encryption,
+  VisualEditAgent gating, IndexedDB connection reuse).
+- **Needs the test net first (roadmap C1):** P6 (RichTextNoteEditor history/state refactor),
+  S13 (frontend asServiceRole audit), Q4 (RTL/e2e), Q5 (useAICall migration + mega-component
+  decomposition).
 
 Each implemented batch ends green on `npm run lint && npm run test:utils && npm run test:components && npm run build`.
