@@ -624,6 +624,34 @@ export function findDuplicateGroups(patients, opts = {}) {
 // function timeout. The interactive UI performs the full fuzzy/phonetic scan.
 const BACKEND_MIN_SCORE = 70;
 
+// Completeness score for survivor selection: when a duplicate group is merged,
+// keep the MORE COMPLETE record rather than just the newest, so a sparse stub
+// can't win over a rich chart and lose identifiers/clinical data. Strong
+// identifiers (MRN, DOB) are weighted because losing those is the worst outcome.
+function isPopulated(v: any): boolean {
+  if (v === undefined || v === null) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === 'object') return Object.keys(v).length > 0;
+  return String(v).trim() !== '';
+}
+function completenessScore(p: any): number {
+  if (!p) return 0;
+  let score = 0;
+  if (isPopulated(p.medical_record_number)) score += 3;
+  if (isPopulated(p.date_of_birth)) score += 2;
+  const fields = [
+    p.first_name, p.last_name, p.middle_name, p.address, p.phone, p.email,
+    p.payor, p.emergency_contact_name, p.emergency_contact_phone,
+    p.physician_name, p.physician_phone, p.caregiver_name, p.caregiver_email,
+    p.primary_diagnosis, p.secondary_diagnoses, p.allergies, p.current_medications,
+    p.insurance_primary, p.insurance_secondary, p.admission_date, p.care_type,
+    p.advance_directives, p.functional_status, p.assigned_nurses,
+    p.enhanced_notes_history, p.clinical_notes, p.goals_of_care,
+  ];
+  for (const f of fields) if (isPopulated(f)) score += 1;
+  return score;
+}
+
 Deno.serve(async (req) => {
   const startTime = Date.now();
 
@@ -723,11 +751,17 @@ Deno.serve(async (req) => {
       const batch = duplicateGroups.slice(i, i + batchSize);
 
       for (const group of batch) {
-        // Sort by status (active first) then by created_date (newest first).
+        // Choose the survivor: active first, then the MOST COMPLETE record, then
+        // newest as a tiebreak. (Previously this kept the newest active record,
+        // so a sparse just-created stub could survive over an older rich chart
+        // and silently lose its identifiers/clinical data.)
         const allInGroup = [group.primary, ...group.duplicates.map((d) => d.patient)];
         allInGroup.sort((a, b) => {
           if (a.status === 'active' && b.status !== 'active') return -1;
           if (a.status !== 'active' && b.status === 'active') return 1;
+          const ca = completenessScore(a);
+          const cb = completenessScore(b);
+          if (cb !== ca) return cb - ca; // keep the more complete record
           const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
           const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
           return dateB - dateA;
