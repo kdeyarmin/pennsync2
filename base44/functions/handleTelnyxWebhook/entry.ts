@@ -111,7 +111,11 @@ Deno.serve(async (req) => {
         const delayMs = BACKOFF_MINUTES[retryCount] * 60 * 1000;
         updateData.next_retry_at = new Date(Date.now() + delayMs).toISOString();
         updateData.retry_count = retryCount + 1;
-      } else {
+      } else if (faxLog.final_failure_notified === undefined || faxLog.final_failure_notified === null) {
+        // Mark for a final-failure notification only the FIRST time retries are
+        // exhausted. A re-delivered webhook for the same already-final fax must
+        // not reset an already-notified (true) or already-pending (false) flag,
+        // or the sender gets re-notified on every retry.
         updateData.final_failure_notified = false;
       }
 

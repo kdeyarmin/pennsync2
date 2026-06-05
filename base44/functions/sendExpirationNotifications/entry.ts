@@ -12,15 +12,17 @@ Deno.serve(async (req) => {
     const todayStr = today.toISOString().split('T')[0];
     const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
 
-    // Fetch all training assignments expiring in 30 days
+    // Fetch assignments/credentials, sorted ASCENDING by date so the SOONEST-
+    // expiring (the ones this job exists to notify) are within the 500-row cap.
+    // A descending sort put the furthest-future first and dropped the imminent
+    // ones off the tail — exactly the records that needed a warning.
     const assignments = await base44.asServiceRole.entities.TrainingAssignment.filter({
       status: 'completed'
-    }, '-due_date', 500);
+    }, 'due_date', 500);
 
-    // Fetch all personnel credentials expiring in 30 days
     const credentials = await base44.asServiceRole.entities.PersonnelCredential.filter({
       status: 'approved'
-    }, '-expiration_date', 500);
+    }, 'expiration_date', 500);
 
     const notifications = [];
     const adminNotifications = [];
