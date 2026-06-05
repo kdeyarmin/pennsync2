@@ -9,6 +9,11 @@ export default [
     files: [
       "src/components/**/*.{js,mjs,cjs,jsx}",
       "src/pages/**/*.{js,mjs,cjs,jsx}",
+      // Previously unlinted application infrastructure — now covered so bugs in
+      // auth/query/api/hook code are caught too (see docs/CODE_REVIEW_2026-06-05.md Q1).
+      "src/lib/**/*.{js,mjs,cjs,jsx}",
+      "src/hooks/**/*.{js,mjs,cjs,jsx}",
+      "src/api/**/*.{js,mjs,cjs,jsx}",
       "src/Layout.jsx",
     ],
     ...pluginJs.configs.recommended,
@@ -44,6 +49,8 @@ export default [
           varsIgnorePattern: "^_",
           args: "after-used",
           argsIgnorePattern: "^_",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
       "react/prop-types": "off",
@@ -53,6 +60,9 @@ export default [
         { ignore: ["cmdk-input-wrapper", "toast-close"] },
       ],
       "react-hooks/rules-of-hooks": "error",
+      // Surface missing/incorrect effect dependencies (the class of bug behind
+      // several stale-closure issues found in review) as a non-blocking warning.
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
 ];

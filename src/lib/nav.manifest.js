@@ -25,11 +25,9 @@ import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, BookOpen, WifiOff,
   Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2,
-  Phone, Send, Heart, Activity, Layers, Database, Lock, Award,
-  Clipboard, Download, Eye, Filter, Globe, MessageSquare,
-  Monitor, PieChart, Radio, RefreshCw, Search, Star, Stethoscope,
-  Tablet, TrendingUp, Upload, UserCheck, Zap, Package, Archive,
-  LifeBuoy, Map, Mic, Pen, Printer, CalendarDays
+  Phone, Send, Heart, Activity, Database, Lock, Award,
+  Clipboard, Eye, Filter, Globe,
+  Monitor, PieChart, Radio, RefreshCw, Search, TrendingUp, Upload, UserCheck, Zap, Package, Archive, Mic, Pen, CalendarDays
 } from "lucide-react";
 
 import { PAGE_NAMES, REDIRECTS } from "@/routes";
