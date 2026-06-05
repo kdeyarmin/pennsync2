@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Square, Loader2, FileAudio } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
@@ -39,6 +39,17 @@ export default function SOAPAudioRecorder({ onSOAPGenerated, disabled }) {
       setIsRecording(false);
     }
   };
+
+  // Stop the recorder and release the mic if the component unmounts mid-recording
+  // (otherwise the microphone stays live on a shared device).
+  useEffect(() => {
+    return () => {
+      const mr = mediaRecorderRef.current;
+      if (!mr) return;
+      try { if (mr.state !== "inactive") mr.stop(); } catch { /* already stopped */ }
+      mr.stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
 
   const handleStop = async () => {
     const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });

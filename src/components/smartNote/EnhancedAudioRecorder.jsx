@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { Mic, MicOff, X, CheckCircle2, AlertCircle } from "lucide-react";
@@ -99,6 +99,27 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // Release the microphone, recorder, and timer if the component unmounts mid-
+  // recording (e.g. navigating away without pressing Stop) — otherwise the mic
+  // stays live on a shared device and the interval keeps firing setState.
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        try { mediaRecorderRef.current.stop(); } catch { /* already stopped */ }
+      }
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  // Revoke the recorded-audio object URL when it changes, is cleared, or the
+  // component unmounts, so blob URLs don't accumulate for the page lifetime.
+  useEffect(() => {
+    return () => {
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+    };
+  }, [audioUrl]);
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-3 space-y-2">

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
@@ -52,9 +52,19 @@ export default function MedicationBottleScanner({ onMedicationExtracted }) {
   const closeCamera = () => {
     if (videoRef.current?.srcObject) {
       videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
       setIsCameraOpen(false);
     }
   };
+
+  // Release the camera if the component unmounts while it's open (otherwise the
+  // back camera stays live on a shared device).
+  useEffect(() => {
+    return () => {
+      const srcObject = videoRef.current?.srcObject;
+      if (srcObject) srcObject.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   // Extract info from image using LLM vision
   const extractMedicationInfo = async (imageData) => {

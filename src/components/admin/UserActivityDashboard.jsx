@@ -42,7 +42,9 @@ export default function UserActivityDashboard() {
 
   // Fetch all user activities
   const { data: activities = [], isLoading } = useQuery({
-    queryKey: ['userActivities'],
+    // dateRange is read in queryFn to compute the cutoff, so it must be part of
+    // the key — otherwise changing the range serves the stale cached result.
+    queryKey: ['userActivities', dateRange],
     queryFn: async () => {
       const cutoffDate = new Date();
       if (dateRange === '24h') {

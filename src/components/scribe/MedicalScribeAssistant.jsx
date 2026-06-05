@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -106,6 +106,18 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
       setIsRecording(false);
     }
   };
+
+  // The mic stream is otherwise stopped only in the recorder's onstop handler
+  // (i.e. when the user presses Stop). Stop it on unmount too so navigating away
+  // mid-recording doesn't leave the microphone live on a shared device.
+  useEffect(() => {
+    return () => {
+      const mr = mediaRecorderRef.current;
+      if (!mr) return;
+      try { if (mr.state !== "inactive") mr.stop(); } catch { /* already stopped */ }
+      mr.stream?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
