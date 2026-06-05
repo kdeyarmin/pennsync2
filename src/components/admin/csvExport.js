@@ -16,7 +16,7 @@
  * does NOT prevent that — so we prefix it with a single quote first. This also
  * makes a phone number like "+12155550100" render as text rather than a formula.
  */
-function escapeField(value) {
+export function escapeCsvField(value) {
   let s = value == null ? "" : String(value);
   if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -32,13 +32,13 @@ function escapeField(value) {
 export function toCsv(columns, records) {
   const cols = Array.isArray(columns) ? columns : [];
   const rows = Array.isArray(records) ? records : [];
-  const header = cols.map((c) => escapeField(c.label)).join(",");
+  const header = cols.map((c) => escapeCsvField(c.label)).join(",");
   const lines = rows.map((row) =>
     cols
       .map((c) => {
         const raw = row ? row[c.key] : undefined;
         const value = typeof c.format === "function" ? c.format(raw, row) : raw;
-        return escapeField(value);
+        return escapeCsvField(value);
       })
       .join(",")
   );
