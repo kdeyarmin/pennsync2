@@ -1,14 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * redriveFailedSms — cron "outbox" that re-sends outbound texts which failed for
- * a TRANSIENT reason (timeout / network / 429 / 5xx). Configure a schedule
- * (e.g. every 10 minutes) in the Base44 dashboard. Enable only ONE schedule.
+ * redriveFailedSms — cron "outbox" that re-sends outbound texts which Twilio
+ * reported as failed for a TRANSIENT reason (timeout / network / 429 / 5xx).
+ * Configure a schedule (e.g. every 10 minutes) in the Base44 dashboard.
+ * Enable only ONE schedule.
  *
- * Each eligible row is re-sent with its ORIGINAL client_message_id, so 8x8
- * de-dups if the first attempt actually landed — no double-send. An attempt cap,
- * an escalating backoff between attempts, and an age ceiling guarantee a stuck
- * message eventually settles into a terminal 'failed' state instead of looping.
+ * Redrive only fires on rows Twilio reported as failed, so re-sending is
+ * appropriate. Twilio has no client idempotency key, so we can't rely on
+ * provider dedupe — double-send is prevented by the claim+re-read and by only
+ * redriving rows Twilio explicitly reported failed (not ambiguous network errors).
+ * An attempt cap, an escalating backoff between attempts, and an age ceiling
+ * guarantee a stuck message eventually settles into a terminal 'failed' state
+ * instead of looping.
  *
  * Permanent failures (opt-out, invalid number, auth, kill switch) are never
  * retried. Bodies are never written to the audit log.
@@ -51,33 +55,44 @@ async function getAgencyConfig(base44: any) {
   const s = settings[0] || {};
   return {
     settings: s,
-    smsSubAccountId: s.eight_x_eight_sms_subaccount_id,
-    region: s.eight_x_eight_region || 'us',
     smsEnabled: s.sms_messaging_enabled ?? true,
   };
 }
 
-async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
-  const env = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
-  if (env && env.trim()) return env.trim();
-  try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
-    const v = rows?.[0]?.api_secret;
-    return v && String(v).trim() ? String(v).trim() : null;
-  } catch {
-    return null;
+/**
+ * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'twilio'. Either path configures the integration, so the
+ * Base44 dashboard env is optional.
+ */
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
+  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let sid = envSid && envSid.trim() ? envSid.trim() : null;
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  if (!sid || !token) {
+    try {
+      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+      const rec = rows?.[0] || {};
+      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
+      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    } catch { /* ignore */ }
   }
+  return { accountSid: sid, authToken: token };
 }
 
-async function send8x8(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string, clientMessageId: string) {
-  const url = `${host}/api/v1/subaccounts/${subAccountId}/messages`;
+async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string) {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
+    const params = new URLSearchParams({ To: to, From: from, Body: body });
     const resp = await fetch(url, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source, destination, text, encoding: 'AUTO', clientMessageId }),
+      headers: {
+        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
       signal: controller.signal,
     });
     const data = await resp.json().catch(() => ({}));
@@ -194,16 +209,15 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const apiKey = await resolveEightXEightApiKey(base44);
-    const { settings, smsSubAccountId, region, smsEnabled } = await getAgencyConfig(base44);
-    const host = `https://sms.${region}.8x8.com`;
+    const { accountSid, authToken } = await resolveTwilioCreds(base44);
+    const { settings, smsEnabled } = await getAgencyConfig(base44);
     const runId = crypto.randomUUID();
     const now = Date.now();
 
     const result = { scanned: 0, redriven: 0, recovered: 0, failed: 0, skipped: 0 };
 
-    if (!apiKey || !smsSubAccountId || smsEnabled === false) {
-      return Response.json({ success: true, ...result, note: 'SMS not configured or disabled — nothing redriven.' });
+    if (!accountSid || !authToken || smsEnabled === false) {
+      return Response.json({ success: true, ...result, note: 'Twilio SMS not configured or disabled — nothing redriven.' });
     }
 
     const failedRows = await base44.asServiceRole.entities.SmsMessage
@@ -235,8 +249,9 @@ Deno.serve(async (req) => {
       // so a crash mid-send can never strand it as a terminal 'queued' (a later
       // run re-scans it once the backoff gap passes). retry_count/last_retry_at
       // advance here so the attempt is counted and the gap is enforced; the
-      // re-read confirms ownership against overlapping runs, and the reused
-      // client_message_id makes any double-send idempotent at 8x8.
+      // re-read confirms ownership against overlapping runs. Twilio has no client
+      // idempotency key, but redrive only fires on rows Twilio explicitly reported
+      // as failed, so re-sending is appropriate; we can't rely on provider dedupe.
       const attempts = (Number(row.retry_count) || 0) + 1;
       try {
         await base44.asServiceRole.entities.SmsMessage.update(row.id, {
@@ -250,17 +265,18 @@ Deno.serve(async (req) => {
       if (!check[0] || check[0].redrive_claimed_by !== runId) { result.skipped++; continue; }
       result.redriven++;
 
-      // Reuse the ORIGINAL client_message_id so 8x8 de-dups a duplicate landing.
+      // The original client_message_id is kept for our own tracking but is NOT
+      // sent to Twilio — Twilio has no client idempotency key.
       const clientMessageId = row.client_message_id || `redrive-${row.id}`;
       let resp;
       try {
-        resp = await send8x8(apiKey, host, smsSubAccountId, row.from_number, row.to_number, row.body, clientMessageId);
+        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body);
       } catch (netErr) {
         const aborted = (netErr as Error)?.name === 'AbortError';
         result.failed++;
         await base44.asServiceRole.entities.SmsMessage.update(row.id, {
           status: 'failed', redrive_claimed_by: null,
-          failure_reason: aborted ? 'Timed out reaching 8x8 (redrive)' : `Network error reaching 8x8 (redrive): ${(netErr as Error).message}`,
+          failure_reason: aborted ? 'Timed out reaching Twilio (redrive)' : `Network error reaching Twilio (redrive): ${(netErr as Error).message}`,
         }).catch(() => {});
         continue;
       }
@@ -269,16 +285,17 @@ Deno.serve(async (req) => {
         result.failed++;
         await base44.asServiceRole.entities.SmsMessage.update(row.id, {
           status: 'failed', redrive_claimed_by: null,
-          failure_reason: resp.data?.message || resp.data?.error || `8x8 API error (${resp.status}) (redrive)`,
+          failure_reason: resp.data?.message || resp.data?.error || `Twilio API error (${resp.status}) (redrive)`,
         }).catch(() => {});
         continue;
       }
 
       result.recovered++;
-      const providerStatus = (resp.data?.status?.code || '').toUpperCase();
+      // Map Twilio status: 'queued'/'accepted' → 'queued', 'delivered' → 'delivered', else 'sent'.
+      const providerStatus = (resp.data?.status || '').toLowerCase();
       await base44.asServiceRole.entities.SmsMessage.update(row.id, {
-        provider_message_id: resp.data?.umid || row.provider_message_id || null,
-        status: providerStatus === 'DELIVERED' ? 'delivered' : 'sent',
+        provider_message_id: resp.data?.sid || row.provider_message_id || null,
+        status: providerStatus === 'delivered' ? 'delivered' : 'sent',
         failure_reason: null,
         client_message_id: clientMessageId,
         redrive_claimed_by: null,
@@ -289,7 +306,7 @@ Deno.serve(async (req) => {
         action: 'sms_redriven',
         entity_type: 'SmsMessage',
         entity_id: row.id,
-        details: { to_number: row.to_number, attempt: attempts, provider_message_id: resp.data?.umid || null },
+        details: { to_number: row.to_number, attempt: attempts, provider_message_id: resp.data?.sid || null },
         status: 'success',
       }).catch(() => {});
     }

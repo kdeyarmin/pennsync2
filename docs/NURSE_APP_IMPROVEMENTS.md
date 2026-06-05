@@ -133,8 +133,8 @@ recommendation carries a `file:line` reference so it can be picked up directly.
     `src/components/voice/CallbackQueue.jsx` plays voicemail audio but offers no transcript; duty
     status is binary (`src/components/voice/DutyStatusCard.jsx`). Add async speech-to-text on
     voicemails, a multi-state duty dropdown (on-break / in-visit / lunch / off), and a callback SLA
-    timer with escalation. (A live 8x8 connectivity probe already exists — `PhoneProvisioningPanel`
-    invokes the `testEightXEightConnection` backend function — so that gap is already covered.)
+    timer with escalation. (A live Twilio connectivity probe already exists — `PhoneProvisioningPanel`
+    invokes the `testTwilioConnection` backend function — so that gap is already covered.)
 
 17. **Messaging upgrades.**
     Add read receipts, group/broadcast SMS (by diagnosis or last-visit age), keyword auto-replies

@@ -123,7 +123,7 @@ export default function CallingHoursPanel() {
     : [form.business_hours_timezone, ...TIMEZONES];
 
   return (
-    <Card id="ex8-hours" className="scroll-mt-24">
+    <Card id="twilio-hours" className="scroll-mt-24">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">

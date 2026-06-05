@@ -6,9 +6,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  *
  * For each pending row whose send_at has passed it: claims the row (pending ->
  * sending) so overlapping runs don't double-send, re-checks the agency kill
- * switch and the patient's opt-out at send time, sends via 8x8, records an
- * SmsMessage in the nurse's thread, and marks the ScheduledSms sent/failed.
- * Bodies are never written to the audit log.
+ * switch and the patient's opt-out at send time, sends via Twilio Messages API,
+ * records an SmsMessage in the nurse's thread, and marks the ScheduledSms
+ * sent/failed. Bodies are never written to the audit log.
  */
 
 const SEND_TIMEOUT_MS = 15000;
@@ -19,27 +19,20 @@ async function getAgencyConfig(base44: any) {
   const s = settings[0] || {};
   return {
     settings: s,
-    smsSubAccountId: s.eight_x_eight_sms_subaccount_id,
-    region: s.eight_x_eight_region || 'us',
     smsEnabled: s.sms_messaging_enabled ?? true,
   };
 }
 
-// ---- transient-failure retry policy (mirrors src/components/voice/eightxeightRetry.js) ----
-// Retries are double-send safe: each send reuses one clientMessageId (8x8
-// idempotency key). Capped at 2 attempts here so a batch of up to BATCH_LIMIT
-// rows stays bounded; a row that still fails is retried on the next cron tick
-// only if re-queued (otherwise it lands in 'failed' as before).
+// ---- transient-failure retry policy ----
+// Twilio has no client idempotency key. Therefore
+// we only retry on explicit retryable HTTP statuses (408/425/429/500/502/503/504).
+// We do NOT retry thrown network errors — a blind retry could double-text.
+// Capped at 2 attempts here so a batch of up to BATCH_LIMIT rows stays bounded;
+// a row that still fails is retried on the next cron tick only if re-queued.
 const MAX_SEND_ATTEMPTS = 2;
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 function isRetryableStatus(status: number): boolean {
   return RETRYABLE_STATUSES.has(Number(status));
-}
-function isRetryableError(err: any): boolean {
-  if (!err) return false;
-  const name = err.name || '';
-  if (name === 'AbortError' || name === 'TimeoutError' || name === 'TypeError') return true;
-  return /network|timeout|timed out|fetch failed|socket|ECONN|ETIMEDOUT|EAI_AGAIN|dns/i.test(err.message || '');
 }
 function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
   if (headerValue == null) return null;
@@ -57,15 +50,19 @@ function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
 }
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function sendOnce(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string, clientMessageId: string) {
-  const url = `${host}/api/v1/subaccounts/${subAccountId}/messages`;
+async function sendOnce(accountSid: string, authToken: string, from: string, to: string, body: string) {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
+    const params = new URLSearchParams({ To: to, From: from, Body: body });
     const resp = await fetch(url, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source, destination, text, encoding: 'AUTO', clientMessageId }),
+      headers: {
+        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
       signal: controller.signal,
     });
     const data = await resp.json().catch(() => ({}));
@@ -75,17 +72,14 @@ async function sendOnce(apiKey: string, host: string, subAccountId: string, sour
   }
 }
 
-async function send8x8(apiKey: string, host: string, subAccountId: string, source: string, destination: string, text: string, clientMessageId: string) {
-  let lastError: any;
+async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string) {
   for (let attempt = 1; attempt <= MAX_SEND_ATTEMPTS; attempt++) {
     let result;
     try {
-      result = await sendOnce(apiKey, host, subAccountId, source, destination, text, clientMessageId);
+      result = await sendOnce(accountSid, authToken, from, to, body);
     } catch (err) {
-      if (attempt === MAX_SEND_ATTEMPTS || !isRetryableError(err)) throw err;
-      lastError = err;
-      await sleep(backoffDelayMs(attempt));
-      continue;
+      // Do NOT retry thrown network errors — a blind retry could double-text.
+      throw err;
     }
     if (result.ok || !isRetryableStatus(result.status) || attempt === MAX_SEND_ATTEMPTS) {
       return { ok: result.ok, status: result.status, data: result.data };
@@ -93,24 +87,28 @@ async function send8x8(apiKey: string, host: string, subAccountId: string, sourc
     const fromHeader = parseRetryAfter(result.retryAfter ?? null);
     await sleep(fromHeader != null ? Math.min(fromHeader, 4000) : backoffDelayMs(attempt));
   }
-  throw lastError || new Error('send8x8 exhausted attempts');
+  throw new Error('sendTwilio exhausted attempts');
 }
 
 /**
- * Resolve the single 8x8 API secret: prefer the legacy backend env var, then the
- * secret the super admin saved in-app (IntegrationSecret). Either one configures
- * the integration, so the Base44 dashboard env is optional.
+ * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'twilio'. Either path configures the integration, so the
+ * Base44 dashboard env is optional.
  */
-async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
-  const env = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
-  if (env && env.trim()) return env.trim();
-  try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
-    const v = rows?.[0]?.api_secret;
-    return v && String(v).trim() ? String(v).trim() : null;
-  } catch {
-    return null;
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
+  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let sid = envSid && envSid.trim() ? envSid.trim() : null;
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  if (!sid || !token) {
+    try {
+      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+      const rec = rows?.[0] || {};
+      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
+      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    } catch { /* ignore */ }
   }
+  return { accountSid: sid, authToken: token };
 }
 
 // ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
@@ -220,9 +218,8 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const apiKey = await resolveEightXEightApiKey(base44);
-    const { smsSubAccountId, region, smsEnabled, settings } = await getAgencyConfig(base44);
-    const host = `https://sms.${region}.8x8.com`;
+    const { accountSid, authToken } = await resolveTwilioCreds(base44);
+    const { smsEnabled, settings } = await getAgencyConfig(base44);
     // A unique id for THIS cron run, used to claim rows (see the claim below).
     const runId = crypto.randomUUID();
 
@@ -238,10 +235,9 @@ Deno.serve(async (req) => {
     for (const row of due) {
       // Claim with a per-run token, then RE-READ to confirm we still own it.
       // This read-after-write check makes overlapping runs far safer than a bare
-      // status flip (the loser sees the winner's token and skips). Belt-and-
-      // suspenders: the send below uses a DETERMINISTIC clientMessageId derived
-      // from the row id, so even if two runs both send, 8x8 de-dups on that key
-      // and the patient is never double-texted.
+      // status flip (the loser sees the winner's token and skips). Since Twilio
+      // has no client idempotency key, the claim+re-read is the primary
+      // double-send prevention — we do NOT retry thrown network errors either.
       try {
         await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
           status: 'sending', claimed_by: runId, claimed_at: new Date().toISOString(),
@@ -265,8 +261,8 @@ Deno.serve(async (req) => {
         }).catch(() => {});
       };
 
-      if (!apiKey || !smsSubAccountId) { await fail('8x8 SMS not configured'); continue; }
-      if (smsEnabled === false) { await fail('SMS messaging disabled for the agency'); continue; }
+      if (!accountSid || !authToken) { await fail('Twilio SMS credentials not configured'); continue; }
+      if (!smsEnabled) { await fail('SMS messaging disabled for the agency'); continue; }
 
       // Re-check opt-out at send time (fail closed on a read error).
       let optedOut = true;
@@ -292,23 +288,26 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Deterministic, stable across re-sends → 8x8 idempotency key.
+      // The deterministic `sched-${row.id}` clientMessageId is kept in the
+      // SmsMessage record for our own tracking but is NOT sent to Twilio —
+      // Twilio has no client idempotency key. Double-send is prevented by the
+      // claim+re-read above and by not retrying thrown network errors.
       const clientMessageId = `sched-${row.id}`;
       let resp;
       try {
-        resp = await send8x8(apiKey, host, smsSubAccountId, row.from_number, row.to_number, row.body, clientMessageId);
+        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body);
       } catch (netErr) {
         const aborted = (netErr as Error)?.name === 'AbortError';
-        await fail(aborted ? 'Timed out reaching 8x8' : `Network error reaching 8x8: ${(netErr as Error).message}`);
+        await fail(aborted ? 'Timed out reaching Twilio' : `Network error reaching Twilio: ${(netErr as Error).message}`);
         continue;
       }
 
       if (!resp.ok) {
-        await fail(resp.data?.message || resp.data?.error || `8x8 API error (${resp.status})`);
+        await fail(resp.data?.message || resp.data?.error || `Twilio API error (${resp.status})`);
         continue;
       }
 
-      const providerMessageId = resp.data?.umid || null;
+      const providerMessageId = resp.data?.sid || null;
       // Record the sent message in the nurse's thread so it shows in their inbox.
       const smsRow = await base44.asServiceRole.entities.SmsMessage.create({
         direction: 'outbound',

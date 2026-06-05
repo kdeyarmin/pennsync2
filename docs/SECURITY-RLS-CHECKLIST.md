@@ -42,9 +42,9 @@ must not be able to write directly; writes go through backend functions.
 
 | Secret | Purpose | If unset |
 |---|---|---|
-| `EIGHT_X_EIGHT_API_KEY`, `EIGHT_X_EIGHT_WEBHOOK_SECRET` | 8x8 SMS/voice + webhook verification | 8x8 features fail / webhooks rejected (fail-closed) |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FAX_NUMBER`, `TWILIO_API_KEY`, `TWILIO_API_SECRET` | Fax + telehealth video | those features fail |
-| `TWILIO_WEBHOOK_URL` | Exact URL for Twilio fax signature check (behind a proxy) | falls back to `req.url` |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | SMS/voice + webhook verification (X-Twilio-Signature) + fax | all Twilio features fail / webhooks rejected (fail-closed) |
+| `TWILIO_FAX_NUMBER`, `TWILIO_API_KEY`, `TWILIO_API_SECRET` | Fax + telehealth video | those features fail |
+| `TWILIO_WEBHOOK_URL` | Exact URL for Twilio signature check behind a proxy (SMS/voice + fax) | falls back to `req.url` |
 | **`INTERNAL_FN_SECRET`** | Activates the `issueCertificate` lockdown (only the training system/admin may issue) | **lockdown inactive — set it at launch** |
 | **`FILE_URL_ALLOWED_HOSTS`** | Restrict server-side file fetches to your storage host(s) — fully closes SSRF incl. DNS-rebinding | only IP/scheme literals blocked |
 | `SIGNUP_WEBHOOK_SECRET` (optional) | Locks `onUserSignup` to the trusted trigger | re-fetch/email-match guard still applies |
@@ -68,13 +68,19 @@ if the platform restricts who can invoke function endpoints — **confirm**):
 
 ## 5. Webhooks
 
-- Point 8x8 (inbound SMS, DLR, VCA, CDR, and — if voicemail is enabled —
-  the `handleEightXEightVoicemail` recording callback) and Twilio (fax status)
-  webhooks at the deployed function URLs.
-- Confirm 8x8's **signature header/scheme** matches `verifyWebhook`
-  (`SIGNATURE_HEADERS`) and its **timestamp field** for the replay guard
-  (`isReplayStale`). Confirm Twilio's `X-Twilio-Signature` validation
-  (`verifyTwilioSignature`) — test good signature → 200, bad → 401.
+- Point Twilio (inbound SMS, delivery status callbacks, inbound voice call, call
+  status callbacks, and — if voicemail is enabled — the `handleTwilioVoicemail`
+  recording callback) webhooks at the deployed function URLs, configured on each
+  Twilio phone number's Voice and Messaging settings in the Twilio Console.
+- Confirm `X-Twilio-Signature` validation (`verifyTwilioSignature`) — HMAC-SHA1
+  over the full URL + sorted POST params keyed with the Auth Token. Test good
+  signature → 200, bad → 401. If the app is behind a proxy set `TWILIO_WEBHOOK_URL`
+  to the exact public URL so signatures compute correctly.
+- Confirm webhook **idempotency**: inbound SMS de-dups on `provider_message_id`
+  (Twilio `MessageSid`) and the call/voicemail handlers on `provider_call_id`
+  (`CallSid`), so Twilio's automatic webhook retries can't double-process.
+  (There is no body-timestamp replay guard — signature + idempotency are the
+  defenses.)
 
 ## 6. New entity fields to create
 
@@ -85,7 +91,7 @@ if the platform restricts who can invoke function endpoints — **confirm**):
 - `CallLog.note`, `disposition`, `has_voicemail`, `voicemail_url`,
   `voicemail_duration_seconds`
 - New `ScheduledSms` entity
-- 8x8 fields per `docs/8x8-entities.md`.
+- Twilio phone fields per `docs/twilio-entities.md`.
 
 ## 7. Verification (do before go-live)
 

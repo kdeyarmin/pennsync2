@@ -18,7 +18,7 @@ import { formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils
 import { isAdminLike } from "@/lib/superAdmin";
 
 /**
- * NumberPoolPanel — admin inventory of 8x8 numbers. Add a number once, then
+ * NumberPoolPanel — admin inventory of Twilio numbers. Add a number once, then
  * assign/reassign it to a nurse from a dropdown (one click) instead of retyping
  * it. All writes go through the managePhoneNumberPool backend function, which
  * keeps the pool and User.work_phone_number in sync. Personal cells are still
@@ -73,12 +73,12 @@ export default function NumberPoolPanel() {
     onError: (err) => toast.error(err?.message || "Failed to remove number"),
   });
 
-  // --- Find & buy numbers from 8x8 directly ---
+  // --- Find & buy numbers from Twilio directly ---
   const [buyOpen, setBuyOpen] = useState(false);
   const [searchArea, setSearchArea] = useState("");
   const [found, setFound] = useState([]);
   const search = useMutation({
-    mutationFn: () => base44.functions.invoke("searchPurchase8x8Numbers", { action: "search", area_code: searchArea }),
+    mutationFn: () => base44.functions.invoke("searchPurchaseTwilioNumbers", { action: "search", area_code: searchArea }),
     onSuccess: (res) => {
       const data = res?.data || res;
       setFound(data?.numbers || []);
@@ -87,7 +87,7 @@ export default function NumberPoolPanel() {
     onError: (err) => toast.error(err?.message || "Number search failed"),
   });
   const purchase = useMutation({
-    mutationFn: (e164) => base44.functions.invoke("searchPurchase8x8Numbers", { action: "purchase", e164 }),
+    mutationFn: (e164) => base44.functions.invoke("searchPurchaseTwilioNumbers", { action: "purchase", e164 }),
     onSuccess: (res, e164) => {
       invalidate();
       setFound((prev) => prev.filter((n) => n.e164 !== e164));
@@ -106,7 +106,7 @@ export default function NumberPoolPanel() {
   const busy = add.isPending || assign.isPending || release.isPending || remove.isPending;
 
   return (
-    <Card id="ex8-pool" className="scroll-mt-24">
+    <Card id="twilio-pool" className="scroll-mt-24">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
@@ -118,15 +118,15 @@ export default function NumberPoolPanel() {
           </Badge>
         </CardTitle>
         <CardDescription>
-          Add your purchased 8x8 numbers here, then assign one to a nurse with a single dropdown — no retyping.
+          Add the Twilio numbers you've purchased here, then assign one to a nurse with a single dropdown — no retyping.
           Releasing a number frees it for someone else and clears it from that nurse.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Find & buy numbers directly from 8x8 */}
+        {/* Find & buy numbers directly from Twilio */}
         <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
           <p className="text-xs text-slate-600">
-            Don't have numbers yet? Search 8x8 and buy one straight into the pool.
+            Don't have numbers yet? Search Twilio and buy one straight into the pool.
           </p>
           <Dialog open={buyOpen} onOpenChange={setBuyOpen}>
             <DialogTrigger asChild>
@@ -135,7 +135,7 @@ export default function NumberPoolPanel() {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Find &amp; buy an 8x8 number</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Find &amp; buy a Twilio number</DialogTitle></DialogHeader>
               <div className="flex items-end gap-2">
                 <div className="flex-1">
                   <Label className="text-xs text-slate-500">Area code (optional)</Label>
@@ -167,7 +167,7 @@ export default function NumberPoolPanel() {
                 )}
               </div>
               <p className="text-[11px] text-slate-400">
-                Uses your 8x8 numbers API (validate the endpoint shape for your account). You're billed by 8x8 for purchased numbers.
+                Uses the Twilio numbers API. You're billed by Twilio for purchased numbers.
               </p>
             </DialogContent>
           </Dialog>
@@ -201,7 +201,7 @@ export default function NumberPoolPanel() {
         {/* Pool list */}
         {pool.length === 0 ? (
           <p className="text-sm text-slate-500 py-4 text-center">
-            No numbers yet. Add the 8x8 virtual numbers you've purchased to start assigning them.
+            No numbers yet. Add the Twilio numbers you've purchased to start assigning them.
           </p>
         ) : (
           <div className="space-y-2">

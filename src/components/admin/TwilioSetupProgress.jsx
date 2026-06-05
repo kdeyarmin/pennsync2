@@ -9,18 +9,18 @@ import {
   CheckCircle2, Circle, AlertTriangle, ArrowRight, Activity, Loader2, Rocket, ListChecks,
 } from "lucide-react";
 import { toast } from "sonner";
-import { buildIntegrationSteps, summarizeSteps, summarize } from "@/components/admin/eightxeightSetup";
+import { buildIntegrationSteps, summarizeSteps, summarize } from "@/components/admin/twilioSetup";
 
 /**
- * EightXEightSetupProgress — the at-a-glance "command center" at the top of the
+ * TwilioSetupProgress — the at-a-glance "command center" at the top of the
  * super admin page. It answers two questions the scattered cards below can't:
- * "how far along is the 8x8 setup?" and "what should I do next?".
+ * "how far along is the Twilio setup?" and "what should I do next?".
  *
  * It is purely a roll-up + navigation layer: it reuses the SAME react-query keys
  * as the secret panel and the provisioning panel, so it updates automatically as
- * the admin saves a secret, edits settings, or provisions a nurse below — no
+ * the admin saves credentials, edits settings, or provisions a nurse below — no
  * duplicated state. The readiness math lives in the unit-tested
- * `eightxeightSetup` helpers; this component only renders it and scrolls to the
+ * `twilioSetup` helpers; this component only renders it and scrolls to the
  * relevant section when a step's "Go" button is clicked.
  */
 
@@ -73,12 +73,12 @@ function StepRow({ step }) {
   );
 }
 
-export default function EightXEightSetupProgress() {
+export default function TwilioSetupProgress() {
   // Shared query keys → this card and the panels below read/write one cache.
   const { data: secretStatus, isLoading: secretLoading } = useQuery({
-    queryKey: ["eightxeight-secret-status"],
+    queryKey: ["twilio-secret-status"],
     queryFn: async () => {
-      const res = await base44.functions.invoke("getEightXEightSecretStatus", {});
+      const res = await base44.functions.invoke("getTwilioSecretStatus", {});
       return res?.data || res;
     },
     refetchOnWindowFocus: false,
@@ -105,17 +105,17 @@ export default function EightXEightSetupProgress() {
   }, [users]);
 
   // The live test is run from here too, so the verify step can light up green
-  // without leaving the command center. Read-only on the 8x8 side.
+  // without leaving the command center.
   const [liveResult, setLiveResult] = useState(null);
   const testConnection = useMutation({
-    mutationFn: () => base44.functions.invoke("testEightXEightConnection", {}),
+    mutationFn: () => base44.functions.invoke("testTwilioConnection", {}),
     onSuccess: (res) => {
       const data = res?.data || res;
       setLiveResult(data);
       const sev = summarize(data?.checks || []).severity;
       if (sev === "fail") toast.error("Live test found problems — see the steps below.");
       else if (sev === "warn") toast("Live test passed with warnings.");
-      else toast.success("8x8 connection looks healthy.");
+      else toast.success("Twilio connection looks healthy.");
     },
     onError: (err) => toast.error(err?.message || "Live connection test failed"),
   });
@@ -127,12 +127,12 @@ export default function EightXEightSetupProgress() {
   const progress = useMemo(() => summarizeSteps(steps), [steps]);
 
   return (
-    <Card id="ex8-overview" className="scroll-mt-24 border-indigo-100">
+    <Card id="twilio-overview" className="scroll-mt-24 border-indigo-100">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
             <ListChecks className="w-5 h-5 text-indigo-600" />
-            8x8 Integration Setup
+            Twilio Integration Setup
           </span>
           {secretLoading ? (
             <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
@@ -180,7 +180,7 @@ export default function EightXEightSetupProgress() {
         ) : (
           <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-sm text-green-900 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-            Every step is complete — your 8x8 integration is fully set up and verified.
+            Every step is complete — your Twilio integration is fully set up and verified.
           </div>
         )}
 

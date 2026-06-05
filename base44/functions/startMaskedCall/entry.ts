@@ -3,14 +3,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 /**
  * startMaskedCall — outbound click-to-call masking (nurse -> patient).
  *
- * The 8x8 Voice API first rings the nurse's personal cell; when the nurse
- * answers, it dials the patient and bridges the two legs, presenting the
- * nurse's WORK number as the caller ID. The patient never sees the cell.
+ * Uses the Twilio Calls API to ring the nurse's personal cell first; when the
+ * nurse answers, Twilio bridges to the patient and presents the nurse's WORK
+ * number as the caller ID. The patient never sees the cell.
  *
- * NOTE: the exact Voice API origination endpoint/body depends on the
- * provisioned voice subaccount. The base URL comes from the
- * AgencySettings.eight_x_eight_voice_api_base admin setting; validate the body
- * shape against 8x8 Connect.
+ * Origination is NON-idempotent: a thrown network error is NOT retried (the
+ * call may already be in flight). Only explicit retryable HTTP statuses (where
+ * Twilio told us the request failed) are retried.
  */
 
 function normalizeE164(raw: string | null | undefined): string | null {
@@ -32,27 +31,30 @@ function phoneVariants(value: string): string[] {
 }
 
 /**
- * Resolve the single 8x8 API secret: prefer the legacy backend env var, then the
- * secret the super admin saved in-app (IntegrationSecret). Either one configures
- * the integration, so the Base44 dashboard env is optional.
+ * Resolve Twilio credentials: prefer env vars, then fall back to the
+ * IntegrationSecret row saved by the super admin in-app.
  */
-async function resolveEightXEightApiKey(base44: any): Promise<string | null> {
-  const env = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
-  if (env && env.trim()) return env.trim();
-  try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'eight_x_eight' });
-    const v = rows?.[0]?.api_secret;
-    return v && String(v).trim() ? String(v).trim() : null;
-  } catch {
-    return null;
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
+  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let sid = envSid && envSid.trim() ? envSid.trim() : null;
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  if (!sid || !token) {
+    try {
+      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+      const rec = rows?.[0] || {};
+      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
+      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    } catch { /* ignore */ }
   }
+  return { accountSid: sid, authToken: token };
 }
 
-// ---- transient-failure retry policy (mirrors src/components/voice/eightxeightRetry.js) ----
-// Call origination is NOT idempotent (no clientMessageId), so a thrown network
-// error is NOT retried (the call might already be placed — a blind retry could
-// double-dial the patient). Only explicit retryable HTTP statuses, where 8x8
-// told us the request failed, are retried.
+// ---- transient-failure retry policy ----
+// Call origination is NOT idempotent, so a thrown network error is NOT retried
+// (the call might already be placed — a blind retry could double-dial the
+// patient). Only explicit retryable HTTP statuses (408/425/429/5xx), where
+// Twilio told us the request failed, are retried.
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 function isRetryableStatus(status: number): boolean {
   return RETRYABLE_STATUSES.has(Number(status));
@@ -90,6 +92,15 @@ async function originateWithRetry(
   throw new Error('originateWithRetry exhausted attempts');
 }
 
+function escapeXml(s: string): string {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -121,13 +132,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    const apiKey = await resolveEightXEightApiKey(base44);
-    const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
-    const voiceBase = settings[0]?.eight_x_eight_voice_api_base;
-    const voiceSubAccountId = settings[0]?.eight_x_eight_voice_subaccount_id;
-
-    if (!apiKey || !voiceBase || !voiceSubAccountId) {
-      return Response.json({ error: '8x8 Voice credentials not configured' }, { status: 500 });
+    const { accountSid, authToken } = await resolveTwilioCreds(base44);
+    if (!accountSid || !authToken) {
+      return Response.json({ error: 'Twilio Voice credentials not configured' }, { status: 500 });
     }
 
     const callLog = await base44.entities.CallLog.create({
@@ -142,34 +149,42 @@ Deno.serve(async (req) => {
       sent_by: user.email,
     });
 
-    // Originate: ring the nurse's cell first, then bridge to the patient with
-    // the work number as the presented caller ID. Each attempt is bounded by an
-    // AbortController timeout so a slow host can't hang the function; an explicit
-    // transient 5xx/429 is retried with backoff (a thrown network error is not,
-    // since the call may already be in flight).
-    const url = `${voiceBase}/subaccounts/${voiceSubAccountId}/callflows`;
+    // Build TwiML: ring nurse's cell first, then bridge to the patient with the
+    // work number as the presented caller ID.
+    const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="${escapeXml(workNumber)}" timeout="20"><Number>${escapeXml(destination)}</Number></Dial></Response>`;
+
+    // Originate via Twilio Calls API. Each attempt is bounded by an AbortController
+    // timeout; explicit transient 5xx/408/425/429 are retried with backoff (a
+    // thrown network error is not, since the call may already be in flight).
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`;
     const ORIGINATE_TIMEOUT_MS = 15000;
+    const functionsBase = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
+
     let result: { ok: boolean; status: number; data: any };
     try {
       result = await originateWithRetry(async () => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), ORIGINATE_TIMEOUT_MS);
         try {
-          const resp = await fetch(url, {
+          const body = new URLSearchParams({
+            To: nurseCell,
+            From: workNumber,
+            Twiml: twiml,
+          });
+          if (functionsBase) {
+            body.set('StatusCallback', `${functionsBase}/handleTwilioCallStatus`);
+            body.append('StatusCallbackEvent', 'initiated');
+            body.append('StatusCallbackEvent', 'ringing');
+            body.append('StatusCallbackEvent', 'answered');
+            body.append('StatusCallbackEvent', 'completed');
+          }
+          const resp = await fetch(twilioUrl, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              callflow: [
-                {
-                  action: 'makeCall',
-                  params: {
-                    source: { type: 'phoneNumber', phoneNumber: nurseCell },
-                    destination: { type: 'phoneNumber', phoneNumber: destination },
-                    callerId: workNumber,
-                  },
-                },
-              ],
-            }),
+            headers: {
+              'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
             signal: controller.signal,
           });
           const data = await resp.json().catch(() => ({}));
@@ -182,14 +197,14 @@ Deno.serve(async (req) => {
       // Network/DNS failure or timeout: don't leave the CallLog stuck in 'initiated'.
       const aborted = netErr?.name === 'AbortError';
       const reason = aborted
-        ? `Timed out after ${ORIGINATE_TIMEOUT_MS} ms reaching 8x8`
-        : `Network error reaching 8x8: ${netErr.message}`;
+        ? `Timed out after ${ORIGINATE_TIMEOUT_MS} ms reaching Twilio`
+        : `Network error reaching Twilio: ${netErr.message}`;
       await base44.entities.CallLog.update(callLog.id, {
         status: 'failed',
         failure_reason: reason,
       }).catch(() => {});
       return Response.json(
-        { error: aborted ? '8x8 Voice API timed out' : 'Failed to reach 8x8 Voice API', details: netErr.message },
+        { error: aborted ? 'Twilio Voice API timed out' : 'Failed to reach Twilio Voice API', details: netErr.message },
         { status: aborted ? 504 : 502 },
       );
     }
@@ -198,12 +213,12 @@ Deno.serve(async (req) => {
     if (!result.ok) {
       await base44.entities.CallLog.update(callLog.id, {
         status: 'failed',
-        failure_reason: data?.message || data?.error || `8x8 Voice API error (${result.status})`,
+        failure_reason: data?.message || data?.error || `Twilio Voice API error (${result.status})`,
       });
-      return Response.json({ error: '8x8 Voice API error', details: data }, { status: result.status });
+      return Response.json({ error: 'Twilio Voice API error', details: data }, { status: result.status });
     }
 
-    const providerCallId = data?.callId || data?.sessionId || data?.id || null;
+    const providerCallId = data?.sid || null;
     await base44.entities.CallLog.update(callLog.id, { provider_call_id: providerCallId });
 
     await base44.entities.UserActivity.create({

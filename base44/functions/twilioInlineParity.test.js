@@ -47,8 +47,8 @@ test("inline normalizeE164 matches phoneUtils across backend functions", async (
   const files = [
     "./sendSms/entry.ts",
     "./startMaskedCall/entry.ts",
-    "./handleEightXEightInboundSms/entry.ts",
-    "./handleEightXEightVoiceCall/entry.ts",
+    "./handleTwilioInboundSms/entry.ts",
+    "./handleTwilioVoiceCall/entry.ts",
     "./provisionNurseWorkNumber/entry.ts",
     "./managePhoneNumberPool/entry.ts",
   ];
@@ -83,7 +83,7 @@ test("inline isAgencyOpen matches businessHours (incl. holidays)", async () => {
     [settings({ business_hours_holidays: ["2026-06-04"] }), new Date("2026-06-04T13:00:00Z")], // holiday
     [{ business_hours_enabled: false }, new Date("2026-06-04T07:00:00Z")], // not enforced
   ];
-  for (const f of ["./handleEightXEightInboundSms/entry.ts", "./handleEightXEightVoiceCall/entry.ts"]) {
+  for (const f of ["./handleTwilioInboundSms/entry.ts", "./handleTwilioVoiceCall/entry.ts"]) {
     const { mod } = await loadInline(f, ["isAgencyOpen"]);
     for (const [st, now] of cases) {
       assert.equal(mod.isAgencyOpen(st, now), businessHours.isAgencyOpen(st, now), `isAgencyOpen drift in ${f} @ ${now.toISOString()}`);
@@ -110,7 +110,7 @@ test("inline quietHoursCheck matches quietHours.isWithinQuietHours", async () =>
 });
 
 test("inline detectUrgency matches urgentKeywords.detectUrgency", async () => {
-  const { mod } = await loadInline("./handleEightXEightInboundSms/entry.ts", ["detectUrgency"]);
+  const { mod } = await loadInline("./handleTwilioInboundSms/entry.ts", ["detectUrgency"]);
   const vectors = ["I have chest pain", "see you at 3pm", "we watched football", "mom had a fall", "", "URGENT help me"];
   for (const v of vectors) {
     assert.equal(mod.detectUrgency(v).urgent, urgentKeywords.detectUrgency(v).urgent, `detectUrgency drift for ${JSON.stringify(v)}`);

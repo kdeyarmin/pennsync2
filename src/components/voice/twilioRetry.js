@@ -1,19 +1,22 @@
 /**
- * eightxeightRetry — retry/backoff policy for outbound 8x8 API calls.
+ * twilioRetry — retry/backoff policy for outbound Twilio API calls.
  *
- * Every outbound 8x8 path (sendSms, startMaskedCall, dispatchScheduledSms,
- * sendTestSms) makes a single bounded fetch to 8x8. A transient hiccup — a 429
- * rate-limit, a 502/503/504 from an 8x8 edge, or a dropped connection — would
- * otherwise fail the whole send and strand the patient, when a second attempt a
- * fraction of a second later would have gone through. This module is the
- * unit-tested source of truth for *whether* to retry and *how long* to wait
+ * Every outbound Twilio path (sendSms, startMaskedCall, dispatchScheduledSms,
+ * sendTestSms) makes a single bounded fetch to Twilio. A transient hiccup — a
+ * 429 rate-limit, a 502/503/504 from a Twilio edge, or a dropped connection —
+ * would otherwise fail the whole send and strand the patient, when a second
+ * attempt a fraction of a second later would have gone through. This module is
+ * the unit-tested source of truth for *whether* to retry and *how long* to wait
  * between attempts; the single-file backend functions keep an inline copy of
  * this policy (the Base44 deploy model forbids cross-file imports).
  *
- * Why retries are safe (no double-send): every send reuses the same
- * `clientMessageId`, which 8x8 treats as an idempotency key. A retried request
- * that the provider already accepted is de-duped rather than delivered twice, so
- * even retrying after an ambiguous network failure cannot text a patient twice.
+ * Why retries are safe (no double-send): an explicit retryable HTTP status
+ * (429/5xx) means Twilio told us the request failed, so re-sending cannot
+ * deliver twice. A *thrown* network error is ambiguous (the request may have
+ * landed). Because Twilio's REST API has no client idempotency key, the
+ * non-idempotent send paths set `retryNetworkErrors: false` so an ambiguous
+ * transport failure is surfaced rather than blindly re-sent — a later redrive
+ * pass handles anything Twilio actually reported as failed.
  *
  * What is NOT retried: permanent client errors (400/401/403/404/422). Those
  * mean the request itself is wrong (bad number, bad credentials, opted-out) and

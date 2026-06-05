@@ -1,16 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * managePhoneNumberPool — admin-only CRUD + assignment for the 8x8 number pool
- * (the PhoneNumber entity). One backend entry point keeps the pool inventory and
- * the actual masking mapping (User.work_phone_number) consistent, with the same
- * uniqueness rules as provisionNurseWorkNumber.
+ * managePhoneNumberPool — admin-only CRUD + assignment for the Twilio number
+ * pool (the PhoneNumber entity). One backend entry point keeps the pool inventory
+ * and the actual masking mapping (User.work_phone_number) consistent, with the
+ * same uniqueness rules as provisionNurseWorkNumber.
  *
  * Body: { action, ... }
- *   - 'add'     { e164, label?, eight_x_eight_voice_endpoint_id? } → add a number to the pool
- *   - 'remove'  { id }                                            → delete an AVAILABLE number
- *   - 'assign'  { id, target_user_email, personal_cell_e164? }    → give a nurse this work number
- *   - 'release' { id }                                            → unassign (clears the nurse's work number)
+ *   - 'add'     { e164, label?, twilio_phone_number_sid? } → add a number to the pool
+ *   - 'remove'  { id }                                    → delete an AVAILABLE number
+ *   - 'assign'  { id, target_user_email, personal_cell_e164? } → give a nurse this work number
+ *   - 'release' { id }                                    → unassign (clears the nurse's work number)
  *
  * The number itself is not PHI; the personal cell is masked to last-4 in audit.
  */
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       const row = await base44.asServiceRole.entities.PhoneNumber.create({
         e164,
         label: typeof body.label === 'string' ? body.label.trim() : '',
-        eight_x_eight_voice_endpoint_id: body.eight_x_eight_voice_endpoint_id || '',
+        twilio_phone_number_sid: body.twilio_phone_number_sid || '',
         status: holder ? 'assigned' : 'available',
         assigned_to_email: holder ? holder.email : '',
       });
@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       // Update the nurse's masking record.
       const update: Record<string, unknown> = { work_phone_number: e164 };
       if (cellNum) update.personal_cell_e164 = cellNum;
-      if (row.eight_x_eight_voice_endpoint_id) update.eight_x_eight_voice_endpoint_id = row.eight_x_eight_voice_endpoint_id;
+      if (row.twilio_phone_number_sid) update.twilio_phone_number_sid = row.twilio_phone_number_sid;
       if (target.duty_status === undefined || target.duty_status === null) update.duty_status = 'off_duty';
       await base44.asServiceRole.entities.User.update(target.id, update);
 
