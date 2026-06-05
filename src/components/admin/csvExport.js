@@ -51,7 +51,9 @@ export function toCsv(columns, records) {
  * so components that build their own ragged/multi-section row arrays can swap an
  * unsafe `rows.map(r => r.join(',')).join('\n')` for `toCsvRows(rows)` without
  * restructuring their data.
- * @param {Array<Array<any>>} rows
+ * Accepts any input and coerces defensively (non-array → [], non-array row →
+ * single-cell row), so the param type is intentionally loose.
+ * @param {any} rows  an array of row-arrays
  * @param {{ eol?: string }} [opts]
  * @returns {string}
  */
