@@ -9,6 +9,16 @@ test("detectUrgency flags red-flag phrases", () => {
   assert.deepEqual(detectUrgency("call 911").matches, ["911"]);
 });
 
+test("routine 'blood ...' phrases are not urgent, but 'bleeding' still is", () => {
+  // bare "blood" was removed to stop firing on these routine phrases.
+  assert.equal(detectUrgency("my blood pressure is normal today").urgent, false);
+  assert.equal(detectUrgency("blood sugar was 110 this morning").urgent, false);
+  assert.equal(detectUrgency("got my blood test results back").urgent, false);
+  assert.ok(!DEFAULT_URGENT_KEYWORDS.includes("blood"));
+  // The genuinely urgent case is still caught.
+  assert.equal(detectUrgency("there is bleeding from the wound").urgent, true);
+});
+
 test("detectUrgency ignores ordinary messages", () => {
   assert.equal(detectUrgency("Thanks, see you at 3pm tomorrow").urgent, false);
   assert.equal(detectUrgency("Running a few minutes late").urgent, false);

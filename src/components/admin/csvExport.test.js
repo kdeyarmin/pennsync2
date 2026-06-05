@@ -7,6 +7,18 @@ test("toCsv writes a header row from column labels", () => {
   assert.equal(csv, "Col A,Col B");
 });
 
+test("toCsv neutralizes spreadsheet formula injection", () => {
+  const cols = [{ key: "v", label: "V" }];
+  // A leading =,+,-,@ is prefixed with a single quote so Excel/Sheets treat it
+  // as text instead of evaluating it.
+  assert.ok(toCsv(cols, [{ v: "=1+1" }]).endsWith("'=1+1"));
+  assert.ok(toCsv(cols, [{ v: "+12155550100" }]).endsWith("'+12155550100"));
+  assert.ok(toCsv(cols, [{ v: "@SUM(A1)" }]).endsWith("'@SUM(A1)"));
+  assert.ok(toCsv(cols, [{ v: "-5" }]).endsWith("'-5"));
+  // Ordinary values are untouched.
+  assert.ok(toCsv(cols, [{ v: "Jane Smith" }]).endsWith("Jane Smith"));
+});
+
 test("toCsv emits one CRLF-separated line per record", () => {
   const csv = toCsv(
     [{ key: "name", label: "Name" }, { key: "n", label: "Count" }],

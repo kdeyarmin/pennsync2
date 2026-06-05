@@ -9,9 +9,16 @@
  * SMS message bodies or recording media — so a compliance export can't leak PHI.
  */
 
-/** Escape a single CSV field per RFC 4180 (quote when it contains , " CR or LF). */
+/**
+ * Escape a single CSV field per RFC 4180 (quote when it contains , " CR or LF),
+ * and neutralize spreadsheet formula injection. A field starting with = + - @
+ * (or a control char) is evaluated as a formula by Excel/Sheets — RFC quoting
+ * does NOT prevent that — so we prefix it with a single quote first. This also
+ * makes a phone number like "+12155550100" render as text rather than a formula.
+ */
 function escapeField(value) {
-  const s = value == null ? "" : String(value);
+  let s = value == null ? "" : String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

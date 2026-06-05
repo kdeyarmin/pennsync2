@@ -14,6 +14,20 @@ test("classifyFaxFailure flags permanent failures", () => {
   assert.equal(classifyFaxFailure("", "Number not in service"), "permanent");
 });
 
+test("isFaxRetryDue stops at retry_count === maxRetries (no extra send/charge)", () => {
+  const now = Date.now();
+  const fax = (retry_count) => ({
+    status: "failed",
+    document_url: "u",
+    next_retry_at: new Date(now - 1000).toISOString(),
+    retry_count,
+  });
+  const cfg = { max_retries: 3 };
+  assert.equal(isFaxRetryDue(fax(2), now, cfg), true);  // budget remains
+  assert.equal(isFaxRetryDue(fax(3), now, cfg), false); // budget spent at == max
+  assert.equal(isFaxRetryDue(fax(4), now, cfg), false);
+});
+
 test("classifyFaxFailure treats busy/no-answer/unknown as transient", () => {
   assert.equal(classifyFaxFailure("7207", "The receiving machine was busy"), "transient");
   assert.equal(classifyFaxFailure("7208", "No answer from remote"), "transient");

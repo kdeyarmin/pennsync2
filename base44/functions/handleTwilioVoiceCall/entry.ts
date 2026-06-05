@@ -93,7 +93,9 @@ function isAgencyOpen(settings: any, now = new Date()): boolean {
   const open = parseHHMM(day.open); const close = parseHHMM(day.close);
   if (open == null || close == null) return false;
   const m = wc.minutes;
-  return open <= close ? (m >= open && m < close) : (m >= open || m < close);
+  // Strict `<` so equal open/close (e.g. 00:00-00:00 "open all day") is treated
+  // as always-open, not always-closed. Mirrors src/components/voice/businessHours.js.
+  return open < close ? (m >= open && m < close) : (m >= open || m < close);
 }
 
 // ---- Twilio signature verification (HMAC-SHA1, same scheme as fax handler) ----
