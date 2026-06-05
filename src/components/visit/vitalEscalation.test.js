@@ -33,6 +33,14 @@ test("hypertensive crisis triggers on diastolic > 120", () => {
   assert.equal(breaches[0].id, "hypertensive_crisis");
 });
 
+test("a leading-digit BP typo is rejected, not parsed as 180/120", () => {
+  // "1180/120" must NOT be read as 180/120 (which would slip under >180/120 and
+  // miss the crisis) nor corrupt the reading. The implausible value is dropped.
+  assert.deepEqual(detectCriticalVitals({ bp: "1180/120" }), []);
+  // A genuine crisis via the bp-string path still escalates.
+  assert.equal(detectCriticalVitals({ bp: "200/130" })[0]?.id, "hypertensive_crisis");
+});
+
 test("severe hypoxia triggers below 88% but not at/above", () => {
   assert.equal(detectCriticalVitals({ oxygen_saturation: "85" })[0]?.id, "severe_hypoxia");
   assert.deepEqual(detectCriticalVitals({ oxygen_saturation: "88" }), []);

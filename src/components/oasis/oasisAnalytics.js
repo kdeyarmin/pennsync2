@@ -5,6 +5,24 @@
 // the page left to do only rendering. Behaviour is intentionally identical to
 // the previous inline useMemo blocks.
 
+/**
+ * Completed-years age from a date-of-birth string, accounting for whether the
+ * birthday has occurred this year. Plain year-subtraction counts a pre-birthday
+ * patient one year too old, which can shift them into the wrong Medicare age band
+ * at the 65 boundary. Returns NaN for missing/unparseable input.
+ * @param {string} dob
+ * @returns {number}
+ */
+export function computeAge(dob, now = new Date()) {
+  if (!dob || dob === "Not found") return NaN;
+  const d = new Date(dob);
+  if (Number.isNaN(d.getTime())) return NaN;
+  let age = now.getFullYear() - d.getFullYear();
+  const monthDelta = now.getMonth() - d.getMonth();
+  if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < d.getDate())) age -= 1;
+  return age;
+}
+
 /** @param {any[]} uploads */
 export function aggregateDemographics(uploads = []) {
   const genderCount = { Male: 0, Female: 0, Unknown: 0 };
@@ -20,9 +38,7 @@ export function aggregateDemographics(uploads = []) {
     else genderCount.Unknown++;
 
     const dob = upload.pdgm_data?.patient_info?.dob;
-    const age = dob && dob !== "Not found"
-      ? new Date().getFullYear() - new Date(dob).getFullYear()
-      : NaN;
+    const age = computeAge(dob);
     // An unparseable dob yields NaN; every `age < N` test is false, so without
     // this guard it would silently fall through to "85+" instead of "Unknown".
     if (!Number.isFinite(age)) ageRanges.Unknown++;

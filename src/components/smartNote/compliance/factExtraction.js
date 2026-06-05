@@ -42,7 +42,9 @@ export function extractVitals(text) {
   const vitals = {};
   if (!text) return vitals;
 
-  const bpMatch = text.match(/bp\s*(\d{2,3})\/(\d{2,3})/i) || text.match(/(\d{2,3})\/(\d{2,3})/);
+  // Anchor the systolic/diastolic groups with digit lookarounds so a typo like
+  // "1148/90" can't be silently read as 148/90 (dropping the leading digit).
+  const bpMatch = text.match(/bp\s*(?<!\d)(\d{2,3})\/(\d{2,3})(?!\d)/i) || text.match(/(?<!\d)(\d{2,3})\/(\d{2,3})(?!\d)/);
   if (bpMatch) {
     const sys = parseInt(bpMatch[1]);
     const dia = parseInt(bpMatch[2]);

@@ -84,6 +84,15 @@ test("extractVitals does not read a date as a blood pressure", () => {
   assert.equal(v.bp_dia, undefined);
 });
 
+test("extractVitals rejects a leading-digit BP typo instead of truncating it", () => {
+  // "BP 1148/90" must not be silently read as systolic 148.
+  const v = extractVitals("BP 1148/90");
+  assert.equal(v.bp_sys, undefined);
+  assert.equal(v.bp_dia, undefined);
+  // A normal labeled reading still parses.
+  assert.equal(extractVitals("BP 148/90").bp_sys, 148);
+});
+
 test("temperature with and without the degree sign normalize to one token", () => {
   const withSign = extractNumbersAndMeasurements("Temperature was 98.6°F");
   const without = extractNumbersAndMeasurements("Temp 98.6 F");

@@ -12,8 +12,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -189,19 +189,23 @@ Provide a comprehensive rehospitalization risk assessment with:
     setAnalyzingPatientId(null);
   };
 
-  // Risk trend data (simulated weekly)
-  const riskTrendData = useMemo(() => {
-    const highRiskByWeek = [];
-    for (let i = 7; i >= 0; i--) {
-      const weekDate = new Date();
-      weekDate.setDate(weekDate.getDate() - i * 7);
-      highRiskByWeek.push({
-        week: weekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        highRisk: Math.floor(patientRisks.filter(p => p.riskLevel === 'high').length * (0.9 + Math.random() * 0.2)),
-        mediumRisk: Math.floor(patientRisks.filter(p => p.riskLevel === 'medium').length * (0.9 + Math.random() * 0.2))
-      });
+  // Current risk distribution (REAL counts). This replaces a prior chart that
+  // fabricated an 8-week "trend" by multiplying the current counts by
+  // Math.random() — there is no historical risk time-series available, so a
+  // trend line would be invented data. We show the honest current snapshot
+  // instead (see docs/AI_TRUSTWORTHINESS_AUDIT.md — no fabricated metrics).
+  const riskDistribution = useMemo(() => {
+    const counts = { High: 0, Medium: 0, Low: 0 };
+    for (const p of patientRisks) {
+      if (p.riskLevel === 'high') counts.High += 1;
+      else if (p.riskLevel === 'medium') counts.Medium += 1;
+      else counts.Low += 1;
     }
-    return highRiskByWeek;
+    return [
+      { level: 'High', count: counts.High },
+      { level: 'Medium', count: counts.Medium },
+      { level: 'Low', count: counts.Low },
+    ];
   }, [patientRisks]);
 
   const selectedPrediction = selectedPatientId ? predictions[selectedPatientId] : null;
@@ -211,24 +215,23 @@ Provide a comprehensive rehospitalization risk assessment with:
 
   return (
     <div className="space-y-6">
-      {/* Risk Trend Chart */}
+      {/* Current risk distribution (real counts, not a fabricated trend) */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600" />
-            Rehospitalization Risk Trends
+            Current Rehospitalization Risk Distribution
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={riskTrendData}>
+            <BarChart data={riskDistribution}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="week" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
+              <XAxis dataKey="level" tick={{ fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Line type="monotone" dataKey="highRisk" stroke="#ef4444" strokeWidth={2} name="High Risk" />
-              <Line type="monotone" dataKey="mediumRisk" stroke="#f59e0b" strokeWidth={2} name="Medium Risk" />
-            </LineChart>
+              <Bar dataKey="count" name="Patients" fill="#6366f1" />
+            </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
