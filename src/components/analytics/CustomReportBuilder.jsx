@@ -16,6 +16,7 @@ import {
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Download, BarChart3, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { escapeCsvField } from "@/components/admin/csvExport";
 
 export default function CustomReportBuilder({ patients, visits, incidents, users }) {
   const [reportName, setReportName] = useState("");
@@ -101,7 +102,7 @@ export default function CustomReportBuilder({ patients, visits, incidents, users
   const exportReport = () => {
     if (!generatedReport) return;
 
-    const csvContent = `${generatedReport.name}\nGenerated: ${format(new Date(generatedReport.date), 'PPpp')}\nDate Range: Last ${dateRange} days\n\nMetric,Value\n${generatedReport.data.map(d => `${d.name},${d.value}`).join('\n')}`;
+    const csvContent = `${escapeCsvField(generatedReport.name)}\nGenerated: ${format(new Date(generatedReport.date), 'PPpp')}\nDate Range: Last ${dateRange} days\n\nMetric,Value\n${generatedReport.data.map(d => `${escapeCsvField(d.name)},${escapeCsvField(d.value)}`).join('\n')}`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
