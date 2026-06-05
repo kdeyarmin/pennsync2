@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toCsvRows } from '@/components/admin/csvExport';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -70,10 +71,10 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
         signature_hash: signature.signature_hash,
       }));
 
-      const csvContent = [
-        Object.keys(auditData[0]).join(','),
-        ...auditData.map((row) => Object.values(row).map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')),
-      ].join('\n');
+      const csvContent = toCsvRows([
+        Object.keys(auditData[0]),
+        ...auditData.map((row) => Object.values(row)),
+      ]);
 
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);

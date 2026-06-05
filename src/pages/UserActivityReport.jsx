@@ -22,6 +22,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import { formatDistanceToNow } from "date-fns";
 import { formatEastern } from "../components/utils/timezone";
 import { jsPDF } from "jspdf";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function UserActivityReport() {
   const [timeRange, setTimeRange] = useState("30"); // days
@@ -192,7 +193,7 @@ export default function UserActivityReport() {
         stat.top_actions[0] ? `${stat.top_actions[0][0]} (${stat.top_actions[0][1]})` : 'N/A'
       ]);
       
-      const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+      const csv = toCsvRows([headers, ...rows]);
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

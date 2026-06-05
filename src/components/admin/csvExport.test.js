@@ -1,6 +1,23 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { toCsv, exportTimestamp } from "./csvExport.js";
+import { toCsv, toCsvRows, exportTimestamp } from "./csvExport.js";
+
+test("toCsvRows escapes every cell and neutralizes formula injection", () => {
+  const csv = toCsvRows([
+    ["Name", "Note"],
+    ["Jane", "=cmd|calc"],
+    ["+15551234567", 'has, comma "and quote"'],
+  ]);
+  const lines = csv.split("\r\n");
+  assert.equal(lines[0], "Name,Note");
+  assert.equal(lines[1], "Jane,'=cmd|calc");           // formula prefixed with '
+  assert.equal(lines[2], "'+15551234567,\"has, comma \"\"and quote\"\"\"");
+});
+
+test("toCsvRows tolerates ragged/non-array rows and bad input", () => {
+  assert.equal(toCsvRows([["a"], "b"]), "a\r\nb");
+  assert.equal(toCsvRows(null), "");
+});
 
 test("toCsv writes a header row from column labels", () => {
   const csv = toCsv([{ key: "a", label: "Col A" }, { key: "b", label: "Col B" }], []);

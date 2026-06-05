@@ -31,6 +31,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AIContactExtractor from "../components/fax/AIContactExtractor";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function FaxContactsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -160,12 +161,10 @@ export default function FaxContactsPage() {
   };
 
   const handleExportCSV = () => {
-    const csv = [
-      ['Name', 'Fax Number', 'Organization', 'Notes'].join(','),
-      ...filteredContacts.map(c => 
-        [c.name, c.fax_number, c.organization || '', c.notes || ''].join(',')
-      )
-    ].join('\n');
+    const csv = toCsvRows([
+      ['Name', 'Fax Number', 'Organization', 'Notes'],
+      ...filteredContacts.map(c => [c.name, c.fax_number, c.organization || '', c.notes || '']),
+    ]);
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);

@@ -45,6 +45,22 @@ export function toCsv(columns, records) {
   return [header, ...lines].join("\r\n");
 }
 
+/**
+ * Join an array of row-arrays into a safe CSV string. Every cell is run through
+ * `escapeCsvField` (RFC 4180 quoting + spreadsheet formula-injection neutralization),
+ * so components that build their own ragged/multi-section row arrays can swap an
+ * unsafe `rows.map(r => r.join(',')).join('\n')` for `toCsvRows(rows)` without
+ * restructuring their data.
+ * @param {Array<Array<any>>} rows
+ * @param {{ eol?: string }} [opts]
+ * @returns {string}
+ */
+export function toCsvRows(rows, { eol = "\r\n" } = {}) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => (Array.isArray(row) ? row : [row]).map(escapeCsvField).join(","))
+    .join(eol);
+}
+
 /** A filename-safe timestamp like 2026-06-02_1430 for export filenames. */
 export function exportTimestamp(now = new Date()) {
   const pad = (n) => String(n).padStart(2, "0");

@@ -24,6 +24,7 @@ import {
   Eye
 } from "lucide-react";
 import { parseISO, isWithinInterval } from "date-fns";
+import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function CustomReportGenerator({ 
   audits = [], 
@@ -170,30 +171,31 @@ export default function CustomReportGenerator({
       type = 'application/json';
     } else {
       // CSV format
-      const lines = [
-        'Compliance Report',
-        `Generated: ${reportData.generated}`,
-        '',
-        'Summary Statistics',
-        `Total Audits,${reportData.stats.totalAudits}`,
-        `Average Score,${reportData.stats.avgScore}%`,
-        `Pass Rate,${reportData.stats.passRate}%`,
-        `Total Issues,${reportData.stats.totalIssues}`,
-        `Critical Issues,${reportData.stats.criticalIssues}`,
-        '',
-        'Nurse Performance',
-        'Nurse,Audits,Avg Score,Pass Rate',
-        ...reportData.nurseStats.map(n => `${n.email},${n.auditCount},${n.avgScore}%,${n.passRate}%`),
-        '',
-        'Issue Categories',
-        'Category,Count,Critical,High,Medium',
-        ...reportData.categoryStats.map(c => `${c.category},${c.count},${c.critical},${c.high},${c.medium}`),
-        '',
-        'Audit Details',
-        'Date,Nurse,Score,Status,Issues',
-        ...reportData.audits.map(a => `${a.date},${a.nurse},${a.score}%,${a.status},${a.issueCount}`)
-      ];
-      content = lines.join('\n');
+      // Build as row-arrays and escape via toCsvRows (emails/categories/nurse
+      // names are free text that must not break the CSV or inject formulas).
+      content = toCsvRows([
+        ['Compliance Report'],
+        [`Generated: ${reportData.generated}`],
+        [],
+        ['Summary Statistics'],
+        ['Total Audits', reportData.stats.totalAudits],
+        ['Average Score', `${reportData.stats.avgScore}%`],
+        ['Pass Rate', `${reportData.stats.passRate}%`],
+        ['Total Issues', reportData.stats.totalIssues],
+        ['Critical Issues', reportData.stats.criticalIssues],
+        [],
+        ['Nurse Performance'],
+        ['Nurse', 'Audits', 'Avg Score', 'Pass Rate'],
+        ...reportData.nurseStats.map(n => [n.email, n.auditCount, `${n.avgScore}%`, `${n.passRate}%`]),
+        [],
+        ['Issue Categories'],
+        ['Category', 'Count', 'Critical', 'High', 'Medium'],
+        ...reportData.categoryStats.map(c => [c.category, c.count, c.critical, c.high, c.medium]),
+        [],
+        ['Audit Details'],
+        ['Date', 'Nurse', 'Score', 'Status', 'Issues'],
+        ...reportData.audits.map(a => [a.date, a.nurse, `${a.score}%`, a.status, a.issueCount]),
+      ]);
       filename = `compliance-report-${new Date().toISOString().split('T')[0]}.csv`;
       type = 'text/csv';
     }

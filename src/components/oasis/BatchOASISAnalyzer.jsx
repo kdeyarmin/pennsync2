@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toCsvRows } from "@/components/admin/csvExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -289,18 +290,8 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
       ];
     });
 
-    // Create CSV content
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => {
-        const value = String(cell || '');
-        // Escape commas and quotes
-        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-          return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value;
-      }).join(','))
-    ].join('\n');
+    // Create CSV content (escaping + formula-injection neutralization via toCsvRows)
+    const csvContent = toCsvRows([headers, ...rows]);
 
     // Download
     const blob = new Blob([csvContent], { type: 'text/csv' });

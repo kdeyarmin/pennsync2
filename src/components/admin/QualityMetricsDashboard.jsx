@@ -37,6 +37,7 @@ import {
   RefreshCw // Added for AI Insights loading
 } from "lucide-react";
 import { format, subDays, differenceInMinutes } from "date-fns";
+import { escapeCsvField } from "@/components/admin/csvExport";
 
 export default function QualityMetricsDashboard() {
   const [timeRange, setTimeRange] = useState("30");
@@ -268,8 +269,8 @@ Total Time Saved,${metrics.totalTimeSavedHours} hours
 
 === NURSE PRODUCTIVITY ===
 Nurse,Total Visits,Completed,Completion Rate,Avg Doc Time
-${Object.entries(metrics.nurseStats).map(([_email, stats]) => 
-  `${stats.name},${stats.totalVisits},${stats.completedVisits},${stats.completionRate}%,${stats.avgDocTime} min`
+${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
+  `${escapeCsvField(stats.name)},${stats.totalVisits},${stats.completedVisits},${stats.completionRate}%,${stats.avgDocTime} min`
 ).join('\n')}`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });

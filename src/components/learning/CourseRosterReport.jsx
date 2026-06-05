@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import ReportFilters from './ReportFilters';
+import { toCsvRows } from "@/components/admin/csvExport";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
 
@@ -64,7 +65,7 @@ export default function CourseRosterReport() {
       a.score_percentage != null ? `${a.score_percentage}%` : (a.score != null ? a.score : ''),
       a.latest_attempt_number || '0',
     ]);
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const csv = toCsvRows([headers, ...rows]);
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
