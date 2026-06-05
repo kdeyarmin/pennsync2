@@ -324,8 +324,21 @@ function calculateComorbidityAdjustment(comorbidities, sourceTimingKey) {
   let highValueCount = 0;
   let mediumValueCount = 0;
 
+  // Negation guard: a free-text comorbidity that asserts the condition is ABSENT
+  // ("No CHF", "Patient denies COPD", "ruled out heart failure") must not be
+  // counted as a present comorbidity — doing so inflates the comorbidity level
+  // and the PDGM payment (a Medicare overbilling/compliance risk). We err toward
+  // NOT counting a negated entry (under-counting loses revenue but never
+  // over-bills). Coded entries (e.g. "I50.9") have no negation words and are
+  // unaffected.
+  const NEGATION_RE = /\b(no|not|none|never|negative for|denies|denied|without|w\/o|absence of|ruled out|r\/o|free of|resolved)\b/;
+
   for (const comorbidity of comorbidities) {
     const cLower = (comorbidity || '').toLowerCase();
+
+    if (!cLower.trim() || NEGATION_RE.test(cLower)) {
+      continue;
+    }
 
     // Check high-value comorbidities
     const isHighValue = HIGH_VALUE_COMORBIDITIES.some(hc => cLower.includes(hc));

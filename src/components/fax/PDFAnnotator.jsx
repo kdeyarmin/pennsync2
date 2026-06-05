@@ -42,6 +42,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
 
   // Per-page annotation strokes stored as arrays of path objects
   const annotationsRef = useRef({}); // { [page]: [{type, data}] }
+  const renderTaskRef = useRef(null); // in-flight pdf.js RenderTask (for cancellation)
   const currentStrokeRef = useRef([]);
   const lastPosRef = useRef(null);
   const textInputRef = useRef(null);
@@ -67,13 +68,29 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
   // Render current page to base canvas
   const renderPage = useCallback(async () => {
     if (!pdfDoc || !canvasRef.current) return;
+    // Cancel any in-flight render first so a slower earlier page/zoom can't
+    // finish after — and paint over — a newer one (pdf.js doesn't auto-cancel).
+    if (renderTaskRef.current) {
+      try { renderTaskRef.current.cancel(); } catch { /* ignore */ }
+      renderTaskRef.current = null;
+    }
     const page = await pdfDoc.getPage(pageNum);
     const viewport = page.getViewport({ scale });
     const canvas = canvasRef.current;
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     const ctx = canvas.getContext("2d");
-    await page.render({ canvasContext: ctx, viewport }).promise;
+    const task = page.render({ canvasContext: ctx, viewport });
+    renderTaskRef.current = task;
+    try {
+      await task.promise;
+    } catch (err) {
+      // RenderingCancelledException is expected when a newer render supersedes.
+      if (err?.name !== "RenderingCancelledException") console.error("PDF render error:", err);
+      return;
+    }
+    if (renderTaskRef.current !== task) return; // superseded by a newer render
+    renderTaskRef.current = null;
 
     // Size the overlay to match
     const overlay = overlayRef.current;
@@ -87,6 +104,12 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
 
   useEffect(() => {
     renderPage();
+    return () => {
+      if (renderTaskRef.current) {
+        try { renderTaskRef.current.cancel(); } catch { /* ignore */ }
+        renderTaskRef.current = null;
+      }
+    };
   }, [renderPage]);
 
   const getAnnotations = (page) => annotationsRef.current[page] || [];
