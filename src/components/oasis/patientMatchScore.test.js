@@ -19,6 +19,13 @@ test('exact name match scores high and reports the factor', () => {
   assert.equal(r.matchQuality, 'excellent');
 });
 
+test('a blank patient record does not earn a spurious "Initials match"', () => {
+  // Previously initials.includes("") was always true, so any extracted name
+  // "matched" an empty patient record.
+  const r = calculatePatientMatchScore('Bob Jones', { first_name: '', last_name: '' });
+  assert.ok(!r.matchFactors.includes('Initials match'));
+});
+
 test('minor typo is tolerated via similarity', () => {
   const r = calculatePatientMatchScore('Jane Smtih', patient);
   assert.ok(r.confidence >= 35, `expected typo tolerance, got ${r.confidence}`);
