@@ -74,7 +74,7 @@ not PHI); write is service-role only.
 | `thread_id` | string | Deterministic `min\|max` of the two numbers |
 | `status` | string enum | `queued` \| `sent` \| `delivered` \| `failed` \| `received` |
 | `provider_message_id` | string | Twilio message SID |
-| `client_message_id` | string | Idempotency key |
+| `client_message_id` | string | Internal send/redrive tracking id (not sent to Twilio; Twilio has no client idempotency key) |
 | `failure_reason` | string | Nullable |
 | `is_read` | boolean | Nurse-inbox unread flag |
 | `sent_by` | string | Nurse email (outbound) |

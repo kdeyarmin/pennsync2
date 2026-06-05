@@ -18,7 +18,7 @@ reduced to a length; numbers are masked to last-4).
 | `sendSms` | nurse | Outbound text from the work number via Twilio Messages API (consent + kill-switch checked, timeout-bounded). |
 | `startMaskedCall` | nurse | Click-to-call: rings the nurse's cell via Twilio Calls API + TwiML `<Dial callerId>`, bridges to the patient showing the work number. |
 | `scheduleSms` | nurse | Queue a text for a future time (a pending `ScheduledSms`). |
-| `dispatchScheduledSms` | **cron** | Send due scheduled texts; re-checks consent + kill switch + TCPA quiet hours at send time. Claims rows with a run token and uses a deterministic idempotency key so overlapping runs can't double-send. |
+| `dispatchScheduledSms` | **cron** | Send due scheduled texts; re-checks consent + kill switch + TCPA quiet hours at send time. Claims each row with a run token and re-reads to confirm ownership before sending, so overlapping runs can't double-send. |
 | `redriveFailedSms` | **cron** | "Outbox" that re-sends texts which failed for a transient reason, with an attempt cap + escalating backoff. Permanent failures are never retried. |
 | `recordSmsConsent` | nurse/admin | Record a patient's texting consent (opt-in/opt-out) captured verbally/in writing, into `SmsConsent` with an audit trail. |
 | `searchPurchaseTwilioNumbers` | admin | Search Twilio IncomingPhoneNumbers API for available numbers and buy one straight into the pool. |
@@ -35,13 +35,16 @@ reduced to a length; numbers are masked to last-4).
 | `handleTwilioVoicemail` | webhook | Attach a voicemail recording (+ transcription, when provided) to its `CallLog`; notify nurse. |
 
 All webhook handlers verify the **X-Twilio-Signature** (HMAC-SHA1 over the full
-URL + body params with the Auth Token) and **fail closed**. All outbound Twilio
-`fetch`es are bounded by an `AbortController` timeout **and retried with jittered
-exponential backoff** on transient failures (HTTP 408/425/429/5xx and dropped
-connections), honoring a `Retry-After` header when present. Texts are
-double-send safe because every send uses a deterministic idempotency key; voice
-origination — which has no idempotency key — retries only on explicit
-server-rejection statuses, never on an ambiguous network error.
+URL + sorted POST params with the Auth Token) and **fail closed**. All outbound
+Twilio `fetch`es are bounded by an `AbortController` timeout **and retried with
+jittered exponential backoff** on transient **HTTP statuses** (408/425/429/5xx),
+honoring a `Retry-After` header when present. Twilio's REST API has **no client
+idempotency key**, so neither texts nor voice origination retry an *ambiguous
+thrown network error* (a dropped connection might mean the message/call already
+went through — a blind retry could double-deliver); only an explicit
+server-rejection status is retried. Anything Twilio reports as failed is
+recovered by the `redriveFailedSms` outbox cron, and overlapping cron runs are
+made safe by row claim-and-verify rather than a provider idempotency key.
 
 ## Entities
 

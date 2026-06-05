@@ -36,8 +36,9 @@ JS/JSX files, 124 routed pages, 111 Base44 entities, ~190 backend functions** (R
 review the following were verified as already-good or already-fixed and should **not** be
 re-litigated:
 
-- **Backend security fundamentals are strong** — inbound webhooks are signature-verified with
-  timing-safe comparison and replay defense, TCPA opt-out is enforced before auto-replies,
+- **Backend security fundamentals are strong** — inbound webhooks are signature-verified
+  (`X-Twilio-Signature`, HMAC-SHA1) with timing-safe comparison and idempotent de-dup on the
+  Twilio `MessageSid`/`CallSid`, TCPA opt-out is enforced before auto-replies,
   temp passwords use a CSPRNG, patient data is scoped server-side to `assigned_nurses`,
   user-management functions gate on `role === 'admin'`, PHI is cleared from React Query +
   IndexedDB on logout, and the service worker refuses to cache `/api/` responses.
@@ -307,8 +308,9 @@ Confirm in the Base44 dashboard / environment — these are operational, not cod
 - [ ] RLS policies in the dashboard match `docs/SECURITY-RLS-CHECKLIST.md` (verify client-writable
       entities like `TrainingCertificate` are gated).
 - [ ] Prefer one scheduler instance for `dispatchScheduledSms` / `redriveFailedSms`. (Double-send risk
-      is now mitigated: a per-run claim token + a deterministic idempotency key make Twilio de-dup
-      overlapping sends — a single schedule is still recommended.)
+      is mitigated by a per-run claim token plus a re-read to confirm ownership before sending —
+      Twilio has no client idempotency key, so claim-and-verify is what guarantees single delivery;
+      a single schedule is still recommended.)
 
 ---
 

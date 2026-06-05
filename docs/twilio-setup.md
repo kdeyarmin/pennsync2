@@ -14,6 +14,12 @@ voice handling).
 3. **Signed BAA with Twilio** — ✅ required; sign it in the Twilio Console under
    General Settings → HIPAA Eligibility (still required; see §5 for the ongoing
    obligations it covers).
+4. **A2P 10DLC registration** — for US application-to-person SMS over standard
+   10-digit long codes, register a Brand + Campaign in the Twilio Console
+   (Messaging → Regulatory Compliance) and attach your numbers to the Messaging
+   Service. Unregistered traffic is heavily filtered or blocked by US carriers.
+   (Toll-free numbers require toll-free verification instead.) This is a Twilio
+   account-level step — the app sends `From` the work number regardless.
 
 ## 2. Configuration
 
@@ -120,9 +126,11 @@ Also configurable in the **Calling & Texting Hours** card (and via cron):
 - **Failed-text recovery** — schedule the `redriveFailedSms` cron (e.g. every
   10 min, one schedule only) to automatically re-send texts that failed for a
   transient reason.
-- **Scheduler safety** — `dispatchScheduledSms` claims rows with a per-run token
-  and sends with a deterministic idempotency key, so overlapping runs can't
-  double-send (still prefer a single schedule).
+- **Scheduler safety** — `dispatchScheduledSms` claims each due row with a
+  per-run token and **re-reads to confirm ownership** before sending, so
+  overlapping runs can't double-send (Twilio has no client idempotency key, so
+  this claim-and-verify is what guarantees single delivery — still prefer a
+  single schedule).
 
 ### Webhook signature troubleshooting
 
@@ -171,20 +179,26 @@ using HMAC-SHA1 over the full URL (including query string) + sorted POST params,
 keyed with the Auth Token. When the app is behind a proxy, set `TWILIO_WEBHOOK_URL`
 to the exact public-facing URL so the computed signature matches.
 
-### Replay protection
+### Duplicate webhooks (idempotency)
 
-The two action webhooks (`handleTwilioInboundSms`, `handleTwilioVoiceCall`)
-also reject **stale** events: if the body carries a timestamp more than ~15 min
-from now, the request is rejected as a possible replay. The check **fails open**
-when no parseable timestamp is present (idempotency on `provider_message_id` /
-`provider_call_id` already de-dups genuine retries).
+Twilio retries a webhook if it doesn't get a timely `2xx`. Every handler is
+idempotent: inbound SMS de-dups on `provider_message_id` (the Twilio
+`MessageSid`), and the call/voicemail handlers de-dup on `provider_call_id`
+(the `CallSid`) — so a retried delivery never creates a duplicate row,
+re-notifies the nurse, or re-sends a TCPA auto-reply. (There is no body
+timestamp to check, so unlike the previous provider there is no separate
+replay-window gate — the signature + idempotency are the defenses.)
 
 ### Transient failures & retries
 
 Every outbound call to Twilio (SMS send, scheduled-SMS dispatch, click-to-call)
 is bounded by a per-attempt timeout **and** retried with jittered exponential
-backoff when Twilio returns a transient error (`408`/`425`/`429`/`5xx`) or the
-connection drops. A `Retry-After` header is honored (clamped) when present.
+backoff when Twilio returns a transient **HTTP status** (`408`/`425`/`429`/`5xx`);
+a `Retry-After` header is honored (clamped) when present. Unlike the previous
+provider, Twilio's REST API has **no client idempotency key**, so an *ambiguous
+thrown network error* (a dropped connection) is **not** retried — re-sending
+could double-deliver. Anything Twilio explicitly reports as failed is recovered
+by the `redriveFailedSms` outbox cron instead.
 
 ## 4. How each flow works
 
@@ -223,6 +237,16 @@ connection drops. A `Retry-After` header is honored (clamped) when present.
   SMS kill switch. **Scope:** a STOP opt-out applies to **texts**; masked
   **voice calls remain allowed** (clinical, nurse-initiated) — the patient UI
   states this explicitly. Revisit if your TCPA posture requires call opt-out.
+  - ⚠️ **Twilio Advanced Opt-Out:** Twilio can *also* auto-respond to
+    STOP/HELP/START at the account/Messaging-Service level (default for A2P
+    10DLC and toll-free). If left on, a patient who texts STOP gets **two**
+    confirmations (Twilio's + ours) and Twilio blocks our app's reply to the
+    now-opted-out number. To keep this app's `SmsConsent` ledger authoritative
+    and avoid double-replies, **disable Twilio's Advanced Opt-Out** for the
+    Messaging Service so the app fully owns keyword handling — or, if you prefer
+    Twilio to own it, remove the app's STOP/HELP auto-replies. Either way, pick
+    one owner; the inbound handler's `sendAutoReply` failures are caught and
+    logged, so a Twilio block degrades gracefully rather than erroring.
 - **PHI minimization**: templated/off-duty messages must contain no diagnoses,
   DOB, or other PHI. Message bodies are **never** written to `UserActivity` /
   `SecurityLog` (only length + thread id). Personal cell numbers are masked to

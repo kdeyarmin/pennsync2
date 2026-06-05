@@ -76,7 +76,11 @@ if the platform restricts who can invoke function endpoints — **confirm**):
   over the full URL + sorted POST params keyed with the Auth Token. Test good
   signature → 200, bad → 401. If the app is behind a proxy set `TWILIO_WEBHOOK_URL`
   to the exact public URL so signatures compute correctly.
-- Confirm the **timestamp field** for the replay guard (`isReplayStale`).
+- Confirm webhook **idempotency**: inbound SMS de-dups on `provider_message_id`
+  (Twilio `MessageSid`) and the call/voicemail handlers on `provider_call_id`
+  (`CallSid`), so Twilio's automatic webhook retries can't double-process.
+  (There is no body-timestamp replay guard — signature + idempotency are the
+  defenses.)
 
 ## 6. New entity fields to create
 
