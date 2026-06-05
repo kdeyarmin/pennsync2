@@ -1,5 +1,69 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RateLimiter, SessionManager, isSafeExternalUrl } from './security';
+import {
+  RateLimiter,
+  SessionManager,
+  isSafeExternalUrl,
+  secureRandomInt,
+  generateSecureToken,
+  generateSecurePassword,
+} from './security';
+
+describe('secureRandomInt', () => {
+  it('returns an integer in [0, max)', () => {
+    for (let i = 0; i < 500; i++) {
+      const n = secureRandomInt(10);
+      expect(Number.isInteger(n)).toBe(true);
+      expect(n).toBeGreaterThanOrEqual(0);
+      expect(n).toBeLessThan(10);
+    }
+  });
+
+  it('covers the full range over many samples (no off-by-one truncation)', () => {
+    const seen = new Set();
+    for (let i = 0; i < 2000; i++) seen.add(secureRandomInt(5));
+    expect([...seen].sort()).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('rejects a non-positive or non-integer max', () => {
+    expect(() => secureRandomInt(0)).toThrow();
+    expect(() => secureRandomInt(-1)).toThrow();
+    expect(() => secureRandomInt(2.5)).toThrow();
+  });
+});
+
+describe('generateSecureToken', () => {
+  it('produces a URL-safe token of the requested length', () => {
+    const t = generateSecureToken(32);
+    expect(t).toHaveLength(32);
+    expect(t).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(generateSecureToken(16)).toHaveLength(16);
+  });
+
+  it('is effectively unique across calls (high entropy)', () => {
+    const tokens = new Set();
+    for (let i = 0; i < 1000; i++) tokens.add(generateSecureToken(32));
+    expect(tokens.size).toBe(1000);
+  });
+});
+
+describe('generateSecurePassword', () => {
+  it('has the requested length and one char from each class', () => {
+    for (let i = 0; i < 50; i++) {
+      const pw = generateSecurePassword(12);
+      expect(pw).toHaveLength(12);
+      expect(pw).toMatch(/[A-Z]/);
+      expect(pw).toMatch(/[a-z]/);
+      expect(pw).toMatch(/[0-9]/);
+      expect(pw).toMatch(/[!@#$%^&*]/);
+    }
+  });
+
+  it('does not repeat across calls', () => {
+    const pws = new Set();
+    for (let i = 0; i < 200; i++) pws.add(generateSecurePassword(12));
+    expect(pws.size).toBe(200);
+  });
+});
 
 describe('isSafeExternalUrl', () => {
   it('accepts http and https URLs', () => {
