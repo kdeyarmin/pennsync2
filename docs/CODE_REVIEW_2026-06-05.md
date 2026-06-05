@@ -229,16 +229,43 @@ larger refactor, sequenced in §7).
 
 ---
 
-## 8. Sequencing (this PR)
+## 8. Status — what landed in this PR
 
-P0 (this PR, low-risk verified fixes): S1, S2, S3, S4, S5, B3 (parse), B4, B8, B9, B10, R3, R7,
-R10, R11, R12, Q6, P1, P3, S10, S12, plus the plan doc.
+Implemented and verified (lint + 440 util tests + component tests + build all green;
+backend `entry.ts` files transpile-checked; mirrored helpers kept in parity):
 
-P1 (this PR, moderate): B1, B2, B5, B6, B7, B11, B12, R1, R2, R4, R5, R6, R8, R9, S6, P2, P4, P5,
-P6, P7 (subset), Q1, Q2.
+- **Security:** S1, S2 (auth gates), S3 (password echo + RNG + error), S4 (deleted GitHub fns),
+  S5 (error leaks in fixUserAccount / manageUserVerification / validateSignerToken / retryFailedFax /
+  checkPendingSignatureRequests), S10, S11, S12 (CSPRNG tokens/passwords).
+- **Clinical/AI:** B3 (BP parse in vitalEscalation + factExtraction), B4 (fabricated trend removed),
+  B7 (DOB range validation, live engine re-synced), B8 (OA), B9 (age), B10 (initials guard).
+- **Comms:** Q6 (CSV injection ×2 + CR), R1 (checkPendingSignatureRequests dedup), R2
+  (retryFailedFax claim/lock), R3 (notifyUrgentMessage null guard), R7 (fax-retry boundary ×2),
+  R9 (createNotification order), R10 (business-hours ×3), R12 (urgent "blood").
+- **React:** P1 (9 camera/mic/AudioContext leaks), P2 (SmartNoteVoiceListener stale closure),
+  P3 (queryKey).
+- **Process:** Q1 (ESLint scope + exhaustive-deps), Q2 (full lint in CI). Plus regression tests
+  for every logic fix above.
 
-P2 (deferred / sequenced, may span PRs): S7, S9, S13, B13, R12-negation, P8, Q3-bounding,
-Q4 (test harness), Q5 (useAICall migration + mega-component decomposition). These need product/
-clinical sign-off, deploy coordination, or a test net first; tackled after P0/P1 land green.
+## 9. Deferred — sequenced follow-ups (with rationale)
 
-Each batch ends green on `npm run lint && npm run test:utils && npm run test:components && npm run build`.
+Not done here on purpose; each is documented above with a concrete fix:
+
+- **Needs clinical/domain validation (changing matching or clinical logic without a domain
+  expert + tests is unsafe):** B1 (PDGM comorbidity negation — billing), B2 (Soundex), B5 (dedup
+  primary selection), B6 (century-typo — also dead `dedupUtils.js`), B11 (OASIS M1020 diabetes),
+  B12 (drug-interaction matching), B13 (PDGM group mappings), R12-negation (urgent-keyword negation —
+  false-negative risk), B3-wiring (route `CRITICAL_VITAL_RULES` into the vitals form). Loosening
+  any of these risks a wrong-patient merge or a missed/over-fired clinical signal.
+- **Needs deploy coordination / config:** S7 (mandatory onUserSignup secret), S9 (webhook replay),
+  S8 (remove debug actions), Q3 (FILE_URL_ALLOWED_HOSTS / required-secret health check).
+- **Larger backend reliability (same safe-direction pattern as R1/R2; untested env here):**
+  R2 for processScheduledFaxes/ByPriority, R4/R5 (expiration-notification sort + threshold + sent
+  ledger), R6 (scheduleSignatureReminders past-due), R8 (consolidate the 3 fax pollers),
+  sendAutomatedSignatureReminders dedup, R11 (normalizeE164 bounds — 6-mirror update), R13.
+- **Needs the test net first (roadmap C1):** P4 (MedicalScribe lost-update), P5 (PDFAnnotator
+  render race), P6 (RichTextNoteEditor desync), P2-remainder (EnhancedVoiceCommands,
+  VoiceCommandListener), P7/P8, S6 (Telnyx/Twilio fax handler dedup), S13 (frontend asServiceRole
+  audit), Q4 (RTL/e2e), Q5 (useAICall migration + mega-component decomposition).
+
+Each implemented batch ends green on `npm run lint && npm run test:utils && npm run test:components && npm run build`.
