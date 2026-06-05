@@ -123,20 +123,23 @@ async function hmacSha1Base64(key: string, msg: string): Promise<string> {
  * row with provider 'twilio'. Either path configures the integration, so the
  * Base44 dashboard env is optional.
  */
-async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null; webhookSecret: string | null }> {
   const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
   const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  const envWebhookSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET');
   let sid = envSid && envSid.trim() ? envSid.trim() : null;
   let token = envToken && envToken.trim() ? envToken.trim() : null;
-  if (!sid || !token) {
+  let webhookSecret = envWebhookSecret && envWebhookSecret.trim() ? envWebhookSecret.trim() : null;
+  if (!sid || !token || !webhookSecret) {
     try {
       const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
       const rec = rows?.[0] || {};
       if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
       if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+      if (!webhookSecret && rec.webhook_secret && String(rec.webhook_secret).trim()) webhookSecret = String(rec.webhook_secret).trim();
     } catch { /* ignore */ }
   }
-  return { accountSid: sid, authToken: token };
+  return { accountSid: sid, authToken: token, webhookSecret };
 }
 
 /**
@@ -146,8 +149,8 @@ async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | n
  * is configured to call. An optional TWILIO_WEBHOOK_SECRET + x-webhook-secret
  * header is supported for manual testing only.
  */
-async function verifyTwilioSignature(req: Request, params: Record<string, string>, authToken: string | null): Promise<boolean> {
-  const sharedSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET');
+async function verifyTwilioSignature(req: Request, params: Record<string, string>, authToken: string | null, webhookSecret: string | null): Promise<boolean> {
+  const sharedSecret = webhookSecret;
   const headerSecret = req.headers.get('x-webhook-secret');
   if (sharedSecret && headerSecret && timingSafeEqual(headerSecret, sharedSecret)) return true;
   const provided = req.headers.get('x-twilio-signature');
@@ -231,9 +234,8 @@ Deno.serve(async (req) => {
     for (const [k, v] of formData.entries()) params[k] = String(v);
 
     const base44 = createClientFromRequest(req);
-    const { accountSid, authToken } = await resolveTwilioCreds(base44);
-
-    const verified = await verifyTwilioSignature(req, params, authToken);
+    const { accountSid, authToken, webhookSecret } = await resolveTwilioCreds(base44);
+    const verified = await verifyTwilioSignature(req, params, authToken, webhookSecret);
     // Diagnostic mode (TWILIO_WEBHOOK_DEBUG): log which signature headers are
     // PRESENT and whether verification passed — never any secret/value.
     if (Deno.env.get('TWILIO_WEBHOOK_DEBUG')) {
