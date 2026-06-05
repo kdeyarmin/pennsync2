@@ -784,6 +784,31 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Persist an audit trail of this DESTRUCTIVE run. Patient deletion here is
+    // irreversible and cascades to visits/care plans/alerts/incidents/tasks, and
+    // the function previously only returned the result to the caller — if the
+    // admin closed the tab there was no record of which charts were removed.
+    // Record kept/removed IDs + MRNs (identifiers, not full PHI bodies) so a
+    // wrongful merge can be traced and the affected chart identified.
+    if (removed.length > 0) {
+      await base44.asServiceRole.entities.UserActivity.create({
+        user_email: user.email,
+        user_name: user.full_name,
+        action: 'patients_deduplicated',
+        entity_type: 'Patient',
+        details: {
+          removed_count: removed.length,
+          groups: detailsArray.map((d) => ({
+            kept_id: d.kept.id,
+            kept_mrn: d.kept.mrn,
+            removed: d.removed.map((r) => ({ id: r.id, mrn: r.mrn, match_score: r.match_score })),
+          })),
+          timestamp: new Date().toISOString(),
+        },
+        status: 'success',
+      }).catch((err) => console.error('Failed to write dedup audit:', err));
+    }
+
     // Calculate confidence levels for results
     const resultsWithConfidence = detailsArray.map((detail) => {
       const avgScore = detail.removed.length > 0
