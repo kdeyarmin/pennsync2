@@ -15,6 +15,17 @@ test("no matching answers → no suggestions", () => {
   assert.deepEqual(evaluateOASIS({ m1910: 0, m1860: 0 }), []);
 });
 
+test("m1020 primary diagnosis routes to the correct domain (1=Diabetes, 2=CHF)", () => {
+  // 1 = Diabetes Mellitus → Diabetes Management
+  const dm = evaluateOASIS({ m1020: 1 });
+  assert.ok(dm.some((r) => r.domain === "Diabetes Management"));
+  assert.ok(!dm.some((r) => r.domain === "Cardiovascular Monitoring"));
+  // 2 = Heart Failure / CHF → Cardiovascular, NOT Diabetes (was the bug)
+  const chf = evaluateOASIS({ m1020: 2 });
+  assert.ok(chf.some((r) => r.domain === "Cardiovascular Monitoring"));
+  assert.ok(!chf.some((r) => r.domain === "Diabetes Management"));
+});
+
 test("string answers are coerced (parseInt), not ignored", () => {
   const results = evaluateOASIS({ m1910: "2" });
   assert.ok(results.some((r) => r.domain === "Fall Prevention" && r.severity === "high"));
