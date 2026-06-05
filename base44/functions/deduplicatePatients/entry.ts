@@ -663,7 +663,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    console.log('Starting deduplication...');
+    // DRY-RUN BY DEFAULT. The merge is destructive, so callers must explicitly
+    // pass { confirm: true } to apply it; any other invocation only PREVIEWS the
+    // groups that would be merged (no DB changes). The function may be invoked
+    // with no body, so parse defensively.
+    const body = await req.json().catch(() => ({}));
+    const confirm = body?.confirm === true;
+
+    console.log(`Starting deduplication (${confirm ? 'APPLY' : 'dry-run preview'})...`);
 
     // Bounded to the SDK's 5000/request max; omitting a limit silently caps at
     // the SDK default of 50. Re-run the scan if more patients remain.
@@ -772,36 +779,37 @@ Deno.serve(async (req) => {
 
         const removedFromGroup = [];
         for (const patient of toRemove) {
+          const entry = {
+            id: patient.id,
+            name: `${patient.first_name} ${patient.last_name}`,
+            mrn: patient.medical_record_number || 'N/A',
+            match_score: group.duplicates.find((d) => d.patient.id === patient.id)?.score || 100,
+          };
+
+          if (!confirm) {
+            // Dry-run preview: report what WOULD be merged; change nothing.
+            removedFromGroup.push(entry);
+            continue;
+          }
+
+          // SOFT-delete (archive) — NOT an irreversible hard cascade-delete. The
+          // duplicate is marked merged/archived and pointed at the survivor; the
+          // main patient list filters is_archived, so it disappears from view
+          // while its record and clinical history (visits, care plans, alerts,
+          // incidents, tasks) are preserved and fully recoverable (clear
+          // is_archived/status to restore). The previous Patient.delete() also
+          // cascade-deleted all of that with no recovery.
           try {
-            // Quick deletion; if it fails, clear related records first.
-            await base44.asServiceRole.entities.Patient.delete(patient.id).catch(async () => {
-              const [visits, carePlans, alerts, incidents, tasks] = await Promise.all([
-                base44.asServiceRole.entities.Visit.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.CarePlan.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.Incident.filter({ patient_id: patient.id }).catch(() => []),
-                base44.asServiceRole.entities.Task.filter({ patient_id: patient.id }).catch(() => []),
-              ]);
-
-              await Promise.all([
-                ...visits.map((v) => base44.asServiceRole.entities.Visit.delete(v.id).catch((err) => console.error(`Failed to delete visit ${v.id}:`, err.message))),
-                ...carePlans.map((cp) => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch((err) => console.error(`Failed to delete care plan ${cp.id}:`, err.message))),
-                ...alerts.map((a) => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch((err) => console.error(`Failed to delete alert ${a.id}:`, err.message))),
-                ...incidents.map((inc) => base44.asServiceRole.entities.Incident.delete(inc.id).catch((err) => console.error(`Failed to delete incident ${inc.id}:`, err.message))),
-                ...tasks.map((t) => base44.asServiceRole.entities.Task.delete(t.id).catch((err) => console.error(`Failed to delete task ${t.id}:`, err.message))),
-              ]);
-
-              await base44.asServiceRole.entities.Patient.delete(patient.id);
+            await base44.asServiceRole.entities.Patient.update(patient.id, {
+              status: 'merged',
+              is_archived: true,
+              merged_into_id: keep.id,
+              merged_at: new Date().toISOString(),
+              merged_by: user.email,
             });
-
-            removedFromGroup.push({
-              id: patient.id,
-              name: `${patient.first_name} ${patient.last_name}`,
-              mrn: patient.medical_record_number || 'N/A',
-              match_score: group.duplicates.find((d) => d.patient.id === patient.id)?.score || 100,
-            });
+            removedFromGroup.push(entry);
           } catch (err) {
-            console.error(`Failed to delete ${patient.id}:`, err.message);
+            console.error(`Failed to archive ${patient.id}:`, err.message);
           }
         }
 
@@ -818,13 +826,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Persist an audit trail of this DESTRUCTIVE run. Patient deletion here is
-    // irreversible and cascades to visits/care plans/alerts/incidents/tasks, and
-    // the function previously only returned the result to the caller — if the
-    // admin closed the tab there was no record of which charts were removed.
-    // Record kept/removed IDs + MRNs (identifiers, not full PHI bodies) so a
-    // wrongful merge can be traced and the affected chart identified.
-    if (removed.length > 0) {
+    // Persist an audit trail of an APPLIED merge (skip for dry-run previews,
+    // which change nothing). Records kept/removed IDs + MRNs (identifiers, not
+    // full PHI bodies) so a wrongful merge can be traced and recovered.
+    if (confirm && removed.length > 0) {
       await base44.asServiceRole.entities.UserActivity.create({
         user_email: user.email,
         user_name: user.full_name,
@@ -862,15 +867,20 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
+      dry_run: !confirm,
+      // In dry-run these are the groups/records that WOULD be merged; with
+      // confirm:true they are the records actually archived (merged).
       duplicate_groups_found: duplicateGroups.length,
-      patients_removed: removed.length,
+      patients_removed: confirm ? removed.length : 0,
+      patients_to_remove: confirm ? 0 : removed.length,
       removed_patients: removed,
       details: resultsWithConfidence,
     });
   } catch (error) {
     console.error('Deduplication error:', error);
+    // Generic message — don't leak internals to the client.
     return Response.json({
-      error: error.message,
+      error: 'Deduplication failed',
       details: 'Check function logs for more information',
     }, { status: 500 });
   }
