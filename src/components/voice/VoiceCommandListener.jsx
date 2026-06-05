@@ -18,6 +18,17 @@ export default function VoiceCommandListener({ onCommand, commands = [], context
   const [showHelp, setShowHelp] = useState(false);
   const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
+  // "User wants to listen" intent (distinct from the recognizer's transient
+  // active state). onend restarts only while this is true.
+  const isListeningRef = useRef(false);
+  // Latest commands/handler via refs so the recognizer (created ONCE below) can
+  // match against current props without being torn down and rebuilt on every
+  // `commands` identity change (which churned the recognizer and spawned
+  // overlapping recognizers).
+  const commandsRef = useRef(commands);
+  const onCommandRef = useRef(onCommand);
+  useEffect(() => { commandsRef.current = commands; }, [commands]);
+  useEffect(() => { onCommandRef.current = onCommand; }, [onCommand]);
 
   useEffect(() => {
     // Check if browser supports speech recognition
@@ -41,8 +52,8 @@ export default function VoiceCommandListener({ onCommand, commands = [], context
 
     recognition.onend = () => {
       setIsListening(false);
-      // Restart if it was manually stopped
-      if (recognitionRef.current === recognition) {
+      // Restart only while the user still intends to listen (continuous mode).
+      if (isListeningRef.current) {
         try {
           recognition.start();
         } catch {
@@ -85,26 +96,29 @@ export default function VoiceCommandListener({ onCommand, commands = [], context
     recognitionRef.current = recognition;
 
     return () => {
+      // Stop intending to listen so the final onend doesn't auto-restart.
+      isListeningRef.current = false;
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
     };
-  }, [commands]);
+    // Create the recognizer once; commands/handler are read via refs.
+  }, []);
 
   const processCommand = (spokenText) => {
-    // Find matching command
-    for (const cmd of commands) {
+    // Find matching command (read the latest commands via ref).
+    for (const cmd of commandsRef.current) {
       // Check if any trigger phrase matches
-      const matched = cmd.triggers.some(trigger => 
+      const matched = cmd.triggers.some(trigger =>
         spokenText.includes(trigger.toLowerCase())
       );
 
       if (matched) {
         setRecognizedCommand(cmd);
-        
-        // Execute command
-        if (onCommand) {
-          onCommand(cmd.action, spokenText);
+
+        // Execute command (latest handler via ref)
+        if (onCommandRef.current) {
+          onCommandRef.current(cmd.action, spokenText);
         }
 
         // Show feedback
@@ -122,13 +136,17 @@ export default function VoiceCommandListener({ onCommand, commands = [], context
     if (!recognitionRef.current) return;
 
     if (isListening) {
+      // Clear intent FIRST so onend doesn't auto-restart. Keep the recognizer
+      // instance (don't null it) so the user can start again.
+      isListeningRef.current = false;
       recognitionRef.current.stop();
-      recognitionRef.current = null;
       setIsListening(false);
     } else {
       try {
+        isListeningRef.current = true;
         recognitionRef.current.start();
       } catch (error) {
+        isListeningRef.current = false;
         console.error('Error starting recognition:', error);
       }
     }

@@ -35,6 +35,14 @@ export default function EnhancedVoiceCommands({
   const [commandMode, setCommandMode] = useState(mode);
   const [confidence, setConfidence] = useState(null);
   const recognitionRef = useRef(null);
+  // The recognition.onend/onerror handlers are created inside startListening
+  // BEFORE setListening(true) applies, so they captured a stale `listening`
+  // (always false) and never auto-restarted. Read this ref instead.
+  const listeningRef = useRef(false);
+
+  useEffect(() => {
+    listeningRef.current = listening;
+  }, [listening]);
 
   useEffect(() => {
     return () => {
@@ -177,7 +185,7 @@ export default function EnhancedVoiceCommands({
     };
     
     recognition.onend = () => {
-      if (listening) {
+      if (listeningRef.current) {
         // Auto-restart if still supposed to be listening
         try {
           recognition.start();
@@ -189,11 +197,11 @@ export default function EnhancedVoiceCommands({
         setInterimText('');
       }
     };
-    
+
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        if (listening) {
+        if (listeningRef.current) {
           setTimeout(() => {
             try {
               recognition.start();
@@ -207,12 +215,14 @@ export default function EnhancedVoiceCommands({
         setInterimText('');
       }
     };
-    
+
+    listeningRef.current = true;
     setListening(true);
     recognition.start();
   };
 
   const stopListening = () => {
+    listeningRef.current = false;
     setListening(false);
     setInterimText('');
     if (recognitionRef.current) {
