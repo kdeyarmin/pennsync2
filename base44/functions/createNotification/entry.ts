@@ -28,26 +28,29 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { user_email, title, message, type, priority = 'medium', action_url, action_label, metadata, patient_id } = body;
-    
+
+    // Validate required fields FIRST — otherwise a missing user_email would fall
+    // into the patient-authorization query below as created_by: undefined and
+    // return a misleading 403 ("has not charted") instead of a 400.
+    if (!user_email || !title || !message || !type) {
+      return Response.json({
+        error: 'Missing required fields: user_email, title, message, type'
+      }, { status: 400 });
+    }
+
     // If this is a patient-related notification, verify the recipient has charted on this patient
     if (patient_id && type !== 'compliance_alert' && type !== 'report_ready' && type !== 'training_due') {
       const chartedVisits = await base44.asServiceRole.entities.Visit.filter({
         patient_id: patient_id,
         created_by: user_email
       });
-      
+
       if (!chartedVisits || chartedVisits.length === 0) {
-        return Response.json({ 
+        return Response.json({
           error: 'Unauthorized: User has not charted on this patient',
           notificationCreated: false
         }, { status: 403 });
       }
-    }
-
-    if (!user_email || !title || !message || !type) {
-      return Response.json({ 
-        error: 'Missing required fields: user_email, title, message, type' 
-      }, { status: 400 });
     }
 
     // Get user's notification preferences

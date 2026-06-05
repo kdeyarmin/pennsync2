@@ -53,6 +53,33 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
+    // Claim the fax for retry BEFORE sending so two concurrent retries (e.g. a
+    // double-click, or a manual retry racing the cron) can't both fax the PHI and
+    // double-charge. Flip failed -> retrying with a token, then re-read; if we
+    // don't own the claim, another retry is already in flight. (Twilio's Fax API
+    // has no client idempotency key, so this claim is the double-send guard.)
+    const runId = crypto.randomUUID();
+    try {
+      await base44.entities.FaxLog.update(fax_log_id, {
+        status: 'retrying',
+        retry_claimed_by: runId,
+        retry_claimed_at: new Date().toISOString(),
+      });
+    } catch {
+      return Response.json({ error: 'Could not claim fax for retry', success: false }, { status: 409 });
+    }
+    const claimCheck = await base44.entities.FaxLog.filter({ id: fax_log_id }, '-created_date', 1).catch(() => []);
+    if (!claimCheck[0] || claimCheck[0].retry_claimed_by !== runId) {
+      return Response.json({ error: 'A retry for this fax is already in progress', success: false }, { status: 409 });
+    }
+
+    // Release the claim back to a retriable 'failed' state if the send doesn't go
+    // through, so a transient error doesn't strand the fax in 'retrying'.
+    const releaseClaim = () => base44.entities.FaxLog.update(fax_log_id, {
+      status: 'failed',
+      retry_claimed_by: null,
+    }).catch(() => {});
+
     const twilioUrl = `https://fax.twilio.com/v1/Faxes`;
 
     // Re-send the fax
@@ -63,21 +90,27 @@ Deno.serve(async (req) => {
 
     const auth = btoa(`${accountSid}:${authToken}`);
 
-    const twilioResponse = await fetch(twilioUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData.toString()
-    });
+    let twilioResponse: Response;
+    try {
+      twilioResponse = await fetch(twilioUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
+      });
+    } catch (sendErr) {
+      await releaseClaim();
+      throw sendErr;
+    }
 
     if (!twilioResponse.ok) {
       const errorData = await twilioResponse.text();
       console.error('Twilio error:', errorData);
+      await releaseClaim();
       return Response.json({
         error: 'Failed to send fax via Twilio',
-        details: errorData,
         success: false
       }, { status: twilioResponse.status });
     }
@@ -102,9 +135,10 @@ Deno.serve(async (req) => {
       estimated_cost: originalFax.estimated_cost
     });
 
-    // Update original fax to mark it as retried
+    // Update original fax to mark it as retried (clears the transient claim).
     await base44.entities.FaxLog.update(fax_log_id, {
       status: 'retried',
+      retry_claimed_by: null,
       failure_reason: `Retry attempt #${(originalFax.retry_count || 0) + 1} initiated`
     });
 
@@ -118,7 +152,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Retry fax error:', error);
     return Response.json({
-      error: error.message,
+      error: 'Failed to retry fax',
       success: false
     }, { status: 500 });
   }

@@ -9,10 +9,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Get all pending or in_progress packages
+    // Get all pending or in_progress packages (bounded so a large backlog can't
+    // time the job out; the oldest are the ones needing reminders).
     const packages = await base44.entities.DocumentPackage.filter({
       status: { $in: ['pending', 'in_progress'] }
-    });
+    }, '-created_date', 500);
 
     if (!packages || packages.length === 0) {
       return Response.json({ 
@@ -33,6 +34,13 @@ Deno.serve(async (req) => {
         (pkg.created_date && new Date(pkg.created_date) < threeDaysAgo);
 
       if (!shouldSendReminder) continue;
+
+      // Idempotency: don't re-email the caregiver on every cron tick. Skip if a
+      // reminder for this package already went out in the last ~20h (allows a
+      // daily cadence with jitter). Without this the same package was re-emailed
+      // every run until signed.
+      const lastSent = pkg.last_reminder_sent_at ? new Date(pkg.last_reminder_sent_at).getTime() : 0;
+      if (lastSent && (now.getTime() - lastSent) < 20 * 60 * 60 * 1000) continue;
 
       // Get patient to retrieve caregiver email
       const patient = await base44.entities.Patient.get(pkg.patient_id);
@@ -75,6 +83,11 @@ Care Team
         from_name: 'Document Signing System'
       });
 
+      // Record that a reminder went out so the next run skips it within the window.
+      await base44.entities.DocumentPackage.update(pkg.id, {
+        last_reminder_sent_at: now.toISOString()
+      }).catch(() => {});
+
       emailsSent.push({
         packageId: pkg.id,
         caregiverEmail: patient.caregiver_email,
@@ -90,6 +103,7 @@ Care Team
       sentTo: emailsSent
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('checkPendingSignatureRequests error:', error);
+    return Response.json({ error: 'Failed to check pending signature requests' }, { status: 500 });
   }
 });
