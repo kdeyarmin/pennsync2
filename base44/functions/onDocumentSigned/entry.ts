@@ -42,13 +42,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send notification email to admin about the signature
+    // Send notification email to admins about the signature. Resolve the real
+    // admin recipients (mirroring notifyAdminOfSignedDocument / onUserSignup)
+    // rather than the previous hardcoded 'admin@agency.com' placeholder, which
+    // never reached a real inbox and risked leaking signer details to an
+    // address the agency doesn't control.
     try {
-      await base44.integrations.Core.SendEmail({
-        to: 'admin@agency.com', // Replace with actual admin email or fetch from settings
-        subject: `Document Signed: ${pkg.package_name}`,
-        body: `${signature.signer_name} (${signature.signer_email}) has signed the document.\n\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
-      });
+      const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+      if (admins && admins.length > 0) {
+        await Promise.all(
+          admins.map((admin) =>
+            base44.integrations.Core.SendEmail({
+              to: admin.email,
+              subject: `Document Signed: ${pkg.package_name}`,
+              body: `${signature.signer_name} (${signature.signer_email}) has signed the document.\n\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
+            })
+          )
+        );
+      }
     } catch (emailError) {
       console.error('Failed to send notification email:', emailError);
       // Continue even if email fails

@@ -29,8 +29,9 @@ Deno.serve(async (req) => {
       console.log('Could not fetch package');
     }
 
-    // Fetch patient info
-    const patient = await base44.asServiceRole.entities.Patient.get(signature.patient_id);
+    // Fetch patient info (tolerate a missing/invalid patient_id rather than
+    // 500-ing the whole notification on a bad lookup)
+    const patient = await base44.asServiceRole.entities.Patient.get(signature.patient_id).catch(() => null);
     const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient';
 
     // Get all admins

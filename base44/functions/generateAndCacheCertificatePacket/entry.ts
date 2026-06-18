@@ -17,12 +17,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Check for existing valid cache
+    // Check for existing valid cache. The cache key only tracks user_id + date
+    // range, so a request that pins a specific set of certificateIds must NOT
+    // reuse a packet cached for a different selection — skip the cache (and
+    // regenerate) whenever explicit certificateIds are supplied.
+    const hasExplicitIds = Array.isArray(certificateIds) && certificateIds.length > 0;
     const cacheQuery = { user_id: employeeId };
     if (dateRangeStart) cacheQuery.date_range_start = dateRangeStart;
     if (dateRangeEnd) cacheQuery.date_range_end = dateRangeEnd;
 
-    const existingCache = await base44.entities.CertificatePacketCache.filter(cacheQuery);
+    const existingCache = hasExplicitIds
+      ? []
+      : await base44.entities.CertificatePacketCache.filter(cacheQuery);
     
     if (existingCache && existingCache.length > 0) {
       const cache = existingCache[0];
@@ -53,13 +59,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Cache miss or expired: generate new packet
-    const employee = await base44.auth.me();
+    // Cache miss or expired: generate new packet. When an admin generates for
+    // someone else, the packet must carry the TARGET employee's name — not the
+    // caller's — so resolve `employee` to the target record rather than reusing
+    // the authenticated caller (auth.me()).
+    let employee = user;
     if (employeeId !== user.email) {
       const employees = await base44.asServiceRole.entities.User.filter({ email: employeeId });
       if (!employees || employees.length === 0) {
         return Response.json({ error: 'Employee not found' }, { status: 404 });
       }
+      employee = employees[0];
     }
 
     // Fetch certificates

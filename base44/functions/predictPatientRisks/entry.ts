@@ -143,9 +143,14 @@ Be specific and evidence-based in your predictions.`;
       }
     });
 
-    // Create alerts for high-risk findings
+    // Create alerts for high-risk findings. `risk_assessments` is not a required
+    // field in the LLM response schema, so guard against a missing/non-array
+    // value rather than throwing "undefined is not iterable" (an unhandled 500).
     const newAlerts = [];
-    for (const risk of riskPredictions.risk_assessments) {
+    const riskAssessments = Array.isArray(riskPredictions?.risk_assessments)
+      ? riskPredictions.risk_assessments
+      : [];
+    for (const risk of riskAssessments) {
       if (risk.risk_score >= 70 && risk.urgency !== 'low') {
         // Check if alert already exists
         const existingAlert = alerts.find(a => 
@@ -187,7 +192,7 @@ Be specific and evidence-based in your predictions.`;
       details: {
         patient_id,
         overall_risk_level: riskPredictions.overall_risk_level,
-        high_risk_count: riskPredictions.risk_assessments.filter(r => r.risk_score >= 70).length,
+        high_risk_count: riskAssessments.filter(r => r.risk_score >= 70).length,
         alerts_created: newAlerts.length,
         analyzed_by: user.email
       }
@@ -197,7 +202,7 @@ Be specific and evidence-based in your predictions.`;
       success: true,
       patient_id,
       overall_risk_level: riskPredictions.overall_risk_level,
-      risk_assessments: riskPredictions.risk_assessments,
+      risk_assessments: riskAssessments,
       immediate_actions: riskPredictions.immediate_actions_needed,
       monitoring_priorities: riskPredictions.monitoring_priorities,
       alerts_created: newAlerts.length,

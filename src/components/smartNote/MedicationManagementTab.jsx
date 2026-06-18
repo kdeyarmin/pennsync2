@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +113,11 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
   }));
 
   const [medications, setMedications]         = useState(initMeds);
+  // Snapshot of the medication list this tab loaded with, used at save time to
+  // distinguish meds the nurse intentionally removed (present here, absent now)
+  // from meds added concurrently by another writer (absent here, present now)
+  // so the whole-array write doesn't silently clobber the latter.
+  const originalMedsRef = useRef(patient?.current_medications || []);
   const [newMed, setNewMed]                   = useState({ name: "", dosage: "", frequency: "", prescriber: "", status: "active" });
   const [generating, setGenerating]           = useState(false);
   const [reconciliationNote, setRecon]        = useState("");
@@ -176,12 +181,40 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
     }
   };
 
+  // Compare meds by clinical identity (not array index / local _id) so the merge
+  // below survives re-fetch and never matches the wrong entry.
+  const sameMedication = (a, b) =>
+    !!a && !!b &&
+    a.name === b.name &&
+    a.dosage === b.dosage &&
+    a.frequency === b.frequency &&
+    a.prescriber === b.prescriber;
+
   const syncToPatient = async () => {
     if (!patientId) return;
     setSavingPatient(true);
     try {
       const medsPayload = medications.map(({ _id, ...rest }) => rest);
-      await base44.entities.Patient.update(patientId, { current_medications: medsPayload });
+      // Re-fetch immediately before writing and preserve any medication that was
+      // added on the server since this tab loaded (present now, but neither in
+      // this tab's working set nor in its original snapshot — i.e. a concurrent
+      // add, not a med the nurse removed). Without this the whole-array write
+      // silently drops a drug another writer (visit med-rec, the patient-detail
+      // editor) added in the interim.
+      const latestArr = await base44.entities.Patient.filter({ id: patientId });
+      const serverMeds = (latestArr?.[0]?.current_medications) || [];
+      const original = originalMedsRef.current;
+      const concurrentlyAdded = serverMeds.filter(
+        (sm) =>
+          !original.some((om) => sameMedication(om, sm)) &&
+          !medsPayload.some((lm) => sameMedication(lm, sm))
+      );
+      const finalMeds = [...medsPayload, ...concurrentlyAdded];
+
+      await base44.entities.Patient.update(patientId, { current_medications: finalMeds });
+      // Advance the snapshot so a second save in the same session reconciles
+      // against what we just persisted (sameMedication ignores id fields).
+      originalMedsRef.current = finalMeds;
       setSavedToPatient(true);
       setTimeout(() => setSavedToPatient(false), 3000);
     } catch (err) {

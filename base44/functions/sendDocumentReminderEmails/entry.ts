@@ -68,9 +68,13 @@ Deno.serve(async (req) => {
         // Skip if no signer email
         if (!pkg.signer_email) continue;
 
-        // Get signature details
+        // Get signature details (guard against a package with no
+        // document_signatures array so a single bad row doesn't 500 the reminder)
+        const signatureIds = Array.isArray(pkg.document_signatures)
+          ? pkg.document_signatures
+          : [];
         const signatures = await Promise.all(
-          pkg.document_signatures.map((id) =>
+          signatureIds.map((id) =>
             base44.entities.DocumentSignature.get(id).catch(() => null)
           )
         );

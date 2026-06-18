@@ -226,7 +226,15 @@ class OfflineSyncWorker {
 
     for (let i = 0; i < queue.length; i++) {
       const item = queue[i];
-      
+
+      // A 'failed' item has exhausted its retry budget and a 'conflict' item is
+      // awaiting manual resolution. Re-running syncItem on them every cycle would
+      // silently bypass the 3-retry cap and re-POST conflicting writes, so leave
+      // them in place for an explicit user-driven retry/resolve.
+      if (item.status === 'failed' || item.status === 'conflict') {
+        continue;
+      }
+
       if (onProgress) {
         onProgress({
           current: i + 1,

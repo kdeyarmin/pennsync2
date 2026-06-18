@@ -433,19 +433,21 @@ export default function OASISAnalyzer() {
         
         setMatchResults(results);
         
-        // Auto-select and auto-save if confidence is very high (>= 85%)
+        // Pre-select the strongest match so the nurse can review and confirm —
+        // but NEVER auto-save. The match score can reach this threshold on name
+        // signals alone (the name/DOB are themselves AI-extracted from the PDF),
+        // so silently persisting an AI-extracted OASIS assessment (and its PDGM
+        // payment estimate) to a chart with no human in the loop risks attaching
+        // a whole assessment to the wrong patient. Saving requires an explicit
+        // click on "Save to Patient Record".
         const bestMatch = matchedPatients[0];
         if (bestMatch && bestMatch.confidence >= 85) {
           setSelectedPatientId(bestMatch.patient.id);
           // Avoid logging patient name (PHI) to the browser console.
-          console.log(`Auto-matched patient with ${bestMatch.confidence}% confidence`);
-          
-          // Auto-save to patient chart
-          setTimeout(() => {
-            handleSaveToPatient(bestMatch.patient.id);
-          }, 500);
+          console.log(`Auto-selected best match (${bestMatch.confidence}% confidence) — awaiting nurse confirmation to save`);
         } else if (bestMatch) {
-          console.log(`Best match (${bestMatch.confidence}% confidence):`, bestMatch.patient.first_name, bestMatch.patient.last_name, '- awaiting manual confirmation');
+          // Avoid logging patient name (PHI) to the browser console.
+          console.log(`Best match (${bestMatch.confidence}% confidence) — awaiting manual confirmation`);
         }
       }
     }

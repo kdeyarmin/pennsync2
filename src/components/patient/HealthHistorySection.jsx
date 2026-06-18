@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,9 +24,43 @@ export default function HealthHistorySection({ patient }) {
   const [editDialog, setEditDialog] = useState(null);
   const [formData, setFormData] = useState({});
   const queryClient = useQueryClient();
+  // Snapshot of the array fields when the dialog opened, so the save-time merge
+  // can tell entries the user removed (in here, gone from server) from entries a
+  // concurrent writer added (absent here, present on server) and not clobber the latter.
+  const originalArraysRef = useRef({});
+
+  // The array history fields are written as a whole array; re-merging keeps a
+  // concurrent add (present on the latest server record, not in the snapshot
+  // this dialog opened with, and not in the edited list) while honoring removals.
+  const ARRAY_FIELDS = ['past_medical_history', 'past_hospitalizations'];
+  const mergeArrayField = (edited, original, server) => {
+    const key = (x) => JSON.stringify(x);
+    const originalKeys = new Set((original || []).map(key));
+    const editedKeys = new Set((edited || []).map(key));
+    const concurrentlyAdded = (server || []).filter(
+      (s) => !originalKeys.has(key(s)) && !editedKeys.has(key(s))
+    );
+    return [...(edited || []), ...concurrentlyAdded];
+  };
 
   const updatePatientMutation = useMutation({
-    mutationFn: (data) => base44.entities.Patient.update(patient.id, data),
+    mutationFn: async (data) => {
+      let payload = data;
+      if (ARRAY_FIELDS.some((f) => f in data)) {
+        try {
+          const latestArr = await base44.entities.Patient.filter({ id: patient.id });
+          const latest = latestArr?.[0];
+          if (latest) {
+            payload = { ...data };
+            for (const f of ARRAY_FIELDS) {
+              if (!(f in data)) continue;
+              payload[f] = mergeArrayField(data[f], originalArraysRef.current[f], latest[f]);
+            }
+          }
+        } catch { /* fall back to writing the dialog snapshot */ }
+      }
+      return base44.entities.Patient.update(patient.id, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['patient', patient.id] });
@@ -41,6 +75,10 @@ export default function HealthHistorySection({ patient }) {
 
   const openEditDialog = (section) => {
     setEditDialog(section);
+    originalArraysRef.current = {
+      past_medical_history: patient.past_medical_history || [],
+      past_hospitalizations: patient.past_hospitalizations || [],
+    };
     if (section === 'allergies') {
       setFormData({ allergies: patient.allergies || '' });
     } else if (section === 'past_medical') {
@@ -50,6 +88,12 @@ export default function HealthHistorySection({ patient }) {
     } else if (section === 'family_history') {
       setFormData({ family_medical_history: patient.family_medical_history || '' });
     }
+  };
+
+  const updateObjectArrayItem = (field, index, key, value) => {
+    const newArray = [...(formData[field] || [])];
+    newArray[index] = { ...newArray[index], [key]: value };
+    setFormData({ ...formData, [field]: newArray });
   };
 
   const handleSave = () => {
@@ -249,6 +293,70 @@ export default function HealthHistorySection({ patient }) {
                       >
                         Remove
                       </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {editDialog === 'surgeries' && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Surgeries & Hospitalizations</Label>
+                  <Button
+                    size="sm"
+                    onClick={() => setFormData({
+                      ...formData,
+                      past_hospitalizations: [
+                        ...(formData.past_hospitalizations || []),
+                        { reason: '', hospital: '', date: '', length_of_stay: '' },
+                      ],
+                    })}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Entry
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.past_hospitalizations || []).length === 0 && (
+                    <p className="text-sm text-slate-500 italic">No entries. Use “Add Entry” to record one.</p>
+                  )}
+                  {(formData.past_hospitalizations || []).map((hosp, index) => (
+                    <div key={index} className="border border-slate-200 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-500">Entry {index + 1}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromArray('past_hospitalizations', index)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <Input
+                        value={hosp.reason || ''}
+                        onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'reason', e.target.value)}
+                        placeholder="Reason / procedure"
+                      />
+                      <Input
+                        value={hosp.hospital || ''}
+                        onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'hospital', e.target.value)}
+                        placeholder="Hospital / facility"
+                      />
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={hosp.date || ''}
+                          onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'date', e.target.value)}
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          value={hosp.length_of_stay ?? ''}
+                          onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'length_of_stay', e.target.value)}
+                          placeholder="Length of stay (days)"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>

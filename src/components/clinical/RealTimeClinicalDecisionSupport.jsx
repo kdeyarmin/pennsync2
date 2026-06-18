@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,18 @@ export default function RealTimeClinicalDecisionSupport({
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState("diagnoses");
   const [addedItems, setAddedItems] = useState([]);
-  const [lastAnalyzedHash, setLastAnalyzedHash] = useState("");
+
+  // Refs mirror the analyze guard/last-hash so the debounced effect reads the
+  // CURRENT value (not a stale closure) and an in-flight analysis can't be
+  // started again, and so we never setState after unmount.
+  const isAnalyzingRef = useRef(false);
+  const lastAnalyzedHashRef = useRef("");
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
 
   // Create a hash of current data to detect changes
   const currentDataHash = JSON.stringify({
@@ -48,9 +59,10 @@ export default function RealTimeClinicalDecisionSupport({
 
   // Auto-analyze when significant data changes
   useEffect(() => {
-    if (patient && currentDataHash !== lastAnalyzedHash && !isAnalyzing) {
+    if (patient && currentDataHash !== lastAnalyzedHashRef.current && !isAnalyzingRef.current) {
       const timer = setTimeout(() => {
-        if (Object.keys(vitalSigns || {}).length > 0 || (narrativeText || '').length > 50) {
+        if (!isAnalyzingRef.current &&
+            (Object.keys(vitalSigns || {}).length > 0 || (narrativeText || '').length > 50)) {
           runAnalysis();
         }
       }, 2000);
@@ -59,8 +71,9 @@ export default function RealTimeClinicalDecisionSupport({
   }, [currentDataHash]);
 
   const runAnalysis = async () => {
-    if (!patient) return;
-    
+    if (!patient || isAnalyzingRef.current) return;
+
+    isAnalyzingRef.current = true;
     setIsAnalyzing(true);
     try {
       const activeCarePlans = (carePlans || [])
@@ -224,12 +237,16 @@ Return JSON:
         }
       });
 
-      setAnalysis(result);
-      setLastAnalyzedHash(currentDataHash);
+      if (isMountedRef.current) {
+        setAnalysis(result);
+      }
+      lastAnalyzedHashRef.current = currentDataHash;
     } catch (error) {
       console.error('Error running clinical analysis:', error);
+    } finally {
+      isAnalyzingRef.current = false;
+      if (isMountedRef.current) setIsAnalyzing(false);
     }
-    setIsAnalyzing(false);
   };
 
   const handleInsert = (text, id) => {
