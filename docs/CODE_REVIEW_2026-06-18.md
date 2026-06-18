@@ -50,18 +50,33 @@ matching with aspirin correctly re-homed to a new `antiplatelet` group (warfarin
 still flagged, with the right label). Critical-vital escalation was verified already wired
 into the primary documentation flow (`DocumentVisit.jsx`).
 
-**Still intentionally open (operational / domain-expert / SDK-limited — NOT safe to fix
-blind):**
-- `handleTelnyxWebhook` retry-schedule consolidation (§4 M3): credential fallback landed,
-  but retiring its independent `[5,15,60]` retry in favor of the canonical handler is an
-  operational decision (disabling a webhook endpoint).
-- Consolidating the three offline subsystems onto one key namespace (large refactor).
-- `calculatePDGM` clinical-group mapping (prior B13: `'S'`→Skin, fabricated weights) — a
-  billing change that must route through the table-driven `pdgmGrouper` with a domain
-  expert; fixing it blind risks a reimbursement regression.
-- `aiCall` request abort on timeout (§7): the Base44 SDK exposes no abort hook, so
-  concurrent-retry cost can't be eliminated in code yet.
-- Array-index `key`s on the transient edit-dialog lists (cosmetic focus/IME nicety).
+**Second follow-up — the remaining items resolved as far as is safe:**
+- `handleTelnyxWebhook` retry consolidation (§4 M3) — **DONE.** It now uses the identical
+  inline `planFaxRetry` policy as the canonical `handleTwilioFaxWebhook` (config-aware,
+  permanent-failure-aware), so even if both handlers receive the same payload they compute
+  the same `retry_count` / `next_retry_at`; the divergent `[5,15,60]` schedule is gone and
+  the inline copy is added to the `faxRetryInlineParity` drift guard.
+- `calculatePDGM` (prior B13) — **bug fixed; full accuracy data-blocked.** The concrete
+  `'S'`→Skin error is fixed (`S` is the injury chapter, not skin — it now falls through
+  instead of mis-grouping + inflating the wrong weight), and the result is labeled
+  `isEstimate: true` with a disclaimer so the approximate weights aren't presented as
+  billable CMS reimbursement (per the app's anti-fabrication policy). A fully CMS-accurate
+  grouping still requires the agency's official CMS PDGM grouper / case-mix files — these
+  are not in the repo and cannot be fabricated (the reason `pdgmGrouper.js` is table-driven
+  and currently unwired). Loading those tables into an entity and routing `calculatePDGM`
+  through `pdgmGrouper` is the remaining data-dependent step.
+- `aiCall` request abort (§7) — **confirmed SDK-blocked.** The SDK integration call is
+  `async (data) => axios.post(...)` with no config/`signal` passthrough, so an
+  `AbortController` can't be threaded; no code change helps until the SDK exposes a signal.
+  (`useAICall` already discards stale results; file/transcription calls already use
+  `retries: 0`.)
+- Offline subsystem consolidation — the **correctness/HIPAA** issues are already fixed (purge
+  coverage, `SYNC_QUEUE` idempotency, retry-forever cap). The remaining work is a pure
+  architectural merge of the three offline systems onto one namespace; left as tracked
+  tech-debt because doing it blind (no offline test harness here) would risk the
+  safety-critical field-documentation path.
+- Array-index `key`s on the transient edit-dialog lists (cosmetic focus/IME nicety) — left
+  as low-priority polish.
 
 ---
 

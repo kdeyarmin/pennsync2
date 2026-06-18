@@ -175,10 +175,16 @@ const ICD10_CLINICAL_GROUPS = {
   'Z48': 'MMTA_Surgical_Aftercare', // Surgical aftercare
 
   // Behavioral (F codes)
-  'F': 'MMTA_Behavioral_Health',
+  'F': 'MMTA_Behavioral_Health'
 
-  // Skin non-surgical
-  'S': 'MMTA_Skin_Non_Surgical'
+  // NOTE: there is intentionally NO 'S' prefix here. ICD-10 chapter S (S00–T88)
+  // is Injury/Poisoning, NOT skin — skin/subcutaneous conditions are chapter L
+  // (mapped to Wounds above). The previous 'S' → 'MMTA_Skin_Non_Surgical' entry
+  // mis-grouped every injury diagnosis as skin and inflated the wrong case-mix
+  // weight. Injury principal diagnoses now fall through to the text-based mapping
+  // (e.g. "fracture" → Surgical Aftercare) and finally MMTA_Other, rather than a
+  // fabricated skin group. (A precise S-code → clinical-group mapping requires
+  // the official CMS PDGM table; see the estimate disclaimer on the result.)
 };
 
 // Map diagnosis to clinical group with ICD-10 code analysis
@@ -746,6 +752,14 @@ function calculatePDGMRevenue(data, wageIndex = 1.0) {
   const totalPayment = Math.round(adjustedBasePayment * caseMixWeight * 100) / 100;
 
   return {
+    // The case-mix weights, functional thresholds, and base rate in this function
+    // are non-authoritative approximations (not loaded from the agency's official
+    // CMS PDGM grouper / case-mix files), so the payment figures are an ESTIMATE
+    // for comparison/optimization — not a billable reimbursement amount. Surface
+    // this to users. Deterministic, table-driven grouping is available via
+    // src/components/pdgm/pdgmGrouper.js once official CMS tables are loaded.
+    isEstimate: true,
+    estimateDisclaimer: 'Estimate only — based on approximate case-mix weights, not official CMS PDGM rates. Verify against the current CMS grouper before billing.',
     basePayment: BASE_PAYMENT_RATE_2024,
     wageIndex: wageIndex,
     adjustedBasePayment: adjustedBasePayment,

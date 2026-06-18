@@ -13,7 +13,50 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  *     used for JSON callers and manual testing.
  * Mirrors handleTwilioFaxWebhook's verification.
  */
-const BACKOFF_MINUTES = [5, 15, 60];
+// Inline copy of the fax retry policy (source of truth: src/components/fax/faxRetry.js;
+// drift-guarded by base44/functions/faxRetryInlineParity.test.js). Using the SAME
+// policy as handleTwilioFaxWebhook means that even if both handlers receive the
+// same Twilio payload they compute identical retry_count / next_retry_at, and a
+// PERMANENT failure (bad number, not a fax machine) gives up immediately instead
+// of burning the old fixed [5,15,60] schedule that ignored FaxRetryConfig.
+const PERMANENT_FAILURE_PATTERNS = [
+  /invalid/i, /not a fax/i, /no fax machine/i, /incompatible/i, /unsupported/i,
+  /rejected/i, /blocked/i, /do not call/i, /unallocated/i, /disconnected/i,
+  /forbidden/i, /not in service/i, /no such number/i, /malformed/i,
+];
+function classifyFaxFailure(errorCode: any, errorMessage: any): string {
+  const s = `${errorCode ?? ''} ${errorMessage ?? ''}`.trim();
+  if (!s) return 'transient';
+  return PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s)) ? 'permanent' : 'transient';
+}
+function faxRetryConfig(config: any) {
+  const c = config || {};
+  return {
+    enabled: c.auto_retry_enabled !== false,
+    maxRetries: Number.isFinite(c.max_retries) ? Math.max(0, c.max_retries) : 3,
+    baseDelayMinutes: Number.isFinite(c.retry_delay_minutes) && c.retry_delay_minutes > 0 ? c.retry_delay_minutes : 15,
+    notifyOnFinalFailure: c.notify_on_final_failure !== false,
+    priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
+  };
+}
+function nextRetryDelayMinutes(attempt: number, config: any, priority = 'normal', factor = 2, maxMinutes = 360): number {
+  const c = faxRetryConfig(config);
+  const a = Math.max(0, Number(attempt) || 0);
+  const mult = Number.isFinite(c.priorityMultiplier[priority]) ? c.priorityMultiplier[priority] : 1;
+  const minutes = c.baseDelayMinutes * factor ** a * mult;
+  return Math.max(1, Math.min(maxMinutes, Math.round(minutes)));
+}
+function planFaxRetry(opts: any) {
+  const { retryCount = 0, errorCode, errorMessage, priority = 'normal', config, now = Date.now() } = opts || {};
+  const c = faxRetryConfig(config);
+  const classification = classifyFaxFailure(errorCode, errorMessage);
+  const attempts = Number(retryCount) || 0;
+  if (!c.enabled || classification === 'permanent' || attempts >= c.maxRetries) {
+    return { willRetry: false, classification, exhausted: true, nextRetryAt: null, nextRetryCount: attempts, delayMinutes: 0 };
+  }
+  const delayMinutes = nextRetryDelayMinutes(attempts, config, priority);
+  return { willRetry: true, classification, exhausted: false, nextRetryAt: new Date(now + delayMinutes * 60000).toISOString(), nextRetryCount: attempts + 1, delayMinutes };
+}
 
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -128,12 +171,20 @@ Deno.serve(async (req) => {
     };
 
     if (mappedStatus === 'failed') {
-      const retryCount = faxLog.retry_count || 0;
-
-      if (retryCount < BACKOFF_MINUTES.length) {
-        const delayMs = BACKOFF_MINUTES[retryCount] * 60 * 1000;
-        updateData.next_retry_at = new Date(Date.now() + delayMs).toISOString();
-        updateData.retry_count = retryCount + 1;
+      // Use the SAME config-aware, permanent-failure-aware policy as
+      // handleTwilioFaxWebhook (honors the admin FaxRetryConfig) instead of the
+      // old fixed [5,15,60] schedule that ignored it and never gave up early.
+      const cfgRows = await base44.asServiceRole.entities.FaxRetryConfig.list('-created_date', 1).catch(() => []);
+      const plan = planFaxRetry({
+        retryCount: faxLog.retry_count || 0,
+        errorCode: payload.errorCode,
+        errorMessage: payload.failureReason,
+        priority: faxLog.priority || 'normal',
+        config: cfgRows[0] || {},
+      });
+      if (plan.willRetry) {
+        updateData.next_retry_at = plan.nextRetryAt;
+        updateData.retry_count = plan.nextRetryCount;
       } else if (faxLog.final_failure_notified === undefined || faxLog.final_failure_notified === null) {
         // Mark for a final-failure notification only the FIRST time retries are
         // exhausted. A re-delivered webhook for the same already-final fax must
@@ -182,6 +233,7 @@ function payloadFromJson(body) {
     status: body.Status || body.FaxStatus || body.status || body.data?.payload?.status,
     numPages: parseNumber(body.NumPages || body.num_pages || body.data?.payload?.page_count),
     failureReason: body.ErrorMessage || body.error_message || body.data?.payload?.failure_reason,
+    errorCode: body.ErrorCode || body.error_code || body.data?.payload?.error_code,
     to: body.To || body.to || body.data?.payload?.to,
     from: body.From || body.from || body.data?.payload?.from
   };
@@ -193,6 +245,7 @@ function payloadFromParams(params) {
     status: params['Status'] || params['FaxStatus'],
     numPages: parseNumber(params['NumPages']),
     failureReason: params['ErrorMessage'] || params['ErrorCode'],
+    errorCode: params['ErrorCode'],
     to: params['To'],
     from: params['From']
   };
