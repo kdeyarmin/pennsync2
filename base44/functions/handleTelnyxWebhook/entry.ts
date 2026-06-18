@@ -163,6 +163,18 @@ Deno.serve(async (req) => {
     const faxLog = faxLogs[0];
     const mappedStatus = mapTwilioStatus(status);
 
+    // Unknown status: ack without writing (don't regress a terminal fax to a
+    // non-terminal state). Matches handleTwilioFaxWebhook.
+    if (!mappedStatus) {
+      return Response.json({ success: true, skipped: 'unknown status', status });
+    }
+    // Idempotency: Twilio re-delivers webhooks. If the status is unchanged, ack
+    // without re-running side effects — critically, without re-entering the
+    // failed-retry branch and re-bumping retry_count via planFaxRetry.
+    if (mappedStatus === faxLog.status) {
+      return Response.json({ success: true, status: mappedStatus, deduped: true });
+    }
+
     const updateData = {
       status: mappedStatus,
       pages: payload.numPages || faxLog.pages,
@@ -267,5 +279,5 @@ function mapTwilioStatus(twilioStatus) {
     canceled: 'failed'
   };
 
-  return statusMap[twilioStatus] || 'sending';
+  return statusMap[twilioStatus] || null;
 }

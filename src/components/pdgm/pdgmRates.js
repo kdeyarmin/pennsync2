@@ -38,6 +38,10 @@ export const DEFAULT_PDGM_RATES = {
     MMTA_Behavioral_Health:   { community_early: 0.8165, community_late: 0.7512, institutional_early: 0.9665, institutional_late: 0.8892 },
     MMTA_Medication_Management:{ community_early: 0.7834, community_late: 0.7207, institutional_early: 0.9234, institutional_late: 0.8495 },
     MMTA_Musculoskeletal:     { community_early: 0.9678, community_late: 0.8904, institutional_early: 1.1178, institutional_late: 1.0284 },
+    // Present so the FE defaults match the backend table exactly (drift guard).
+    // Currently unreachable from the ICD/text mapping, but the admin can map a
+    // prefix to it if they choose.
+    MMTA_Skin_Non_Surgical:   { community_early: 1.0123, community_late: 0.9313, institutional_early: 1.1623, institutional_late: 1.0693 },
   },
   // Functional-impairment point thresholds (Low ≤ low; Medium < high; else High).
   functionalThresholds: {

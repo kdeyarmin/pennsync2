@@ -71,6 +71,21 @@ test("warfarin + clopidogrel is flagged as an antiplatelet bleeding interaction"
   assert.ok(r.some((x) => /antiplatelet/i.test(x.description) && x.severity === "major"));
 });
 
+test("aspirin keeps its renal interactions with methotrexate and lithium (salicylate)", () => {
+  const mtx = findDeterministicInteractions([{ name: "Methotrexate" }, { name: "Aspirin 81mg" }]);
+  assert.ok(mtx.some((x) => x.severity === "major" && /methotrexate clearance/i.test(x.description)));
+  const li = findDeterministicInteractions([{ name: "Lithium" }, { name: "Aspirin" }]);
+  assert.ok(li.some((x) => x.severity === "major" && /lithium clearance/i.test(x.description)));
+  // ...but a non-aspirin antiplatelet must NOT false-flag the MTX renal interaction.
+  const clopidogrel = findDeterministicInteractions([{ name: "Methotrexate" }, { name: "Clopidogrel" }]);
+  assert.ok(!clopidogrel.some((x) => /methotrexate clearance/i.test(x.description)));
+});
+
+test("brand-name Klor-Con still matches potassium_sparing (hyphen tokenized)", () => {
+  const r = findDeterministicInteractions([{ name: "Klor-Con 10 mEq" }, { name: "lisinopril" }]);
+  assert.ok(r.some((x) => x.severity === "major" && /hyperkalemia/i.test(x.description)));
+});
+
 test("token matching avoids substring false positives but keeps true matches", () => {
   // "mononitrate" must not match the bare "nitrate" fragment as a substring;
   // the nitrate group is still detected via the "isosorbide" token, so the

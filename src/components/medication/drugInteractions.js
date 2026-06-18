@@ -20,12 +20,17 @@ const GROUPS = {
   // still surfaced — with the correct label, not dropped.
   nsaid: ["ibuprofen", "naproxen", "ketorolac", "diclofenac", "meloxicam", "indomethacin", "celecoxib", "nsaid"],
   antiplatelet: ["aspirin", "asa", "acetylsalicylic", "clopidogrel", "plavix", "prasugrel", "effient", "ticagrelor", "brilinta", "dipyridamole", "aggrenox"],
+  // Aspirin is ALSO a salicylate: like the NSAIDs it reduces renal clearance of
+  // methotrexate and lithium. Kept separate from `nsaid` (so warfarin+aspirin is
+  // labeled antiplatelet, not "NSAID") and from `antiplatelet` (so clopidogrel et
+  // al. don't false-flag the MTX/lithium renal interactions, which are aspirin-specific).
+  salicylate: ["aspirin", "asa", "acetylsalicylic"],
   maoi: ["phenelzine", "tranylcypromine", "isocarboxazid", "selegiline", "rasagiline", "linezolid"],
   ssri_snri: ["fluoxetine", "sertraline", "paroxetine", "citalopram", "escitalopram", "fluvoxamine", "venlafaxine", "desvenlafaxine", "duloxetine"],
   nitrate: ["nitroglycerin", "isosorbide", "nitrate"],
   pde5: ["sildenafil", "tadalafil", "vardenafil", "avanafil"],
   ace_arb: ["lisinopril", "enalapril", "ramipril", "benazepril", "captopril", "quinapril", "losartan", "valsartan", "olmesartan", "candesartan", "irbesartan", "telmisartan"],
-  potassium_sparing: ["spironolactone", "eplerenone", "triamterene", "amiloride", "potassium chloride", "potassium", "klor-con"],
+  potassium_sparing: ["spironolactone", "eplerenone", "triamterene", "amiloride", "potassium chloride", "potassium", "klor con"],
   statin_cyp3a4: ["simvastatin", "lovastatin", "atorvastatin"],
   strong_cyp3a4_inhibitor: ["clarithromycin", "erythromycin", "itraconazole", "ketoconazole", "ritonavir", "cobicistat"],
   digoxin: ["digoxin", "lanoxin"],
@@ -56,10 +61,12 @@ const RULES = [
   { a: "statin_cyp3a4", b: "strong_cyp3a4_inhibitor", severity: "major", type: "pharmacokinetic", description: "Elevated statin levels → myopathy/rhabdomyolysis.", recommendation: "Avoid; hold the statin or use a non-CYP3A4 statin during therapy." },
   { a: "digoxin", b: "digoxin_potentiator", severity: "major", type: "pharmacokinetic", description: "Increased digoxin levels → toxicity.", recommendation: "Reduce digoxin dose and monitor levels." },
   { a: "methotrexate", b: "nsaid", severity: "major", type: "pharmacokinetic", description: "Reduced methotrexate clearance → toxicity.", recommendation: "Avoid NSAIDs (esp. with higher-dose MTX); monitor." },
+  { a: "methotrexate", b: "salicylate", severity: "major", type: "pharmacokinetic", description: "Reduced methotrexate clearance → toxicity.", recommendation: "Avoid salicylates (incl. aspirin), esp. with higher-dose MTX; monitor." },
   { a: "methotrexate", b: "mtx_potentiator", severity: "major", type: "pharmacokinetic", description: "Increased methotrexate toxicity / myelosuppression.", recommendation: "Avoid trimethoprim-sulfamethoxazole with methotrexate." },
   { a: "opioid", b: "benzodiazepine", severity: "major", type: "pharmacodynamic", description: "Additive CNS/respiratory depression (FDA boxed warning).", recommendation: "Avoid co-prescribing; if necessary use lowest doses and monitor." },
   { a: "allopurinol", b: "thiopurine", severity: "major", type: "pharmacokinetic", description: "Severe myelosuppression.", recommendation: "Avoid, or reduce thiopurine dose by ~75% with close monitoring." },
   { a: "lithium", b: "nsaid", severity: "major", type: "pharmacokinetic", description: "Reduced lithium clearance → toxicity.", recommendation: "Avoid NSAIDs; monitor lithium levels." },
+  { a: "lithium", b: "salicylate", severity: "major", type: "pharmacokinetic", description: "Reduced lithium clearance → toxicity.", recommendation: "Avoid salicylates (incl. aspirin); monitor lithium levels." },
   { a: "lithium", b: "ace_arb", severity: "major", type: "pharmacokinetic", description: "Reduced lithium clearance → toxicity.", recommendation: "Monitor lithium levels closely." },
   { a: "warfarin", b: "warfarin_potentiator", severity: "major", type: "pharmacokinetic", description: "Raises INR / bleeding risk (CYP / protein-binding interaction).", recommendation: "Monitor INR closely and adjust the warfarin dose." },
   { a: "warfarin", b: "ssri_snri", severity: "major", type: "pharmacodynamic", description: "Additive bleeding risk (impaired platelet function).", recommendation: "Monitor for bleeding; consider gastroprotection." },

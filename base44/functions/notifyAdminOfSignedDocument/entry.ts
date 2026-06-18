@@ -5,28 +5,19 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { data } = await req.json();
 
-    // Opt-in auth gate (mirrors checkExpiredInvitations): when INTERNAL_FN_SECRET
-    // is set, require admin OR the internal secret header so an unauthenticated
-    // caller can't probe patient records / spam admins. Unset => the entity-trigger
-    // (no identity) path stays allowed; an authenticated non-admin is rejected.
-    const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
-    }
-
+    // Entity-trigger (fires on DocumentSignature update): invoked by the platform
+    // with no identity / no custom header, so a secret gate would 403 the
+    // legitimate trigger when INTERNAL_FN_SECRET is set. The defense for a trigger
+    // is to re-fetch the canonical record and act only on its real state, never
+    // the posted body — so a forged id/status can't probe patients or spam admins.
     if (!data || !data.id) {
       return Response.json({ error: 'No signature data provided' }, { status: 400 });
     }
 
-    // Re-fetch the canonical signature by id rather than trusting the posted body.
-    const fresh = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
-    const signature = fresh || data;
+    const signature = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
+    if (!signature) {
+      return Response.json({ success: true, skipped: 'signature not found' });
+    }
 
     // Only notify if status is 'signed'
     if (signature.status !== 'signed') {

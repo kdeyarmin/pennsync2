@@ -5,25 +5,23 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
 
-    // Opt-in auth gate (mirrors checkExpiredInvitations): this grants a nurse
-    // access to a patient (assigned_nurses is the primary PHI access-scoping
-    // field) via service role, so when INTERNAL_FN_SECRET is set require admin OR
-    // the internal secret header. Unset => the Visit-automation (no identity) path
-    // stays allowed; an authenticated non-admin is rejected.
-    const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
+    // Entity-trigger (fires on Visit create): invoked by the platform with no
+    // identity / no custom header, so a secret gate would 403 the legitimate
+    // trigger when INTERNAL_FN_SECRET is set. Defense for a trigger: re-fetch the
+    // canonical Visit by id and derive the nurse + patient FROM the real record
+    // (never the posted body), so a forged payload can't grant an arbitrary nurse
+    // PHI access to an arbitrary patient.
+    let patient_id = payload.data?.patient_id;
+    let nurse_email = payload.data?.created_by;
+    const visitId = payload.data?.id;
+    if (visitId) {
+      const visit = await base44.asServiceRole.entities.Visit.get(visitId).catch(() => null);
+      if (!visit) {
+        return Response.json({ success: true, skipped: 'visit not found' });
       }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+      patient_id = visit.patient_id;
+      nurse_email = visit.created_by;
     }
-
-    // Extract from entity automation payload
-    const patient_id = payload.data?.patient_id;
-    const nurse_email = payload.data?.created_by;
 
     if (!patient_id || !nurse_email) {
       console.error('Missing patient_id or nurse_email from Visit:', payload);

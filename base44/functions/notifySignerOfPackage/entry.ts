@@ -5,31 +5,20 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { data } = await req.json();
 
-    // Opt-in auth gate (mirrors checkExpiredInvitations): when INTERNAL_FN_SECRET
-    // is set, require admin OR the internal secret header so an unauthenticated
-    // caller can't have a 30-day signer-portal token minted + emailed for an
-    // arbitrary package/address. Unset => the entity-trigger (no identity) path
-    // stays allowed; an authenticated non-admin is rejected.
-    const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
-    }
-
+    // Entity-trigger (fires on DocumentPackage create): invoked by the platform
+    // with no identity / no custom header, so a secret gate would 403 the
+    // legitimate trigger when INTERNAL_FN_SECRET is set. Defense for a trigger:
+    // re-fetch the canonical package by id and use ITS signer fields (never the
+    // posted body), so the 30-day signing credential can only be minted for a real
+    // package and can't be redirected to an attacker-chosen address.
     if (!data || !data.id) {
       return Response.json({ error: 'No package data provided' }, { status: 400 });
     }
 
-    // Re-fetch the canonical package by id and use ITS signer fields, so the
-    // emailed signing credential can't be redirected to an attacker-chosen
-    // address via a forged body.
-    const fresh = await base44.asServiceRole.entities.DocumentPackage.get(data.id).catch(() => null);
-    const pkg = fresh || data;
+    const pkg = await base44.asServiceRole.entities.DocumentPackage.get(data.id).catch(() => null);
+    if (!pkg) {
+      return Response.json({ success: true, skipped: 'package not found' });
+    }
     if (!pkg.signer_email) {
       return Response.json({ success: true, skipped: 'No signer email' });
     }

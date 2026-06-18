@@ -34,7 +34,13 @@ export default function HealthHistorySection({ patient }) {
   // this dialog opened with, and not in the edited list) while honoring removals.
   const ARRAY_FIELDS = ['past_medical_history', 'past_hospitalizations'];
   const mergeArrayField = (edited, original, server) => {
-    const key = (x) => JSON.stringify(x);
+    // Order-insensitive identity: sort object keys before stringifying so the
+    // same hospitalization record isn't treated as "new" (and duplicated) just
+    // because a concurrent writer serialized its fields in a different order.
+    const key = (x) =>
+      x && typeof x === "object" && !Array.isArray(x)
+        ? JSON.stringify(Object.keys(x).sort().reduce((o, k) => { o[k] = x[k]; return o; }, {}))
+        : JSON.stringify(x);
     const originalKeys = new Set((original || []).map(key));
     const editedKeys = new Set((edited || []).map(key));
     const concurrentlyAdded = (server || []).filter(

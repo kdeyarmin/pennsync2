@@ -6,33 +6,25 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { event, data } = body;
 
-    // Opt-in auth gate (mirrors checkExpiredInvitations): when INTERNAL_FN_SECRET
-    // is set, require an admin user OR the internal secret header so an
-    // unauthenticated caller can't forge a signature event and force-complete a
-    // package. Unset => the platform entity-trigger path (no identity) stays
-    // allowed; an authenticated non-admin is rejected.
-    const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
-    }
-
-    // This is triggered when a DocumentSignature is updated
+    // This is a Base44 entity-trigger (fires when a DocumentSignature is updated):
+    // the platform invokes it with NO user identity and no way to attach an
+    // x-internal-secret header, so an auth/secret gate here would 403 the
+    // legitimate trigger the moment INTERNAL_FN_SECRET is set. The integrity
+    // defense for a trigger is to NOT trust the posted body — re-fetch the
+    // canonical record by id (below) and act only on its real, server-side state,
+    // so a forged body can't claim a 'signed' status it doesn't have.
     if (!event || event.type !== 'update') {
       return Response.json({ success: true });
     }
 
-    // Re-fetch the canonical signature by id rather than trusting the posted body
-    // (a forged body could otherwise claim a 'signed' status it doesn't have).
     let signature = data;
     if (data?.id) {
       const fresh = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
-      if (fresh) signature = fresh;
+      if (!fresh) {
+        // No real record for this id → nothing to act on (ignore forged ids).
+        return Response.json({ success: true, skipped: 'signature not found' });
+      }
+      signature = fresh;
     }
 
     // Only process if signature status changed to "signed"
