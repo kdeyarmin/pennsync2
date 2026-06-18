@@ -17,10 +17,51 @@ introduces **0 new lint warnings**.
 **Relationship to prior docs.** Complements `docs/APP_IMPROVEMENT_ROADMAP_2026-06.md` and
 `docs/CODE_REVIEW_2026-06-05.md`; everything below is **new** (not already tracked there).
 The backend functions cannot be executed/transpiled in this environment (no Deno), so
-backend changes here are limited to clearly-correct, non-behavioral fixes; the more
-serious backend **auth-gate** findings are documented with concrete fixes for a
-deploy-coordinated follow-up (they interact with how Base44 invokes entity triggers, which
-must be validated against the live platform).
+backend changes mirror existing in-repo patterns exactly and are covered by the inline
+parity / dedupe tests where those exist.
+
+---
+
+## 0. Follow-up implementation status (the open backlog has now been addressed)
+
+After the initial review (§2 lists what landed first), a follow-up pass implemented
+essentially the entire open backlog. Net state:
+
+**§3 backend security — DONE.** Opt-in `INTERNAL_FN_SECRET` gate (mirrors
+`checkExpiredInvitations`, safe-by-default) + canonical re-fetch on `onDocumentSigned`,
+`notifyAdminOfSignedDocument`, `notifySignerOfPackage`; gate + 5000-row bound on
+`monitorComplianceRisks`; admin-role gate on `archiveSignedDocument`; automation gate on
+`autoAssignNurseToPatient`. Fax credential fallback (env → in-app `IntegrationSecret`)
+added to `handleTwilioFaxWebhook`, `sendFax`, `autoRetryFailedFaxes`, `retryFailedFax`,
+`syncTwilioFaxStatuses`, and `handleTelnyxWebhook`.
+
+**§4 comms — DONE.** `sendFax` idempotency guard; `pollFaxStatuses` + `handleTwilioFaxWebhook`
+unknown-status → skip; `dispatchScheduledSms` 24h staleness expiry + `StatusCallback`;
+`redriveFailedSms` `StatusCallback`; quiet-hours parity via `agencyQuietHoursConfig` (+
+extended parity test); inbound SMS/voice nurse lookup via `phoneVariants`.
+
+**§5 offline — DONE.** IndexedDB `SYNC_QUEUE` drain deduped via a `client_request_id`
+idempotency key (added to the Visit schema) + in-flight guard; `OfflineManager` roster
+prefetch gated on `isAuthenticated`.
+
+**§6 clinical — DONE (the safe, well-defined ones, all with tests + backend mirrors synced).**
+Dyspnea de-dup; diabetes de-dup; standard Soundex H/W; drug-interaction word-boundary
+matching with aspirin correctly re-homed to a new `antiplatelet` group (warfarin+aspirin is
+still flagged, with the right label). Critical-vital escalation was verified already wired
+into the primary documentation flow (`DocumentVisit.jsx`).
+
+**Still intentionally open (operational / domain-expert / SDK-limited — NOT safe to fix
+blind):**
+- `handleTelnyxWebhook` retry-schedule consolidation (§4 M3): credential fallback landed,
+  but retiring its independent `[5,15,60]` retry in favor of the canonical handler is an
+  operational decision (disabling a webhook endpoint).
+- Consolidating the three offline subsystems onto one key namespace (large refactor).
+- `calculatePDGM` clinical-group mapping (prior B13: `'S'`→Skin, fabricated weights) — a
+  billing change that must route through the table-driven `pdgmGrouper` with a domain
+  expert; fixing it blind risks a reimbursement regression.
+- `aiCall` request abort on timeout (§7): the Base44 SDK exposes no abort hook, so
+  concurrent-retry cost can't be eliminated in code yet.
+- Array-index `key`s on the transient edit-dialog lists (cosmetic focus/IME nicety).
 
 ---
 
