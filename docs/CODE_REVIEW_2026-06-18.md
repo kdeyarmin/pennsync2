@@ -65,9 +65,10 @@ into the primary documentation flow (`DocumentVisit.jsx`).
   any omitted value falls back to the default). Results are labeled `isEstimate: true` with
   a disclaimer until the admin enters their official CMS numbers and toggles
   “official,” at which point the output is treated as authoritative. The merge + default
-  numbers live in the tested `src/components/pdgm/pdgmRates.js`. (The fully table-driven
-  `pdgmGrouper.js` remains available for ICD-10→group lookups once a CMS dx-mapping table is
-  loaded too.)
+  numbers live in the tested `src/components/pdgm/pdgmRates.js`. The **ICD-10 → clinical-group
+  mapping** is editable on the same page too (add/edit/remove prefix→group rows, REPLACE
+  semantics); `calculatePDGM` uses the saved map (else the built-in defaults). So both the
+  clinical-group *assignment* and the case-mix *weights* are now fully admin-controlled.
 - `aiCall` request abort (§7) — **confirmed SDK-blocked.** The SDK integration call is
   `async (data) => axios.post(...)` with no config/`signal` passthrough, so an
   `AbortController` can't be threaded; no code change helps until the SDK exposes a signal.

@@ -60,6 +60,52 @@ export const DEFAULT_PDGM_RATES = {
   },
 };
 
+// Default ICD-10 (prefix) → clinical-group mapping. Longest-prefix wins (a
+// specific code like "I63" beats the chapter letter "I"). MIRRORS
+// ICD10_CLINICAL_GROUPS in base44/functions/calculatePDGM/entry.ts. Note there is
+// intentionally NO "S" entry — ICD chapter S is Injury, not skin. An admin can
+// edit/add/remove any of these on the PDGM Rate Settings page.
+export const DEFAULT_ICD10_CLINICAL_GROUPS = {
+  G: "MMTA_Neuro_Rehab",
+  I63: "MMTA_Neuro_Rehab",
+  I64: "MMTA_Neuro_Rehab",
+  I: "MMTA_Cardiac_Circulatory",
+  I50: "MMTA_Cardiac_Circulatory",
+  I10: "MMTA_Cardiac_Circulatory",
+  I25: "MMTA_Cardiac_Circulatory",
+  J: "MMTA_Respiratory",
+  J44: "MMTA_Respiratory",
+  J18: "MMTA_Respiratory",
+  E: "MMTA_Endocrine",
+  E11: "MMTA_Endocrine",
+  E10: "MMTA_Endocrine",
+  K: "MMTA_GI_GU",
+  N: "MMTA_GI_GU",
+  N18: "MMTA_GI_GU",
+  L: "MMTA_Wounds",
+  L89: "MMTA_Wounds",
+  M: "MMTA_Musculoskeletal",
+  M79: "MMTA_Musculoskeletal",
+  A: "MMTA_Infectious_Disease",
+  B: "MMTA_Infectious_Disease",
+  Z96: "MMTA_Surgical_Aftercare",
+  Z47: "MMTA_Surgical_Aftercare",
+  Z48: "MMTA_Surgical_Aftercare",
+  F: "MMTA_Behavioral_Health",
+};
+
+/**
+ * Effective ICD-10 → clinical-group map. Unlike the numeric rate tables (which
+ * merge value-by-value), this is REPLACE-when-present so an admin can add, edit,
+ * AND remove prefixes: once a custom map is saved it's used verbatim; an empty/
+ * unset map falls back to the built-in defaults.
+ */
+export function effectiveIcdGroups(savedMap) {
+  return savedMap && typeof savedMap === "object" && Object.keys(savedMap).length > 0
+    ? savedMap
+    : DEFAULT_ICD10_CLINICAL_GROUPS;
+}
+
 /**
  * Recursively overlay the finite NUMBERS in `over` onto `base`, preserving any
  * base value the override omits or sets to a non-number. This is what lets an

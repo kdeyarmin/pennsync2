@@ -217,8 +217,10 @@ const ICD10_CLINICAL_GROUPS = {
   // the official CMS PDGM table; see the estimate disclaimer on the result.)
 };
 
-// Map diagnosis to clinical group with ICD-10 code analysis
-function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code) {
+// Map diagnosis to clinical group with ICD-10 code analysis. `icdMap` is the
+// admin-editable prefix→group map (defaults to ICD10_CLINICAL_GROUPS).
+function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code, icdMap = ICD10_CLINICAL_GROUPS) {
+  const map = icdMap && Object.keys(icdMap).length > 0 ? icdMap : ICD10_CLINICAL_GROUPS;
   // First try ICD-10 code mapping (most accurate)
   if (icd10Code) {
     const code = icd10Code.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -226,13 +228,9 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code) {
     // Check specific codes first: sort prefixes longest-first so a specific
     // code (e.g. 'I63') wins over a generic one (e.g. 'I') regardless of the
     // object's declaration order.
-    const orderedGroups = Object.entries(ICD10_CLINICAL_GROUPS).sort((a, b) => b[0].length - a[0].length);
+    const orderedGroups = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
     for (const [prefix, group] of orderedGroups) {
       if (code.startsWith(prefix)) {
-        // Handle stroke specially - it's neuro even though it starts with I
-        if (code.startsWith('I63') || code.startsWith('I64')) {
-          return 'MMTA_Neuro_Rehab';
-        }
         return group;
       }
     }
@@ -614,12 +612,17 @@ Deno.serve(async (req) => {
     // result is marked authoritative (isEstimate:false) rather than an estimate.
     let rates = DEFAULT_RATES;
     let isOfficial = false;
+    let icdMap = ICD10_CLINICAL_GROUPS;
     try {
       const rateRows = await base44.asServiceRole.entities.PDGMRateConfig.list('-created_date', 1);
       const rateConfig = rateRows && rateRows.length > 0 ? rateRows[0] : null;
       if (rateConfig) {
         rates = deepMergeNumbers(DEFAULT_RATES, rateConfig.rates);
         isOfficial = rateConfig.is_official === true;
+        // REPLACE-when-present so the admin can add/edit/remove prefixes.
+        if (rateConfig.icd10_clinical_groups && Object.keys(rateConfig.icd10_clinical_groups).length > 0) {
+          icdMap = rateConfig.icd10_clinical_groups;
+        }
       }
     } catch (e) {
       console.log('No PDGM rate config found, using built-in default rates');
@@ -640,7 +643,7 @@ Deno.serve(async (req) => {
     ];
 
     // Calculate original PDGM revenue
-    const originalRevenue = calculatePDGMRevenue(pdgmData, appliedWageIndex, rates, isOfficial);
+    const originalRevenue = calculatePDGMRevenue(pdgmData, appliedWageIndex, rates, isOfficial, icdMap);
     originalRevenue.dataValidation = {
       admissionSource: sourceValidation,
       episodeTiming: timingValidation,
@@ -662,7 +665,7 @@ Deno.serve(async (req) => {
         episode_timing: correctedPdgmData.episode_timing || timingValidation.validatedTiming
       };
 
-      correctedRevenue = calculatePDGMRevenue(correctedWithValidation, appliedWageIndex, rates, isOfficial);
+      correctedRevenue = calculatePDGMRevenue(correctedWithValidation, appliedWageIndex, rates, isOfficial, icdMap);
       correctedRevenue._appliedCorrections = correctedPdgmData._appliedCorrections || [];
       correctedRevenue._correctionCount = correctedPdgmData._correctionCount || 0;
 
@@ -674,7 +677,7 @@ Deno.serve(async (req) => {
     }
 
     // Calculate alternative scenarios for comparison
-    const scenarios = calculateAlternativeScenarios(pdgmData, appliedWageIndex, rates, isOfficial);
+    const scenarios = calculateAlternativeScenarios(pdgmData, appliedWageIndex, rates, isOfficial, icdMap);
 
     return Response.json({
       rateBasis: {
@@ -711,7 +714,7 @@ Deno.serve(async (req) => {
 });
 
 // Calculate all 4 scenario combinations for comparison
-function calculateAlternativeScenarios(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOfficial = false) {
+function calculateAlternativeScenarios(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOfficial = false, icdMap = ICD10_CLINICAL_GROUPS) {
   const scenarios = {};
   const combinations = [
     { admission_source: 'community', episode_timing: 'early', key: 'community_early' },
@@ -726,7 +729,7 @@ function calculateAlternativeScenarios(data, wageIndex = 1.0, rates = DEFAULT_RA
       admission_source: combo.admission_source,
       episode_timing: combo.episode_timing
     };
-    const result = calculatePDGMRevenue(scenarioData, wageIndex, rates, isOfficial);
+    const result = calculatePDGMRevenue(scenarioData, wageIndex, rates, isOfficial, icdMap);
     scenarios[combo.key] = {
       admissionSource: combo.admission_source,
       episodeTiming: combo.episode_timing,
@@ -753,7 +756,7 @@ function calculateAlternativeScenarios(data, wageIndex = 1.0, rates = DEFAULT_RA
   };
 }
 
-function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOfficial = false) {
+function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOfficial = false, icdMap = ICD10_CLINICAL_GROUPS) {
   const clinicalGroupWeights = rates?.clinicalGroupWeights || CLINICAL_GROUP_WEIGHTS;
   const functionalMultipliersTable = rates?.functionalMultipliers || FUNCTIONAL_MULTIPLIERS;
   const comorbidityMultipliersTable = rates?.comorbidityMultipliers || COMORBIDITY_MULTIPLIERS;
@@ -782,8 +785,8 @@ function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOf
   // Create source-timing key for lookups
   const sourceTimingKey = `${admissionSource}_${episodeTiming}`;
 
-  // Determine clinical group from diagnosis
-  const clinicalGroup = mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code);
+  // Determine clinical group from diagnosis (admin-editable ICD→group map)
+  const clinicalGroup = mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code, icdMap);
 
   // Get clinical weight based on source and timing (from the merged rate table)
   const groupWeights = clinicalGroupWeights[clinicalGroup] || clinicalGroupWeights['MMTA_Other'] || CLINICAL_GROUP_WEIGHTS['MMTA_Other'];

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { isAdminLike } from "@/lib/superAdmin";
-import { DEFAULT_PDGM_RATES, mergePdgmRates } from "@/components/pdgm/pdgmRates";
+import { DEFAULT_PDGM_RATES, mergePdgmRates, DEFAULT_ICD10_CLINICAL_GROUPS, effectiveIcdGroups } from "@/components/pdgm/pdgmRates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
-import { PieChart, Save, RotateCcw, Info, ShieldCheck } from "lucide-react";
+import { PieChart, Save, RotateCcw, Info, ShieldCheck, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
+const mapToRows = (obj) => Object.entries(obj || {}).map(([prefix, group]) => ({ prefix, group }));
+const rowsToMap = (rows) =>
+  (rows || []).reduce((acc, r) => {
+    const p = String(r.prefix || "").toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
+    if (p && r.group) acc[p] = r.group;
+    return acc;
+  }, {});
 
 // The four editable 2-level rate tables (everything except the single base rate).
 const TABLES = [
@@ -125,11 +134,13 @@ export default function PDGMRateSettings() {
 
   const [form, setForm] = useState(() => ratesToForm(DEFAULT_PDGM_RATES));
   const [meta, setMeta] = useState({ label: "", effective_year: "", is_official: false, notes: "" });
+  const [icdRows, setIcdRows] = useState(() => mapToRows(DEFAULT_ICD10_CLINICAL_GROUPS));
 
   // Seed the editor from the saved config (merged over defaults) once it loads.
   useEffect(() => {
     if (config) {
       setForm(ratesToForm(mergePdgmRates(config.rates)));
+      setIcdRows(mapToRows(effectiveIcdGroups(config.icd10_clinical_groups)));
       setMeta({
         label: config.label || "",
         effective_year: config.effective_year || "",
@@ -138,6 +149,11 @@ export default function PDGMRateSettings() {
       });
     }
   }, [config]);
+
+  const groupOptions = useMemo(() => Object.keys(form.clinicalGroupWeights || {}), [form.clinicalGroupWeights]);
+  const updateIcdRow = (i, patch) => setIcdRows((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const removeIcdRow = (i) => setIcdRows((rows) => rows.filter((_, idx) => idx !== i));
+  const addIcdRow = () => setIcdRows((rows) => [...rows, { prefix: "", group: groupOptions[0] || "" }]);
 
   const setCell = (section, row, col, value) =>
     setForm((f) => ({
@@ -150,6 +166,7 @@ export default function PDGMRateSettings() {
       const payload = {
         ...meta,
         rates: formToRates(form),
+        icd10_clinical_groups: rowsToMap(icdRows),
         updated_by_email: user?.email || null,
       };
       if (config?.id) return base44.entities.PDGMRateConfig.update(config.id, payload);
@@ -167,6 +184,7 @@ export default function PDGMRateSettings() {
 
   const resetToDefaults = () => {
     setForm(ratesToForm(DEFAULT_PDGM_RATES));
+    setIcdRows(mapToRows(DEFAULT_ICD10_CLINICAL_GROUPS));
     setMeta((m) => ({ ...m, is_official: false }));
     toast.message("Reset to built-in defaults (not yet saved).");
   };
@@ -247,6 +265,58 @@ export default function PDGMRateSettings() {
               onCell={(row, col, value) => setCell(key, row, col, value)}
             />
           ))}
+
+          {/* ICD-10 → clinical group mapping */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">ICD-10 → clinical group</CardTitle>
+              <p className="text-xs text-slate-500">
+                How a principal diagnosis is assigned to a clinical group. Enter an ICD-10
+                prefix (e.g. <code>I50</code>, or just the chapter letter <code>J</code>); the
+                longest matching prefix wins. Add, edit, or remove rows freely. (Note: chapter
+                <code> S</code> is Injury, not skin — skin is chapter <code>L</code>.)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {icdRows.map((row, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      aria-label={`ICD prefix ${i + 1}`}
+                      value={row.prefix}
+                      placeholder="ICD-10 prefix"
+                      onChange={(e) => updateIcdRow(i, { prefix: e.target.value.toUpperCase() })}
+                      className="h-8 w-32 text-sm font-mono"
+                    />
+                    <span className="text-slate-400">→</span>
+                    <Select value={row.group} onValueChange={(v) => updateIcdRow(i, { group: v })}>
+                      <SelectTrigger className="h-8 w-72 text-sm" aria-label={`Clinical group ${i + 1}`}>
+                        <SelectValue placeholder="Select clinical group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Keep the current value selectable even if it's not a weighted group. */}
+                        {(groupOptions.includes(row.group) ? groupOptions : [row.group, ...groupOptions].filter(Boolean))
+                          .map((g) => (
+                            <SelectItem key={g} value={g}>{prettify(g)}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="sm" aria-label={`Remove row ${i + 1}`} onClick={() => removeIcdRow(i)}>
+                      <Trash2 className="w-4 h-4 text-slate-400" />
+                    </Button>
+                  </div>
+                ))}
+                {icdRows.length === 0 && (
+                  <p className="text-sm text-slate-500 italic">
+                    No mappings — diagnoses will fall back to text matching / MMTA Other.
+                  </p>
+                )}
+                <Button variant="outline" size="sm" onClick={addIcdRow} className="mt-1">
+                  <Plus className="w-4 h-4 mr-1" /> Add mapping
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="flex flex-wrap items-center gap-3 sticky bottom-0 bg-white/80 backdrop-blur py-3 border-t">
             <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
