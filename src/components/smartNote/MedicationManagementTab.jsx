@@ -188,7 +188,13 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
   // drug name is in NEITHER the nurse's working set NOR the original snapshot
   // (a genuinely new drug added elsewhere); a concurrent edit to a drug the nurse
   // also has is resolved last-writer-wins on the nurse's version (no duplicate).
-  const drugName = (m) => String(m?.name || "").trim().toLowerCase();
+  // A med lacking a name (malformed/partial entry) falls back to full-value
+  // identity so a concurrent add of one isn't silently dropped by the whole-array
+  // write — an unnamed med can't collide with a named-drug edit, so there's no
+  // duplicate-dose risk from the fallback.
+  const medKey = (m) =>
+    (m?.name ? String(m.name).trim().toLowerCase() : "") ||
+    JSON.stringify(Object.keys(m || {}).sort().reduce((o, k) => { o[k] = m[k]; return o; }, {}));
 
   const syncToPatient = async () => {
     if (!patientId) return;
@@ -200,11 +206,11 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
       // loaded — without merging, the whole-array write would silently drop it.
       const latestArr = await base44.entities.Patient.filter({ id: patientId });
       const serverMeds = (latestArr?.[0]?.current_medications) || [];
-      const localNames = new Set(medsPayload.map(drugName).filter(Boolean));
-      const originalNames = new Set((originalMedsRef.current || []).map(drugName).filter(Boolean));
+      const localKeys = new Set(medsPayload.map(medKey).filter(Boolean));
+      const originalKeys = new Set((originalMedsRef.current || []).map(medKey).filter(Boolean));
       const concurrentlyAdded = serverMeds.filter((sm) => {
-        const n = drugName(sm);
-        return n && !localNames.has(n) && !originalNames.has(n);
+        const k = medKey(sm);
+        return k && !localKeys.has(k) && !originalKeys.has(k);
       });
       const finalMeds = [...medsPayload, ...concurrentlyAdded];
 

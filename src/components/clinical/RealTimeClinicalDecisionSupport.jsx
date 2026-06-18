@@ -45,6 +45,12 @@ export default function RealTimeClinicalDecisionSupport({
   const lastAnalyzedHashRef = useRef("");
   const latestHashRef = useRef("");
   const reanalyzeTimerRef = useRef(null);
+  // Points at the FRESHEST runAnalysis closure (reassigned every render). The
+  // in-flight re-trigger must call this, not the closure that scheduled it —
+  // that stale closure would re-analyze its own frozen data and keep writing its
+  // frozen hash to lastAnalyzedHashRef, so the re-trigger condition would never
+  // clear and we'd loop LLM calls forever.
+  const runAnalysisRef = useRef(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -260,11 +266,18 @@ Return JSON:
       if (isMountedRef.current && latestHashRef.current !== lastAnalyzedHashRef.current) {
         if (reanalyzeTimerRef.current) clearTimeout(reanalyzeTimerRef.current);
         reanalyzeTimerRef.current = setTimeout(() => {
-          if (isMountedRef.current) runAnalysis();
+          // Invoke the latest closure (via ref) so it analyzes the CURRENT data
+          // and records the CURRENT hash, letting the loop converge once inputs
+          // settle instead of re-running this frozen closure forever.
+          if (isMountedRef.current) runAnalysisRef.current?.();
         }, 2000);
       }
     }
   };
+
+  // Keep the ref pointing at this render's runAnalysis so the in-flight
+  // re-trigger above always runs the freshest closure.
+  runAnalysisRef.current = runAnalysis;
 
   const handleInsert = (text, id) => {
     onInsertText("\n\n" + text);

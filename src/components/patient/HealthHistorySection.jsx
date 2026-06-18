@@ -35,14 +35,20 @@ export default function HealthHistorySection({ patient }) {
   // this dialog opened with, and not in the edited list) while honoring removals.
   const ARRAY_FIELDS = ['past_medical_history', 'past_hospitalizations'];
   // Identity per field, used to carry over a concurrent ADD without duplicating a
-  // concurrent EDIT. A hospitalization is identified by its `reason` (so editing
-  // its hospital/date/length elsewhere doesn't create a second row); a
-  // past-medical-history entry is the string itself. Entries lacking the primary
-  // key fall back to full (order-insensitive) value identity.
+  // concurrent EDIT. A hospitalization is identified by `reason` + `date` so that
+  // editing its hospital/length doesn't fork a second row, while two admissions
+  // sharing a reason on different dates (e.g. two CHF stays) stay distinct and a
+  // concurrent add of the second isn't collapsed into the first and lost. A
+  // past-medical-history entry is the string itself. Entries lacking both reason
+  // and date fall back to full (order-insensitive) value identity.
   const fieldKeyFns = {
-    past_hospitalizations: (h) =>
-      (h?.reason ? String(h.reason).trim().toLowerCase() : '') ||
-      JSON.stringify(Object.keys(h || {}).sort().reduce((o, k) => { o[k] = h[k]; return o; }, {})),
+    past_hospitalizations: (h) => {
+      const reason = h?.reason ? String(h.reason).trim().toLowerCase() : '';
+      const date = h?.date ? String(h.date).trim() : '';
+      return (reason || date)
+        ? `${reason}|${date}`
+        : JSON.stringify(Object.keys(h || {}).sort().reduce((o, k) => { o[k] = h[k]; return o; }, {}));
+    },
     past_medical_history: (s) => String(s ?? '').trim().toLowerCase(),
   };
   const mergeArrayField = (edited, original, server, keyFn) => {
