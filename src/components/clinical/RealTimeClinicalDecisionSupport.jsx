@@ -43,6 +43,7 @@ export default function RealTimeClinicalDecisionSupport({
   // started again, and so we never setState after unmount.
   const isAnalyzingRef = useRef(false);
   const lastAnalyzedHashRef = useRef("");
+  const lastAttemptedHashRef = useRef("");
   const latestHashRef = useRef("");
   const reanalyzeTimerRef = useRef(null);
   // Points at the FRESHEST runAnalysis closure (reassigned every render). The
@@ -88,6 +89,11 @@ export default function RealTimeClinicalDecisionSupport({
     if (!patient || isAnalyzingRef.current) return;
 
     isAnalyzingRef.current = true;
+    // Record the inputs THIS run covers, regardless of success, so the
+    // re-trigger below fires only when newer data arrived mid-flight — not on a
+    // persistent LLM error (which never advances lastAnalyzedHashRef and would
+    // otherwise loop retries every 2s for the whole session).
+    lastAttemptedHashRef.current = currentDataHash;
     setIsAnalyzing(true);
     try {
       const activeCarePlans = (carePlans || [])
@@ -262,8 +268,10 @@ Return JSON:
       if (isMountedRef.current) setIsAnalyzing(false);
       // If the inputs changed while this analysis was in flight, the
       // [currentDataHash] effect already bailed (isAnalyzing was true), so nothing
-      // would re-analyze the latest edits. Re-trigger once here.
-      if (isMountedRef.current && latestHashRef.current !== lastAnalyzedHashRef.current) {
+      // would re-analyze the latest edits. Re-trigger once here. Compare against
+      // the hash this run ATTEMPTED (not the last successful one) so a failed
+      // analysis doesn't retry-loop on unchanged data.
+      if (isMountedRef.current && latestHashRef.current !== lastAttemptedHashRef.current) {
         if (reanalyzeTimerRef.current) clearTimeout(reanalyzeTimerRef.current);
         reanalyzeTimerRef.current = setTimeout(() => {
           // Invoke the latest closure (via ref) so it analyzes the CURRENT data
