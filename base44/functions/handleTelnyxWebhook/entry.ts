@@ -182,6 +182,7 @@ Deno.serve(async (req) => {
       next_retry_at: null,
     };
 
+    let exhaustedNow = false;
     if (mappedStatus === 'failed') {
       // Use the SAME config-aware, permanent-failure-aware policy as
       // handleTwilioFaxWebhook (honors the admin FaxRetryConfig) instead of the
@@ -197,18 +198,38 @@ Deno.serve(async (req) => {
       if (plan.willRetry) {
         updateData.next_retry_at = plan.nextRetryAt;
         updateData.retry_count = plan.nextRetryCount;
-      } else if (faxLog.final_failure_notified === undefined || faxLog.final_failure_notified === null) {
-        // Mark for a final-failure notification only the FIRST time retries are
-        // exhausted. A re-delivered webhook for the same already-final fax must
-        // not reset an already-notified (true) or already-pending (false) flag,
-        // or the sender gets re-notified on every retry.
-        updateData.final_failure_notified = false;
+      } else {
+        // Retries exhausted — notify the sender ONCE and mark it notified, using
+        // the SAME final_failure_notified convention as handleTwilioFaxWebhook /
+        // autoRetryFailedFaxes (true = notified). The previous code set it to
+        // `false` (pending) expecting an external sender that doesn't exist, so a
+        // fax that died on this path never notified the sender at all. The shared
+        // flag + the `!final_failure_notified` guard prevents a double-notify if
+        // both fax handlers ever touch the same FaxLog.
+        exhaustedNow = !faxLog.final_failure_notified;
+        updateData.final_failure_notified = true;
       }
 
       updateData.failure_reason = payload.failureReason || 'Unknown error';
     }
 
     await base44.asServiceRole.entities.FaxLog.update(faxLog.id, updateData);
+
+    // Tell the sender when a fax has permanently failed (no retries left).
+    if (exhaustedNow && faxLog.sent_by) {
+      const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+      await base44.asServiceRole.entities.Notification.create({
+        user_email: faxLog.sent_by,
+        title: '❌ Fax failed',
+        message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${updateData.failure_reason}). Verify the number and resend.`,
+        type: 'fax_failed',
+        priority: 'high',
+        related_entity: 'FaxLog',
+        related_entity_id: faxLog.id,
+        is_read: false,
+        action_url: `/send-fax?fax_id=${faxLog.id}`,
+      }).catch((err) => console.error('Failed to send fax failure notification:', err));
+    }
 
     await base44.asServiceRole.entities.UserActivity.create({
       user_email: 'system',

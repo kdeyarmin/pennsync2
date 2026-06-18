@@ -43,11 +43,16 @@ export default function RealTimeClinicalDecisionSupport({
   // started again, and so we never setState after unmount.
   const isAnalyzingRef = useRef(false);
   const lastAnalyzedHashRef = useRef("");
+  const latestHashRef = useRef("");
+  const reanalyzeTimerRef = useRef(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
     isMountedRef.current = true;
-    return () => { isMountedRef.current = false; };
+    return () => {
+      isMountedRef.current = false;
+      if (reanalyzeTimerRef.current) clearTimeout(reanalyzeTimerRef.current);
+    };
   }, []);
 
   // Create a hash of current data to detect changes
@@ -56,6 +61,9 @@ export default function RealTimeClinicalDecisionSupport({
     notes: (narrativeText || '').substring(0, 200),
     diagnosis: patient?.primary_diagnosis
   });
+  // Track the newest hash each render so runAnalysis can tell whether the inputs
+  // changed WHILE it was in flight and re-trigger once it finishes.
+  latestHashRef.current = currentDataHash;
 
   // Auto-analyze when significant data changes
   useEffect(() => {
@@ -246,6 +254,15 @@ Return JSON:
     } finally {
       isAnalyzingRef.current = false;
       if (isMountedRef.current) setIsAnalyzing(false);
+      // If the inputs changed while this analysis was in flight, the
+      // [currentDataHash] effect already bailed (isAnalyzing was true), so nothing
+      // would re-analyze the latest edits. Re-trigger once here.
+      if (isMountedRef.current && latestHashRef.current !== lastAnalyzedHashRef.current) {
+        if (reanalyzeTimerRef.current) clearTimeout(reanalyzeTimerRef.current);
+        reanalyzeTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current) runAnalysis();
+        }, 2000);
+      }
     }
   };
 
