@@ -181,39 +181,36 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
     }
   };
 
-  // Compare meds by clinical identity (not array index / local _id) so the merge
-  // below survives re-fetch and never matches the wrong entry.
-  const sameMedication = (a, b) =>
-    !!a && !!b &&
-    a.name === b.name &&
-    a.dosage === b.dosage &&
-    a.frequency === b.frequency &&
-    a.prescriber === b.prescriber;
+  // A med's DRUG identity for the concurrent-merge is its NAME. A dose/frequency
+  // change to a drug the nurse already lists is a concurrent EDIT of that drug,
+  // not a new med — appending it (matching on full value) would persist the same
+  // drug twice at conflicting doses. So we carry over a server med only when its
+  // drug name is in NEITHER the nurse's working set NOR the original snapshot
+  // (a genuinely new drug added elsewhere); a concurrent edit to a drug the nurse
+  // also has is resolved last-writer-wins on the nurse's version (no duplicate).
+  const drugName = (m) => String(m?.name || "").trim().toLowerCase();
 
   const syncToPatient = async () => {
     if (!patientId) return;
     setSavingPatient(true);
     try {
       const medsPayload = medications.map(({ _id, ...rest }) => rest);
-      // Re-fetch immediately before writing and preserve any medication that was
-      // added on the server since this tab loaded (present now, but neither in
-      // this tab's working set nor in its original snapshot — i.e. a concurrent
-      // add, not a med the nurse removed). Without this the whole-array write
-      // silently drops a drug another writer (visit med-rec, the patient-detail
-      // editor) added in the interim.
+      // Re-fetch immediately before writing and preserve any medication another
+      // writer (visit med-rec, the patient-detail editor) ADDED since this tab
+      // loaded — without merging, the whole-array write would silently drop it.
       const latestArr = await base44.entities.Patient.filter({ id: patientId });
       const serverMeds = (latestArr?.[0]?.current_medications) || [];
-      const original = originalMedsRef.current;
-      const concurrentlyAdded = serverMeds.filter(
-        (sm) =>
-          !original.some((om) => sameMedication(om, sm)) &&
-          !medsPayload.some((lm) => sameMedication(lm, sm))
-      );
+      const localNames = new Set(medsPayload.map(drugName).filter(Boolean));
+      const originalNames = new Set((originalMedsRef.current || []).map(drugName).filter(Boolean));
+      const concurrentlyAdded = serverMeds.filter((sm) => {
+        const n = drugName(sm);
+        return n && !localNames.has(n) && !originalNames.has(n);
+      });
       const finalMeds = [...medsPayload, ...concurrentlyAdded];
 
       await base44.entities.Patient.update(patientId, { current_medications: finalMeds });
       // Advance the snapshot so a second save in the same session reconciles
-      // against what we just persisted (sameMedication ignores id fields).
+      // against what we just persisted.
       originalMedsRef.current = finalMeds;
       setSavedToPatient(true);
       setTimeout(() => setSavedToPatient(false), 3000);

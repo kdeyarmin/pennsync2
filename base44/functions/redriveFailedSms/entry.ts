@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
       const clientMessageId = row.client_message_id || `redrive-${row.id}`;
       let resp;
       try {
-        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body);
+        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body, statusCallback);
       } catch (netErr) {
         const aborted = (netErr as Error)?.name === 'AbortError';
         result.failed++;

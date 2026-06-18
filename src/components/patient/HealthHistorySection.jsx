@@ -34,18 +34,25 @@ export default function HealthHistorySection({ patient }) {
   // concurrent add (present on the latest server record, not in the snapshot
   // this dialog opened with, and not in the edited list) while honoring removals.
   const ARRAY_FIELDS = ['past_medical_history', 'past_hospitalizations'];
-  const mergeArrayField = (edited, original, server) => {
-    // Order-insensitive identity: sort object keys before stringifying so the
-    // same hospitalization record isn't treated as "new" (and duplicated) just
-    // because a concurrent writer serialized its fields in a different order.
-    const key = (x) =>
-      x && typeof x === "object" && !Array.isArray(x)
-        ? JSON.stringify(Object.keys(x).sort().reduce((o, k) => { o[k] = x[k]; return o; }, {}))
-        : JSON.stringify(x);
-    const originalKeys = new Set((original || []).map(key));
-    const editedKeys = new Set((edited || []).map(key));
+  // Identity per field, used to carry over a concurrent ADD without duplicating a
+  // concurrent EDIT. A hospitalization is identified by its `reason` (so editing
+  // its hospital/date/length elsewhere doesn't create a second row); a
+  // past-medical-history entry is the string itself. Entries lacking the primary
+  // key fall back to full (order-insensitive) value identity.
+  const fieldKeyFns = {
+    past_hospitalizations: (h) =>
+      (h?.reason ? String(h.reason).trim().toLowerCase() : '') ||
+      JSON.stringify(Object.keys(h || {}).sort().reduce((o, k) => { o[k] = h[k]; return o; }, {})),
+    past_medical_history: (s) => String(s ?? '').trim().toLowerCase(),
+  };
+  const mergeArrayField = (edited, original, server, keyFn) => {
+    const originalKeys = new Set((original || []).map(keyFn));
+    const editedKeys = new Set((edited || []).map(keyFn));
+    // Only a server entry whose identity is in NEITHER the snapshot nor the edited
+    // list is a genuine concurrent ADD; an edit to an entry the user also has
+    // resolves last-writer-wins on the user's version (no duplicate).
     const concurrentlyAdded = (server || []).filter(
-      (s) => !originalKeys.has(key(s)) && !editedKeys.has(key(s))
+      (s) => !originalKeys.has(keyFn(s)) && !editedKeys.has(keyFn(s))
     );
     return [...(edited || []), ...concurrentlyAdded];
   };
@@ -61,7 +68,7 @@ export default function HealthHistorySection({ patient }) {
             payload = { ...data };
             for (const f of ARRAY_FIELDS) {
               if (!(f in data)) continue;
-              payload[f] = mergeArrayField(data[f], originalArraysRef.current[f], latest[f]);
+              payload[f] = mergeArrayField(data[f], originalArraysRef.current[f], latest[f], fieldKeyFns[f]);
             }
           }
         } catch { /* fall back to writing the dialog snapshot */ }

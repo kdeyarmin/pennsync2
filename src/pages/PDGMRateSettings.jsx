@@ -16,7 +16,11 @@ import AccessDeniedState from "@/components/ui/AccessDeniedState";
 import { PieChart, Save, RotateCcw, Info, ShieldCheck, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-const mapToRows = (obj) => Object.entries(obj || {}).map(([prefix, group]) => ({ prefix, group }));
+// Stable per-row key (not persisted — rowsToMap reads only prefix/group) so
+// removing a middle ICD row doesn't shift focus/value by index.
+let icdRowKeySeq = 0;
+const freshIcdKey = () => `icd-${icdRowKeySeq++}`;
+const mapToRows = (obj) => Object.entries(obj || {}).map(([prefix, group]) => ({ _key: freshIcdKey(), prefix, group }));
 const rowsToMap = (rows) =>
   (rows || []).reduce((acc, r) => {
     const p = String(r.prefix || "").toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
@@ -153,7 +157,7 @@ export default function PDGMRateSettings() {
   const groupOptions = useMemo(() => Object.keys(form.clinicalGroupWeights || {}), [form.clinicalGroupWeights]);
   const updateIcdRow = (i, patch) => setIcdRows((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const removeIcdRow = (i) => setIcdRows((rows) => rows.filter((_, idx) => idx !== i));
-  const addIcdRow = () => setIcdRows((rows) => [...rows, { prefix: "", group: groupOptions[0] || "" }]);
+  const addIcdRow = () => setIcdRows((rows) => [...rows, { _key: freshIcdKey(), prefix: "", group: groupOptions[0] || "" }]);
 
   const setCell = (section, row, col, value) =>
     setForm((f) => ({
@@ -280,7 +284,7 @@ export default function PDGMRateSettings() {
             <CardContent>
               <div className="space-y-2">
                 {icdRows.map((row, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={row._key ?? i} className="flex items-center gap-2">
                     <Input
                       aria-label={`ICD prefix ${i + 1}`}
                       value={row.prefix}

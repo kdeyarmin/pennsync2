@@ -171,16 +171,22 @@ Deno.serve(async (req) => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const cacheEntry = await base44.entities.CertificatePacketCache.create({
-      user_id: employeeId,
-      certificate_ids_json: certificates.map(c => c.id),
-      date_range_start: dateRangeStart || null,
-      date_range_end: dateRangeEnd || null,
-      file_uri: uploadResponse.file_uri,
-      generated_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      download_count: 0
-    });
+    // Don't cache explicit-certificateIds packets: the cache READ keys only on
+    // user_id + date range (it can't match a specific id set), so persisting a
+    // pinned-subset packet here would let a later all-certs / date-range request
+    // for the same employee read it back. Generate + return without caching.
+    if (!hasExplicitIds) {
+      await base44.entities.CertificatePacketCache.create({
+        user_id: employeeId,
+        certificate_ids_json: certificates.map(c => c.id),
+        date_range_start: dateRangeStart || null,
+        date_range_end: dateRangeEnd || null,
+        file_uri: uploadResponse.file_uri,
+        generated_at: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        download_count: 0
+      });
+    }
 
     // Generate signed URL
     const signedUrl = await base44.integrations.Core.CreateFileSignedUrl({
