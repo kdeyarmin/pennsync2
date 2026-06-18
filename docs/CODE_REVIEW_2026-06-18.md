@@ -27,7 +27,8 @@ parity / dedupe tests where those exist.
 After the initial review (§2 lists what landed first), a follow-up pass implemented
 essentially the entire open backlog. Net state:
 
-**§3 backend security — DONE.** The three document-signing webhooks
+**§3 backend security — in-repo items DONE; two residuals (one deploy-only, one tracked-open).**
+The three document-signing webhooks
 (`onDocumentSigned`, `notifyAdminOfSignedDocument`, `notifySignerOfPackage`) and
 `autoAssignNurseToPatient` are **entity triggers** — the platform invokes them with no
 user identity and no custom header, so a required `INTERNAL_FN_SECRET` gate would 403 the
@@ -35,20 +36,30 @@ legitimate trigger the moment the secret is set. They are therefore hardened by 
 canonical re-fetch** instead: require `data.id`, re-fetch the real
 `DocumentSignature`/`DocumentPackage`/`Patient` by id, and derive all privileged state
 (completion, admin recipients, the 30-day signer token's email) from that record — never the
-posted body. A true network-auth gate on these triggers remains deploy-only (it needs the
-platform configured to send the secret header) and is the only §3 residual. The **cron**
-path `monitorComplianceRisks` *does* get the opt-in `INTERNAL_FN_SECRET` gate + 5000-row
-bound (crons can carry the header); `archiveSignedDocument` got an admin-role gate. Fax
-credential fallback (env → in-app `IntegrationSecret` via `resolveTwilioCreds`) added to
-`handleTwilioFaxWebhook`, `sendFax`, `autoRetryFailedFaxes`, `retryFailedFax`,
-`syncTwilioFaxStatuses`, and `handleTelnyxWebhook`.
+posted body. The **cron** path `monitorComplianceRisks` *does* get the opt-in
+`INTERNAL_FN_SECRET` gate + 5000-row bound (crons can carry the header);
+`archiveSignedDocument` got an admin-role gate. Fax credential fallback (env → in-app
+`IntegrationSecret` via `resolveTwilioCreds`) added to `handleTwilioFaxWebhook`, `sendFax`,
+`autoRetryFailedFaxes`, `retryFailedFax`, `syncTwilioFaxStatuses`, and `handleTelnyxWebhook`.
+**Two residuals remain:** (1) a true network-auth gate on the entity-trigger webhooks is
+**deploy-only** (needs the platform configured to send the secret header) and is mitigated by
+the canonical re-fetch; (2) `autoAssignNurseToPatient` still writes **placeholder PHI**
+(`phone:'000-000-0000'`, `date_of_birth:'1900-01-01'`, `address`/contact `'Unknown'`) to fill
+missing required fields so its `assigned_nurses` update passes schema validation — **tracked
+open**, because removing it blind could break nurse assignment for legacy records missing
+those fields (needs a Deno env to confirm partial updates skip required-field validation, or a
+redesign that patches only `assigned_nurses`).
 
-**`PDGMRateConfig` RLS — DONE (in-repo).** The rate-editor entity now carries an `rls` block
-(`read: {}`, `write: { user_condition: { role: "admin" } }`, mirroring `AIConfiguration`),
-so only admins can persist case-mix weights / base rate / ICD map while every authenticated
-read still works. `calculatePDGM` reads it via `asServiceRole` (RLS-exempt), so the
-calculation is unaffected. This was previously listed as a deploy-time step; it is expressed
-in the entity definition and needs no dashboard change.
+**`PDGMRateConfig` write authorization — DONE (in-repo).** The rate-editor entity is now
+**service-role-write only** (`read: {}`, `write: { user_condition: { role: "__service_role_only__" } }`),
+and the admin **PDGM Rate Settings** page saves through the new gated `savePDGMRateConfig`
+function (mirroring how `saveTwilioSecret` guards `IntegrationSecret`). That function authorizes
+on `isAdminLike` — role `admin` **or** an `agency_admin`/`super_admin` account_type **or** the
+owner email — so the platform owner (whose `role` is promoted only best-effort by
+`ensureSuperAdmin`) can still save; a plain `role:'admin'` RLS rule would have locked them out.
+Writes stamp `updated_by_email` from the authenticated caller and never trust a posted id.
+`calculatePDGM` reads the config via `asServiceRole` (RLS-exempt), so the calculation is
+unaffected.
 
 **§4 comms — DONE.** `sendFax` idempotency guard; `pollFaxStatuses` + `handleTwilioFaxWebhook`
 unknown-status → skip; `dispatchScheduledSms` 24h staleness expiry + `StatusCallback`;
@@ -225,21 +236,26 @@ into the primary documentation flow (`DocumentVisit.jsx`).
 
 ## 3. Backend security (RESOLVED — see §0; original findings + fixes below)
 
-> **Status:** Every item in this section has since been remediated (see §0). The signing
-> webhooks / `autoAssignNurseToPatient` use mandatory canonical re-fetch (a hard secret gate
-> would break the entity trigger); `monitorComplianceRisks` and `archiveSignedDocument` are
-> gated; the fax credential fallback is in place; and `PDGMRateConfig` is admin-write via RLS.
-> The **only** residual is a true network-auth gate on the entity-trigger webhooks, which is
-> deploy-only (needs the platform configured to send the secret header) and is mitigated by
-> the re-fetch. The original finding write-ups are kept below for the audit trail.
+> **Status (see §0 for detail):** The **in-repo** items in this section are remediated — the
+> signing webhooks / `autoAssignNurseToPatient` use mandatory canonical re-fetch (a hard secret
+> gate would break the entity trigger); `monitorComplianceRisks` and `archiveSignedDocument`
+> are gated; the fax credential fallback is in place; and `PDGMRateConfig` is now
+> service-role-write via the gated `savePDGMRateConfig` function. **Two residuals remain:**
+> (1) a true network-auth gate on the entity-trigger webhooks — **deploy-only** (needs the
+> platform configured to send the secret header), mitigated by the re-fetch; and (2) the
+> **placeholder-PHI writes** still in `autoAssignNurseToPatient` (see the
+> `autoAssignNurseToPatient` item below) — **tracked open**. The original finding write-ups are
+> kept below for the audit trail.
 
-These were the **most serious** findings. They were **not** auto-fixed in the first pass because the fix
-interacts with how Base44 invokes entity-trigger / cron functions (adding a required gate
-can break the platform trigger unless it is configured to send the secret header), and the
-backend cannot be executed in this environment. Apply with the ability to test the live
-trigger. The established pattern to copy is `checkExpiredInvitations/entry.ts:17-26`
-(opt-in `INTERNAL_FN_SECRET`) and `onUserSignup/entry.ts:18-21` (`SIGNUP_WEBHOOK_SECRET`);
-both env vars already exist in `.env.example`.
+*(Historical — the original first-pass rationale; see the **Status** note above for the current
+state.)* These were the **most serious** findings. They were **not** auto-fixed in the first
+pass because the fix interacts with how Base44 invokes entity-trigger / cron functions (adding
+a required gate can break the platform trigger unless it is configured to send the secret
+header), and the backend cannot be executed in this environment — so any remaining deploy-only
+gate must be applied with the ability to test the live trigger. The established pattern to copy
+is `checkExpiredInvitations/entry.ts:17-26` (opt-in `INTERNAL_FN_SECRET`) and
+`onUserSignup/entry.ts:18-21` (`SIGNUP_WEBHOOK_SECRET`); both env vars already exist in
+`.env.example`.
 
 - **[Critical] Three unauthenticated document-signing webhooks run privileged service-role
   work from a caller-supplied body.**
@@ -269,6 +285,14 @@ both env vars already exist in `.env.example`.
   PHI access-scoping field) via service role, and force-writes placeholder PHI
   (`phone:'000-000-0000'`, `date_of_birth:'1900-01-01'`) onto real records. → Add the
   automation secret gate; stop writing placeholder PHI.
+  - **Auth: DONE** — now requires `data.id` and re-fetches the canonical `Visit` by id,
+    deriving `patient_id` / `nurse_email` from the real record (never the posted body), so an
+    unauthenticated caller can't grant an attacker-chosen email PHI access.
+  - **Placeholder PHI: STILL OPEN** — the function still fills missing required fields with
+    `'000-000-0000'` / `'1900-01-01'` / `'Unknown'` so the `assigned_nurses` update passes
+    schema validation. Removing this blind risks breaking nurse assignment for legacy records
+    that are missing those fields; the safe fix (patch only `assigned_nurses`, or confirm
+    partial updates skip required-field validation) needs a Deno env to verify.
 
 - **[High] Fax subsystem can't read in-app Twilio credentials.** `sendFax`,
   `handleTwilioFaxWebhook`, `autoRetryFailedFaxes`, `retryFailedFax`, the fax pollers, and

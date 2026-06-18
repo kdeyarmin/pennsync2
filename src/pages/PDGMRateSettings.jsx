@@ -167,14 +167,16 @@ export default function PDGMRateSettings() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // PDGMRateConfig is service-role-write only, so writes go through the
+      // savePDGMRateConfig function, which gates on isAdminLike (so an account_type
+      // admin / the owner — whose `role` may not be literally 'admin' — can still
+      // save) and stamps updated_by_email from the authenticated caller.
       const payload = {
         ...meta,
         rates: formToRates(form),
         icd10_clinical_groups: rowsToMap(icdRows),
-        updated_by_email: user?.email || null,
       };
-      if (config?.id) return base44.entities.PDGMRateConfig.update(config.id, payload);
-      return base44.entities.PDGMRateConfig.create(payload);
+      return base44.functions.invoke("savePDGMRateConfig", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pdgm-rate-config"] });
