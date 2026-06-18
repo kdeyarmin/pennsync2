@@ -40,17 +40,37 @@ Deno.serve(async (req) => {
     const assignedNurses = patient.assigned_nurses || [];
     if (!assignedNurses.includes(nurse_email)) {
       assignedNurses.push(nurse_email);
-      
-      const updateData = { assigned_nurses: assignedNurses };
-      
-      // Fill missing required fields for legacy/incomplete records to pass schema validation
-      if (!patient.address || typeof patient.address !== 'string') updateData.address = patient.address ? String(patient.address) : 'Unknown';
-      if (!patient.phone || typeof patient.phone !== 'string') updateData.phone = patient.phone ? String(patient.phone) : '000-000-0000';
-      if (!patient.emergency_contact_name || typeof patient.emergency_contact_name !== 'string') updateData.emergency_contact_name = patient.emergency_contact_name ? String(patient.emergency_contact_name) : 'Unknown';
-      if (!patient.emergency_contact_phone || typeof patient.emergency_contact_phone !== 'string') updateData.emergency_contact_phone = patient.emergency_contact_phone ? String(patient.emergency_contact_phone) : '000-000-0000';
-      if (!patient.date_of_birth || typeof patient.date_of_birth !== 'string') updateData.date_of_birth = '1900-01-01';
 
-      await base44.asServiceRole.entities.Patient.update(patient_id, updateData);
+      // Prefer a MINIMAL write that only touches the PHI-access-scoping field, so we
+      // never fabricate PHI on a real patient record. If the platform validates the
+      // whole record on update, this minimal write throws for a legacy/incomplete
+      // record missing required fields — only THEN do we backfill those specific
+      // fields (logged) so the nurse still gets access. A record that already has
+      // its required fields, or a platform that validates only the patch, never gets
+      // a placeholder.
+      try {
+        await base44.asServiceRole.entities.Patient.update(patient_id, { assigned_nurses: assignedNurses });
+      } catch (minimalErr) {
+        const updateData: Record<string, unknown> = { assigned_nurses: assignedNurses };
+        const backfilled: string[] = [];
+        if (!patient.address || typeof patient.address !== 'string') { updateData.address = patient.address ? String(patient.address) : 'Unknown'; backfilled.push('address'); }
+        if (!patient.phone || typeof patient.phone !== 'string') { updateData.phone = patient.phone ? String(patient.phone) : '000-000-0000'; backfilled.push('phone'); }
+        if (!patient.emergency_contact_name || typeof patient.emergency_contact_name !== 'string') { updateData.emergency_contact_name = patient.emergency_contact_name ? String(patient.emergency_contact_name) : 'Unknown'; backfilled.push('emergency_contact_name'); }
+        if (!patient.emergency_contact_phone || typeof patient.emergency_contact_phone !== 'string') { updateData.emergency_contact_phone = patient.emergency_contact_phone ? String(patient.emergency_contact_phone) : '000-000-0000'; backfilled.push('emergency_contact_phone'); }
+        if (!patient.date_of_birth || typeof patient.date_of_birth !== 'string') { updateData.date_of_birth = '1900-01-01'; backfilled.push('date_of_birth'); }
+
+        // If nothing was missing, the minimal write failed for some OTHER reason
+        // (network, permissions, …) — don't mask it by writing placeholders.
+        if (backfilled.length === 0) throw minimalErr;
+
+        console.warn(
+          `autoAssignNurseToPatient: minimal assigned_nurses update failed for patient ${patient_id} ` +
+          `(${(minimalErr as Error)?.message}); backfilling missing required fields to complete the ` +
+          `assignment: ${backfilled.join(', ')}. These are PLACEHOLDERS on an incomplete legacy record ` +
+          `and should be corrected with the patient's real data.`
+        );
+        await base44.asServiceRole.entities.Patient.update(patient_id, updateData);
+      }
     }
 
     return Response.json({ 

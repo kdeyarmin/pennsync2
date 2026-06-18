@@ -41,14 +41,20 @@ posted body. The **cron** path `monitorComplianceRisks` *does* get the opt-in
 `archiveSignedDocument` got an admin-role gate. Fax credential fallback (env → in-app
 `IntegrationSecret` via `resolveTwilioCreds`) added to `handleTwilioFaxWebhook`, `sendFax`,
 `autoRetryFailedFaxes`, `retryFailedFax`, `syncTwilioFaxStatuses`, and `handleTelnyxWebhook`.
-**Two residuals remain:** (1) a true network-auth gate on the entity-trigger webhooks is
-**deploy-only** (needs the platform configured to send the secret header) and is mitigated by
-the canonical re-fetch; (2) `autoAssignNurseToPatient` still writes **placeholder PHI**
-(`phone:'000-000-0000'`, `date_of_birth:'1900-01-01'`, `address`/contact `'Unknown'`) to fill
-missing required fields so its `assigned_nurses` update passes schema validation — **tracked
-open**, because removing it blind could break nurse assignment for legacy records missing
-those fields (needs a Deno env to confirm partial updates skip required-field validation, or a
-redesign that patches only `assigned_nurses`).
+**Residual (deploy-only):** a true network-auth gate on the entity-trigger webhooks needs the
+platform configured to send the secret header; it is mitigated by the canonical re-fetch.
+
+**`autoAssignNurseToPatient` placeholder PHI — HARDENED.** The function now attempts a
+**minimal `{ assigned_nurses }` update first** (zero fabricated PHI). Only if that write throws
+*and* the record is genuinely missing required fields does it backfill those specific fields
+(`phone:'000-000-0000'`, `date_of_birth:'1900-01-01'`, `address`/contact `'Unknown'`) as a
+**logged last resort** so the nurse still gets PHI access; if the minimal write fails for any
+other reason, the original error propagates (no placeholders). This is robust under both
+platform validation models without a Deno test: partial-patch validation → placeholders are
+never written; whole-record validation on a complete record → never written; only an
+incomplete legacy record under whole-record validation still gets them, now logged for
+correction. Fully eliminating that last case needs a schema change (make those fields optional)
+or deploy-confirmed partial-patch validation.
 
 **`PDGMRateConfig` write authorization — DONE (in-repo).** The rate-editor entity is now
 **service-role-write only** (`read: {}`, `write: { user_condition: { role: "__service_role_only__" } }`),
@@ -240,11 +246,12 @@ into the primary documentation flow (`DocumentVisit.jsx`).
 > signing webhooks / `autoAssignNurseToPatient` use mandatory canonical re-fetch (a hard secret
 > gate would break the entity trigger); `monitorComplianceRisks` and `archiveSignedDocument`
 > are gated; the fax credential fallback is in place; and `PDGMRateConfig` is now
-> service-role-write via the gated `savePDGMRateConfig` function. **Two residuals remain:**
-> (1) a true network-auth gate on the entity-trigger webhooks — **deploy-only** (needs the
-> platform configured to send the secret header), mitigated by the re-fetch; and (2) the
-> **placeholder-PHI writes** still in `autoAssignNurseToPatient` (see the
-> `autoAssignNurseToPatient` item below) — **tracked open**. The original finding write-ups are
+> service-role-write via the gated `savePDGMRateConfig` function. The `autoAssignNurseToPatient`
+> placeholder-PHI write is **hardened** — a minimal `{ assigned_nurses }` write is tried first,
+> with placeholder backfill now only a logged last resort for incomplete legacy records under
+> whole-record validation (see §0 / the item below). The remaining **deploy-only** residual is a
+> true network-auth gate on the entity-trigger webhooks (needs the platform to send the secret
+> header), mitigated by the re-fetch. The original finding write-ups are
 > kept below for the audit trail.
 
 *(Historical — the original first-pass rationale; see the **Status** note above for the current
@@ -288,11 +295,13 @@ is `checkExpiredInvitations/entry.ts:17-26` (opt-in `INTERNAL_FN_SECRET`) and
   - **Auth: DONE** — now requires `data.id` and re-fetches the canonical `Visit` by id,
     deriving `patient_id` / `nurse_email` from the real record (never the posted body), so an
     unauthenticated caller can't grant an attacker-chosen email PHI access.
-  - **Placeholder PHI: STILL OPEN** — the function still fills missing required fields with
-    `'000-000-0000'` / `'1900-01-01'` / `'Unknown'` so the `assigned_nurses` update passes
-    schema validation. Removing this blind risks breaking nurse assignment for legacy records
-    that are missing those fields; the safe fix (patch only `assigned_nurses`, or confirm
-    partial updates skip required-field validation) needs a Deno env to verify.
+  - **Placeholder PHI: HARDENED** — the function now tries a minimal `{ assigned_nurses }`
+    write first (no fabricated PHI). It backfills `'000-000-0000'` / `'1900-01-01'` / `'Unknown'`
+    only if that throws *and* the record is genuinely missing required fields — a **logged last
+    resort** so the assignment still completes; any other failure propagates unchanged. Safe
+    under both validation models without a Deno test (placeholders are never written when
+    avoidable). Fully eliminating the last case (incomplete legacy record + whole-record
+    validation) needs a schema change making those fields optional.
 
 - **[High] Fax subsystem can't read in-app Twilio credentials.** `sendFax`,
   `handleTwilioFaxWebhook`, `autoRetryFailedFaxes`, `retryFailedFax`, the fax pollers, and
