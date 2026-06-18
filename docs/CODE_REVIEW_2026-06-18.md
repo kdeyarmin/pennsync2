@@ -48,8 +48,11 @@ platform configured to send the secret header; it is mitigated by the canonical 
 **minimal `{ assigned_nurses }` update first** (zero fabricated PHI). Only if that write throws
 *and* the record is genuinely missing required fields does it backfill those specific fields
 (`phone:'000-000-0000'`, `date_of_birth:'1900-01-01'`, `address`/contact `'Unknown'`) as a
-**logged last resort** so the nurse still gets PHI access; if the minimal write fails for any
-other reason, the original error propagates (no placeholders). This is robust under both
+**logged last resort** so the nurse still gets PHI access. A clearly non-validation failure
+(server 5xx, 429 rate-limit, or 401/403 auth — detected best-effort from the error's HTTP
+status) **rethrows** instead of backfilling, so a transient error can't mask the real cause by
+writing placeholders on retry; a 4xx or undetectable status keeps the safe backfill default.
+This is robust under both
 platform validation models without a Deno test: partial-patch validation → placeholders are
 never written; whole-record validation on a complete record → never written; only an
 incomplete legacy record under whole-record validation still gets them, now logged for

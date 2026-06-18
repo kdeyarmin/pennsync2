@@ -1,5 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+// Best-effort HTTP status extraction from an SDK/axios-style error (the exact
+// shape isn't guaranteed, so check the common locations and tolerate absence).
+const httpStatusOf = (e: unknown): number | null => {
+  const x = e as {
+    status?: unknown; statusCode?: unknown;
+    response?: { status?: unknown; statusCode?: unknown };
+    cause?: { status?: unknown };
+  } | null;
+  for (const c of [x?.status, x?.statusCode, x?.response?.status, x?.response?.statusCode, x?.cause?.status]) {
+    if (typeof c === 'number') return c;
+  }
+  return null;
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -51,6 +65,18 @@ Deno.serve(async (req) => {
       try {
         await base44.asServiceRole.entities.Patient.update(patient_id, { assigned_nurses: assignedNurses });
       } catch (minimalErr) {
+        // Only a likely required-field VALIDATION failure should trigger the
+        // placeholder backfill. A clearly transient/non-validation error — server
+        // 5xx, 429 rate-limit, or 401/403 auth — must rethrow so the real cause
+        // surfaces instead of being masked by a retry that fabricates PHI. A 4xx
+        // (typical validation status) or an undetectable status keeps the safe
+        // default (backfill), since this path exists to let a legacy record's
+        // assignment still complete.
+        const status = httpStatusOf(minimalErr);
+        if (status !== null && (status >= 500 || status === 429 || status === 401 || status === 403)) {
+          throw minimalErr;
+        }
+
         const updateData: Record<string, unknown> = { assigned_nurses: assignedNurses };
         const backfilled: string[] = [];
         if (!patient.address || typeof patient.address !== 'string') { updateData.address = patient.address ? String(patient.address) : 'Unknown'; backfilled.push('address'); }
