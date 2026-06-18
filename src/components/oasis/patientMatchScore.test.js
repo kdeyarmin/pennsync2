@@ -39,13 +39,26 @@ test('"LastName, FirstName" format is recognized', () => {
 
 test('verified DOB adds confidence and sets dobMatch', () => {
   // A weak (single-token) name keeps the base score well below the cap so the
-  // DOB contribution is observable. The DOB normalizer compares digit strings,
-  // so the document DOB must share the record's digit order to verify.
+  // DOB contribution is observable.
   const withDob = calculatePatientMatchScore('Jane', patient, '1950-03-15');
   const withoutDob = calculatePatientMatchScore('Jane', patient);
   assert.equal(withDob.dobMatch, true);
   assert.ok(withDob.confidence > withoutDob.confidence);
   assert.ok(withDob.matchFactors.some(f => f.includes('Date of birth verified')));
+});
+
+test('DOB verifies across formats (US MM/DD/YYYY document vs ISO record)', () => {
+  // The document DOB is typically US-formatted while the record is ISO; the
+  // matcher must compare Y/M/D components, not raw digit order.
+  const r = calculatePatientMatchScore('Jane', patient, '03/15/1950');
+  assert.equal(r.dobMatch, true);
+  assert.ok(r.matchFactors.some(f => f.includes('Date of birth verified')));
+});
+
+test('same year but different month/day does not falsely verify', () => {
+  const r = calculatePatientMatchScore('Jane', patient, '11/22/1950');
+  assert.equal(r.dobMatch, false);
+  assert.ok(r.matchFactors.some(f => f.includes('Birth year matches')));
 });
 
 test('a mismatched DOB year subtracts confidence and flags the discrepancy', () => {

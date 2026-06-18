@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Reference to Patient entity"
     },
+    "client_request_id": {
+      "type": "string",
+      "description": "Client-generated idempotency key for offline-queued creates. Used by OfflineManager to dedupe before re-creating a visit whose prior create may have succeeded but not been confirmed."
+    },
     "visit_date": {
       "type": "string",
       "format": "date"

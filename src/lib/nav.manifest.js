@@ -1094,6 +1094,15 @@ export const NAV_MANIFEST = [
     keywords: ["agency", "settings", "configuration"],
   },
   {
+    page: "PDGMRateSettings",
+    label: "PDGM Rate Settings",
+    icon: PieChart,
+    category: "Configuration",
+    adminOnly: true,
+    breadcrumbParent: "AdminOperations",
+    keywords: ["pdgm", "case mix", "case-mix", "weights", "rates", "reimbursement", "billing", "cms"],
+  },
+  {
     page: "ManageNewFeatures",
     label: "Manage Features",
     icon: Zap,

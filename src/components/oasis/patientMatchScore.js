@@ -170,26 +170,34 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
   let addressMatch = false;
 
   if (extractedDOB && patient.date_of_birth) {
-    const normalizeDOB = (dob) => {
-      const cleaned = dob.replace(/[^\d]/g, '');
-      if (cleaned.length >= 6) {
-        return cleaned.substring(0, 8);
-      }
-      return cleaned;
+    // Parse each DOB into Y/M/D components so verification doesn't depend on the
+    // two sources sharing a digit ORDER. The document DOB is typically US
+    // MM/DD/YYYY while the patient record is ISO YYYY-MM-DD; comparing raw digit
+    // strings (the previous approach) made the SAME person's DOB look different
+    // across formats — suppressing correct links and weakening this critical
+    // identity check exactly when formats differ.
+    const parseDobParts = (dob) => {
+      const s = String(dob || '').trim();
+      let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/); // ISO YYYY-MM-DD
+      if (m) return { y: +m[1], mo: +m[2], d: +m[3] };
+      m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);     // US MM/DD/YYYY
+      if (m) return { y: +m[3], mo: +m[1], d: +m[2] };
+      const yearOnly = s.match(/(\d{4})/);                      // year-only fallback
+      if (yearOnly) return { y: +yearOnly[1], mo: null, d: null };
+      return null;
     };
 
-    const extractedDOBNorm = normalizeDOB(extractedDOB);
-    const patientDOBNorm = normalizeDOB(patient.date_of_birth);
+    const eDob = parseDobParts(extractedDOB);
+    const pDob = parseDobParts(patient.date_of_birth);
 
-    if (extractedDOBNorm === patientDOBNorm) {
-      confidence += 30;
-      dobMatch = true;
-      matchFactors.push('✓ Date of birth verified');
-    } else if (extractedDOBNorm && patientDOBNorm) {
-      const extractedYear = extractedDOB.match(/\d{4}/)?.[0];
-      const patientYear = patient.date_of_birth.match(/\d{4}/)?.[0];
-
-      if (extractedYear === patientYear) {
+    if (eDob && pDob) {
+      const haveFullDates =
+        eDob.mo != null && eDob.d != null && pDob.mo != null && pDob.d != null;
+      if (haveFullDates && eDob.y === pDob.y && eDob.mo === pDob.mo && eDob.d === pDob.d) {
+        confidence += 30;
+        dobMatch = true;
+        matchFactors.push('✓ Date of birth verified');
+      } else if (eDob.y === pDob.y) {
         confidence += 10;
         matchFactors.push('Birth year matches');
       } else {

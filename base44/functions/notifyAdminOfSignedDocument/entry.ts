@@ -3,13 +3,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event, data } = await req.json();
+    const { data } = await req.json();
 
+    // Entity-trigger (fires on DocumentSignature update): invoked by the platform
+    // with no identity / no custom header, so a secret gate would 403 the
+    // legitimate trigger when INTERNAL_FN_SECRET is set. The defense for a trigger
+    // is to re-fetch the canonical record and act only on its real state, never
+    // the posted body — so a forged id/status can't probe patients or spam admins.
     if (!data || !data.id) {
       return Response.json({ error: 'No signature data provided' }, { status: 400 });
     }
 
-    const signature = data;
+    const signature = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
+    if (!signature) {
+      return Response.json({ success: true, skipped: 'signature not found' });
+    }
 
     // Only notify if status is 'signed'
     if (signature.status !== 'signed') {
@@ -29,8 +37,9 @@ Deno.serve(async (req) => {
       console.log('Could not fetch package');
     }
 
-    // Fetch patient info
-    const patient = await base44.asServiceRole.entities.Patient.get(signature.patient_id);
+    // Fetch patient info (tolerate a missing/invalid patient_id rather than
+    // 500-ing the whole notification on a bad lookup)
+    const patient = await base44.asServiceRole.entities.Patient.get(signature.patient_id).catch(() => null);
     const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient';
 
     // Get all admins

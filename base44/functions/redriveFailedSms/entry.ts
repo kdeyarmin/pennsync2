@@ -80,12 +80,13 @@ async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | n
   return { accountSid: sid, authToken: token };
 }
 
-async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string) {
+async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string, statusCallback?: string) {
   const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
     const params = new URLSearchParams({ To: to, From: from, Body: body });
+    if (statusCallback) params.set('StatusCallback', statusCallback);
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
@@ -213,6 +214,11 @@ Deno.serve(async (req) => {
     const { settings, smsEnabled } = await getAgencyConfig(base44);
     const runId = crypto.randomUUID();
     const now = Date.now();
+    // Reconcile terminal delivery status via the DLR webhook (mirrors sendSms) —
+    // without it a redriven message that later fails delivery is never retried
+    // again and never surfaces a failed-delivery notification.
+    const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
+    const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTwilioSmsStatus` : undefined;
 
     const result = { scanned: 0, redriven: 0, recovered: 0, failed: 0, skipped: 0 };
 
@@ -270,7 +276,7 @@ Deno.serve(async (req) => {
       const clientMessageId = row.client_message_id || `redrive-${row.id}`;
       let resp;
       try {
-        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body);
+        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body, statusCallback);
       } catch (netErr) {
         const aborted = (netErr as Error)?.name === 'AbortError';
         result.failed++;

@@ -251,7 +251,11 @@ Return JSON:
     try {
       const createdPlans = [];
       for (const plan of selected) {
-        const targetDate = format(addDays(new Date(), plan.target_days || 60), 'yyyy-MM-dd');
+        // Clamp the AI/user-supplied horizon to a sane range so addDays never
+        // yields a past (negative/zero) or absurdly-distant target_date.
+        const days = Number(plan.target_days);
+        const targetDays = Number.isFinite(days) && days >= 1 ? Math.min(365, Math.round(days)) : 60;
+        const targetDate = format(addDays(new Date(), targetDays), 'yyyy-MM-dd');
         
         const carePlan = await base44.entities.CarePlan.create({
           patient_id: patientId,
@@ -463,7 +467,10 @@ Return JSON:
                             <Input
                               type="number"
                               value={editingPlan.target_days}
-                              onChange={(e) => setEditingPlan({...editingPlan, target_days: parseInt(e.target.value)})}
+                              onChange={(e) => {
+                                const n = parseInt(e.target.value, 10);
+                                setEditingPlan({ ...editingPlan, target_days: Number.isNaN(n) ? '' : n });
+                              }}
                               className="mt-1 text-sm"
                             />
                           </div>

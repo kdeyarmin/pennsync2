@@ -65,12 +65,11 @@ async function hmacSha1Base64(key: string, msg: string): Promise<string> {
  * is configured to call. An optional TWILIO_WEBHOOK_SECRET + x-webhook-secret
  * header is supported for manual testing only.
  */
-async function verifyTwilioSignature(req: Request, params: Record<string, string>): Promise<boolean> {
-  const sharedSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET');
+async function verifyTwilioSignature(req: Request, params: Record<string, string>, authToken: string | null, storedWebhookSecret: string | null = null): Promise<boolean> {
+  const envSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET');
   const headerSecret = req.headers.get('x-webhook-secret');
-  if (sharedSecret && headerSecret && timingSafeEqual(headerSecret, sharedSecret)) return true;
+  if (headerSecret && ((envSecret && timingSafeEqual(headerSecret, envSecret)) || (storedWebhookSecret && timingSafeEqual(headerSecret, storedWebhookSecret)))) return true;
 
-  const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
   const provided = req.headers.get('x-twilio-signature');
   if (!authToken || !provided) return false;
 
@@ -81,14 +80,40 @@ async function verifyTwilioSignature(req: Request, params: Record<string, string
   return timingSafeEqual(provided.trim(), expected);
 }
 
+/**
+ * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'twilio'. Mirrors the SMS/voice handlers so fax webhooks work
+ * for agencies that store credentials in-app rather than in the dashboard env.
+ */
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null; storedWebhookSecret: string | null }> {
+  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let sid = envSid && envSid.trim() ? envSid.trim() : null;
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  let storedWebhookSecret: string | null = null;
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+    const rec = rows?.[0] || {};
+    if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
+    if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    if (rec.webhook_secret && String(rec.webhook_secret).trim()) storedWebhookSecret = String(rec.webhook_secret).trim();
+  } catch { /* ignore */ }
+  return { accountSid: sid, authToken: token, storedWebhookSecret };
+}
+
 Deno.serve(async (req) => {
   try {
     const formData = await req.formData();
     const params: Record<string, string> = {};
     for (const [k, v] of formData.entries()) params[k] = String(v);
 
-    // Fail closed: only accept genuine Twilio-signed callbacks.
-    if (!(await verifyTwilioSignature(req, params))) {
+    const base44 = createClientFromRequest(req);
+
+    // Fail closed: only accept genuine Twilio-signed callbacks. Resolve the auth
+    // token from env OR the in-app IntegrationSecret so agencies that store creds
+    // in-app don't have every inbound fax webhook rejected 401.
+    const { authToken, storedWebhookSecret } = await resolveTwilioCreds(base44);
+    if (!(await verifyTwilioSignature(req, params, authToken, storedWebhookSecret))) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -102,8 +127,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing FaxSid' }, { status: 400 });
     }
 
-    const base44 = createClientFromRequest(req);
-
     const faxLogs = await base44.asServiceRole.entities.FaxLog.filter({
       telnyx_fax_id: faxSid
     });
@@ -114,6 +137,12 @@ Deno.serve(async (req) => {
 
     const faxLog = faxLogs[0];
     const mappedStatus = mapTwilioStatus(status);
+
+    // Unknown Twilio status: ack without writing, rather than coercing to the
+    // non-terminal 'sending' (which can mask a terminal state).
+    if (!mappedStatus) {
+      return Response.json({ success: true, skipped: 'unknown status', status });
+    }
 
     // Idempotency: Twilio retries webhooks. If the status is unchanged, ack
     // without re-running side effects (duplicate notifications / retry bumps).
@@ -211,7 +240,7 @@ function mapTwilioStatus(twilioStatus) {
     failed: 'failed',
     canceled: 'failed'
   };
-  return statusMap[twilioStatus] || 'sending';
+  return statusMap[twilioStatus] || null;
 }
 
 async function sendStatusNotification(base44, faxLog, status, numPages) {

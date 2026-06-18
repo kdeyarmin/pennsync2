@@ -1,4 +1,5 @@
 import { clearCachedPatients } from './indexedDB';
+import { PURGE_FULL_PREFIXES, PURGE_SYNCED_KEYS } from './offlineKeys';
 
 /**
  * Local PHI hygiene for shared/kiosk devices.
@@ -8,26 +9,38 @@ import { clearCachedPatients } from './indexedDB';
  * idle session timeout this must be purged so the next user on the same device
  * cannot read the previous user's patient data.
  *
- * IMPORTANT — we intentionally do NOT clear unsynced offline work:
- *   - localStorage: `offline_pending`, `offline_visit_drafts`, `offline_conflicts`,
- *     `visit_draft_*`
- *   - IndexedDB: DRAFT_NOTES and SYNC_QUEUE stores
- * Wiping those when a 15-minute idle timeout fires mid-visit (frequently while
- * offline in the field) would be silent loss of documented care. They survive
- * until they sync. The proper long-term fix for that residual exposure is
- * encryption-at-rest with a session-derived key, tracked separately.
+ * The key classification (which keys to purge fully, drop-synced, or preserve)
+ * now lives in ONE place — src/lib/offlineKeys.js — derived here, so the three
+ * offline subsystems and this purge can't drift apart. See that file for the
+ * rationale on preserving unsynced field work (wiping it on a mid-visit idle
+ * timeout would be silent loss of documented care) vs. purging synced copies +
+ * diagnostic logs (re-fetchable PHI that must not survive on a shared device).
  */
 
-// Re-fetchable PHI caches in localStorage (exact key or prefix match).
-const PHI_CACHE_KEY_PREFIXES = [
-  'offline_patients',          // full cached patient roster (largest exposure)
-  'offline_patient_data',      // cached per-patient detail
-  'offline_cache_timestamp',
-  'recentPatients_',           // recently-viewed patient names/ids
-  'favoritedPatients_',        // favorited patient names/ids
-  'oasis_data_',               // extracted OASIS assessment data
-  'penn_sync_offline_cache_',  // generic offline cache (STORAGE_PREFIX + "cache_")
-];
+/**
+ * Drop the already-synced entries from an offline-work queue while preserving
+ * anything still pending sync. Best-effort: a malformed value is left untouched
+ * (it isn't re-fetchable PHI we can safely interpret), never throwing.
+ */
+function purgeSyncedOfflineEntries() {
+  if (typeof localStorage === 'undefined') return;
+  for (const key of PURGE_SYNCED_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const items = JSON.parse(raw);
+      if (!Array.isArray(items)) continue;
+      const pending = items.filter((item) => !item?.synced);
+      if (pending.length === 0) {
+        localStorage.removeItem(key);
+      } else if (pending.length !== items.length) {
+        localStorage.setItem(key, JSON.stringify(pending));
+      }
+    } catch {
+      /* malformed entry — leave as-is */
+    }
+  }
+}
 
 /**
  * Purge re-fetchable cached PHI from local storage. Best-effort and never
@@ -41,11 +54,14 @@ export async function clearCachedPHI() {
       const toRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && PHI_CACHE_KEY_PREFIXES.some((p) => key === p || key.startsWith(p))) {
+        if (key && PURGE_FULL_PREFIXES.some((p) => key === p || key.startsWith(p))) {
           toRemove.push(key);
         }
       }
       toRemove.forEach((key) => localStorage.removeItem(key));
+      // Drop the synced (already-on-server) copies from the offline-work queues
+      // while preserving anything still pending sync.
+      purgeSyncedOfflineEntries();
     }
   } catch {
     /* storage unavailable — nothing to purge */

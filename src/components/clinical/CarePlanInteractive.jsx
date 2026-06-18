@@ -28,11 +28,20 @@ function CarePlanCard({ plan, currentUser, onUpdated }) {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Re-fetch the plan's current notes immediately before prepending so a
+      // note another clinician added since this card loaded (the plan comes from
+      // a cached query) isn't dropped by a stale concatenation.
+      let baseNotes = plan.clinical_notes || "";
+      try {
+        const latest = await base44.entities.CarePlan.filter({ id: plan.id });
+        if (latest?.[0]) baseNotes = latest[0].clinical_notes || "";
+      } catch { /* fall back to the cached value */ }
+
       await base44.entities.CarePlan.update(plan.id, {
         status: newStatus,
         clinical_notes: note
-          ? `[${new Date().toLocaleDateString()} - ${currentUser?.full_name}] ${note}\n\n${plan.clinical_notes || ""}`
-          : plan.clinical_notes,
+          ? `[${new Date().toLocaleDateString()} - ${currentUser?.full_name}] ${note}\n\n${baseNotes}`
+          : baseNotes,
       });
       toast.success("Care plan updated");
       setNote("");

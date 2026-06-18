@@ -1,6 +1,27 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
+ * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'twilio'. Mirrors the SMS/voice handlers so fax functions work
+ * for agencies that store credentials in-app rather than in the dashboard env.
+ */
+async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
+  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let sid = envSid && envSid.trim() ? envSid.trim() : null;
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  if (!sid || !token) {
+    try {
+      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+      const rec = rows?.[0] || {};
+      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
+      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    } catch { /* ignore */ }
+  }
+  return { accountSid: sid, authToken: token };
+}
+
+/**
  * Re-dispatches failed faxes whose config-aware backoff window (set by the
  * status webhook) has elapsed. Called every few minutes by a scheduled
  * automation; enable ONE schedule. Honors the admin's FaxRetryConfig (max
@@ -74,8 +95,7 @@ Deno.serve(async (req) => {
     let retriedCount = 0;
     let skippedCount = 0;
 
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const { accountSid, authToken } = await resolveTwilioCreds(base44);
     const fromNumber = Deno.env.get('TWILIO_FAX_NUMBER');
 
     if (!accountSid || !authToken || !fromNumber) {

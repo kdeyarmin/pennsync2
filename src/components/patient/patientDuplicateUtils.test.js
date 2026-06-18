@@ -30,6 +30,17 @@ test('soundex codes similar-sounding names the same', () => {
   assert.equal(soundex(null), '');
 });
 
+test('soundex applies the standard H/W coalescing rule (reference codes)', () => {
+  // Classic reference values. The H/W rule means two consonants with the same
+  // code separated only by H or W collapse to one digit, while vowels reset it.
+  assert.equal(soundex('Robert'), 'R163');
+  assert.equal(soundex('Rupert'), 'R163');
+  assert.equal(soundex('Ashcraft'), 'A261'); // sh-c coalesced via H -> not A226
+  assert.equal(soundex('Ashcroft'), 'A261');
+  assert.equal(soundex('Tymczak'), 'T522');
+  assert.equal(soundex('Pfister'), 'P236');
+});
+
 test('levenshtein measures edit distance', () => {
   assert.equal(levenshtein('kitten', 'sitting'), 3);
   assert.equal(levenshtein('abc', 'abc'), 0);

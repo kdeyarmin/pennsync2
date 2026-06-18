@@ -78,22 +78,26 @@ Deno.serve(async (req) => {
       };
     }).filter(u => u.needs_upload);
 
+    // Guard against division by zero — a tenant/segment with no patients, users,
+    // or completed visits would otherwise emit "NaN" strings into the dashboard.
+    const pct = (count, total) => (total > 0 ? (count / total) * 100 : 0).toFixed(1);
+
     // Calculate summary statistics
     const summary = {
       total_patients: patients.length,
       patients_with_issues: patientIssues.length,
-      patient_completeness: ((patients.length - patientIssues.length) / patients.length * 100).toFixed(1),
-      
+      patient_completeness: pct(patients.length - patientIssues.length, patients.length),
+
       total_users: users.length,
       users_with_issues: userIssues.length,
-      user_completeness: ((users.length - userIssues.length) / users.length * 100).toFixed(1),
-      
+      user_completeness: pct(users.length - userIssues.length, users.length),
+
       total_visits: visits.length,
       visits_with_issues: visitIssues.length,
-      visit_completeness: ((visits.length - visitIssues.length) / visits.length * 100).toFixed(1),
-      
+      visit_completeness: pct(visits.length - visitIssues.length, visits.length),
+
       users_without_credentials: credentialCoverage.length,
-      credential_coverage: ((users.length - credentialCoverage.length) / users.length * 100).toFixed(1),
+      credential_coverage: pct(users.length - credentialCoverage.length, users.length),
       
       critical_patient_issues: patientIssues.filter(p => p.critical).length,
       critical_user_issues: userIssues.filter(u => u.critical).length,

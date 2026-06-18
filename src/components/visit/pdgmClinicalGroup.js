@@ -137,8 +137,16 @@ export function identifyComorbidities(primaryDx, secondaryDx = [], narrativeText
 
   const foundComorbidities = { high: [], low: [], count: 0, adjustment: 'none' };
 
+  // The diabetes family spans both tiers: "Diabetes with Complications" (high)
+  // and "Diabetes (uncomplicated)" (low) can match the same text. Treat them as
+  // mutually exclusive so a complicated-diabetes dx is counted once (in high)
+  // rather than double-counted in both tiers.
+  let diabetesMatched = false;
+
   for (const category of ['high', 'low']) {
     for (const comorbidity of comorbidityCategories[category]) {
+      const isDiabetes = comorbidity.name.startsWith('Diabetes');
+      if (isDiabetes && diabetesMatched) continue;
       for (const pattern of comorbidity.patterns) {
         if (pattern.test(allText)) {
           foundComorbidities[category].push({
@@ -147,6 +155,7 @@ export function identifyComorbidities(primaryDx, secondaryDx = [], narrativeText
             matched: pattern.source
           });
           foundComorbidities.count++;
+          if (isDiabetes) diabetesMatched = true;
           break;
         }
       }

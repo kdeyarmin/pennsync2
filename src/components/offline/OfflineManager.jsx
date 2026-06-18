@@ -1,35 +1,60 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
-import { 
-  getSyncQueue, 
-  removeFromSyncQueue, 
+import { useAuth } from '@/lib/AuthContext';
+import {
+  getSyncQueue,
+  removeFromSyncQueue,
   savePatients
 } from '@/lib/indexedDB';
 
 export default function OfflineManager() {
+  const { isAuthenticated } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  // Guards the drain against concurrent/re-entrant runs so two `online` events
+  // (or a re-mount) don't both drain the same queue and double-create visits.
+  const isDrainingRef = useRef(false);
 
   useEffect(() => {
     const handleOnline = async () => {
       setIsOnline(true);
+
+      if (isDrainingRef.current) return;
+      isDrainingRef.current = true;
       toast.success('Back online! Syncing data...');
-      
+
+      let syncedCount = 0;
       try {
         const queue = await getSyncQueue();
         for (const item of queue) {
           if (item.action === 'CREATE_VISIT') {
-            await base44.entities.Visit.create(item.payload);
+            // Idempotency: if a Visit with this client_request_id already exists
+            // (e.g. created on a prior interrupted drain), skip the create and
+            // just clear the queue item — never create a duplicate clinical record.
+            const key = item.payload?.client_request_id;
+            const existing = key
+              ? await base44.entities.Visit.filter({ client_request_id: key })
+              : [];
+            if (!existing || existing.length === 0) {
+              await base44.entities.Visit.create(item.payload);
+            }
             await removeFromSyncQueue(item.id);
+            syncedCount += 1;
+          } else {
+            // Unknown action types have no handler; log so they aren't invisibly
+            // stuck in the queue forever. Left in place (not removed) for inspection.
+            console.warn('Skipping unknown sync action; no handler:', item.action, item.id);
           }
         }
 
-        if (queue.length > 0) {
-            toast.success(`Successfully synced ${queue.length} items.`);
+        if (syncedCount > 0) {
+            toast.success(`Successfully synced ${syncedCount} items.`);
         }
       } catch (err) {
         console.error('Error syncing data:', err);
         toast.error('Some items failed to sync.');
+      } finally {
+        isDrainingRef.current = false;
       }
     };
 
@@ -41,8 +66,9 @@ export default function OfflineManager() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Initial cache of patients
-    if (isOnline) {
+    // Initial cache of patients. OfflineManager is mounted outside the auth gate,
+    // so guard this PHI query on authentication to avoid firing it on the login screen.
+    if (isOnline && isAuthenticated) {
       base44.entities.Patient.filter({ status: "active" }, "first_name", 200)
         .then(patients => {
           savePatients(patients);
@@ -54,7 +80,7 @@ export default function OfflineManager() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [isOnline]);
+  }, [isOnline, isAuthenticated]);
 
   return null;
 }

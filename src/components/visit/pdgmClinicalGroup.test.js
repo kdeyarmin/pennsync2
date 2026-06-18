@@ -95,6 +95,19 @@ test('identifyComorbidities: each comorbidity is counted once even with multiple
   assert.equal(r.count, 1);
 });
 
+test('identifyComorbidities: complicated diabetes counts once (high), not in both tiers', () => {
+  // "Type 2 diabetes mellitus with diabetic neuropathy" matches BOTH the
+  // high-tier "Diabetes with Complications" and the low-tier
+  // "Diabetes (uncomplicated)". The diabetes family is mutually exclusive, so it
+  // must be counted exactly once, in the high tier.
+  const r = identifyComorbidities('Type 2 diabetes mellitus with diabetic neuropathy', [], '');
+  assert.equal(r.high.length, 1);
+  assert.equal(r.high[0].name, 'Diabetes with Complications');
+  assert.equal(r.low.length, 0);
+  assert.equal(r.count, 1);
+  assert.equal(r.adjustment, 'high');
+});
+
 test('identifyComorbidities: returns empty result for no matches', () => {
   const r = identifyComorbidities('Routine visit', [], '');
   assert.deepEqual(r, { high: [], low: [], count: 0, adjustment: 'none' });

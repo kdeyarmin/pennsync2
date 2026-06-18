@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { queryClientInstance } from "@/lib/query-client";
 import {
@@ -23,13 +23,20 @@ export default function SessionTimeoutManager({
   const [showWarning, setShowWarning] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(warningMinutes * 60);
   const [lastActivity, setLastActivity] = useState(Date.now());
+  // Latch so the 1-second checkInterval can't re-enter handleLogout on every
+  // tick while the logout redirect is still in flight — otherwise each tick
+  // re-fires the SESSION_TIMEOUT audit write and another logout/clear call.
+  const loggingOutRef = useRef(false);
 
   const handleLogout = useCallback(async () => {
+    if (loggingOutRef.current) return;
+    loggingOutRef.current = true;
+
     await logSecurityEvent('SESSION_TIMEOUT', {
       timeout_minutes: timeoutMinutes,
       last_activity: new Date(lastActivity).toISOString()
     }, 'warning');
-    
+
     // Clear sensitive data from memory (incl. cached PHI in the query cache)
     sessionStorage.clear();
     try { queryClientInstance.clear(); } catch { /* no-op */ }
@@ -38,8 +45,9 @@ export default function SessionTimeoutManager({
     // completes before the logout redirect navigates away.
     try { await clearCachedPHI(); } catch { /* no-op */ }
 
-    // Logout and redirect
-    base44.auth.logout();
+    // Logout and redirect (pass the current URL so the SDK performs a
+    // deterministic navigation, matching AuthContext.logout).
+    base44.auth.logout(window.location.href);
   }, [timeoutMinutes, lastActivity]);
 
   const handleExtendSession = useCallback(() => {

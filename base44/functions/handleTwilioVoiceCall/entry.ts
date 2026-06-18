@@ -245,8 +245,14 @@ Deno.serve(async (req) => {
     const callerNum = normalizeE164(callerRaw) || callerRaw;
     const functionsBase = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
 
-    const nurses = workNum ? await base44.asServiceRole.entities.User.filter({ work_phone_number: workNum }).catch(() => []) : [];
-    const nurse = nurses[0];
+    // Resolve the nurse via the same phoneVariants fan-out used for the caller,
+    // so a stored work_phone_number in a different format doesn't route a real
+    // nurse's call to the main office.
+    let nurse = null;
+    for (const variant of (workNum ? phoneVariants(workNum) : [])) {
+      const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }).catch(() => []);
+      if (matches.length > 0) { nurse = matches[0]; break; }
+    }
 
     // Unresolved work number — fail safe to the main office.
     if (!nurse) {

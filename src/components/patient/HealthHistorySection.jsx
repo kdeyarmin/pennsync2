@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,10 +23,64 @@ import { toast } from "sonner";
 export default function HealthHistorySection({ patient }) {
   const [editDialog, setEditDialog] = useState(null);
   const [formData, setFormData] = useState({});
+  const [rowKeys, setRowKeys] = useState([]);
   const queryClient = useQueryClient();
+  // Snapshot of the array fields when the dialog opened, so the save-time merge
+  // can tell entries the user removed (in here, gone from server) from entries a
+  // concurrent writer added (absent here, present on server) and not clobber the latter.
+  const originalArraysRef = useRef({});
+
+  // The array history fields are written as a whole array; re-merging keeps a
+  // concurrent add (present on the latest server record, not in the snapshot
+  // this dialog opened with, and not in the edited list) while honoring removals.
+  const ARRAY_FIELDS = ['past_medical_history', 'past_hospitalizations'];
+  // Identity per field, used to carry over a concurrent ADD without duplicating a
+  // concurrent EDIT. A hospitalization is identified by `reason` + `date` so that
+  // editing its hospital/length doesn't fork a second row, while two admissions
+  // sharing a reason on different dates (e.g. two CHF stays) stay distinct and a
+  // concurrent add of the second isn't collapsed into the first and lost. A
+  // past-medical-history entry is the string itself. Entries lacking both reason
+  // and date fall back to full (order-insensitive) value identity.
+  const fieldKeyFns = {
+    past_hospitalizations: (h) => {
+      const reason = h?.reason ? String(h.reason).trim().toLowerCase() : '';
+      const date = h?.date ? String(h.date).trim() : '';
+      return (reason || date)
+        ? `${reason}|${date}`
+        : JSON.stringify(Object.keys(h || {}).sort().reduce((o, k) => { o[k] = h[k]; return o; }, {}));
+    },
+    past_medical_history: (s) => String(s ?? '').trim().toLowerCase(),
+  };
+  const mergeArrayField = (edited, original, server, keyFn) => {
+    const originalKeys = new Set((original || []).map(keyFn));
+    const editedKeys = new Set((edited || []).map(keyFn));
+    // Only a server entry whose identity is in NEITHER the snapshot nor the edited
+    // list is a genuine concurrent ADD; an edit to an entry the user also has
+    // resolves last-writer-wins on the user's version (no duplicate).
+    const concurrentlyAdded = (server || []).filter(
+      (s) => !originalKeys.has(keyFn(s)) && !editedKeys.has(keyFn(s))
+    );
+    return [...(edited || []), ...concurrentlyAdded];
+  };
 
   const updatePatientMutation = useMutation({
-    mutationFn: (data) => base44.entities.Patient.update(patient.id, data),
+    mutationFn: async (data) => {
+      let payload = data;
+      if (ARRAY_FIELDS.some((f) => f in data)) {
+        try {
+          const latestArr = await base44.entities.Patient.filter({ id: patient.id });
+          const latest = latestArr?.[0];
+          if (latest) {
+            payload = { ...data };
+            for (const f of ARRAY_FIELDS) {
+              if (!(f in data)) continue;
+              payload[f] = mergeArrayField(data[f], originalArraysRef.current[f], latest[f], fieldKeyFns[f]);
+            }
+          }
+        } catch { /* fall back to writing the dialog snapshot */ }
+      }
+      return base44.entities.Patient.update(patient.id, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['patient', patient.id] });
@@ -39,17 +93,37 @@ export default function HealthHistorySection({ patient }) {
     }
   });
 
+  // Stable per-row keys for the editable array dialogs, kept parallel to the
+  // array so removing a middle row doesn't shift React keys by index (which would
+  // move focus/IME state to the wrong input). Not persisted — purely for keying.
+  const rowKeyCounter = useRef(0);
+  const makeRowKeys = (n) => Array.from({ length: n }, () => `r${rowKeyCounter.current++}`);
+
   const openEditDialog = (section) => {
     setEditDialog(section);
+    originalArraysRef.current = {
+      past_medical_history: patient.past_medical_history || [],
+      past_hospitalizations: patient.past_hospitalizations || [],
+    };
     if (section === 'allergies') {
       setFormData({ allergies: patient.allergies || '' });
     } else if (section === 'past_medical') {
-      setFormData({ past_medical_history: patient.past_medical_history || [] });
+      const arr = patient.past_medical_history || [];
+      setFormData({ past_medical_history: arr });
+      setRowKeys(makeRowKeys(arr.length));
     } else if (section === 'surgeries') {
-      setFormData({ past_hospitalizations: patient.past_hospitalizations || [] });
+      const arr = patient.past_hospitalizations || [];
+      setFormData({ past_hospitalizations: arr });
+      setRowKeys(makeRowKeys(arr.length));
     } else if (section === 'family_history') {
       setFormData({ family_medical_history: patient.family_medical_history || '' });
     }
+  };
+
+  const updateObjectArrayItem = (field, index, key, value) => {
+    const newArray = [...(formData[field] || [])];
+    newArray[index] = { ...newArray[index], [key]: value };
+    setFormData({ ...formData, [field]: newArray });
   };
 
   const handleSave = () => {
@@ -61,6 +135,19 @@ export default function HealthHistorySection({ patient }) {
       ...formData,
       [field]: [...(formData[field] || []), '']
     });
+    setRowKeys((k) => [...k, `r${rowKeyCounter.current++}`]);
+  };
+
+  // Append a blank hospitalization entry (object) + its stable row key.
+  const addHospitalizationRow = () => {
+    setFormData({
+      ...formData,
+      past_hospitalizations: [
+        ...(formData.past_hospitalizations || []),
+        { reason: '', hospital: '', date: '', length_of_stay: '' },
+      ],
+    });
+    setRowKeys((k) => [...k, `r${rowKeyCounter.current++}`]);
   };
 
   const updateArrayItem = (field, index, value) => {
@@ -73,6 +160,7 @@ export default function HealthHistorySection({ patient }) {
     const newArray = [...(formData[field] || [])];
     newArray.splice(index, 1);
     setFormData({ ...formData, [field]: newArray });
+    setRowKeys((k) => k.filter((_, i) => i !== index));
   };
 
   return (
@@ -236,7 +324,7 @@ export default function HealthHistorySection({ patient }) {
                 </div>
                 <div className="space-y-2">
                   {(formData.past_medical_history || []).map((condition, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={rowKeys[index] ?? index} className="flex gap-2">
                       <Input
                         value={condition}
                         onChange={(e) => updateArrayItem('past_medical_history', index, e.target.value)}
@@ -249,6 +337,61 @@ export default function HealthHistorySection({ patient }) {
                       >
                         Remove
                       </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {editDialog === 'surgeries' && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Surgeries & Hospitalizations</Label>
+                  <Button size="sm" onClick={addHospitalizationRow}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Entry
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.past_hospitalizations || []).length === 0 && (
+                    <p className="text-sm text-slate-500 italic">No entries. Use “Add Entry” to record one.</p>
+                  )}
+                  {(formData.past_hospitalizations || []).map((hosp, index) => (
+                    <div key={rowKeys[index] ?? index} className="border border-slate-200 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-500">Entry {index + 1}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromArray('past_hospitalizations', index)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <Input
+                        value={hosp.reason || ''}
+                        onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'reason', e.target.value)}
+                        placeholder="Reason / procedure"
+                      />
+                      <Input
+                        value={hosp.hospital || ''}
+                        onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'hospital', e.target.value)}
+                        placeholder="Hospital / facility"
+                      />
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={hosp.date || ''}
+                          onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'date', e.target.value)}
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          value={hosp.length_of_stay ?? ''}
+                          onChange={(e) => updateObjectArrayItem('past_hospitalizations', index, 'length_of_stay', e.target.value)}
+                          placeholder="Length of stay (days)"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>

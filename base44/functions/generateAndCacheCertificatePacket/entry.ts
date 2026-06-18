@@ -17,12 +17,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Check for existing valid cache
+    // Check for existing valid cache. The cache key only tracks user_id + date
+    // range, so a request that pins a specific set of certificateIds must NOT
+    // reuse a packet cached for a different selection — skip the cache (and
+    // regenerate) whenever explicit certificateIds are supplied.
+    const hasExplicitIds = Array.isArray(certificateIds) && certificateIds.length > 0;
     const cacheQuery = { user_id: employeeId };
     if (dateRangeStart) cacheQuery.date_range_start = dateRangeStart;
     if (dateRangeEnd) cacheQuery.date_range_end = dateRangeEnd;
 
-    const existingCache = await base44.entities.CertificatePacketCache.filter(cacheQuery);
+    const existingCache = hasExplicitIds
+      ? []
+      : await base44.entities.CertificatePacketCache.filter(cacheQuery);
     
     if (existingCache && existingCache.length > 0) {
       const cache = existingCache[0];
@@ -53,13 +59,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Cache miss or expired: generate new packet
-    const employee = await base44.auth.me();
+    // Cache miss or expired: generate new packet. When an admin generates for
+    // someone else, the packet must carry the TARGET employee's name — not the
+    // caller's — so resolve `employee` to the target record rather than reusing
+    // the authenticated caller (auth.me()).
+    let employee = user;
     if (employeeId !== user.email) {
       const employees = await base44.asServiceRole.entities.User.filter({ email: employeeId });
       if (!employees || employees.length === 0) {
         return Response.json({ error: 'Employee not found' }, { status: 404 });
       }
+      employee = employees[0];
     }
 
     // Fetch certificates
@@ -161,16 +171,22 @@ Deno.serve(async (req) => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const cacheEntry = await base44.entities.CertificatePacketCache.create({
-      user_id: employeeId,
-      certificate_ids_json: certificates.map(c => c.id),
-      date_range_start: dateRangeStart || null,
-      date_range_end: dateRangeEnd || null,
-      file_uri: uploadResponse.file_uri,
-      generated_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      download_count: 0
-    });
+    // Don't cache explicit-certificateIds packets: the cache READ keys only on
+    // user_id + date range (it can't match a specific id set), so persisting a
+    // pinned-subset packet here would let a later all-certs / date-range request
+    // for the same employee read it back. Generate + return without caching.
+    if (!hasExplicitIds) {
+      await base44.entities.CertificatePacketCache.create({
+        user_id: employeeId,
+        certificate_ids_json: certificates.map(c => c.id),
+        date_range_start: dateRangeStart || null,
+        date_range_end: dateRangeEnd || null,
+        file_uri: uploadResponse.file_uri,
+        generated_at: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        download_count: 0
+      });
+    }
 
     // Generate signed URL
     const signedUrl = await base44.integrations.Core.CreateFileSignedUrl({

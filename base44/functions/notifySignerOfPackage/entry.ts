@@ -3,13 +3,22 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event, data } = await req.json();
+    const { data } = await req.json();
 
-    if (!data) {
+    // Entity-trigger (fires on DocumentPackage create): invoked by the platform
+    // with no identity / no custom header, so a secret gate would 403 the
+    // legitimate trigger when INTERNAL_FN_SECRET is set. Defense for a trigger:
+    // re-fetch the canonical package by id and use ITS signer fields (never the
+    // posted body), so the 30-day signing credential can only be minted for a real
+    // package and can't be redirected to an attacker-chosen address.
+    if (!data || !data.id) {
       return Response.json({ error: 'No package data provided' }, { status: 400 });
     }
 
-    const pkg = data;
+    const pkg = await base44.asServiceRole.entities.DocumentPackage.get(data.id).catch(() => null);
+    if (!pkg) {
+      return Response.json({ success: true, skipped: 'package not found' });
+    }
     if (!pkg.signer_email) {
       return Response.json({ success: true, skipped: 'No signer email' });
     }

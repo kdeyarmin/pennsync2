@@ -13,13 +13,24 @@
 // Drug / class -> lowercase name fragments that identify a member.
 const GROUPS = {
   warfarin: ["warfarin", "coumadin", "jantoven"],
-  nsaid: ["ibuprofen", "naproxen", "ketorolac", "diclofenac", "meloxicam", "indomethacin", "aspirin", "celecoxib", "nsaid"],
+  // NSAIDs proper. Aspirin is intentionally NOT here: it acts primarily as an
+  // antiplatelet, so lumping it with NSAIDs mislabeled warfarin + aspirin as an
+  // "NSAID GI bleeding" interaction. Aspirin lives in `antiplatelet` below so the
+  // genuine (and dangerous) anticoagulant + antiplatelet bleeding interaction is
+  // still surfaced — with the correct label, not dropped.
+  nsaid: ["ibuprofen", "naproxen", "ketorolac", "diclofenac", "meloxicam", "indomethacin", "celecoxib", "nsaid"],
+  antiplatelet: ["aspirin", "asa", "acetylsalicylic", "clopidogrel", "plavix", "prasugrel", "effient", "ticagrelor", "brilinta", "dipyridamole", "aggrenox"],
+  // Aspirin is ALSO a salicylate: like the NSAIDs it reduces renal clearance of
+  // methotrexate and lithium. Kept separate from `nsaid` (so warfarin+aspirin is
+  // labeled antiplatelet, not "NSAID") and from `antiplatelet` (so clopidogrel et
+  // al. don't false-flag the MTX/lithium renal interactions, which are aspirin-specific).
+  salicylate: ["aspirin", "asa", "acetylsalicylic"],
   maoi: ["phenelzine", "tranylcypromine", "isocarboxazid", "selegiline", "rasagiline", "linezolid"],
   ssri_snri: ["fluoxetine", "sertraline", "paroxetine", "citalopram", "escitalopram", "fluvoxamine", "venlafaxine", "desvenlafaxine", "duloxetine"],
   nitrate: ["nitroglycerin", "isosorbide", "nitrate"],
   pde5: ["sildenafil", "tadalafil", "vardenafil", "avanafil"],
   ace_arb: ["lisinopril", "enalapril", "ramipril", "benazepril", "captopril", "quinapril", "losartan", "valsartan", "olmesartan", "candesartan", "irbesartan", "telmisartan"],
-  potassium_sparing: ["spironolactone", "eplerenone", "triamterene", "amiloride", "potassium chloride", "potassium", "klor-con"],
+  potassium_sparing: ["spironolactone", "eplerenone", "triamterene", "amiloride", "potassium chloride", "potassium", "klor con"],
   statin_cyp3a4: ["simvastatin", "lovastatin", "atorvastatin"],
   strong_cyp3a4_inhibitor: ["clarithromycin", "erythromycin", "itraconazole", "ketoconazole", "ritonavir", "cobicistat"],
   digoxin: ["digoxin", "lanoxin"],
@@ -42,16 +53,20 @@ const GROUPS = {
 // Pairwise rules. Each links two groups with a fixed severity + guidance.
 const RULES = [
   { a: "warfarin", b: "nsaid", severity: "major", type: "pharmacodynamic", description: "Greatly increased risk of serious GI/other bleeding.", recommendation: "Avoid; if unavoidable use gastroprotection and monitor INR/bleeding closely." },
+  { a: "warfarin", b: "antiplatelet", severity: "major", type: "pharmacodynamic", description: "Additive bleeding risk (anticoagulant + antiplatelet).", recommendation: "Avoid unless a specific indication exists; if combined, use gastroprotection and monitor INR and for bleeding." },
+  { a: "ssri_snri", b: "antiplatelet", severity: "moderate", type: "pharmacodynamic", description: "Increased bleeding risk (impaired platelet function plus antiplatelet).", recommendation: "Monitor for bleeding; consider gastroprotection." },
   { a: "maoi", b: "ssri_snri", severity: "critical", type: "contraindication", description: "Risk of serotonin syndrome (potentially fatal).", recommendation: "Contraindicated; observe washout (≥2 weeks; 5 weeks after fluoxetine)." },
   { a: "nitrate", b: "pde5", severity: "critical", type: "contraindication", description: "Profound, potentially fatal hypotension.", recommendation: "Contraindicated combination." },
   { a: "ace_arb", b: "potassium_sparing", severity: "major", type: "pharmacodynamic", description: "Risk of life-threatening hyperkalemia.", recommendation: "Monitor potassium and renal function; avoid in renal impairment." },
   { a: "statin_cyp3a4", b: "strong_cyp3a4_inhibitor", severity: "major", type: "pharmacokinetic", description: "Elevated statin levels → myopathy/rhabdomyolysis.", recommendation: "Avoid; hold the statin or use a non-CYP3A4 statin during therapy." },
   { a: "digoxin", b: "digoxin_potentiator", severity: "major", type: "pharmacokinetic", description: "Increased digoxin levels → toxicity.", recommendation: "Reduce digoxin dose and monitor levels." },
   { a: "methotrexate", b: "nsaid", severity: "major", type: "pharmacokinetic", description: "Reduced methotrexate clearance → toxicity.", recommendation: "Avoid NSAIDs (esp. with higher-dose MTX); monitor." },
+  { a: "methotrexate", b: "salicylate", severity: "major", type: "pharmacokinetic", description: "Reduced methotrexate clearance → toxicity.", recommendation: "Avoid salicylates (incl. aspirin), esp. with higher-dose MTX; monitor." },
   { a: "methotrexate", b: "mtx_potentiator", severity: "major", type: "pharmacokinetic", description: "Increased methotrexate toxicity / myelosuppression.", recommendation: "Avoid trimethoprim-sulfamethoxazole with methotrexate." },
   { a: "opioid", b: "benzodiazepine", severity: "major", type: "pharmacodynamic", description: "Additive CNS/respiratory depression (FDA boxed warning).", recommendation: "Avoid co-prescribing; if necessary use lowest doses and monitor." },
   { a: "allopurinol", b: "thiopurine", severity: "major", type: "pharmacokinetic", description: "Severe myelosuppression.", recommendation: "Avoid, or reduce thiopurine dose by ~75% with close monitoring." },
   { a: "lithium", b: "nsaid", severity: "major", type: "pharmacokinetic", description: "Reduced lithium clearance → toxicity.", recommendation: "Avoid NSAIDs; monitor lithium levels." },
+  { a: "lithium", b: "salicylate", severity: "major", type: "pharmacokinetic", description: "Reduced lithium clearance → toxicity.", recommendation: "Avoid salicylates (incl. aspirin); monitor lithium levels." },
   { a: "lithium", b: "ace_arb", severity: "major", type: "pharmacokinetic", description: "Reduced lithium clearance → toxicity.", recommendation: "Monitor lithium levels closely." },
   { a: "warfarin", b: "warfarin_potentiator", severity: "major", type: "pharmacokinetic", description: "Raises INR / bleeding risk (CYP / protein-binding interaction).", recommendation: "Monitor INR closely and adjust the warfarin dose." },
   { a: "warfarin", b: "ssri_snri", severity: "major", type: "pharmacodynamic", description: "Additive bleeding risk (impaired platelet function).", recommendation: "Monitor for bleeding; consider gastroprotection." },
@@ -65,9 +80,27 @@ const RULES = [
 /** Groups a single medication name belongs to. */
 function groupsFor(name) {
   const n = String(name || "").toLowerCase();
+  // Split into lowercased word tokens so a fragment only matches when it appears
+  // as a whole word (or whole multi-word phrase), not as an arbitrary substring.
+  // This avoids false positives like "nitrate" matching inside "mononitrate" or
+  // a bare antiplatelet (aspirin) being mischaracterized via substring overlap,
+  // while keeping every legitimate whole-token/phrase match intact.
+  const tokens = n.split(/[^a-z0-9]+/).filter(Boolean);
+  const tokenSet = new Set(tokens);
+  const matchesFragment = (f) => {
+    if (f.includes(" ")) {
+      // Multi-word phrase: require all its words to appear as consecutive tokens.
+      const words = f.split(/\s+/).filter(Boolean);
+      for (let i = 0; i + words.length <= tokens.length; i++) {
+        if (words.every((w, k) => tokens[i + k] === w)) return true;
+      }
+      return false;
+    }
+    return tokenSet.has(f);
+  };
   const out = [];
   for (const [group, fragments] of Object.entries(GROUPS)) {
-    if (fragments.some((f) => n.includes(f))) out.push(group);
+    if (fragments.some(matchesFragment)) out.push(group);
   }
   return out;
 }

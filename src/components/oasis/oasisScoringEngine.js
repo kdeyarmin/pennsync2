@@ -60,7 +60,10 @@ const RULES = [
   {
     domain: "Respiratory Management",
     triggers: [
-      { questionId: "m1400", values: [2, 3, 4], severity: "high" },  // shortness of breath
+      // Mild–moderate dyspnea (2) routes to respiratory education; severe
+      // dyspnea (3–4) is handled by Cardiovascular Monitoring so a single
+      // finding never emits two high-severity suggestions.
+      { questionId: "m1400", values: [2], severity: "high" },  // shortness of breath
     ],
     reason: () => "Significant dyspnea rating requires respiratory assessment and breathing technique education.",
     interventionIds: ["resp-1", "resp-2", "resp-3"],

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,30 @@ export default function RealTimeClinicalDecisionSupport({
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState("diagnoses");
   const [addedItems, setAddedItems] = useState([]);
-  const [lastAnalyzedHash, setLastAnalyzedHash] = useState("");
+
+  // Refs mirror the analyze guard/last-hash so the debounced effect reads the
+  // CURRENT value (not a stale closure) and an in-flight analysis can't be
+  // started again, and so we never setState after unmount.
+  const isAnalyzingRef = useRef(false);
+  const lastAnalyzedHashRef = useRef("");
+  const lastAttemptedHashRef = useRef("");
+  const latestHashRef = useRef("");
+  const reanalyzeTimerRef = useRef(null);
+  // Points at the FRESHEST runAnalysis closure (reassigned every render). The
+  // in-flight re-trigger must call this, not the closure that scheduled it —
+  // that stale closure would re-analyze its own frozen data and keep writing its
+  // frozen hash to lastAnalyzedHashRef, so the re-trigger condition would never
+  // clear and we'd loop LLM calls forever.
+  const runAnalysisRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (reanalyzeTimerRef.current) clearTimeout(reanalyzeTimerRef.current);
+    };
+  }, []);
 
   // Create a hash of current data to detect changes
   const currentDataHash = JSON.stringify({
@@ -45,12 +68,16 @@ export default function RealTimeClinicalDecisionSupport({
     notes: (narrativeText || '').substring(0, 200),
     diagnosis: patient?.primary_diagnosis
   });
+  // Track the newest hash each render so runAnalysis can tell whether the inputs
+  // changed WHILE it was in flight and re-trigger once it finishes.
+  latestHashRef.current = currentDataHash;
 
   // Auto-analyze when significant data changes
   useEffect(() => {
-    if (patient && currentDataHash !== lastAnalyzedHash && !isAnalyzing) {
+    if (patient && currentDataHash !== lastAnalyzedHashRef.current && !isAnalyzingRef.current) {
       const timer = setTimeout(() => {
-        if (Object.keys(vitalSigns || {}).length > 0 || (narrativeText || '').length > 50) {
+        if (!isAnalyzingRef.current &&
+            (Object.keys(vitalSigns || {}).length > 0 || (narrativeText || '').length > 50)) {
           runAnalysis();
         }
       }, 2000);
@@ -59,8 +86,14 @@ export default function RealTimeClinicalDecisionSupport({
   }, [currentDataHash]);
 
   const runAnalysis = async () => {
-    if (!patient) return;
-    
+    if (!patient || isAnalyzingRef.current) return;
+
+    isAnalyzingRef.current = true;
+    // Record the inputs THIS run covers, regardless of success, so the
+    // re-trigger below fires only when newer data arrived mid-flight — not on a
+    // persistent LLM error (which never advances lastAnalyzedHashRef and would
+    // otherwise loop retries every 2s for the whole session).
+    lastAttemptedHashRef.current = currentDataHash;
     setIsAnalyzing(true);
     try {
       const activeCarePlans = (carePlans || [])
@@ -224,13 +257,35 @@ Return JSON:
         }
       });
 
-      setAnalysis(result);
-      setLastAnalyzedHash(currentDataHash);
+      if (isMountedRef.current) {
+        setAnalysis(result);
+      }
+      lastAnalyzedHashRef.current = currentDataHash;
     } catch (error) {
       console.error('Error running clinical analysis:', error);
+    } finally {
+      isAnalyzingRef.current = false;
+      if (isMountedRef.current) setIsAnalyzing(false);
+      // If the inputs changed while this analysis was in flight, the
+      // [currentDataHash] effect already bailed (isAnalyzing was true), so nothing
+      // would re-analyze the latest edits. Re-trigger once here. Compare against
+      // the hash this run ATTEMPTED (not the last successful one) so a failed
+      // analysis doesn't retry-loop on unchanged data.
+      if (isMountedRef.current && latestHashRef.current !== lastAttemptedHashRef.current) {
+        if (reanalyzeTimerRef.current) clearTimeout(reanalyzeTimerRef.current);
+        reanalyzeTimerRef.current = setTimeout(() => {
+          // Invoke the latest closure (via ref) so it analyzes the CURRENT data
+          // and records the CURRENT hash, letting the loop converge once inputs
+          // settle instead of re-running this frozen closure forever.
+          if (isMountedRef.current) runAnalysisRef.current?.();
+        }, 2000);
+      }
     }
-    setIsAnalyzing(false);
   };
+
+  // Keep the ref pointing at this render's runAnalysis so the in-flight
+  // re-trigger above always runs the freshest closure.
+  runAnalysisRef.current = runAnalysis;
 
   const handleInsert = (text, id) => {
     onInsertText("\n\n" + text);

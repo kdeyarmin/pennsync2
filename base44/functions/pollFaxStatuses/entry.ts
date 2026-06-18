@@ -43,6 +43,10 @@ Deno.serve(async (req) => {
         const faxData = await response.json();
         const newStatus = mapTwilioStatus(faxData.status);
 
+        // Unknown Twilio status: skip rather than coercing to the non-terminal
+        // 'queued', which would keep re-polling this fax forever.
+        if (!newStatus) return;
+
         if (newStatus !== fax.status) {
           await base44.asServiceRole.entities.FaxLog.update(fax.id, {
             status: newStatus,
@@ -83,7 +87,7 @@ function mapTwilioStatus(twilioStatus) {
     'failed': 'failed',
     'canceled': 'failed'
   };
-  return statusMap[twilioStatus] || 'queued';
+  return statusMap[twilioStatus] || null;
 }
 
 function getNotificationMessage(status, fax) {

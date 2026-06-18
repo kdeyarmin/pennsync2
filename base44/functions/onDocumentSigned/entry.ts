@@ -6,12 +6,26 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { event, data } = body;
 
-    // This is triggered when a DocumentSignature is updated
+    // This is a Base44 entity-trigger (fires when a DocumentSignature is updated):
+    // the platform invokes it with NO user identity and no way to attach an
+    // x-internal-secret header, so an auth/secret gate here would 403 the
+    // legitimate trigger the moment INTERNAL_FN_SECRET is set. The integrity
+    // defense for a trigger is to NOT trust the posted body — re-fetch the
+    // canonical record by id and act only on its real, server-side state. The id
+    // is always present on a real trigger, so we REQUIRE it and never fall back to
+    // the body (otherwise a forged body with no id would be trusted verbatim).
     if (!event || event.type !== 'update') {
       return Response.json({ success: true });
     }
 
-    const signature = data;
+    if (!data?.id) {
+      return Response.json({ success: true, skipped: 'no signature id' });
+    }
+    const signature = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
+    if (!signature) {
+      // No real record for this id → nothing to act on (ignore forged ids).
+      return Response.json({ success: true, skipped: 'signature not found' });
+    }
 
     // Only process if signature status changed to "signed"
     if (signature.status !== 'signed') {
@@ -42,13 +56,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send notification email to admin about the signature
+    // Send notification email to admins about the signature. Resolve the real
+    // admin recipients (mirroring notifyAdminOfSignedDocument / onUserSignup)
+    // rather than the previous hardcoded 'admin@agency.com' placeholder, which
+    // never reached a real inbox and risked leaking signer details to an
+    // address the agency doesn't control.
     try {
-      await base44.integrations.Core.SendEmail({
-        to: 'admin@agency.com', // Replace with actual admin email or fetch from settings
-        subject: `Document Signed: ${pkg.package_name}`,
-        body: `${signature.signer_name} (${signature.signer_email}) has signed the document.\n\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
-      });
+      const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+      if (admins && admins.length > 0) {
+        await Promise.all(
+          admins.map((admin) =>
+            base44.integrations.Core.SendEmail({
+              to: admin.email,
+              subject: `Document Signed: ${pkg.package_name}`,
+              body: `${signature.signer_name} (${signature.signer_email}) has signed the document.\n\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
+            })
+          )
+        );
+      }
     } catch (emailError) {
       console.error('Failed to send notification email:', emailError);
       // Continue even if email fails

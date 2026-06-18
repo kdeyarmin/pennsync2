@@ -248,7 +248,15 @@ export default function SmartNoteAssistant() {
 
     if (!navigator.onLine) {
       const { addToSyncQueue } = await import('@/lib/indexedDB');
-      await addToSyncQueue('CREATE_VISIT', { patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured });
+      // Stable client-generated idempotency key so the offline-sync drain can
+      // dedupe: if Visit.create succeeds but the queue item isn't removed (tab
+      // close, second `online` event, re-mount), the drain skips the re-create.
+      // crypto.randomUUID is only defined in secure contexts; fall back so the
+      // offline save (the whole point of this branch) never throws in the field.
+      const clientRequestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured });
       toast.success("Saved offline. Will sync when reconnected.");
       logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
       return;

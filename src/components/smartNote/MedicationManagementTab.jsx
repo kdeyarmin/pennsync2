@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +113,11 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
   }));
 
   const [medications, setMedications]         = useState(initMeds);
+  // Snapshot of the medication list this tab loaded with, used at save time to
+  // distinguish meds the nurse intentionally removed (present here, absent now)
+  // from meds added concurrently by another writer (absent here, present now)
+  // so the whole-array write doesn't silently clobber the latter.
+  const originalMedsRef = useRef(patient?.current_medications || []);
   const [newMed, setNewMed]                   = useState({ name: "", dosage: "", frequency: "", prescriber: "", status: "active" });
   const [generating, setGenerating]           = useState(false);
   const [reconciliationNote, setRecon]        = useState("");
@@ -176,12 +181,43 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
     }
   };
 
+  // A med's DRUG identity for the concurrent-merge is its NAME. A dose/frequency
+  // change to a drug the nurse already lists is a concurrent EDIT of that drug,
+  // not a new med — appending it (matching on full value) would persist the same
+  // drug twice at conflicting doses. So we carry over a server med only when its
+  // drug name is in NEITHER the nurse's working set NOR the original snapshot
+  // (a genuinely new drug added elsewhere); a concurrent edit to a drug the nurse
+  // also has is resolved last-writer-wins on the nurse's version (no duplicate).
+  // A med lacking a name (malformed/partial entry) falls back to full-value
+  // identity so a concurrent add of one isn't silently dropped by the whole-array
+  // write — an unnamed med can't collide with a named-drug edit, so there's no
+  // duplicate-dose risk from the fallback.
+  const medKey = (m) =>
+    (m?.name ? String(m.name).trim().toLowerCase() : "") ||
+    JSON.stringify(Object.keys(m || {}).sort().reduce((o, k) => { o[k] = m[k]; return o; }, {}));
+
   const syncToPatient = async () => {
     if (!patientId) return;
     setSavingPatient(true);
     try {
       const medsPayload = medications.map(({ _id, ...rest }) => rest);
-      await base44.entities.Patient.update(patientId, { current_medications: medsPayload });
+      // Re-fetch immediately before writing and preserve any medication another
+      // writer (visit med-rec, the patient-detail editor) ADDED since this tab
+      // loaded — without merging, the whole-array write would silently drop it.
+      const latestArr = await base44.entities.Patient.filter({ id: patientId });
+      const serverMeds = (latestArr?.[0]?.current_medications) || [];
+      const localKeys = new Set(medsPayload.map(medKey).filter(Boolean));
+      const originalKeys = new Set((originalMedsRef.current || []).map(medKey).filter(Boolean));
+      const concurrentlyAdded = serverMeds.filter((sm) => {
+        const k = medKey(sm);
+        return k && !localKeys.has(k) && !originalKeys.has(k);
+      });
+      const finalMeds = [...medsPayload, ...concurrentlyAdded];
+
+      await base44.entities.Patient.update(patientId, { current_medications: finalMeds });
+      // Advance the snapshot so a second save in the same session reconciles
+      // against what we just persisted.
+      originalMedsRef.current = finalMeds;
       setSavedToPatient(true);
       setTimeout(() => setSavedToPatient(false), 3000);
     } catch (err) {

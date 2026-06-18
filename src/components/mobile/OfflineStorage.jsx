@@ -3,11 +3,14 @@
  * Handles local storage of visit data when offline
  */
 
-const STORAGE_PREFIX = 'penn_sync_offline_';
-const PENDING_VISITS_KEY = `${STORAGE_PREFIX}pending_visits`;
-const PENDING_UPDATES_KEY = `${STORAGE_PREFIX}pending_updates`;
-const SYNC_ERRORS_KEY = `${STORAGE_PREFIX}sync_errors`;
-const SYNC_STATUS_KEY = `${STORAGE_PREFIX}sync_status`;
+import { OFFLINE_KEYS } from '@/lib/offlineKeys';
+
+// Keys sourced from the single offline-key registry so the PHI purge
+// (phiStorage.js) can't drift from what this module writes.
+const PENDING_VISITS_KEY = OFFLINE_KEYS.PENN_PENDING_VISITS;
+const PENDING_UPDATES_KEY = OFFLINE_KEYS.PENN_PENDING_UPDATES;
+const SYNC_ERRORS_KEY = OFFLINE_KEYS.PENN_SYNC_ERRORS;
+const SYNC_STATUS_KEY = OFFLINE_KEYS.PENN_SYNC_STATUS;
 
 class OfflineStorage {
   constructor() {
@@ -136,7 +139,7 @@ class OfflineStorage {
   cacheData(key, data) {
     try {
       const timestamp = new Date().toISOString();
-      localStorage.setItem(`${STORAGE_PREFIX}cache_${key}`, JSON.stringify({ data, timestamp }));
+      localStorage.setItem(`${OFFLINE_KEYS.PENN_CACHE_PREFIX}${key}`, JSON.stringify({ data, timestamp }));
     } catch (error) {
       console.error('Cache storage error:', error);
     }
@@ -145,7 +148,7 @@ class OfflineStorage {
   // Retrieve cached data
   getCachedData(key) {
     try {
-      const cached = localStorage.getItem(`${STORAGE_PREFIX}cache_${key}`);
+      const cached = localStorage.getItem(`${OFFLINE_KEYS.PENN_CACHE_PREFIX}${key}`);
       if (!cached) return null;
       const { data, timestamp } = JSON.parse(cached);
       return { data, timestamp };
@@ -158,7 +161,7 @@ class OfflineStorage {
   // Store pending changes to sync later
   addPendingChange(type, data, entityId = null) {
     try {
-      const pending = JSON.parse(localStorage.getItem('offline_pending') || '[]');
+      const pending = JSON.parse(localStorage.getItem(OFFLINE_KEYS.PENDING) || '[]');
       const change = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         type,
@@ -170,7 +173,7 @@ class OfflineStorage {
         retryCount: 0
       };
       pending.push(change);
-      localStorage.setItem('offline_pending', JSON.stringify(pending));
+      localStorage.setItem(OFFLINE_KEYS.PENDING, JSON.stringify(pending));
       
       window.dispatchEvent(new CustomEvent('offline-change-added', { detail: change }));
       
@@ -184,7 +187,7 @@ class OfflineStorage {
   // Get all pending changes
   getPendingChanges() {
     try {
-      return JSON.parse(localStorage.getItem('offline_pending') || '[]');
+      return JSON.parse(localStorage.getItem(OFFLINE_KEYS.PENDING) || '[]');
     } catch (error) {
       console.error('Pending changes retrieval error:', error);
       return [];
@@ -194,7 +197,7 @@ class OfflineStorage {
   // Clear pending changes after sync
   clearPendingChanges() {
     try {
-      localStorage.setItem('offline_pending', '[]');
+      localStorage.setItem(OFFLINE_KEYS.PENDING, '[]');
       window.dispatchEvent(new CustomEvent('offline-changes-cleared'));
     } catch (error) {
       console.error('Clear pending error:', error);
@@ -286,7 +289,7 @@ class OfflineStorage {
 
   storeConflict(localData, serverData) {
     let conflicts = [];
-    try { conflicts = JSON.parse(localStorage.getItem('offline_conflicts') || '[]'); } catch {}
+    try { conflicts = JSON.parse(localStorage.getItem(OFFLINE_KEYS.CONFLICTS) || '[]'); } catch {}
     conflicts.push({
       id: Date.now().toString(),
       localData,
@@ -294,12 +297,12 @@ class OfflineStorage {
       timestamp: new Date().toISOString(),
       resolved: false
     });
-    localStorage.setItem('offline_conflicts', JSON.stringify(conflicts));
+    localStorage.setItem(OFFLINE_KEYS.CONFLICTS, JSON.stringify(conflicts));
   }
 
   getConflicts() {
     try {
-      return JSON.parse(localStorage.getItem('offline_conflicts') || '[]');
+      return JSON.parse(localStorage.getItem(OFFLINE_KEYS.CONFLICTS) || '[]');
     } catch {
       return [];
     }
@@ -361,7 +364,7 @@ class OfflineStorage {
       }
     }
 
-    localStorage.setItem('offline_pending', JSON.stringify(remaining));
+    localStorage.setItem(OFFLINE_KEYS.PENDING, JSON.stringify(remaining));
     return { success, failed, errors };
   }
 

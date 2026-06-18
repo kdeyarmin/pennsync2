@@ -91,20 +91,31 @@ test("inline isAgencyOpen matches businessHours (incl. holidays)", async () => {
   }
 });
 
-test("inline quietHoursCheck matches quietHours.isWithinQuietHours", async () => {
-  const settings = { tcpa_quiet_hours_enabled: true };
+test("inline quietHoursCheck matches quietHours.isWithinQuietHours (default + custom windows)", async () => {
+  // Exercise the default 8–21 window AND admin-customized windows so the source
+  // util (via agencyQuietHoursConfig) is proven to mirror the backend's
+  // tcpa_quiet_start_hour / tcpa_quiet_end_hour handling, not just the defaults.
+  const settingsVariants = [
+    { tcpa_quiet_hours_enabled: true },
+    { tcpa_quiet_hours_enabled: true, tcpa_quiet_start_hour: 9, tcpa_quiet_end_hour: 20 },
+    { tcpa_quiet_hours_enabled: true, tcpa_quiet_start_hour: 7, tcpa_quiet_end_hour: 22 },
+  ];
   const cases = [
     ["+12155550100", new Date("2026-06-04T20:00:00Z")], // 4pm ET allowed
-    ["+12155550100", new Date("2026-06-04T11:30:00Z")], // 7:30am ET blocked
+    ["+12155550100", new Date("2026-06-04T11:30:00Z")], // 7:30am ET (blocked unless start<=7)
+    ["+12155550100", new Date("2026-06-04T12:30:00Z")], // 8:30am ET (blocked when start=9)
+    ["+12155550100", new Date("2026-06-05T00:30:00Z")], // 8:30pm ET (blocked when end=20)
     ["+14155550100", new Date("2026-06-04T11:30:00Z")], // 4:30am PT blocked
     ["+442079460958", new Date("2026-06-04T11:30:00Z")], // unknown → allowed
   ];
   for (const f of ["./sendSms/entry.ts", "./dispatchScheduledSms/entry.ts", "./redriveFailedSms/entry.ts"]) {
     const { mod } = await loadInline(f, ["quietHoursCheck"]);
-    for (const [num, now] of cases) {
-      const inline = mod.quietHoursCheck(num, now, settings).allowed;
-      const source = quietHours.isWithinQuietHours(num, now, { startHour: 8, endHour: 21 }).allowed;
-      assert.equal(inline, source, `quietHoursCheck drift in ${f} for ${num} @ ${now.toISOString()}`);
+    for (const settings of settingsVariants) {
+      for (const [num, now] of cases) {
+        const inline = mod.quietHoursCheck(num, now, settings).allowed;
+        const source = quietHours.isWithinQuietHours(num, now, quietHours.agencyQuietHoursConfig(settings)).allowed;
+        assert.equal(inline, source, `quietHoursCheck drift in ${f} for ${num} @ ${now.toISOString()} with ${JSON.stringify(settings)}`);
+      }
     }
   }
 });
