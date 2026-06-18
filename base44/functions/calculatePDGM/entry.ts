@@ -89,6 +89,36 @@ const COMORBIDITY_MULTIPLIERS = {
   institutional_late: { none: 1.0, low: 1.03, high: 1.075 }
 };
 
+// Built-in default rate set. An admin can override ANY of these numbers via the
+// PDGMRateSettings page (PDGMRateConfig entity); the handler merges their saved
+// values over these defaults so they can keep their case-mix weights / base rate
+// current each CMS rate year. Shape mirrors src/components/pdgm/pdgmRates.js.
+const DEFAULT_RATES = {
+  basePaymentRate: BASE_PAYMENT_RATE_2024,
+  clinicalGroupWeights: CLINICAL_GROUP_WEIGHTS,
+  functionalThresholds: FUNCTIONAL_THRESHOLDS,
+  functionalMultipliers: FUNCTIONAL_MULTIPLIERS,
+  comorbidityMultipliers: COMORBIDITY_MULTIPLIERS,
+};
+
+// Recursively overlay the finite numbers in `over` onto `base`, preserving any
+// value the override omits or sets to a non-number — so a partial/malformed
+// saved override can never blank out a rate. Mirrors deepMergeNumbers in
+// src/components/pdgm/pdgmRates.js.
+function deepMergeNumbers(base: any, over: any): any {
+  const out: any = { ...(base || {}) };
+  if (!over || typeof over !== 'object') return out;
+  for (const key of Object.keys(over)) {
+    const ov = over[key];
+    if (ov && typeof ov === 'object' && !Array.isArray(ov)) {
+      out[key] = deepMergeNumbers(base?.[key] || {}, ov);
+    } else if (typeof ov === 'number' && Number.isFinite(ov)) {
+      out[key] = ov;
+    }
+  }
+  return out;
+}
+
 // High-value comorbidities for PDGM (ICD-10 categories that increase payment)
 const HIGH_VALUE_COMORBIDITIES = [
   // Diabetes complications
@@ -288,7 +318,7 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code) {
 }
 
 // Calculate functional impairment level with source/timing consideration
-function calculateFunctionalLevel(functionalData, sourceTimingKey) {
+function calculateFunctionalLevel(functionalData, sourceTimingKey, thresholdsTable = FUNCTIONAL_THRESHOLDS) {
   let totalPoints = 0;
 
   // M1800 - Grooming (0-3)
@@ -313,7 +343,7 @@ function calculateFunctionalLevel(functionalData, sourceTimingKey) {
   totalPoints += parseInt(functionalData.m1860_ambulation) || 0;
 
   // Get thresholds based on admission source and timing
-  const thresholds = FUNCTIONAL_THRESHOLDS[sourceTimingKey] || FUNCTIONAL_THRESHOLDS.community_early;
+  const thresholds = thresholdsTable[sourceTimingKey] || thresholdsTable.community_early || FUNCTIONAL_THRESHOLDS.community_early;
 
   // Determine level
   if (totalPoints >= thresholds.high) return { level: 'high', points: totalPoints };
@@ -578,6 +608,23 @@ Deno.serve(async (req) => {
       console.log('No agency settings found, using default wage index');
     }
 
+    // Load the admin-editable PDGM rate set (PDGMRateConfig) and merge it over the
+    // built-in defaults, so the agency can keep their case-mix weights / base rate
+    // current. When they've entered + flagged their official CMS numbers, the
+    // result is marked authoritative (isEstimate:false) rather than an estimate.
+    let rates = DEFAULT_RATES;
+    let isOfficial = false;
+    try {
+      const rateRows = await base44.asServiceRole.entities.PDGMRateConfig.list('-created_date', 1);
+      const rateConfig = rateRows && rateRows.length > 0 ? rateRows[0] : null;
+      if (rateConfig) {
+        rates = deepMergeNumbers(DEFAULT_RATES, rateConfig.rates);
+        isOfficial = rateConfig.is_official === true;
+      }
+    } catch (e) {
+      console.log('No PDGM rate config found, using built-in default rates');
+    }
+
     // Validate primary diagnosis code
     const diagnosisValidation = validatePrimaryDiagnosis(pdgmData);
 
@@ -593,7 +640,7 @@ Deno.serve(async (req) => {
     ];
 
     // Calculate original PDGM revenue
-    const originalRevenue = calculatePDGMRevenue(pdgmData, appliedWageIndex);
+    const originalRevenue = calculatePDGMRevenue(pdgmData, appliedWageIndex, rates, isOfficial);
     originalRevenue.dataValidation = {
       admissionSource: sourceValidation,
       episodeTiming: timingValidation,
@@ -615,7 +662,7 @@ Deno.serve(async (req) => {
         episode_timing: correctedPdgmData.episode_timing || timingValidation.validatedTiming
       };
 
-      correctedRevenue = calculatePDGMRevenue(correctedWithValidation, appliedWageIndex);
+      correctedRevenue = calculatePDGMRevenue(correctedWithValidation, appliedWageIndex, rates, isOfficial);
       correctedRevenue._appliedCorrections = correctedPdgmData._appliedCorrections || [];
       correctedRevenue._correctionCount = correctedPdgmData._correctionCount || 0;
 
@@ -627,9 +674,14 @@ Deno.serve(async (req) => {
     }
 
     // Calculate alternative scenarios for comparison
-    const scenarios = calculateAlternativeScenarios(pdgmData, appliedWageIndex);
+    const scenarios = calculateAlternativeScenarios(pdgmData, appliedWageIndex, rates, isOfficial);
 
     return Response.json({
+      rateBasis: {
+        isOfficial,
+        isEstimate: !isOfficial,
+        basePayment: rates.basePaymentRate,
+      },
       original: originalRevenue,
       corrected: correctedRevenue,
       revenueDifference: revenueDifference ? Math.round(revenueDifference * 100) / 100 : null,
@@ -659,7 +711,7 @@ Deno.serve(async (req) => {
 });
 
 // Calculate all 4 scenario combinations for comparison
-function calculateAlternativeScenarios(data, wageIndex = 1.0) {
+function calculateAlternativeScenarios(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOfficial = false) {
   const scenarios = {};
   const combinations = [
     { admission_source: 'community', episode_timing: 'early', key: 'community_early' },
@@ -674,7 +726,7 @@ function calculateAlternativeScenarios(data, wageIndex = 1.0) {
       admission_source: combo.admission_source,
       episode_timing: combo.episode_timing
     };
-    const result = calculatePDGMRevenue(scenarioData, wageIndex);
+    const result = calculatePDGMRevenue(scenarioData, wageIndex, rates, isOfficial);
     scenarios[combo.key] = {
       admissionSource: combo.admission_source,
       episodeTiming: combo.episode_timing,
@@ -701,7 +753,13 @@ function calculateAlternativeScenarios(data, wageIndex = 1.0) {
   };
 }
 
-function calculatePDGMRevenue(data, wageIndex = 1.0) {
+function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOfficial = false) {
+  const clinicalGroupWeights = rates?.clinicalGroupWeights || CLINICAL_GROUP_WEIGHTS;
+  const functionalMultipliersTable = rates?.functionalMultipliers || FUNCTIONAL_MULTIPLIERS;
+  const comorbidityMultipliersTable = rates?.comorbidityMultipliers || COMORBIDITY_MULTIPLIERS;
+  const functionalThresholdsTable = rates?.functionalThresholds || FUNCTIONAL_THRESHOLDS;
+  const basePayment = Number.isFinite(rates?.basePaymentRate) ? rates.basePaymentRate : BASE_PAYMENT_RATE_2024;
+
   // Extract data - try multiple fields for primary diagnosis
   const primaryDiagnosis = data.primary_diagnosis || data.primary_diagnosis_description || '';
 
@@ -727,18 +785,18 @@ function calculatePDGMRevenue(data, wageIndex = 1.0) {
   // Determine clinical group from diagnosis
   const clinicalGroup = mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code);
 
-  // Get clinical weight based on source and timing
-  const groupWeights = CLINICAL_GROUP_WEIGHTS[clinicalGroup] || CLINICAL_GROUP_WEIGHTS['MMTA_Other'];
+  // Get clinical weight based on source and timing (from the merged rate table)
+  const groupWeights = clinicalGroupWeights[clinicalGroup] || clinicalGroupWeights['MMTA_Other'] || CLINICAL_GROUP_WEIGHTS['MMTA_Other'];
   const clinicalWeight = groupWeights[sourceTimingKey] || groupWeights.community_early || 1.0;
 
   // Calculate functional level with source/timing consideration
-  const functionalResult = calculateFunctionalLevel(functionalData, sourceTimingKey);
-  const functionalMultipliers = FUNCTIONAL_MULTIPLIERS[sourceTimingKey] || FUNCTIONAL_MULTIPLIERS.community_early;
+  const functionalResult = calculateFunctionalLevel(functionalData, sourceTimingKey, functionalThresholdsTable);
+  const functionalMultipliers = functionalMultipliersTable[sourceTimingKey] || functionalMultipliersTable.community_early || FUNCTIONAL_MULTIPLIERS.community_early;
   const functionalMultiplier = functionalMultipliers[functionalResult.level];
 
   // Calculate comorbidity adjustment
   const comorbidityResult = calculateComorbidityAdjustment(comorbidities, sourceTimingKey);
-  const comorbidityMultipliers = COMORBIDITY_MULTIPLIERS[sourceTimingKey] || COMORBIDITY_MULTIPLIERS.community_early;
+  const comorbidityMultipliers = comorbidityMultipliersTable[sourceTimingKey] || comorbidityMultipliersTable.community_early || COMORBIDITY_MULTIPLIERS.community_early;
   const comorbidityMultiplier = comorbidityMultipliers[comorbidityResult.level];
 
   // Calculate total case-mix weight (clinical × functional × comorbidity)
@@ -746,21 +804,21 @@ function calculatePDGMRevenue(data, wageIndex = 1.0) {
   const caseMixWeight = clinicalWeight * functionalMultiplier * comorbidityMultiplier;
 
   // Apply wage index to base payment
-  const adjustedBasePayment = Math.round(BASE_PAYMENT_RATE_2024 * wageIndex * 100) / 100;
+  const adjustedBasePayment = Math.round(basePayment * wageIndex * 100) / 100;
 
   // Calculate payment with wage-adjusted base
   const totalPayment = Math.round(adjustedBasePayment * caseMixWeight * 100) / 100;
 
   return {
-    // The case-mix weights, functional thresholds, and base rate in this function
-    // are non-authoritative approximations (not loaded from the agency's official
-    // CMS PDGM grouper / case-mix files), so the payment figures are an ESTIMATE
-    // for comparison/optimization — not a billable reimbursement amount. Surface
-    // this to users. Deterministic, table-driven grouping is available via
-    // src/components/pdgm/pdgmGrouper.js once official CMS tables are loaded.
-    isEstimate: true,
-    estimateDisclaimer: 'Estimate only — based on approximate case-mix weights, not official CMS PDGM rates. Verify against the current CMS grouper before billing.',
-    basePayment: BASE_PAYMENT_RATE_2024,
+    // The case-mix weights / base rate come from the merged PDGMRateConfig (admin
+    // values over built-in defaults). They are an ESTIMATE — not a billable
+    // amount — UNTIL the admin enters their official CMS numbers and marks the
+    // rate set official (is_official), at which point isEstimate flips to false.
+    isEstimate: !isOfficial,
+    estimateDisclaimer: isOfficial
+      ? null
+      : 'Estimate only — based on approximate case-mix weights, not confirmed official CMS PDGM rates. Set your official numbers in Admin → PDGM Rate Settings and mark them official.',
+    basePayment: basePayment,
     wageIndex: wageIndex,
     adjustedBasePayment: adjustedBasePayment,
     clinicalGroup,
@@ -783,8 +841,8 @@ function calculatePDGMRevenue(data, wageIndex = 1.0) {
         ? 'Base Payment × Wage Index × Clinical Weight × Functional Multiplier × Comorbidity Multiplier'
         : 'Base Payment × Clinical Weight × Functional Multiplier × Comorbidity Multiplier',
       values: wageIndex !== 1.0
-        ? `$${BASE_PAYMENT_RATE_2024} × ${wageIndex.toFixed(4)} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`
-        : `$${BASE_PAYMENT_RATE_2024} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`,
+        ? `$${basePayment} × ${wageIndex.toFixed(4)} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`
+        : `$${basePayment} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`,
       result: `$${totalPayment.toFixed(2)}`
     }
   };

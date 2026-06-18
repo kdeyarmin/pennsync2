@@ -56,15 +56,18 @@ into the primary documentation flow (`DocumentVisit.jsx`).
   permanent-failure-aware), so even if both handlers receive the same payload they compute
   the same `retry_count` / `next_retry_at`; the divergent `[5,15,60]` schedule is gone and
   the inline copy is added to the `faxRetryInlineParity` drift guard.
-- `calculatePDGM` (prior B13) — **bug fixed; full accuracy data-blocked.** The concrete
+- `calculatePDGM` (prior B13) — **bug fixed + rates now admin-editable.** The concrete
   `'S'`→Skin error is fixed (`S` is the injury chapter, not skin — it now falls through
-  instead of mis-grouping + inflating the wrong weight), and the result is labeled
-  `isEstimate: true` with a disclaimer so the approximate weights aren't presented as
-  billable CMS reimbursement (per the app's anti-fabrication policy). A fully CMS-accurate
-  grouping still requires the agency's official CMS PDGM grouper / case-mix files — these
-  are not in the repo and cannot be fabricated (the reason `pdgmGrouper.js` is table-driven
-  and currently unwired). Loading those tables into an entity and routing `calculatePDGM`
-  through `pdgmGrouper` is the remaining data-dependent step.
+  instead of mis-grouping + inflating the wrong weight). The previously-hardcoded case-mix
+  weights, base rate, and multipliers are now **editable anytime** via the new
+  **Admin → PDGM Rate Settings** page (`PDGMRateConfig` entity); `calculatePDGM` loads the
+  saved numbers and merges them over the built-in defaults (a partial override is safe —
+  any omitted value falls back to the default). Results are labeled `isEstimate: true` with
+  a disclaimer until the admin enters their official CMS numbers and toggles
+  “official,” at which point the output is treated as authoritative. The merge + default
+  numbers live in the tested `src/components/pdgm/pdgmRates.js`. (The fully table-driven
+  `pdgmGrouper.js` remains available for ICD-10→group lookups once a CMS dx-mapping table is
+  loaded too.)
 - `aiCall` request abort (§7) — **confirmed SDK-blocked.** The SDK integration call is
   `async (data) => axios.post(...)` with no config/`signal` passthrough, so an
   `AbortController` can't be threaded; no code change helps until the SDK exposes a signal.
