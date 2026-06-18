@@ -5,20 +5,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Wifi, WifiOff, Upload, AlertCircle, Clock } from 'lucide-react';
+import { OFFLINE_KEYS } from '@/lib/offlineKeys';
 
-// Local storage keys
+// Local storage keys (sourced from the single offline-key registry so the PHI
+// purge in phiStorage.js can't drift from what this service actually writes).
 const STORAGE_KEYS = {
-  PENDING_VISITS: 'offline_pending_visits',
-  PENDING_NOTES: 'offline_pending_notes',
-  PENDING_VITALS: 'offline_pending_vitals',
-  PENDING_TASKS: 'offline_pending_tasks',
-  SYNC_QUEUE: 'offline_sync_queue',
-  LAST_SYNC: 'offline_last_sync',
-  CONFLICT_LOG: 'offline_conflicts',
+  PENDING_VISITS: OFFLINE_KEYS.PENDING_VISITS,
+  PENDING_NOTES: OFFLINE_KEYS.PENDING_NOTES,
+  PENDING_VITALS: OFFLINE_KEYS.PENDING_VITALS,
+  PENDING_TASKS: OFFLINE_KEYS.PENDING_TASKS,
+  SYNC_QUEUE: OFFLINE_KEYS.SYNC_QUEUE,
+  LAST_SYNC: OFFLINE_KEYS.LAST_SYNC,
+  CONFLICT_LOG: OFFLINE_KEYS.CONFLICTS,
   // Maps an offline_ placeholder id (e.g. an offline visit) to the real server
   // id it received once synced. Persisted so dependent items (notes/vitals) can
   // resolve their parent even when the visit synced on an earlier run.
-  ID_MAP: 'offline_id_map'
+  ID_MAP: OFFLINE_KEYS.ID_MAP,
 };
 
 // Offline storage manager

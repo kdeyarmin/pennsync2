@@ -3,11 +3,15 @@
  * Handles local storage of visit data when offline
  */
 
+import { OFFLINE_KEYS } from '@/lib/offlineKeys';
+
+// Keys sourced from the single offline-key registry so the PHI purge
+// (phiStorage.js) can't drift from what this module writes.
 const STORAGE_PREFIX = 'penn_sync_offline_';
-const PENDING_VISITS_KEY = `${STORAGE_PREFIX}pending_visits`;
-const PENDING_UPDATES_KEY = `${STORAGE_PREFIX}pending_updates`;
-const SYNC_ERRORS_KEY = `${STORAGE_PREFIX}sync_errors`;
-const SYNC_STATUS_KEY = `${STORAGE_PREFIX}sync_status`;
+const PENDING_VISITS_KEY = OFFLINE_KEYS.PENN_PENDING_VISITS;
+const PENDING_UPDATES_KEY = OFFLINE_KEYS.PENN_PENDING_UPDATES;
+const SYNC_ERRORS_KEY = OFFLINE_KEYS.PENN_SYNC_ERRORS;
+const SYNC_STATUS_KEY = OFFLINE_KEYS.PENN_SYNC_STATUS;
 
 class OfflineStorage {
   constructor() {

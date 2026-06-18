@@ -23,6 +23,7 @@ import { toast } from "sonner";
 export default function HealthHistorySection({ patient }) {
   const [editDialog, setEditDialog] = useState(null);
   const [formData, setFormData] = useState({});
+  const [rowKeys, setRowKeys] = useState([]);
   const queryClient = useQueryClient();
   // Snapshot of the array fields when the dialog opened, so the save-time merge
   // can tell entries the user removed (in here, gone from server) from entries a
@@ -79,6 +80,12 @@ export default function HealthHistorySection({ patient }) {
     }
   });
 
+  // Stable per-row keys for the editable array dialogs, kept parallel to the
+  // array so removing a middle row doesn't shift React keys by index (which would
+  // move focus/IME state to the wrong input). Not persisted — purely for keying.
+  const rowKeyCounter = useRef(0);
+  const makeRowKeys = (n) => Array.from({ length: n }, () => `r${rowKeyCounter.current++}`);
+
   const openEditDialog = (section) => {
     setEditDialog(section);
     originalArraysRef.current = {
@@ -88,9 +95,13 @@ export default function HealthHistorySection({ patient }) {
     if (section === 'allergies') {
       setFormData({ allergies: patient.allergies || '' });
     } else if (section === 'past_medical') {
-      setFormData({ past_medical_history: patient.past_medical_history || [] });
+      const arr = patient.past_medical_history || [];
+      setFormData({ past_medical_history: arr });
+      setRowKeys(makeRowKeys(arr.length));
     } else if (section === 'surgeries') {
-      setFormData({ past_hospitalizations: patient.past_hospitalizations || [] });
+      const arr = patient.past_hospitalizations || [];
+      setFormData({ past_hospitalizations: arr });
+      setRowKeys(makeRowKeys(arr.length));
     } else if (section === 'family_history') {
       setFormData({ family_medical_history: patient.family_medical_history || '' });
     }
@@ -111,6 +122,19 @@ export default function HealthHistorySection({ patient }) {
       ...formData,
       [field]: [...(formData[field] || []), '']
     });
+    setRowKeys((k) => [...k, `r${rowKeyCounter.current++}`]);
+  };
+
+  // Append a blank hospitalization entry (object) + its stable row key.
+  const addHospitalizationRow = () => {
+    setFormData({
+      ...formData,
+      past_hospitalizations: [
+        ...(formData.past_hospitalizations || []),
+        { reason: '', hospital: '', date: '', length_of_stay: '' },
+      ],
+    });
+    setRowKeys((k) => [...k, `r${rowKeyCounter.current++}`]);
   };
 
   const updateArrayItem = (field, index, value) => {
@@ -123,6 +147,7 @@ export default function HealthHistorySection({ patient }) {
     const newArray = [...(formData[field] || [])];
     newArray.splice(index, 1);
     setFormData({ ...formData, [field]: newArray });
+    setRowKeys((k) => k.filter((_, i) => i !== index));
   };
 
   return (
@@ -286,7 +311,7 @@ export default function HealthHistorySection({ patient }) {
                 </div>
                 <div className="space-y-2">
                   {(formData.past_medical_history || []).map((condition, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={rowKeys[index] ?? index} className="flex gap-2">
                       <Input
                         value={condition}
                         onChange={(e) => updateArrayItem('past_medical_history', index, e.target.value)}
@@ -309,16 +334,7 @@ export default function HealthHistorySection({ patient }) {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label>Surgeries & Hospitalizations</Label>
-                  <Button
-                    size="sm"
-                    onClick={() => setFormData({
-                      ...formData,
-                      past_hospitalizations: [
-                        ...(formData.past_hospitalizations || []),
-                        { reason: '', hospital: '', date: '', length_of_stay: '' },
-                      ],
-                    })}
-                  >
+                  <Button size="sm" onClick={addHospitalizationRow}>
                     <Plus className="w-4 h-4 mr-1" />
                     Add Entry
                   </Button>
@@ -328,7 +344,7 @@ export default function HealthHistorySection({ patient }) {
                     <p className="text-sm text-slate-500 italic">No entries. Use “Add Entry” to record one.</p>
                   )}
                   {(formData.past_hospitalizations || []).map((hosp, index) => (
-                    <div key={index} className="border border-slate-200 rounded-lg p-3 space-y-2">
+                    <div key={rowKeys[index] ?? index} className="border border-slate-200 rounded-lg p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-slate-500">Entry {index + 1}</span>
                         <Button
