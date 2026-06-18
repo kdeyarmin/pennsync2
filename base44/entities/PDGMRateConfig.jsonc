@@ -31,5 +31,13 @@
       "type": "string",
       "description": "Email of the admin who last saved these rates."
     }
+  },
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "__service_role_only__"
+      }
+    }
   }
 }
