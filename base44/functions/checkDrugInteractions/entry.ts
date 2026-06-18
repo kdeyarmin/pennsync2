@@ -7,7 +7,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 // interaction database or clinical judgment.
 const DDI_GROUPS: Record<string, string[]> = {
   warfarin: ['warfarin', 'coumadin', 'jantoven'],
-  nsaid: ['ibuprofen', 'naproxen', 'ketorolac', 'diclofenac', 'meloxicam', 'indomethacin', 'aspirin', 'celecoxib', 'nsaid'],
+  nsaid: ['ibuprofen', 'naproxen', 'ketorolac', 'diclofenac', 'meloxicam', 'indomethacin', 'celecoxib', 'nsaid'],
+  antiplatelet: ['aspirin', 'asa', 'acetylsalicylic', 'clopidogrel', 'plavix', 'prasugrel', 'effient', 'ticagrelor', 'brilinta', 'dipyridamole', 'aggrenox'],
   maoi: ['phenelzine', 'tranylcypromine', 'isocarboxazid', 'selegiline', 'rasagiline', 'linezolid'],
   ssri_snri: ['fluoxetine', 'sertraline', 'paroxetine', 'citalopram', 'escitalopram', 'fluvoxamine', 'venlafaxine', 'desvenlafaxine', 'duloxetine'],
   nitrate: ['nitroglycerin', 'isosorbide', 'nitrate'],
@@ -34,6 +35,8 @@ const DDI_GROUPS: Record<string, string[]> = {
 };
 const DDI_RULES = [
   { a: 'warfarin', b: 'nsaid', severity: 'major', type: 'pharmacodynamic', description: 'Greatly increased risk of serious GI/other bleeding.', recommendation: 'Avoid; if unavoidable use gastroprotection and monitor INR/bleeding closely.' },
+  { a: 'warfarin', b: 'antiplatelet', severity: 'major', type: 'pharmacodynamic', description: 'Additive bleeding risk (anticoagulant + antiplatelet).', recommendation: 'Avoid unless a specific indication exists; if combined, use gastroprotection and monitor INR and for bleeding.' },
+  { a: 'ssri_snri', b: 'antiplatelet', severity: 'moderate', type: 'pharmacodynamic', description: 'Increased bleeding risk (impaired platelet function plus antiplatelet).', recommendation: 'Monitor for bleeding; consider gastroprotection.' },
   { a: 'maoi', b: 'ssri_snri', severity: 'critical', type: 'contraindication', description: 'Risk of serotonin syndrome (potentially fatal).', recommendation: 'Contraindicated; observe washout (>=2 weeks; 5 weeks after fluoxetine).' },
   { a: 'nitrate', b: 'pde5', severity: 'critical', type: 'contraindication', description: 'Profound, potentially fatal hypotension.', recommendation: 'Contraindicated combination.' },
   { a: 'ace_arb', b: 'potassium_sparing', severity: 'major', type: 'pharmacodynamic', description: 'Risk of life-threatening hyperkalemia.', recommendation: 'Monitor potassium and renal function; avoid in renal impairment.' },
@@ -55,9 +58,23 @@ const DDI_RULES = [
 ];
 function ddiGroupsFor(name: string): string[] {
   const n = String(name || '').toLowerCase();
+  // Token/whole-phrase match so a fragment matches only as a whole word (or whole
+  // multi-word phrase), not an arbitrary substring (e.g. 'nitrate' in 'mononitrate').
+  const tokens = n.split(/[^a-z0-9]+/).filter(Boolean);
+  const tokenSet = new Set(tokens);
+  const matchesFragment = (f: string): boolean => {
+    if (f.includes(' ')) {
+      const words = f.split(/\s+/).filter(Boolean);
+      for (let i = 0; i + words.length <= tokens.length; i++) {
+        if (words.every((w, k) => tokens[i + k] === w)) return true;
+      }
+      return false;
+    }
+    return tokenSet.has(f);
+  };
   const out: string[] = [];
   for (const [group, fragments] of Object.entries(DDI_GROUPS)) {
-    if (fragments.some((f) => n.includes(f))) out.push(group);
+    if (fragments.some(matchesFragment)) out.push(group);
   }
   return out;
 }

@@ -26,6 +26,24 @@ test("m1020 primary diagnosis routes to the correct domain (1=Diabetes, 2=CHF)",
   assert.ok(!chf.some((r) => r.domain === "Diabetes Management"));
 });
 
+test("severe dyspnea (m1400=4) yields exactly one high-severity domain (Cardiovascular)", () => {
+  // Regression: m1400 in [3,4] must not double-trigger high suggestions from
+  // both Cardiovascular and Respiratory. Severe dyspnea routes to Cardiovascular.
+  const results = evaluateOASIS({ m1400: 4 });
+  const highDomains = results.filter((r) => r.severity === "high").map((r) => r.domain);
+  assert.deepEqual(highDomains, ["Cardiovascular Monitoring"]);
+  assert.ok(!results.some((r) => r.domain === "Respiratory Management"));
+});
+
+test("mild–moderate dyspnea (m1400=2) still routes to Respiratory Management", () => {
+  const results = evaluateOASIS({ m1400: 2 });
+  const resp = results.find((r) => r.domain === "Respiratory Management");
+  assert.ok(resp);
+  assert.equal(resp.severity, "high");
+  // ...and does NOT trigger the Cardiovascular dyspnea rule.
+  assert.ok(!results.some((r) => r.domain === "Cardiovascular Monitoring"));
+});
+
 test("string answers are coerced (parseInt), not ignored", () => {
   const results = evaluateOASIS({ m1910: "2" });
   assert.ok(results.some((r) => r.domain === "Fall Prevention" && r.severity === "high"));

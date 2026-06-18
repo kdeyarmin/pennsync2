@@ -43,6 +43,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
     }
 
+    // Idempotency: a double-submit (double-click, retried fetch, flaky-network
+    // re-send) would otherwise create a second FaxLog and send + charge the same
+    // PHI fax twice. Twilio's Fax API has no client idempotency key, so de-dupe on
+    // a recent identical (recipient + document + sender) send before creating.
+    const recentCutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const recent = await base44.asServiceRole.entities.FaxLog
+      .filter({ to_number, document_url: file_url, sent_by: user.email }, '-created_date', 5)
+      .catch(() => []);
+    const dupe = (recent || []).find((f: any) =>
+      f.created_date && f.created_date >= recentCutoff && f.status !== 'failed'
+    );
+    if (dupe) {
+      return Response.json({ success: true, deduped: true, fax_id: dupe.id, status: dupe.status });
+    }
+
     // Log the fax in the database
     const faxLog = await base44.entities.FaxLog.create({
       from_number: fromNumber,

@@ -13,7 +13,13 @@
 // Drug / class -> lowercase name fragments that identify a member.
 const GROUPS = {
   warfarin: ["warfarin", "coumadin", "jantoven"],
-  nsaid: ["ibuprofen", "naproxen", "ketorolac", "diclofenac", "meloxicam", "indomethacin", "aspirin", "celecoxib", "nsaid"],
+  // NSAIDs proper. Aspirin is intentionally NOT here: it acts primarily as an
+  // antiplatelet, so lumping it with NSAIDs mislabeled warfarin + aspirin as an
+  // "NSAID GI bleeding" interaction. Aspirin lives in `antiplatelet` below so the
+  // genuine (and dangerous) anticoagulant + antiplatelet bleeding interaction is
+  // still surfaced — with the correct label, not dropped.
+  nsaid: ["ibuprofen", "naproxen", "ketorolac", "diclofenac", "meloxicam", "indomethacin", "celecoxib", "nsaid"],
+  antiplatelet: ["aspirin", "asa", "acetylsalicylic", "clopidogrel", "plavix", "prasugrel", "effient", "ticagrelor", "brilinta", "dipyridamole", "aggrenox"],
   maoi: ["phenelzine", "tranylcypromine", "isocarboxazid", "selegiline", "rasagiline", "linezolid"],
   ssri_snri: ["fluoxetine", "sertraline", "paroxetine", "citalopram", "escitalopram", "fluvoxamine", "venlafaxine", "desvenlafaxine", "duloxetine"],
   nitrate: ["nitroglycerin", "isosorbide", "nitrate"],
@@ -42,6 +48,8 @@ const GROUPS = {
 // Pairwise rules. Each links two groups with a fixed severity + guidance.
 const RULES = [
   { a: "warfarin", b: "nsaid", severity: "major", type: "pharmacodynamic", description: "Greatly increased risk of serious GI/other bleeding.", recommendation: "Avoid; if unavoidable use gastroprotection and monitor INR/bleeding closely." },
+  { a: "warfarin", b: "antiplatelet", severity: "major", type: "pharmacodynamic", description: "Additive bleeding risk (anticoagulant + antiplatelet).", recommendation: "Avoid unless a specific indication exists; if combined, use gastroprotection and monitor INR and for bleeding." },
+  { a: "ssri_snri", b: "antiplatelet", severity: "moderate", type: "pharmacodynamic", description: "Increased bleeding risk (impaired platelet function plus antiplatelet).", recommendation: "Monitor for bleeding; consider gastroprotection." },
   { a: "maoi", b: "ssri_snri", severity: "critical", type: "contraindication", description: "Risk of serotonin syndrome (potentially fatal).", recommendation: "Contraindicated; observe washout (≥2 weeks; 5 weeks after fluoxetine)." },
   { a: "nitrate", b: "pde5", severity: "critical", type: "contraindication", description: "Profound, potentially fatal hypotension.", recommendation: "Contraindicated combination." },
   { a: "ace_arb", b: "potassium_sparing", severity: "major", type: "pharmacodynamic", description: "Risk of life-threatening hyperkalemia.", recommendation: "Monitor potassium and renal function; avoid in renal impairment." },
@@ -65,9 +73,27 @@ const RULES = [
 /** Groups a single medication name belongs to. */
 function groupsFor(name) {
   const n = String(name || "").toLowerCase();
+  // Split into lowercased word tokens so a fragment only matches when it appears
+  // as a whole word (or whole multi-word phrase), not as an arbitrary substring.
+  // This avoids false positives like "nitrate" matching inside "mononitrate" or
+  // a bare antiplatelet (aspirin) being mischaracterized via substring overlap,
+  // while keeping every legitimate whole-token/phrase match intact.
+  const tokens = n.split(/[^a-z0-9]+/).filter(Boolean);
+  const tokenSet = new Set(tokens);
+  const matchesFragment = (f) => {
+    if (f.includes(" ")) {
+      // Multi-word phrase: require all its words to appear as consecutive tokens.
+      const words = f.split(/\s+/).filter(Boolean);
+      for (let i = 0; i + words.length <= tokens.length; i++) {
+        if (words.every((w, k) => tokens[i + k] === w)) return true;
+      }
+      return false;
+    }
+    return tokenSet.has(f);
+  };
   const out = [];
   for (const [group, fragments] of Object.entries(GROUPS)) {
-    if (fragments.some((f) => n.includes(f))) out.push(group);
+    if (fragments.some(matchesFragment)) out.push(group);
   }
   return out;
 }

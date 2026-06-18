@@ -13,6 +13,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const SEND_TIMEOUT_MS = 15000;
 const BATCH_LIMIT = 100;
+// Scheduled sends still pending this long after their send_at when the dispatcher
+// runs (e.g. after cron downtime) are expired instead of delivered — a day-late
+// reminder is worse than none. Mirrors redriveFailedSms' 24h ceiling.
+const MAX_SCHEDULE_AGE_MS = 24 * 60 * 60 * 1000;
 
 async function getAgencyConfig(base44: any) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
@@ -50,12 +54,13 @@ function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
 }
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function sendOnce(accountSid: string, authToken: string, from: string, to: string, body: string) {
+async function sendOnce(accountSid: string, authToken: string, from: string, to: string, body: string, statusCallback?: string) {
   const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
     const params = new URLSearchParams({ To: to, From: from, Body: body });
+    if (statusCallback) params.set('StatusCallback', statusCallback);
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
@@ -72,11 +77,11 @@ async function sendOnce(accountSid: string, authToken: string, from: string, to:
   }
 }
 
-async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string) {
+async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string, statusCallback?: string) {
   for (let attempt = 1; attempt <= MAX_SEND_ATTEMPTS; attempt++) {
     let result;
     try {
-      result = await sendOnce(accountSid, authToken, from, to, body);
+      result = await sendOnce(accountSid, authToken, from, to, body, statusCallback);
     } catch (err) {
       // Do NOT retry thrown network errors — a blind retry could double-text.
       throw err;
@@ -223,6 +228,10 @@ Deno.serve(async (req) => {
     // A unique id for THIS cron run, used to claim rows (see the claim below).
     const runId = crypto.randomUUID();
 
+    // Reconcile terminal delivery status via the DLR webhook (mirrors sendSms).
+    const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
+    const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTwilioSmsStatus` : undefined;
+
     const nowIso = new Date().toISOString();
     // Pending rows that are due. (Base44 filter operators may vary; fetch a
     // batch of pending rows and filter by time in code to stay portable.)
@@ -261,6 +270,14 @@ Deno.serve(async (req) => {
         }).catch(() => {});
       };
 
+      // Expire sends that are too stale to be relevant (e.g. after cron downtime)
+      // rather than blasting every overdue reminder at once on resume.
+      const sendAtMs = Date.parse(row.send_at);
+      if (Number.isFinite(sendAtMs) && Date.now() - sendAtMs > MAX_SCHEDULE_AGE_MS) {
+        await fail('Scheduled send expired (older than 24h) before dispatch');
+        continue;
+      }
+
       if (!accountSid || !authToken) { await fail('Twilio SMS credentials not configured'); continue; }
       if (!smsEnabled) { await fail('SMS messaging disabled for the agency'); continue; }
 
@@ -295,7 +312,7 @@ Deno.serve(async (req) => {
       const clientMessageId = `sched-${row.id}`;
       let resp;
       try {
-        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body);
+        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body, statusCallback);
       } catch (netErr) {
         const aborted = (netErr as Error)?.name === 'AbortError';
         await fail(aborted ? 'Timed out reaching Twilio' : `Network error reaching Twilio: ${(netErr as Error).message}`);

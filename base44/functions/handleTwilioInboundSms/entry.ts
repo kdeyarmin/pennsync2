@@ -267,9 +267,15 @@ Deno.serve(async (req) => {
     const patientNum = normalizeE164(source) || source;
     const workNum = normalizeE164(destination) || destination;
 
-    // Resolve the nurse who owns this work number.
-    const nurses = await base44.asServiceRole.entities.User.filter({ work_phone_number: workNum }).catch(() => []);
-    const nurse = nurses[0];
+    // Resolve the nurse who owns this work number. Use the same phoneVariants
+    // fan-out as the patient lookup below so a stored work_phone_number in a
+    // different format (e.g. "(215) 555-0100" vs "+12155550100") doesn't silently
+    // drop the inbound message.
+    let nurse = null;
+    for (const variant of phoneVariants(workNum)) {
+      const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }).catch(() => []);
+      if (matches.length > 0) { nurse = matches[0]; break; }
+    }
     if (!nurse) {
       // Unknown work number — do not leak; log anomaly and exit.
       await base44.asServiceRole.entities.UserActivity.create({

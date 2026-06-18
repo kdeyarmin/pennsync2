@@ -28,11 +28,32 @@ async function hmacSha1Base64(key: string, msg: string): Promise<string> {
   return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
 
+/**
+ * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'twilio'. Mirrors the SMS/voice handlers so this fax webhook
+ * verifies for agencies that store credentials in-app rather than in env.
+ */
+async function resolveTwilioCreds(base44: any): Promise<{ authToken: string | null; storedWebhookSecret: string | null }> {
+  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  let token = envToken && envToken.trim() ? envToken.trim() : null;
+  let storedWebhookSecret: string | null = null;
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
+    const rec = rows?.[0] || {};
+    if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
+    if (rec.webhook_secret && String(rec.webhook_secret).trim()) storedWebhookSecret = String(rec.webhook_secret).trim();
+  } catch { /* ignore */ }
+  return { authToken: token, storedWebhookSecret };
+}
+
 /** Optional shared-secret escape hatch for JSON callers / manual testing. */
-function hasValidSharedSecret(req: Request): boolean {
+function hasValidSharedSecret(req: Request, storedWebhookSecret: string | null = null): boolean {
   const sharedSecret = Deno.env.get('TWILIO_WEBHOOK_SECRET') || Deno.env.get('FAX_WEBHOOK_SECRET');
   const headerSecret = req.headers.get('x-webhook-secret');
-  return !!(sharedSecret && headerSecret && timingSafeEqual(headerSecret, sharedSecret));
+  if (!headerSecret) return false;
+  if (sharedSecret && timingSafeEqual(headerSecret, sharedSecret)) return true;
+  if (storedWebhookSecret && timingSafeEqual(headerSecret, storedWebhookSecret)) return true;
+  return false;
 }
 
 /**
@@ -41,8 +62,7 @@ function hasValidSharedSecret(req: Request): boolean {
  * proxy that rewrites host/path, set TWILIO_WEBHOOK_URL to the exact URL Twilio
  * is configured to call.
  */
-async function verifyTwilioSignature(req: Request, params: Record<string, string>): Promise<boolean> {
-  const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+async function verifyTwilioSignature(req: Request, params: Record<string, string>, authToken: string | null): Promise<boolean> {
   const provided = req.headers.get('x-twilio-signature');
   if (!authToken || !provided) return false;
 
@@ -56,6 +76,9 @@ async function verifyTwilioSignature(req: Request, params: Record<string, string
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    // Resolve the auth token + stored webhook secret from env OR the in-app
+    // IntegrationSecret so verification works for in-app-configured agencies.
+    const { authToken, storedWebhookSecret } = await resolveTwilioCreds(base44);
 
     // Read the body once, then authenticate before doing any work.
     const contentType = req.headers.get('content-type') || '';
@@ -64,7 +87,7 @@ Deno.serve(async (req) => {
     if (contentType.includes('application/json')) {
       const body = await req.json().catch(() => ({}));
       // JSON callers can't carry a Twilio signature; require the shared secret.
-      if (!hasValidSharedSecret(req)) {
+      if (!hasValidSharedSecret(req, storedWebhookSecret)) {
         return Response.json({ error: 'Invalid signature' }, { status: 401 });
       }
       payload = payloadFromJson(body);
@@ -73,7 +96,7 @@ Deno.serve(async (req) => {
       const params: Record<string, string> = {};
       for (const [k, v] of formData.entries()) params[k] = String(v);
       // Fail closed: accept genuine Twilio-signed callbacks or the shared secret.
-      if (!hasValidSharedSecret(req) && !(await verifyTwilioSignature(req, params))) {
+      if (!hasValidSharedSecret(req, storedWebhookSecret) && !(await verifyTwilioSignature(req, params, authToken))) {
         return Response.json({ error: 'Invalid signature' }, { status: 401 });
       }
       payload = payloadFromParams(params);

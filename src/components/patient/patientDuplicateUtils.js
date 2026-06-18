@@ -26,12 +26,21 @@ export function soundex(str) {
   let result = s[0];
   let prevCode = codeFor(s[0]);
   for (let i = 1; i < s.length; i++) {
-    const code = codeFor(s[i]);
+    const ch = s[i];
+    const code = codeFor(ch);
     if (code && code !== prevCode) result += code;
-    // Vowels (and H/W/Y) reset the "previous code" only for vowels, matching
-    // the classic algorithm closely enough for fuzzy name matching.
-    if (code === '') prevCode = '';
-    else prevCode = code;
+    // Standard Soundex H/W rule: H and W are transparent — they do NOT reset
+    // the "previous code", so two same-coded consonants separated only by H or W
+    // are treated as adjacent (coalesced into one digit). Vowels (and Y) DO
+    // reset prevCode, so a same-coded consonant on the other side of a vowel is
+    // emitted again. Coded consonants set prevCode to their own code.
+    if (ch === 'H' || ch === 'W') {
+      // leave prevCode unchanged
+    } else if (code === '') {
+      prevCode = ''; // vowel or Y resets
+    } else {
+      prevCode = code;
+    }
   }
   return (result + '000').substring(0, 4);
 }

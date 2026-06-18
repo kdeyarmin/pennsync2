@@ -55,6 +55,31 @@ test("no false positive for an unrelated pair", () => {
   assert.deepEqual(findDeterministicInteractions([{ name: "acetaminophen" }, { name: "vitamin d" }]), []);
 });
 
+test("warfarin + aspirin is flagged as an antiplatelet bleeding interaction, not an NSAID one", () => {
+  // Aspirin is an antiplatelet, not an NSAID for this safety-net. The pair is a
+  // genuine, dangerous bleeding interaction and MUST still be surfaced — but with
+  // the correct antiplatelet label, never the warfarin/NSAID "GI bleeding" one.
+  const r = findDeterministicInteractions([{ name: "Warfarin 5mg" }, { name: "Aspirin 81mg" }]);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].severity, "major");
+  assert.match(r[0].description, /antiplatelet/i);
+  assert.ok(!r.some((x) => /NSAID/i.test(x.description)));
+});
+
+test("warfarin + clopidogrel is flagged as an antiplatelet bleeding interaction", () => {
+  const r = findDeterministicInteractions([{ name: "Warfarin" }, { name: "Clopidogrel" }]);
+  assert.ok(r.some((x) => /antiplatelet/i.test(x.description) && x.severity === "major"));
+});
+
+test("token matching avoids substring false positives but keeps true matches", () => {
+  // "mononitrate" must not match the bare "nitrate" fragment as a substring;
+  // the nitrate group is still detected via the "isosorbide" token, so the
+  // nitrate + PDE5 critical interaction still fires.
+  const r = findDeterministicInteractions([{ name: "Isosorbide mononitrate" }, { name: "sildenafil" }]);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].severity, "critical");
+});
+
 test("handles <2 meds and empty/blank input", () => {
   assert.deepEqual(findDeterministicInteractions([{ name: "warfarin" }]), []);
   assert.deepEqual(findDeterministicInteractions([]), []);
