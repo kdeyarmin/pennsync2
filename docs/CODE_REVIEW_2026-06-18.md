@@ -27,13 +27,28 @@ parity / dedupe tests where those exist.
 After the initial review (§2 lists what landed first), a follow-up pass implemented
 essentially the entire open backlog. Net state:
 
-**§3 backend security — DONE.** Opt-in `INTERNAL_FN_SECRET` gate (mirrors
-`checkExpiredInvitations`, safe-by-default) + canonical re-fetch on `onDocumentSigned`,
-`notifyAdminOfSignedDocument`, `notifySignerOfPackage`; gate + 5000-row bound on
-`monitorComplianceRisks`; admin-role gate on `archiveSignedDocument`; automation gate on
-`autoAssignNurseToPatient`. Fax credential fallback (env → in-app `IntegrationSecret`)
-added to `handleTwilioFaxWebhook`, `sendFax`, `autoRetryFailedFaxes`, `retryFailedFax`,
+**§3 backend security — DONE.** The three document-signing webhooks
+(`onDocumentSigned`, `notifyAdminOfSignedDocument`, `notifySignerOfPackage`) and
+`autoAssignNurseToPatient` are **entity triggers** — the platform invokes them with no
+user identity and no custom header, so a required `INTERNAL_FN_SECRET` gate would 403 the
+legitimate trigger the moment the secret is set. They are therefore hardened by **mandatory
+canonical re-fetch** instead: require `data.id`, re-fetch the real
+`DocumentSignature`/`DocumentPackage`/`Patient` by id, and derive all privileged state
+(completion, admin recipients, the 30-day signer token's email) from that record — never the
+posted body. A true network-auth gate on these triggers remains deploy-only (it needs the
+platform configured to send the secret header) and is the only §3 residual. The **cron**
+path `monitorComplianceRisks` *does* get the opt-in `INTERNAL_FN_SECRET` gate + 5000-row
+bound (crons can carry the header); `archiveSignedDocument` got an admin-role gate. Fax
+credential fallback (env → in-app `IntegrationSecret` via `resolveTwilioCreds`) added to
+`handleTwilioFaxWebhook`, `sendFax`, `autoRetryFailedFaxes`, `retryFailedFax`,
 `syncTwilioFaxStatuses`, and `handleTelnyxWebhook`.
+
+**`PDGMRateConfig` RLS — DONE (in-repo).** The rate-editor entity now carries an `rls` block
+(`read: {}`, `write: { user_condition: { role: "admin" } }`, mirroring `AIConfiguration`),
+so only admins can persist case-mix weights / base rate / ICD map while every authenticated
+read still works. `calculatePDGM` reads it via `asServiceRole` (RLS-exempt), so the
+calculation is unaffected. This was previously listed as a deploy-time step; it is expressed
+in the entity definition and needs no dashboard change.
 
 **§4 comms — DONE.** `sendFax` idempotency guard; `pollFaxStatuses` + `handleTwilioFaxWebhook`
 unknown-status → skip; `dispatchScheduledSms` 24h staleness expiry + `StatusCallback`;
@@ -208,9 +223,17 @@ into the primary documentation flow (`DocumentVisit.jsx`).
 
 ---
 
-## 3. Open — backend security (needs deploy coordination; concrete fixes below)
+## 3. Backend security (RESOLVED — see §0; original findings + fixes below)
 
-These are the **most serious** findings. They were **not** auto-fixed because the fix
+> **Status:** Every item in this section has since been remediated (see §0). The signing
+> webhooks / `autoAssignNurseToPatient` use mandatory canonical re-fetch (a hard secret gate
+> would break the entity trigger); `monitorComplianceRisks` and `archiveSignedDocument` are
+> gated; the fax credential fallback is in place; and `PDGMRateConfig` is admin-write via RLS.
+> The **only** residual is a true network-auth gate on the entity-trigger webhooks, which is
+> deploy-only (needs the platform configured to send the secret header) and is mitigated by
+> the re-fetch. The original finding write-ups are kept below for the audit trail.
+
+These were the **most serious** findings. They were **not** auto-fixed in the first pass because the fix
 interacts with how Base44 invokes entity-trigger / cron functions (adding a required gate
 can break the platform trigger unless it is configured to send the secret header), and the
 backend cannot be executed in this environment. Apply with the ability to test the live
