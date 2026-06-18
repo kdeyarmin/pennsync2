@@ -6,12 +6,34 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { event, data } = body;
 
+    // Opt-in auth gate (mirrors checkExpiredInvitations): when INTERNAL_FN_SECRET
+    // is set, require an admin user OR the internal secret header so an
+    // unauthenticated caller can't forge a signature event and force-complete a
+    // package. Unset => the platform entity-trigger path (no identity) stays
+    // allowed; an authenticated non-admin is rejected.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     // This is triggered when a DocumentSignature is updated
     if (!event || event.type !== 'update') {
       return Response.json({ success: true });
     }
 
-    const signature = data;
+    // Re-fetch the canonical signature by id rather than trusting the posted body
+    // (a forged body could otherwise claim a 'signed' status it doesn't have).
+    let signature = data;
+    if (data?.id) {
+      const fresh = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
+      if (fresh) signature = fresh;
+    }
 
     // Only process if signature status changed to "signed"
     if (signature.status !== 'signed') {

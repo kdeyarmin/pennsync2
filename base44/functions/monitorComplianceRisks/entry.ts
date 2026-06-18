@@ -3,9 +3,26 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
-    // Service role for monitoring all patients
-    const patients = await base44.asServiceRole.entities.Patient.filter({ status: 'active' });
+
+    // Opt-in auth gate (mirrors checkExpiredInvitations): this cron reads every
+    // active patient's PHI and writes PatientAlerts, so when INTERNAL_FN_SECRET is
+    // set require admin OR the internal secret header (the trusted scheduler sends
+    // x-internal-secret). Unset => the no-identity cron path stays allowed; an
+    // authenticated non-admin is rejected.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
+    // Service role for monitoring all patients (bounded — an unbounded list would
+    // silently truncate at the SDK page default and time out at scale).
+    const patients = await base44.asServiceRole.entities.Patient.filter({ status: 'active' }, '-created_date', 5000);
     const alerts = [];
     const currentDate = new Date();
     

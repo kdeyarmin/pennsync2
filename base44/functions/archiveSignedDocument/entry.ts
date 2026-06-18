@@ -9,6 +9,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Archiving retires a patient's signed clinical/legal document, so restrict
+    // it to administrators rather than any authenticated user.
+    const isAdminLike =
+      user.role === 'admin' ||
+      user.account_type === 'agency_admin' ||
+      user.account_type === 'super_admin';
+    if (!isAdminLike) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     const { document_id, archive_notes } = await req.json();
 
     if (!document_id) {

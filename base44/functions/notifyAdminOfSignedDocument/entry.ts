@@ -3,13 +3,30 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event, data } = await req.json();
+    const { data } = await req.json();
+
+    // Opt-in auth gate (mirrors checkExpiredInvitations): when INTERNAL_FN_SECRET
+    // is set, require admin OR the internal secret header so an unauthenticated
+    // caller can't probe patient records / spam admins. Unset => the entity-trigger
+    // (no identity) path stays allowed; an authenticated non-admin is rejected.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
 
     if (!data || !data.id) {
       return Response.json({ error: 'No signature data provided' }, { status: 400 });
     }
 
-    const signature = data;
+    // Re-fetch the canonical signature by id rather than trusting the posted body.
+    const fresh = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
+    const signature = fresh || data;
 
     // Only notify if status is 'signed'
     if (signature.status !== 'signed') {
