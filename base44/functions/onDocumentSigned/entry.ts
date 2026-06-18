@@ -11,20 +11,20 @@ Deno.serve(async (req) => {
     // x-internal-secret header, so an auth/secret gate here would 403 the
     // legitimate trigger the moment INTERNAL_FN_SECRET is set. The integrity
     // defense for a trigger is to NOT trust the posted body — re-fetch the
-    // canonical record by id (below) and act only on its real, server-side state,
-    // so a forged body can't claim a 'signed' status it doesn't have.
+    // canonical record by id and act only on its real, server-side state. The id
+    // is always present on a real trigger, so we REQUIRE it and never fall back to
+    // the body (otherwise a forged body with no id would be trusted verbatim).
     if (!event || event.type !== 'update') {
       return Response.json({ success: true });
     }
 
-    let signature = data;
-    if (data?.id) {
-      const fresh = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
-      if (!fresh) {
-        // No real record for this id → nothing to act on (ignore forged ids).
-        return Response.json({ success: true, skipped: 'signature not found' });
-      }
-      signature = fresh;
+    if (!data?.id) {
+      return Response.json({ success: true, skipped: 'no signature id' });
+    }
+    const signature = await base44.asServiceRole.entities.DocumentSignature.get(data.id).catch(() => null);
+    if (!signature) {
+      // No real record for this id → nothing to act on (ignore forged ids).
+      return Response.json({ success: true, skipped: 'signature not found' });
     }
 
     // Only process if signature status changed to "signed"

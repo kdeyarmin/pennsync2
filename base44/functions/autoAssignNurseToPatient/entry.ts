@@ -8,23 +8,24 @@ Deno.serve(async (req) => {
     // Entity-trigger (fires on Visit create): invoked by the platform with no
     // identity / no custom header, so a secret gate would 403 the legitimate
     // trigger when INTERNAL_FN_SECRET is set. Defense for a trigger: re-fetch the
-    // canonical Visit by id and derive the nurse + patient FROM the real record
-    // (never the posted body), so a forged payload can't grant an arbitrary nurse
-    // PHI access to an arbitrary patient.
-    let patient_id = payload.data?.patient_id;
-    let nurse_email = payload.data?.created_by;
+    // canonical Visit by id and derive the nurse + patient FROM the real record.
+    // The id is ALWAYS present on a real trigger payload, so we require it and
+    // NEVER fall back to the posted body — otherwise an unauthenticated caller
+    // could omit the id and have arbitrary patient_id/created_by trusted, granting
+    // an attacker-chosen email PHI access to any patient.
     const visitId = payload.data?.id;
-    if (visitId) {
-      const visit = await base44.asServiceRole.entities.Visit.get(visitId).catch(() => null);
-      if (!visit) {
-        return Response.json({ success: true, skipped: 'visit not found' });
-      }
-      patient_id = visit.patient_id;
-      nurse_email = visit.created_by;
+    if (!visitId) {
+      return Response.json({ success: true, skipped: 'no visit id' });
     }
+    const visit = await base44.asServiceRole.entities.Visit.get(visitId).catch(() => null);
+    if (!visit) {
+      return Response.json({ success: true, skipped: 'visit not found' });
+    }
+    const patient_id = visit.patient_id;
+    const nurse_email = visit.created_by;
 
     if (!patient_id || !nurse_email) {
-      console.error('Missing patient_id or nurse_email from Visit:', payload);
+      console.error('Missing patient_id or created_by on Visit:', visitId);
       return Response.json({ error: 'patient_id and nurse_email are required' }, { status: 400 });
     }
 
