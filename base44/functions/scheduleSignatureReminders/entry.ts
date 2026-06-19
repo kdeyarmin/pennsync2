@@ -41,7 +41,9 @@ Deno.serve(async (req) => {
         type: 'task_due_soon',
         priority: 'high',
         is_read: false,
-        action_url: `/SignerPortal?document=${document_id}`,
+        // No action_url: the signer portal is reached via a per-signer tokenized
+        // link (/signer?token=...) which this cron doesn't have, and a bare
+        // /SignerPortal?document= path doesn't exist — a dead link is worse than none.
       });
     }
 
