@@ -2,15 +2,16 @@ import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 
-// Connection quality readout for the active video call. A network-quality level
-// runs from 0 (lost) to 5 (excellent); we subscribe to changes when the SDK
-// surfaces them, and fall back to the browser online/offline signal otherwise.
+// Connection quality readout for the active video call. The @telnyx/video
+// `connectionQuality` runs from 0 (network_broken) to 5 (excellent_network); we
+// enable the room's network-metrics report for the local participant and read it
+// off the `network_metrics_report` event, falling back to the browser
+// online/offline signal otherwise.
 //
 // `room` is the connected Telnyx Video Room (a real value, not a ref) so this
-// effect re-subscribes if/when the room becomes available or changes.
-// TODO(verify): confirm the network-quality property/event names against the
-// @telnyx/video docs; this reads networkQualityLevel + networkQualityLevelChanged
-// and no-ops gracefully if the SDK doesn't expose them.
+// effect re-subscribes if/when the room becomes available or changes. The SDK
+// surface used here (enableNetworkMetricsReport / network_metrics_report /
+// getState().localParticipantId) is asserted by telnyxVideoApi.test.js.
 export default function NetworkMonitor({ room }) {
   const [level, setLevel] = useState(null);
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -27,12 +28,19 @@ export default function NetworkMonitor({ room }) {
   }, []);
 
   useEffect(() => {
-    const localParticipant = room?.localParticipant;
-    if (!localParticipant || typeof localParticipant.on !== 'function') return;
-    setLevel(localParticipant.networkQualityLevel ?? null);
-    const handler = (lvl) => setLevel(lvl);
-    localParticipant.on('networkQualityLevelChanged', handler);
-    return () => localParticipant.removeListener?.('networkQualityLevelChanged', handler);
+    if (!room || typeof room.on !== 'function') return undefined;
+    const localId = room.getState?.().localParticipantId;
+    if (!localId) return undefined;
+    // Ask the room to start emitting metrics for our own leg.
+    try { room.enableNetworkMetricsReport([localId]); } catch { /* optional */ }
+    const unsubscribe = room.on('network_metrics_report', (metrics) => {
+      const q = metrics?.[localId]?.connectionQuality;
+      if (typeof q === 'number') setLevel(q);
+    });
+    return () => {
+      try { unsubscribe?.(); } catch { /* already gone */ }
+      try { room.disableNetworkMetricsReport([localId]); } catch { /* optional */ }
+    };
   }, [room]);
 
   if (!online || level === 0) {

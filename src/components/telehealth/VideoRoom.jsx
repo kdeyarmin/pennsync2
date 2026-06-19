@@ -9,20 +9,37 @@ import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";
 import TelehealthChat from "./TelehealthChat";
 
-// VideoRoom — Telnyx Video room client.
+// VideoRoom — Telnyx Video room client (@telnyx/video v1).
 //
-// createTelehealthToken now returns a Telnyx token:
+// createTelehealthToken returns a Telnyx token:
 //   { token, room_id, room_name, identity, host_name, refresh_token }
-// We initialize a Telnyx Video Room with the `token` + `room_id`, join, publish
-// local audio/video, and render remote participants' streams.
 //
-// NOTE: The exact method/event names on the `@telnyx/video` Room API are pinned
-// against Telnyx's documented JS SDK. Where a name is uncertain it's marked with
-// a TODO(verify) so it can be confirmed against the @telnyx/video docs without
-// leaving the component broken.
+// Validated against the installed @telnyx/video type surface (see
+// src/components/telehealth/telnyxVideoApi.test.js, which asserts every SDK
+// method/event used here actually exists):
+//   initialize({ roomId, clientToken, context }) -> Promise<Room>
+//   room.on(event, cb), room.connect(), room.disconnect()
+//   room.getState() -> { status, localParticipantId, participants: Map, streams: Map }
+//   room.addStream(key, { audio?: track, video?: track }), room.removeStream(key)
+//   room.addSubscription(participantId, key, { audio, video })
+//   room.getParticipantStream(participantId, key) -> Stream{ audioTrack, videoTrack }
+//   room.sendMessage(message, recipients?)
+//   events: connected, disconnected, state_changed, participant_joined/left,
+//           stream_published/unpublished, subscription_started/ended,
+//           track_enabled/disabled, message_received
+
+// The participant `context` we set is JSON.stringify({ identity }); read it back.
+function identityFromParticipant(p) {
+  if (!p) return "Participant";
+  try {
+    const ctx = typeof p.context === "string" ? JSON.parse(p.context) : p.context;
+    if (ctx?.identity) return ctx.identity;
+  } catch { /* context wasn't our JSON */ }
+  return p.id;
+}
 
 export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange, joinToken, videoDeviceId, audioDeviceId, waitingMessage = "Waiting for patient to join..." }) {
-  // Remote participants, keyed for rendering. Each entry: { id, identity, streams }
+  // Remote participants, keyed for rendering. Each: { id, identity, streamKeys }
   const [participants, setParticipants] = useState([]);
   const [status, setStatus] = useState("connecting"); // connecting | connected | reconnecting | error | disconnected
   const [error, setError] = useState(null);
@@ -47,17 +64,18 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   const localStreamRef = useRef(null);   // local MediaStream (camera + mic)
   const screenStreamRef = useRef(null);  // active screen-share MediaStream
   const endedRef = useRef(false);
+  const wasConnectedRef = useRef(false);
 
-  // Append a chat message received over the room's data channel.
+  // Append a chat message received over the room's message channel.
   const handleIncomingMessage = useCallback((raw, senderIdentity) => {
     let text = raw;
     let ts = Date.now();
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
       text = parsed.text ?? raw;
       ts = parsed.ts ?? ts;
     } catch { /* fall back to the raw string */ }
-    setMessages(prev => [...prev, {
+    setMessages((prev) => [...prev, {
       id: `${senderIdentity}-${ts}-${Math.random().toString(36).slice(2, 6)}`,
       sender: senderIdentity,
       text,
@@ -67,21 +85,31 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   }, []);
 
   // Refresh the rendered remote-participant list from the room's current state.
+  // state.participants is a Map<id, Participant>; exclude the local participant.
   const syncParticipants = useCallback((room) => {
     if (!room) return;
-    // TODO(verify): confirm against @telnyx/video docs — Room exposes the set of
-    // remote participants (here read as room.state.participants, excluding self).
-    const all = room?.state?.participants
-      ? Object.values(room.state.participants)
-      : (room?.participants ? Object.values(room.participants) : []);
-    const remote = all
-      .filter((p) => p && p.id !== room?.state?.localParticipantId && !p.isLocal)
+    const state = room.getState();
+    const localId = state.localParticipantId;
+    const remote = [...state.participants.values()]
+      .filter((p) => p && p.id !== localId && p.origin !== "local")
       .map((p) => ({
         id: p.id,
-        identity: p.context?.identity || p.externalUsername || p.id,
-        streams: p.streams || {},
+        identity: identityFromParticipant(p),
+        streamKeys: Object.keys(p.streams || {}),
       }));
     setParticipants(remote);
+  }, []);
+
+  // Subscribe to every stream a remote participant publishes so its media flows
+  // to us; the SDK requires an explicit subscription before tracks arrive.
+  const subscribeRemote = useCallback(async (room, participantId, key) => {
+    const state = room.getState();
+    if (participantId === state.localParticipantId) return;
+    try {
+      await room.addSubscription(participantId, key, { audio: true, video: true });
+    } catch (e) {
+      console.error("subscribe error:", e);
+    }
   }, []);
 
   const connectToRoom = useCallback(async () => {
@@ -93,10 +121,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         joinToken ? { room_name: roomName, join_token: joinToken } : { room_name: roomName, identity }
       );
       const { token, room_id } = res.data || {};
-      // Surface the server's friendly reason (e.g. "Invalid or expired join
-      // link") instead of a cryptic provider "invalid token" error downstream.
       if (!token) throw new Error(res.data?.error || "We couldn't start the visit. Please try again.");
-      // For patients, greet them with the provider's name while they wait.
       if (joinToken && res.data.host_name) setProviderName(res.data.host_name);
 
       const { initialize } = await import("@telnyx/video");
@@ -107,22 +132,22 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       const videoConstraint = { width: 1280, height: 720 };
       if (videoDeviceId) videoConstraint.deviceId = videoDeviceId;
 
-      // TODO(verify): confirm against @telnyx/video docs — `initialize` creates a
-      // Room client from the capability token + room id, then `connect()` joins.
-      const room = initialize({
+      // initialize() returns a Promise<Room>; it must be awaited.
+      const room = await initialize({
         roomId: room_id,
         clientToken: token,
         context: JSON.stringify({ identity }),
+        enableMessages: true,
       });
       roomRef.current = room;
       endedRef.current = false;
 
       // Wire room lifecycle + participant events before connecting so we don't
       // miss the initial participant set.
-      // TODO(verify): confirm event names against @telnyx/video docs.
       room.on("connected", () => {
+        wasConnectedRef.current = true;
         setStatus("connected");
-        setSessionStartTime(new Date());
+        setSessionStartTime((t) => t || new Date());
         syncParticipants(room);
       });
       room.on("disconnected", () => {
@@ -132,28 +157,37 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
           onDisconnect && onDisconnect();
         }
       });
-      // Telnyx recovers transient network drops on its own; surface that as a
-      // "Reconnecting…" state instead of treating the blip as the visit ending.
-      room.on("reconnecting", () => setStatus("reconnecting"));
-      room.on("reconnected", () => setStatus("connected"));
-      const onParticipantChange = (p) => {
+      // Derive a "Reconnecting…" state from the room status without inventing
+      // events: status returns to 'connecting' after a transient drop.
+      room.on("state_changed", (state) => {
+        if (state.status === "connecting" && wasConnectedRef.current) setStatus("reconnecting");
+        else if (state.status === "connected") setStatus("connected");
+      });
+      const onParticipantJoin = (participantId) => {
         syncParticipants(room);
-        const who = p?.context?.identity || p?.externalUsername;
+        const p = room.getState().participants.get(participantId);
+        const who = p ? identityFromParticipant(p) : null;
         if (who) toast.success(`${who} joined the visit`);
       };
-      room.on("participant_joined", onParticipantChange);
+      room.on("participant_joined", onParticipantJoin);
       room.on("participant_left", () => syncParticipants(room));
-      // Remote stream published/subscribed → re-render so the new track attaches.
-      room.on("stream_published", () => syncParticipants(room));
+      // A remote stream was published → subscribe, then re-render once it starts.
+      room.on("stream_published", (participantId, key) => {
+        subscribeRemote(room, participantId, key);
+      });
+      room.on("stream_unpublished", () => syncParticipants(room));
+      room.on("subscription_started", () => syncParticipants(room));
+      room.on("subscription_ended", () => syncParticipants(room));
       room.on("track_enabled", () => syncParticipants(room));
-      // In-call chat over the data/message channel.
-      // TODO(verify): confirm message event + send API against @telnyx/video docs.
-      room.on("message_received", (msg) => {
-        const sender = msg?.sender?.context?.identity || msg?.sender || "Participant";
-        handleIncomingMessage(msg?.payload ?? msg?.data ?? msg, sender);
+      room.on("track_disabled", () => syncParticipants(room));
+      // In-call chat over the message channel. Signature is
+      // (participantId, message, recipients, state).
+      room.on("message_received", (participantId, message) => {
+        const p = room.getState().participants.get(participantId);
+        handleIncomingMessage(message, p ? identityFromParticipant(p) : "Participant");
       });
 
-      // Acquire local media honoring the chosen devices, then connect + publish.
+      // Acquire local media honoring the chosen devices.
       const localStream = await navigator.mediaDevices.getUserMedia({
         audio: audioConstraint,
         video: videoConstraint,
@@ -169,18 +203,23 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         localVideoRef.current.appendChild(videoEl);
       }
 
-      // TODO(verify): confirm against @telnyx/video docs — connect() joins the
-      // room; addStream/publish makes the local camera+mic visible to others.
+      // connect() joins the room; addStream publishes the local camera + mic as
+      // the "self" stream (tracks passed individually, per the SDK).
       await room.connect();
       await room.addStream("self", {
-        audio: true,
-        video: true,
-        stream: localStream,
+        audio: localStream.getAudioTracks()[0],
+        video: localStream.getVideoTracks()[0],
       });
 
-      // If the SDK fires "connected" synchronously inside connect(), the handler
-      // above already ran; otherwise reflect joined state now.
-      if (status !== "connected") {
+      // Subscribe to anyone already publishing when we joined.
+      const state = room.getState();
+      for (const p of state.participants.values()) {
+        if (p.id === state.localParticipantId) continue;
+        for (const key of Object.keys(p.streams || {})) subscribeRemote(room, p.id, key);
+      }
+
+      if (!wasConnectedRef.current) {
+        wasConnectedRef.current = true;
         setStatus("connected");
         setSessionStartTime((t) => t || new Date());
       }
@@ -191,8 +230,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       setError(friendly || err.message);
       setStatus("error");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomName, identity, joinToken, videoDeviceId, audioDeviceId, onDisconnect, syncParticipants, handleIncomingMessage]);
+  }, [roomName, identity, joinToken, videoDeviceId, audioDeviceId, onDisconnect, syncParticipants, subscribeRemote, handleIncomingMessage]);
 
   useEffect(() => {
     connectToRoom();
@@ -203,7 +241,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     };
   }, [connectToRoom]);
 
-  // Live call timer (the previous duration display never ticked).
+  // Live call timer.
   useEffect(() => {
     if (!sessionStartTime) return;
     const id = setInterval(() => {
@@ -219,22 +257,25 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
+  // Mute by toggling the local track's enabled flag and republishing the new
+  // track to the "self" stream so remote participants see the change.
   const toggleAudio = () => {
     const next = !audioMuted;
-    // Toggle the local audio track directly so it works even if the SDK helper
-    // name differs across versions.
-    localStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = !next; });
-    // TODO(verify): confirm against @telnyx/video docs — the Room may expose
-    // updateStream/disableStream to signal mute state to remote participants.
-    try { next ? roomRef.current?.disableAudio?.("self") : roomRef.current?.enableAudio?.("self"); } catch { /* optional */ }
+    const track = localStreamRef.current?.getAudioTracks()[0];
+    if (track) {
+      track.enabled = !next;
+      try { roomRef.current?.updateStream("self", { audio: track }); } catch { /* optional */ }
+    }
     setAudioMuted(next);
   };
 
   const toggleVideo = () => {
     const next = !videoMuted;
-    localStreamRef.current?.getVideoTracks().forEach((t) => { t.enabled = !next; });
-    // TODO(verify): confirm against @telnyx/video docs — disableVideo/enableVideo.
-    try { next ? roomRef.current?.disableVideo?.("self") : roomRef.current?.enableVideo?.("self"); } catch { /* optional */ }
+    const track = localStreamRef.current?.getVideoTracks()[0];
+    if (track) {
+      track.enabled = !next;
+      try { roomRef.current?.updateStream("self", { video: track }); } catch { /* optional */ }
+    }
     setVideoMuted(next);
   };
 
@@ -253,16 +294,14 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     }
   };
 
-  // Screen sharing: publish a getDisplayMedia stream as a second/replacement
-  // stream, restoring the camera when it stops.
+  // Screen sharing: publish a getDisplayMedia track as a named "screen" stream,
+  // restoring the camera preview when it stops.
   const stopScreenShare = () => {
     const screenStream = screenStreamRef.current;
     if (!screenStream) return; // already stopped — keep this idempotent
     screenStreamRef.current = null;
     screenStream.getTracks().forEach((t) => t.stop());
-    // TODO(verify): confirm against @telnyx/video docs — removeStream("screen")
-    // and that the camera ("self") stream remains published.
-    try { roomRef.current?.removeStream?.("screen"); } catch { /* optional */ }
+    try { roomRef.current?.removeStream("screen"); } catch { /* optional */ }
     // Restore the local camera preview.
     if (localVideoRef.current && localStreamRef.current) {
       const videoEl = document.createElement("video");
@@ -283,10 +322,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
     screenStreamRef.current = screenStream;
 
-    // TODO(verify): confirm against @telnyx/video docs — addStream publishes a
-    // named "screen" stream alongside (or in place of) the camera.
     try {
-      await room.addStream?.("screen", { audio: false, video: true, stream: screenStream });
+      await room.addStream("screen", { video: screenStream.getVideoTracks()[0] });
     } catch (e) {
       console.error("Screen publish error:", e);
     }
@@ -325,21 +362,19 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       }
     } catch (err) {
       // Most commonly the user dismissed the screen picker — leave the call as-is.
-      console.error('Screen share error:', err);
+      console.error("Screen share error:", err);
       setScreenSharing(false);
     }
   };
 
   const sendMessage = (text) => {
     try {
-      // TODO(verify): confirm against @telnyx/video docs — sendMessage broadcasts
-      // a payload over the room's data channel to all participants.
-      roomRef.current?.sendMessage?.(JSON.stringify({ text, ts: Date.now() }));
+      roomRef.current?.sendMessage(JSON.stringify({ text, ts: Date.now() }));
     } catch (err) {
-      console.error('Chat send error:', err);
+      console.error("Chat send error:", err);
     }
-    // Data messages don't echo back to the sender, so add our own locally.
-    setMessages(prev => [...prev, {
+    // Messages don't echo back to the sender, so add our own locally.
+    setMessages((prev) => [...prev, {
       id: `self-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       sender: identity,
       text,
@@ -412,7 +447,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         </div>
 
         {/* Remote participants */}
-        {participants.map(participant => (
+        {participants.map((participant) => (
           <RemoteParticipant key={participant.id} participant={participant} room={roomRef.current} />
         ))}
 
@@ -434,7 +469,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
         onDisconnect={disconnect}
-        onToggleChat={() => setShowChat(v => !v)}
+        onToggleChat={() => setShowChat((v) => !v)}
         onToggleScreenShare={toggleScreenShare}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
@@ -452,42 +487,34 @@ function RemoteParticipant({ participant, room }) {
   const audioRef = useRef(null);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!room) return undefined;
+    // Build a MediaStream from the participant's subscribed Telnyx streams
+    // (getParticipantStream(participantId, key) -> Stream{ audioTrack, videoTrack }).
+    const tracks = [];
+    for (const key of participant.streamKeys || []) {
+      const s = room.getParticipantStream(participant.id, key);
+      if (s?.audioTrack) tracks.push(s.audioTrack);
+      if (s?.videoTrack) tracks.push(s.videoTrack);
+    }
+    if (!tracks.length) return undefined;
+    const mediaStream = new MediaStream(tracks);
 
-    // TODO(verify): confirm against @telnyx/video docs — how a subscribed
-    // participant's media is obtained. We try a MediaStream off the participant's
-    // published streams; if the SDK exposes getParticipantStream/getStats use
-    // that instead. Attaches video + audio elements to the tiles.
-    const attach = async () => {
-      let mediaStream = null;
-      const streams = participant.streams || {};
-      const first = Object.values(streams)[0];
-      if (first?.mediaStream) {
-        mediaStream = first.mediaStream;
-      } else if (room?.getParticipantStream) {
-        try { mediaStream = await room.getParticipantStream(participant.id); } catch { /* not ready */ }
-      }
-      if (cancelled || !mediaStream) return;
-
-      if (videoRef.current && mediaStream.getVideoTracks().length) {
-        const v = document.createElement("video");
-        v.autoplay = true;
-        v.playsInline = true;
-        v.srcObject = mediaStream;
-        videoRef.current.innerHTML = "";
-        videoRef.current.appendChild(v);
-      }
-      if (audioRef.current && mediaStream.getAudioTracks().length) {
-        const a = document.createElement("audio");
-        a.autoplay = true;
-        a.srcObject = mediaStream;
-        audioRef.current.innerHTML = "";
-        audioRef.current.appendChild(a);
-      }
-    };
-
-    attach();
-    return () => { cancelled = true; };
+    if (videoRef.current && mediaStream.getVideoTracks().length) {
+      const v = document.createElement("video");
+      v.autoplay = true;
+      v.playsInline = true;
+      v.srcObject = mediaStream;
+      videoRef.current.innerHTML = "";
+      videoRef.current.appendChild(v);
+    }
+    if (audioRef.current && mediaStream.getAudioTracks().length) {
+      const a = document.createElement("audio");
+      a.autoplay = true;
+      a.srcObject = mediaStream;
+      audioRef.current.innerHTML = "";
+      audioRef.current.appendChild(a);
+    }
+    return undefined;
   }, [participant, room]);
 
   return (
