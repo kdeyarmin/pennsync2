@@ -167,7 +167,7 @@ Return JSON with the complete material:`,
     if (!educationMaterial) return;
     
     const fullText = `${educationMaterial.title}\n\n${educationMaterial.introduction}\n\n` +
-      educationMaterial.sections.map(s => `${s.section_title}\n${s.content}\n`).join('\n') +
+      (educationMaterial.sections || []).map(s => `${s.section_title}\n${s.content}\n`).join('\n') +
       `\n${educationMaterial.summary}`;
     
     navigator.clipboard.writeText(fullText);
@@ -181,7 +181,7 @@ Return JSON with the complete material:`,
     setIsSending(true);
     try {
       const fullText = `${educationMaterial.title}\n\n${educationMaterial.introduction}\n\n` +
-        educationMaterial.sections.map(s => `${s.section_title}\n${s.content}\n`).join('\n') +
+        (educationMaterial.sections || []).map(s => `${s.section_title}\n${s.content}\n`).join('\n') +
         `\n${educationMaterial.summary}`;
 
       await base44.integrations.Core.SendEmail({

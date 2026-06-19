@@ -312,7 +312,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
           onValueChange={(val) => !showResult && setSelectedAnswer(parseInt(val))}
           className="space-y-3"
         >
-          {currentQ?.options.map((option, idx) => {
+          {currentQ?.options?.map((option, idx) => {
             let optionClass = "border-slate-200 hover:border-blue-300";
             if (showResult) {
               if (idx === currentQ.correct_index) {
