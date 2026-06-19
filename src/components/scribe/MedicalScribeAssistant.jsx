@@ -165,7 +165,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
     alert('Copied to clipboard!');
   };
 
-  const isProcessing = uploadAudioMutation.isLoading || transcribeMutation.isLoading;
+  const isProcessing = uploadAudioMutation.isPending || transcribeMutation.isPending;
 
   return (
     <Card className="border-purple-200">

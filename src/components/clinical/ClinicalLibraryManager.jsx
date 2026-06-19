@@ -674,7 +674,7 @@ export default function ClinicalLibraryManager() {
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isLoading || updateMutation.isLoading}>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                 {editingTemplate ? 'Update' : 'Create'} Template
               </Button>
             </div>

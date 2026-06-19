@@ -151,7 +151,10 @@ Please review and approve in the Personnel File dashboard.`
   }).sort((a, b) => new Date(a.expiration_date) - new Date(b.expiration_date));
 
   const expiredCredentials = credentials.filter(cred => {
-    if (!cred.expiration_date) return false;
+    // A pending_approval record is a renewal-in-flight (typically with a future
+    // expiration), not a credential the user needs to re-renew — exclude it so it
+    // never surfaces as "Expired / Renew Now".
+    if (!cred.expiration_date || cred.status === 'pending_approval') return false;
     const expDate = parseISO(cred.expiration_date);
     return expDate < today;
   });
@@ -336,7 +339,7 @@ Please review and approve in the Personnel File dashboard.`
                               </Button>
                               <Button
                                 type="submit"
-                                disabled={!renewalData.uploaded_file_url || submitRenewalMutation.isLoading}
+                                disabled={!renewalData.uploaded_file_url || submitRenewalMutation.isPending}
                                 className="bg-green-600 hover:bg-green-700"
                               >
                                 <FileCheck className="w-4 h-4 mr-2" />
@@ -457,11 +460,11 @@ Please review and approve in the Personnel File dashboard.`
                               </Button>
                               <Button
                                 type="submit"
-                                disabled={!renewalData.uploaded_file_url || submitRenewalMutation.isLoading}
+                                disabled={!renewalData.uploaded_file_url || submitRenewalMutation.isPending}
                                 className="bg-green-600 hover:bg-green-700"
                               >
                                 <FileCheck className="w-4 h-4 mr-2" />
-                                {submitRenewalMutation.isLoading ? "Submitting..." : "Submit for Approval"}
+                                {submitRenewalMutation.isPending ? "Submitting..." : "Submit for Approval"}
                               </Button>
                             </div>
                           </form>

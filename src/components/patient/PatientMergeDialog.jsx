@@ -332,10 +332,10 @@ export default function PatientMergeDialog({
             ) : (
               <Button
                 onClick={() => mergeMutation.mutate()}
-                disabled={mergeMutation.isLoading}
+                disabled={mergeMutation.isPending}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {mergeMutation.isLoading ? 'Merging...' : 'Merge Patients'}
+                {mergeMutation.isPending ? 'Merging...' : 'Merge Patients'}
               </Button>
             )}
           </div>

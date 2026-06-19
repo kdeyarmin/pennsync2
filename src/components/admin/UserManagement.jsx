@@ -682,7 +682,7 @@ export default function UserManagement({ users }) {
             </Button>
             <Button
               onClick={handleSaveEdit}
-              disabled={updateUserMutation.isLoading}
+              disabled={updateUserMutation.isPending}
               className="bg-blue-600 hover:bg-blue-700"
             >
               Save Changes

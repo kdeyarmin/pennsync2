@@ -259,7 +259,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
                   variant="ghost"
                   size="sm"
                   onClick={() => markAllAsReadMutation.mutate()}
-                  disabled={markAllAsReadMutation.isLoading}
+                  disabled={markAllAsReadMutation.isPending}
                 >
                   <CheckCheck className="w-4 h-4 mr-1" />
                   Mark all read

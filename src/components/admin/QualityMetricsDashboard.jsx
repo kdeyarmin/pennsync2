@@ -200,16 +200,18 @@ export default function QualityMetricsDashboard() {
       // Calculate avg doc time for this nurse
       const nurseVisitsWithTime = nurseVisits.filter(v => v.start_time && v.end_time);
       if (nurseVisitsWithTime.length > 0) {
+        // Same NaN guard as the agency-wide avg: differenceInMinutes returns NaN
+        // (without throwing) on a malformed time, so skip non-finite diffs and
+        // divide by the valid count — otherwise one bad row showed "NaN min".
+        let validCount = 0;
         const totalMins = nurseVisitsWithTime.reduce((sum, v) => {
-          try {
-            const start = new Date(`2000-01-01 ${v.start_time}`);
-            const end = new Date(`2000-01-01 ${v.end_time}`);
-            return sum + differenceInMinutes(end, start);
-          } catch {
-            return sum;
-          }
+          const start = new Date(`2000-01-01 ${v.start_time}`);
+          const end = new Date(`2000-01-01 ${v.end_time}`);
+          const mins = differenceInMinutes(end, start);
+          if (Number.isFinite(mins)) { validCount++; return sum + mins; }
+          return sum;
         }, 0);
-        nurseStats[nurse.email].avgDocTime = Math.round(totalMins / nurseVisitsWithTime.length);
+        nurseStats[nurse.email].avgDocTime = validCount > 0 ? Math.round(totalMins / validCount) : 0;
       }
     });
 
