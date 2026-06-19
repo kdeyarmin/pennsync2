@@ -665,7 +665,7 @@ async function decideInboundRouting(base44: any, config: any, workNum: string) {
   if (isOffDutyNow(nurse, new Date(), config.settings)) {
     const office = config.mainOffice || '724-465-0440';
     const greeting = (nurse.off_duty_message ||
-      `Thank you for calling, but I am currently off duty. Please call the office at ${office}.`).replace(/\{office\}/gi, office);
+      'Thank you for your call, I am not working right now. Please hold while I connect you to Penn Home Health.').replace(/\{office\}/gi, office);
     // Speak the message, then connect them to the office so they don't have to
     // redial; if no office number is configured, just play the message and end.
     if (config.mainOffice) return { action: 'greet_transfer', greeting, to: config.mainOffice, callerId: workNum, nurse };

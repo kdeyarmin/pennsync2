@@ -165,7 +165,7 @@ in `src/components/voice/dutyUtils.js`.
 
 **Off-duty auto-replies** (office number = `AgencySettings.main_office_number_e164`):
 - SMS: *"Thank you for your text, but I am currently not working. Please contact the office at {office}."*
-- Voice: *"Thank you for calling, but I am currently off duty. Please call the office at {office}."* — then connects the caller to the office.
+- Voice: *"Thank you for your call, I am not working right now. Please hold while I connect you to Penn Home Health."* — then connects the caller to the office.
 
 Both default to the office number `724-465-0440` until one is configured, and a
 user can override their own message (`off_duty_message`).
