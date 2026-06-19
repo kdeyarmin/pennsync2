@@ -61,6 +61,13 @@ test("runSmoke fails on bad credentials and warns on a missing resource", async 
   assert.ok(failed >= 1);
 });
 
+test("an unreachable API (network error) is a hard failure so CI can gate on it", async () => {
+  const impl = async () => { throw new Error("ENOTFOUND api.telnyx.com"); };
+  const { checks, failed } = await runSmoke({ apiKey: "KEY", fetchImpl: impl });
+  assert.equal(checks.find((c) => c.id === "auth").status, "fail");
+  assert.ok(failed >= 1, "network error must count as a failure (non-zero exit)");
+});
+
 test("missing public key is a warning, not a hard failure", async () => {
   const { impl } = mockFetch([{ match: "/whoami", status: 200 }]);
   const { checks } = await runSmoke({ apiKey: "KEY", publicKey: null, fetchImpl: impl });

@@ -188,7 +188,8 @@ Deno.serve(async (req) => {
       }).catch(() => {});
       return Response.json({
         success: true,
-        twilio_fax_id: faxData?.data?.id,
+        fax_id: faxData?.data?.id,
+        twilio_fax_id: faxData?.data?.id, // deprecated alias, kept for back-compat
         warning: 'Fax retry was sent, but recording the new log entry failed.'
       });
     }
@@ -196,7 +197,8 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       new_fax_log_id: newFaxLog.id,
-      twilio_fax_id: faxData?.data?.id,
+      fax_id: faxData?.data?.id,
+      twilio_fax_id: faxData?.data?.id, // deprecated alias, kept for back-compat
       retry_count: (originalFax.retry_count || 0) + 1,
       message: `Fax retry #${(originalFax.retry_count || 0) + 1} queued for ${originalFax.to_number}`
     });

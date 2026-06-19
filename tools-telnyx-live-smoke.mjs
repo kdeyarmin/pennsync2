@@ -39,6 +39,10 @@ export function parseArgs(argv = []) {
 
 function classify(status) {
   if (status === 200) return "ok";
+  // Network-unreachable (status 0 from probe()'s catch) and rejected credentials
+  // are hard failures so this can gate CI/deploy. 404 (resource not found) stays
+  // a warn since a missing/mistyped id isn't a connectivity failure.
+  if (status === 0) return "fail";
   if (status === 401 || status === 403) return "fail";
   if (status === 404) return "warn";
   return "warn";

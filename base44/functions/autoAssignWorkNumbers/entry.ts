@@ -12,7 +12,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  *
  * Body (all optional): {
  *   emails?: string[]        // limit to these users; default = all users missing a work number
- *   include_assigned?: bool  // also re-affirm users who already have one (no-op safety; default false)
  * }
  *
  * Mirrors the assign semantics of managePhoneNumberPool: marks the pool number
