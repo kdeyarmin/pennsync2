@@ -44,19 +44,61 @@ export function isScheduledOffActive(start, end, now = new Date(), recurring = f
   return t >= s && t <= e;
 }
 
+// Default end-of-day cutoff: a nurse is auto-ended at 5pm local time even if
+// they forgot to flip the switch ("toggle off ... or at 5pm, whichever first").
+export const DEFAULT_AUTO_OFF_HOUR = 17;
+// The agency office is in the 724 (Pennsylvania / Eastern) area, so default the
+// duty clock to Eastern when no timezone is configured.
+export const DEFAULT_DUTY_TIMEZONE = "America/New_York";
+
+/** Hour (0–23) at `now` in `timeZone`, or null when it can't be computed. */
+export function hourInZone(date, timeZone) {
+  try {
+    const h = new Intl.DateTimeFormat("en-US", { timeZone: timeZone || undefined, hour12: false, hour: "2-digit" }).format(date);
+    let n = parseInt(h, 10);
+    if (n === 24) n = 0;
+    return Number.isNaN(n) ? null : n;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * True when the nurse should be treated as off duty at `now` — manual off-duty
- * toggle OR an active scheduled window (one-off or weekly recurring).
+ * True when `now` is at/after the agency's auto-off-duty hour (default 5pm) in
+ * the duty timezone. After this, a nurse is treated as off duty regardless of
+ * their toggle. Disabled when `auto_off_duty_enabled` is explicitly false. An
+ * unknown timezone returns false (don't force everyone off on a misconfig).
  */
-export function isOffDutyNow(user, now = new Date()) {
+export function isPastAutoOffHour(settings, now = new Date()) {
+  const s = settings || {};
+  if (s.auto_off_duty_enabled === false) return false;
+  const hour = Number.isFinite(Number(s.auto_off_duty_hour)) ? Number(s.auto_off_duty_hour) : DEFAULT_AUTO_OFF_HOUR;
+  const tz = s.duty_timezone || s.business_hours_timezone || DEFAULT_DUTY_TIMEZONE;
+  const h = hourInZone(now, tz);
+  if (h == null) return false;
+  return h >= hour;
+}
+
+/**
+ * True when the nurse should be treated as off duty at `now`. A nurse is on duty
+ * ONLY while explicitly toggled on (`duty_status === 'on_duty'`), before the
+ * agency's auto-off hour, and with no active scheduled time-off window. Anything
+ * else — a fresh account, a forgotten toggle, after 5pm, or a scheduled window —
+ * routes calls/texts to the office.
+ *
+ * `settings` is optional (backward compatible); pass the AgencySettings row to
+ * enable the 5pm auto-off cutoff.
+ */
+export function isOffDutyNow(user, now = new Date(), settings = null) {
   if (!user) return false;
-  if (user.duty_status === "off_duty") return true;
-  return isScheduledOffActive(
+  if (isScheduledOffActive(
     user.scheduled_off_duty_start,
     user.scheduled_off_duty_end,
     now,
-    !!user.scheduled_off_duty_recurring
-  );
+    !!user.scheduled_off_duty_recurring,
+  )) return true;
+  if (settings && isPastAutoOffHour(settings, now)) return true;
+  return user.duty_status !== "on_duty";
 }
 
 /**

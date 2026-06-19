@@ -259,7 +259,8 @@ test("inbound call answers first, then bridges an on-duty nurse on call.answered
     data: {
       IntegrationSecret: [{ api_key: "KEYtest", public_key: pubB64 }],
       User: [{ email: "n@x.com", work_phone_number: "+12155550100", personal_cell_e164: "+12155550111", duty_status: "on_duty" }],
-      AgencySettings: [], CallLog: [],
+      // Disable the 5pm auto-off so this bridge assertion is time-independent.
+      AgencySettings: [{ auto_off_duty_enabled: false }], CallLog: [],
     },
   });
 
@@ -343,6 +344,34 @@ test("sendSms forwards MMS media_urls and rejects non-https/oversized media", as
   const res = await handler2(new Request("https://app/functions/sendSms", { method: "POST", body: JSON.stringify({ to_number: "2155550133", body: "x", media_urls: ["http://insecure/x.jpg"] }) }));
   assert.equal(res.status, 400);
   assert.equal(calls2.length, 0, "no send attempted for invalid media");
+});
+
+test("an inbound text to an off-duty nurse gets the off-duty auto-reply", async () => {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const pubB64 = rawEd25519PublicKeyB64(publicKey);
+  const { impl, calls } = makeFetch([
+    { match: (u) => u.includes("/v2/messages"), respond: () => ({ status: 200, json: { data: { id: "reply_1" } } }) },
+  ]);
+  const handler = await loadHandler("./handleTelnyxStatusWebhook/entry.ts", {
+    env: { TELNYX_API_KEY: "KEYtest", TELNYX_PUBLIC_KEY: pubB64 },
+    makeClient: () => makeBase44({
+      data: {
+        IntegrationSecret: [{ api_key: "KEYtest", public_key: pubB64 }],
+        // Nurse with no duty_status → default OFF until they toggle on.
+        User: [{ email: "n@x.com", work_phone_number: "+12155550100" }],
+        AgencySettings: [{ main_office_number_e164: "724-465-0440" }],
+        SmsConsent: [], Patient: [],
+      },
+    }),
+    fetchImpl: impl,
+  });
+  await handler(signedWebhook(privateKey, { data: { event_type: "message.received", payload: { id: "in_1", from: { phone_number: "+13125550182" }, to: [{ phone_number: "+12155550100" }], text: "are you available?" } } }));
+  const reply = calls.find((c) => c.url === "https://api.telnyx.com/v2/messages");
+  assert.ok(reply, "sent an auto-reply");
+  assert.equal(reply.body.from, "+12155550100", "reply comes from the work number");
+  assert.equal(reply.body.to, "+13125550182");
+  assert.match(reply.body.text, /currently not working/i);
+  assert.match(reply.body.text, /724-465-0440/);
 });
 
 test("handleTelnyxStatusWebhook rejects a tampered signature (fail-closed)", async () => {

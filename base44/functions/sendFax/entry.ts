@@ -48,7 +48,13 @@ Deno.serve(async (req) => {
     }
 
     const { apiKey, faxConnectionId } = await resolveTelnyxCreds(base44);
-    const fromNumber = Deno.env.get('TELNYX_FAX_NUMBER');
+    // Every user faxes from the SINGLE shared office fax number so the office
+    // number is what recipients see (and reply-to) — incoming faxes therefore go
+    // straight to the office, never to an individual. Configurable in-app via
+    // AgencySettings.office_fax_number_e164, else the TELNYX_FAX_NUMBER env.
+    const settingsRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+    const officeFax = (settingsRows[0]?.office_fax_number_e164 || '').toString().trim();
+    const fromNumber = officeFax || Deno.env.get('TELNYX_FAX_NUMBER');
 
     if (!apiKey || !faxConnectionId || !fromNumber) {
       return Response.json({ error: 'Telnyx fax credentials not configured' }, { status: 500 });

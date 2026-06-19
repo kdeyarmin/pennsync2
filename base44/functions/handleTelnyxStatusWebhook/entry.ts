@@ -168,20 +168,49 @@ function phoneVariants(value: string): string[] {
   const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
-function isOffDutyNow(user: any, now = new Date()): boolean {
+// Hour (0–23) at `now` in `timeZone`, or null when it can't be computed.
+function dutyHourInZone(date: Date, timeZone?: string): number | null {
+  try {
+    const h = new Intl.DateTimeFormat('en-US', { timeZone: timeZone || undefined, hour12: false, hour: '2-digit' }).format(date);
+    let n = parseInt(h, 10);
+    if (n === 24) n = 0;
+    return Number.isNaN(n) ? null : n;
+  } catch {
+    return null;
+  }
+}
+// At/after the agency's auto-off hour (default 5pm) in the duty timezone. Mirrors
+// isPastAutoOffHour in src/components/voice/dutyUtils.js.
+function isPastAutoOffHour(settings: any, now = new Date()): boolean {
+  const s = settings || {};
+  if (s.auto_off_duty_enabled === false) return false;
+  const hour = Number.isFinite(Number(s.auto_off_duty_hour)) ? Number(s.auto_off_duty_hour) : 17;
+  const tz = s.duty_timezone || s.business_hours_timezone || 'America/New_York';
+  const h = dutyHourInZone(now, tz);
+  if (h == null) return false;
+  return h >= hour;
+}
+// Off duty unless explicitly toggled on, before the auto-off hour, and outside a
+// scheduled time-off window. Mirrors isOffDutyNow in dutyUtils.js (default-off +
+// 5pm auto-end-of-day). `settings` enables the cutoff.
+function isOffDutyNow(user: any, now = new Date(), settings: any = null): boolean {
   if (!user) return false;
-  if (user.duty_status === 'off_duty') return true;
   const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
   const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
-  if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return false;
-  const t = now.getTime();
-  const week = 7 * 24 * 60 * 60 * 1000;
-  if (user.scheduled_off_duty_recurring && e - s < week) {
-    if (t < s) return false;
-    const delta = ((t - s) % week + week) % week;
-    return delta <= e - s;
+  if (!Number.isNaN(s) && !Number.isNaN(e) && e > s) {
+    const t = now.getTime();
+    const week = 7 * 24 * 60 * 60 * 1000;
+    if (user.scheduled_off_duty_recurring && e - s < week) {
+      if (t >= s) {
+        const delta = ((t - s) % week + week) % week;
+        if (delta <= e - s) return true;
+      }
+    } else if (t >= s && t <= e) {
+      return true;
+    }
   }
-  return t >= s && t <= e;
+  if (settings && isPastAutoOffHour(settings, now)) return true;
+  return user.duty_status !== 'on_duty';
 }
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -478,7 +507,8 @@ async function handleInboundMessage(base44: any, apiKey: string | null, messagin
   }
 
   // --- Automatic after-hours / off-duty reply (only ever one) ---
-  const offDuty = isOffDutyNow(nurse);
+  // Off duty = toggled off, after the 5pm auto-off, or a scheduled window.
+  const offDuty = isOffDutyNow(nurse, new Date(), config.settings);
   const agencyClosed = !isAgencyOpen(config.settings);
   if (agencyClosed && config.afterHoursReplyEnabled && !priorOptedOut && smsEnabled) {
     const office = config.mainOffice || 'the main office';
@@ -487,9 +517,9 @@ async function handleInboundMessage(base44: any, apiKey: string | null, messagin
       .replace(/\{office\}/gi, office);
     await sendReply(msg);
   } else if (offDuty && !priorOptedOut && smsEnabled) {
-    const office = config.mainOffice || 'the main office';
+    const office = config.mainOffice || '724-465-0440';
     const msg = (nurse.off_duty_message || config.defaultOffDuty ||
-      `Your nurse is currently off duty. For assistance, please call the main office at ${office}.`)
+      `Thank you for your text, but I am currently not working. Please contact the office at ${office}.`)
       .replace(/\{office\}/gi, office);
     await sendReply(msg);
   }
@@ -631,10 +661,13 @@ async function decideInboundRouting(base44: any, config: any, workNum: string) {
     return { action: 'greet_transfer', greeting, to: target, callerId: workNum, nurse };
   }
 
-  if (isOffDutyNow(nurse)) {
-    const office = config.mainOffice || 'the main office';
+  // Off duty = toggled off, after the 5pm auto-off, or a scheduled window.
+  if (isOffDutyNow(nurse, new Date(), config.settings)) {
+    const office = config.mainOffice || '724-465-0440';
     const greeting = (nurse.off_duty_message ||
-      'Your nurse is currently off duty. Please hold while we connect you to our main office.').replace(/\{office\}/gi, office);
+      `Thank you for calling, but I am currently off duty. Please call the office at ${office}.`).replace(/\{office\}/gi, office);
+    // Speak the message, then connect them to the office so they don't have to
+    // redial; if no office number is configured, just play the message and end.
     if (config.mainOffice) return { action: 'greet_transfer', greeting, to: config.mainOffice, callerId: workNum, nurse };
     return { action: 'hangup', greeting, nurse };
   }

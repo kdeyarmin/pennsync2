@@ -134,7 +134,43 @@ using the same guest-token / staff authorization model as before. The client
 > annotated with `TODO(verify)` and should be confirmed against the SDK version
 > pinned in `package.json` during rollout.
 
-## 7. Status mapping
+## 7. Duty model & easy provisioning
+
+**Each user gets their own number for voice + SMS.** Provision in one click from
+**Administration → Super Admin → Nurse Work Numbers → "Auto-assign N numbers"**
+(`autoAssignWorkNumbers`), which hands every user without a work number the next
+available number from the pool. (Or set them individually.) Add numbers to the
+pool with the in-app search/buy (`searchPurchaseTelnyxNumbers`).
+
+**Fax is shared.** Everyone faxes from the single office fax number
+(`AgencySettings.office_fax_number_e164`, else `TELNYX_FAX_NUMBER`), so the office
+number is what recipients see and reply to — **incoming faxes go straight to the
+office**, never to an individual.
+
+**The duty toggle (default OFF).** A user is reachable on their work number ONLY
+while they've toggled **On Duty** (DutyStatusCard). They flip it on in the morning;
+calls ring their cell (masked) and texts reach them.
+
+**Auto end-of-day at 5pm.** A user is treated as off duty when they toggle off OR
+once the clock passes the auto-off hour, whichever comes first:
+- Real-time: the inbound webhook checks the cutoff live, so at 5pm calls/texts
+  route to the office even before any sweep runs.
+- Persistent: schedule `autoEndDutyDay` daily at the cutoff to flip everyone's
+  stored toggle back to off, so the next morning they start off and must toggle on.
+
+Configurable on `AgencySettings`: `auto_off_duty_hour` (default `17`),
+`duty_timezone` (default `America/New_York`), `auto_off_duty_enabled` (set `false`
+to disable). The cutoff logic is the unit-tested `isOffDutyNow` / `isPastAutoOffHour`
+in `src/components/voice/dutyUtils.js`.
+
+**Off-duty auto-replies** (office number = `AgencySettings.main_office_number_e164`):
+- SMS: *"Thank you for your text, but I am currently not working. Please contact the office at {office}."*
+- Voice: *"Thank you for calling, but I am currently off duty. Please call the office at {office}."* — then connects the caller to the office.
+
+Both default to the office number `724-465-0440` until one is configured, and a
+user can override their own message (`off_duty_message`).
+
+## 8. Status mapping
 
 The provider→internal status mapping is the unit-tested source of truth in
 `src/components/integrations/telnyx/telnyxUtils.js` and is inlined into the webhook

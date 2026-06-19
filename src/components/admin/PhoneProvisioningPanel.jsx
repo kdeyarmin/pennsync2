@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Phone, Save, ShieldCheck, Info, CheckCircle2, AlertTriangle, XCircle,
-  Loader2, Copy, Check, Activity, Webhook, Send,
+  Loader2, Copy, Check, Activity, Webhook, Send, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { maskPhone, formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils";
@@ -136,6 +136,18 @@ export default function PhoneProvisioningPanel() {
       toast.success("Work number provisioned");
     },
     onError: (err) => toast.error(err?.message || "Failed to provision number"),
+  });
+
+  // One-click: hand every user without a work number the next available pool
+  // number. Fax is shared (the office number), so there's nothing per-user there.
+  const autoAssign = useMutation({
+    mutationFn: () => base44.functions.invoke("autoAssignWorkNumbers", {}),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["phone-users"] });
+      const d = res?.data || res;
+      toast.success(d?.message || `Assigned ${d?.assigned_count ?? 0} work number(s)`);
+    },
+    onError: (err) => toast.error(err?.message || "Auto-assign failed"),
   });
 
   // Live Telnyx connection test (backend probe of secrets + SMS API + provisioning).
@@ -482,13 +494,31 @@ export default function PhoneProvisioningPanel() {
 
       <Card id="twilio-nurses" className="scroll-mt-24">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Phone className="w-5 h-5 text-indigo-600" />
-            Nurse Work Numbers
+          <CardTitle className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="flex items-center gap-2">
+              <Phone className="w-5 h-5 text-indigo-600" />
+              Nurse Work Numbers
+            </span>
+            {(() => {
+              const missing = users.filter((u) => !u.work_phone_number).length;
+              return (
+                <Button
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  disabled={autoAssign.isPending || missing === 0}
+                  onClick={() => autoAssign.mutate()}
+                  title="Give every user without a work number the next available pool number"
+                >
+                  {autoAssign.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                  {missing > 0 ? `Auto-assign ${missing} number${missing === 1 ? "" : "s"}` : "All assigned"}
+                </Button>
+              );
+            })()}
           </CardTitle>
           <CardDescription>
-            Assign each nurse a dedicated Telnyx work number and the private cell it bridges to. The
-            number must already be purchased in Telnyx and its webhooks pointed at this app.
+            Each user gets their own number for voice + SMS. Click <strong>Auto-assign</strong> to hand
+            every user without one the next available number from the pool — or set them individually
+            below. (Fax is shared: everyone sends from the single office fax number.)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

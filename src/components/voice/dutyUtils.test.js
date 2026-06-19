@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   isScheduledOffActive,
   isOffDutyNow,
+  isPastAutoOffHour,
   scheduleState,
   getUpcomingWeekend,
 } from "./dutyUtils.js";
@@ -43,6 +44,36 @@ test("isOffDutyNow flips off during an active scheduled window even when on duty
 test("isOffDutyNow tolerates null/undefined user", () => {
   assert.equal(isOffDutyNow(null), false);
   assert.equal(isOffDutyNow(undefined), false);
+});
+
+test("isOffDutyNow defaults to OFF until the nurse explicitly toggles on", () => {
+  // A fresh account or a forgotten toggle routes to the office.
+  assert.equal(isOffDutyNow({}), true);
+  assert.equal(isOffDutyNow({ duty_status: null }), true);
+  assert.equal(isOffDutyNow({ work_phone_number: "+12155550100" }), true);
+});
+
+test("isPastAutoOffHour is true at/after the cutoff in the duty timezone", () => {
+  const settings = { duty_timezone: "America/New_York" }; // default 17:00 cutoff
+  // 21:00Z == 17:00 ET (EDT, summer) → at the cutoff.
+  assert.equal(isPastAutoOffHour(settings, new Date("2026-06-15T21:00:00Z")), true);
+  // 20:59Z == 16:59 ET → still on.
+  assert.equal(isPastAutoOffHour(settings, new Date("2026-06-15T20:59:00Z")), false);
+  // Custom cutoff hour.
+  assert.equal(isPastAutoOffHour({ ...settings, auto_off_duty_hour: 20 }, new Date("2026-06-16T00:00:00Z")), true); // 20:00 ET
+  // Kill switch.
+  assert.equal(isPastAutoOffHour({ ...settings, auto_off_duty_enabled: false }, new Date("2026-06-15T23:00:00Z")), false);
+});
+
+test("isOffDutyNow flips an on-duty nurse off after 5pm (auto end-of-day)", () => {
+  const user = { duty_status: "on_duty" };
+  const settings = { duty_timezone: "America/New_York" };
+  // 14:00 ET → still on.
+  assert.equal(isOffDutyNow(user, new Date("2026-06-15T18:00:00Z"), settings), false);
+  // 17:30 ET → auto off, even though the toggle is still on.
+  assert.equal(isOffDutyNow(user, new Date("2026-06-15T21:30:00Z"), settings), true);
+  // Without settings the cutoff doesn't apply (backward compatible).
+  assert.equal(isOffDutyNow(user, new Date("2026-06-15T21:30:00Z")), false);
 });
 
 test("recurring weekly window repeats on later weeks", () => {
