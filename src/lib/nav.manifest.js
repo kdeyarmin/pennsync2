@@ -944,6 +944,16 @@ export const NAV_MANIFEST = [
     keywords: ["pathways", "clinical pathways", "protocols"],
   },
   {
+    page: "CommsDashboard",
+    label: "Communications",
+    navLabel: "Comms",
+    icon: Radio,
+    category: "Administration",
+    adminOnly: true,
+    breadcrumbParent: "AdminOperations",
+    keywords: ["sms", "calls", "fax", "telnyx", "phone", "delivery"],
+  },
+  {
     page: "ClinicalInsightsDashboard",
     label: "Clinical Insights",
     icon: Brain,

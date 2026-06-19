@@ -640,6 +640,47 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
 }
 
 // ============================ VOICE ============================
+// ---- find-me-follow-me ringdown (mirrors src/components/voice/onCall.js) ----
+const RING_TIMEOUT_SECS_DEFAULT = 20;
+function buildRingdown(opts: any) {
+  const { primary = null, others = [], office = null, maxTargets = 4 } = opts || {};
+  const seen = new Set<string>();
+  const out: Array<{ to: string; kind: string }> = [];
+  const push = (num: any, kind: string) => {
+    const n = String(num || '').trim();
+    if (!n || seen.has(n)) return;
+    seen.add(n);
+    out.push({ to: n, kind });
+  };
+  push(primary, 'primary');
+  for (const o of Array.isArray(others) ? others : []) push(o, 'backup');
+  push(office, 'office');
+  const cap = Number.isFinite(maxTargets) && maxTargets > 0 ? maxTargets : 4;
+  return out.slice(0, cap);
+}
+const UNANSWERED_CAUSES = new Set([
+  'no_answer', 'no_user_response', 'user_busy', 'call_rejected', 'timeout',
+  'normal_temporary_failure', 'unallocated_number', 'recovery_on_timer_expire', 'originator_cancel',
+]);
+function isUnansweredHangup(cause: any): boolean {
+  return UNANSWERED_CAUSES.has(String(cause || '').toLowerCase());
+}
+
+// Other on-duty nurses' cells (for the ringdown backup list), excluding the
+// primary nurse and anyone without a cell.
+async function otherOnDutyCells(base44: any, config: any, primaryEmail: string): Promise<string[]> {
+  const users = await base44.asServiceRole.entities.User.list('full_name', 500).catch(() => []);
+  const now = new Date();
+  const cells: string[] = [];
+  for (const u of Array.isArray(users) ? users : []) {
+    if (!u || u.email === primaryEmail) continue;
+    if (!u.personal_cell_e164) continue;
+    if (isOffDutyNow(u, now, config.settings)) continue; // only currently on-duty
+    cells.push(u.personal_cell_e164);
+  }
+  return cells;
+}
+
 // Decide how an inbound call to a work number should be routed. Mirrors the
 // routing in the former handleTwilioVoiceCall (agency hours > off-duty > masked
 // bridge), returning a provider-neutral action the Call Control flow executes.
@@ -684,11 +725,15 @@ async function decideInboundRouting(base44: any, config: any, workNum: string) {
     return { action: 'hangup', greeting, nurse };
   }
 
-  // On duty: masked bridge to the nurse's personal cell (caller id = work number).
-  if (nurse.personal_cell_e164) {
-    return { action: 'bridge', to: nurse.personal_cell_e164, callerId: workNum, nurse };
+  // On duty: find-me-follow-me ringdown — ring the nurse's cell first, then any
+  // other on-duty nurse, then the office. Caller id = the work number on every
+  // leg so the patient never sees a personal cell.
+  const others = await otherOnDutyCells(base44, config, nurse.email);
+  const maxTargets = Number.isFinite(Number(config.settings?.ringdown_max)) ? Number(config.settings.ringdown_max) : 4;
+  const targets = buildRingdown({ primary: nurse.personal_cell_e164, others, office: config.mainOffice, maxTargets });
+  if (targets.length > 0) {
+    return { action: 'ringdown', targets, to: targets[0].to, callerId: workNum, nurse };
   }
-  if (config.mainOffice) return { action: 'bridge', to: config.mainOffice, callerId: workNum, nurse };
   return { action: 'hangup', greeting: 'We are unable to connect your call at this time. Please try again later.', nurse };
 }
 
@@ -700,7 +745,7 @@ async function logInboundCall(base44: any, callControlId: string, callerNum: str
   // (no nurse) must NOT be mislabeled as an off-duty transfer.
   const callMode = !route.nurse ? 'unresolved'
     : route.action === 'voicemail' ? 'voicemail'
-      : route.action === 'bridge' && route.nurse?.personal_cell_e164 ? 'masked_bridge'
+      : (route.action === 'ringdown' || (route.action === 'bridge' && route.nurse?.personal_cell_e164)) ? 'masked_bridge'
         : 'office_transfer';
   const logRow = await base44.asServiceRole.entities.CallLog.create({
     direction: 'inbound', from_number: callerNum, to_number: route.to || '', displayed_number: workNum,
@@ -743,21 +788,39 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
       const route = await decideInboundRouting(base44, config, workNum);
       await logInboundCall(base44, callControlId, callerNum, workNum, route);
       await callCommand(apiKey, callControlId, 'answer', {
-        client_state: encodeClientState({ t: 'inbound_ivr', action: route.action, greeting: route.greeting || '', to: route.to || null, callerId: route.callerId || null }),
+        client_state: encodeClientState({ t: 'inbound_ivr', action: route.action, greeting: route.greeting || '', to: route.to || null, callerId: route.callerId || null, targets: route.targets || null }),
       });
       return Response.json({ success: true, inbound: route.action });
     }
 
-    // Step 2: the inbound call we answered is now live → speak the greeting,
-    // then continue (transfer / hangup / record) once the greeting finishes.
+    // --- RINGDOWN advance: a dialed leg went unanswered → roll to the next
+    // target on the original caller leg (a_leg). A plain caller hangup carries a
+    // different client_state, so this only fires on a callee no-answer. ---
+    if (eventType === 'call.hangup' && state?.t === 'ringdown' && state.a_leg && isUnansweredHangup(payload?.hangup_cause)) {
+      const next = (Number(state.idx) || 0) + 1;
+      const hasNext = Array.isArray(state.targets) && state.targets[next];
+      if (hasNext) {
+        await startRingdown(apiKey, state.a_leg, state.targets, state.callerId, next);
+      } else {
+        await callCommand(apiKey, state.a_leg, 'hangup', {});
+      }
+      return Response.json({ success: true, ringdown_advance: next, exhausted: !hasNext });
+    }
+
+    // Step 2: the inbound call we answered is now live → ring the targets
+    // (find-me-follow-me), or speak the greeting then continue once it finishes.
     if (eventType === 'call.answered' && state?.t === 'inbound_ivr') {
+      if (state.action === 'ringdown') {
+        await startRingdown(apiKey, callControlId, state.targets || [], state.callerId, 0);
+        return Response.json({ success: true, inbound_ivr: 'ringdown' });
+      }
       const greeting = String(state.greeting || '').slice(0, 320);
-      const next = encodeClientState({ t: 'inbound_after_greet', action: state.action, to: state.to || null, callerId: state.callerId || null });
+      const next = encodeClientState({ t: 'inbound_after_greet', action: state.action, to: state.to || null, callerId: state.callerId || null, targets: state.targets || null });
       if (greeting) {
         await callCommand(apiKey, callControlId, 'speak', { ...SPEAK_DEFAULTS, payload: greeting, client_state: next });
       } else {
-        // No greeting (e.g. a plain bridge) → act immediately.
-        await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId);
+        // No greeting (e.g. a plain transfer) → act immediately.
+        await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId, state.targets);
       }
       return Response.json({ success: true, inbound_ivr: state.action });
     }
@@ -770,19 +833,23 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
       const config = await getAgencyConfig(base44);
       const workNum = normalizeE164(payload?.to) || payload?.to || '';
       const route = await decideInboundRouting(base44, config, workNum);
+      if (route.action === 'ringdown') {
+        await startRingdown(apiKey, callControlId, route.targets || [], route.callerId, 0);
+        return Response.json({ success: true, inbound_recovered: 'ringdown' });
+      }
       const greeting = String(route.greeting || '').slice(0, 320);
       if (greeting) {
-        const next = encodeClientState({ t: 'inbound_after_greet', action: route.action, to: route.to || null, callerId: route.callerId || null });
+        const next = encodeClientState({ t: 'inbound_after_greet', action: route.action, to: route.to || null, callerId: route.callerId || null, targets: route.targets || null });
         await callCommand(apiKey, callControlId, 'speak', { ...SPEAK_DEFAULTS, payload: greeting, client_state: next });
       } else {
-        await continueAfterGreeting(base44, apiKey, callControlId, route.action, route.to, route.callerId);
+        await continueAfterGreeting(base44, apiKey, callControlId, route.action, route.to, route.callerId, route.targets);
       }
       return Response.json({ success: true, inbound_recovered: route.action });
     }
 
     // Step 3: greeting finished → execute the deferred action.
     if (eventType === 'call.speak.ended' && state?.t === 'inbound_after_greet') {
-      await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId);
+      await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId, state.targets);
       return Response.json({ success: true, after_greet: state.action });
     }
 
@@ -830,7 +897,26 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
   return Response.json({ success: true, event: eventType, status: mapped });
 }
 
-async function continueAfterGreeting(base44: any, apiKey: string, callControlId: string, action: string, to: string | null, callerId: string | null) {
+// Ring the next find-me-follow-me target on the original caller leg. The dialed
+// leg carries the ringdown client_state so an unanswered hangup can advance.
+async function startRingdown(apiKey: string, aLegId: string, targets: any, callerId: string | null, idx = 0) {
+  const list = Array.isArray(targets) ? targets : [];
+  const target = list[idx];
+  if (!target) { await callCommand(apiKey, aLegId, 'hangup', {}); return; }
+  await callCommand(apiKey, aLegId, 'transfer', {
+    to: target.to,
+    from: callerId || target.to,
+    timeout_secs: RING_TIMEOUT_SECS_DEFAULT,
+    client_state: encodeClientState({ t: 'ringdown', targets: list, idx, callerId, a_leg: aLegId }),
+  });
+}
+
+async function continueAfterGreeting(base44: any, apiKey: string, callControlId: string, action: string, to: string | null, callerId: string | null, targets: any = null) {
+  // Find-me-follow-me: ring the targets in order on the caller leg.
+  if (action === 'ringdown') {
+    await startRingdown(apiKey, callControlId, targets || (to ? [{ to, kind: 'primary' }] : []), callerId, 0);
+    return;
+  }
   // A plain bridge and a greet-then-transfer both end in a transfer; unify them
   // and fall back gracefully if the transfer fails so the caller is never left on
   // a silent, open (billed) leg.

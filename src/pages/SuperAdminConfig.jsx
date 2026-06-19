@@ -12,6 +12,8 @@ import PageHeader from "@/components/ui/PageHeader";
 import TelnyxSecretPanel from "@/components/admin/TelnyxSecretPanel";
 import TelnyxSetupProgress from "@/components/admin/TelnyxSetupProgress";
 import PhoneProvisioningPanel from "@/components/admin/PhoneProvisioningPanel";
+import A2PCompliancePanel from "@/components/admin/A2PCompliancePanel";
+import ConsentLedgerPanel from "@/components/admin/ConsentLedgerPanel";
 import { isSuperAdmin, isSuperAdminEmail, SUPER_ADMIN_EMAIL } from "@/lib/superAdmin";
 
 /**
@@ -146,6 +148,14 @@ export default function SuperAdminConfig() {
 
         {/* Telnyx provisioning + health + agency settings */}
         <PhoneProvisioningPanel />
+
+        {/* A2P 10DLC registration status + SMS consent ledger (compliance) */}
+        <div id="a2p-compliance" className="scroll-mt-24">
+          <A2PCompliancePanel />
+        </div>
+        <div id="consent-ledger" className="scroll-mt-24">
+          <ConsentLedgerPanel />
+        </div>
       </div>
     </PageContainer>
   );

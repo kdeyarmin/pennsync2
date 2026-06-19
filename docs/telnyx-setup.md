@@ -175,6 +175,34 @@ in `src/components/voice/dutyUtils.js`.
 Both default to the office number `724-465-0440` until one is configured, and a
 user can override their own message (`off_duty_message`).
 
+## 7b. On-call rotation, cost controls, compliance & dashboard
+
+**Find-me-follow-me (on-call rotation).** An inbound call to an on-duty nurse now
+rings a **ringdown** in order: the nurse's cell → any other on-duty nurse → the
+office. If a leg goes unanswered, the webhook rolls the original caller to the
+next target (carried in `client_state`), so a patient call is never silently
+missed. Ordering logic is the unit-tested `src/components/voice/onCall.js`; the
+ring timeout is ~20s. (`AgencySettings.ringdown_max` caps the number of targets.)
+
+**Cost controls** (set in Super Admin → Nurse Work Numbers → Cost controls):
+- `allow_international` (default off) — only US/Canada (+1) destinations are
+  allowed; premium 900/976 are always blocked. `blocked_area_codes` (array) can
+  block specific NANP area codes.
+- `monthly_sms_cap` — blocks new outbound texts once the cap is hit for the
+  calendar month. Enforced in `sendSms`; destination rules in `sendSms` /
+  `startMaskedCall` / `sendFax`. Logic: `src/components/voice/costControls.js`.
+
+**A2P 10DLC + consent ledger** (Super Admin): the A2P panel records your
+registration status/brand/campaign (`a2p_10dlc_status`, `a2p_brand_id`,
+`a2p_campaign_id`) — US 10DLC registration is required or carriers filter texts.
+The consent ledger (`manageSmsConsent`) browses `SmsConsent`, shows opted-in/out
+counts, supports a manual opt-out / opt-back-in, and CSV export.
+
+**Communications dashboard** (`Communications` nav, admin-only): SMS/call/fax
+volume (7-day chart), delivery rates, recent failures, voicemail backlog, and
+per-number activity, from `getCommsDashboard` (no message bodies / PHI). Summary
+logic is the unit-tested `src/components/admin/commsDashboard.js`.
+
 ## 8. Go-live verification (live smoke test)
 
 Before launch, validate a real Telnyx account end-to-end:

@@ -93,12 +93,15 @@ export default function PhoneProvisioningPanel() {
 
   const [agency, setAgency] = useState({
     main_office_number_e164: "",
+    office_fax_number_e164: "",
     default_off_duty_template: "",
     sms_messaging_enabled: true,
     sms_quick_replies: [],
     sms_templates: [],
     voicemail_enabled: false,
     voicemail_greeting: "",
+    allow_international: false,
+    monthly_sms_cap: "",
   });
   const [inputs, setInputs] = useState({}); // email -> { work, cell }
 
@@ -106,21 +109,31 @@ export default function PhoneProvisioningPanel() {
     if (settings) {
       setAgency({
         main_office_number_e164: settings.main_office_number_e164 || "",
+        office_fax_number_e164: settings.office_fax_number_e164 || "",
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
         sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
         sms_templates: Array.isArray(settings.sms_templates) ? settings.sms_templates : [],
         voicemail_enabled: settings.voicemail_enabled === true,
         voicemail_greeting: settings.voicemail_greeting || "",
+        allow_international: settings.allow_international === true,
+        monthly_sms_cap: settings.monthly_sms_cap ?? "",
       });
     }
   }, [settings]);
 
   const saveAgency = useMutation({
-    mutationFn: () =>
-      settings?.id
-        ? base44.entities.AgencySettings.update(settings.id, agency)
-        : base44.entities.AgencySettings.create(agency),
+    mutationFn: () => {
+      // Coerce the monthly cap to a positive number or null ("no cap").
+      const capNum = Number(agency.monthly_sms_cap);
+      const payload = {
+        ...agency,
+        monthly_sms_cap: Number.isFinite(capNum) && capNum > 0 ? capNum : null,
+      };
+      return settings?.id
+        ? base44.entities.AgencySettings.update(settings.id, payload)
+        : base44.entities.AgencySettings.create(payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
       toast.success("Agency phone settings saved");
@@ -367,12 +380,49 @@ export default function PhoneProvisioningPanel() {
             <div>
               <Label className="text-sm font-medium">Main office number (E.164)</Label>
               <Input
-                placeholder="+12155550100"
+                placeholder="+17244650440"
                 value={agency.main_office_number_e164}
                 onChange={(e) => setAgency((a) => ({ ...a, main_office_number_e164: e.target.value }))}
                 className="mt-1"
               />
-              <p className="text-xs text-slate-500 mt-1">Off-duty calls transfer here; texts reference it.</p>
+              <p className="text-xs text-slate-500 mt-1">Off-duty / unanswered calls roll here; texts reference it.</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Shared office fax number (E.164)</Label>
+              <Input
+                placeholder="+17244650441"
+                value={agency.office_fax_number_e164}
+                onChange={(e) => setAgency((a) => ({ ...a, office_fax_number_e164: e.target.value }))}
+                className="mt-1"
+              />
+              <p className="text-xs text-slate-500 mt-1">Every user faxes from this one number, so replies go to the office.</p>
+            </div>
+          </div>
+
+          {/* Cost controls */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
+            <p className="text-sm font-semibold text-slate-800">Cost controls</p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="text-sm font-medium">Allow international destinations</Label>
+                <p className="text-xs text-slate-500">Off by default — only US/Canada (+1) numbers can be texted/called. Premium 900/976 are always blocked.</p>
+              </div>
+              <Switch
+                checked={agency.allow_international}
+                onCheckedChange={(v) => setAgency((a) => ({ ...a, allow_international: v }))}
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Monthly outbound SMS cap</Label>
+              <Input
+                type="number"
+                min="0"
+                placeholder="No limit"
+                value={agency.monthly_sms_cap}
+                onChange={(e) => setAgency((a) => ({ ...a, monthly_sms_cap: e.target.value }))}
+                className="mt-1 max-w-[200px]"
+              />
+              <p className="text-xs text-slate-500 mt-1">Blocks new outbound texts once reached this calendar month. Blank / 0 = no cap.</p>
             </div>
           </div>
           <div>

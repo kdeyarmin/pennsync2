@@ -276,21 +276,47 @@ test("inbound call answers first, then bridges an on-duty nurse on call.answered
   const answer = calls1.find((c) => /\/actions\/answer$/.test(c.url));
   assert.ok(answer, "answered the inbound call first");
   const carried = decodeState(answer.body.client_state);
-  assert.equal(carried.action, "bridge");
-  assert.equal(carried.to, "+12155550111", "bridge target = nurse cell");
+  assert.equal(carried.action, "ringdown");
+  assert.equal(carried.targets[0].to, "+12155550111", "first ringdown target = nurse cell");
 
-  // Step 2: call.answered with that client_state issues the bridge transfer.
+  // Step 2: call.answered with that client_state rings the first target.
   const { impl: impl2, calls: calls2 } = makeFetch([
     { match: (u) => u.includes("/actions/transfer"), respond: () => ({ status: 200, json: { data: {} } }) },
   ]);
   const h2 = await loadHandler("./handleTelnyxStatusWebhook/entry.ts", {
     env: { TELNYX_API_KEY: "KEYtest", TELNYX_PUBLIC_KEY: pubB64 }, makeClient: base, fetchImpl: impl2,
   });
-  await h2(signedWebhook(privateKey, { data: { event_type: "call.answered", payload: { call_control_id: "cc_in", direction: "incoming", client_state: b64json({ t: "inbound_ivr", action: carried.action, greeting: "", to: carried.to, callerId: carried.callerId }) } } }));
+  await h2(signedWebhook(privateKey, { data: { event_type: "call.answered", payload: { call_control_id: "cc_in", direction: "incoming", client_state: b64json({ t: "inbound_ivr", action: "ringdown", greeting: "", to: carried.to, callerId: carried.callerId, targets: carried.targets }) } } }));
   const transfer = calls2.find((c) => /\/v2\/calls\/cc_in\/actions\/transfer$/.test(c.url));
-  assert.ok(transfer, "bridged on answer");
+  assert.ok(transfer, "rang the first target on answer");
   assert.equal(transfer.body.to, "+12155550111");
   assert.equal(transfer.body.from, "+12155550100");
+  // The transfer carries ringdown state so an unanswered hangup can advance.
+  assert.equal(decodeState(transfer.body.client_state).t, "ringdown");
+});
+
+test("find-me-follow-me rolls to the next target when a leg goes unanswered", async () => {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const pubB64 = rawEd25519PublicKeyB64(publicKey);
+  const { impl, calls } = makeFetch([
+    { match: (u) => u.includes("/actions/transfer"), respond: () => ({ status: 200, json: { data: {} } }) },
+  ]);
+  const handler = await loadHandler("./handleTelnyxStatusWebhook/entry.ts", {
+    env: { TELNYX_API_KEY: "KEYtest", TELNYX_PUBLIC_KEY: pubB64 },
+    makeClient: () => makeBase44({ data: { IntegrationSecret: [{ api_key: "KEYtest", public_key: pubB64 }] } }),
+    fetchImpl: impl,
+  });
+  // The dialed leg (target 0 = nurse cell) hangs up unanswered; a_leg is the caller.
+  const ringdownState = b64json({
+    t: "ringdown", idx: 0, callerId: "+12155550100", a_leg: "cc_caller",
+    targets: [{ to: "+12155550111", kind: "primary" }, { to: "+17244650440", kind: "office" }],
+  });
+  await handler(signedWebhook(privateKey, { data: { event_type: "call.hangup", payload: { call_control_id: "cc_leg0", client_state: ringdownState, hangup_cause: "no_answer" } } }));
+  // It must transfer the ORIGINAL caller leg to the next target (the office).
+  const next = calls.find((c) => /\/v2\/calls\/cc_caller\/actions\/transfer$/.test(c.url));
+  assert.ok(next, "rolled to the next target on the caller leg");
+  assert.equal(next.body.to, "+17244650440");
+  assert.equal(decodeState(next.body.client_state).idx, 1);
 });
 
 test("a failed masked-bridge transfer falls back to speak+hangup and marks the call failed", async () => {

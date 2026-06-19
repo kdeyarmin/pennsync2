@@ -32,6 +32,32 @@ function phoneVariants(value: string): string[] {
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
+// ---- cost controls (mirrors src/components/voice/costControls.js) ----
+const PREMIUM_AREA_CODES = new Set(['900', '976']);
+function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+  const s = settings || {};
+  const e = String(e164 || '').trim();
+  if (/^\+1\d{10}$/.test(e)) {
+    const areaCode = e.slice(2, 5);
+    if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
+    return { allowed: true, reason: 'allowed' };
+  }
+  if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: 'invalid_destination' };
+  if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
+  return { allowed: false, reason: 'international_blocked' };
+}
+function blockedReasonMessage(reason: string): string {
+  switch (reason) {
+    case 'premium_number_blocked': return 'Premium-rate numbers (900/976) are blocked.';
+    case 'blocked_area_code': return "That area code is blocked by your agency's policy.";
+    case 'international_blocked': return 'International destinations are blocked. Ask an admin to enable international sending.';
+    case 'invalid_destination': return "That doesn't look like a valid phone number.";
+    default: return "That destination isn't allowed.";
+  }
+}
+
 async function resolveTelnyxCreds(base44: any): Promise<{
   apiKey: string | null;
   publicKey: string | null;
@@ -133,6 +159,13 @@ Deno.serve(async (req) => {
     const { apiKey, voiceConnectionId } = await resolveTelnyxCreds(base44);
     if (!apiKey || !voiceConnectionId) {
       return Response.json({ error: 'Telnyx Voice credentials not configured' }, { status: 500 });
+    }
+
+    // Cost control: block premium/blocked/international destinations by default.
+    const settingsRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+    const destAllowed = isAllowedDestination(destination, settingsRows[0] || {});
+    if (!destAllowed.allowed) {
+      return Response.json({ error: blockedReasonMessage(destAllowed.reason), reason: destAllowed.reason }, { status: 403 });
     }
 
     const callLog = await base44.entities.CallLog.create({

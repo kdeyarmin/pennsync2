@@ -11,6 +11,41 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * (TELNYX_FAX_NUMBER or the in-app TELNYX_FAX_NUMBER env).
  */
 
+function normalizeFaxDest(raw: string | null | undefined): string {
+  if (!raw) return '';
+  const digits = String(raw).replace(/[^\d]/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  if (String(raw).trim().startsWith('+') && digits.length >= 8 && digits.length <= 15 && digits[0] !== '0') return `+${digits}`;
+  return String(raw).trim();
+}
+
+// ---- cost controls (mirrors src/components/voice/costControls.js) ----
+const PREMIUM_AREA_CODES = new Set(['900', '976']);
+function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+  const s = settings || {};
+  const e = String(e164 || '').trim();
+  if (/^\+1\d{10}$/.test(e)) {
+    const areaCode = e.slice(2, 5);
+    if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
+    return { allowed: true, reason: 'allowed' };
+  }
+  if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: 'invalid_destination' };
+  if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
+  return { allowed: false, reason: 'international_blocked' };
+}
+function blockedReasonMessage(reason: string): string {
+  switch (reason) {
+    case 'premium_number_blocked': return 'Premium-rate numbers (900/976) are blocked.';
+    case 'blocked_area_code': return "That area code is blocked by your agency's policy.";
+    case 'international_blocked': return 'International destinations are blocked. Ask an admin to enable international sending.';
+    case 'invalid_destination': return "That doesn't look like a valid fax number.";
+    default: return "That destination isn't allowed.";
+  }
+}
+
 async function resolveTelnyxCreds(base44: any): Promise<{
   apiKey: string | null;
   publicKey: string | null;
@@ -55,6 +90,13 @@ Deno.serve(async (req) => {
     const settingsRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
     const officeFax = (settingsRows[0]?.office_fax_number_e164 || '').toString().trim();
     const fromNumber = officeFax || Deno.env.get('TELNYX_FAX_NUMBER');
+
+    // Cost control: block premium/blocked/international fax destinations by default.
+    const faxDest = normalizeFaxDest(to_number);
+    const destAllowed = isAllowedDestination(faxDest, settingsRows[0] || {});
+    if (!destAllowed.allowed) {
+      return Response.json({ error: blockedReasonMessage(destAllowed.reason), reason: destAllowed.reason }, { status: 403 });
+    }
 
     if (!apiKey || !faxConnectionId || !fromNumber) {
       return Response.json({ error: 'Telnyx fax credentials not configured' }, { status: 500 });
