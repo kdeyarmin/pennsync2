@@ -32,14 +32,27 @@ async function loadInline(entryPath, names) {
   }
 }
 
-// file -> the credential fields that copy actually returns.
+// file -> the credential fields that copy actually returns. Provider-neutral
+// function names (sendSms, sendFax, startMaskedCall, createTelehealthToken) now
+// run on Telnyx; createTelehealthToken keeps an apiKey-only copy.
+const ALL = ["apiKey", "publicKey", "messagingProfileId", "voiceConnectionId", "faxConnectionId"];
 const FILES = {
-  "./testTelnyxConnection/entry.ts": ["apiKey", "publicKey", "messagingProfileId", "voiceConnectionId", "faxConnectionId"],
-  "./sendTelnyxSms/entry.ts": ["apiKey", "publicKey", "messagingProfileId", "voiceConnectionId", "faxConnectionId"],
-  "./sendTelnyxFax/entry.ts": ["apiKey", "publicKey", "messagingProfileId", "voiceConnectionId", "faxConnectionId"],
-  "./startTelnyxCall/entry.ts": ["apiKey", "publicKey", "messagingProfileId", "voiceConnectionId", "faxConnectionId"],
-  "./handleTelnyxStatusWebhook/entry.ts": ["apiKey", "publicKey", "messagingProfileId", "voiceConnectionId", "faxConnectionId"],
-  "./createTelnyxVideoToken/entry.ts": ["apiKey"],
+  "./testTelnyxConnection/entry.ts": ALL,
+  "./sendSms/entry.ts": ALL,
+  "./sendFax/entry.ts": ALL,
+  "./startMaskedCall/entry.ts": ALL,
+  "./handleTelnyxStatusWebhook/entry.ts": ALL,
+  "./searchPurchaseTelnyxNumbers/entry.ts": ALL,
+  "./retryFailedFax/entry.ts": ALL,
+  "./autoRetryFailedFaxes/entry.ts": ALL,
+  "./sendBatchFax/entry.ts": ALL,
+  "./syncFaxStatuses/entry.ts": ALL,
+  "./pollFaxStatuses/entry.ts": ALL,
+  "./sendFaxStatusNotification/entry.ts": ALL,
+  "./sendTestSms/entry.ts": ALL,
+  "./dispatchScheduledSms/entry.ts": ALL,
+  "./redriveFailedSms/entry.ts": ALL,
+  "./createTelehealthToken/entry.ts": ["apiKey"],
 };
 
 const SCENARIOS = [

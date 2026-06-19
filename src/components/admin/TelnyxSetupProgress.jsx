@@ -12,9 +12,9 @@ import { toast } from "sonner";
 import { buildIntegrationSteps, summarizeSteps, summarize } from "@/components/admin/twilioSetup";
 
 /**
- * TwilioSetupProgress — the at-a-glance "command center" at the top of the
+ * TelnyxSetupProgress — the at-a-glance "command center" at the top of the
  * super admin page. It answers two questions the scattered cards below can't:
- * "how far along is the Twilio setup?" and "what should I do next?".
+ * "how far along is the Telnyx setup?" and "what should I do next?".
  *
  * It is purely a roll-up + navigation layer: it reuses the SAME react-query keys
  * as the secret panel and the provisioning panel, so it updates automatically as
@@ -73,12 +73,12 @@ function StepRow({ step }) {
   );
 }
 
-export default function TwilioSetupProgress() {
+export default function TelnyxSetupProgress() {
   // Shared query keys → this card and the panels below read/write one cache.
   const { data: secretStatus, isLoading: secretLoading } = useQuery({
-    queryKey: ["twilio-secret-status"],
+    queryKey: ["telnyx-secret-status"],
     queryFn: async () => {
-      const res = await base44.functions.invoke("getTwilioSecretStatus", {});
+      const res = await base44.functions.invoke("getTelnyxSecretStatus", {});
       return res?.data || res;
     },
     refetchOnWindowFocus: false,
@@ -108,14 +108,14 @@ export default function TwilioSetupProgress() {
   // without leaving the command center.
   const [liveResult, setLiveResult] = useState(null);
   const testConnection = useMutation({
-    mutationFn: () => base44.functions.invoke("testTwilioConnection", {}),
+    mutationFn: () => base44.functions.invoke("testTelnyxConnection", {}),
     onSuccess: (res) => {
       const data = res?.data || res;
       setLiveResult(data);
       const sev = summarize(data?.checks || []).severity;
       if (sev === "fail") toast.error("Live test found problems — see the steps below.");
       else if (sev === "warn") toast("Live test passed with warnings.");
-      else toast.success("Twilio connection looks healthy.");
+      else toast.success("Telnyx connection looks healthy.");
     },
     onError: (err) => toast.error(err?.message || "Live connection test failed"),
   });
@@ -132,7 +132,7 @@ export default function TwilioSetupProgress() {
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
             <ListChecks className="w-5 h-5 text-indigo-600" />
-            Twilio Integration Setup
+            Telnyx Integration Setup
           </span>
           {secretLoading ? (
             <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
@@ -180,7 +180,7 @@ export default function TwilioSetupProgress() {
         ) : (
           <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-sm text-green-900 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-            Every step is complete — your Twilio integration is fully set up and verified.
+            Every step is complete — your Telnyx integration is fully set up and verified.
           </div>
         )}
 

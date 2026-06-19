@@ -862,7 +862,7 @@ export const NAV_MANIFEST = [
     category: "Administration",
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
-    keywords: ["super admin", "twilio", "api secret", "integration", "provisioning", "phone setup", "owner"],
+    keywords: ["super admin", "telnyx", "api secret", "integration", "provisioning", "phone setup", "owner"],
   },
   {
     page: "UserManagement",

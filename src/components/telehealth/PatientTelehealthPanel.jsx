@@ -92,7 +92,7 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   };
 
   const endSession = async () => {
-    // Guard against the End button + Twilio "disconnected" event both firing.
+    // Guard against the End button + Telnyx "disconnected" event both firing.
     if (!activeSession || endingRef.current) return;
     endingRef.current = true;
     const endedAt = new Date();

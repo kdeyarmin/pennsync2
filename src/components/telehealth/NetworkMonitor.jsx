@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 
-// Connection quality via Twilio's Network Quality API. The local participant
-// reports a level from 0 (lost) to 5 (excellent); we subscribe to changes.
-// (The previous implementation called room.getStats() — which returns a
-// Promise — synchronously, so it never actually reported anything.)
+// Connection quality readout for the active video call. A network-quality level
+// runs from 0 (lost) to 5 (excellent); we subscribe to changes when the SDK
+// surfaces them, and fall back to the browser online/offline signal otherwise.
 //
-// `room` is the connected Twilio Room (a real value, not a ref) so this effect
-// re-subscribes if/when the room becomes available or changes.
+// `room` is the connected Telnyx Video Room (a real value, not a ref) so this
+// effect re-subscribes if/when the room becomes available or changes.
+// TODO(verify): confirm the network-quality property/event names against the
+// @telnyx/video docs; this reads networkQualityLevel + networkQualityLevelChanged
+// and no-ops gracefully if the SDK doesn't expose them.
 export default function NetworkMonitor({ room }) {
   const [level, setLevel] = useState(null);
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -26,11 +28,11 @@ export default function NetworkMonitor({ room }) {
 
   useEffect(() => {
     const localParticipant = room?.localParticipant;
-    if (!localParticipant) return;
-    setLevel(localParticipant.networkQualityLevel);
+    if (!localParticipant || typeof localParticipant.on !== 'function') return;
+    setLevel(localParticipant.networkQualityLevel ?? null);
     const handler = (lvl) => setLevel(lvl);
     localParticipant.on('networkQualityLevelChanged', handler);
-    return () => localParticipant.removeListener('networkQualityLevelChanged', handler);
+    return () => localParticipant.removeListener?.('networkQualityLevelChanged', handler);
   }, [room]);
 
   if (!online || level === 0) {

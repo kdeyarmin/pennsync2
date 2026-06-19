@@ -1,10 +1,10 @@
 /**
- * twilioSetup — pure helpers for the admin "Twilio Setup & Health" panel.
+ * twilioSetup — pure helpers for the admin "Telnyx Setup & Health" panel.
  *
  * This is the unit-tested source of truth for the *configuration readiness*
- * checklist an admin sees in Admin → Settings → Twilio Phone. It evaluates only
+ * checklist an admin sees in Admin → Settings → Telnyx Phone. It evaluates only
  * the AgencySettings an admin can see/edit; the live connectivity probe and the
- * backend-secret presence checks live in the testTwilioConnection backend
+ * backend-secret presence checks live in the testTelnyxConnection backend
  * function (which merges its own checks into the same shape). Keeping the logic
  * here — with no UI or network dependency — means it can be exercised in
  * isolation, like smsUtils / dutyUtils.
@@ -24,16 +24,27 @@ function looksLikePhone(value) {
 const isBlank = (v) => v == null || String(v).trim() === "";
 
 /**
- * The four Twilio webhooks an admin must register, mapped to the Base44 function
- * that handles each and where on the Twilio phone number / call the callback is
- * configured. Used to render a copy-able reference so setup doesn't require
- * digging through docs.
+ * Telnyx delivers EVERY event (messaging, fax, voice/Call Control) to a single
+ * webhook function — handleTelnyxStatusWebhook. The admin just points the webhook
+ * URL of each connection at that one function. Rendered as a copy-able reference
+ * so setup doesn't require digging through docs.
  */
 export const WEBHOOK_FUNCTIONS = [
-  { fn: "handleTwilioInboundSms", event: "Inbound SMS", configuredOn: "Phone number Messaging webhook" },
-  { fn: "handleTwilioSmsStatus", event: "SMS delivery status callback", configuredOn: "StatusCallback on sends" },
-  { fn: "handleTwilioVoiceCall", event: "Incoming voice call", configuredOn: "Phone number Voice webhook" },
-  { fn: "handleTwilioCallStatus", event: "Call status callback", configuredOn: "StatusCallback on the number/call" },
+  {
+    fn: "handleTelnyxStatusWebhook",
+    event: "Inbound SMS & message delivery status",
+    configuredOn: "Messaging Profile webhook URL",
+  },
+  {
+    fn: "handleTelnyxStatusWebhook",
+    event: "Inbound voice, masked-bridge & call status",
+    configuredOn: "Voice (Call Control) connection webhook URL",
+  },
+  {
+    fn: "handleTelnyxStatusWebhook",
+    event: "Fax delivery & failure status",
+    configuredOn: "Programmable Fax connection webhook URL",
+  },
 ];
 
 /**
@@ -52,11 +63,11 @@ export function functionUrlBase(serverUrl) {
 }
 
 /**
- * Evaluate the agency-editable Twilio configuration into an ordered checklist.
+ * Evaluate the agency-editable Telnyx configuration into an ordered checklist.
  * Network/secret checks are intentionally excluded — the backend test merges
  * those in. Returns an array of checks (see module doc for the shape).
  *
- * Twilio credentials (Account SID + Auth Token) live in the secret panel, not
+ * Telnyx credentials (API key + connection ids) live in the secret panel, not
  * in agency settings — so there are no required provider fields here. The
  * office/template checks remain at warn-level.
  */
@@ -103,19 +114,19 @@ export function evaluateAgencyConfig(settings) {
 }
 
 /**
- * Roll the whole Twilio integration up into an ordered, friendly setup checklist
+ * Roll the whole Telnyx integration up into an ordered, friendly setup checklist
  * for the super admin "command center". Pure (no UI/network): pass in the data
  * the page already has and get back ordered steps with a clear status and the
  * single best next action. Verification/manual steps are kept separate from the
  * required ones so they never block the "ready to go live" signal.
  *
  * All inputs are optional:
- *   - secretStatus   getTwilioSecretStatus result
- *                    ({ configured, source, account_sid_last_four, secret_last_four, ... })
- *                    source is 'env' | 'config' | 'none'; secret_last_four is from Auth Token.
+ *   - secretStatus   getTelnyxSecretStatus result
+ *                    ({ configured, source, api_key_last_four, ... })
+ *                    source is 'env' | 'config' | 'none'; api_key_last_four is from the API key.
  *   - agencySettings the AgencySettings row (or undefined)
  *   - provisioning   { total, withWorkNumber, missingBridgeCell }
- *   - liveResult     testTwilioConnection result ({ checks, ... }) or null
+ *   - liveResult     testTelnyxConnection result ({ checks, ... }) or null
  *
  * Each step: { id, title, detail, status: 'done'|'todo'|'attention',
  *   kind: 'required'|'verify'|'manual', anchor }.
@@ -130,24 +141,24 @@ export function evaluateAgencyConfig(settings) {
 export function buildIntegrationSteps({ secretStatus, agencySettings, provisioning, liveResult } = {}) {
   const steps = [];
 
-  // 1. Twilio Account SID + Auth Token (required).
+  // 1. Telnyx API key (required).
   const secretConfigured = Boolean(secretStatus && secretStatus.configured);
-  // suffix shows Auth Token last-four when saved in-app, or "(Base44 dashboard env)" when from env
+  // suffix shows API key last-four when saved in-app, or "(Base44 dashboard env)" when from env
   const secretSuffix =
     secretStatus?.source === "env"
       ? " (Base44 dashboard env)"
-      : secretStatus?.secret_last_four
-        ? ` ••••${secretStatus.secret_last_four}`
+      : secretStatus?.api_key_last_four
+        ? ` ••••${secretStatus.api_key_last_four}`
         : "";
   steps.push({
     id: "api_secret",
-    title: "Add your Twilio credentials",
+    title: "Add your Telnyx API key",
     kind: "required",
     anchor: "twilio-secret",
     status: secretConfigured ? "done" : "todo",
     detail: secretConfigured
       ? `Configured${secretSuffix}.`
-      : "Paste your Twilio Account SID and Auth Token so SMS, voice, and webhook verification can run.",
+      : "Paste your Telnyx API key so SMS, voice, fax, and webhook verification can run.",
   });
 
   // 2. Agency configuration (required) — reuse the detailed checklist so the
@@ -192,12 +203,12 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
   // 4. Register the webhooks (manual — there's no API to read this back).
   steps.push({
     id: "webhooks",
-    title: "Point your Twilio number's webhooks at this app",
+    title: "Point your Telnyx webhooks at this app",
     kind: "manual",
     anchor: "twilio-webhooks",
     status: "todo",
     detail:
-      "Set each Twilio phone number's Voice & Messaging webhooks (and status callbacks) to the matching function. This can't be auto-detected — confirm it in the Twilio Console.",
+      "Set your Telnyx messaging/fax profile and voice connection webhook URLs to the matching function. This can't be auto-detected — confirm it in the Telnyx Portal.",
   });
 
   // 5. Verify end to end with the live connection test (recommended).
@@ -212,7 +223,7 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
     anchor: "twilio-health",
     status: !liveSummary ? "todo" : liveSummary.fail > 0 ? "attention" : "done",
     detail: !liveSummary
-      ? "Run the live test to confirm your Twilio Account SID and Auth Token actually authenticate."
+      ? "Run the live test to confirm your Telnyx API key actually authenticates."
       : liveSummary.fail > 0
         ? `Last run found ${liveSummary.fail} problem${liveSummary.fail > 1 ? "s" : ""} — see the Setup & Health checklist.`
         : liveSummary.warn > 0

@@ -1,18 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * handleTelnyxStatusWebhook — the single inbound webhook for the Telnyx
- * integration (text + voice + fax). Telnyx POSTs a JSON envelope
- * `{ data: { event_type, payload } }` and signs it with Ed25519:
+ * handleTelnyxStatusWebhook — the single inbound webhook for the whole Telnyx
+ * integration: messaging (inbound SMS + delivery status), fax status, and voice
+ * (Call Control inbound IVR + outbound masked-bridge + call status). Telnyx POSTs
+ * a JSON envelope `{ data: { event_type, payload } }` and signs it with Ed25519:
  *   signed message = `${telnyx-timestamp}|${rawBody}`
  *   header `telnyx-signature-ed25519` = base64(signature)
  * verified against the account's Ed25519 PUBLIC key (Portal → Keys & Credentials).
  *
  * Fails closed: a webhook without a valid signature (or with a stale timestamp)
  * is rejected 401, because these events mutate delivery state for PHI-bearing
- * messages/faxes/calls. The value-mapping logic mirrors
- * src/components/integrations/telnyx/telnyxUtils.js (drift-guarded by
+ * messages/faxes/calls and drive auto-replies / call routing. Value-mapping logic
+ * mirrors src/components/integrations/telnyx/telnyxUtils.js (drift-guarded by
  * base44/functions/telnyxInlineParity.test.js).
+ *
+ * Replaces the former Twilio handlers: handleTwilioInboundSms, handleTwilioSmsStatus,
+ * handleTwilioFaxWebhook, handleTwilioVoiceCall, handleTwilioVoicemail, handleTwilioCallStatus.
  */
 
 // ---- credential resolution (inlined; parity-guarded) ----
@@ -84,6 +88,145 @@ function isFreshTimestamp(timestamp: any, nowMs = Date.now(), toleranceSeconds =
   return Math.abs(nowMs / 1000 - ts) <= toleranceSeconds;
 }
 
+// ---- fax retry policy (source of truth: src/components/fax/faxRetry.js;
+// drift-guarded by base44/functions/faxRetryInlineParity.test.js). Mirrors the
+// policy used by autoRetryFailedFaxes so a failed fax gets a consistent
+// next_retry_at and a PERMANENT failure (bad number, not a fax machine) gives up
+// immediately. ----
+const PERMANENT_FAILURE_PATTERNS = [
+  /invalid/i, /not a fax/i, /no fax machine/i, /incompatible/i, /unsupported/i,
+  /rejected/i, /blocked/i, /do not call/i, /unallocated/i, /disconnected/i,
+  /forbidden/i, /not in service/i, /no such number/i, /malformed/i,
+];
+function classifyFaxFailure(errorCode: any, errorMessage: any): string {
+  const s = `${errorCode ?? ''} ${errorMessage ?? ''}`.trim();
+  if (!s) return 'transient';
+  return PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s)) ? 'permanent' : 'transient';
+}
+function faxRetryConfig(config: any) {
+  const c = config || {};
+  return {
+    enabled: c.auto_retry_enabled !== false,
+    maxRetries: Number.isFinite(c.max_retries) ? Math.max(0, c.max_retries) : 3,
+    baseDelayMinutes: Number.isFinite(c.retry_delay_minutes) && c.retry_delay_minutes > 0 ? c.retry_delay_minutes : 15,
+    notifyOnFinalFailure: c.notify_on_final_failure !== false,
+    priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
+  };
+}
+function nextRetryDelayMinutes(attempt: number, config: any, priority = 'normal', factor = 2, maxMinutes = 360): number {
+  const c = faxRetryConfig(config);
+  const a = Math.max(0, Number(attempt) || 0);
+  const mult = Number.isFinite(c.priorityMultiplier[priority]) ? c.priorityMultiplier[priority] : 1;
+  const minutes = c.baseDelayMinutes * factor ** a * mult;
+  return Math.max(1, Math.min(maxMinutes, Math.round(minutes)));
+}
+function planFaxRetry(opts: any) {
+  const { retryCount = 0, errorCode, errorMessage, priority = 'normal', config, now = Date.now() } = opts || {};
+  const c = faxRetryConfig(config);
+  const classification = classifyFaxFailure(errorCode, errorMessage);
+  const attempts = Number(retryCount) || 0;
+  if (!c.enabled || classification === 'permanent' || attempts >= c.maxRetries) {
+    return { willRetry: false, classification, exhausted: true, nextRetryAt: null, nextRetryCount: attempts, delayMinutes: 0 };
+  }
+  const delayMinutes = nextRetryDelayMinutes(attempts, config, priority);
+  return { willRetry: true, classification, exhausted: false, nextRetryAt: new Date(now + delayMinutes * 60000).toISOString(), nextRetryCount: attempts + 1, delayMinutes };
+}
+
+// ---- phone + duty + business-hours helpers (mirror the voice utils) ----
+function normalizeE164(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const digits = String(raw).replace(/[^\d]/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  if (String(raw).trim().startsWith('+') && digits.length >= 8 && digits.length <= 15 && digits[0] !== '0') return `+${digits}`;
+  return null;
+}
+function getThreadId(a: string, b: string): string {
+  const na = normalizeE164(a) || a;
+  const nb = normalizeE164(b) || b;
+  return [na, nb].sort().join('|');
+}
+function phoneVariants(value: string): string[] {
+  const d = (value || '').replace(/[^\d]/g, '');
+  const ten = d.slice(-10);
+  if (ten.length !== 10) return value ? [value] : [];
+  const a = ten.slice(0, 3), b = ten.slice(3, 6), c = ten.slice(6);
+  const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  return variants.filter((v, i) => variants.indexOf(v) === i);
+}
+function isOffDutyNow(user: any, now = new Date()): boolean {
+  if (!user) return false;
+  if (user.duty_status === 'off_duty') return true;
+  const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
+  const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
+  if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return false;
+  const t = now.getTime();
+  const week = 7 * 24 * 60 * 60 * 1000;
+  if (user.scheduled_off_duty_recurring && e - s < week) {
+    if (t < s) return false;
+    const delta = ((t - s) % week + week) % week;
+    return delta <= e - s;
+  }
+  return t >= s && t <= e;
+}
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+function parseHHMM(value: any): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
+  if (!m) return null;
+  const h = Number(m[1]); const min = Number(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+function wallClockInTimeZone(date: Date, timeZone?: string): { weekday: number | null; minutes: number } {
+  const dtf = new Intl.DateTimeFormat('en-US', { timeZone: timeZone || undefined, hour12: false, weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  const parts: Record<string, string> = {};
+  for (const p of dtf.formatToParts(date)) parts[p.type] = p.value;
+  let hour = parseInt(parts.hour, 10);
+  if (hour === 24) hour = 0;
+  const minute = parseInt(parts.minute, 10);
+  const weekday = WEEKDAY_INDEX[parts.weekday];
+  return { weekday: weekday ?? null, minutes: hour * 60 + minute };
+}
+function dateKeyInTimeZone(date: Date, timeZone?: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || undefined, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
+function isAgencyOpen(settings: any, now = new Date()): boolean {
+  const s = settings || {};
+  if (s.business_hours_enabled !== true) return true;
+  let wc; let dateKey;
+  try { wc = wallClockInTimeZone(now, s.business_hours_timezone); dateKey = dateKeyInTimeZone(now, s.business_hours_timezone); }
+  catch { wc = wallClockInTimeZone(now, undefined); dateKey = dateKeyInTimeZone(now, undefined); }
+  if (Array.isArray(s.business_hours_holidays) && s.business_hours_holidays.includes(dateKey)) return false;
+  const day = (s.business_hours || {})[DAY_KEYS[wc.weekday as number]];
+  if (!day || day.enabled === false) return false;
+  const open = parseHHMM(day.open); const close = parseHHMM(day.close);
+  if (open == null || close == null) return false;
+  const m = wc.minutes;
+  return open < close ? (m >= open && m < close) : (m >= open || m < close);
+}
+
+// ---- urgent-keyword detection (mirrors src/components/voice/urgentKeywords.js) ----
+const DEFAULT_URGENT_KEYWORDS = [
+  'emergency', 'urgent', '911', 'chest pain', "can't breathe", 'cant breathe',
+  'trouble breathing', 'short of breath', 'suicidal', 'kill myself', 'overdose',
+  'bleeding', 'fell', 'fall', 'fallen', 'passed out', 'unconscious',
+  'stroke', 'seizure', 'severe pain', 'help me', 'not breathing', 'unresponsive',
+];
+function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function detectUrgency(text: string, extra: string[] = []): { urgent: boolean; matches: string[] } {
+  const s = String(text || '');
+  if (!s.trim()) return { urgent: false, matches: [] };
+  const extras = (Array.isArray(extra) ? extra : []).map((k) => String(k || '').toLowerCase().trim()).filter(Boolean);
+  const all = [...new Set([...DEFAULT_URGENT_KEYWORDS, ...extras])];
+  const matches: string[] = [];
+  for (const kw of all) {
+    if (!kw) continue;
+    if (new RegExp(`\\b${escapeRe(kw)}\\b`, 'i').test(s)) matches.push(kw);
+  }
+  return { urgent: matches.length > 0, matches };
+}
+
 // ---- Ed25519 signature verification ----
 function base64ToBytes(b64: string): Uint8Array | null {
   try {
@@ -95,7 +238,6 @@ function base64ToBytes(b64: string): Uint8Array | null {
     return null;
   }
 }
-
 async function verifyTelnyxSignature(rawBody: string, signatureB64: string | null, timestamp: string | null, publicKeyB64: string | null): Promise<boolean> {
   if (!publicKeyB64 || !signatureB64 || !timestamp) return false;
   if (!isFreshTimestamp(timestamp)) return false;
@@ -112,20 +254,85 @@ async function verifyTelnyxSignature(rawBody: string, signatureB64: string | nul
   }
 }
 
-// client_state is base64(JSON) set by startTelnyxCall to drive the masked bridge.
+// client_state is base64(JSON) used to carry routing/bridge intent across the
+// asynchronous Call Control event stream.
+function encodeClientState(obj: Record<string, unknown>): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
 function decodeClientState(b64: any): Record<string, any> | null {
   if (!b64 || typeof b64 !== 'string') return null;
   const bytes = base64ToBytes(b64);
   if (!bytes) return null;
+  try { return JSON.parse(new TextDecoder().decode(bytes)); } catch { return null; }
+}
+
+// ---- Call Control command helper ----
+// TODO(verify): confirm Call Control action paths/field names against the live
+// Telnyx v2 API for your account (answer/transfer/speak/hangup/record_start).
+async function callCommand(apiKey: string, callControlId: string, command: string, payload: Record<string, unknown> = {}) {
   try {
-    return JSON.parse(new TextDecoder().decode(bytes));
-  } catch {
+    return await fetch(`https://api.telnyx.com/v2/calls/${encodeURIComponent(callControlId)}/actions/${command}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.error(`Call Control ${command} failed:`, (err as Error)?.message);
     return null;
   }
 }
+const SPEAK_DEFAULTS = { voice: 'female', language: 'en-US' };
 
-// ---- per-channel handlers ----
-async function handleMessageEvent(base44: any, payload: any): Promise<Response> {
+// ---- Telnyx outbound SMS (auto-reply) ----
+async function sendAutoReply(apiKey: string, messagingProfileId: string | null, from: string, to: string, text: string) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const payload: Record<string, unknown> = { from, to, text };
+    if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+    return await fetch('https://api.telnyx.com/v2/messages', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    console.error('auto-reply send failed:', (err as Error)?.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function getAgencyConfig(base44: any) {
+  const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+  const s = settings[0] || {};
+  return {
+    settings: s,
+    mainOffice: s.main_office_number_e164 || '',
+    defaultOffDuty: s.default_off_duty_template || '',
+    smsEnabled: s.sms_messaging_enabled ?? true,
+    afterHoursReplyEnabled: s.after_hours_sms_auto_reply_enabled !== false,
+    afterHoursReply: s.after_hours_sms_auto_reply || '',
+    urgentEscalationEnabled: s.urgent_escalation_enabled !== false,
+    urgentKeywords: Array.isArray(s.urgent_keywords) ? s.urgent_keywords : [],
+    voicemailEnabled: s.voicemail_enabled === true,
+    voicemailGreeting: s.voicemail_greeting || '',
+    afterHoursAction: s.after_hours_call_action || 'transfer',
+    afterHoursTransfer: s.after_hours_transfer_number_e164 || s.main_office_number_e164 || '',
+    afterHoursGreeting: s.after_hours_call_greeting || '',
+  };
+}
+
+const STOP_WORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
+const START_WORDS = ['START', 'UNSTOP', 'YES'];
+const HELP_WORDS = ['HELP', 'INFO'];
+
+// ============================ MESSAGING ============================
+async function handleOutboundMessageStatus(base44: any, payload: any): Promise<Response> {
   const providerId = payload?.id;
   const recipientStatus = payload?.to?.[0]?.status || payload?.status;
   const mapped = mapMessageStatus(recipientStatus);
@@ -135,7 +342,6 @@ async function handleMessageEvent(base44: any, payload: any): Promise<Response> 
   const rows = await base44.asServiceRole.entities.SmsMessage.filter({ provider_message_id: providerId }, '-created_date', 1).catch(() => []);
   if (!rows.length) return Response.json({ success: false, message: 'SmsMessage not found' });
   const row = rows[0];
-  // Idempotency + never regress a terminal row.
   if (row.status === mapped || (row.status === 'delivered' && mapped !== 'failed')) {
     return Response.json({ success: true, status: row.status, deduped: true });
   }
@@ -148,6 +354,138 @@ async function handleMessageEvent(base44: any, payload: any): Promise<Response> 
   return Response.json({ success: true, status: mapped });
 }
 
+async function handleInboundMessage(base44: any, apiKey: string | null, messagingProfileId: string | null, payload: any): Promise<Response> {
+  const source = payload?.from?.phone_number || payload?.from;
+  const destination = Array.isArray(payload?.to) ? payload.to[0]?.phone_number : payload?.to;
+  const text = String(payload?.text || '');
+  const providerMessageId = payload?.id || null;
+  if (!source || !destination) return Response.json({ success: true, skipped: 'missing parties' });
+
+  const config = await getAgencyConfig(base44);
+  const patientNum = normalizeE164(source) || source;
+  const workNum = normalizeE164(destination) || destination;
+
+  // Resolve the nurse who owns this work number.
+  let nurse = null;
+  for (const variant of phoneVariants(workNum)) {
+    const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }).catch(() => []);
+    if (matches.length > 0) { nurse = matches[0]; break; }
+  }
+  if (!nurse) {
+    await base44.asServiceRole.entities.UserActivity.create({
+      user_email: 'system', action: 'sms_received_unresolved',
+      details: { destination: workNum, timestamp: new Date().toISOString() }, status: 'failure',
+    }).catch(() => {});
+    return Response.json({ success: true, skipped: 'unresolved work number' });
+  }
+
+  // Idempotency: Telnyx may re-deliver. If we already stored this id, ack.
+  if (providerMessageId) {
+    const dup = await base44.asServiceRole.entities.SmsMessage
+      .filter({ provider_message_id: providerMessageId }, '-created_date', 1).catch(() => []);
+    if (dup.length > 0) return Response.json({ success: true, deduped: true });
+  }
+
+  // Resolve patient (best effort).
+  let patientId: string | null = null;
+  for (const variant of phoneVariants(patientNum)) {
+    const m = await base44.asServiceRole.entities.Patient.filter({ phone: variant }).catch(() => []);
+    if (m.length > 0) { patientId = m[0].id; break; }
+  }
+
+  const keyword = text.trim().toUpperCase();
+  const sendReply = (msg: string) =>
+    apiKey ? sendAutoReply(apiKey, messagingProfileId, workNum, patientNum, msg) : Promise.resolve(null);
+  const recordConsent = (status: string, sourceTag: string) =>
+    base44.asServiceRole.entities.SmsConsent.create({
+      patient_id: patientId, phone_e164: patientNum, consent_status: status,
+      consent_source: sourceTag, captured_by: null, captured_at: new Date().toISOString(),
+      notes: `Inbound keyword "${keyword}" to ${nurse.email}`,
+    }).catch((err) => console.error('consent write failed:', err));
+
+  // Always store the inbound message.
+  const inboundRow = await base44.asServiceRole.entities.SmsMessage.create({
+    direction: 'inbound', from_number: patientNum, to_number: workNum, body: text,
+    nurse_email: nurse.email, patient_id: patientId, thread_id: getThreadId(patientNum, workNum),
+    status: 'received', provider_message_id: providerMessageId, is_read: false, consent_checked: false,
+  });
+
+  // Opt-out status — FAIL-CLOSED: if the ledger can't be read, assume opted-out.
+  let priorOptedOut = true;
+  try {
+    const consents = await base44.asServiceRole.entities.SmsConsent.filter({ phone_e164: patientNum }, '-captured_at', 1);
+    priorOptedOut = consents[0]?.consent_status === 'opted_out';
+  } catch {
+    priorOptedOut = true;
+  }
+  const smsEnabled = config.smsEnabled !== false;
+
+  // --- Keyword handling FIRST (TCPA, legally required) ---
+  if (STOP_WORDS.includes(keyword)) {
+    await recordConsent('opted_out', 'keyword_stop');
+    await sendReply('You have been unsubscribed and will no longer receive texts from your care team. Reply START to opt back in.');
+    await base44.asServiceRole.entities.UserActivity.create({
+      user_email: 'system', action: 'sms_opt_out', entity_type: 'SmsMessage', entity_id: inboundRow.id,
+      details: { phone: patientNum, nurse_email: nurse.email, patient_id: patientId }, status: 'success',
+    }).catch(() => {});
+    return Response.json({ success: true, opted_out: true });
+  }
+  if (START_WORDS.includes(keyword)) {
+    await recordConsent('opted_in', 'keyword_start');
+    await sendReply('You are now subscribed to texts from your care team. Reply STOP to opt out, HELP for help.');
+  } else if (HELP_WORDS.includes(keyword)) {
+    if (!priorOptedOut && smsEnabled) {
+      const office = config.mainOffice ? ` or call our office at ${config.mainOffice}` : '';
+      await sendReply(`This is your home-health care team. Reply STOP to unsubscribe${office}.`);
+    }
+  }
+
+  // --- Automatic after-hours / off-duty reply (only ever one) ---
+  const offDuty = isOffDutyNow(nurse);
+  const agencyClosed = !isAgencyOpen(config.settings);
+  if (agencyClosed && config.afterHoursReplyEnabled && !priorOptedOut && smsEnabled) {
+    const office = config.mainOffice || 'the main office';
+    const msg = (config.afterHoursReply || config.defaultOffDuty ||
+      `Thanks for your message. Our office is currently closed. For anything urgent, please call ${office}. We'll reply during business hours.`)
+      .replace(/\{office\}/gi, office);
+    await sendReply(msg);
+  } else if (offDuty && !priorOptedOut && smsEnabled) {
+    const office = config.mainOffice || 'the main office';
+    const msg = (nurse.off_duty_message || config.defaultOffDuty ||
+      `Your nurse is currently off duty. For assistance, please call the main office at ${office}.`)
+      .replace(/\{office\}/gi, office);
+    await sendReply(msg);
+  }
+
+  // --- Urgent-keyword escalation ---
+  const urgency = config.urgentEscalationEnabled ? detectUrgency(text, config.urgentKeywords) : { urgent: false, matches: [] };
+  if (urgency.urgent) {
+    await base44.asServiceRole.entities.Notification.create({
+      user_email: nurse.email, title: '🚨 Possibly urgent patient text',
+      message: `A text from ${patientNum} may need immediate attention (flagged: ${urgency.matches.slice(0, 3).join(', ')}). Review now.`,
+      type: 'sms_urgent', priority: 'urgent', related_entity: 'SmsMessage', related_entity_id: inboundRow.id, is_read: false,
+    }).catch((err) => console.error('urgent notification failed:', err));
+  }
+
+  // --- Notify the nurse in-app ---
+  await base44.asServiceRole.entities.Notification.create({
+    user_email: nurse.email, title: '💬 New text message', message: `You have a new text from ${patientNum}.`,
+    type: 'sms_received', priority: 'normal', related_entity: 'SmsMessage', related_entity_id: inboundRow.id, is_read: false,
+  }).catch((err) => console.error('notification failed:', err));
+
+  // Audit — never log message body.
+  await base44.asServiceRole.entities.UserActivity.create({
+    user_email: 'system', action: 'sms_received', entity_type: 'SmsMessage', entity_id: inboundRow.id,
+    details: {
+      from_number: patientNum, to_number: workNum, nurse_email: nurse.email, patient_id: patientId,
+      thread_id: inboundRow.thread_id, body_length: text.length, off_duty: offDuty, agency_closed: agencyClosed, urgent: urgency.urgent,
+    }, status: 'success',
+  }).catch(() => {});
+
+  return Response.json({ success: true, received: true });
+}
+
+// ============================ FAX ============================
 async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
   const providerId = payload?.id;
   const mapped = mapFaxStatus(payload?.status);
@@ -157,35 +495,184 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
   const rows = await base44.asServiceRole.entities.FaxLog.filter({ telnyx_fax_id: providerId }).catch(() => []);
   if (!rows.length) return Response.json({ success: false, message: 'FaxLog not found' });
   const faxLog = rows[0];
+  // Idempotency: Telnyx re-delivers webhooks. If the status is unchanged, ack
+  // without re-running side effects (critically, without re-bumping retry_count).
   if (mapped === faxLog.status) return Response.json({ success: true, status: mapped, deduped: true });
 
-  const update: Record<string, unknown> = { status: mapped, pages: payload?.page_count || faxLog.pages };
+  const update: Record<string, unknown> = {
+    status: mapped,
+    pages: payload?.page_count || faxLog.pages,
+    failure_reason: null,
+    next_retry_at: null,
+  };
+
+  let exhaustedNow = false;
   if (mapped === 'failed') {
-    update.failure_reason = payload?.failure_reason || payload?.failover?.failure_reason || 'Fax delivery failed';
+    const failureReason = payload?.failure_reason || payload?.failover?.failure_reason || 'Fax delivery failed';
+    // Honor the admin FaxRetryConfig: schedule a retry or give up (and notify once).
+    const cfgRows = await base44.asServiceRole.entities.FaxRetryConfig.list('-created_date', 1).catch(() => []);
+    const plan = planFaxRetry({
+      retryCount: faxLog.retry_count || 0,
+      errorCode: payload?.failure_code || payload?.error_code,
+      errorMessage: failureReason,
+      priority: faxLog.priority || 'normal',
+      config: cfgRows[0] || {},
+    });
+    if (plan.willRetry) {
+      update.next_retry_at = plan.nextRetryAt;
+      update.retry_count = plan.nextRetryCount;
+    } else {
+      exhaustedNow = !faxLog.final_failure_notified;
+      update.final_failure_notified = true;
+    }
+    update.failure_reason = failureReason;
   }
+
   await base44.asServiceRole.entities.FaxLog.update(faxLog.id, update);
+
+  // Tell the sender when a fax has permanently failed (no retries left).
+  if (exhaustedNow && faxLog.sent_by) {
+    const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+    await base44.asServiceRole.entities.Notification.create({
+      user_email: faxLog.sent_by,
+      title: '❌ Fax failed',
+      message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${update.failure_reason}). Verify the number and resend.`,
+      type: 'fax_failed', priority: 'high', related_entity: 'FaxLog', related_entity_id: faxLog.id,
+      is_read: false, action_url: `/send-fax?fax_id=${faxLog.id}`,
+    }).catch((err) => console.error('Failed to send fax failure notification:', err));
+  }
   return Response.json({ success: true, status: mapped });
+}
+
+// ============================ VOICE ============================
+// Decide how an inbound call to a work number should be routed. Mirrors the
+// routing in the former handleTwilioVoiceCall (agency hours > off-duty > masked
+// bridge), returning a provider-neutral action the Call Control flow executes.
+async function decideInboundRouting(base44: any, config: any, workNum: string) {
+  const agencyClosed = !isAgencyOpen(config.settings);
+
+  let nurse = null;
+  for (const variant of (workNum ? phoneVariants(workNum) : [])) {
+    const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }).catch(() => []);
+    if (matches.length > 0) { nurse = matches[0]; break; }
+  }
+  if (!nurse) {
+    return config.mainOffice
+      ? { action: 'bridge', to: config.mainOffice, callerId: workNum || config.mainOffice, nurse: null }
+      : { action: 'hangup', greeting: 'We are unable to connect your call at this time. Please try again later.', nurse: null };
+  }
+
+  if (agencyClosed) {
+    const office = config.afterHoursTransfer || config.mainOffice || 'the main office';
+    if (config.afterHoursAction === 'voicemail' && config.voicemailEnabled) {
+      const greeting = (config.afterHoursGreeting || config.voicemailGreeting ||
+        'Our office is currently closed. Please leave a message after the tone and we will return your call.').replace(/\{office\}/gi, office);
+      return { action: 'voicemail', greeting, nurse };
+    }
+    if (config.afterHoursAction === 'hangup' || (!config.afterHoursTransfer && !config.mainOffice)) {
+      const greeting = (config.afterHoursGreeting || 'Our office is currently closed. Please call back during business hours.').replace(/\{office\}/gi, office);
+      return { action: 'hangup', greeting, nurse };
+    }
+    const greeting = (config.afterHoursGreeting || 'Our office is currently closed. Please hold while we connect you.').replace(/\{office\}/gi, office);
+    const target = config.afterHoursTransfer || config.mainOffice;
+    return { action: 'greet_transfer', greeting, to: target, callerId: workNum, nurse };
+  }
+
+  if (isOffDutyNow(nurse)) {
+    const office = config.mainOffice || 'the main office';
+    const greeting = (nurse.off_duty_message ||
+      'Your nurse is currently off duty. Please hold while we connect you to our main office.').replace(/\{office\}/gi, office);
+    if (config.mainOffice) return { action: 'greet_transfer', greeting, to: config.mainOffice, callerId: workNum, nurse };
+    return { action: 'hangup', greeting, nurse };
+  }
+
+  // On duty: masked bridge to the nurse's personal cell (caller id = work number).
+  if (nurse.personal_cell_e164) {
+    return { action: 'bridge', to: nurse.personal_cell_e164, callerId: workNum, nurse };
+  }
+  if (config.mainOffice) return { action: 'bridge', to: config.mainOffice, callerId: workNum, nurse };
+  return { action: 'hangup', greeting: 'We are unable to connect your call at this time. Please try again later.', nurse };
+}
+
+async function logInboundCall(base44: any, callControlId: string, callerNum: string, workNum: string, route: any) {
+  if (!callControlId) return;
+  const existing = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => []);
+  if (existing.length > 0) return;
+  const callMode = route.action === 'bridge' && route.nurse?.personal_cell_e164 ? 'masked_bridge'
+    : route.action === 'voicemail' ? 'voicemail' : 'off_duty_transfer';
+  const logRow = await base44.asServiceRole.entities.CallLog.create({
+    direction: 'inbound', from_number: callerNum, to_number: route.to || '', displayed_number: workNum,
+    nurse_email: route.nurse?.email || null, call_mode: callMode, status: 'ringing', provider_call_id: callControlId,
+  }).catch(() => null);
+  await base44.asServiceRole.entities.UserActivity.create({
+    user_email: 'system', action: 'inbound_call_received', entity_type: 'CallLog', entity_id: logRow?.id,
+    details: { call_mode: callMode, nurse_email: route.nurse?.email || null, provider_call_id: callControlId }, status: 'success',
+  }).catch(() => {});
 }
 
 async function handleCallEvent(base44: any, apiKey: string | null, eventType: string, payload: any): Promise<Response> {
   const callControlId = payload?.call_control_id;
   const state = decodeClientState(payload?.client_state);
+  const direction = String(payload?.direction || '').toLowerCase(); // 'incoming' | 'outgoing'
 
-  // Masked bridge: when the nurse leg answers, dial the patient presenting the
-  // work number as caller id. Guarded by the tag we set in startTelnyxCall.
+  // --- OUTBOUND masked bridge: nurse leg answered → dial the patient (caller id = work number). ---
   if (eventType === 'call.answered' && state?.t === 'masked_bridge' && callControlId && apiKey) {
-    try {
-      await fetch(`https://api.telnyx.com/v2/calls/${encodeURIComponent(callControlId)}/actions/transfer`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: state.bridge_to, from: state.caller_id }),
-      });
-    } catch (err) {
-      console.error('Telnyx bridge transfer error:', (err as Error)?.message);
+    await callCommand(apiKey, callControlId, 'transfer', { to: state.bridge_to, from: state.caller_id });
+  }
+
+  // --- INBOUND IVR state machine (Call Control) ---
+  if (apiKey && callControlId) {
+    // Step 1: a fresh inbound call rings in. Decide routing; bridge calls can
+    // transfer immediately, anything with a greeting/voicemail answers first.
+    if (eventType === 'call.initiated' && direction === 'incoming' && !state) {
+      const config = await getAgencyConfig(base44);
+      const callerNum = normalizeE164(payload?.from) || payload?.from || '';
+      const workNum = normalizeE164(payload?.to) || payload?.to || '';
+      const route = await decideInboundRouting(base44, config, workNum);
+      await logInboundCall(base44, callControlId, callerNum, workNum, route);
+
+      if (route.action === 'bridge') {
+        // TODO(verify): a plain transfer on a ringing inbound leg bridges A→B,
+        // presenting `from` as caller id (no answer needed).
+        await callCommand(apiKey, callControlId, 'transfer', { to: route.to, from: route.callerId });
+      } else {
+        // Greeting / hangup / voicemail all need the call answered first; carry
+        // the decided action forward in client_state for call.answered.
+        await callCommand(apiKey, callControlId, 'answer', {
+          client_state: encodeClientState({ t: 'inbound_ivr', ...route, nurse: undefined, nurse_email: route.nurse?.email || null }),
+        });
+      }
+      return Response.json({ success: true, inbound: route.action });
+    }
+
+    // Step 2: the inbound call we answered is now live → speak the greeting,
+    // then continue (transfer / hangup / record) once the greeting finishes.
+    if (eventType === 'call.answered' && state?.t === 'inbound_ivr') {
+      const greeting = String(state.greeting || '').slice(0, 320);
+      const next = encodeClientState({ t: 'inbound_after_greet', action: state.action, to: state.to || null, callerId: state.callerId || null });
+      if (greeting) {
+        await callCommand(apiKey, callControlId, 'speak', { ...SPEAK_DEFAULTS, payload: greeting, client_state: next });
+      } else {
+        // No greeting → act immediately.
+        await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId);
+      }
+      return Response.json({ success: true, inbound_ivr: state.action });
+    }
+
+    // Step 3: greeting finished → execute the deferred action.
+    if (eventType === 'call.speak.ended' && state?.t === 'inbound_after_greet') {
+      await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId);
+      return Response.json({ success: true, after_greet: state.action });
+    }
+
+    // Voicemail recording finished → persist it (port of handleTwilioVoicemail).
+    if (eventType === 'call.recording.saved') {
+      await saveVoicemail(base44, payload);
+      return Response.json({ success: true, voicemail_saved: true });
     }
   }
 
-  // Best-effort CallLog status update by provider call id or client_state log id.
+  // --- Best-effort CallLog status update for any call event. ---
   const mapped = mapCallStatus(eventType);
   if (mapped) {
     let rows = callControlId
@@ -201,10 +688,41 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
   return Response.json({ success: true, event: eventType, status: mapped });
 }
 
+async function continueAfterGreeting(base44: any, apiKey: string, callControlId: string, action: string, to: string | null, callerId: string | null) {
+  if (action === 'greet_transfer' && to) {
+    await callCommand(apiKey, callControlId, 'transfer', { to, from: callerId || to });
+  } else if (action === 'voicemail') {
+    // TODO(verify): record_start params (format/channels) against the live API.
+    await callCommand(apiKey, callControlId, 'record_start', { format: 'mp3', channels: 'single', client_state: encodeClientState({ t: 'voicemail' }) });
+  } else {
+    await callCommand(apiKey, callControlId, 'hangup', {});
+  }
+}
+
+async function saveVoicemail(base44: any, payload: any) {
+  const callControlId = payload?.call_control_id;
+  const recordingUrl = payload?.recording_urls?.mp3 || payload?.recording_urls?.wav || payload?.public_recording_urls?.mp3 || null;
+  if (!callControlId) return;
+  const rows = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => []);
+  if (!rows.length) return;
+  await base44.asServiceRole.entities.CallLog.update(rows[0].id, {
+    voicemail_url: recordingUrl || rows[0].voicemail_url || null,
+    status: 'completed',
+  }).catch(() => {});
+  if (rows[0].nurse_email) {
+    await base44.asServiceRole.entities.Notification.create({
+      user_email: rows[0].nurse_email, title: '📞 New voicemail',
+      message: `You have a new voicemail from ${rows[0].from_number || 'a caller'}.`,
+      type: 'voicemail', priority: 'normal', related_entity: 'CallLog', related_entity_id: rows[0].id, is_read: false,
+    }).catch(() => {});
+  }
+}
+
+// ============================ ENTRY ============================
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { apiKey, publicKey } = await resolveTelnyxCreds(base44);
+    const { apiKey, publicKey, messagingProfileId } = await resolveTelnyxCreds(base44);
 
     // Read the raw body ONCE — signature is over the exact bytes.
     const rawBody = await req.text();
@@ -221,7 +739,8 @@ Deno.serve(async (req) => {
 
     if (!eventType) return Response.json({ success: true, skipped: 'no event type' });
 
-    if (eventType.startsWith('message.')) return await handleMessageEvent(base44, payload);
+    if (eventType === 'message.received') return await handleInboundMessage(base44, apiKey, messagingProfileId, payload);
+    if (eventType.startsWith('message.')) return await handleOutboundMessageStatus(base44, payload);
     if (eventType.startsWith('fax.')) return await handleFaxEvent(base44, payload);
     if (eventType.startsWith('call.')) return await handleCallEvent(base44, apiKey, eventType, payload);
 

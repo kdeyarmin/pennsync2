@@ -1,23 +1,22 @@
 # Telnyx Integration — Text, Voice, Video & Fax
 
-Telnyx is supported as an alternative provider to Twilio for the four communication
-channels:
+Telnyx is the sole telephony/communications provider for the app. It powers all
+four channels:
 
-| Channel | Telnyx product | Backend function |
+| Channel | Telnyx product | Backend function (provider-neutral name) |
 |---|---|---|
-| **Text** (SMS/MMS) | Messaging API | `sendTelnyxSms` |
-| **Voice** (masked click-to-call) | Call Control v2 | `startTelnyxCall` |
-| **Video** (telehealth) | Telnyx Video (Rooms) | `createTelnyxVideoToken` |
-| **Fax** | Programmable Fax | `sendTelnyxFax` |
+| **Text** (SMS/MMS) | Messaging API | `sendSms`, `sendTestSms`, `dispatchScheduledSms`, `redriveFailedSms` |
+| **Voice** (masked click-to-call + inbound IVR) | Call Control v2 | `startMaskedCall` (outbound), inbound handled in the webhook |
+| **Video** (telehealth) | Telnyx Video (Rooms) + `@telnyx/video` client | `createTelehealthToken` |
+| **Fax** | Programmable Fax | `sendFax`, `retryFailedFax`, `autoRetryFailedFaxes`, `sendBatchFax`, `syncFaxStatuses`, `pollFaxStatuses` |
 
-All four share one inbound webhook — `handleTelnyxStatusWebhook` — and one
-credential row (`IntegrationSecret`, provider `telnyx`).
+> The user-facing function names are provider-neutral (`sendSms`, `sendFax`,
+> `startMaskedCall`, `createTelehealthToken`) and run on Telnyx internally. The
+> former Twilio functions, the `twilio-video` client SDK, and the Twilio
+> credential model have been removed.
 
-It mirrors the Twilio integration intentionally: SMS threads in the same
-`SmsMessage` entity, faxes in `FaxLog` (the existing `telnyx_fax_id` field stores
-the provider fax id), calls in `CallLog`, and telehealth in `TelehealthSession`.
-TCPA opt-out + quiet-hours protections, masked caller ID, idempotent fax sends,
-and PHI-minimized audit logging all behave identically to the Twilio path.
+Every inbound and status event — messaging, fax, and voice (Call Control) —
+is delivered to a **single signed webhook**, `handleTelnyxStatusWebhook`.
 
 ## 1. Prerequisites in Telnyx
 
@@ -25,7 +24,7 @@ and PHI-minimized audit logging all behave identically to the Twilio path.
 2. A purchased number (or numbers) with the relevant capabilities (SMS, voice, fax).
 3. A signed **BAA with Telnyx** for HIPAA-eligible traffic.
 4. The resources each channel needs:
-   - **Text** — a *Messaging Profile* (optional but recommended for opt-out/routing).
+   - **Text** — a *Messaging Profile* (recommended for opt-out/routing).
    - **Voice** — a *Call Control Application* (gives you a `connection_id`).
    - **Fax** — a *FAX / Programmable Fax Application* (gives you a `connection_id`)
      and a fax-capable number.
@@ -37,10 +36,10 @@ and PHI-minimized audit logging all behave identically to the Twilio path.
 
 ### Option A — in-app (recommended)
 
-Go to **Administration → Super Admin** and save your Telnyx API key plus the
-optional resource ids. They are stored backend-only (`IntegrationSecret`, provider
-`telnyx`) and are never returned to the browser — only presence + the last 4
-characters are shown. Functions used by the admin UI:
+**Administration → Super Admin** → the **Telnyx Credentials** panel. Save your
+API key plus the optional resource ids. They are stored backend-only
+(`IntegrationSecret`, provider `telnyx`) and are never returned to the browser —
+only presence + the last 4 characters are shown. Functions:
 
 - `saveTelnyxSecret` — store the API key / public key / connection ids (super-admin only).
 - `getTelnyxSecretStatus` — read whether each value is configured (no secrets returned).
@@ -64,15 +63,16 @@ Env values override the in-app `IntegrationSecret` values when both are set.
 
 ## 3. Webhooks
 
-Point every Telnyx webhook (messaging profile, Call Control app, FAX app) at:
+Point the webhook URL of **each** connection (Messaging Profile, Call Control
+connection, Programmable Fax connection) at the single function:
 
 ```
 https://<your-functions-base>/handleTelnyxStatusWebhook
 ```
 
-Outbound sends also pass a per-request `webhook_url` pointing at the same function
-when `FUNCTIONS_BASE_URL` is set, so delivery/status updates flow back even before
-you configure the portal-level webhooks.
+Outbound sends/calls also pass a per-request `webhook_url` pointing at the same
+function when `FUNCTIONS_BASE_URL` is set, so delivery/status updates flow back
+even before you finish the portal-level webhook configuration.
 
 ### Signature verification (fail-closed)
 
@@ -83,18 +83,44 @@ you configure the portal-level webhooks.
 - the `telnyx-timestamp` must be within a 5-minute replay window
 
 A webhook without a valid signature, or with a stale timestamp, is rejected `401`.
-These events mutate delivery state for PHI-bearing messages/faxes/calls, so the
-public key **must** be configured for inbound webhooks to be accepted.
+The public key **must** be configured for inbound webhooks to be accepted.
 
-## 4. Masked voice flow
+## 4. Voice flows (Call Control)
 
-`startTelnyxCall` rings the nurse's personal cell first (caller id = their work
-number) and stashes the bridge target + presented caller id in the Call Control
-`client_state`. When the nurse answers, the `call.answered` webhook decodes
-`client_state` and issues a Call Control **transfer** to the patient presenting the
-work number — so the patient never sees the nurse's cell.
+Both inbound and outbound voice run on a Call Control Application, so all call
+events arrive at `handleTelnyxStatusWebhook` and are driven there as a small state
+machine via `client_state`.
 
-## 5. Status mapping
+- **Outbound masked click-to-call** (`startMaskedCall`): rings the nurse's cell
+  first (caller id = work number); on `call.answered` the webhook issues a Call
+  Control `transfer` to bridge the patient, presenting the work number.
+- **Inbound** (patient → work number): on `call.initiated` the webhook resolves
+  the nurse and applies the agency-hours → off-duty → masked-bridge routing. A
+  plain bridge transfers immediately; greeting / voicemail / after-hours paths
+  `answer`, `speak`, then `transfer` / `hangup` / `record_start`. Voicemail
+  recordings are stored on `call.recording.saved`.
+
+> Call Control action/field names are annotated with `TODO(verify)` in the
+> webhook and should be confirmed against your live Telnyx account during rollout.
+
+## 5. Inbound SMS
+
+`message.received` events are handled in the webhook: STOP/START/HELP keyword
+handling (TCPA), inbound message storage + threading, automatic after-hours /
+off-duty auto-replies, urgent-keyword escalation, and in-app nurse notification.
+
+## 6. Telehealth video
+
+`createTelehealthToken` finds-or-creates a Telnyx Video room by `unique_name`
+(the session `room_name`) and mints a per-session join client token (1-hour TTL)
+using the same guest-token / staff authorization model as before. The client
+(`src/components/telehealth/VideoRoom.jsx`) uses the `@telnyx/video` SDK.
+
+> The `@telnyx/video` Room API method/event names used in `VideoRoom.jsx` are
+> annotated with `TODO(verify)` and should be confirmed against the SDK version
+> pinned in `package.json` during rollout.
+
+## 7. Status mapping
 
 The provider→internal status mapping is the unit-tested source of truth in
 `src/components/integrations/telnyx/telnyxUtils.js` and is inlined into the webhook

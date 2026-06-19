@@ -14,10 +14,10 @@ function byId(checks, id) {
 }
 
 // A fully wired set of inputs, reused/tweaked by the step tests below.
-// Twilio credentials live in the secret panel, not in agency settings, so
+// Telnyx credentials live in the secret panel, not in agency settings, so
 // READY_INPUTS only carries office/template settings for agencySettings.
 const READY_INPUTS = {
-  secretStatus: { configured: true, source: "config", secret_last_four: "9abc" },
+  secretStatus: { configured: true, source: "config", api_key_last_four: "9abc" },
   agencySettings: {
     main_office_number_e164: "+12155550100",
     default_off_duty_template: "We are closed; call {office}.",
@@ -29,7 +29,7 @@ const READY_INPUTS = {
 
 test("an empty config produces only warn checks (no required fields removed)", () => {
   const checks = evaluateAgencyConfig({});
-  // All checks should be warn or ok — no required provider fields in Twilio setup
+  // All checks should be warn or ok — no required provider fields in Telnyx setup
   for (const c of checks) {
     assert.ok(c.status === "warn" || c.status === "ok", `unexpected fail status for ${c.id}`);
   }
@@ -138,7 +138,7 @@ test("buildIntegrationSteps with empty inputs leaves required steps undone", () 
   assert.equal(byId(steps, "live_test").status, "todo");
 });
 
-test("buildIntegrationSteps reflects a fully wired, verified integration", () => {
+test("buildIntegrationSteps reflects a fully wired, verified integration (api_key_last_four)", () => {
   const steps = buildIntegrationSteps(READY_INPUTS);
   assert.equal(byId(steps, "api_secret").status, "done");
   assert.match(byId(steps, "api_secret").detail, /9abc/);
@@ -181,19 +181,18 @@ test("webhooks is a manual step we never auto-complete", () => {
   assert.equal(w.status, "todo");
 });
 
-test("step 1 wording says Twilio credentials", () => {
+test("step 1 wording says Telnyx API key", () => {
   const steps = buildIntegrationSteps({});
   const s = byId(steps, "api_secret");
-  assert.match(s.title, /Twilio/i);
-  assert.match(s.detail, /Account SID/i);
-  assert.match(s.detail, /Auth Token/i);
+  assert.match(s.title, /Telnyx API key/i);
+  assert.match(s.detail, /Telnyx API key/i);
 });
 
-test("step 4 wording says Twilio Console", () => {
+test("step 4 wording says Telnyx Portal", () => {
   const steps = buildIntegrationSteps({});
   const w = byId(steps, "webhooks");
-  assert.match(w.title, /Twilio/i);
-  assert.match(w.detail, /Twilio Console/);
+  assert.match(w.title, /Telnyx/i);
+  assert.match(w.detail, /Telnyx Portal/);
 });
 
 test("summarizeSteps tracks required progress and percent", () => {
@@ -231,19 +230,16 @@ test("summarizeSteps handles a non-array input safely", () => {
   assert.equal(sum.nextStep, null);
 });
 
-test("WEBHOOK_FUNCTIONS lists the four Twilio handlers", () => {
-  assert.equal(WEBHOOK_FUNCTIONS.length, 4);
-  const fns = WEBHOOK_FUNCTIONS.map((w) => w.fn);
-  assert.ok(fns.includes("handleTwilioInboundSms"));
-  assert.ok(fns.includes("handleTwilioSmsStatus"));
-  assert.ok(fns.includes("handleTwilioVoiceCall"));
-  assert.ok(fns.includes("handleTwilioCallStatus"));
+test("WEBHOOK_FUNCTIONS points every connection at the single Telnyx handler", () => {
+  assert.equal(WEBHOOK_FUNCTIONS.length, 3);
+  // Telnyx delivers all event types to one webhook function.
+  assert.ok(WEBHOOK_FUNCTIONS.every((w) => w.fn === "handleTelnyxStatusWebhook"));
   for (const w of WEBHOOK_FUNCTIONS) {
     assert.ok(w.event && w.configuredOn, "each entry has an event + where it's configured");
   }
 });
 
-test("WEBHOOK_FUNCTIONS configuredOn references Twilio concepts (no legacy sub-account references)", () => {
+test("WEBHOOK_FUNCTIONS configuredOn references Telnyx concepts (no legacy sub-account references)", () => {
   for (const w of WEBHOOK_FUNCTIONS) {
     assert.ok(
       !w.configuredOn.includes("sub-account"),

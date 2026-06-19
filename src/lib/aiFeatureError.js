@@ -13,7 +13,7 @@ const SERVICE_LABELS = {
   openai: "audio transcription and AI documentation",
   anthropic: "AI fax cover-page generation",
   heygen: "AI training-video generation",
-  twilio: "telehealth and messaging",
+  telnyx: "telehealth and messaging",
 };
 
 /**
@@ -29,7 +29,7 @@ export function configNotReadyMessage(err) {
 
   if (!raw) return null;
 
-  const match = /(openai|anthropic|heygen|twilio)[\s\S]*?not configured/i.exec(raw);
+  const match = /(openai|anthropic|heygen|telnyx)[\s\S]*?not configured/i.exec(raw);
   if (!match) return null;
 
   const label = SERVICE_LABELS[match[1].toLowerCase()] || "this AI feature";
