@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export default function AIComplianceAuditor({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [auditResults, setAuditResults] = useState(null);
   const [_expandedSection, _setExpandedSection] = useState(null);
+  const queryClient = useQueryClient();
 
   const { data: patient } = useQuery({
     queryKey: ['patient', patientId],
@@ -503,6 +504,10 @@ For each area, provide:
         compliant_elements: result.compliance_strengths || [],
         audit_type: 'automated'
       });
+
+      // Refresh the compliance dashboards that read ComplianceAudit (prefix match
+      // covers the keyed variants ['complianceAudits', dateRange|timeRange]).
+      queryClient.invalidateQueries({ queryKey: ['complianceAudits'] });
 
     } catch (error) {
       console.error("Compliance audit failed:", error);

@@ -529,7 +529,7 @@ Return structured JSON training module.`,
                           {idx + 1}. {q.question}
                         </p>
                         <div className="space-y-1 mb-2">
-                          {q.options.map((opt, optIdx) => (
+                          {q.options?.map((opt, optIdx) => (
                             <div
                               key={optIdx}
                               className={`p-2 rounded text-sm ${

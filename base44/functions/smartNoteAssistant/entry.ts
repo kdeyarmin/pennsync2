@@ -70,6 +70,11 @@ async function enhanceNote(base44, user, params) {
   if (!patientData) {
     return Response.json({ error: 'Patient not found' }, { status: 404 });
   }
+  // Authorize against the patient (assigned nurse or admin) before its chart
+  // drives the prompt or the enhanced-note write. RLS-independent code check.
+  if (user.role !== 'admin' && !(Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email))) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   const contextPrompt = buildPatientContext(patientData, carePlans, recentVisits, oasisData[0], {
     visitType,
@@ -350,10 +355,12 @@ async function transcribeAudio(base44, user, params) {
   let patientContext = '';
   if (patient_id) {
     const patient = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
-    if (patient.length > 0) {
-      const p = patient[0];
-      patientContext = `Patient: ${p.first_name} ${p.last_name}, DOB: ${p.date_of_birth}, Primary Diagnosis: ${p.primary_diagnosis || 'None'}`;
+    const p = patient[0];
+    if (!p) return Response.json({ error: 'Patient not found' }, { status: 404 });
+    if (user.role !== 'admin' && !(Array.isArray(p.assigned_nurses) && p.assigned_nurses.includes(user.email))) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
+    patientContext = `Patient: ${p.first_name} ${p.last_name}, DOB: ${p.date_of_birth}, Primary Diagnosis: ${p.primary_diagnosis || 'None'}`;
   }
 
   // Transcribe audio
@@ -426,6 +433,14 @@ async function extractEventsFromNote(base44, user, params) {
 
   if (!visit_id || !patient_id || !nurse_notes) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  // Authorize: only an assigned nurse (or admin) may write ClinicalEvent rows to
+  // this patient's chart. RLS-independent code check.
+  const [evPatient] = await base44.asServiceRole.entities.Patient.filter({ id: patient_id }, '', 1);
+  if (!evPatient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+  if (user.role !== 'admin' && !(Array.isArray(evPatient.assigned_nurses) && evPatient.assigned_nurses.includes(user.email))) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const result = await base44.integrations.Core.InvokeLLM({

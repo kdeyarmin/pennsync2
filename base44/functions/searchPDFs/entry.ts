@@ -55,8 +55,24 @@ Deno.serve(async (req) => {
     if (document_type && document_type !== 'all') {
       filter.document_type = document_type;
     }
-    if (patient_id) {
+    // Authorize the patient scope. Non-admins may only search PDFs for patients
+    // they are assigned to; without this, omitting patient_id returned EVERY
+    // indexed PDF's extracted PHI agency-wide. Mirrors getScopedPatientAlerts.
+    const isAdmin = user.role === 'admin';
+    if (isAdmin) {
+      if (patient_id) filter.patient_id = patient_id;
+    } else if (patient_id) {
+      const [scopePatient] = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
+      if (!(Array.isArray(scopePatient?.assigned_nurses) && scopePatient.assigned_nurses.includes(user.email))) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
       filter.patient_id = patient_id;
+    } else {
+      const myPatients = await base44.asServiceRole.entities.Patient
+        .filter({ assigned_nurses: user.email }, '-created_date', 1000).catch(() => []);
+      const allowedIds = (myPatients || []).map((p) => p.id).filter(Boolean);
+      if (allowedIds.length === 0) return Response.json({ results: [], total: 0 });
+      filter.patient_id = { $in: allowedIds };
     }
 
     // Fetch all indexed documents

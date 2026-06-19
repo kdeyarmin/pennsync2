@@ -3,9 +3,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
-    const { 
-      document_name, 
+
+    // Require authentication: previously unauthenticated, so anonymous callers
+    // could run billable service-role LLM calls and bump FaxPriorityRule counts.
+    // Mirrors analyzeFaxContent. Internal callers (sendBatchFax) propagate identity.
+    const user = await base44.auth.me().catch(() => null);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const {
+      document_name,
       cover_page_details, 
       to_number, 
       from_number,

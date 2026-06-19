@@ -18,6 +18,13 @@ Deno.serve(async (req) => {
     // Fetch existing OASIS data if patient ID provided
     let existingOASIS = null;
     if (patientId) {
+      // Authorize against the patient before reading their OASIS PHI into the
+      // prompt/response (assigned nurse or admin). RLS-independent code check.
+      const [oasisPatient] = await base44.asServiceRole.entities.Patient.filter({ id: patientId }, '', 1);
+      if (!oasisPatient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+      if (user.role !== 'admin' && !(Array.isArray(oasisPatient.assigned_nurses) && oasisPatient.assigned_nurses.includes(user.email))) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
       const oasisRecords = await base44.asServiceRole.entities.OASISUpload.filter(
         { patient_id: patientId },
         '-created_date',

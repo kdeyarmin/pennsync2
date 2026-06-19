@@ -313,7 +313,7 @@ For each issue found, provide:
                               </Badge>
                             </div>
                             <Badge variant="outline" className="text-xs">
-                              {issue.inconsistency_type.replace(/_/g, ' ')}
+                              {issue.inconsistency_type?.replace(/_/g, ' ')}
                             </Badge>
                           </div>
                         </div>

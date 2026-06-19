@@ -10,6 +10,12 @@ Deno.serve(async (req) => {
     }
 
     const { nurse_email, training_module_id, session_id } = await req.json();
+    // Only admins may analyze another nurse's real-time performance metrics.
+    // Mirrors analyzeNurseDeficits; without it any user reads another nurse's
+    // RealTimePerformanceMetric + an AI critique of them.
+    if (nurse_email && nurse_email !== user.email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const targetEmail = nurse_email || user.email;
 
     // Fetch real-time metrics for this session

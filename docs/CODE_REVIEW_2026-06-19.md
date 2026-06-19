@@ -90,6 +90,57 @@ negative counts stay numeric).
 
 ---
 
+## Second sweep — additional backend IDOR/auth fixes + React correctness fixes
+
+A second review pass (remaining ~140 backend functions, all entity RLS policies, and the
+largest React pages) surfaced and fixed the following.
+
+**Backend — IDOR: caller-supplied id used with `asServiceRole` and no ownership gate.** Each now
+authorizes against the documented access model (assigned-nurse-or-admin **in code**, RLS-independent,
+mirroring `getScopedPatientAlerts`) before reading PHI into a prompt / response or writing to a
+chart: `enhanceNoteOptimized`, `smartNoteAssistant` (all 4 actions), `extractClinicalEvents`,
+`mapNoteToOASIS`, `batchAIAnalysis`, `predictSupplyNeeds`, `generateFollowUpTasks` (made the
+RLS-scoped read blocking), `processFaxOCR` (sent_by gate), `extractReferralDataForSmartNote`
+(switched to the user-scoped Referral read), `analyzeRealTimePerformance` (nurse_email self-clamp),
+and `searchPDFs` (non-admins restricted to their assigned patients' PDFs).
+
+**Backend — missing authorization on privileged crons / helpers.** Added the opt-in
+`INTERNAL_FN_SECRET` + admin lockdown (mirroring `checkExpiredInvitations`) to
+`processTrainingRenewals`, `processAnnualEducationRenewals`, `scheduledGuidelineSync`,
+`syncFaxStatuses`, `pollFaxStatuses`; and an `auth.me()` + 401 to `analyzeFaxPriority`.
+
+**Backend — body-trust, broken function, pagination.** `triggerCorrectiveActionPlan` now
+re-fetches the canonical `TrainingAttempt` by id instead of acting on the posted body;
+`scheduleSignatureReminders` was completely non-functional (invalid `subject`/`type`/`related_*`
+fields + admin-only write via the user-scoped client → threw for every caller) and now creates a
+valid service-role Notification; `processTrainingRenewals`/`processAnnualEducationRenewals`
+(renewal-cert truncation) and `assignAnnualLearningPlan`/`assignInService` (roster truncation)
+were bounded at 5000 instead of 100/500.
+
+**Frontend — React correctness.** `CarePlanManagement` rendered an inline `BuilderTab` component
+as `<BuilderTab />`, remounting the whole build-plan subtree (and dropping input focus) on every
+keystroke — now invoked as `{BuilderTab()}`. `AIComplianceAuditor` now invalidates
+`['complianceAudits']` after creating an audit so the compliance dashboards refresh. Added
+crash guards (`?.`) for unguarded LLM-optional fields in `AIDataValidationEngine` and
+`AITrainingModuleGenerator`.
+
+## Open: entity-level RLS for patient-clinical tables (needs your decision)
+
+The RLS audit found ~20 PHI-bearing entities with **no `rls` block** (any authenticated user can
+read/write all rows): `Medication`, `MedicationReconciliation`, `OASISUpload`, `OASISAssessment`,
+`DischargeSummary`, `DocumentSignature`, `FaxLog`, `ScheduledFax`, `Referral`, `Document`,
+`PatientAlert`, `PatientRiskAssessment`, and others, plus `TeamNote`/`Message`/`SystemLog` with
+open writes. This is the single largest security gap. **It is deliberately NOT auto-patched**
+because: (1) the documented correct model is *"by patient access"* (`Patient.assigned_nurses`),
+but rows like `Medication` carry only `patient_id` — the repo RLS DSL (field-equals-user only,
+no cross-entity join) **cannot express that**, so naive `created_by` owner-scoping would *block an
+assigned nurse from a colleague's entries* (e.g. break the medication list) — a patient-safety
+regression; (2) the checklist (`docs/SECURITY-RLS-CHECKLIST.md` §2/§7) designates RLS as Base44
+**dashboard** configuration plus a multi-role verification protocol that can't be run in this
+environment. The backend IDOR fixes above are the RLS-independent code-layer defense for the
+*function* endpoints; the remaining exposure is *direct client entity reads*, which only RLS
+closes. Recommended path: configure per-entity RLS in the dashboard per the checklist and run §7.
+
 ## Follow-up: the previously-deferred backend findings are now fixed
 
 These were initially documented rather than changed; a follow-up pass implemented all of them.

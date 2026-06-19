@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+    const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000);
     let candidates = allUsers.filter((candidate) => candidate.email);
 
     if (user.account_type === 'agency_admin' && user.agency_name) {

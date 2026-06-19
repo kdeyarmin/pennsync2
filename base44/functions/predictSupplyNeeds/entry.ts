@@ -23,6 +23,12 @@ Deno.serve(async (req) => {
     if (!patientData) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
+    // Authorize against the patient (assigned nurse or admin) before reading
+    // their supply usage and writing a SupplyPrediction. The 404 above only
+    // covers global non-existence, not access. RLS-independent code check.
+    if (user.role !== 'admin' && !(Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email))) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // Get 6 months of usage logs for this patient
     const sixMonthsAgo = new Date();
