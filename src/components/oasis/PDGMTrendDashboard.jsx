@@ -837,7 +837,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip formatter={(value, name, props) => {
-                if (name === "avgPayment") return `$${value.toLocaleString()}${props.payload.isPrediction ? ' (predicted)' : ''}`;
+                if (name === "avgPayment") return `$${(value ?? 0).toLocaleString()}${props.payload?.isPrediction ? ' (predicted)' : ''}`;
                 return value;
               }} />
               <Legend />

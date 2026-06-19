@@ -44,7 +44,12 @@ import {
 } from "recharts";
 import { subDays } from "date-fns";
 
-export default function AIStaffPerformanceAnalytics({ timeRange = 30, autoAnalyze = false }) {
+export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRange = 30, autoAnalyze = false }) {
+  // Local state so the Time Range selector actually changes the range — the prop
+  // can't be mutated, so the control previously just window.location.reload()'d
+  // and discarded the choice. The query keys, cutoffDate, and prompt all key off
+  // this; the Analyze / Refresh buttons re-run the analysis with the new value.
+  const [timeRange, setTimeRange] = useState(initialTimeRange);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [selectedNurse, setSelectedNurse] = useState("all");
   const [performanceData, setPerformanceData] = useState(null);
@@ -391,7 +396,7 @@ Return detailed analysis suitable for management dashboard.`,
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Time Range</Label>
-              <Select value={timeRange.toString()} onValueChange={(_v) => window.location.reload()}>
+              <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(Number(v))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

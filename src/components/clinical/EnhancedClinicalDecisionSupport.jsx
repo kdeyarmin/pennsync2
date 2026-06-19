@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,24 +55,32 @@ export default function EnhancedClinicalDecisionSupport({
     });
   }, [currentNoteText, vitalSigns, patient?.primary_diagnosis]);
 
-  // Debounced analysis function
-  const debouncedAnalyze = useCallback(
-    debounce(async (forceAnalyze = false) => {
-      const currentHash = getInputHash();
-      if (!forceAnalyze && currentHash === lastAnalyzedHash) return;
-      if (!currentNoteText || currentNoteText.length < 30) return;
+  // Latest-callback ref: reassigned every render so the debounced wrapper (built
+  // ONCE below) always runs the current logic with the latest props/state.
+  // Previously this was useCallback(debounce(...), [currentNoteText, ...]) — the
+  // deps changed on every keystroke, so a brand-new debounced function (with a
+  // fresh 3s timer) was created each change while the prior timer was orphaned,
+  // so the "analyze 3s after typing stops" debounce never actually fired.
+  const analyzeRef = useRef(null);
+  analyzeRef.current = async (forceAnalyze = false) => {
+    const currentHash = getInputHash();
+    if (!forceAnalyze && currentHash === lastAnalyzedHash) return;
+    if (!currentNoteText || currentNoteText.length < 30) return;
 
-      setIsAnalyzing(true);
-      try {
-        const result = await analyzeClinicalData();
-        setCdsResults(result);
-        setLastAnalyzedHash(currentHash);
-      } catch (error) {
-        console.error("CDS Analysis error:", error);
-      }
-      setIsAnalyzing(false);
-    }, 3000),
-    [currentNoteText, vitalSigns, patient, previousVisits, carePlans]
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeClinicalData();
+      setCdsResults(result);
+      setLastAnalyzedHash(currentHash);
+    } catch (error) {
+      console.error("CDS Analysis error:", error);
+    }
+    setIsAnalyzing(false);
+  };
+
+  const debouncedAnalyze = useMemo(
+    () => debounce((forceAnalyze = false) => analyzeRef.current?.(forceAnalyze), 3000),
+    []
   );
 
   // Auto-analyze when inputs change
