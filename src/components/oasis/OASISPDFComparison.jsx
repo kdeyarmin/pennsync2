@@ -87,7 +87,7 @@ export default function OASISPDFComparison({
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['oasisFeedback']);
+      queryClient.invalidateQueries({ queryKey: ['oasisFeedback'] });
     }
   });
 

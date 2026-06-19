@@ -27,7 +27,7 @@ export default function EnhancedFaxHistory({ patientId }) {
   const retryMutation = useMutation({
     mutationFn: (faxLogId) => retryFailedFax({ fax_log_id: faxLogId }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-logs']);
+      queryClient.invalidateQueries({ queryKey: ['fax-logs'] });
       toast.success("Fax retry initiated");
     },
     onError: (error) => {

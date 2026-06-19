@@ -57,7 +57,7 @@ export default function ClinicalLibraryManager() {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.ClinicalLibraryTemplate.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-templates']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-templates'] });
       toast.success('Template created successfully');
       resetForm();
     }
@@ -66,7 +66,7 @@ export default function ClinicalLibraryManager() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.ClinicalLibraryTemplate.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-templates']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-templates'] });
       toast.success('Template updated successfully');
       resetForm();
     }
@@ -75,7 +75,7 @@ export default function ClinicalLibraryManager() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.ClinicalLibraryTemplate.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-templates']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-templates'] });
       toast.success('Template deleted');
     }
   });
@@ -83,7 +83,7 @@ export default function ClinicalLibraryManager() {
   const createFolderMutation = useMutation({
     mutationFn: (data) => base44.entities.ClinicalLibraryFolder.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-folders']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-folders'] });
       toast.success('Folder created');
     }
   });
@@ -91,7 +91,7 @@ export default function ClinicalLibraryManager() {
   const updateFolderMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.ClinicalLibraryFolder.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-folders']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-folders'] });
       toast.success('Folder updated');
     }
   });
@@ -99,7 +99,7 @@ export default function ClinicalLibraryManager() {
   const deleteFolderMutation = useMutation({
     mutationFn: (id) => base44.entities.ClinicalLibraryFolder.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-folders']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-folders'] });
       toast.success('Folder deleted');
     }
   });

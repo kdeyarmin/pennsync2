@@ -87,7 +87,7 @@ export default function NurseTrainingHub() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['myTrainingCompletions']);
+      queryClient.invalidateQueries({ queryKey: ['myTrainingCompletions'] });
       setActiveTraining(null);
       setSelectedModule(null);
     }

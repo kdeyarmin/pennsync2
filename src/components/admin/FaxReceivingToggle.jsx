@@ -29,7 +29,7 @@ export default function FaxReceivingToggle() {
       });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['agency-settings']);
+      queryClient.invalidateQueries({ queryKey: ['agency-settings'] });
       toast.success(
         variables.enabled 
           ? "Fax receiving enabled" 

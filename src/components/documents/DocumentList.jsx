@@ -188,8 +188,8 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Document.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['patient-documents']);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-documents'] });
       toast.success("Document deleted");
     }
   });

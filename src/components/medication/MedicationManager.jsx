@@ -287,7 +287,18 @@ export default function MedicationManager({ patientId }) {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Dialog>
+                      <Dialog
+                        open={editingId === med.id}
+                        onOpenChange={(open) => {
+                          // Closing via the X or overlay (not the Cancel button) must still
+                          // clear editingId — otherwise the Add dialog stays blocked and the
+                          // next submit is misrouted to updateMutation against a stale id.
+                          if (!open) {
+                            setEditingId(null);
+                            resetForm();
+                          }
+                        }}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             size="sm"

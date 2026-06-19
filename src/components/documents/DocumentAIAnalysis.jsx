@@ -16,8 +16,8 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
   const analyzeMutation = useMutation({
     mutationFn: () => analyzeDocument({ document_id: document.id }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['patient-documents']);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-documents'] });
       toast.success("Document analyzed successfully");
     },
     onError: (error) => {

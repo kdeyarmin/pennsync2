@@ -318,8 +318,13 @@ Return comprehensive analysis with:
               </div>
             )}
 
-            {/* All Clear */}
-            {analysis.total_issues === 0 && (
+            {/* All Clear — derive from the actual issue arrays rather than the
+                optional total_issues field, which the prompt never asks the model
+                to populate (so it's frequently absent even on a clean regimen). */}
+            {((analysis.critical_interactions?.length || 0) +
+              (analysis.moderate_interactions?.length || 0) +
+              (analysis.contraindications?.length || 0) +
+              (analysis.duplicate_therapy?.length || 0)) === 0 && (
               <Alert className="bg-green-50 border-green-300">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
                 <AlertDescription className="text-sm text-green-800">

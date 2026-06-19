@@ -91,8 +91,8 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
       return newDoc;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['patient-documents']);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-documents'] });
       toast.success("Document uploaded successfully");
       resetForm();
       onUploadComplete?.();

@@ -55,7 +55,7 @@ export default function FaxContactsPage() {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.FaxContact.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       setIsDialogOpen(false);
       resetForm();
       toast.success("Contact added");
@@ -65,7 +65,7 @@ export default function FaxContactsPage() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.FaxContact.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       setIsDialogOpen(false);
       resetForm();
       toast.success("Contact updated");
@@ -75,7 +75,7 @@ export default function FaxContactsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.FaxContact.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       toast.success("Contact deleted");
     }
   });
@@ -153,7 +153,7 @@ export default function FaxContactsPage() {
       }
 
       await base44.entities.FaxContact.bulkCreate(contactsToAdd);
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       toast.success(`Added ${contactsToAdd.length} contacts`);
     } catch (error) {
       toast.error("Failed to upload CSV: " + error.message);

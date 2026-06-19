@@ -257,7 +257,7 @@ export default function SmartOASISAssessment() {
         })
       ));
       setAddedToCarePlan(prev => [...new Set([...prev, ...newInterventions])]);
-      queryClient.invalidateQueries(["care-plans", selectedPatientId]);
+      queryClient.invalidateQueries({ queryKey: ["care-plans", selectedPatientId] });
       toast.success(`${newInterventions.length} intervention${newInterventions.length > 1 ? "s" : ""} added to care plan!`);
     } catch (err) {
       console.error("Failed to add interventions to care plan:", err);

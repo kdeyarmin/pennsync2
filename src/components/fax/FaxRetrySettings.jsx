@@ -41,7 +41,7 @@ export default function FaxRetrySettings() {
       return base44.entities.FaxRetryConfig.create({ ...data, is_active: true });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-retry-config']);
+      queryClient.invalidateQueries({ queryKey: ['fax-retry-config'] });
       toast.success("Retry settings saved");
     }
   });

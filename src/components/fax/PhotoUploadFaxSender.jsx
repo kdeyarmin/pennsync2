@@ -98,7 +98,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
       setToNumber("");
       setSignatureDataUrl(null);
       setCoverSheetUrl(null);
-      queryClient.invalidateQueries(['fax-logs']);
+      queryClient.invalidateQueries({ queryKey: ['fax-logs'] });
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
     } finally {

@@ -142,7 +142,7 @@ export default function BatchFaxSender({ prefilledData }) {
       setFiles([]);
       setToNumber("");
       setCoverSheetUrl(null);
-      queryClient.invalidateQueries(["fax-logs"]);
+      queryClient.invalidateQueries({ queryKey: ["fax-logs"] });
     } catch (err) {
       toast.error("Failed to send: " + err.message);
     } finally {
