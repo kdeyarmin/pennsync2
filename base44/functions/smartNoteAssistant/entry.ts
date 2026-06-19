@@ -72,7 +72,7 @@ async function enhanceNote(base44, user, params) {
   }
   // Authorize against the patient (assigned nurse or admin) before its chart
   // drives the prompt or the enhanced-note write. RLS-independent code check.
-  if (user.role !== 'admin' && !(Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email))) {
+  if (user.role !== 'admin' && patientData.created_by !== user.email && !(Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email))) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -357,7 +357,7 @@ async function transcribeAudio(base44, user, params) {
     const patient = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
     const p = patient[0];
     if (!p) return Response.json({ error: 'Patient not found' }, { status: 404 });
-    if (user.role !== 'admin' && !(Array.isArray(p.assigned_nurses) && p.assigned_nurses.includes(user.email))) {
+    if (user.role !== 'admin' && p.created_by !== user.email && !(Array.isArray(p.assigned_nurses) && p.assigned_nurses.includes(user.email))) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
     patientContext = `Patient: ${p.first_name} ${p.last_name}, DOB: ${p.date_of_birth}, Primary Diagnosis: ${p.primary_diagnosis || 'None'}`;
@@ -439,7 +439,7 @@ async function extractEventsFromNote(base44, user, params) {
   // this patient's chart. RLS-independent code check.
   const [evPatient] = await base44.asServiceRole.entities.Patient.filter({ id: patient_id }, '', 1);
   if (!evPatient) return Response.json({ error: 'Patient not found' }, { status: 404 });
-  if (user.role !== 'admin' && !(Array.isArray(evPatient.assigned_nurses) && evPatient.assigned_nurses.includes(user.email))) {
+  if (user.role !== 'admin' && evPatient.created_by !== user.email && !(Array.isArray(evPatient.assigned_nurses) && evPatient.assigned_nurses.includes(user.email))) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 

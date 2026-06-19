@@ -63,14 +63,23 @@ Deno.serve(async (req) => {
       if (patient_id) filter.patient_id = patient_id;
     } else if (patient_id) {
       const [scopePatient] = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
-      if (!(Array.isArray(scopePatient?.assigned_nurses) && scopePatient.assigned_nurses.includes(user.email))) {
+      // Mirror the Patient RLS: assigned nurse OR creator OR admin.
+      const allowed = scopePatient?.created_by === user.email
+        || (Array.isArray(scopePatient?.assigned_nurses) && scopePatient.assigned_nurses.includes(user.email));
+      if (!allowed) {
         return Response.json({ error: 'Forbidden' }, { status: 403 });
       }
       filter.patient_id = patient_id;
     } else {
-      const myPatients = await base44.asServiceRole.entities.Patient
-        .filter({ assigned_nurses: user.email }, '-created_date', 1000).catch(() => []);
-      const allowedIds = (myPatients || []).map((p) => p.id).filter(Boolean);
+      // All accessible patients: those assigned to the caller OR created by them
+      // (the Patient RLS grants both), de-duplicated by id.
+      const [assignedPatients, createdPatients] = await Promise.all([
+        base44.asServiceRole.entities.Patient.filter({ assigned_nurses: user.email }, '-created_date', 1000).catch(() => []),
+        base44.asServiceRole.entities.Patient.filter({ created_by: user.email }, '-created_date', 1000).catch(() => []),
+      ]);
+      const allowedIds = [...new Set(
+        [...(assignedPatients || []), ...(createdPatients || [])].map((p) => p.id).filter(Boolean)
+      )];
       if (allowedIds.length === 0) return Response.json({ results: [], total: 0 });
       filter.patient_id = { $in: allowedIds };
     }

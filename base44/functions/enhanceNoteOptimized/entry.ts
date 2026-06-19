@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     // Authorize against the documented access model (assigned nurse or admin)
     // before pulling this chart into the prompt or writing enhanced_notes_history
     // back to it. RLS-independent code check (matches getScopedPatientAlerts).
-    if (user.role !== 'admin' && !(Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email))) {
+    if (user.role !== 'admin' && patientData.created_by !== user.email && !(Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email))) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
     const oasis = oasisData[0];
