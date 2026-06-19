@@ -287,6 +287,52 @@ genuinely need a platform/schema change are called out.
 
 ---
 
+## Fifth sweep — react-query v5 systemic fixes + admin/medication/fax/documents
+
+- **`mutation.isLoading` → `isPending` (react-query v5) — FIXED app-wide (12 components).**
+  In v5 `useMutation` exposes `isPending`, not `isLoading`, so every `*Mutation.isLoading`
+  reference was permanently `undefined`: submit buttons never disabled and double-submit was
+  possible. Converted across UserManagement, PatientRiskPredictor, ClinicalLibraryManager,
+  MedicalScribeAssistant, NotificationCenter, BulkPatientActions, PatientMergeDialog,
+  IncidentReportingModule, NurseTrainingHub, ComplianceMonitoringDashboard,
+  AdminCredentialApproval and CredentialRenewalPortal. Verified zero remaining occurrences.
+- **`invalidateQueries(['key'])` over-invalidated the entire cache — FIXED (47 sites, 23 files).**
+  v5 takes a *filters object*; a bare array has no `queryKey`/`type`, so `matchQuery` defaulted
+  `type` to `"all"` and returned true for every query — a refetch storm after each mutation.
+  Converted every positional-array call to `{ queryKey: [...] }`. (Confirmed against
+  `node_modules/@tanstack/query-core/build/legacy/utils.js`.) No correctness change: the targeted
+  query was already a subset of "all". `refetch/cancel/remove/resetQueries` were checked and clean.
+- **`QualityMetricsDashboard` per-nurse avg documentation time → FIXED.** Guarded against `NaN`
+  with a `Number.isFinite` filter and a `validCount` divisor (mirrors the agency-wide fix).
+- **`AuditTrailViewer` → FIXED.** `filter(Boolean)` on the unique users/actions lists so a record
+  with an undefined user/action can't crash the Radix `SelectItem`.
+- **`UserActivityDashboard` → FIXED.** Optional-chained `user_email` in the search filter.
+- **`AIKPIReportGenerator` → FIXED.** Optional-chained the `documentation_compliance`,
+  `operational_metrics` and `risk_analysis` objects so the report still renders when the LLM
+  omits a top-level section.
+- **`CredentialRenewalPortal` → FIXED.** Excluded `pending_approval` (renewal-in-flight) records
+  from the Expired bucket so they no longer surface as "Expired / Renew Now".
+- **`MedicationManager` Edit dialog state leak → FIXED.** The edit `Dialog` was uncontrolled, so
+  closing it via the X/overlay left `editingId` set — blocking the Add dialog and misrouting the
+  next submit to `updateMutation`. Made it controlled so any dismiss clears the edit state.
+- **`MedicationInteractionChecker` "All Clear" banner → FIXED.** It keyed off the optional
+  `total_issues` field the prompt never asks the model to populate (so it was frequently absent on
+  a clean regimen and the reassurance never showed). Derive the clear state from the actual issue
+  arrays instead.
+- **`FaxCoverSheetGenerator` toggle → FIXED.** `handleToggle` tested the pre-toggle `includeCover`
+  with an inverted condition, so un-checking never cleared the stale cover sheet (and re-checking
+  wrongly wiped it). Condition corrected.
+- **`FaxHistory` → FIXED.** Optional-chained `log.to_number` in the search filter (a null
+  `to_number` crashed the whole list; the sibling `EnhancedFaxHistory` was already guarded).
+- **`FaxSearchInterface.highlightText` → FIXED.** Escaped regex metacharacters in the user query
+  (a `(`/`[`/`*` etc. threw and crashed the render) and replaced the stateful global `.test()`
+  regex with an anchored non-global one (it was skip-highlighting alternating matches).
+- **`PDFSearchInterface` → FIXED.** Guarded `response.data?.results` before reading `.length`
+  (line above already defaulted to `[]`, this read did not), avoiding a misleading "Search failed"
+  toast on an empty/degenerate backend response.
+
+---
+
 ## Verified correct (sampled — no change needed)
 
 Clinical: `oasisScoringEngine`, `oasisAnalytics`, `patientMatchScore`, `pdgmGrouper`,
