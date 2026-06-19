@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, CheckCircle2, Copy, Send, Sparkles, Loader2, BarChart3, Shield } from "lucide-react";
+import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { base44 } from "@/api/base44Client";
 import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
@@ -153,7 +154,7 @@ export default function AnnualMandatoryEducationHub() {
       queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
       queryClient.invalidateQueries({ queryKey: ["annual-plans"] });
     } catch (error) {
-      setSeedResult({ error: error?.message || "Failed to create yearly required in-services." });
+      setSeedResult({ error: configNotReadyMessage(error) || error?.message || "Failed to create yearly required in-services." });
     } finally {
       setSeeding(false);
     }

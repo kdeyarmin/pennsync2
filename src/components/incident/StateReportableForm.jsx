@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
+import { submitStateReportableIncident } from "@/functions/submitStateReportableIncident";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,86 +88,30 @@ export default function StateReportableForm({ patients = [], currentUser }) {
     const patient = patients.find((p) => p.id === form.patient_id);
     const patientName = patient ? `${patient.first_name} ${patient.last_name}` : form.patient_id;
 
-    const reportText = `
-STATE REPORTABLE EVENT REPORT
-==============================
-Patient: ${patientName}
-Date of Event: ${form.event_date}
-Time of Event: ${form.event_time}
-Event Type: ${form.event_type}
-Location of Event: ${form.location_of_event}
-
-Medications (Name & Frequency):
-${form.medications || "Not provided"}
-
-Diagnosis of Patient:
-${form.diagnosis || "Not provided"}
-
-Factual Description:
-${form.factual_description}
-
-Description of Follow-up Action:
-${form.followup_action}
-
-Submitted By: ${currentUser?.full_name || "Unknown"}
-Submitted On: ${new Date().toLocaleString()}
-    `.trim();
-
-    // Save as an Incident record
-    const incident = await base44.entities.Incident.create({
+    const result = await submitStateReportableIncident({
       patient_id: form.patient_id,
       patient_name: patientName,
-      incident_type: "other",
-      incident_name: `State Reportable: ${form.event_type}`,
-      incident_date: form.event_date,
-      incident_time: form.event_time,
-      severity: "high",
-      report: reportText,
-      details: {
-        state_reportable: true,
-        event_type: form.event_type,
-        location_of_event: form.location_of_event,
-        medications: form.medications,
-        diagnosis: form.diagnosis,
-        factual_description: form.factual_description,
-        followup_action: form.followup_action,
-        submitted_by_name: currentUser?.full_name,
-        submitted_by_email: currentUser?.email,
-        submitted_at: new Date().toISOString(),
-      },
-      status: "reported",
-      office_notified: true,
-      alert_triggered: true,
+      event_type: form.event_type,
+      event_date: form.event_date,
+      event_time: form.event_time,
+      location_of_event: form.location_of_event,
+      medications: form.medications,
+      diagnosis: form.diagnosis,
+      factual_description: form.factual_description,
+      followup_action: form.followup_action,
+      submitted_by_name: currentUser?.full_name,
+      source: "state_reportable_form",
     });
 
-    // Notify admins
-    const admins = await base44.entities.User.list("-created_date", 200);
-    const adminUsers = admins.filter((u) => u.role === "admin");
-
-    await Promise.all(
-      adminUsers.map((admin) =>
-        base44.entities.Notification.create({
-          user_email: admin.email,
-          title: "⚠️ State Reportable Event Submitted",
-          message: `A state reportable event has been submitted by ${currentUser?.full_name || "a nurse"}.\nEvent Type: ${form.event_type}\nPatient: ${patientName}\nDate: ${form.event_date}`,
-          type: "alert",
-          is_read: false,
-          related_entity_type: "Incident",
-          related_entity_id: incident.id,
-        })
-      )
-    );
-
-    // Send emails to admins
-    await Promise.all(
-      adminUsers.map((admin) =>
-        base44.integrations.Core.SendEmail({
-          to: admin.email,
-          subject: `[URGENT] State Reportable Event – ${form.event_type} – ${patientName}`,
-          body: `<pre style="font-family:monospace;font-size:14px;">${reportText}</pre>`,
-        }).catch(() => {})
-      )
-    );
+    // The incident is persisted server-side BEFORE any email is attempted, so a
+    // notification problem never loses the state-mandated record. Warn only when
+    // admins exist but none could be emailed, so someone follows up out-of-band.
+    const data = result?.data || result || {};
+    if ((data.admin_count ?? 0) === 0) {
+      toast.warning("Report saved, but no administrators are configured to receive the alert.");
+    } else if ((data.emails_sent ?? 0) === 0) {
+      toast.warning("Report saved, but admin email alerts could not be sent. Please notify your administrator directly.");
+    }
 
     setSubmitted(true);
     } catch (err) {

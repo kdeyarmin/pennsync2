@@ -1,6 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 import { jsPDF } from 'npm:jspdf@2.5.1';
 
+// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
+// production by default. console.error/warn remain ungated for visibility.
+const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
+const debugLog = (...args) => { if (DEBUG) debugLog(...args); };
+
 const LOGO_URL = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/c39653ba3_PennHomeHealthInc.png';
 
 // Interactive elements for handouts
@@ -1663,7 +1668,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     // HIPAA: never log the full request body — it carries patientName/email/
     // condition (PHI). Log only the non-PHI key shape for debugging.
-    console.log('Request received with keys:', Object.keys(body || {}));
+    debugLog('Request received with keys:', Object.keys(body || {}));
 
     const { condition, patientName, patientEmail, action, selectedSections, customNotes, styleOptions } = body;
     diagnostics.condition = condition;
@@ -1690,14 +1695,14 @@ Deno.serve(async (req) => {
 
     const template = handoutTemplates[condition];
     diagnostics.totalSections = template.sections?.length || 0;
-    console.log('Using template:', condition);
-    console.log('Template has', diagnostics.totalSections, 'sections');
+    debugLog('Using template:', condition);
+    debugLog('Template has', diagnostics.totalSections, 'sections');
     
     diagnostics.stage = 'creating_pdf_instance';
     // Create PDF with accessibility metadata
-    console.log('Creating jsPDF instance...');
+    debugLog('Creating jsPDF instance...');
     doc = new jsPDF();
-    console.log('jsPDF instance created successfully');
+    debugLog('jsPDF instance created successfully');
     diagnostics.stage = 'pdf_metadata';
     
     // Set PDF metadata for accessibility
@@ -1818,7 +1823,7 @@ Deno.serve(async (req) => {
       
       yPos += 35;
     } catch (error) {
-      console.log('Logo loading skipped:', error.message);
+      debugLog('Logo loading skipped:', error.message);
       yPos += 15;
     }
 
@@ -1876,7 +1881,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`Processing ${sectionsToInclude.length} sections for ${condition}`);
+    debugLog(`Processing ${sectionsToInclude.length} sections for ${condition}`);
     diagnostics.stage = 'rendering_sections';
 
     // Content sections - Accessibility: Structured, readable body text
@@ -2370,7 +2375,7 @@ Deno.serve(async (req) => {
 
     // Generate PDF with error handling
     diagnostics.stage = 'generating_pdf_output';
-    console.log('Generating PDF output...');
+    debugLog('Generating PDF output...');
     let pdfBytes, base64Pdf;
     try {
       pdfBytes = doc.output('arraybuffer');
@@ -2389,7 +2394,7 @@ Deno.serve(async (req) => {
       diagnostics.stage = 'encoding_base64';
       base64Pdf = btoa(binary);
       diagnostics.contentLength = base64Pdf.length;
-      console.log('PDF generated successfully, length:', base64Pdf.length);
+      debugLog('PDF generated successfully, length:', base64Pdf.length);
       diagnostics.stage = 'complete';
     } catch (pdfError) {
       diagnostics.stage = 'pdf_output_error';
@@ -2400,7 +2405,7 @@ Deno.serve(async (req) => {
 
     // If action is email, send it with PDF attachment
     if (action === 'email' && patientEmail) {
-      console.log('Sending handout email (recipient redacted)');
+      debugLog('Sending handout email (recipient redacted)');
       diagnostics.stage = 'sending_email';
       
       try {
@@ -2444,7 +2449,7 @@ Deno.serve(async (req) => {
             </div>
           `
         });
-        console.log('Email sent successfully');
+        debugLog('Email sent successfully');
         diagnostics.stage = 'email_complete';
       } catch (emailError) {
         diagnostics.emailError = emailError.message;
@@ -2473,8 +2478,8 @@ Deno.serve(async (req) => {
     }
 
     // Return PDF as base64 for download
-    console.log('Returning PDF response');
-    console.log('Response diagnostics:', {
+    debugLog('Returning PDF response');
+    debugLog('Response diagnostics:', {
       stage: diagnostics.stage,
       pdfLength: base64Pdf?.length,
       filename: `${condition}_handout.pdf`
@@ -2521,7 +2526,7 @@ Deno.serve(async (req) => {
           },
           error_stack: error.stack
         });
-        console.log('Error logged to SystemLog');
+        debugLog('Error logged to SystemLog');
         
         // Send admin email notification
         try {
@@ -2550,7 +2555,7 @@ Deno.serve(async (req) => {
               <p><a href="https://app.base44.com/app/pennsync">View in Penn Sync Admin</a></p>
             `
           });
-          console.log('Admin notification email sent');
+          debugLog('Admin notification email sent');
         } catch (emailError) {
           console.error('Failed to send admin notification email:', emailError);
         }
@@ -2561,7 +2566,7 @@ Deno.serve(async (req) => {
     
     // Try to generate a minimal fallback PDF
     try {
-      console.log('Attempting fallback PDF generation...');
+      debugLog('Attempting fallback PDF generation...');
       if (!doc) {
         doc = new jsPDF();
       }
@@ -2597,7 +2602,7 @@ Deno.serve(async (req) => {
       }
       
       const fallbackBase64 = btoa(fallbackBinary);
-      console.log('Fallback PDF generated');
+      debugLog('Fallback PDF generated');
       
       return Response.json({
         success: true,

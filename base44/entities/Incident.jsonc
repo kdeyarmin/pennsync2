@@ -83,6 +83,20 @@
       "default": false,
       "description": "Whether an urgent admin alert was triggered"
     },
+    "state_reportable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this incident is a state-reportable event (drives the admin State Reportable folder/filter)"
+    },
+    "state_reportable_pdf_url": {
+      "type": "string",
+      "description": "URL of the retained PDF copy of the state-reportable report"
+    },
+    "state_reportable_alert_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the immediate admin email alert was sent for a state-reportable incident"
+    },
     "status": {
       "type": "string",
       "enum": [

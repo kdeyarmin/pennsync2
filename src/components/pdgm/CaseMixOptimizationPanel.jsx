@@ -34,22 +34,22 @@ export default function CaseMixOptimizationPanel({
     setIsLoading(true);
     try {
       const result = await invokeLLM({
-        prompt: `Analyze PDGM case-mix optimization opportunities for this home health patient.
+        prompt: `Review this home health patient's documentation for accuracy and completeness, and identify clinically-supported documentation that may also affect PDGM case-mix.
 
 CURRENT DOCUMENTATION:
 ${currentNote}
 
 PRIMARY DIAGNOSIS: ${diagnosis}
 
-Provide specific, actionable recommendations to optimize case-mix score while maintaining clinical accuracy and compliance.
+Provide specific, actionable recommendations to make the documentation complete and accurately reflect the patient's condition. Only recommend documentation that is clinically supported; where it is, note its case-mix relevance. Never recommend wording that overstates the patient's condition.
 
 Focus on:
 1. Functional impairment documentation (mobility, ADLs, IADLs)
-2. Comorbidity capture (conditions that qualify for adjustment)
+2. Comorbidity capture (active conditions supported by the record)
 3. Clinical severity indicators
 4. Therapy justification (if applicable)
 
-For each recommendation, calculate the payment impact and provide exact text to add.
+For each recommendation, provide the clinical basis, the exact text to add (only if clinically accurate), and any case-mix relevance.
 
 Return JSON:
 {

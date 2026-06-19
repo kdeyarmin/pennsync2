@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { configNotReadyMessage } from '@/lib/aiFeatureError';
 import { Mic, MicOff, Loader, AlertCircle, Copy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -139,8 +140,9 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
         setError('Could not transcribe audio. Please try again.');
       }
     } catch (err) {
-      setError(err.message || 'Transcription error');
-      console.error('Transcription error:', err);
+      const friendly = configNotReadyMessage(err);
+      setError(friendly || err.message || 'Transcription error');
+      if (!friendly) console.error('Transcription error:', err);
     } finally {
       setIsTranscribing(false);
     }

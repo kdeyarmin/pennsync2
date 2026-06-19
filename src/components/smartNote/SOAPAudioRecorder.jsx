@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { configNotReadyMessage } from '@/lib/aiFeatureError';
 import { Button } from "@/components/ui/button";
 import { Square, Loader2, FileAudio } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
@@ -90,8 +91,13 @@ Plan: ${soap.plan || 'N/A'}
                 toast.error("Failed to generate SOAP note.");
             }
         } catch (err) {
-            console.error("Function error:", err);
-            toast.error("Error processing audio.");
+            const friendly = configNotReadyMessage(err);
+            if (friendly) {
+                toast.error(friendly);
+            } else {
+                console.error("Function error:", err);
+                toast.error("Error processing audio.");
+            }
         } finally {
             setIsProcessing(false);
         }

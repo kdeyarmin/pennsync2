@@ -1,8 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 import OpenAI from 'npm:openai@4.56.0';
 
-const openai = new OpenAI({ apiKey: Deno.env.get('OPENAI_API_KEY') });
-
 const normalizeCategory = (value) => {
   const allowed = ['compliance', 'clinical', 'safety', 'documentation', 'hospice', 'home_health', 'dme', 'onboarding', 'leadership'];
   return allowed.includes(value) ? value : 'compliance';
@@ -22,6 +20,15 @@ Deno.serve(async (req) => {
     if (!isAdmin) {
       return Response.json({ error: 'Unauthorized - admin access required' }, { status: 403 });
     }
+
+    // Guard before constructing the client so a missing key returns a clear,
+    // canonical "not configured" message (the frontend maps this to an
+    // admin-facing notice) instead of an opaque SDK crash at module load.
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+    }
+    const openai = new OpenAI({ apiKey: openaiApiKey });
 
     const {
       topic,

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { submitStateReportableIncident } from "@/functions/submitStateReportableIncident";
+import { submitIncidentReport } from "@/functions/submitIncidentReport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,86 +99,63 @@ export default function EventReport() {
     setIsSubmitting(true);
     
     try {
-      // Create incident record
-      const incidentData = {
-        patient_id: formData.patient_id,
-        patient_name: formData.patient_id, // Will be populated from patient lookup if needed
-        incident_type: "other",
-        incident_name: formData.event_type,
-        incident_date: formData.date_of_event,
-        incident_time: formData.time_of_event,
-        severity: "medium",
-        details: {
+      // State-reportable events take the reliable server-side path (persist +
+      // retained PDF + immediate admin email). Other event reports still persist
+      // server-side and notify admins in-app, but without the urgent email/PDF.
+      const isStateReportable = formData.state_reportable === "Yes";
+      const patientName = formData.patient_id;
+
+      let result;
+      if (isStateReportable) {
+        result = await submitStateReportableIncident({
+          patient_id: formData.patient_id,
+          patient_name: patientName,
+          event_type: formData.event_type,
           event_type_id: formData.event_type_id,
-          location: formData.location_of_event,
+          event_date: formData.date_of_event,
+          event_time: formData.time_of_event,
+          location_of_event: formData.location_of_event,
           medications: formData.medications,
           diagnosis: formData.diagnosis,
-          submitter: formData.submitted_by,
-          submitter_title: formData.submitter_title,
-          state_reportable: formData.state_reportable,
-        },
-        report: `Event Type: ${formData.event_type}\n\nFactual Description:\n${formData.factual_description}\n\nFollow-up Action:\n${formData.follow_up_action}`,
-        status: "reported",
-      };
-
-      const incident = await base44.entities.Incident.create(incidentData);
-
-      // Generate PDF
-      const _pdfResponse = await invokeLLM({
-        prompt: `Generate an Event Report PDF document with the following information:
-
-Event Report ID: ${incident.id}
-Patient ID: ${formData.patient_id}
-Date of Event: ${formData.date_of_event}
-Time of Event: ${formData.time_of_event}
-Event Type ID: ${formData.event_type_id}
-Event Type: ${formData.event_type}
-State Reportable: ${formData.state_reportable}
-Location of Event: ${formData.location_of_event}
-Name and Frequency of Medication(s): ${formData.medications || 'N/A'}
-Diagnosis of Resident/Patient: ${formData.diagnosis || 'N/A'}
-Factual Description: ${formData.factual_description}
-Description of Follow-up Action: ${formData.follow_up_action}
-Submitted By: ${formData.submitted_by}
-Submitter's Title: ${formData.submitter_title}
-
-Format this as a professional medical event report document.`,
-      });
-
-      // Get admin users
-      const users = await base44.entities.User.list();
-      const adminUsers = users.filter(u => u.role === 'admin');
-      
-      // Send email to all admins
-      for (const admin of adminUsers) {
-        await base44.integrations.Core.SendEmail({
-          to: admin.email,
-          subject: `Event Report ${incident.id} Submitted - Patient ${formData.patient_id}`,
-          body: `
-A new Event Report has been submitted:
-
-Event Report ID: ${incident.id}
-Patient ID: ${formData.patient_id}
-Date of Event: ${formData.date_of_event}
-Time of Event: ${formData.time_of_event}
-Event Type ID: ${formData.event_type_id}
-Event Type: ${formData.event_type}
-State Reportable: ${formData.state_reportable}
-Location: ${formData.location_of_event}
-Submitted By: ${formData.submitted_by} (${formData.submitter_title})
-
-Factual Description:
-${formData.factual_description}
-
-Follow-up Action:
-${formData.follow_up_action}
-
-Please review this report in the Incident Reporting system.
-          `
+          factual_description: formData.factual_description,
+          followup_action: formData.follow_up_action,
+          submitted_by_name: formData.submitted_by,
+          submitted_by_title: formData.submitter_title,
+          source: "event_report",
+        });
+      } else {
+        result = await submitIncidentReport({
+          patient_id: formData.patient_id,
+          patient_name: patientName,
+          incident_type: "other",
+          incident_name: formData.event_type,
+          incident_date: formData.date_of_event,
+          incident_time: formData.time_of_event,
+          severity: "medium",
+          report: `Event Type: ${formData.event_type}\n\nLocation: ${formData.location_of_event}\n\nFactual Description:\n${formData.factual_description}\n\nFollow-up Action:\n${formData.follow_up_action}\n\nSubmitted By: ${formData.submitted_by} (${formData.submitter_title})`,
+          details: {
+            event_type_id: formData.event_type_id,
+            location: formData.location_of_event,
+            medications: formData.medications,
+            diagnosis: formData.diagnosis,
+            submitter: formData.submitted_by,
+            submitter_title: formData.submitter_title,
+            state_reportable: false,
+          },
+          immediate_alert: false,
         });
       }
-      
-      toast.success(`Event Report ${incident.id} submitted successfully! PDF generated and administrators notified.`);
+
+      const data = result?.data || result || {};
+      if (isStateReportable) {
+        if ((data.admin_count ?? 0) > 0 && (data.emails_sent ?? 0) === 0) {
+          toast.warning("Event report saved, but admin email alerts could not be sent. Please notify your administrator directly.");
+        } else {
+          toast.success("State reportable event submitted. A PDF copy was retained and administrators were alerted immediately.");
+        }
+      } else {
+        toast.success("Event report submitted and administrators have been notified.");
+      }
       
       // Reset form
       setFormData({
@@ -279,8 +257,8 @@ Please review this report in the Incident Reporting system.
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
               <div>
                 <Label className="text-red-600">*Event Type:</Label>
-                <p className="text-xs text-blue-600 mt-1">
-                  To see the full event type description <a href="#" className="underline">Click Here</a>
+                <p className="text-xs text-slate-500 mt-1">
+                  Each option below shows its full description.
                 </p>
               </div>
               <Select

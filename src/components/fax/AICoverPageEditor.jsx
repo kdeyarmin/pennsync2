@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +28,7 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
       toast.success("AI cover page generated!");
     },
     onError: (error) => {
-      toast.error("Failed to generate AI cover page: " + error.message);
+      toast.error(configNotReadyMessage(error) || ("Failed to generate AI cover page: " + error.message));
     }
   });
 
