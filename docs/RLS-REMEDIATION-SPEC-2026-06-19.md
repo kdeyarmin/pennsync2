@@ -13,9 +13,23 @@ which would hide a colleague's entries from an assigned nurse and break shared c
 rules and the service-role principal are available) and verify with checklist §7 (multi-role test
 of raw network responses) before launch.
 
-**Already applied in-repo (safe subset, this PR):** `OfflineDataCache` (read+write `user_email` +
+**Already applied in-repo (safe subset):** `OfflineDataCache` (read+write `user_email` +
 admin), `SystemLog` (write → admin), `Message` (write → sender ∨ recipient ∨ admin),
-`TeamNote` (write → `created_by` + admin; read still needs the patient-access rule below).
+`TeamNote` (write → `created_by` + admin; read still needs the patient-access rule below),
+**`ScheduledFax`** (read+write → `created_by` + admin — verified no client path exists; dispatch
+crons use service-role), and **`DocumentPackageToken`** (read → `signer_email` + admin since the
+only in-app reader `DocumentAuditLogs` is `adminOnly`; write → `signer_email` ∨ `created_by` ∨ admin
+to cover the in-app token creator; external signers reach it via service-role backend functions).
+
+**Verified UNSAFE to owner-scope in-repo (need the dashboard relation rule, NOT a `created_by`/`sent_by`
+field rule):** `FaxLog` (nurses share a per-patient fax history across senders, and `OCRReviewPanel`
+updates a fax it didn't send) and `DocumentSignature` (shared per-patient signature views, the public
+`/signer` portal does a client `.get`, and several creates omit `created_by_email`/set `'system'`).
+`TrainingCompletion` / `MicroLearningProgress` likewise stay a dashboard task: there is **no**
+service-role writer to route through (so a service-role-only write rule would break ~16 client write
+sites including self-completion); the workable rule is **write `owner(nurse_email)` + admin, read open**
+(or read `owner(nurse_email)`+admin only after confirming every staff-overview/assignment component —
+`AgencyTrainingManager`, `TrainingCompletionTracker`, `StaffTrainingOverview`, … — is admin-gated via §7).
 
 Notation: `byPatient` = caller is admin OR is in the referenced patient's `assigned_nurses`
 (implement as a relation rule in the dashboard, or a server-scoped function for the shared view —

@@ -434,13 +434,26 @@ runtime-verified in this repo. Final disposition:
   platform layer. Recommend adding that CAS in the Base44 dashboard; the in-code guards are the
   correct mitigation until then. (No further code change made — the function is well-tested and any
   in-repo "fix" would be illusory without platform support.)
-- **Patient-clinical entity RLS → spec complete; needs dashboard application.** The repo RLS DSL has
-  no cross-entity join, so the documented *"by patient access"* model isn't expressible in-repo. The
-  full per-entity remediation (read `byPatient`, write clinician-on-own-patient + admin, with the
-  owner-scoped and training-attestation tables) is in `docs/RLS-REMEDIATION-SPEC-2026-06-19.md`,
-  along with the §7 multi-role raw-response verification to run after applying it in the Base44
-  dashboard. The safe in-repo subset (`OfflineDataCache`, `SystemLog`, `Message`, `TeamNote` writes)
-  was already shipped; the cross-entity rules remain a dashboard task by design.
+- **Entity RLS → expressible subset now applied in-repo; the rest verified to need the dashboard.**
+  A per-entity access-pattern audit (every client `base44.entities.X` read/write vs. service-role
+  backend writes) split the candidates cleanly:
+  - **Applied in-repo this round:** `ScheduledFax` (read+write `created_by`+admin — no client path
+    exists at all, crons are service-role) and `DocumentPackageToken` (read `signer_email`+admin
+    since its only in-app reader `DocumentAuditLogs` is `adminOnly`; write adds `created_by` to cover
+    the nurse who creates the token; external signers use service-role). These join the earlier
+    `OfflineDataCache`/`SystemLog`/`Message`/`TeamNote` subset.
+  - **Verified UNSAFE in-repo (kept for the dashboard relation rule):** `FaxLog` and
+    `DocumentSignature` both have legitimate *shared per-patient* read views and non-owner writes (and
+    the signer portal does a client `.get`), so a `created_by`/`sent_by` field rule would break those
+    flows — they need the relation-based "byPatient" rule. `TrainingCompletion`/`MicroLearningProgress`
+    have **no** service-role writer, so the spec's "service-role-only write" would break ~16 client
+    write sites; the corrected rule (write `owner(nurse_email)`+admin, read open) is now in the spec,
+    pending §7 confirmation that the cross-nurse assignment/overview components are admin-gated.
+  - **Patient-clinical entities (table A):** still not expressible in-repo — the "by patient access"
+    read needs `assigned_nurses` on each row (only `Patient` carries it) and write-scoping by
+    `created_by` would break shared care-team editing (confirmed: `Medication.update` is called by any
+    nurse, not just the creator). Full per-entity remediation + §7 verification remain in
+    `docs/RLS-REMEDIATION-SPEC-2026-06-19.md` as a Base44-dashboard task by design.
 
 ---
 
