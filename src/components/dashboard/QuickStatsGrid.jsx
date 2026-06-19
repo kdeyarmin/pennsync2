@@ -5,12 +5,17 @@ import {
   Target,
   AlertTriangle
 } from "lucide-react";
-import { formatEastern } from "../utils/timezone";
+import { formatEastern, todayEastern } from "../utils/timezone";
 
 export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, _patient }) {
+  // visit_date is a date-only string ("YYYY-MM-DD"); compare against today's
+  // Eastern date string so a visit scheduled for today isn't dropped during the
+  // workday (new Date("YYYY-MM-DD") parses as midnight UTC, which is in the past
+  // by Eastern daytime).
+  const today = todayEastern();
   const completedVisits = visits.filter(v => v.status === 'completed').length;
-  const upcomingVisits = visits.filter(v => 
-    v.status === 'scheduled' && new Date(v.visit_date) >= new Date()
+  const upcomingVisits = visits.filter(v =>
+    v.status === 'scheduled' && v.visit_date >= today
   ).length;
   
   const activeCarePlans = carePlans.filter(cp => cp.status === 'active').length;
@@ -26,7 +31,7 @@ export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, _
   }).length;
 
   const lastVisit = visits.find(v => v.status === 'completed');
-  const nextVisit = visits.find(v => v.status === 'scheduled' && new Date(v.visit_date) >= new Date());
+  const nextVisit = visits.find(v => v.status === 'scheduled' && v.visit_date >= today);
 
   const stats = [
     {

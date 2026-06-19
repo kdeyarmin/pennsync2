@@ -365,7 +365,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
         </div>
       )}
 
-      {matchAnalysis.discrepancies && matchAnalysis.discrepancies.length > 0 && (
+      {matchAnalysis?.discrepancies && matchAnalysis.discrepancies.length > 0 && (
         <Alert className="bg-red-50 border-red-300">
           <AlertCircle className="w-4 h-4 text-red-600" />
           <AlertDescription>

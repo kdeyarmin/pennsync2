@@ -95,11 +95,16 @@ export default function ReferralProcessor() {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
 
       alert('Patient created successfully!');
+      // Return the new id so callers (generateCarePlans) can use it immediately
+      // — setCreatedPatientId is async and the captured createdPatientId is still
+      // stale within the same tick.
+      return newPatient.id;
     } catch (error) {
       console.error('Error creating patient:', error);
       alert('Failed to create patient. Please try again or create manually.');
+    } finally {
+      setIsCreatingPatient(false);
     }
-    setIsCreatingPatient(false);
   };
 
   const generateCarePlans = async () => {
@@ -110,8 +115,7 @@ export default function ReferralProcessor() {
       // If no patient created yet, create one first
       let patientId = createdPatientId;
       if (!patientId) {
-        await createPatientFromReferral();
-        patientId = createdPatientId;
+        patientId = await createPatientFromReferral();
       }
 
       if (!patientId) {
