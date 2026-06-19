@@ -27,7 +27,7 @@ import {
   Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2,
   Phone, Send, Heart, Activity, Database, Lock, Award,
   Clipboard, Eye, Filter, Globe,
-  Monitor, PieChart, Radio, RefreshCw, Search, TrendingUp, Upload, UserCheck, Zap, Package, Archive, Mic, Pen, CalendarDays
+  Monitor, PieChart, Radio, RefreshCw, Search, TrendingUp, Upload, UserCheck, Zap, Archive, Mic, Pen, CalendarDays
 } from "lucide-react";
 
 import { PAGE_NAMES, REDIRECTS } from "@/routes";
@@ -184,16 +184,6 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "PatientEducationHub",
     keywords: ["patient portal", "education portal"],
   },
-  {
-    page: "MedicationReconciliation",
-    label: "Medication Reconciliation",
-    icon: Package,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Patients",
-    keywords: ["medication", "reconciliation", "meds", "drug"],
-  },
-
   // ─── Documentation ───────────────────────────────────────────────────────────
   // Sidebar order follows the visit lifecycle: intake → chart the visit →
   // note tools → document repository.

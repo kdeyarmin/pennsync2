@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Heart, Stethoscope, Activity, Pill, ClipboardList, ExternalLink, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Heart, Stethoscope, Activity, ClipboardList, ExternalLink, Users } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,7 +33,6 @@ import PredictiveRiskAnalyzer from "../components/analytics/PredictiveRiskAnalyz
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import ReferralLetterGenerator from "../components/documents/ReferralLetterGenerator";
 import PatientDeteriorationPredictor from "../components/predictive/PatientDeteriorationPredictor";
-import MedicationInteractionChecker from "../components/medication/MedicationInteractionChecker";
 import CarePlanGapAnalyzer from "../components/carePlan/CarePlanGapAnalyzer";
 import InterdisciplinaryTeamCoordinator from "../components/coordination/InterdisciplinaryTeamCoordinator";
 import OptimalCommunicationAdvisor from "../components/coordination/OptimalCommunicationAdvisor";
@@ -46,7 +45,6 @@ import AIProactiveOASISAssistant from "../components/oasis/AIProactiveOASISAssis
 import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAssessment";
 import ReferralDocumentViewer from "../components/documents/ReferralDocumentViewer";
 import HealthHistorySection from "../components/patient/HealthHistorySection";
-import MedicationManager from "../components/medication/MedicationManager";
 import ClinicalEventsTimeline from "../components/patient/ClinicalEventsTimeline";
 import DocumentUploader from "../components/documents/DocumentUploader";
 import DocumentList from "../components/documents/DocumentList";
@@ -142,7 +140,6 @@ export default function PatientDetails() {
   });
 
   const [_detectedCarePlanGaps, _setDetectedCarePlanGaps] = useState(null);
-  const [_detectedMedicationIssues, _setDetectedMedicationIssues] = useState(null);
 
   // Critical alerts drive the banner styling below the header.
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
@@ -306,8 +303,6 @@ export default function PatientDetails() {
                <HealthHistorySection patient={patient} />
              </CardContent>
            </Card>
-
-           <MedicationManager patientId={patientId} />
          </TabsContent>
 
         {/* Overview Tab */}
@@ -334,16 +329,7 @@ export default function PatientDetails() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <RiskAlertWidget patientId={patientId} compact={false} />
-            <MedicationInteractionChecker
-              medications={patient?.current_medications || []}
-              patientDiagnoses={[patient?.primary_diagnosis, ...(patient?.secondary_diagnoses || [])].filter(Boolean)}
-              patientAge={patient?.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null}
-              patientAllergies={patient?.allergies}
-              autoCheck={true}
-            />
-          </div>
+          <RiskAlertWidget patientId={patientId} compact={false} />
         </TabsContent>
 
         {/* Clinical Events Tab */}
@@ -459,7 +445,6 @@ export default function PatientDetails() {
                 <div className="overflow-x-auto scrollbar-hide">
                   <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
                     <TabsTrigger value="allergies" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Allergies</TabsTrigger>
-                    <TabsTrigger value="medications" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Medications</TabsTrigger>
                     <TabsTrigger value="history" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">History</TabsTrigger>
                     <TabsTrigger value="visits" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Recent Visits</TabsTrigger>
                   </TabsList>
@@ -473,38 +458,6 @@ export default function PatientDetails() {
                       <p className="text-sm">{sanitizeInput(patient.allergies) || 'No Known Drug Allergies (NKDA)'}</p>
                     </AlertDescription>
                   </Alert>
-                </TabsContent>
-
-                <TabsContent value="medications" className="space-y-4">
-                  {patient.current_medications && patient.current_medications.length > 0 ? (
-                    <ScrollArea className="max-h-[500px]">
-                      <div className="space-y-3">
-                        {patient.current_medications.map((med, index) => (
-                          <Card key={index} className="border-l-4 border-l-blue-500">
-                            <CardContent className="p-4">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Pill className="w-4 h-4 text-blue-600" />
-                                <h4 className="font-semibold text-slate-900">{sanitizeInput(med.name)}</h4>
-                              </div>
-                              <div className="space-y-1 text-sm">
-                                <p className="text-slate-700">
-                                  <span className="font-medium">Dosage:</span> {sanitizeInput(med.dosage) || 'Not specified'}
-                                </p>
-                                <p className="text-slate-700">
-                                  <span className="font-medium">Frequency:</span> {sanitizeInput(med.frequency) || 'Not specified'}
-                                </p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  ) : (
-                    <div className="text-center py-8 text-slate-500">
-                      <Pill className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p>No current medications documented</p>
-                    </div>
-                  )}
                 </TabsContent>
 
                 <TabsContent value="history" className="space-y-4">

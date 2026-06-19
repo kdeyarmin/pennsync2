@@ -90,6 +90,10 @@ export const REDIRECTS = [
   // SystemMonitoring was an Activity + Jobs wrapper; Activity now lives in the
   // Admin Console "User Activity" tab and the job monitor is its own page.
   { from: '/SystemMonitoring', to: '/SystemJobMonitor' },
+
+  // Medication Reconciliation was retired along with the rest of the medication
+  // entry/checking UI; send old links and bookmarks to the patient list.
+  { from: '/MedicationReconciliation', to: '/Patients' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';
