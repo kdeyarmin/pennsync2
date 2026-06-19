@@ -382,6 +382,34 @@ Messaging, dashboard/alerts, and OASIS-automation domains otherwise audited clea
 
 ---
 
+## Eighth sweep — referral intake, dashboard visit lists, admin config, scheduling
+
+- **`ReferralProcessor` "Generate Care Plans" always failed for a new referral → FIXED.**
+  `createPatientFromReferral` called `setCreatedPatientId(...)` but never returned the new id, so
+  `generateCarePlans` read the still-stale `createdPatientId` after the await and threw "Failed to
+  create patient" (after actually creating the patient — a possible orphan). It now returns the id
+  and the caller consumes the return value.
+- **`PatientMatchReview` dialog crash → FIXED.** Line 368 read `matchAnalysis.discrepancies`
+  unguarded, but the component's own top guard permits a null `matchAnalysis` when
+  `match_suggestions` exists; optional-chained it (every other use already was).
+- **Today's visits dropped from dashboard lists during the workday → FIXED (3 sites).**
+  `UpcomingAppointments` and `QuickStatsGrid` compared `new Date(v.visit_date) >= new Date()`, but
+  `visit_date` is a date-only string parsed as midnight UTC — so a visit scheduled for *today* fell
+  out of the upcoming list/count and the next-visit pick during Eastern daytime. Switched to the
+  codebase's `todayEastern()` (YYYY-MM-DD) string comparison.
+- **`AIConfigurationManager` showed defaults instead of saved config → FIXED.** The settings
+  sub-components seed `useState` from `getConfigValue` at mount, but `configs` loads async with no
+  re-sync, so the default-active tab rendered hard-coded defaults (and toggling persisted from the
+  wrong baseline). Gated the tabs on the query resolving so children mount with real config.
+- Task/scheduling components (`IntelligentTaskPrioritization`, `ProactiveClinicalTaskGenerator`,
+  `AIScheduleOptimizer`, `SmartRouteOptimizer`), the admin telephony panels, and the referral
+  extraction utilities otherwise audited **clean**.
+
+CI confirmed green on the branch via `workflow_dispatch` (Component Tests + Workflow Quality Checks
+both succeeded).
+
+---
+
 ## Verified correct (sampled — no change needed)
 
 Clinical: `oasisScoringEngine`, `oasisAnalytics`, `patientMatchScore`, `pdgmGrouper`,
