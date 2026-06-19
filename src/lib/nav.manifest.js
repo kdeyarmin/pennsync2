@@ -862,7 +862,7 @@ export const NAV_MANIFEST = [
     category: "Administration",
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
-    keywords: ["super admin", "twilio", "api secret", "integration", "provisioning", "phone setup", "owner"],
+    keywords: ["super admin", "telnyx", "api secret", "integration", "provisioning", "phone setup", "owner"],
   },
   {
     page: "UserManagement",
@@ -942,6 +942,16 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["pathways", "clinical pathways", "protocols"],
+  },
+  {
+    page: "CommsDashboard",
+    label: "Communications",
+    navLabel: "Comms",
+    icon: Radio,
+    category: "Administration",
+    adminOnly: true,
+    breadcrumbParent: "AdminOperations",
+    keywords: ["sms", "calls", "fax", "telnyx", "phone", "delivery"],
   },
   {
     page: "ClinicalInsightsDashboard",

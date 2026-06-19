@@ -16,7 +16,7 @@ test("matches each provider's 'not configured' message", () => {
     /AI training-video generation/,
   );
   assert.match(
-    configNotReadyMessage(new Error("Twilio credentials not configured")),
+    configNotReadyMessage(new Error("Telnyx API key not configured")),
     /telehealth and messaging/,
   );
 });
@@ -28,7 +28,7 @@ test("reads the message off a Base44 SDK error shape (response.data.error)", () 
 
 test("reads the message off err.data.error and raw strings", () => {
   assert.ok(configNotReadyMessage({ data: { error: "HeyGen API key not configured" } }));
-  assert.ok(configNotReadyMessage("Twilio credentials not configured"));
+  assert.ok(configNotReadyMessage("Telnyx API key not configured"));
 });
 
 test("is case-insensitive and tolerant of surrounding text", () => {

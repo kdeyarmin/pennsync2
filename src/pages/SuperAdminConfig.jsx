@@ -9,17 +9,19 @@ import { Loader2, ShieldCheck, Crown, RefreshCw, CheckCircle2 } from "lucide-rea
 import { toast } from "sonner";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
-import TwilioSecretPanel from "@/components/admin/TwilioSecretPanel";
-import TwilioSetupProgress from "@/components/admin/TwilioSetupProgress";
+import TelnyxSecretPanel from "@/components/admin/TelnyxSecretPanel";
+import TelnyxSetupProgress from "@/components/admin/TelnyxSetupProgress";
 import PhoneProvisioningPanel from "@/components/admin/PhoneProvisioningPanel";
+import A2PCompliancePanel from "@/components/admin/A2PCompliancePanel";
+import ConsentLedgerPanel from "@/components/admin/ConsentLedgerPanel";
 import { isSuperAdmin, isSuperAdminEmail, SUPER_ADMIN_EMAIL } from "@/lib/superAdmin";
 
 /**
  * SuperAdminConfig — the single, easy-to-use control panel for the platform
  * super admin (kdeyarmin@comcast.net). It does three things:
  *   1. Confirms / self-heals the super admin account (ensureSuperAdmin).
- *   2. Manages the Twilio credentials (TwilioSecretPanel).
- *   3. Surfaces the full Twilio provisioning + health surface (PhoneProvisioningPanel),
+ *   2. Manages the Telnyx credentials (TelnyxSecretPanel).
+ *   3. Surfaces the full Telnyx provisioning + health surface (PhoneProvisioningPanel),
  *      so number assignment, agency settings, webhooks, and the live test all
  *      live behind one page.
  *
@@ -86,7 +88,7 @@ export default function SuperAdminConfig() {
     <PageContainer>
       <PageHeader
         title="Super Admin"
-        description="Platform-owner controls: Twilio integration secret and phone provisioning, all in one place."
+        description="Platform-owner controls: Telnyx integration secret and phone provisioning, all in one place."
         icon={Crown}
       />
 
@@ -137,15 +139,23 @@ export default function SuperAdminConfig() {
         </Card>
 
         {/* Guided setup command center — progress + "what's next", links below */}
-        <TwilioSetupProgress />
+        <TelnyxSetupProgress />
 
-        {/* Twilio Account SID + Auth Token */}
+        {/* Telnyx API key */}
         <div id="twilio-secret" className="scroll-mt-24">
-          <TwilioSecretPanel />
+          <TelnyxSecretPanel />
         </div>
 
-        {/* Twilio provisioning + health + agency settings */}
+        {/* Telnyx provisioning + health + agency settings */}
         <PhoneProvisioningPanel />
+
+        {/* A2P 10DLC registration status + SMS consent ledger (compliance) */}
+        <div id="a2p-compliance" className="scroll-mt-24">
+          <A2PCompliancePanel />
+        </div>
+        <div id="consent-ledger" className="scroll-mt-24">
+          <ConsentLedgerPanel />
+        </div>
       </div>
     </PageContainer>
   );

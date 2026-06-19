@@ -1,0 +1,112 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+
+/**
+ * manageSmsConsent — admin-only management surface for the SmsConsent ledger that
+ * backs A2P 10DLC / TCPA compliance. Two actions:
+ *
+ *  - 'list' { search?, limit? }: read the recent SmsConsent rows, compute opt
+ *    totals, and return a (optionally phone-filtered) recent slice for display.
+ *  - 'set'  { phone_e164, consent_status }: an admin manually records consent for
+ *    a number (e.g. honoring a verbal/written opt-out), writing a new SmsConsent
+ *    row plus a SecurityLog audit entry.
+ *
+ * All reads/writes go through base44.asServiceRole. Admin gate mirrors
+ * testTelnyxConnection: role 'admin' || account_type 'super_admin' || the owner
+ * email. Single-file Deno deploy — helpers are inlined.
+ */
+
+const VALID_STATUSES = ['opted_in', 'opted_out', 'unknown'];
+
+/** Normalize a raw phone string to +E.164, or null if it doesn't look valid. */
+function normalizeE164(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = String(raw).trim();
+  if (!/^\+?\d{8,15}$/.test(trimmed)) return null;
+  const digits = trimmed.replace(/[^\d]/g, '');
+  return `+${digits}`;
+}
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const isAdmin =
+      user.role === 'admin' ||
+      user.account_type === 'super_admin' ||
+      String(user.email || '').trim().toLowerCase() === 'kdeyarmin@comcast.net';
+    if (!isAdmin) {
+      return Response.json({ error: 'Only administrators can manage SMS consent' }, { status: 403 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const action = String(body.action || 'list');
+
+    if (action === 'list') {
+      const rows = await base44.asServiceRole.entities.SmsConsent.list('-captured_at', 500);
+      const list = Array.isArray(rows) ? rows : [];
+
+      const totals = { opted_in: 0, opted_out: 0, unknown: 0 };
+      for (const r of list) {
+        const s = r?.consent_status;
+        if (s === 'opted_in') totals.opted_in += 1;
+        else if (s === 'opted_out') totals.opted_out += 1;
+        else totals.unknown += 1;
+      }
+
+      const search = typeof body.search === 'string' ? body.search.trim().toLowerCase() : '';
+      let filtered = list;
+      if (search) {
+        filtered = list.filter((r) => String(r?.phone_e164 || '').toLowerCase().includes(search));
+      }
+
+      const limit = Number.isFinite(Number(body.limit)) && Number(body.limit) > 0 ? Math.floor(Number(body.limit)) : 100;
+      const recent = filtered.slice(0, limit).map((r) => ({
+        phone_e164: r?.phone_e164 || '',
+        consent_status: r?.consent_status || 'unknown',
+        consent_source: r?.consent_source || '',
+        captured_at: r?.captured_at || '',
+        patient_id: r?.patient_id ?? null,
+        notes: r?.notes || '',
+      }));
+
+      return Response.json({ success: true, totals, recent });
+    }
+
+    if (action === 'set') {
+      const status = String(body.consent_status || '');
+      if (!VALID_STATUSES.includes(status)) {
+        return Response.json({ error: "consent_status must be 'opted_in', 'opted_out', or 'unknown'." }, { status: 400 });
+      }
+      const phone = normalizeE164(body.phone_e164);
+      if (!phone) {
+        return Response.json({ error: 'A valid E.164 phone number is required.' }, { status: 400 });
+      }
+
+      const now = new Date().toISOString();
+      await base44.asServiceRole.entities.SmsConsent.create({
+        phone_e164: phone,
+        consent_status: status,
+        consent_source: 'admin_manual',
+        captured_by: user.email,
+        captured_at: now,
+        notes: 'Set by admin',
+      });
+
+      await base44.asServiceRole.entities.SecurityLog.create({
+        timestamp: now,
+        user_email: user.email,
+        action: 'sms_consent_set_manually',
+        details: { phone_e164: phone, consent_status: status },
+      }).catch((err) => console.error('SecurityLog write failed:', err));
+
+      return Response.json({ success: true, phone_e164: phone, consent_status: status });
+    }
+
+    return Response.json({ error: `Unknown action: ${action}` }, { status: 400 });
+  } catch (error) {
+    console.error('manageSmsConsent error:', error);
+    return Response.json({ error: (error as Error).message }, { status: 500 });
+  }
+});

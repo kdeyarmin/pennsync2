@@ -1,5 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+/**
+ * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'telnyx'. Mirrors the SMS/voice handlers so fax functions work
+ * for agencies that store credentials in-app rather than in the dashboard env.
+ */
+async function resolveTelnyxCreds(base44: any): Promise<{
+  apiKey: string | null;
+  publicKey: string | null;
+  messagingProfileId: string | null;
+  voiceConnectionId: string | null;
+  faxConnectionId: string | null;
+}> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
+  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
+  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
+  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+    const rec = rows?.[0] || {};
+    if (!apiKey) apiKey = pick(rec.api_key);
+    if (!publicKey) publicKey = pick(rec.public_key);
+    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
+    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
+    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
+  } catch { /* ignore */ }
+  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -45,12 +75,11 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const twilioFromNumber = from_number || Deno.env.get('TWILIO_FAX_NUMBER');
+    const { apiKey, faxConnectionId } = await resolveTelnyxCreds(base44);
+    const telnyxFromNumber = from_number || Deno.env.get('TELNYX_FAX_NUMBER');
 
-    if (!accountSid || !authToken || !twilioFromNumber) {
-      return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
+    if (!apiKey || !faxConnectionId || !telnyxFromNumber) {
+      return Response.json({ error: 'Telnyx credentials not configured' }, { status: 500 });
     }
 
     const results = [];
@@ -59,7 +88,7 @@ Deno.serve(async (req) => {
     for (const to_number of normalizedRecipients) {
       try {
         const faxLog = await base44.entities.FaxLog.create({
-          from_number: twilioFromNumber,
+          from_number: telnyxFromNumber,
           to_number,
           document_url: file_url,
           document_name: document_name || 'Batch Fax',
@@ -71,31 +100,31 @@ Deno.serve(async (req) => {
           estimated_cost: estimatedCostPerPage
         });
 
-        const formBody = new URLSearchParams();
-        formBody.append('From', twilioFromNumber);
-        formBody.append('To', to_number);
-        formBody.append('MediaUrl', file_url);
-        formBody.append('Quality', 'fine');
-
-        const twilioResponse = await fetch('https://fax.twilio.com/v1/Faxes', {
+        const telnyxResponse = await fetch('https://api.telnyx.com/v2/faxes', {
           method: 'POST',
           headers: {
-            'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
           },
-          body: formBody.toString()
+          body: JSON.stringify({
+            connection_id: faxConnectionId,
+            from: telnyxFromNumber,
+            to: to_number,
+            media_url: file_url,
+            quality: 'high'
+          })
         });
 
-        const twilioData = await twilioResponse.json();
+        const telnyxData = await telnyxResponse.json().catch(() => ({}));
 
-        if (twilioResponse.ok) {
+        if (telnyxResponse.ok) {
           await base44.entities.FaxLog.update(faxLog.id, {
-            telnyx_fax_id: twilioData.sid,
+            telnyx_fax_id: telnyxData?.data?.id,
             status: 'sending'
           });
-          results.push({ to_number, success: true, fax_id: twilioData.sid });
+          results.push({ to_number, success: true, fax_id: telnyxData?.data?.id });
         } else {
-          const failureReason = twilioData.message || twilioData.error_message || 'Failed to send';
+          const failureReason = telnyxData?.errors?.[0]?.detail || telnyxData?.errors?.[0]?.title || 'Failed to send';
           await base44.entities.FaxLog.update(faxLog.id, {
             status: 'failed',
             failure_reason: failureReason
