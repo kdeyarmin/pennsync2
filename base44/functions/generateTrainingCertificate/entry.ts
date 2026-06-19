@@ -10,7 +10,60 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { moduleName, completionDate, score } = await req.json();
+    const body = await req.json();
+    const requestedModule = body.moduleName || body.module_title || null;
+    const recordId = body.completion_id || body.certificate_id || null;
+    const moduleId = body.module_id || null;
+
+    // Re-derive the certificate's facts from a record the caller actually OWNS so
+    // a cert can't be minted for training they never completed. Reads are scoped
+    // to the caller's own email (reliable regardless of per-id RLS). Callers pass
+    // inconsistent shapes (moduleName / module_title+certificate_id /
+    // completion_id+module_id) — all are resolved here.
+    const [myCerts, myCompletions] = await Promise.all([
+      base44.asServiceRole.entities.TrainingCertificate.filter({ user_id: user.email }, '-issued_at', 500).catch(() => []),
+      base44.asServiceRole.entities.TrainingCompletion.filter({ nurse_email: user.email, status: 'completed' }, '-completion_date', 500).catch(() => []),
+    ]);
+
+    if (myCerts.length === 0 && myCompletions.length === 0) {
+      return Response.json({ error: 'No completed training found for this account.' }, { status: 403 });
+    }
+
+    const norm = (s) => String(s || '').trim().toLowerCase();
+    let moduleName = null;
+    let completionDate = null;
+    let score = null;
+
+    const cert = myCerts.find((c) =>
+      (recordId && (c.id === recordId || c.certificate_id === recordId)) ||
+      (requestedModule && norm(c.course_title) === norm(requestedModule)));
+    if (cert) {
+      moduleName = cert.course_title || requestedModule;
+      completionDate = cert.completion_date || cert.issued_at || null;
+      score = typeof cert.score === 'number' ? cert.score : null;
+    } else {
+      const comp = myCompletions.find((c) =>
+        (recordId && c.id === recordId) || (moduleId && c.training_module_id === moduleId));
+      if (comp) {
+        completionDate = comp.completion_date || null;
+        score = typeof comp.score === 'number' ? comp.score : null;
+        try {
+          const mod = await base44.asServiceRole.entities.TrainingModule.filter({ id: comp.training_module_id }, '-created_date', 1);
+          moduleName = mod?.[0]?.title || requestedModule;
+        } catch { moduleName = requestedModule; }
+      } else if (recordId) {
+        // A specific record was requested but none of the caller's records match
+        // it — refuse rather than mint against an id they don't own.
+        return Response.json({ error: 'Training record not found for this account.' }, { status: 403 });
+      }
+    }
+
+    // Fall back to the request only for display fields we could not derive (the
+    // legacy caller that passes just moduleName); ownership is already established
+    // by the non-empty owned-record check above.
+    moduleName = moduleName || requestedModule;
+    completionDate = completionDate || body.completionDate || body.completion_date || null;
+    if (score === null && typeof body.score === 'number') score = body.score;
 
     if (!moduleName || !completionDate) {
       return Response.json({ error: 'Module name and completion date required' }, { status: 400 });

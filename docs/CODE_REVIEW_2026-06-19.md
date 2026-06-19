@@ -90,43 +90,51 @@ negative counts stay numeric).
 
 ---
 
-## Documented, not changed (verified real, but deferred — risk/contract/infra)
+## Follow-up: the previously-deferred backend findings are now fixed
 
-These are genuine findings, but the fix carries more risk than the value of a blind change
-in an environment where the Deno backend can't be executed or runtime-tested. Each should be
-done with a deploy-time check or a coordinated frontend change.
+These were initially documented rather than changed; a follow-up pass implemented all of them.
+The Deno backend can't be executed here, so every change mirrors an existing in-repo pattern
+and is covered by `npm run check:backend-transpile` (204 functions clean). Residual caveats that
+genuinely need a platform/schema change are called out.
 
-- **`generateTrainingCertificate` — self-mintable certificate.** Renders a branded completion
-  certificate purely from body-supplied `moduleName`/`completionDate`/`score` with no
-  completion check. Hardening requires re-deriving identity/score from a persisted
-  `TrainingCertificate`/`TrainingCompletion` — but the existing callers pass **inconsistent
-  parameter shapes** (`module_title`/`certificate_id` vs `moduleName`), so a safe fix must
-  reconcile the caller contract first. Recommend routing all issuance through the hardened
-  `issueCertificate` path.
-- **`handleTwilioFaxWebhook` — no monotonic status guard.** Unlike the SMS/call siblings
-  (`SMS_RANK`/`CALL_RANK`), it dedupes only on exact equality, so an out-of-order Twilio callback
-  can regress a `delivered` fax. A naive `FAX_RANK` guard risks breaking the legitimate
-  `failed → sending` retry-resend transition, so it needs to be designed against the
-  `autoRetryFailedFaxes` resend flow.
-- **`autoRetryFailedFaxes` — transient HTTP rejection treated as permanent.** A 429/503 on
-  resend marks the fax permanently `failed` and notifies the sender, unlike the adjacent
-  network-error branch which correctly reschedules within budget.
-- **`dispatchScheduledSms` — non-atomic claim (TOCTOU).** The "claim then re-read" scheme can
-  double-send under overlapping cron runs; needs an atomic compare-and-swap or a single-writer
-  lock (infra-dependent).
-- **`awardBadgeOnCompletion` — no attempt-ownership/idempotency.** A perfect-score `attempt_id`
-  can be replayed to farm badges/points/streak. Gamification integrity only (no PHI/billing).
-- **`analyzeMedicationReconciliation` — unvalidated `patient_id`; `ageRisks` counted but not
-  listed** in the stored `discrepancies` array.
-- **`processScheduledFaxesByPriority` — descending+capped pagination** can starve the
-  earliest-due faxes under a > 200 backlog; the sibling `processScheduledFaxes` filters
-  server-side correctly.
-- **`migrateExistingData`** lists active patients with no limit (silently caps at the SDK
-  default ~50); admin-only, idempotent, re-runnable. Add a `5000` bound.
-- **`sendBatchFax`** is the only fax sender without the `resolveTwilioCreds` env→in-app
-  fallback (fail-closed, not a security bug).
-- **`handleTwilioVoiceCall`** logs the full Twilio param set (incl. caller number) when
-  `TWILIO_WEBHOOK_DEBUG` is on, unlike the other handlers (operator-gated).
+- **`generateTrainingCertificate` — self-mintable certificate → FIXED.** Now re-derives the
+  module/date/score from a record the **caller owns** (their `TrainingCertificate` by `user_id`
+  or completed `TrainingCompletion` by `nurse_email`), resolving all three caller param shapes
+  (`moduleName` / `module_title`+`certificate_id` / `completion_id`+`module_id`). An account with
+  no completed training — or a request for a record it doesn't own — is rejected `403`. This also
+  repairs the callers that were silently `400`ing (they passed `completion_id`/`module_title`,
+  which the old code ignored). *Residual:* the legacy caller that passes only `moduleName` (and
+  whose module can't be matched to an owned record) still renders from the request after the
+  owns-some-completed-training gate; tightening to an exact per-module match would need that
+  caller to pass the record id.
+- **`handleTwilioFaxWebhook` — monotonic status guard → FIXED.** Added `FAX_RANK`
+  (queued<sending<delivered/failed) mirroring `SMS_RANK`/`CALL_RANK`. Safe against the retry
+  flow because the `failed → queued` resend transition is driven by the cron, not a webhook.
+- **`autoRetryFailedFaxes` — transient HTTP rejection → FIXED.** A non-2xx resend is now
+  classified; transient (429/5xx) reschedules within budget like the network-error branch, only
+  permanent errors / spent budget exhaust + notify.
+- **`dispatchScheduledSms` — claim TOCTOU → MITIGATED.** Added an application-layer idempotency
+  check on the deterministic `client_message_id` immediately before sending (settles the row from
+  the prior `SmsMessage` and skips), and corrected the overstated comment. *Residual:* the claim
+  is still an optimistic re-read, not a true atomic compare-and-swap — eliminating the race
+  entirely needs a platform CAS / unique constraint or a single-writer lock.
+- **`awardBadgeOnCompletion` — ownership + idempotency → FIXED.** Enforces
+  `attempt.user_id === user.email` (non-admin) and short-circuits if a `UserBadge` already
+  references the attempt. *Residual:* an attempt that earns **no** badge writes no `UserBadge`, so
+  full no-badge replay idempotency (streak/courses) would need a processed-marker field on
+  `TrainingAttempt`.
+- **`analyzeMedicationReconciliation` → FIXED.** Requires + scope-validates `patient_id`
+  (user-scoped read + 404) and now lists `ageRisks` in the stored `discrepancies` array so the
+  Beers/contraindication rows match the counts.
+- **`processScheduledFaxesByPriority` → FIXED.** Now filters due rows server-side
+  (`scheduled_time $lte now`) sorted ascending, so the most-overdue faxes are no longer starved
+  under a backlog.
+- **`migrateExistingData` → FIXED.** Both list calls now pass a `5000` bound instead of relying
+  on the SDK default page size.
+- **`sendBatchFax` → FIXED.** Added the `resolveTwilioCreds` env→in-app `IntegrationSecret`
+  fallback so batch/scheduled fax works for agencies that configure Twilio in-app.
+- **`handleTwilioVoiceCall` → FIXED.** The `TWILIO_WEBHOOK_DEBUG` log no longer prints the Twilio
+  params (caller PHI) — it logs only which signature headers are present, mirroring the SMS handler.
 
 ---
 

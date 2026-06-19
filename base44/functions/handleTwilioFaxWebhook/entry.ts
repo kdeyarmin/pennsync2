@@ -101,6 +101,13 @@ async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | n
   return { accountSid: sid, authToken: token, storedWebhookSecret };
 }
 
+// Monotonic rank so a late/out-of-order Twilio callback can't downgrade a
+// terminal fax (e.g. a stale 'sending' arriving after 'delivered'). queued <
+// sending < delivered/failed (both terminal for a given fax SID). The
+// failed -> queued retry transition is driven by autoRetryFailedFaxes (the
+// cron), not a webhook, so it is never gated by this rank.
+const FAX_RANK: Record<string, number> = { queued: 1, sending: 2, delivered: 3, failed: 3 };
+
 Deno.serve(async (req) => {
   try {
     const formData = await req.formData();
@@ -144,10 +151,12 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: 'unknown status', status });
     }
 
-    // Idempotency: Twilio retries webhooks. If the status is unchanged, ack
-    // without re-running side effects (duplicate notifications / retry bumps).
-    if (mappedStatus === faxLog.status) {
-      return Response.json({ success: true, status: mappedStatus, deduped: true });
+    // Idempotency + ordering: Twilio retries and may reorder webhooks. Ignore an
+    // unchanged status OR a backward transition (a late 'sending' after
+    // 'delivered'), so a stale callback can't regress a terminal fax or re-fire
+    // its delivery notification / retry scheduling. Mirrors the SMS/call rank guards.
+    if ((FAX_RANK[mappedStatus] || 0) <= (FAX_RANK[faxLog.status] || 0)) {
+      return Response.json({ success: true, status: faxLog.status, ignored: true });
     }
     const parsedNumPages = numPages ? parseInt(String(numPages), 10) : faxLog.pages;
 

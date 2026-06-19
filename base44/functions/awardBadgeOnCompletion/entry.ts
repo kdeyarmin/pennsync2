@@ -18,6 +18,24 @@ Deno.serve(async (req) => {
     }
 
     const attemptData = attempt[0];
+
+    // Authorization: a user may only earn badges from their OWN attempt. The
+    // attempt was read with the user-scoped client, but enforce ownership
+    // explicitly so a forwarded/guessed attempt_id can't award to this account.
+    if (user.role !== 'admin' && attemptData.user_id && attemptData.user_id !== user.email) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Idempotency: this runs once when an attempt completes. If a badge was
+    // already granted for this attempt, return early instead of re-awarding —
+    // otherwise a replayed attempt_id farms points, streak, and perfect-score
+    // badges. (Badge records carry trigger_context.attempt_id.)
+    const priorBadges = await base44.entities.UserBadge
+      .filter({ user_id: user.email }, '-earned_at', 500).catch(() => []);
+    if (priorBadges.some((b) => b?.trigger_context?.attempt_id === attemptData.id)) {
+      return Response.json({ success: true, already_awarded: true, badges_awarded: 0, badges: [] });
+    }
+
     const badgesAwarded = [];
 
     // Get or create leaderboard entry

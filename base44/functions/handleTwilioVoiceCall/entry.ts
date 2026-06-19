@@ -223,7 +223,10 @@ Deno.serve(async (req) => {
     for (const [k, v] of formData.entries()) params[k] = String(v);
 
     if (Deno.env.get('TWILIO_WEBHOOK_DEBUG')) {
-      console.log('[webhook-debug] handleTwilioVoiceCall ' + JSON.stringify({ params, content_type: req.headers.get('content-type') }));
+      // Log only which signature headers are PRESENT and the content type — never
+      // the Twilio params themselves (From/To are caller PHI). Mirrors the SMS handler.
+      const present = ['x-twilio-signature', 'x-webhook-secret'].filter((h) => req.headers.get(h));
+      console.log('[webhook-debug] handleTwilioVoiceCall ' + JSON.stringify({ signature_headers_present: present, content_type: req.headers.get('content-type') }));
     }
 
     const base44 = createClientFromRequest(req);

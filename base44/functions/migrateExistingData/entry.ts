@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     };
 
     // Migrate patients - add quality scores and defaults
-    const patients = await base44.asServiceRole.entities.Patient.filter({ status: 'active' });
+    const patients = await base44.asServiceRole.entities.Patient.filter({ status: 'active' }, '-created_date', 5000);
     
     for (const patient of patients) {
       const criticalFields = ['emergency_contact_name', 'emergency_contact_phone', 'physician_name', 'phone', 'date_of_birth', 'address'];
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     }
 
     // Migrate visits - extract homebound justifications from notes
-    const visits = await base44.asServiceRole.entities.Visit.filter({ status: 'completed' });
+    const visits = await base44.asServiceRole.entities.Visit.filter({ status: 'completed' }, '-created_date', 5000);
     
     for (const visit of visits) {
       const updates = {

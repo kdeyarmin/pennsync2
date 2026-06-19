@@ -157,9 +157,22 @@ Deno.serve(async (req) => {
         } else {
           const errText = await twilioResp.text();
           console.error(`Twilio error on retry for fax ${fax.id}:`, errText);
-          // Twilio rejected the re-send — a permanent rejection, so stop now.
-          await base44.asServiceRole.entities.FaxLog.update(fax.id, { status: 'failed', retry_claimed_by: null }).catch(() => {});
-          await handleRetryExhausted(base44, fax, `Twilio rejected retry: ${errText}`, c.maxRetries, c.notifyOnFinalFailure);
+          // A non-2xx response may be TRANSIENT (429 rate-limit, 5xx) or PERMANENT
+          // (bad number, blocked). Treating every rejection as permanent wrongly
+          // gave up — and emailed the sender "exhausted" — while retry budget
+          // remained. Classify and, when transient AND within budget, reschedule
+          // with the same backoff as the network-error branch; only exhaust on a
+          // permanent error or a spent budget.
+          const classification = classifyFaxFailure(twilioResp.status, errText);
+          const attempts = Number(fax.retry_count) || 0;
+          const within = classification !== 'permanent' && attempts < c.maxRetries;
+          const delayMin = nextRetryDelayMinutes(attempts, cfg, fax.priority || 'normal');
+          await base44.asServiceRole.entities.FaxLog.update(fax.id, {
+            status: 'failed',
+            retry_claimed_by: null,
+            next_retry_at: within ? new Date(now.getTime() + delayMin * 60000).toISOString() : null,
+          }).catch(() => {});
+          if (!within) await handleRetryExhausted(base44, fax, `Twilio rejected retry: ${errText}`, c.maxRetries, c.notifyOnFinalFailure);
         }
       } catch (err) {
         console.error(`Network error retrying fax ${fax.id}:`, err.message);

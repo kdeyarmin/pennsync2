@@ -11,6 +11,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No medications provided' }, { status: 400 });
     }
 
+    // Verify the caller can see this patient (user-scoped read enforces RLS/tenant
+    // scoping) before writing a MedicationReconciliation against it via the
+    // service-role client below. Mirrors reconcileMedications.
+    if (!patient_id) {
+      return Response.json({ error: 'patient_id is required' }, { status: 400 });
+    }
+    const patientRows = await base44.entities.Patient.filter({ id: patient_id });
+    if (!patientRows || patientRows.length === 0) {
+      return Response.json({ error: 'Patient not found' }, { status: 404 });
+    }
+
     // Use AI to analyze medications comprehensively
     const analysisPrompt = `You are a clinical pharmacist conducting a comprehensive medication reconciliation review.
 
@@ -190,6 +201,16 @@ Be thorough and specific. Focus on actionable clinical recommendations.`;
           medication_name: g.medication,
           description: g.issue,
           ai_recommendation: g.recommendation,
+          status: 'pending'
+        })),
+        // Age/condition (Beers, contraindication) risks were counted in
+        // total/critical but had no visible row for the reviewer — include them.
+        ...ageRisks.map(r => ({
+          discrepancy_type: 'age_condition_risk',
+          severity: r.severity,
+          medication_name: r.medication || 'Multiple',
+          description: r.risk_type ? `${r.risk_type}: ${r.description || ''}`.trim() : (r.description || ''),
+          ai_recommendation: r.recommendation,
           status: 'pending'
         }))
       ],

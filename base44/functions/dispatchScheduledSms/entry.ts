@@ -243,10 +243,11 @@ Deno.serve(async (req) => {
 
     for (const row of due) {
       // Claim with a per-run token, then RE-READ to confirm we still own it.
-      // This read-after-write check makes overlapping runs far safer than a bare
-      // status flip (the loser sees the winner's token and skips). Since Twilio
-      // has no client idempotency key, the claim+re-read is the primary
-      // double-send prevention — we do NOT retry thrown network errors either.
+      // This read-after-write check makes overlapping runs much safer than a bare
+      // status flip (the loser usually sees the winner's token and skips), but it
+      // is NOT a true atomic compare-and-swap — so it is backed by an
+      // application-layer idempotency check on the deterministic client_message_id
+      // just before sending (below), plus not retrying thrown network errors.
       try {
         await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
           status: 'sending', claimed_by: runId, claimed_at: new Date().toISOString(),
@@ -307,9 +308,28 @@ Deno.serve(async (req) => {
 
       // The deterministic `sched-${row.id}` clientMessageId is kept in the
       // SmsMessage record for our own tracking but is NOT sent to Twilio —
-      // Twilio has no client idempotency key. Double-send is prevented by the
-      // claim+re-read above and by not retrying thrown network errors.
+      // Twilio has no client idempotency key.
       const clientMessageId = `sched-${row.id}`;
+
+      // Idempotency guard: if a prior (possibly overlapping) run already recorded
+      // an outbound SmsMessage for this schedule, it was already sent — settle the
+      // row from that record and skip rather than texting the patient twice. This
+      // backs the optimistic claim above, which is not an atomic compare-and-swap.
+      const priorSend = await base44.asServiceRole.entities.SmsMessage
+        .filter({ client_message_id: clientMessageId, direction: 'outbound' }, '-created_date', 1)
+        .catch(() => []);
+      if (priorSend[0]) {
+        await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
+          status: 'sent',
+          provider_message_id: priorSend[0].provider_message_id || null,
+          sent_at: priorSend[0].created_date || new Date().toISOString(),
+          sms_message_id: priorSend[0].id,
+          attempts: (row.attempts || 0) + 1,
+        }).catch(() => {});
+        result.skipped++;
+        continue;
+      }
+
       let resp;
       try {
         resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body, statusCallback);
