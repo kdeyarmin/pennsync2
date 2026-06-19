@@ -113,16 +113,22 @@ genuinely need a platform/schema change are called out.
 - **`autoRetryFailedFaxes` — transient HTTP rejection → FIXED.** A non-2xx resend is now
   classified; transient (429/5xx) reschedules within budget like the network-error branch, only
   permanent errors / spent budget exhaust + notify.
-- **`dispatchScheduledSms` — claim TOCTOU → MITIGATED.** Added an application-layer idempotency
-  check on the deterministic `client_message_id` immediately before sending (settles the row from
-  the prior `SmsMessage` and skips), and corrected the overstated comment. *Residual:* the claim
-  is still an optimistic re-read, not a true atomic compare-and-swap — eliminating the race
-  entirely needs a platform CAS / unique constraint or a single-writer lock.
-- **`awardBadgeOnCompletion` — ownership + idempotency → FIXED.** Enforces
-  `attempt.user_id === user.email` (non-admin) and short-circuits if a `UserBadge` already
-  references the attempt. *Residual:* an attempt that earns **no** badge writes no `UserBadge`, so
-  full no-badge replay idempotency (streak/courses) would need a processed-marker field on
-  `TrainingAttempt`.
+- **`dispatchScheduledSms` — claim TOCTOU → MITIGATED (platform-limited).** Added an
+  application-layer idempotency check on the deterministic `client_message_id` immediately before
+  sending (settles the row from the prior `SmsMessage` and skips), and corrected the overstated
+  comment. *Residual (genuine platform limit, not an oversight):* a true exactly-once guarantee
+  needs a DB-level unique constraint on `SmsMessage.client_message_id` or an atomic
+  compare-and-swap. The Base44 entity-schema format used in this repo exposes only
+  `name`/`type`/`properties`/`required`/`rls` — **no `unique`/`index`/`constraint` keys** — and
+  the `SmsMessage`/`ScheduledSms` entities aren't even mirrored in-repo, so this cannot be
+  expressed as a schema change here; it requires Base44 platform support. The layered
+  claim + re-read + `client_message_id` idempotency is the strongest in-repo mitigation.
+- **`awardBadgeOnCompletion` — ownership + idempotency → FULLY FIXED (incl. schema change).**
+  Enforces `attempt.user_id === user.email` (non-admin) and short-circuits if already processed.
+  Added a `badges_processed_at` field to the `TrainingAttempt` entity schema, checked at the top
+  and set after a successful award, so **every** attempt — including ones that earn no badge — is
+  idempotent against replay (no more streak/courses farming). The `UserBadge` check is kept as a
+  backstop for attempts processed before the marker field existed.
 - **`analyzeMedicationReconciliation` → FIXED.** Requires + scope-validates `patient_id`
   (user-scoped read + 404) and now lists `ageRisks` in the stored `discrepancies` array so the
   Beers/contraindication rows match the counts.

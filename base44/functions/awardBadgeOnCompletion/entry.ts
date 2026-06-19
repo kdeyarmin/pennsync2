@@ -26,10 +26,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Idempotency: this runs once when an attempt completes. If a badge was
-    // already granted for this attempt, return early instead of re-awarding —
-    // otherwise a replayed attempt_id farms points, streak, and perfect-score
-    // badges. (Badge records carry trigger_context.attempt_id.)
+    // Idempotency (complete): once an attempt has been processed, re-running is a
+    // no-op — this covers attempts that earn NO badge too, which would otherwise
+    // re-bump streak/courses on every replay. The UserBadge check below is a
+    // backstop for attempts processed before this marker field existed.
+    if (attemptData.badges_processed_at) {
+      return Response.json({ success: true, already_awarded: true, badges_awarded: 0, badges: [] });
+    }
     const priorBadges = await base44.entities.UserBadge
       .filter({ user_id: user.email }, '-earned_at', 500).catch(() => []);
     if (priorBadges.some((b) => b?.trigger_context?.attempt_id === attemptData.id)) {
@@ -190,6 +193,12 @@ Deno.serve(async (req) => {
         }
       });
     }
+
+    // Mark the attempt processed so any replay short-circuits at the top. Done
+    // last so a mid-processing failure doesn't mark it done with no awards.
+    await base44.entities.TrainingAttempt.update(attemptData.id, {
+      badges_processed_at: new Date().toISOString(),
+    }).catch((e) => console.error('Failed to mark attempt badges_processed_at:', e?.message));
 
     return Response.json({
       success: true,
