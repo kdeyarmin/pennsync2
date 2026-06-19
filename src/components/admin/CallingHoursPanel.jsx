@@ -63,7 +63,9 @@ export default function CallingHoursPanel() {
     after_hours_call_greeting: "",
     after_hours_sms_auto_reply_enabled: true,
     after_hours_sms_auto_reply: "",
-    tcpa_quiet_hours_enabled: false,
+    // TCPA quiet hours default ON: not texting patients overnight is the
+    // legally-safer floor. An agency can still explicitly disable it.
+    tcpa_quiet_hours_enabled: true,
     tcpa_quiet_start_hour: 8,
     tcpa_quiet_end_hour: 21,
   });
@@ -83,7 +85,8 @@ export default function CallingHoursPanel() {
       after_hours_call_greeting: settings.after_hours_call_greeting || "",
       after_hours_sms_auto_reply_enabled: settings.after_hours_sms_auto_reply_enabled !== false,
       after_hours_sms_auto_reply: settings.after_hours_sms_auto_reply || "",
-      tcpa_quiet_hours_enabled: settings.tcpa_quiet_hours_enabled === true,
+      // Default ON when unset (only an explicit `false` disables quiet hours).
+      tcpa_quiet_hours_enabled: settings.tcpa_quiet_hours_enabled !== false,
       tcpa_quiet_start_hour: settings.tcpa_quiet_start_hour ?? 8,
       tcpa_quiet_end_hour: settings.tcpa_quiet_end_hour ?? 21,
     });

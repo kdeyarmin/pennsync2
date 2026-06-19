@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
           });
         }
       } catch (e) {
-        console.log('Error fetching additional data:', e.message);
+        console.warn('Error fetching additional data:', e.message);
       }
     }
 
@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
             const textField = form.getTextField(fieldName);
             textField.setText(String(value));
           } catch (e) {
-            console.log(`Could not fill field ${fieldName}:`, e.message);
+            console.warn(`Could not fill field ${fieldName}:`, e.message);
           }
         }
       });
@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
       // Flatten the form to prevent editing
       form.flatten();
     } catch (e) {
-      console.log('No fillable form fields found or error filling them:', e.message);
+      console.warn('No fillable form fields found or error filling them:', e.message);
       
       // If no form fields, add text overlays on the first page
       const fontSize = 11;

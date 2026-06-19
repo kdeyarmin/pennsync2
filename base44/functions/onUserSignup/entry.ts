@@ -1,11 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
+// production by default. console.error/warn remain ungated for visibility.
+const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
+const debugLog = (...args) => { if (DEBUG) debugLog(...args); };
+
 Deno.serve(async (req) => {
   try {
-    console.log('onUserSignup triggered');
+    debugLog('onUserSignup triggered');
     const base44 = createClientFromRequest(req);
     const { user } = await req.json();
-    console.log('User data received:', user?.email);
+    debugLog('User data received:', user?.email ? '[email present]' : '[no email]');
 
     if (!user || !user.email) {
       console.error('No user data provided');
@@ -21,12 +26,12 @@ Deno.serve(async (req) => {
     }
 
     // Check if user was invited
-    console.log('Checking for invitation...');
+    debugLog('Checking for invitation...');
     const invitations = await base44.asServiceRole.entities.UserInvitation.filter({ 
       email: user.email,
       status: 'pending'
     });
-    console.log('Found invitations:', invitations?.length || 0);
+    debugLog('Found invitations:', invitations?.length || 0);
 
     if (invitations && invitations.length > 0) {
       const invitation = invitations[0];
@@ -39,7 +44,7 @@ Deno.serve(async (req) => {
       }
       
       // Auto-approve ALL invited users (admin-added users should be automatically approved)
-      console.log('Auto-approving invited user...');
+      debugLog('Auto-approving invited user...');
       
       try {
         await base44.asServiceRole.entities.User.update(user.id, {
@@ -76,7 +81,7 @@ Deno.serve(async (req) => {
           console.error('Failed to log activity:', logError);
         }
 
-        console.log('Auto-approved invited user:', user.email, verification.success ? '(verified)' : '(verification pending)');
+        debugLog('Auto-approved invited user', verification.success ? '(verified)' : '(verification pending)');
         return Response.json({ success: true, auto_approved: true, auth_verified: verification.success });
       } catch (updateError) {
         console.error('Failed to auto-approve user:', updateError);
@@ -84,9 +89,9 @@ Deno.serve(async (req) => {
     }
 
     // Not invited - notify admins for manual approval
-    console.log('Fetching admin users...');
+    debugLog('Fetching admin users...');
     const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
-    console.log('Found admins:', admins.length);
+    debugLog('Found admins:', admins.length);
 
     const emailBody = `
     Hello,
@@ -129,9 +134,9 @@ Deno.serve(async (req) => {
       })
     );
 
-    console.log('Sending emails to admins and kdeyarmin@pennhospice.com...');
+    debugLog('Sending signup notification emails to admins...');
     await Promise.all(emailPromises);
-    console.log('Signup notification complete');
+    debugLog('Signup notification complete');
 
     return Response.json({ 
       success: true, 

@@ -279,8 +279,8 @@ Please review this report in the Incident Reporting system.
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
               <div>
                 <Label className="text-red-600">*Event Type:</Label>
-                <p className="text-xs text-blue-600 mt-1">
-                  To see the full event type description <a href="#" className="underline">Click Here</a>
+                <p className="text-xs text-slate-500 mt-1">
+                  Each option below shows its full description.
                 </p>
               </div>
               <Select

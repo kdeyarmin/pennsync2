@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,16 +158,28 @@ Submitted On: ${new Date().toLocaleString()}
       )
     );
 
-    // Send emails to admins
-    await Promise.all(
+    // Send emails to admins. A failed notification must not block submission of a
+    // state-mandated report, but a *total* failure should be surfaced so someone
+    // follows up out-of-band rather than assuming admins were alerted.
+    const emailResults = await Promise.all(
       adminUsers.map((admin) =>
         base44.integrations.Core.SendEmail({
           to: admin.email,
           subject: `[URGENT] State Reportable Event – ${form.event_type} – ${patientName}`,
           body: `<pre style="font-family:monospace;font-size:14px;">${reportText}</pre>`,
-        }).catch(() => {})
+        })
+          .then(() => true)
+          .catch((e) => {
+            console.warn("Failed to send state-reportable admin notification:", e?.message);
+            return false;
+          })
       )
     );
+    if (adminUsers.length > 0 && emailResults.every((ok) => !ok)) {
+      toast.warning(
+        "Report saved, but admin notifications could not be sent. Please notify your administrator directly."
+      );
+    }
 
     setSubmitted(true);
     } catch (err) {

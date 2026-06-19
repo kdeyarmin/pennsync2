@@ -1,8 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
+// production by default. console.error/warn remain ungated for visibility.
+const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
+const debugLog = (...args) => { if (DEBUG) debugLog(...args); };
+
 Deno.serve(async (req) => {
   try {
-    console.log('Starting discharge report processing...');
+    debugLog('Starting discharge report processing...');
     const base44 = createClientFromRequest(req);
     
     const user = await base44.auth.me();
@@ -15,7 +20,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
     }
 
-    console.log('Extracting discharge data from file...');
+    debugLog('Extracting discharge data from file...');
     
     // Extract patient discharge data using AI
     const extractResponse = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({
@@ -51,7 +56,7 @@ Deno.serve(async (req) => {
     }
 
     const dischargedPatientsData = extractResponse.output.discharged_patients;
-    console.log(`Extracted ${dischargedPatientsData.length} discharged patients`);
+    debugLog(`Extracted ${dischargedPatientsData.length} discharged patients`);
 
     // Fetch patients to match the discharge records against (bounded to the
     // SDK's 5000/request max; omitting a limit silently caps at the SDK default
@@ -141,7 +146,7 @@ Deno.serve(async (req) => {
     }
 
     // Process updates in batches to avoid rate limiting
-    console.log(`Processing ${updateBatch.length} discharges in batches...`);
+    debugLog(`Processing ${updateBatch.length} discharges in batches...`);
     for (let i = 0; i < updateBatch.length; i += BATCH_SIZE) {
       const batch = updateBatch.slice(i, i + BATCH_SIZE);
       
@@ -177,7 +182,7 @@ Deno.serve(async (req) => {
       }
     });
 
-    console.log('Discharge processing complete:', results);
+    debugLog('Discharge processing complete:', results);
     return Response.json({
       success: true,
       ...results

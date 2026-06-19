@@ -74,7 +74,7 @@ export default function Layout({ children, currentPageName }) {
       device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
       details: { timestamp: new Date().toISOString(), user_role: currentUser.role, session_start: true },
       user_agent: navigator.userAgent,
-    }).catch(() => {});
+    }).catch((e) => console.warn("Failed to log login activity:", e?.message));
     sessionStorage.setItem(key, 'true');
   }, [currentUser?.email]);
 

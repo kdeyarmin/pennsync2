@@ -228,7 +228,7 @@ export default function UserSettings() {
           type: 'system_update',
           priority: 'high',
           metadata: { requested_by: currentUser?.email },
-        }).catch(() => {})
+        }).catch((e) => console.warn("Failed to notify admin of account-deletion request:", e?.message))
       ));
 
       toast.success('Your account deletion request has been submitted. An administrator will process it. You will be signed out now.');
