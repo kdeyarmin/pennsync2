@@ -16,8 +16,10 @@ export default function VisitCompletionButton({ visitId, currentStatus, onComple
     setIsProcessing(true);
 
     try {
-      // Call the AI processing function
-      const result = await processCompletedVisit({ visit_id: visitId });
+      // Call the AI processing function. functions.invoke returns the full axios
+      // response (interceptResponses:false), so the body is under .data.
+      const response = await processCompletedVisit({ visit_id: visitId });
+      const result = response?.data || response;
 
       // Guard against a null/empty response (e.g. a 5xx or network failure) so we
       // don't crash on `result.success` and instead surface a clear error.

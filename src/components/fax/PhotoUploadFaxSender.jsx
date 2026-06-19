@@ -86,7 +86,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         const merged = await base44.functions.invoke('mergePDFs', {
           pdf_urls: [coverSheetUrl, pdfUrl]
         });
-        pdfUrl = merged.data?.merged_url || pdfUrl;
+        pdfUrl = merged.data?.merged_pdf_url || pdfUrl;
       }
       await base44.functions.invoke('sendFax', {
         to_number: toNumber,

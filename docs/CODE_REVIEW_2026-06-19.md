@@ -160,6 +160,15 @@ directly (always `undefined`), so the signer portal showed "invalid link" for ev
 same mistake. Both now use the established `response.data || response` fallback. (Other
 body-direct invoke consumers may exist app-wide — worth a follow-up audit; not changed blind here.)
 
+**Follow-up audit (FIXED) — 5 more silently-broken `invoke` consumers** (of 162 call sites; the
+rest were already correct): `VisitCompletionButton` (every visit completion showed an error despite
+backend success), `AITrainingGenerator` (blank course title + broken approve navigation),
+`AICoverPageEditor` (AI fax cover page never rendered), and `VisitScribe`/`ScribeNoteRecorder`
+(transcription/note came up blank — `generateNoteFromRecording` double-nests its body under `data`,
+so the fields live at `response.data.data`). Also a field-name bug: the four fax senders read
+`merged.data.merged_url` but `mergePDFs` returns `merged_pdf_url`, so merged multi-page faxes silently
+sent unmerged. The time-off `result?.error` guards are dead (harmless) and left as-is.
+
 **Mid-size components (FIXED).** `RealTimeValidator` treated invalid email/phone/date as warnings
 (form reported `valid:true`) with blank messages — the validators return bare strings, so
 `.severity` was always undefined; now pushed as real errors. `DuplicatePatientManager.merge`
