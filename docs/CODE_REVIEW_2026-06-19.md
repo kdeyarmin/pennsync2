@@ -139,7 +139,16 @@ regression; (2) the checklist (`docs/SECURITY-RLS-CHECKLIST.md` §2/§7) designa
 **dashboard** configuration plus a multi-role verification protocol that can't be run in this
 environment. The backend IDOR fixes above are the RLS-independent code-layer defense for the
 *function* endpoints; the remaining exposure is *direct client entity reads*, which only RLS
-closes. Recommended path: configure per-entity RLS in the dashboard per the checklist and run §7.
+closes.
+
+**Resolution (chosen): safe subset in-repo + a dashboard spec for the rest.** Applied in-repo
+(verified non-breaking): `OfflineDataCache` (read+write `user_email` + admin — per-user cache),
+`SystemLog` (write → admin — no user-scoped client writes), `Message` (write → sender ∨ recipient
+∨ admin — preserves recipients' `read_by` updates), and `TeamNote` (write → `created_by` + admin —
+the only client op is create). The patient-clinical tables (`Medication`, `OASISUpload`,
+`DischargeSummary`, `FaxLog`, `Referral`, `PatientAlert`, …) need the *"by patient access"* rule
+that the repo DSL can't express, so they are specified per-entity in
+**`docs/RLS-REMEDIATION-SPEC-2026-06-19.md`** to apply + verify (§7) in the Base44 dashboard.
 
 ## Follow-up: the previously-deferred backend findings are now fixed
 
