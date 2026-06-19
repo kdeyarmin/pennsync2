@@ -184,7 +184,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       // (participantId, message, recipients, state).
       room.on("message_received", (participantId, message) => {
         const p = room.getState().participants.get(participantId);
-        handleIncomingMessage(message, p ? identityFromParticipant(p) : "Participant");
+        // message is a Telnyx Message { type: 'text', payload: string }.
+        handleIncomingMessage(message?.payload ?? message, p ? identityFromParticipant(p) : "Participant");
       });
 
       // Acquire local media honoring the chosen devices.
@@ -369,7 +370,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
   const sendMessage = (text) => {
     try {
-      roomRef.current?.sendMessage(JSON.stringify({ text, ts: Date.now() }));
+      // Telnyx requires a Message object { type: 'text', payload: string }.
+      roomRef.current?.sendMessage({ type: "text", payload: JSON.stringify({ text, ts: Date.now() }) });
     } catch (err) {
       console.error("Chat send error:", err);
     }

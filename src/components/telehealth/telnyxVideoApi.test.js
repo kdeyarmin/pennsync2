@@ -142,3 +142,17 @@ test("telehealth components do not reference non-existent @telnyx/video symbols"
     "VideoRoom.jsx calls getParticipantStream with one arg; the SDK requires (participantId, key)",
   );
 });
+
+test("chat uses the SDK Message shape { type, payload } in both directions", () => {
+  // The SDK's Message is { type: 'text'; payload: string }, so sendMessage must
+  // pass an object (not a bare string) and the receive path must read .payload.
+  const messageDts = read(join(sdkLib, "registers", "participant_register.d.ts"));
+  assert.match(messageDts, /payload\s*:\s*string/, "SDK Message must carry a string payload");
+
+  assert.ok(
+    !/sendMessage\(\s*JSON\.stringify/.test(videoRoom),
+    "sendMessage must pass a Message object { type, payload }, not a bare JSON string",
+  );
+  assert.match(videoRoom, /sendMessage\(\s*\{\s*type:\s*["']text["']/, "sendMessage should send { type: 'text', payload }");
+  assert.match(videoRoom, /message\?\.payload/, "received messages must read message.payload");
+});

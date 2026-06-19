@@ -73,6 +73,20 @@ function mapCallStatus(eventType: any): string | null {
     default: return null;
   }
 }
+// Monotonic rank so a late/out-of-order call event can't regress a terminal
+// CallLog status. Mirrors the CALL_RANK guard the former handleTwilioCallStatus
+// enforced.
+const CALL_RANK: Record<string, number> = { ringing: 1, in_progress: 2, completed: 3 };
+
+// Best-effort call duration (seconds) from a Call Control hangup payload's
+// start/end timestamps. Returns null when they're missing/unparseable.
+function callDurationSecs(payload: any): number | null {
+  const start = Date.parse(payload?.start_time || '');
+  const end = Date.parse(payload?.end_time || '');
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+  return Math.round((end - start) / 1000);
+}
+
 function extractTelnyxEvent(body: any): { eventType: string | null; id: string | null; payload: any } {
   const b = body || {};
   const data = b.data || b;
@@ -332,6 +346,11 @@ const START_WORDS = ['START', 'UNSTOP', 'YES'];
 const HELP_WORDS = ['HELP', 'INFO'];
 
 // ============================ MESSAGING ============================
+// Monotonic rank so a late/out-of-order delivery webhook can't downgrade a
+// terminal state (e.g. a re-delivered 'sending' arriving after 'sent'). Mirrors
+// the SMS_RANK guard the former handleTwilioSmsStatus enforced.
+const SMS_RANK: Record<string, number> = { queued: 1, sent: 2, delivered: 3, failed: 3 };
+
 async function handleOutboundMessageStatus(base44: any, payload: any): Promise<Response> {
   const providerId = payload?.id;
   const recipientStatus = payload?.to?.[0]?.status || payload?.status;
@@ -342,7 +361,8 @@ async function handleOutboundMessageStatus(base44: any, payload: any): Promise<R
   const rows = await base44.asServiceRole.entities.SmsMessage.filter({ provider_message_id: providerId }, '-created_date', 1).catch(() => []);
   if (!rows.length) return Response.json({ success: false, message: 'SmsMessage not found' });
   const row = rows[0];
-  if (row.status === mapped || (row.status === 'delivered' && mapped !== 'failed')) {
+  // Forward-only: ignore an unchanged or out-of-order (lower-rank) transition.
+  if ((SMS_RANK[mapped] || 0) <= (SMS_RANK[row.status] || 0)) {
     return Response.json({ success: true, status: row.status, deduped: true });
   }
   const update: Record<string, unknown> = { status: mapped };
@@ -351,6 +371,18 @@ async function handleOutboundMessageStatus(base44: any, payload: any): Promise<R
     update.failure_reason = err?.detail || err?.title || 'Delivery failed';
   }
   await base44.asServiceRole.entities.SmsMessage.update(row.id, update);
+
+  // Tell the sending nurse when their text could not be delivered (parity with
+  // the outbound fax-failed notification). Once per row.
+  if (mapped === 'failed' && row.nurse_email && !row.failure_notified) {
+    await base44.asServiceRole.entities.SmsMessage.update(row.id, { failure_notified: true }).catch(() => {});
+    await base44.asServiceRole.entities.Notification.create({
+      user_email: row.nurse_email,
+      title: '⚠️ Text not delivered',
+      message: `Your text to ${row.to_number} could not be delivered (${update.failure_reason}). Verify the number and try again.`,
+      type: 'sms_failed', priority: 'high', related_entity: 'SmsMessage', related_entity_id: row.id, is_read: false,
+    }).catch((err) => console.error('Failed to send sms failure notification:', err));
+  }
   return Response.json({ success: true, status: mapped });
 }
 
@@ -501,7 +533,8 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
 
   const update: Record<string, unknown> = {
     status: mapped,
-    pages: payload?.page_count || faxLog.pages,
+    // Don't let a legitimate 0-page report fall through to the old value.
+    pages: Number.isFinite(payload?.page_count) ? payload.page_count : faxLog.pages,
     failure_reason: null,
     next_retry_at: null,
   };
@@ -529,6 +562,21 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
   }
 
   await base44.asServiceRole.entities.FaxLog.update(faxLog.id, update);
+
+  // Tell the sender when a fax was delivered successfully (parity with the old
+  // handleTwilioFaxWebhook). Guarded by delivery_confirmation_sent so a
+  // re-delivered webhook can't double-notify.
+  if (mapped === 'delivered' && faxLog.sent_by && !faxLog.delivery_confirmation_sent) {
+    await base44.asServiceRole.entities.FaxLog.update(faxLog.id, { delivery_confirmation_sent: true }).catch(() => {});
+    const recipientName = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+    await base44.asServiceRole.entities.Notification.create({
+      user_email: faxLog.sent_by,
+      title: '✅ Fax delivered',
+      message: `Your fax to ${recipientName} was delivered successfully (${update.pages || faxLog.pages || 'N/A'} pages).`,
+      type: 'fax_delivered', priority: 'normal', related_entity: 'FaxLog', related_entity_id: faxLog.id,
+      is_read: false, action_url: `/fax-logs?fax_id=${faxLog.id}`,
+    }).catch((err) => console.error('Failed to send fax delivered notification:', err));
+  }
 
   // Tell the sender when a fax has permanently failed (no retries left).
   if (exhaustedNow && faxLog.sent_by) {
@@ -598,8 +646,12 @@ async function logInboundCall(base44: any, callControlId: string, callerNum: str
   if (!callControlId) return;
   const existing = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => []);
   if (existing.length > 0) return;
-  const callMode = route.action === 'bridge' && route.nurse?.personal_cell_e164 ? 'masked_bridge'
-    : route.action === 'voicemail' ? 'voicemail' : 'off_duty_transfer';
+  // Label the call accurately: a call to a de-provisioned/unowned work number
+  // (no nurse) must NOT be mislabeled as an off-duty transfer.
+  const callMode = !route.nurse ? 'unresolved'
+    : route.action === 'voicemail' ? 'voicemail'
+      : route.action === 'bridge' && route.nurse?.personal_cell_e164 ? 'masked_bridge'
+        : 'office_transfer';
   const logRow = await base44.asServiceRole.entities.CallLog.create({
     direction: 'inbound', from_number: callerNum, to_number: route.to || '', displayed_number: workNum,
     nurse_email: route.nurse?.email || null, call_mode: callMode, status: 'ringing', provider_call_id: callControlId,
@@ -681,8 +733,20 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
     if (!rows.length && state?.call_log_id) {
       rows = await base44.asServiceRole.entities.CallLog.filter({ id: state.call_log_id }).catch(() => []);
     }
-    if (rows.length && rows[0].status !== mapped && rows[0].status !== 'completed') {
-      await base44.asServiceRole.entities.CallLog.update(rows[0].id, { status: mapped }).catch(() => {});
+    if (rows.length) {
+      const cur = rows[0];
+      const patch: Record<string, unknown> = {};
+      // Forward-only so an out-of-order event can't regress a terminal call.
+      if ((CALL_RANK[mapped] || 0) > (CALL_RANK[cur.status] || 0)) patch.status = mapped;
+      // Capture the call duration on hangup (from the Call Control timestamps)
+      // so call logs and any length-based reporting aren't blank.
+      if (eventType === 'call.hangup') {
+        const dur = callDurationSecs(payload);
+        if (dur != null && dur !== cur.duration_seconds) patch.duration_seconds = dur;
+      }
+      if (Object.keys(patch).length) {
+        await base44.asServiceRole.entities.CallLog.update(cur.id, patch).catch(() => {});
+      }
     }
   }
   return Response.json({ success: true, event: eventType, status: mapped });
@@ -692,8 +756,13 @@ async function continueAfterGreeting(base44: any, apiKey: string, callControlId:
   if (action === 'greet_transfer' && to) {
     await callCommand(apiKey, callControlId, 'transfer', { to, from: callerId || to });
   } else if (action === 'voicemail') {
-    // TODO(verify): record_start params (format/channels) against the live API.
-    await callCommand(apiKey, callControlId, 'record_start', { format: 'mp3', channels: 'single', client_state: encodeClientState({ t: 'voicemail' }) });
+    // Bound the recording so a silent/abandoned line can't leave a billed leg
+    // open indefinitely (matches the old 120s voicemail cap). TODO(verify):
+    // record_start field names (format/channels/max_length_secs) against the API.
+    await callCommand(apiKey, callControlId, 'record_start', {
+      format: 'mp3', channels: 'single', max_length_secs: 120,
+      client_state: encodeClientState({ t: 'voicemail' }),
+    });
   } else {
     await callCommand(apiKey, callControlId, 'hangup', {});
   }
