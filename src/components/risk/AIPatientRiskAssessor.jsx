@@ -318,7 +318,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-bold text-slate-900">Overall Risk Profile</h3>
                   <Badge className={`${getRiskColor(displayAssessment.overall_risk_level)} text-white text-lg px-4 py-2`}>
-                    {displayAssessment.overall_risk_level.toUpperCase()}
+                    {(displayAssessment.overall_risk_level || 'unknown').toUpperCase()}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-4 mb-3">
@@ -450,7 +450,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <p className="font-semibold text-slate-900">{action.action}</p>
                           <Badge className={getUrgencyColor(action.urgency)}>
-                            {action.urgency.replace('_', ' ')}
+                            {action.urgency?.replace('_', ' ')}
                           </Badge>
                         </div>
                         <p className="text-sm text-slate-600">{action.rationale}</p>

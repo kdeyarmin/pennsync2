@@ -671,7 +671,7 @@ export default function PatientDetails() {
                   patientId={patientId}
                   patientData={patient}
                   recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 3)}
-                  upcomingVisits={visits?.filter(v => v.status === 'scheduled')}
+                  upcomingVisits={visits?.filter(v => v.status === 'scheduled').sort((a, b) => `${a.visit_date || ''}${a.visit_time || ''}`.localeCompare(`${b.visit_date || ''}${b.visit_time || ''}`))}
                   outreachPurpose="Care coordination and status update"
                 />
               </div>

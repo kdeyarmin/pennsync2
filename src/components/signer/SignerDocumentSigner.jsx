@@ -66,12 +66,15 @@ export default function SignerDocumentSigner({
       // authorized path). The previous direct entity write let anyone forge a
       // signature on any document; this binds the write to the signer's token and
       // stamps the server-derived signer identity.
-      const result = await submitSignerSignature({
+      const signResponse = await submitSignerSignature({
         token,
         document_id: documentId,
         signature_image_url: uploadResponse.file_url,
         typed_name: signatureName,
       });
+      // functions.invoke returns the full axios response (interceptResponses:false),
+      // so the body is under .data; fall back to the object itself defensively.
+      const result = signResponse?.data || signResponse;
 
       if (!result?.success) {
         toast.error(result?.error || 'Failed to save signature');

@@ -246,7 +246,7 @@ export default function HealthHistorySection({ patient }) {
                         {hosp.date && (
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {format(new Date(hosp.date), 'MMM d, yyyy')}
+                            {Number.isNaN(new Date(hosp.date).getTime()) ? hosp.date : format(new Date(hosp.date), 'MMM d, yyyy')}
                           </span>
                         )}
                         {hosp.length_of_stay && (

@@ -150,6 +150,45 @@ the only client op is create). The patient-clinical tables (`Medication`, `OASIS
 that the repo DSL can't express, so they are specified per-entity in
 **`docs/RLS-REMEDIATION-SPEC-2026-06-19.md`** to apply + verify (§7) in the Base44 dashboard.
 
+## Fourth sweep — telehealth, scheduling, mid-size components + a systemic invoke bug
+
+**Systemic — `functions.invoke` result shape (FIXED in the signer flow).** The Base44 functions
+axios client is created with `interceptResponses: false`, so `base44.functions.invoke(...)` returns
+the **full axios response** — the body is under `.data`. `SignerPortal` read `response.valid`
+directly (always `undefined`), so the signer portal showed "invalid link" for every valid token
+(the whole signer flow was non-functional), and my new `submitSignerSignature` consumption had the
+same mistake. Both now use the established `response.data || response` fallback. (Other
+body-direct invoke consumers may exist app-wide — worth a follow-up audit; not changed blind here.)
+
+**Mid-size components (FIXED).** `RealTimeValidator` treated invalid email/phone/date as warnings
+(form reported `valid:true`) with blank messages — the validators return bare strings, so
+`.severity` was always undefined; now pushed as real errors. `DuplicatePatientManager.merge`
+deleted duplicates without reassigning their Visits/CarePlans (lost clinical history) — now mirrors
+`PatientMergeDialog`. `PatientForm` real-time validation used a stale `formData` closure (every
+field but the edited one was the pre-keystroke value) — now validates the authoritative next state
+via a ref, debounced. `PendingPatientUpdates` approve could crash on a `find()` that returned
+undefined — now passes `patient_id` through the mutation. Crash guards (optional chaining /
+fallbacks) on partial-LLM fields in `PatientMatchReview`, `ReferralAnalyzer`, `PatientRiskPredictor`,
+`AIPatientRiskAssessor`, and date-format guards in `PatientMergeDialog`/`MedicationManagementSection`/
+`HealthHistorySection`. `DocumentToTriageMapper` now invalidates its lists after creating a
+patient/referral; `ReferralTriageAnalyzer` awaits the clipboard write (no false "copied" toast).
+
+**Scheduling (FIXED).** `analyzeVisitForSupplyUsage` had a write-IDOR (caller-supplied `patientId`
+→ service-role `SupplyUsageLog` write + inventory decrement with no scope check) — added the
+assigned-nurse/admin gate. `PatientDetails` passed scheduled visits in descending order so the
+"next visit" advisor used the *furthest-out* visit — now sorted ascending. (Several scheduling
+components — `AIScheduleOptimizer`, `AutomatedTaskAssigner`, `CareCoordination*` — are unrouted dead
+code; their latent bugs were noted, not fixed.)
+
+**Telehealth (deferred — documented).** The public `/join` flow is otherwise sound (server-side
+token compare, server-derived identity, room-scoped 3600s grant, status gate). Two real residuals:
+(1) `createTelehealthToken` resolves the session by caller-supplied `room_name` (newest-wins), so a
+user who can learn a victim's exact `room_name` could mint a grant into their room — low practical
+exploitability (room_name is read-RLS-protected and carries a `Date.now()` component), high
+fix-risk (needs binding the mint to an immutable session id + client contract change, untestable
+here); (2) the join token has no time-based TTL (only a status gate), unlike `validateSignerToken`.
+Both documented with recommended fixes rather than changed blind on an untestable A/V flow.
+
 ## Third sweep — signature/signer flow + offline-sync subsystem
 
 **Signature & signer flow.**

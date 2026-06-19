@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,15 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
     care_type: 'home_health',
     status: 'active'
   });
+
+  // Keep a live ref to the latest formData so real-time validation always sees
+  // every field's current value. The old handleChange validated
+  // `{ ...formData, [field]: value }` off the render closure, so every field
+  // except the one being edited was the stale pre-keystroke value (cross-field
+  // checks and "did I fix it?" feedback were wrong). The timer ref also debounces.
+  const formDataRef = useRef(formData);
+  useEffect(() => { formDataRef.current = formData; }, [formData]);
+  const validationTimerRef = useRef(null);
 
   const [secondaryDiagnosisInput, setSecondaryDiagnosisInput] = useState('');
   const [validationErrors, setValidationErrors] = useState([]);
@@ -59,15 +68,14 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   }, [patient]);
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Real-time validation
-    setTimeout(() => {
-      const errors = validatePatient({ ...formData, [field]: value });
-      setValidationErrors(errors);
+    const next = { ...formDataRef.current, [field]: value };
+    formDataRef.current = next; // sync so rapid successive edits accumulate
+    setFormData(next);
+
+    // Real-time validation against the authoritative next state, debounced.
+    clearTimeout(validationTimerRef.current);
+    validationTimerRef.current = setTimeout(() => {
+      setValidationErrors(validatePatient(next));
     }, 500);
   };
   

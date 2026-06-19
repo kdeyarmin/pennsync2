@@ -169,7 +169,7 @@ export default function PatientMergeDialog({
           <div className="text-center">
             <p className="text-xs text-slate-500">Created</p>
             <p className="text-xs font-medium text-slate-700">
-              {format(new Date(patient.created_date), 'MM/dd/yyyy')}
+              {Number.isNaN(new Date(patient.created_date).getTime()) ? '—' : format(new Date(patient.created_date), 'MM/dd/yyyy')}
             </p>
           </div>
         </div>

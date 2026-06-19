@@ -72,6 +72,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
         </Button>
       </div>
 
+      {matchAnalysis && (
       <Card className="border-2 border-blue-300">
         <CardHeader className="bg-blue-50">
           <CardTitle className="flex items-center gap-2">
@@ -128,6 +129,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
           </div>
         </CardContent>
       </Card>
+      )}
 
       {viewMode === 'list' && referral.match_suggestions && referral.match_suggestions.length > 0 && (
         <div className="space-y-3">

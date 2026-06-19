@@ -138,7 +138,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
                 riskData.overall_risk_level === 'medium' ? 'text-yellow-900' :
                 'text-green-900'
               }>
-                <strong>Overall Risk Level: {riskData.overall_risk_level.toUpperCase()}</strong>
+                <strong>Overall Risk Level: {(riskData.overall_risk_level || 'unknown').toUpperCase()}</strong>
                 {riskData.alerts_created > 0 && (
                   <p className="text-sm mt-1">
                     {riskData.alerts_created} new alert{riskData.alerts_created > 1 ? 's' : ''} created

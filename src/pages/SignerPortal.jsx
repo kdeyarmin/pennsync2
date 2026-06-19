@@ -28,12 +28,16 @@ export default function SignerPortal() {
     try {
       setIsLoading(true);
       const response = await validateSignerToken({ token });
-      
-      if (response.valid) {
+      // functions.invoke returns the full axios response (interceptResponses:false);
+      // the body is under .data. Reading response.valid directly always failed
+      // (undefined), so the portal showed "invalid link" for every valid token.
+      const result = response?.data || response;
+
+      if (result.valid) {
         setIsValid(true);
-        setPackageData(response);
+        setPackageData(result);
       } else {
-        setError(response.error || 'Invalid or expired access link.');
+        setError(result.error || 'Invalid or expired access link.');
       }
     } catch (err) {
       setError(err.message || 'Failed to validate access link.');
