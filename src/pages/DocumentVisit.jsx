@@ -22,7 +22,6 @@ import ClinicalDecisionSupport from "../components/visit/ClinicalDecisionSupport
 import CarePlanProgress from "../components/visit/CarePlanProgress";
 import TextExpander from "../components/visit/TextExpander";
 import OneClickActions from "../components/visit/OneClickActions";
-import MedicationReconciliation from "../components/visit/MedicationReconciliation";
 import TeamNotes from "../components/visit/TeamNotes";
 import SmartReminders from "../components/visit/SmartReminders";
 import PreVisitPrep from "../components/visit/PreVisitPrep";
@@ -1395,11 +1394,6 @@ Generate the complete clinical narrative based on the audio and context:`;
               <SameAsLastVisit
                 previousVisit={previousVisit}
                 onCopyContent={handleCopyFromPrevious}
-              />
-
-              <MedicationReconciliation
-                patientId={visit?.patient_id}
-                onMedicationsUpdated={(medText) => setNarrativeText(prev => prev + '\n\n' + medText)}
               />
 
               {previousVisit && Object.keys(vitalSigns).length > 0 && (

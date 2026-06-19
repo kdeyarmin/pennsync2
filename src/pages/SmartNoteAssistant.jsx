@@ -16,7 +16,6 @@ import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
 import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
-import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
@@ -379,20 +378,6 @@ export default function SmartNoteAssistant() {
       <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
 
       <SmartNoteTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
-      {/* ── TAB: MEDICATIONS ── */}
-      {activeTab === "medications" && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <MedicationManagementTab
-            patient={patient}
-            patientId={patientId}
-            onAddToNote={(medNote) => {
-              setNote(prev => prev + "\n\n" + medNote);
-              setActiveTab("builder");
-            }}
-          />
-        </div>
-      )}
 
       {/* ── TAB: DRAFT FROM VITALS ── */}
       {activeTab === "drafter" && (
