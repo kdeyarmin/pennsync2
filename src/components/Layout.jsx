@@ -79,7 +79,7 @@ export default function Layout({ children, currentPageName }) {
       device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
       details: { timestamp: new Date().toISOString(), user_role: currentUser.role, session_start: true },
       user_agent: navigator.userAgent,
-    }).catch(() => {});
+    }).catch((e) => console.warn("Failed to log login activity:", e?.message));
     sessionStorage.setItem(key, 'true');
   }, [currentUser?.email]);
 
@@ -293,7 +293,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-slate-100 w-0 md:w-auto">
+        <main id="main-content" className="flex-1 pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-slate-100 w-0 md:w-auto">
           <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 animate-fade-in">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}

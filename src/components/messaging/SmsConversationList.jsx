@@ -102,7 +102,7 @@ export default function SmsConversationList() {
       selectedUnreadKey.split(",").map((id) => base44.entities.SmsMessage.update(id, { is_read: true }))
     )
       .then(() => queryClient.invalidateQueries({ queryKey: ["sms-messages", user?.email] }))
-      .catch(() => {});
+      .catch((e) => console.warn("Failed to mark SMS read:", e?.message));
   }, [selectedUnreadKey, user?.email]);
 
   if (!user?.work_phone_number) {

@@ -73,9 +73,9 @@ export default function AISmartOASISAssistant({
       };
 
       const result = await invokeLLM({
-        prompt: `You are an expert home health OASIS-E assessment specialist with deep knowledge of PDGM reimbursement optimization and CMS compliance requirements.
+        prompt: `You are an expert home health OASIS-E assessment specialist with deep knowledge of CMS documentation and Medicare compliance requirements.
 
-**PRIMARY OBJECTIVE: Maximize PDGM reimbursement while ensuring full Medicare compliance**
+**PRIMARY OBJECTIVE: Produce clinically accurate, fully compliant OASIS-E documentation that reflects the patient's true condition.**
 
 For each OASIS item, provide:
 1. Item code and name (e.g., M1021 - Primary Diagnosis)
@@ -83,71 +83,70 @@ For each OASIS item, provide:
 3. Confidence level: HIGH (>90%), MEDIUM (70-90%), LOW (<70%)
 4. Data source: What data supports this suggestion
 5. Verification flags: What the nurse should verify during visit
-6. PDGM impact: How this item affects reimbursement/case-mix
+6. Clinical significance: What this item documents about the patient's condition
 7. Clinical notes: Additional context or considerations
 8. Compliance risk: Any red flags or documentation gaps
 
-**CRITICAL OASIS SECTIONS FOR MAXIMUM REIMBURSEMENT:**
+**KEY OASIS SECTIONS TO DOCUMENT ACCURATELY:**
 
-**DIAGNOSES (Highest Impact on Payment):**
-- M1021: Primary Diagnosis - MUST align with highest-paying PDGM clinical group
-- M1023: Other Diagnoses - Capture ALL comorbidities that increase case-mix adjustment
-- Focus on diagnoses in these high-paying groups: MS-Rehab, Neuro/Rehab, Wounds, MMTA-Surgical
+**DIAGNOSES:**
+- M1021: Primary Diagnosis - the condition most related to the current plan of care
+- M1023: Other Diagnoses - Capture ALL active comorbidities that affect the plan of care
+- Code diagnoses to the highest specificity supported by the clinical record
 
-**FUNCTIONAL STATUS (Major Payment Impact):**
-- M1800-M1870: Grooming through Toileting - Lower scores = higher payment
-- M1845: Toilet Transferring - Critical for case-mix
-- M1850: Transferring - Critical for case-mix
-- M1860: Ambulation - Critical for case-mix
-- Document functional LIMITATIONS accurately - understating = lost revenue
+**FUNCTIONAL STATUS:**
+- M1800-M1870: Grooming through Toileting - document the level of assistance the patient actually requires
+- M1845: Toilet Transferring - assess and document the patient's actual ability
+- M1850: Transferring - assess and document the patient's actual ability
+- M1860: Ambulation - assess and document the patient's actual ability
+- Document functional status to accurately reflect the patient's actual abilities and limitations — neither overstating nor understating
 
-**CLINICAL FACTORS (Case-Mix Adjusters):**
-- M1033: Risk for Hospitalization (≥2 factors increases payment)
-- M1600: Vision - Impairment increases case-mix
-- M1610: Hearing - Impairment increases case-mix
-- M1620: Speech - Impairment increases case-mix
-- M1730: Urinary incontinence - Affects case-mix
-- M1740/M1745: Bowel issues - Affects case-mix
+**CLINICAL FACTORS:**
+- M1033: Risk for Hospitalization - assess and document all applicable risk factors
+- M1600: Vision - document any impairment
+- M1610: Hearing - document any impairment
+- M1620: Speech - document any impairment
+- M1730: Urinary incontinence - document if present
+- M1740/M1745: Bowel issues - document if present
 
-**WOUND CARE (High-Paying Group):**
-- M1306-M1322: Pressure ulcers (Stage 2+ = high payment)
+**WOUND CARE:**
+- M1306-M1322: Pressure ulcers - document stage, location, and size
 - M1324-M1334: Stasis ulcers
 - M1340-M1342: Surgical wounds
 - Document ALL wounds with stage, location, size
 
-**THERAPY THRESHOLD:**
-- Ensure functional scores support therapy need if applicable
-- 10+ therapy visits = higher payment tier
+**THERAPY:**
+- Document the functional findings that support any therapy need
+- Record the planned therapy services and their clinical justification
 
 **COMPLIANCE REQUIREMENTS:**
 - M1510: Symptom control - Must be assessed
 - M2200: Therapy need - Required for skilled services
 - M2250: Plan of Care - Must align with diagnoses and functional needs
-- M2301: Emergent care - Recent ER visits affect payment
+- M2301: Emergent care - Recent ER visits must be documented
 - M2410: High-risk drug classes - Required for medication review
 
 **RED FLAGS TO AVOID:**
-- Missing comorbidities that should increase payment
-- Functional scores too high (missing functional limitations)
-- Primary diagnosis in low-paying group when higher group applies
+- Missing active comorbidities that belong in the record
+- Functional scores that don't match the patient's documented abilities
+- Primary diagnosis that doesn't reflect the focus of care
 - Missing wound documentation
 - Incomplete risk factors for hospitalization
 
-**OPTIMIZATION CHECKLIST:**
-1. Verify primary diagnosis is in highest applicable PDGM group
-2. Capture ALL comorbidities (diabetes, COPD, CHF, etc.)
-3. Document functional limitations accurately (don't overstate independence)
+**ACCURACY & COMPLETENESS CHECKLIST:**
+1. Verify the primary diagnosis reflects the focus of the current plan of care
+2. Capture ALL active comorbidities (diabetes, COPD, CHF, etc.)
+3. Document functional status accurately (neither over- nor under-stating independence)
 4. Identify ALL wounds and skin issues
-5. Count hospitalization risk factors (aim for 2+ when applicable)
+5. Document all applicable hospitalization risk factors
 6. Document sensory impairments (vision, hearing, speech)
 7. Capture continence issues
 8. Note all high-risk medications
 
 For each suggested OASIS item, explicitly state:
-- **PDGM Impact**: "Increases case-mix by X%" or "Qualifies for [Clinical Group]"
-- **Revenue Impact**: Estimate payment difference if documented vs. missed
-- **Documentation Needed**: Specific evidence nurse must observe/document
-- **Compliance Risk**: "HIGH" if missing this creates audit risk
+- **Clinical Basis**: The findings in the record that support this response
+- **Documentation Needed**: Specific evidence the nurse must observe/document
+- **Compliance Risk**: "HIGH" if missing this creates audit or accuracy risk
 
 **CRITICAL: CROSS-VALIDATION ACROSS DATA SOURCES**
 
@@ -156,7 +155,7 @@ You have access to multiple data sources: referral data, patient history, and vi
 1. **Diagnoses (M1021-M1029):**
    - Compare primary diagnosis across referral, patient record, and visit notes
    - Flag if diagnoses are inconsistent or contradict each other
-   - Identify if a higher-paying diagnosis appears in one source but not selected as primary
+   - Flag if a more clinically appropriate primary diagnosis appears in one source but isn't selected
    - Check ICD-10 codes match diagnosis descriptions
 
 2. **Functional Status (M1800-M1910):**
@@ -181,73 +180,65 @@ For each discrepancy found, provide:
 - **Sources Compared:** Which documents/records show the conflict
 - **Compliance Risk:** How this affects OASIS accuracy and audit risk
 - **Resolution Steps:** Specific actions to reconcile the discrepancy
-- **Reimbursement Impact:** How fixing this could affect payment
+- **Clinical Impact:** How resolving this improves the accuracy of the record
 
-**PROACTIVE PDGM OPTIMIZATION STRATEGY:**
+**ACCURACY & COMPLETENESS GUIDANCE:**
 
-You must provide actionable, revenue-maximizing recommendations:
+Provide actionable recommendations that improve documentation accuracy and completeness:
 
-1. **Diagnosis Optimization (M1021-M1029):**
-   - If multiple diagnoses exist, analyze which should be PRIMARY for highest-paying clinical group
-   - Provide specific ICD-10 code recommendations
-   - Give concrete documentation templates/examples to justify primary diagnosis selection
+1. **Diagnosis Accuracy (M1021-M1029):**
+   - If multiple diagnoses exist, analyze which best reflects the focus of the current plan of care as PRIMARY
+   - Provide specific ICD-10 code recommendations at the correct level of specificity
+   - Give concrete documentation examples to justify primary diagnosis selection
    - Explain EXACTLY what clinical observations/assessments the nurse needs to document
-   - Compare revenue potential: "Making X primary vs Y primary = $Z difference per episode"
 
-2. **Functional Status Optimization (M1800-M1860):**
-   - For EACH functional item, identify specific observational points that support higher impairment
+2. **Functional Status Accuracy (M1800-M1860):**
+   - For EACH functional item, identify the observations needed to score it correctly
    - Suggest exact wording for documentation (e.g., "Document: Patient requires physical assist with...")
    - Provide clinical examples: "If patient uses walker, document specific limitations and assist needed"
-   - Explain how each functional scoring change impacts case-mix weight
-   - Revenue impact: "Scoring M1850 as '2' instead of '1' increases payment by $X"
+   - Base every suggested score on the patient's documented abilities, never on payment
 
-3. **Missing Data Revenue Analysis:**
-   - Identify EACH missing data element that affects PDGM
-   - Calculate potential revenue at risk: "Missing wound staging data = potential $X loss"
-   - Prioritize by dollar impact (highest revenue impact first)
-   - Provide specific questions nurse must ask or observations to make
+3. **Missing Data Analysis:**
+   - Identify EACH missing data element needed for a complete, accurate assessment
+   - Prioritize by clinical importance and audit risk
+   - Provide specific questions the nurse must ask or observations to make
 
 4. **Specific OASIS Mappings:**
-   - Recommend optimal OASIS item selections with exact reasoning
-   - Format: "M1XXX: Select [option] because [clinical reasoning] → Increases payment by $X"
-   - Provide decision trees: "If patient has X condition, then score M1XXX as Y"
+   - Recommend OASIS item selections with clinical reasoning
+   - Format: "M1XXX: Select [option] because [clinical reasoning]"
+   - Provide decision trees: "If patient has X condition, then assess and score M1XXX accordingly"
 
-**COMPREHENSIVE PDGM ANALYSIS REQUIRED:**
+**COMPREHENSIVE ASSESSMENT REVIEW:**
 
-After analyzing all OASIS items, provide a detailed PDGM Analysis section that includes:
+After analyzing all OASIS items, provide a detailed review section that includes:
 
-1. **Current PDGM Status:**
+1. **Current Assessment Summary:**
    - Clinical group based on primary diagnosis
-   - Estimated case-mix weight
    - Functional impairment level (based on M1800-M1860 scores)
-   - Comorbidity tier
+   - Comorbidity profile
 
-2. **Optimization Opportunities:**
+2. **Accuracy & Completeness Opportunities:**
    For each opportunity, specify:
-   - What could be optimized (diagnosis selection, functional scoring, comorbidity capture)
-   - Current status vs. optimal status
+   - What could be improved (diagnosis specificity, functional scoring accuracy, comorbidity capture)
+   - Current status vs. accurate/complete status
    - Specific recommendations with action steps
-   - Estimated revenue impact (e.g., "$500-800 per episode")
+   - The clinical documentation that would support the change
 
-3. **Alternative Clinical Groups:**
-   - Other PDGM groups patient might qualify for
-   - Required primary diagnosis changes
-   - Case-mix weight comparison
-   - Documentation needed to support the change
-   - Feasibility assessment
+3. **Alternative Clinical Considerations:**
+   - Other clinical groups the patient's condition might support
+   - Documentation needed to support any change
+   - Whether the current record supports it
 
-4. **Missing High-Value Data:**
-   - Critical information gaps that affect payment
-   - Why each missing element matters for PDGM
+4. **Missing Clinically-Relevant Data:**
+   - Critical information gaps that affect assessment accuracy
+   - Why each missing element matters clinically
    - How to obtain/assess during visit
-   - Potential value add if captured
 
-5. **Functional Score Optimization:**
+5. **Functional Score Review:**
    - Current estimated functional scores
-   - Target scores for higher payment tier
    - Specific assessment areas to focus on (e.g., "Assess toilet transferring - current data suggests assistance needed but not documented")
 
-CRITICAL: Only suggest items where you have reliable data. Mark items as NEEDS_MANUAL_ASSESSMENT when data is insufficient, but ALWAYS explain what to look for to capture maximum reimbursement.
+CRITICAL: Only suggest items where you have reliable data. Mark items as NEEDS_MANUAL_ASSESSMENT when data is insufficient. Always base recommendations on the patient's actual clinical condition, and explain what to assess to ensure complete and accurate documentation.
 
 Patient Data: ${JSON.stringify(contextData)}`,
         response_json_schema: {
@@ -600,7 +591,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 <Alert className="bg-green-50 border-green-300">
                   <AlertCircle className="w-4 h-4 text-green-600" />
                   <AlertDescription>
-                    <p className="font-semibold text-green-900">💰 PDGM Clinical Group: {suggestions.summary.pdgm_clinical_group}</p>
+                    <p className="font-semibold text-green-900">PDGM Clinical Group: {suggestions.summary.pdgm_clinical_group}</p>
                     {suggestions.summary.potential_revenue_opportunities && (
                       <p className="text-sm text-green-800 mt-1">{suggestions.summary.potential_revenue_opportunities}</p>
                     )}
@@ -646,7 +637,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 <Alert className="bg-orange-100 border-orange-400">
                   <AlertDescription className="text-orange-900 text-sm">
                     <strong>⚠️ Cross-validation analysis found inconsistencies across referral data, patient history, and visit notes.</strong> 
-                    <br/>Review and resolve these before finalizing OASIS to ensure compliance and maximize reimbursement.
+                    <br/>Review and resolve these before finalizing OASIS to ensure documentation accuracy and compliance.
                   </AlertDescription>
                 </Alert>
                 
@@ -731,13 +722,13 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-purple-900">
                   <Target className="w-5 h-5" />
-                  Primary Diagnosis Optimization for Maximum Reimbursement
+                  Primary Diagnosis Documentation Review
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Alert className="bg-purple-100 border-purple-400">
                   <AlertDescription className="text-purple-900 text-sm">
-                    <strong>Strategic Diagnosis Selection:</strong> Choosing the optimal primary diagnosis can significantly impact your PDGM clinical group and reimbursement.
+                    <strong>Primary Diagnosis Selection:</strong> Choose the primary diagnosis that most accurately reflects the focus of the current plan of care.
                   </AlertDescription>
                 </Alert>
                 {suggestions.diagnosis_optimization.map((diag, idx) => (
@@ -754,10 +745,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                         <p className="text-sm font-semibold text-slate-900">{diag.recommended_primary}</p>
                         <p className="text-xs text-blue-600 font-mono">{diag.recommended_icd10}</p>
                         <p className="text-xs text-slate-500">{diag.clinical_group_recommended}</p>
-                      </div>
-                      <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
-                        <p className="text-xs text-green-700">Revenue Impact</p>
-                        <p className="text-lg font-bold text-green-900">+${diag.revenue_impact}</p>
                       </div>
                     </div>
 
@@ -799,7 +786,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <CardContent className="space-y-4">
                 <Alert className="bg-blue-100 border-blue-400">
                   <AlertDescription className="text-blue-900 text-sm">
-                    <strong>Case-Mix Maximization:</strong> Accurate functional scoring directly impacts your case-mix weight and payment. Document specific observations to support appropriate impairment levels.
+                    <strong>Document functional status accurately:</strong> Score each item to reflect the patient's actual abilities, and document specific observations that support the level of impairment recorded.
                   </AlertDescription>
                 </Alert>
                 {suggestions.functional_optimization.map((func, idx) => (
@@ -820,10 +807,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                             <p className="text-lg font-bold text-green-600">{func.recommended_score}</p>
                           </div>
                         </div>
-                      </div>
-                      <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg text-right">
-                        <p className="text-xs text-green-700">Payment Impact</p>
-                        <p className="text-lg font-bold text-green-900">+${func.revenue_impact}</p>
                       </div>
                     </div>
 
@@ -867,13 +850,13 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-red-900">
                   <AlertCircle className="w-5 h-5" />
-                  Critical Missing Data - Revenue at Risk
+                  Critical Missing Documentation
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Alert className="bg-red-100 border-red-400">
                   <AlertDescription className="text-red-900 text-sm">
-                    <strong>High Priority:</strong> The following data gaps are preventing optimal PDGM classification. Total revenue at risk: ${suggestions.missing_data_revenue_analysis.reduce((sum, item) => sum + (item.revenue_at_risk || 0), 0).toLocaleString()}
+                    <strong>High Priority:</strong> The following documentation gaps are preventing a complete, accurate PDGM classification. Address them so the assessment fully reflects the patient's condition.
                   </AlertDescription>
                 </Alert>
                 {suggestions.missing_data_revenue_analysis
@@ -897,10 +880,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                           <p className="font-semibold text-slate-900">{missing.data_element}</p>
                         </div>
                         <p className="text-xs text-slate-600">Affects: {missing.pdgm_component_affected}</p>
-                      </div>
-                      <div className="ml-4 bg-red-100 px-3 py-2 rounded-lg text-right">
-                        <p className="text-xs text-red-700">Revenue at Risk</p>
-                        <p className="text-xl font-bold text-red-900">${missing.revenue_at_risk}</p>
                       </div>
                     </div>
 
@@ -943,12 +922,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                         <p className="font-semibold text-lg text-slate-900 mb-2">{mapping.recommended_selection}</p>
                         <p className="text-sm text-slate-700 mb-3">{mapping.clinical_reasoning}</p>
                       </div>
-                      {mapping.payment_impact > 0 && (
-                        <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
-                          <p className="text-xs text-green-700">Impact</p>
-                          <p className="text-lg font-bold text-green-900">+${mapping.payment_impact}</p>
-                        </div>
-                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -992,7 +965,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
             <Card className="border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-900">
-                  💰 PDGM Reimbursement Analysis
+                  PDGM Documentation Review
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1004,7 +977,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <p className="text-sm text-slate-600 mt-1">Case-Mix Weight: <span className="font-semibold">{suggestions.pdgm_analysis.current_case_mix_weight?.toFixed(3)}</span></p>
                   </div>
                   <div className="bg-white p-4 rounded-lg border-2 border-blue-200">
-                    <p className="text-xs font-semibold text-slate-600 mb-2">Payment Factors</p>
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Clinical Factors</p>
                     <div className="space-y-1 text-sm">
                       <p><strong>Functional Level:</strong> {suggestions.pdgm_analysis.functional_impairment_level}</p>
                       <p><strong>Comorbidity Tier:</strong> {suggestions.pdgm_analysis.comorbidity_tier}</p>
@@ -1017,16 +990,13 @@ Patient Data: ${JSON.stringify(contextData)}`,
                   <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
                     <h4 className="font-semibold text-yellow-900 mb-3 flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
-                      Revenue Optimization Opportunities
+                      Documentation Completeness Opportunities
                     </h4>
                     <div className="space-y-3">
                       {suggestions.pdgm_analysis.optimization_opportunities.map((opp, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-yellow-200">
                           <div className="flex items-start justify-between mb-2">
                             <p className="font-semibold text-slate-900">{opp.opportunity_type}</p>
-                            {opp.revenue_increase_estimate && (
-                              <Badge className="bg-green-600">{opp.revenue_increase_estimate}</Badge>
-                            )}
                           </div>
                           <p className="text-sm text-slate-600 mb-2"><strong>Current:</strong> {opp.current_status}</p>
                           <p className="text-sm text-green-700 font-medium mb-2">{opp.recommendation}</p>
@@ -1050,7 +1020,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 {/* Alternative Clinical Groups */}
                 {suggestions.pdgm_analysis.alternative_clinical_groups?.length > 0 && (
                   <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-                    <h4 className="font-semibold text-purple-900 mb-3">Alternative Higher-Paying Clinical Groups</h4>
+                    <h4 className="font-semibold text-purple-900 mb-3">Alternative Clinical Groups to Consider</h4>
                     <div className="space-y-2">
                       {suggestions.pdgm_analysis.alternative_clinical_groups.map((alt, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-purple-200">
@@ -1084,7 +1054,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                           <p className="font-semibold text-slate-900 text-sm mb-1">{missing.data_element}</p>
                           <p className="text-xs text-slate-600 mb-1"><strong>Why Important:</strong> {missing.why_important}</p>
                           <p className="text-xs text-blue-700 mb-1"><strong>How to Obtain:</strong> {missing.how_to_obtain}</p>
-                          <p className="text-xs text-green-700 font-medium">💰 {missing.potential_value_add}</p>
+                          <p className="text-xs text-green-700 font-medium">{missing.potential_value_add}</p>
                         </div>
                       ))}
                     </div>
@@ -1097,7 +1067,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <h4 className="font-semibold text-blue-900 mb-3">Functional Score Optimization</h4>
                     <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3">
                       <p className="text-sm mb-2"><strong>Current Estimated Scores:</strong> {suggestions.pdgm_analysis.functional_score_optimization.current_estimated_scores}</p>
-                      <p className="text-sm text-green-700 font-medium mb-2"><strong>Target for Higher Payment:</strong> {suggestions.pdgm_analysis.functional_score_optimization.target_for_higher_payment}</p>
+                      <p className="text-sm text-green-700 font-medium mb-2"><strong>Documentation Focus:</strong> {suggestions.pdgm_analysis.functional_score_optimization.target_for_higher_payment}</p>
                     </div>
                     {suggestions.pdgm_analysis.functional_score_optimization.assessment_focus_areas?.length > 0 && (
                       <div className="bg-white p-3 rounded-lg border border-blue-200">
@@ -1197,11 +1167,8 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
                             {item.pdgm_impact && (
                               <div className="bg-green-50 p-3 rounded-lg mb-2 border-l-4 border-green-500">
-                                <p className="text-sm font-semibold text-green-900 mb-1">💰 PDGM Impact:</p>
+                                <p className="text-sm font-semibold text-green-900 mb-1">PDGM / Case-Mix Relevance:</p>
                                 <p className="text-sm text-slate-900">{item.pdgm_impact}</p>
-                                {item.revenue_impact && (
-                                  <p className="text-xs text-green-700 mt-1 font-semibold">Revenue: {item.revenue_impact}</p>
-                                )}
                               </div>
                             )}
 

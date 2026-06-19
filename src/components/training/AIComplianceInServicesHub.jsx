@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles, Loader2, AlertCircle, Video } from "lucide-react";
+import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { base44 } from "@/api/base44Client";
 import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
@@ -120,7 +121,7 @@ export default function AIComplianceInServicesHub() {
       queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
       setGenerateSuccess(result?.data || result);
     } catch (err) {
-      setGenerateError(err?.message || "AI generation failed. Please try again.");
+      setGenerateError(configNotReadyMessage(err) || err?.message || "AI generation failed. Please try again.");
     } finally {
       setGenerating(false);
     }

@@ -38,6 +38,7 @@
         "discharge_summary",
         "medication_list",
         "orders",
+        "state_reportable_incident",
         "other"
       ],
       "description": "Document category"

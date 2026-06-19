@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   DAY_KEYS, defaultBusinessHours, isWithinBusinessHours, summarizeSchedule,
 } from "@/components/voice/businessHours";
+import { backfillTcpaQuietHours } from "@/functions/backfillTcpaQuietHours";
 
 const DAY_LABELS = {
   sun: "Sunday", mon: "Monday", tue: "Tuesday", wed: "Wednesday",
@@ -63,7 +64,9 @@ export default function CallingHoursPanel() {
     after_hours_call_greeting: "",
     after_hours_sms_auto_reply_enabled: true,
     after_hours_sms_auto_reply: "",
-    tcpa_quiet_hours_enabled: false,
+    // TCPA quiet hours default ON: not texting patients overnight is the
+    // legally-safer floor. An agency can still explicitly disable it.
+    tcpa_quiet_hours_enabled: true,
     tcpa_quiet_start_hour: 8,
     tcpa_quiet_end_hour: 21,
   });
@@ -83,11 +86,28 @@ export default function CallingHoursPanel() {
       after_hours_call_greeting: settings.after_hours_call_greeting || "",
       after_hours_sms_auto_reply_enabled: settings.after_hours_sms_auto_reply_enabled !== false,
       after_hours_sms_auto_reply: settings.after_hours_sms_auto_reply || "",
-      tcpa_quiet_hours_enabled: settings.tcpa_quiet_hours_enabled === true,
+      // Default ON when unset (only an explicit `false` disables quiet hours).
+      tcpa_quiet_hours_enabled: settings.tcpa_quiet_hours_enabled !== false,
       tcpa_quiet_start_hour: settings.tcpa_quiet_start_hour ?? 8,
       tcpa_quiet_end_hour: settings.tcpa_quiet_end_hour ?? 21,
     });
   }, [settings]);
+
+  // One-time, idempotent backfill: existing agencies that never configured TCPA
+  // quiet hours get the legally-safer default enforced immediately in the
+  // outbound SMS paths. Only touches records where the flag was never set; an
+  // explicit "off" is respected.
+  useEffect(() => {
+    backfillTcpaQuietHours()
+      .then((res) => {
+        const updated = (res?.data ?? res)?.updated_count ?? 0;
+        if (updated > 0) {
+          queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
+          toast.success("TCPA quiet hours are now enforced by default for outbound texting.");
+        }
+      })
+      .catch((e) => console.warn("TCPA quiet-hours backfill skipped:", e?.message));
+  }, [queryClient]);
 
   const save = useMutation({
     mutationFn: () => {

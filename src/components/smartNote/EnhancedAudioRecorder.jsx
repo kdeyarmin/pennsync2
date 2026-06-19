@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { Mic, MicOff, X, CheckCircle2, AlertCircle } from "lucide-react";
@@ -79,8 +80,9 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
       setTranscript(enhanced);
       setShowMapper(true);
     } catch (err) {
-      setError(`Transcription error: ${err.message}`);
-      console.error("Transcription error:", err);
+      const friendly = configNotReadyMessage(err);
+      setError(friendly || `Transcription error: ${err.message}`);
+      if (!friendly) console.error("Transcription error:", err);
     } finally {
       setTranscribing(false);
     }

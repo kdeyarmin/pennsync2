@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { configNotReadyMessage } from '@/lib/aiFeatureError';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,8 +86,9 @@ export default function AITrainingGenerator() {
       setGeneratedCourse(response?.data || response);
       toast.success('Training course generated successfully!');
     } catch (error) {
-      console.error('Generation failed:', error);
-      toast.error('Failed to generate course: ' + error.message);
+      const friendly = configNotReadyMessage(error);
+      if (!friendly) console.error('Generation failed:', error);
+      toast.error(friendly || ('Failed to generate course: ' + error.message));
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,7 @@
-import { Sparkles, Pill, ClipboardList, FileText, TrendingUp } from "lucide-react";
+import { Sparkles, ClipboardList, FileText, TrendingUp } from "lucide-react";
 
 export const SMART_NOTE_TABS = [
   { id: "builder", label: "Note Builder", icon: Sparkles, color: "indigo" },
-  { id: "medications", label: "Medications", icon: Pill, color: "emerald" },
   { id: "drafter", label: "Draft from Vitals", icon: ClipboardList, color: "violet" },
   { id: "summary", label: "Visit Summary", icon: FileText, color: "purple" },
   { id: "trends", label: "Vital Trends", icon: TrendingUp, color: "cyan" },

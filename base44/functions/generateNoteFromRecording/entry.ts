@@ -1,5 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
+// production by default. console.error/warn remain ungated for visibility.
+const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
+const debugLog = (...args) => { if (DEBUG) debugLog(...args); };
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -28,7 +33,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 1: Transcribe audio using AI
-    console.log('Transcribing audio...');
+    debugLog('Transcribing audio...');
     const transcriptionResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `Please transcribe the following audio/video file of a medical visit. Provide a clear, complete transcription of the conversation between the healthcare provider and patient. Preserve medical terminology and patient responses accurately.`,
       file_urls: [audio_url],
@@ -44,7 +49,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 2: Generate structured clinical note
-    console.log('Generating clinical note...');
+    debugLog('Generating clinical note...');
     const notePrompt = `Based on the following patient interaction transcription, generate a professional structured clinical note in SOAP format (Subjective, Objective, Assessment, Plan).
 
 Patient Information:
@@ -73,7 +78,7 @@ Format the note professionally for medical records.`;
     const generatedNote = typeof noteResponse === 'string' ? noteResponse : noteResponse.text || '';
 
     // Step 3: Generate treatment suggestions
-    console.log('Generating treatment suggestions...');
+    debugLog('Generating treatment suggestions...');
     const treatmentPrompt = `Based on this patient interaction transcript and diagnosis, suggest relevant treatment options:
 
 Diagnosis: ${diagnosis}

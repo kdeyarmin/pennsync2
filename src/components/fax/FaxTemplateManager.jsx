@@ -111,7 +111,8 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
 
   const handleApply = async (tpl) => {
     // Increment use count
-    base44.entities.FaxTemplate.update(tpl.id, { use_count: (tpl.use_count || 0) + 1 }).catch(() => {});
+    base44.entities.FaxTemplate.update(tpl.id, { use_count: (tpl.use_count || 0) + 1 })
+      .catch((e) => console.warn("Failed to increment template use_count:", e?.message));
     queryClient.invalidateQueries({ queryKey: ["fax-templates"] });
     if (onApplyTemplate) onApplyTemplate(tpl);
     toast.success(`Template "${tpl.name}" applied`);

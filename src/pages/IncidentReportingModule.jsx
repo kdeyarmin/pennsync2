@@ -247,6 +247,11 @@ Please review this incident in the Incident Reporting Dashboard.`
 
   const recentIncidents = incidents.slice(0, 10);
 
+  // State-reportable events get their own admin follow-up folder/section.
+  const stateReportableIncidents = incidents.filter(
+    (i) => i.state_reportable || i.details?.state_reportable
+  );
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'reported': return 'bg-yellow-500';
@@ -602,6 +607,82 @@ Please review this incident in the Incident Reporting Dashboard.`
           </div>
         </CardContent>
       </Card>
+
+      {/* State Reportable Events — admin follow-up folder */}
+      {currentUser?.role === 'admin' && (
+        <Card className="mb-6 border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              State Reportable Events
+              <Badge className="ml-2 bg-red-600 text-white">{stateReportableIncidents.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stateReportableIncidents.length === 0 ? (
+              <div className="text-center py-6 text-slate-500">
+                <FileText className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                <p>No state reportable events on file.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stateReportableIncidents.map((incident) => (
+                  <div key={incident.id} className="border border-red-100 rounded-lg p-4 bg-red-50/40">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h4 className="font-semibold text-slate-900">{incident.patient_name}</h4>
+                          <Badge className={getSeverityColor(incident.severity)}>{incident.severity}</Badge>
+                          <Badge className={getStatusColor(incident.status)}>{incident.status.replace(/_/g, ' ')}</Badge>
+                        </div>
+                        <p className="text-sm text-slate-700">
+                          {incident.details?.event_type || incident.incident_name}
+                        </p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="w-3 h-3" />
+                            {incident.incident_date ? format(parseISO(incident.incident_date), 'MMM d, yyyy') : '—'}
+                            {incident.incident_time ? ` at ${incident.incident_time}` : ''}
+                          </span>
+                          <span>Reported by: {incident.created_by}</span>
+                          {incident.state_reportable_alert_sent_at && (
+                            <span className="text-green-700">Admins alerted</span>
+                          )}
+                        </div>
+                        {incident.state_reportable_pdf_url && (
+                          <a
+                            href={incident.state_reportable_pdf_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600 underline"
+                          >
+                            <FileText className="w-4 h-4" /> View PDF report
+                          </a>
+                        )}
+                      </div>
+                      {incident.status !== 'resolved' && (
+                        <Select
+                          value={incident.status}
+                          onValueChange={(newStatus) => updateIncidentMutation.mutate({ id: incident.id, updates: { status: newStatus } })}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="reported">Reported</SelectItem>
+                            <SelectItem value="under_review">Under Review</SelectItem>
+                            <SelectItem value="resolved">Resolved</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Incidents */}
       <Card>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createTelehealthToken } from "@/functions/createTelehealthToken";
+import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VideoOff, Users, Loader2 } from "lucide-react";
@@ -129,8 +130,9 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       });
 
     } catch (err) {
-      console.error("Video connect error:", err);
-      setError(err.message);
+      const friendly = configNotReadyMessage(err);
+      if (!friendly) console.error("Video connect error:", err);
+      setError(friendly || err.message);
       setStatus("error");
     }
   }, [roomName, identity, joinToken, videoDeviceId, audioDeviceId, onDisconnect]);
