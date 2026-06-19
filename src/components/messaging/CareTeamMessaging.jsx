@@ -108,8 +108,9 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
       if (!msg || !user?.email) return;
       const readBy = msg.read_by || [];
       if (!readBy.includes(user.email)) {
-        readBy.push(user.email);
-        return base44.entities.Message.update(messageId, { read_by: readBy });
+        // Spread rather than push — readBy may alias the react-query-cached
+        // array, and mutating it in place corrupts cached state.
+        return base44.entities.Message.update(messageId, { read_by: [...readBy, user.email] });
       }
     },
     onSuccess: () => {
