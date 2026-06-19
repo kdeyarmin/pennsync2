@@ -1,5 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// A guest invite link (capability URL) is otherwise valid for as long as the
+// session stays scheduled/active, so a forgotten or leaked link would grant
+// audio/video access indefinitely. Bound the guest capability in time as well:
+// reject joins more than this long past the scheduled start. 12h is generous
+// enough to cover a full clinical day of early/late joins and reconnects while
+// still expiring a stale link the same day. Staff joins are unaffected.
+const GUEST_JOIN_WINDOW_MS = 12 * 60 * 60 * 1000;
+
 // Constant-time comparison so the per-session join token can't be recovered
 // via response-timing analysis.
 function timingSafeEqual(a, b) {
@@ -52,6 +60,13 @@ Deno.serve(async (req) => {
       }
       if (session.status !== 'scheduled' && session.status !== 'active') {
         return Response.json({ error: 'This telehealth visit is no longer open' }, { status: 403 });
+      }
+      // Time-bound the capability token so a leaked/forgotten invite link can't
+      // grant A/V access indefinitely. Fail open when scheduled_at is absent,
+      // consistent with the rest of the codebase's "unknown → allow" convention.
+      const scheduledAtMs = session.scheduled_at ? Date.parse(session.scheduled_at) : NaN;
+      if (Number.isFinite(scheduledAtMs) && Date.now() - scheduledAtMs > GUEST_JOIN_WINDOW_MS) {
+        return Response.json({ error: 'This telehealth invite link has expired' }, { status: 403 });
       }
       participantIdentity = session.patient_name || 'Patient';
     } else {

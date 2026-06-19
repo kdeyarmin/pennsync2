@@ -410,6 +410,40 @@ both succeeded).
 
 ---
 
+## Deferred-items closure — the previously untestable/high-risk findings
+
+These three were originally documented-not-fixed because they need platform features or can't be
+runtime-verified in this repo. Final disposition:
+
+- **Telehealth guest-token TTL → FIXED in-repo.** `createTelehealthToken` gated the guest (patient)
+  capability token only on session *status* (`scheduled`/`active`), so a forgotten or leaked invite
+  link (`?t=…`) granted A/V access indefinitely. Added a time bound: the guest path now also rejects
+  joins more than `GUEST_JOIN_WINDOW_MS` (12h) past the session's `scheduled_at` (`403` "invite link
+  has expired"). Fail-open when `scheduled_at` is absent, matching the codebase's "unknown → allow"
+  convention; staff joins are unaffected. The minted Twilio JWT already carries `exp = now + 3600`.
+  Transpile-checked (205 functions). The A/V flow itself remains untestable here.
+- **`dispatchScheduledSms` true atomicity → at the in-repo limit; needs a platform CAS.** The cron
+  already layers (1) an optimistic claim (`pending → sending` with a per-run `claimed_by`) plus a
+  read-after-write ownership re-check, (2) a deterministic `client_message_id` (`sched-<rowId>`)
+  idempotency guard that settles from any prior `SmsMessage` instead of re-texting, and (3) a
+  no-retry-on-thrown-network-error policy. The only residual gap is the TOCTOU between the
+  idempotency read and the post-send `SmsMessage.create`, which two perfectly-overlapping runs could
+  both pass. Closing it fully requires a feature the repo can't express: an **atomic
+  compare-and-swap** on the claim (so exactly one run flips `pending → sending`) — e.g. a conditional
+  update, or a unique constraint on `ScheduledSms.claimed_by`/`SmsMessage.client_message_id` at the
+  platform layer. Recommend adding that CAS in the Base44 dashboard; the in-code guards are the
+  correct mitigation until then. (No further code change made — the function is well-tested and any
+  in-repo "fix" would be illusory without platform support.)
+- **Patient-clinical entity RLS → spec complete; needs dashboard application.** The repo RLS DSL has
+  no cross-entity join, so the documented *"by patient access"* model isn't expressible in-repo. The
+  full per-entity remediation (read `byPatient`, write clinician-on-own-patient + admin, with the
+  owner-scoped and training-attestation tables) is in `docs/RLS-REMEDIATION-SPEC-2026-06-19.md`,
+  along with the §7 multi-role raw-response verification to run after applying it in the Base44
+  dashboard. The safe in-repo subset (`OfflineDataCache`, `SystemLog`, `Message`, `TeamNote` writes)
+  was already shipped; the cross-entity rules remain a dashboard task by design.
+
+---
+
 ## Verified correct (sampled — no change needed)
 
 Clinical: `oasisScoringEngine`, `oasisAnalytics`, `patientMatchScore`, `pdgmGrouper`,
