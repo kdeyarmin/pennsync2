@@ -74,7 +74,7 @@ export default function AITrainingRecommendations({ _userId, userEmail }) {
 
 NURSE PERFORMANCE DATA:
 - Recent Compliance Audits: ${complianceAudits.length}
-- Average Compliance Score: ${(complianceAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / complianceAudits.length).toFixed(1)}%
+- Average Compliance Score: ${complianceAudits.length > 0 ? (complianceAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / complianceAudits.length).toFixed(1) : 'N/A'}%
 - Total Flagged Issues: ${recentIssues.length}
 
 COMMON ISSUE CATEGORIES:
