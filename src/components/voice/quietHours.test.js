@@ -76,6 +76,28 @@ test("custom window narrows the allowed hours", () => {
   assert.equal(r.allowed, false);
 });
 
+test("an overnight allowed window (start > end) wraps past midnight correctly", () => {
+  // Allowed 22:00–06:00 ET. +1 215 => America/New_York.
+  const opts = { startHour: 22, endHour: 6 };
+  // 08:00 ET (12:00Z) → outside the window → blocked.
+  const day = isWithinQuietHours("+12155550100", new Date("2026-06-04T12:00:00Z"), opts);
+  assert.equal(day.localHour, 8);
+  assert.equal(day.allowed, false);
+  // 23:00 ET (03:00Z next day) → inside the late side → allowed.
+  const late = isWithinQuietHours("+12155550100", new Date("2026-06-05T03:00:00Z"), opts);
+  assert.equal(late.localHour, 23);
+  assert.equal(late.allowed, true);
+  // 02:00 ET (06:00Z) → inside the early side → allowed.
+  const early = isWithinQuietHours("+12155550100", new Date("2026-06-04T06:00:00Z"), opts);
+  assert.equal(early.localHour, 2);
+  assert.equal(early.allowed, true);
+});
+
+test("start === end means the window is always open", () => {
+  const r = isWithinQuietHours("+12155550100", new Date("2026-06-04T07:00:00Z"), { startHour: 0, endHour: 0 });
+  assert.equal(r.allowed, true);
+});
+
 test("the area-code table only maps to valid IANA zones", () => {
   const valid = new Set([
     "America/New_York", "America/Chicago", "America/Denver",

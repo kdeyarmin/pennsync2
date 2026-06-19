@@ -211,7 +211,11 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
   if (!tz) return { allowed: true, reason: 'unknown_timezone' };
   const h = hourInZone(now, tz);
   if (h == null) return { allowed: true, reason: 'unknown_timezone' };
-  const allowed = h >= startHour && h < endHour;
+  // Allowed contact window; supports a window that wraps past midnight
+  // (start > end). Mirrors isWithinQuietHours in src/components/voice/quietHours.js.
+  const allowed = startHour === endHour ? true
+    : startHour < endHour ? (h >= startHour && h < endHour)
+      : (h >= startHour || h < endHour);
   return { allowed, reason: allowed ? 'within_hours' : 'quiet_hours' };
 }
 

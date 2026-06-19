@@ -210,7 +210,19 @@ function isOffDutyNow(user: any, now = new Date(), settings: any = null): boolea
     }
   }
   if (settings && isPastAutoOffHour(settings, now)) return true;
-  return user.duty_status !== 'on_duty';
+  if (user.duty_status !== 'on_duty') return true;
+  // The on-duty toggle expires nightly: if it was set on an earlier calendar day
+  // it's stale → off until they toggle on again. (Legacy rows without
+  // duty_on_since keep the prior always-on behavior.) Mirrors dutyUtils.js.
+  if (user.duty_on_since) {
+    const dtz = (settings && (settings.duty_timezone || settings.business_hours_timezone)) || 'America/New_York';
+    const dateKey = (d: Date) => {
+      try { return new Intl.DateTimeFormat('en-CA', { timeZone: dtz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
+      catch { return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
+    };
+    if (dateKey(new Date(user.duty_on_since)) !== dateKey(now)) return true;
+  }
+  return false;
 }
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };

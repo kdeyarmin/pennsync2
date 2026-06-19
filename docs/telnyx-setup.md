@@ -151,12 +151,17 @@ office**, never to an individual.
 while they've toggled **On Duty** (DutyStatusCard). They flip it on in the morning;
 calls ring their cell (masked) and texts reach them.
 
-**Auto end-of-day at 5pm.** A user is treated as off duty when they toggle off OR
-once the clock passes the auto-off hour, whichever comes first:
+**Auto end-of-day at 5pm + nightly reset (no cron required).** A user is treated
+as off duty when they toggle off, once the clock passes the auto-off hour, or the
+next calendar day — whichever comes first:
 - Real-time: the inbound webhook checks the cutoff live, so at 5pm calls/texts
   route to the office even before any sweep runs.
-- Persistent: schedule `autoEndDutyDay` daily at the cutoff to flip everyone's
-  stored toggle back to off, so the next morning they start off and must toggle on.
+- Self-expiring: toggling on stamps `duty_on_since`. The on-duty state is honored
+  only on that same calendar day (in the duty timezone), so a forgotten toggle is
+  automatically off the next morning until they toggle on again — **no cron
+  needed**. (Legacy rows without `duty_on_since` keep the prior behavior.)
+- Optional: schedule `autoEndDutyDay` daily at the cutoff to also flip the stored
+  toggle off so the UI matches reality; it's a convenience, not a dependency.
 
 Configurable on `AgencySettings`: `auto_off_duty_hour` (default `17`),
 `duty_timezone` (default `America/New_York`), `auto_off_duty_enabled` (set `false`
@@ -170,7 +175,27 @@ in `src/components/voice/dutyUtils.js`.
 Both default to the office number `724-465-0440` until one is configured, and a
 user can override their own message (`off_duty_message`).
 
-## 8. Status mapping
+## 8. Go-live verification (live smoke test)
+
+Before launch, validate a real Telnyx account end-to-end:
+
+```
+TELNYX_API_KEY=KEY... TELNYX_PUBLIC_KEY=... \
+TELNYX_MESSAGING_PROFILE_ID=... TELNYX_VOICE_CONNECTION_ID=... TELNYX_FAX_CONNECTION_ID=... \
+node tools-telnyx-live-smoke.mjs            # read-only: auth + resource existence
+node tools-telnyx-live-smoke.mjs --send-to +1215... --confirm   # also sends one real test SMS
+```
+
+It checks that the API key authenticates, the webhook public key is set, and the
+messaging profile / Call Control app / Fax app ids resolve. It then prints the
+exact Call Control event types the webhook state machine expects
+(`call.answered`, `call.speak.ended`, `call.recording.saved`, `call.transcription`,
+`message.received`, …) — place one test call and confirm those arrive at
+`handleTelnyxStatusWebhook` in Telnyx's webhook debugger to close the remaining
+`TODO(verify)` items. The tool's logic is unit-tested in
+`tools-telnyx-live-smoke.test.js` (mocked fetch), so it runs in CI without a key.
+
+## 9. Status mapping
 
 The provider→internal status mapping is the unit-tested source of truth in
 `src/components/integrations/telnyx/telnyxUtils.js` and is inlined into the webhook

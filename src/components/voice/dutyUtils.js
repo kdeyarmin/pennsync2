@@ -79,15 +79,27 @@ export function isPastAutoOffHour(settings, now = new Date()) {
   return h >= hour;
 }
 
+/** Calendar date key (YYYY-MM-DD) for `date` in `timeZone`. */
+export function dateKeyInZone(date, timeZone) {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: timeZone || undefined, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  }
+}
+
 /**
  * True when the nurse should be treated as off duty at `now`. A nurse is on duty
  * ONLY while explicitly toggled on (`duty_status === 'on_duty'`), before the
- * agency's auto-off hour, and with no active scheduled time-off window. Anything
- * else — a fresh account, a forgotten toggle, after 5pm, or a scheduled window —
- * routes calls/texts to the office.
+ * agency's auto-off hour, with no active scheduled time-off window, AND only on
+ * the same calendar day they toggled on. That last rule makes the toggle expire
+ * by itself overnight (no cron required): a nurse who forgets to toggle off is
+ * automatically off the next morning until they explicitly toggle on again.
+ * Anything else — a fresh account, a forgotten toggle, after 5pm, yesterday's
+ * toggle, or a scheduled window — routes calls/texts to the office.
  *
  * `settings` is optional (backward compatible); pass the AgencySettings row to
- * enable the 5pm auto-off cutoff.
+ * enable the 5pm auto-off cutoff and the duty timezone for the nightly reset.
  */
 export function isOffDutyNow(user, now = new Date(), settings = null) {
   if (!user) return false;
@@ -98,7 +110,15 @@ export function isOffDutyNow(user, now = new Date(), settings = null) {
     !!user.scheduled_off_duty_recurring,
   )) return true;
   if (settings && isPastAutoOffHour(settings, now)) return true;
-  return user.duty_status !== "on_duty";
+  if (user.duty_status !== "on_duty") return true;
+  // Toggled on, but the activation expires nightly: if it was set on an earlier
+  // calendar day, treat as off until they toggle on again today. (Legacy rows
+  // without duty_on_since stay on, falling back to the prior behavior.)
+  if (user.duty_on_since) {
+    const tz = (settings && (settings.duty_timezone || settings.business_hours_timezone)) || DEFAULT_DUTY_TIMEZONE;
+    if (dateKeyInZone(new Date(user.duty_on_since), tz) !== dateKeyInZone(now, tz)) return true;
+  }
+  return false;
 }
 
 /**

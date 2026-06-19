@@ -76,6 +76,17 @@ test("isOffDutyNow flips an on-duty nurse off after 5pm (auto end-of-day)", () =
   assert.equal(isOffDutyNow(user, new Date("2026-06-15T21:30:00Z")), false);
 });
 
+test("the on-duty toggle expires overnight (cron-free) via duty_on_since", () => {
+  const settings = { duty_timezone: "America/New_York", auto_off_duty_enabled: false };
+  // Toggled on this morning (Mon 9:00 ET = 13:00Z) → on at 11am ET same day.
+  const onToday = { duty_status: "on_duty", duty_on_since: "2026-06-15T13:00:00Z" };
+  assert.equal(isOffDutyNow(onToday, new Date("2026-06-15T15:00:00Z"), settings), false);
+  // Next morning (Tue 6:00 ET = 10:00Z) the same toggle is stale → off.
+  assert.equal(isOffDutyNow(onToday, new Date("2026-06-16T10:00:00Z"), settings), true);
+  // Legacy on-duty row without duty_on_since keeps the prior behavior (stays on).
+  assert.equal(isOffDutyNow({ duty_status: "on_duty" }, new Date("2026-06-16T10:00:00Z"), settings), false);
+});
+
 test("recurring weekly window repeats on later weeks", () => {
   // Anchor: Sat 2026-06-06 00:00Z -> Mon 2026-06-08 00:00Z.
   const start = iso("2026-06-06T00:00:00Z");
