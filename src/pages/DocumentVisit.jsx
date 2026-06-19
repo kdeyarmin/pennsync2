@@ -1054,7 +1054,27 @@ Generate the complete clinical narrative based on the audio and context:`;
       // pain) required elements even when the nurse didn't restate them in the
       // narrative — they are saved on the same visit. Fold them into the SCORED
       // text only; the persisted nurse_notes stays exactly what the nurse wrote.
-      const vs = vitalSigns || {};
+      // Vitals reach this page under two key conventions (see vitalEscalation.js):
+      // the structured VitalSignsForm uses long keys (blood_pressure_systolic,
+      // heart_rate, oxygen_saturation, pain_level, ...) while the primary
+      // SmartVitalsInput card uses short keys (bp as a "120/80" string, hr, temp,
+      // o2, pain). Normalize to the long keys first so vitals entered via EITHER
+      // card count toward the scored "vitals"/"pain" required elements — otherwise
+      // a note documented with the primary card scored as if no vitals existed.
+      const vsRaw = vitalSigns || {};
+      const bpMatch = typeof vsRaw.bp === "string"
+        ? vsRaw.bp.match(/(?<!\d)(\d{2,3})\s*\/\s*(\d{2,3})(?!\d)/)
+        : null;
+      const vs = {
+        temperature: vsRaw.temperature ?? vsRaw.temp,
+        blood_pressure_systolic: vsRaw.blood_pressure_systolic ?? (bpMatch ? bpMatch[1] : undefined),
+        blood_pressure_diastolic: vsRaw.blood_pressure_diastolic ?? (bpMatch ? bpMatch[2] : undefined),
+        heart_rate: vsRaw.heart_rate ?? vsRaw.hr,
+        respiratory_rate: vsRaw.respiratory_rate ?? vsRaw.rr,
+        oxygen_saturation: vsRaw.oxygen_saturation ?? vsRaw.o2,
+        pain_level: vsRaw.pain_level ?? vsRaw.pain,
+        weight: vsRaw.weight,
+      };
       const vitalsForScore = [
         vs.temperature != null && `Temperature: ${vs.temperature}°F`,
         vs.blood_pressure_systolic != null && vs.blood_pressure_diastolic != null &&
