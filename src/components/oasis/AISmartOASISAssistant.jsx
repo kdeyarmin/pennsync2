@@ -591,7 +591,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 <Alert className="bg-green-50 border-green-300">
                   <AlertCircle className="w-4 h-4 text-green-600" />
                   <AlertDescription>
-                    <p className="font-semibold text-green-900">💰 PDGM Clinical Group: {suggestions.summary.pdgm_clinical_group}</p>
+                    <p className="font-semibold text-green-900">PDGM Clinical Group: {suggestions.summary.pdgm_clinical_group}</p>
                     {suggestions.summary.potential_revenue_opportunities && (
                       <p className="text-sm text-green-800 mt-1">{suggestions.summary.potential_revenue_opportunities}</p>
                     )}
@@ -637,7 +637,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 <Alert className="bg-orange-100 border-orange-400">
                   <AlertDescription className="text-orange-900 text-sm">
                     <strong>⚠️ Cross-validation analysis found inconsistencies across referral data, patient history, and visit notes.</strong> 
-                    <br/>Review and resolve these before finalizing OASIS to ensure compliance and maximize reimbursement.
+                    <br/>Review and resolve these before finalizing OASIS to ensure documentation accuracy and compliance.
                   </AlertDescription>
                 </Alert>
                 
@@ -722,13 +722,13 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-purple-900">
                   <Target className="w-5 h-5" />
-                  Primary Diagnosis Optimization for Maximum Reimbursement
+                  Primary Diagnosis Documentation Review
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Alert className="bg-purple-100 border-purple-400">
                   <AlertDescription className="text-purple-900 text-sm">
-                    <strong>Strategic Diagnosis Selection:</strong> Choosing the optimal primary diagnosis can significantly impact your PDGM clinical group and reimbursement.
+                    <strong>Primary Diagnosis Selection:</strong> Choose the primary diagnosis that most accurately reflects the focus of the current plan of care.
                   </AlertDescription>
                 </Alert>
                 {suggestions.diagnosis_optimization.map((diag, idx) => (
@@ -745,10 +745,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                         <p className="text-sm font-semibold text-slate-900">{diag.recommended_primary}</p>
                         <p className="text-xs text-blue-600 font-mono">{diag.recommended_icd10}</p>
                         <p className="text-xs text-slate-500">{diag.clinical_group_recommended}</p>
-                      </div>
-                      <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
-                        <p className="text-xs text-green-700">Revenue Impact</p>
-                        <p className="text-lg font-bold text-green-900">+${diag.revenue_impact}</p>
                       </div>
                     </div>
 
@@ -790,7 +786,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <CardContent className="space-y-4">
                 <Alert className="bg-blue-100 border-blue-400">
                   <AlertDescription className="text-blue-900 text-sm">
-                    <strong>Case-Mix Maximization:</strong> Accurate functional scoring directly impacts your case-mix weight and payment. Document specific observations to support appropriate impairment levels.
+                    <strong>Document functional status accurately:</strong> Score each item to reflect the patient's actual abilities, and document specific observations that support the level of impairment recorded.
                   </AlertDescription>
                 </Alert>
                 {suggestions.functional_optimization.map((func, idx) => (
@@ -811,10 +807,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                             <p className="text-lg font-bold text-green-600">{func.recommended_score}</p>
                           </div>
                         </div>
-                      </div>
-                      <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg text-right">
-                        <p className="text-xs text-green-700">Payment Impact</p>
-                        <p className="text-lg font-bold text-green-900">+${func.revenue_impact}</p>
                       </div>
                     </div>
 
@@ -858,13 +850,13 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-red-900">
                   <AlertCircle className="w-5 h-5" />
-                  Critical Missing Data - Revenue at Risk
+                  Critical Missing Documentation
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Alert className="bg-red-100 border-red-400">
                   <AlertDescription className="text-red-900 text-sm">
-                    <strong>High Priority:</strong> The following data gaps are preventing optimal PDGM classification. Total revenue at risk: ${suggestions.missing_data_revenue_analysis.reduce((sum, item) => sum + (item.revenue_at_risk || 0), 0).toLocaleString()}
+                    <strong>High Priority:</strong> The following documentation gaps are preventing a complete, accurate PDGM classification. Address them so the assessment fully reflects the patient's condition.
                   </AlertDescription>
                 </Alert>
                 {suggestions.missing_data_revenue_analysis
@@ -888,10 +880,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                           <p className="font-semibold text-slate-900">{missing.data_element}</p>
                         </div>
                         <p className="text-xs text-slate-600">Affects: {missing.pdgm_component_affected}</p>
-                      </div>
-                      <div className="ml-4 bg-red-100 px-3 py-2 rounded-lg text-right">
-                        <p className="text-xs text-red-700">Revenue at Risk</p>
-                        <p className="text-xl font-bold text-red-900">${missing.revenue_at_risk}</p>
                       </div>
                     </div>
 
@@ -934,12 +922,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
                         <p className="font-semibold text-lg text-slate-900 mb-2">{mapping.recommended_selection}</p>
                         <p className="text-sm text-slate-700 mb-3">{mapping.clinical_reasoning}</p>
                       </div>
-                      {mapping.payment_impact > 0 && (
-                        <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
-                          <p className="text-xs text-green-700">Impact</p>
-                          <p className="text-lg font-bold text-green-900">+${mapping.payment_impact}</p>
-                        </div>
-                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -983,7 +965,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
             <Card className="border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-900">
-                  💰 PDGM Reimbursement Analysis
+                  PDGM Documentation Review
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -995,7 +977,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <p className="text-sm text-slate-600 mt-1">Case-Mix Weight: <span className="font-semibold">{suggestions.pdgm_analysis.current_case_mix_weight?.toFixed(3)}</span></p>
                   </div>
                   <div className="bg-white p-4 rounded-lg border-2 border-blue-200">
-                    <p className="text-xs font-semibold text-slate-600 mb-2">Payment Factors</p>
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Clinical Factors</p>
                     <div className="space-y-1 text-sm">
                       <p><strong>Functional Level:</strong> {suggestions.pdgm_analysis.functional_impairment_level}</p>
                       <p><strong>Comorbidity Tier:</strong> {suggestions.pdgm_analysis.comorbidity_tier}</p>
@@ -1008,16 +990,13 @@ Patient Data: ${JSON.stringify(contextData)}`,
                   <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
                     <h4 className="font-semibold text-yellow-900 mb-3 flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
-                      Revenue Optimization Opportunities
+                      Documentation Completeness Opportunities
                     </h4>
                     <div className="space-y-3">
                       {suggestions.pdgm_analysis.optimization_opportunities.map((opp, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-yellow-200">
                           <div className="flex items-start justify-between mb-2">
                             <p className="font-semibold text-slate-900">{opp.opportunity_type}</p>
-                            {opp.revenue_increase_estimate && (
-                              <Badge className="bg-green-600">{opp.revenue_increase_estimate}</Badge>
-                            )}
                           </div>
                           <p className="text-sm text-slate-600 mb-2"><strong>Current:</strong> {opp.current_status}</p>
                           <p className="text-sm text-green-700 font-medium mb-2">{opp.recommendation}</p>
@@ -1041,7 +1020,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 {/* Alternative Clinical Groups */}
                 {suggestions.pdgm_analysis.alternative_clinical_groups?.length > 0 && (
                   <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-                    <h4 className="font-semibold text-purple-900 mb-3">Alternative Higher-Paying Clinical Groups</h4>
+                    <h4 className="font-semibold text-purple-900 mb-3">Alternative Clinical Groups to Consider</h4>
                     <div className="space-y-2">
                       {suggestions.pdgm_analysis.alternative_clinical_groups.map((alt, idx) => (
                         <div key={idx} className="bg-white p-3 rounded-lg border border-purple-200">
@@ -1075,7 +1054,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                           <p className="font-semibold text-slate-900 text-sm mb-1">{missing.data_element}</p>
                           <p className="text-xs text-slate-600 mb-1"><strong>Why Important:</strong> {missing.why_important}</p>
                           <p className="text-xs text-blue-700 mb-1"><strong>How to Obtain:</strong> {missing.how_to_obtain}</p>
-                          <p className="text-xs text-green-700 font-medium">💰 {missing.potential_value_add}</p>
+                          <p className="text-xs text-green-700 font-medium">{missing.potential_value_add}</p>
                         </div>
                       ))}
                     </div>
@@ -1088,7 +1067,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                     <h4 className="font-semibold text-blue-900 mb-3">Functional Score Optimization</h4>
                     <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3">
                       <p className="text-sm mb-2"><strong>Current Estimated Scores:</strong> {suggestions.pdgm_analysis.functional_score_optimization.current_estimated_scores}</p>
-                      <p className="text-sm text-green-700 font-medium mb-2"><strong>Target for Higher Payment:</strong> {suggestions.pdgm_analysis.functional_score_optimization.target_for_higher_payment}</p>
+                      <p className="text-sm text-green-700 font-medium mb-2"><strong>Documentation Focus:</strong> {suggestions.pdgm_analysis.functional_score_optimization.target_for_higher_payment}</p>
                     </div>
                     {suggestions.pdgm_analysis.functional_score_optimization.assessment_focus_areas?.length > 0 && (
                       <div className="bg-white p-3 rounded-lg border border-blue-200">
@@ -1188,11 +1167,8 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
                             {item.pdgm_impact && (
                               <div className="bg-green-50 p-3 rounded-lg mb-2 border-l-4 border-green-500">
-                                <p className="text-sm font-semibold text-green-900 mb-1">💰 PDGM Impact:</p>
+                                <p className="text-sm font-semibold text-green-900 mb-1">PDGM / Case-Mix Relevance:</p>
                                 <p className="text-sm text-slate-900">{item.pdgm_impact}</p>
-                                {item.revenue_impact && (
-                                  <p className="text-xs text-green-700 mt-1 font-semibold">Revenue: {item.revenue_impact}</p>
-                                )}
                               </div>
                             )}
 

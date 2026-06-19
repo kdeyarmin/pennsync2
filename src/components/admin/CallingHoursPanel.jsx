@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   DAY_KEYS, defaultBusinessHours, isWithinBusinessHours, summarizeSchedule,
 } from "@/components/voice/businessHours";
+import { backfillTcpaQuietHours } from "@/functions/backfillTcpaQuietHours";
 
 const DAY_LABELS = {
   sun: "Sunday", mon: "Monday", tue: "Tuesday", wed: "Wednesday",
@@ -91,6 +92,22 @@ export default function CallingHoursPanel() {
       tcpa_quiet_end_hour: settings.tcpa_quiet_end_hour ?? 21,
     });
   }, [settings]);
+
+  // One-time, idempotent backfill: existing agencies that never configured TCPA
+  // quiet hours get the legally-safer default enforced immediately in the
+  // outbound SMS paths. Only touches records where the flag was never set; an
+  // explicit "off" is respected.
+  useEffect(() => {
+    backfillTcpaQuietHours()
+      .then((res) => {
+        const updated = (res?.data ?? res)?.updated_count ?? 0;
+        if (updated > 0) {
+          queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
+          toast.success("TCPA quiet hours are now enforced by default for outbound texting.");
+        }
+      })
+      .catch((e) => console.warn("TCPA quiet-hours backfill skipped:", e?.message));
+  }, [queryClient]);
 
   const save = useMutation({
     mutationFn: () => {
