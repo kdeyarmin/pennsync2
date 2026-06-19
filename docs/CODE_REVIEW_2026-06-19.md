@@ -333,6 +333,34 @@ genuinely need a platform/schema change are called out.
 
 ---
 
+## Sixth sweep — messaging, education/training, supplies, validation
+
+- **`RealTimeValidator` broken `fuzzyMatch` import → FIXED.** It imported `fuzzyMatch` from
+  `utils/patientValidation`, which never exported it (resolved to `undefined`); any use of the
+  documented `fuzzyMatchAgainst` prop threw "is not a function" on each keystroke. Implemented and
+  exported a real `fuzzyMatch(value, target, threshold)` (Levenshtein similarity) returning the
+  `{ match, type }` shape the caller expects.
+- **`CareTeamMessaging.markAsReadMutation` cache mutation → FIXED.** It `push`ed onto `msg.read_by`,
+  which aliases the react-query-cached array; switched to a spread (matching `Messages.jsx`).
+- **`AdminTrainingAssignment` wrong audit field → FIXED.** `avgCompliance` summed
+  `a.overall_score`, a field the `ComplianceAudit` entity doesn't have (it's `compliance_score`),
+  so every nurse with audits computed 0% and was wrongly flagged `needsTraining` (< 85) — inflating
+  the auto-assign batch and the performance badges. Now reads `compliance_score`.
+- **`AITrainingRecommendations` NaN prompt → FIXED.** The manual "Re-analyze" path divided by
+  `complianceAudits.length` with no zero-guard (only the auto-run effect guarded it), feeding
+  "Average Compliance Score: NaN%" to the LLM for a nurse with no audits. Guarded with `'N/A'`.
+- **`SupplyForecastDashboard` dead "Generate Predictions" button → FIXED.** It fired a freeform
+  `invokeLLM` prompt and discarded the result, so no `SupplyPrediction` was ever created and the
+  list never refreshed — yet it toasted success. Rewired to the real `predictSupplyNeeds` backend
+  function (which authorizes the patient, analyzes 6 months of usage and persists predictions) and
+  invalidate the predictions query on success.
+- **`SupplyManagementDashboard` → FIXED.** Guarded the non-required `status` field before
+  `.replace()` so an item without a status can't crash the inventory list render.
+
+Messaging, dashboard/alerts, and OASIS-automation domains otherwise audited clean.
+
+---
+
 ## Verified correct (sampled — no change needed)
 
 Clinical: `oasisScoringEngine`, `oasisAnalytics`, `patientMatchScore`, `pdgmGrouper`,
