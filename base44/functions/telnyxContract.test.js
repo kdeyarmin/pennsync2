@@ -205,6 +205,21 @@ function rawEd25519PublicKeyB64(publicKey) {
   return Buffer.from(der.subarray(der.length - 32)).toString("base64");
 }
 
+// Build a validly-signed Telnyx webhook request for an event object.
+function signedWebhook(privateKey, event) {
+  const rawBody = JSON.stringify(event);
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const signature = nodeSign(null, Buffer.from(`${timestamp}|${rawBody}`), privateKey).toString("base64");
+  return new Request("https://app/functions/handleTelnyxStatusWebhook", {
+    method: "POST",
+    headers: { "telnyx-signature-ed25519": signature, "telnyx-timestamp": timestamp, "content-type": "application/json" },
+    body: rawBody,
+  });
+}
+
+const b64json = (o) => Buffer.from(JSON.stringify(o)).toString("base64");
+const decodeState = (b64) => JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+
 test("handleTelnyxStatusWebhook verifies Ed25519 and bridges an answered masked call", async () => {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
   const pubB64 = rawEd25519PublicKeyB64(publicKey);
@@ -237,43 +252,97 @@ test("handleTelnyxStatusWebhook verifies Ed25519 and bridges an answered masked 
   assert.equal(transfer.body.from, "+12155550100");
 });
 
-test("handleTelnyxStatusWebhook inbound call to an on-duty nurse masks-bridges to their cell", async () => {
+test("inbound call answers first, then bridges an on-duty nurse on call.answered", async () => {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
   const pubB64 = rawEd25519PublicKeyB64(publicKey);
+  const base = () => makeBase44({
+    data: {
+      IntegrationSecret: [{ api_key: "KEYtest", public_key: pubB64 }],
+      User: [{ email: "n@x.com", work_phone_number: "+12155550100", personal_cell_e164: "+12155550111", duty_status: "on_duty" }],
+      AgencySettings: [], CallLog: [],
+    },
+  });
 
-  // Inbound leg ringing in: patient -> nurse work number. No client_state yet.
-  const event = { data: { event_type: "call.initiated", payload: { call_control_id: "cc_in", direction: "incoming", from: "+13125550182", to: "+12155550100" } } };
-  const rawBody = JSON.stringify(event);
-  const timestamp = String(Math.floor(Date.now() / 1000));
-  const signature = nodeSign(null, Buffer.from(`${timestamp}|${rawBody}`), privateKey).toString("base64");
-
-  const { impl, calls } = makeFetch([
-    { match: (u) => u.includes("/actions/transfer"), respond: () => ({ status: 200, json: { data: {} } }) },
+  // Step 1: call.initiated (incoming) must ANSWER first (not transfer on a
+  // ringing leg), carrying the bridge decision in client_state.
+  const { impl: impl1, calls: calls1 } = makeFetch([
     { match: (u) => u.includes("/actions/answer"), respond: () => ({ status: 200, json: { data: {} } }) },
   ]);
-  const handler = await loadHandler("./handleTelnyxStatusWebhook/entry.ts", {
-    env: { TELNYX_API_KEY: "KEYtest", TELNYX_PUBLIC_KEY: pubB64 },
-    makeClient: () => makeBase44({
-      data: {
-        IntegrationSecret: [{ api_key: "KEYtest", public_key: pubB64 }],
-        // On-duty nurse with a cell on file → immediate masked bridge.
-        User: [{ email: "n@x.com", work_phone_number: "+12155550100", personal_cell_e164: "+12155550111", duty_status: "on_duty" }],
-        AgencySettings: [],
-        CallLog: [],
-      },
-    }),
-    fetchImpl: impl,
+  const h1 = await loadHandler("./handleTelnyxStatusWebhook/entry.ts", {
+    env: { TELNYX_API_KEY: "KEYtest", TELNYX_PUBLIC_KEY: pubB64 }, makeClient: base, fetchImpl: impl1,
   });
-  const res = await handler(new Request("https://app/functions/handleTelnyxStatusWebhook", {
-    method: "POST",
-    headers: { "telnyx-signature-ed25519": signature, "telnyx-timestamp": timestamp, "content-type": "application/json" },
-    body: rawBody,
-  }));
-  assert.equal(res.status, 200);
-  const transfer = calls.find((c) => /\/v2\/calls\/cc_in\/actions\/transfer$/.test(c.url));
-  assert.ok(transfer, "bridged the inbound call");
-  assert.equal(transfer.body.to, "+12155550111", "rings the nurse's personal cell");
-  assert.equal(transfer.body.from, "+12155550100", "presents the work number as caller id");
+  await h1(signedWebhook(privateKey, { data: { event_type: "call.initiated", payload: { call_control_id: "cc_in", direction: "incoming", from: "+13125550182", to: "+12155550100" } } }));
+  const answer = calls1.find((c) => /\/actions\/answer$/.test(c.url));
+  assert.ok(answer, "answered the inbound call first");
+  const carried = decodeState(answer.body.client_state);
+  assert.equal(carried.action, "bridge");
+  assert.equal(carried.to, "+12155550111", "bridge target = nurse cell");
+
+  // Step 2: call.answered with that client_state issues the bridge transfer.
+  const { impl: impl2, calls: calls2 } = makeFetch([
+    { match: (u) => u.includes("/actions/transfer"), respond: () => ({ status: 200, json: { data: {} } }) },
+  ]);
+  const h2 = await loadHandler("./handleTelnyxStatusWebhook/entry.ts", {
+    env: { TELNYX_API_KEY: "KEYtest", TELNYX_PUBLIC_KEY: pubB64 }, makeClient: base, fetchImpl: impl2,
+  });
+  await h2(signedWebhook(privateKey, { data: { event_type: "call.answered", payload: { call_control_id: "cc_in", direction: "incoming", client_state: b64json({ t: "inbound_ivr", action: carried.action, greeting: "", to: carried.to, callerId: carried.callerId }) } } }));
+  const transfer = calls2.find((c) => /\/v2\/calls\/cc_in\/actions\/transfer$/.test(c.url));
+  assert.ok(transfer, "bridged on answer");
+  assert.equal(transfer.body.to, "+12155550111");
+  assert.equal(transfer.body.from, "+12155550100");
+});
+
+test("a failed masked-bridge transfer falls back to speak+hangup and marks the call failed", async () => {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const pubB64 = rawEd25519PublicKeyB64(publicKey);
+  // Transfer returns 422 (e.g. invalid patient number) → must not strand the leg.
+  const { impl, calls } = makeFetch([
+    { match: (u) => u.includes("/actions/transfer"), respond: () => ({ status: 422, json: { errors: [{ detail: "bad number" }] } }) },
+    { match: (u) => u.includes("/actions/speak"), respond: () => ({ status: 200, json: { data: {} } }) },
+    { match: (u) => u.includes("/actions/hangup"), respond: () => ({ status: 200, json: { data: {} } }) },
+  ]);
+  let updated = null;
+  const client = () => {
+    // Stable entities object so the CallLog.update spy persists (the default
+    // makeBase44 Proxy returns a fresh entity per access).
+    const callLog = { create: async (r) => ({ id: "x", ...r }), filter: async () => [], list: async () => [], update: async (id, patch) => { updated = { id, patch }; return { id, ...patch }; } };
+    const generic = { create: async (r) => ({ id: "x", ...r }), filter: async () => [], list: async () => [], update: async () => ({}) };
+    const entities = new Proxy({}, { get: (_t, n) => (n === "CallLog" ? callLog : (n === "IntegrationSecret" ? { ...generic, filter: async () => [{ api_key: "KEYtest", public_key: pubB64 }] } : generic)) });
+    return { auth: { me: async () => ({}) }, entities, asServiceRole: { entities } };
+  };
+  const handler = await loadHandler("./handleTelnyxStatusWebhook/entry.ts", {
+    env: { TELNYX_API_KEY: "KEYtest", TELNYX_PUBLIC_KEY: pubB64 }, makeClient: client, fetchImpl: impl,
+  });
+  await handler(signedWebhook(privateKey, { data: { event_type: "call.answered", payload: { call_control_id: "cc_f", direction: "outgoing", client_state: b64json({ t: "masked_bridge", bridge_to: "+12155550144", caller_id: "+12155550100", call_log_id: "CallLog_9" }) } } }));
+  assert.ok(calls.find((c) => /\/actions\/speak$/.test(c.url)), "spoke an apology to the nurse");
+  assert.ok(calls.find((c) => /\/actions\/hangup$/.test(c.url)), "hung up instead of stranding dead air");
+  assert.equal(updated?.id, "CallLog_9");
+  assert.equal(updated?.patch.status, "failed");
+});
+
+test("sendSms forwards MMS media_urls and rejects non-https/oversized media", async () => {
+  const mk = () => makeBase44({ data: { IntegrationSecret: [{ api_key: "KEYtest" }] } });
+  // Happy path: media_urls forwarded to Telnyx.
+  const { impl, calls } = makeFetch([
+    { match: (u) => u.includes("/v2/messages"), respond: () => ({ status: 200, json: { data: { id: "m", to: [{ status: "queued" }] } } }) },
+  ]);
+  const handler = await loadHandler("./sendSms/entry.ts", {
+    env: { TELNYX_API_KEY: "KEYtest" }, makeClient: mk, fetchImpl: impl,
+  });
+  await handler(new Request("https://app/functions/sendSms", { method: "POST", body: JSON.stringify({ to_number: "2155550133", body: "see attached", media_urls: ["https://files/x.jpg"] }) }));
+  const call = calls.find((c) => c.url === "https://api.telnyx.com/v2/messages");
+  assert.deepEqual(call.body.media_urls, ["https://files/x.jpg"]);
+
+  // Validation: a non-https URL is rejected before any send.
+  const { impl: impl2, calls: calls2 } = makeFetch([
+    { match: (u) => u.includes("/v2/messages"), respond: () => ({ status: 200, json: { data: { id: "m" } } }) },
+  ]);
+  const handler2 = await loadHandler("./sendSms/entry.ts", {
+    env: { TELNYX_API_KEY: "KEYtest" }, makeClient: mk, fetchImpl: impl2,
+  });
+  const res = await handler2(new Request("https://app/functions/sendSms", { method: "POST", body: JSON.stringify({ to_number: "2155550133", body: "x", media_urls: ["http://insecure/x.jpg"] }) }));
+  assert.equal(res.status, 400);
+  assert.equal(calls2.length, 0, "no send attempted for invalid media");
 });
 
 test("handleTelnyxStatusWebhook rejects a tampered signature (fail-closed)", async () => {

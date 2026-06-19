@@ -221,7 +221,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { to_number, body, patient_id } = await req.json();
+    const { to_number, body, patient_id, media_urls } = await req.json();
     if (!to_number || !body) {
       return Response.json({ error: 'Missing required fields: to_number, body' }, { status: 400 });
     }
@@ -230,6 +230,15 @@ Deno.serve(async (req) => {
     }
     if (body.length > 1600) {
       return Response.json({ error: 'Message is too long (max 1600 characters).' }, { status: 400 });
+    }
+    // Optional MMS attachments (Telnyx sends an MMS when media_urls is set). Cap
+    // the count and require https URLs so a bad payload can't fan out or SSRF.
+    let mediaUrls: string[] | null = null;
+    if (media_urls != null) {
+      if (!Array.isArray(media_urls) || media_urls.length > 10 || !media_urls.every((u) => typeof u === 'string' && /^https:\/\//i.test(u))) {
+        return Response.json({ error: 'media_urls must be an array of up to 10 https URLs.' }, { status: 400 });
+      }
+      mediaUrls = media_urls;
     }
 
     const fromNumber = user.work_phone_number;
@@ -305,6 +314,7 @@ Deno.serve(async (req) => {
         try {
           const payload: Record<string, unknown> = { from: fromNumber, to: destination, text: body };
           if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+          if (mediaUrls) payload.media_urls = mediaUrls; // MMS
           if (webhookUrl) payload.webhook_url = webhookUrl;
           const resp = await fetch(telnyxUrl, {
             method: 'POST',

@@ -95,13 +95,27 @@ machine via `client_state`.
   first (caller id = work number); on `call.answered` the webhook issues a Call
   Control `transfer` to bridge the patient, presenting the work number.
 - **Inbound** (patient → work number): on `call.initiated` the webhook resolves
-  the nurse and applies the agency-hours → off-duty → masked-bridge routing. A
-  plain bridge transfers immediately; greeting / voicemail / after-hours paths
-  `answer`, `speak`, then `transfer` / `hangup` / `record_start`. Voicemail
-  recordings are stored on `call.recording.saved`.
+  the nurse, applies the agency-hours → off-duty → masked-bridge routing, and
+  **answers first** (consistent with the outbound path), carrying the decision in
+  `client_state`. On `call.answered` it `speak`s the greeting (if any) then
+  `transfer`s / `hangup`s / starts voicemail. If `call.initiated` is ever dropped
+  (webhooks are at-least-once), `call.answered` re-derives the route so the call
+  is never stranded on a silent leg.
+
+Resilience built in:
+- `callCommand` returns `{ ok, status }`; a **failed transfer falls back** to a
+  spoken apology + `hangup` (and, for the outbound bridge, marks the `CallLog`
+  failed) rather than leaving the caller/nurse on dead air.
+- Voicemail recording is bounded (`max_length_secs`) and **transcribed**
+  (`transcription_start` → `call.transcription` events append to the `CallLog`,
+  setting `has_voicemail` and surfacing a transcript preview in the notification).
 
 > Call Control action/field names are annotated with `TODO(verify)` in the
 > webhook and should be confirmed against your live Telnyx account during rollout.
+
+**MMS:** `sendSms` accepts an optional `media_urls` array (up to 10 `https` URLs);
+when present, Telnyx sends an MMS. Non-https or oversized payloads are rejected
+before any send.
 
 ## 5. Inbound SMS
 

@@ -284,18 +284,23 @@ function decodeClientState(b64: any): Record<string, any> | null {
 }
 
 // ---- Call Control command helper ----
+// Returns { ok, status } so callers can fall back on failure instead of
+// silently stranding a live (billed) call leg.
 // TODO(verify): confirm Call Control action paths/field names against the live
 // Telnyx v2 API for your account (answer/transfer/speak/hangup/record_start).
-async function callCommand(apiKey: string, callControlId: string, command: string, payload: Record<string, unknown> = {}) {
+async function callCommand(apiKey: string, callControlId: string, command: string, payload: Record<string, unknown> = {}): Promise<{ ok: boolean; status: number }> {
   try {
-    return await fetch(`https://api.telnyx.com/v2/calls/${encodeURIComponent(callControlId)}/actions/${command}`, {
+    const resp = await fetch(`https://api.telnyx.com/v2/calls/${encodeURIComponent(callControlId)}/actions/${command}`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    if (!resp.ok) console.error(`Call Control ${command} -> HTTP ${resp.status}`);
+    await resp.body?.cancel?.().catch(() => {});
+    return { ok: resp.ok, status: resp.status };
   } catch (err) {
     console.error(`Call Control ${command} failed:`, (err as Error)?.message);
-    return null;
+    return { ok: false, status: 0 };
   }
 }
 const SPEAK_DEFAULTS = { voice: 'female', language: 'en-US' };
@@ -669,31 +674,32 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
 
   // --- OUTBOUND masked bridge: nurse leg answered → dial the patient (caller id = work number). ---
   if (eventType === 'call.answered' && state?.t === 'masked_bridge' && callControlId && apiKey) {
-    await callCommand(apiKey, callControlId, 'transfer', { to: state.bridge_to, from: state.caller_id });
+    const r = await callCommand(apiKey, callControlId, 'transfer', { to: state.bridge_to, from: state.caller_id });
+    if (!r.ok) {
+      // Don't leave the nurse connected to dead air: tell them, hang up, and mark
+      // the call failed so the log reflects that the patient was never reached.
+      await callCommand(apiKey, callControlId, 'speak', { ...SPEAK_DEFAULTS, payload: 'We could not connect your call. Please try again later.' });
+      await callCommand(apiKey, callControlId, 'hangup', {});
+      if (state.call_log_id) {
+        await base44.asServiceRole.entities.CallLog.update(state.call_log_id, { status: 'failed', failure_reason: 'Bridge transfer to the patient failed' }).catch(() => {});
+      }
+    }
+    return Response.json({ success: true, bridged: r.ok });
   }
 
   // --- INBOUND IVR state machine (Call Control) ---
   if (apiKey && callControlId) {
-    // Step 1: a fresh inbound call rings in. Decide routing; bridge calls can
-    // transfer immediately, anything with a greeting/voicemail answers first.
+    // Step 1: a fresh inbound call rings in. Answer it first (consistent with the
+    // outbound path), carrying the routing decision forward in client_state.
     if (eventType === 'call.initiated' && direction === 'incoming' && !state) {
       const config = await getAgencyConfig(base44);
       const callerNum = normalizeE164(payload?.from) || payload?.from || '';
       const workNum = normalizeE164(payload?.to) || payload?.to || '';
       const route = await decideInboundRouting(base44, config, workNum);
       await logInboundCall(base44, callControlId, callerNum, workNum, route);
-
-      if (route.action === 'bridge') {
-        // TODO(verify): a plain transfer on a ringing inbound leg bridges A→B,
-        // presenting `from` as caller id (no answer needed).
-        await callCommand(apiKey, callControlId, 'transfer', { to: route.to, from: route.callerId });
-      } else {
-        // Greeting / hangup / voicemail all need the call answered first; carry
-        // the decided action forward in client_state for call.answered.
-        await callCommand(apiKey, callControlId, 'answer', {
-          client_state: encodeClientState({ t: 'inbound_ivr', ...route, nurse: undefined, nurse_email: route.nurse?.email || null }),
-        });
-      }
+      await callCommand(apiKey, callControlId, 'answer', {
+        client_state: encodeClientState({ t: 'inbound_ivr', action: route.action, greeting: route.greeting || '', to: route.to || null, callerId: route.callerId || null }),
+      });
       return Response.json({ success: true, inbound: route.action });
     }
 
@@ -705,16 +711,43 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
       if (greeting) {
         await callCommand(apiKey, callControlId, 'speak', { ...SPEAK_DEFAULTS, payload: greeting, client_state: next });
       } else {
-        // No greeting → act immediately.
+        // No greeting (e.g. a plain bridge) → act immediately.
         await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId);
       }
       return Response.json({ success: true, inbound_ivr: state.action });
+    }
+
+    // Safety net: if call.initiated was lost (webhooks are at-least-once and can
+    // drop), the first event we see for an inbound call may be call.answered with
+    // no routing state. Re-derive the route and act so the call is never stranded
+    // on a silent answered leg.
+    if (eventType === 'call.answered' && direction === 'incoming' && !state) {
+      const config = await getAgencyConfig(base44);
+      const workNum = normalizeE164(payload?.to) || payload?.to || '';
+      const route = await decideInboundRouting(base44, config, workNum);
+      const greeting = String(route.greeting || '').slice(0, 320);
+      if (greeting) {
+        const next = encodeClientState({ t: 'inbound_after_greet', action: route.action, to: route.to || null, callerId: route.callerId || null });
+        await callCommand(apiKey, callControlId, 'speak', { ...SPEAK_DEFAULTS, payload: greeting, client_state: next });
+      } else {
+        await continueAfterGreeting(base44, apiKey, callControlId, route.action, route.to, route.callerId);
+      }
+      return Response.json({ success: true, inbound_recovered: route.action });
     }
 
     // Step 3: greeting finished → execute the deferred action.
     if (eventType === 'call.speak.ended' && state?.t === 'inbound_after_greet') {
       await continueAfterGreeting(base44, apiKey, callControlId, state.action, state.to, state.callerId);
       return Response.json({ success: true, after_greet: state.action });
+    }
+
+    // Live voicemail transcription (final segments) → append to the CallLog.
+    if (eventType === 'call.transcription') {
+      const td = payload?.transcription_data || {};
+      const isFinal = td.is_final === true || td.status === 'completed';
+      const text = td.transcript || td.text;
+      if (isFinal && text) await appendVoicemailTranscript(base44, callControlId, text);
+      return Response.json({ success: true, transcription: Boolean(isFinal && text) });
     }
 
     // Voicemail recording finished → persist it (port of handleTwilioVoicemail).
@@ -753,8 +786,15 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
 }
 
 async function continueAfterGreeting(base44: any, apiKey: string, callControlId: string, action: string, to: string | null, callerId: string | null) {
-  if (action === 'greet_transfer' && to) {
-    await callCommand(apiKey, callControlId, 'transfer', { to, from: callerId || to });
+  // A plain bridge and a greet-then-transfer both end in a transfer; unify them
+  // and fall back gracefully if the transfer fails so the caller is never left on
+  // a silent, open (billed) leg.
+  if ((action === 'greet_transfer' || action === 'bridge') && to) {
+    const r = await callCommand(apiKey, callControlId, 'transfer', { to, from: callerId || to });
+    if (!r.ok) {
+      await callCommand(apiKey, callControlId, 'speak', { ...SPEAK_DEFAULTS, payload: 'We are unable to connect your call at this time. Please try again later.' });
+      await callCommand(apiKey, callControlId, 'hangup', {});
+    }
   } else if (action === 'voicemail') {
     // Bound the recording so a silent/abandoned line can't leave a billed leg
     // open indefinitely (matches the old 120s voicemail cap). TODO(verify):
@@ -763,26 +803,48 @@ async function continueAfterGreeting(base44: any, apiKey: string, callControlId:
       format: 'mp3', channels: 'single', max_length_secs: 120,
       client_state: encodeClientState({ t: 'voicemail' }),
     });
+    // Restore the voicemail transcription the old handler captured. Best-effort:
+    // transcripts arrive on call.transcription events. TODO(verify): transcription_start
+    // field names against the live API.
+    await callCommand(apiKey, callControlId, 'transcription_start', { language: 'en', client_state: encodeClientState({ t: 'voicemail' }) });
   } else {
     await callCommand(apiKey, callControlId, 'hangup', {});
   }
 }
 
-async function saveVoicemail(base44: any, payload: any) {
-  const callControlId = payload?.call_control_id;
-  const recordingUrl = payload?.recording_urls?.mp3 || payload?.recording_urls?.wav || payload?.public_recording_urls?.mp3 || null;
+async function appendVoicemailTranscript(base44: any, callControlId: string, text: string) {
   if (!callControlId) return;
   const rows = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => []);
   if (!rows.length) return;
+  const existing = rows[0].voicemail_transcription ? `${rows[0].voicemail_transcription} ` : '';
   await base44.asServiceRole.entities.CallLog.update(rows[0].id, {
-    voicemail_url: recordingUrl || rows[0].voicemail_url || null,
+    voicemail_transcription: `${existing}${text}`.slice(0, 4000),
+    has_voicemail: true,
+  }).catch(() => {});
+}
+
+async function saveVoicemail(base44: any, payload: any) {
+  const callControlId = payload?.call_control_id;
+  const recordingUrl = payload?.recording_urls?.mp3 || payload?.recording_urls?.wav || payload?.public_recording_urls?.mp3 || null;
+  const durationSecs = Number.isFinite(payload?.recording_duration_secs) ? payload.recording_duration_secs : null;
+  if (!callControlId) return;
+  const rows = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => []);
+  if (!rows.length) return;
+  const row = rows[0];
+  await base44.asServiceRole.entities.CallLog.update(row.id, {
+    voicemail_url: recordingUrl || row.voicemail_url || null,
+    voicemail_duration_seconds: durationSecs ?? row.voicemail_duration_seconds ?? null,
+    has_voicemail: true,
     status: 'completed',
   }).catch(() => {});
-  if (rows[0].nurse_email) {
+  // Notify once (a recording.saved redelivery shouldn't re-alert).
+  if (row.nurse_email && !row.voicemail_notified) {
+    await base44.asServiceRole.entities.CallLog.update(row.id, { voicemail_notified: true }).catch(() => {});
+    const preview = row.voicemail_transcription ? ` "${String(row.voicemail_transcription).slice(0, 120)}"` : '';
     await base44.asServiceRole.entities.Notification.create({
-      user_email: rows[0].nurse_email, title: '📞 New voicemail',
-      message: `You have a new voicemail from ${rows[0].from_number || 'a caller'}.`,
-      type: 'voicemail', priority: 'normal', related_entity: 'CallLog', related_entity_id: rows[0].id, is_read: false,
+      user_email: row.nurse_email, title: '📞 New voicemail',
+      message: `New voicemail from ${row.from_number || 'a caller'}.${preview}`,
+      type: 'voicemail', priority: 'normal', related_entity: 'CallLog', related_entity_id: row.id, is_read: false,
     }).catch(() => {});
   }
 }
