@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import SignaturePadCanvas from '@/components/signature/SignaturePadCanvas';
+import { submitSignerSignature } from '@/functions/submitSignerSignature';
 
 export default function SignerDocumentSigner({
   documentId,
   packageData,
-  _token,
+  token,
   onComplete,
   onCancel,
 }) {
@@ -61,13 +62,21 @@ export default function SignerDocumentSigner({
         file: blob,
       });
 
-      // Update document signature
-      await base44.entities.DocumentSignature.update(documentId, {
-        status: 'signed',
-        signed_at: new Date().toISOString(),
-        signer_name: signatureName,
+      // Record the signature through the token-validating backend (the ONLY
+      // authorized path). The previous direct entity write let anyone forge a
+      // signature on any document; this binds the write to the signer's token and
+      // stamps the server-derived signer identity.
+      const result = await submitSignerSignature({
+        token,
+        document_id: documentId,
         signature_image_url: uploadResponse.file_url,
+        typed_name: signatureName,
       });
+
+      if (!result?.success) {
+        toast.error(result?.error || 'Failed to save signature');
+        return;
+      }
 
       toast.success('Document signed successfully!');
       setTimeout(() => onComplete(), 1500);

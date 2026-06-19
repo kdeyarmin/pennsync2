@@ -150,6 +150,41 @@ the only client op is create). The patient-clinical tables (`Medication`, `OASIS
 that the repo DSL can't express, so they are specified per-entity in
 **`docs/RLS-REMEDIATION-SPEC-2026-06-19.md`** to apply + verify (§7) in the Base44 dashboard.
 
+## Third sweep — signature/signer flow + offline-sync subsystem
+
+**Signature & signer flow.**
+- **CRITICAL — anonymous signature forgery (FIXED, public path).** The external
+  `/signer` portal wrote the legally-binding signature client-side, straight to the RLS-less
+  `DocumentSignature` entity via the public SDK, with the signer token never checked — anyone could
+  forge a signature on any HIPAA consent/order as any signer. (A pre-existing `_token`-vs-`token`
+  prop-name bug meant the token never even reached the signer component.) Fixed by adding a
+  token-validating backend endpoint **`submitSignerSignature`** (mirrors `validateSignerToken`:
+  active + unexpired token, the document must be in the token's package, not already signed, signer
+  identity taken from the token — never the client; deactivates the token once the package is fully
+  signed) and rewiring `SignerDocumentSigner` to call it with the now-correctly-passed token.
+  *Coupled follow-up:* the `DocumentSignature` entity itself still has no write-RLS, so to also stop
+  a direct entity write the entity must be locked to service-role — which requires routing the ~10
+  **authenticated** internal signing/creation writes (`SignDocument`, `PDFSignatureCapture`,
+  `InteractivePDFSigner`, `SecureESignatureCapture`, the request-creators) through backend endpoints
+  too. Tracked in `docs/RLS-REMEDIATION-SPEC-2026-06-19.md`. (Those paths require login, so they are
+  not the anonymous-forgery vector.)
+- **Package marked "completed" with zero signatures (FIXED)** — `onDocumentSigned` used
+  `filter({package_id}).every()`; creators don't always back-fill `package_id`, so `[].every()`
+  returned true. Now computes completion from `pkg.document_signatures`.
+- **Deferred (documented):** token over-broad disclosure (`validateSignerToken` returns every
+  document to any one signer's token) and post-signing PDF swap (`DocumentReplacementDialog`
+  carry-forward) — both need the per-signer/content-hash binding that's part of the signing-endpoint
+  follow-up.
+
+**Offline-sync subsystem (data loss / duplication under ordinary field conditions — FIXED).**
+The three localStorage sync paths each did read-all → async-drain → write-back-all, clobbering any
+change a nurse saved during a background sync; and lacked reentrancy guards, so overlapping
+syncs created duplicate visits. Fixed `OfflineStorage.syncPendingChanges` and
+`OfflineSyncManager`/`OfflineDataManager` to re-read-and-merge by stable id before writing, and
+added `useRef` in-flight guards. (The IndexedDB `OfflineManager` path already had idempotency +
+a guard and was unchanged.) *Deferred (low-confidence):* `OfflineVisitNoteCapture` queuing a visit
+without an `offline_` id (latent orphan risk) and the idle-purge read-modify-write window.
+
 ## Follow-up: the previously-deferred backend findings are now fixed
 
 These were initially documented rather than changed; a follow-up pass implemented all of them.
