@@ -82,7 +82,10 @@ export default function SignerDocumentSigner({
       }
 
       toast.success('Document signed successfully!');
-      setTimeout(() => onComplete(), 1500);
+      // Pass all_signed up: on the final signature the backend single-uses (deactivates)
+      // the token, so the portal must show a completion screen from this response rather
+      // than re-validating the now-inactive token (which would 403 → "Access Denied").
+      setTimeout(() => onComplete(result.all_signed === true), 1500);
     } catch (error) {
       toast.error(error.message || 'Failed to save signature');
     } finally {

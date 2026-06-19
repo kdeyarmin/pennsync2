@@ -83,6 +83,10 @@ export default function EnhancedClinicalDecisionSupport({
     []
   );
 
+  // Cancel any pending debounced run on unmount so it can't fire (and call
+  // setState) after the component is gone.
+  useEffect(() => () => debouncedAnalyze.cancel(), [debouncedAnalyze]);
+
   // Auto-analyze when inputs change
   useEffect(() => {
     if (autoAnalyze && currentNoteText?.length > 50) {

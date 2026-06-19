@@ -37,6 +37,9 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   const formDataRef = useRef(formData);
   useEffect(() => { formDataRef.current = formData; }, [formData]);
   const validationTimerRef = useRef(null);
+  // Clear the debounced-validation timer on unmount so it can't fire setState
+  // after the component is gone (and leak the pending timeout).
+  useEffect(() => () => clearTimeout(validationTimerRef.current), []);
 
   const [secondaryDiagnosisInput, setSecondaryDiagnosisInput] = useState('');
   const [validationErrors, setValidationErrors] = useState([]);
