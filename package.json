@@ -25,8 +25,8 @@
     "verify:workflow-quality": "npm run lint:workflow-targets && npm run typecheck:utils && npm run test:utils && npm run test:components && npm run build"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.31",
-    "@base44/vite-plugin": "^1.0.21",
+    "@base44/sdk": "^0.8.32",
+    "@base44/vite-plugin": "^1.0.23",
     "@hello-pangea/dnd": "^18.0.1",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
