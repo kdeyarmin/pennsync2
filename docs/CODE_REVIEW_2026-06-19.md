@@ -361,6 +361,27 @@ Messaging, dashboard/alerts, and OASIS-automation domains otherwise audited clea
 
 ---
 
+## Seventh sweep — visit documentation, compliance reporting, patient management
+
+- **`DocumentVisit` compliance score dropped primary-card vitals → FIXED.** The "fold vitals
+  into the scored text" block read only the long-key vitals convention
+  (`blood_pressure_systolic`, `heart_rate`, `oxygen_saturation`, `pain_level`, …), but the
+  primary `SmartVitalsInput` card stores short keys (`bp` as a `"120/80"` string, `hr`, `temp`,
+  `o2`, `pain`). A note documented via the primary card therefore scored as if no vitals were
+  recorded, silently lowering `compliance_score` and the derived `ComplianceAudit` status. Now
+  normalizes both conventions before scoring, mirroring `vitalEscalation.js` (BP parsed from the
+  `"120/80"` string with the same anchored, plausibility-checked regex). (The LLM-prompt and
+  comparison sites read long keys too — advisory only, no saved-data impact — left as-is.)
+- **`CustomReportGenerator` "Download JSON" crash → FIXED.** `downloadReport(format)`'s `format`
+  parameter (value `'json'`) shadowed date-fns `format`, which isn't imported in that file, so the
+  JSON path threw "format is not a function" and produced no file. Built the date with
+  `toISOString().split('T')[0]`.
+- Patient-management UI (`Patients`, `PatientDetails`, `DuplicatePatients`, and the patient/*
+  components incl. the concurrent-edit merge paths) and the rest of the compliance/incident/
+  physician components audited **clean**.
+
+---
+
 ## Verified correct (sampled — no change needed)
 
 Clinical: `oasisScoringEngine`, `oasisAnalytics`, `patientMatchScore`, `pdgmGrouper`,
