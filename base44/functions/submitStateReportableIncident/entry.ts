@@ -222,12 +222,14 @@ Please review and follow up in the Incident Reporting module.`;
     try {
       await base44.asServiceRole.entities.Incident.update(incident.id, {
         ...(pdfUrl ? { state_reportable_pdf_url: pdfUrl } : {}),
-        state_reportable_alert_sent_at: new Date().toISOString(),
+        ...(recipients.length > 0
+          ? { state_reportable_alert_sent_at: new Date().toISOString() }
+          : {}),
         details: {
           ...(incident.details || {}),
           document_id: documentId,
           admin_alert: {
-            email_sent_at: new Date().toISOString(),
+            email_sent_at: recipients.length > 0 ? new Date().toISOString() : null,
             recipients,
             failures,
             notified_count: notifiedCount,
