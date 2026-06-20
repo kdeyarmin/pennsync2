@@ -168,7 +168,7 @@ export default function ComplianceAlertAggregator() {
         title: 'Security Events Detected',
         message: `${recentSecurityEvents.length} security event(s) in the last 7 days require review`,
         count: recentSecurityEvents.length,
-        link: createPageUrl("AdminDashboard"),
+        link: createPageUrl("AdminOperations"),
         linkText: 'View Logs',
         category: 'Security'
       });

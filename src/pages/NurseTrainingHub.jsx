@@ -196,11 +196,11 @@ export default function NurseTrainingHub() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600 mb-1">Completed</p>
-                <p className="text-3xl font-bold text-green-600">
+                <p className="text-3xl font-bold text-emerald-600">
                   {myCompletions.filter(c => c.status === 'completed').length}
                 </p>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-green-400" />
+              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
             </div>
           </CardContent>
         </Card>
@@ -269,8 +269,8 @@ export default function NurseTrainingHub() {
 
           {/* AI-Generated Training Section */}
           {skillGaps.length > 0 && (
-            <Card className="border-navy-200">
-              <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
+            <Card>
+              <CardHeader className="border-b border-slate-100">
                 <CardTitle className="flex items-center gap-2">
                   <Brain className="w-5 h-5 text-navy-600" />
                   Generate Custom Training
@@ -334,7 +334,7 @@ export default function NurseTrainingHub() {
                     <Badge variant="outline">{module.category}</Badge>
                   </div>
                   {getCompletionStatus(module.id) === 'completed' ? (
-                    <div className="flex items-center gap-2 text-green-600">
+                    <div className="flex items-center gap-2 text-emerald-600">
                       <CheckCircle2 className="w-4 h-4" />
                       <span className="text-sm font-medium">
                         Completed - Score: {getCompletionScore(module.id)}%
@@ -371,7 +371,7 @@ export default function NurseTrainingHub() {
                     <Badge variant="outline">{module.difficulty_level}</Badge>
                   </div>
                   {getCompletionStatus(module.id) === 'completed' ? (
-                    <div className="flex items-center gap-2 text-green-600">
+                    <div className="flex items-center gap-2 text-emerald-600">
                       <CheckCircle2 className="w-4 h-4" />
                       <span className="text-sm font-medium">
                         Completed - Score: {getCompletionScore(module.id)}%
@@ -420,7 +420,7 @@ export default function NurseTrainingHub() {
                             </h4>
                             <div className="flex items-center gap-2 mt-2">
                               <Badge className={
-                                completion.status === 'completed' ? 'bg-green-500' :
+                                completion.status === 'completed' ? 'bg-emerald-500' :
                                 completion.status === 'in_progress' ? 'bg-orange-500' :
                                 'bg-slate-500'
                               }>

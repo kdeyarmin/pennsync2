@@ -174,7 +174,7 @@ export default function AgencyAnalytics() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-green-600" />
+                    <Users className="w-5 h-5 text-emerald-600" />
                     Patient Status
                   </CardTitle>
                 </CardHeader>
@@ -182,7 +182,7 @@ export default function AgencyAnalytics() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-600">Active</span>
-                      <span className="text-sm font-semibold text-green-600">{overallStats.patients.active}</span>
+                      <span className="text-sm font-semibold text-emerald-600">{overallStats.patients.active}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-600">Discharged</span>
@@ -261,11 +261,11 @@ export default function AgencyAnalytics() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-green-700">Passed</span>
+                      <span className="text-sm font-medium text-emerald-700">Passed</span>
                       <span className="text-sm font-semibold">{overallStats.compliance.passedAudits}</span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{ width: `${overallStats.compliance.qualityScore}%` }}></div>
+                      <div className="bg-emerald-600 h-2 rounded-full" style={{ width: `${overallStats.compliance.qualityScore}%` }}></div>
                     </div>
                   </div>
                   <div>
@@ -408,12 +408,12 @@ export default function AgencyAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                  <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-green-700">Total Time Saved</p>
-                      <p className="text-2xl font-bold text-green-900">{overallStats.timeSaved.displayTotal}</p>
+                      <p className="text-sm font-medium text-emerald-700">Total Time Saved</p>
+                      <p className="text-2xl font-bold text-emerald-900">{overallStats.timeSaved.displayTotal}</p>
                     </div>
-                    <DollarSign className="w-8 h-8 text-green-600" />
+                    <DollarSign className="w-8 h-8 text-emerald-600" />
                   </div>
                   <div className="flex justify-between items-center p-4 bg-indigo-50 rounded-lg">
                     <div>

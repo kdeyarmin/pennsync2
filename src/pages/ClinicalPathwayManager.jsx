@@ -475,7 +475,7 @@ export default function ClinicalPathwayManager() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-2 h-12 rounded ${pathway.is_active ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      <div className={`w-2 h-12 rounded ${pathway.is_active ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                       <div>
                         <CardTitle className="text-lg">{pathway.pathway_name}</CardTitle>
                         <CardDescription>{pathway.description}</CardDescription>
@@ -506,10 +506,10 @@ export default function ClinicalPathwayManager() {
                       <p className="font-bold text-navy-700">{pathway.documentation_prompts?.length || 0}</p>
                       <p className="text-navy-600">Doc Prompts</p>
                     </div>
-                    <div className="bg-green-50 p-2 rounded">
-                      <DollarSign className="w-3 h-3 text-green-600 mx-auto mb-1" />
-                      <p className="font-bold text-green-700">{pathway.rescore_opportunities?.length || 0}</p>
-                      <p className="text-green-600">Rescores</p>
+                    <div className="bg-emerald-50 p-2 rounded">
+                      <DollarSign className="w-3 h-3 text-emerald-600 mx-auto mb-1" />
+                      <p className="font-bold text-emerald-700">{pathway.rescore_opportunities?.length || 0}</p>
+                      <p className="text-emerald-600">Rescores</p>
                     </div>
                     <div className="bg-navy-50 p-2 rounded">
                       <ClipboardList className="w-3 h-3 text-navy-600 mx-auto mb-1" />
@@ -826,7 +826,7 @@ const getPriorityColor = (priority) => {
   switch (priority) {
     case 'critical': return 'bg-red-600 text-white';
     case 'high': return 'bg-orange-500 text-white';
-    case 'medium': return 'bg-yellow-500 text-white';
+    case 'medium': return 'bg-amber-500 text-white';
     case 'low': return 'bg-blue-500 text-white';
     default: return 'bg-slate-500 text-white';
   }

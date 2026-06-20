@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
-  Mic, Square
+  Mic, Square, AlertTriangle
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -567,9 +567,9 @@ export default function SmartNoteAssistant() {
       {activeTab === "builder" && (
         <>
           {draftRestored && (
-            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <p className="text-xs text-green-700 font-medium">Draft restored.</p>
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <p className="text-xs text-emerald-700 font-medium">Draft restored.</p>
             </div>
           )}
 
@@ -616,7 +616,7 @@ export default function SmartNoteAssistant() {
                     <strong>{patient.first_name} {patient.last_name}</strong>
                     {patient.primary_diagnosis ? ` · ${patient.primary_diagnosis}` : ""}
                     {patient.current_medications?.length > 0 ? ` · ${patient.current_medications.length} meds` : ""}
-                    {patient.functional_status?.fall_risk === "high" && <span className="ml-2 text-red-600 font-bold">⚠ High Fall Risk</span>}
+                    {patient.functional_status?.fall_risk === "high" && <span className="ml-2 inline-flex items-center gap-1 text-rose-600 font-bold"><AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" /> High Fall Risk</span>}
                   </span>
                 </div>
               )}
@@ -636,9 +636,9 @@ export default function SmartNoteAssistant() {
 
               <ComplianceChecklist isHospice={isHospice} />
 
-              <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-navy-50 border-b border-indigo-100">
-                  <span className="text-xs font-semibold text-indigo-700">Your Rough Notes / Bullet Points</span>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
+                  <span className="text-xs font-semibold text-navy-700">Your Rough Notes / Bullet Points</span>
                   <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-navy-600 hover:text-navy-800"
                     onClick={() => { setActiveTab("drafter"); }}>
                     <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
@@ -667,7 +667,7 @@ export default function SmartNoteAssistant() {
                   className="w-full min-h-[240px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed" spellCheck={false}
                 />
                 <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50 gap-3">
-                  <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-slate-400"}`}>
+                  <span className={`text-xs shrink-0 ${ready ? "text-emerald-600 font-medium" : "text-slate-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
                   <Button onClick={startReview} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
@@ -695,8 +695,8 @@ export default function SmartNoteAssistant() {
               renderFinalNote={(api) => (
                 <>
                   {generatingTasks && (
-                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-                      <Loader2 className="w-4 h-4 animate-spin text-green-600 shrink-0" />
+                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800">
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600 shrink-0" />
                       Generating follow-up tasks from your note…
                     </div>
                   )}

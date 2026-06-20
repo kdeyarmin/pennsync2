@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import LoadingState from "@/components/ui/LoadingState";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { formatEastern } from "../components/utils/timezone";
@@ -230,7 +231,7 @@ export default function PatientDataManagement() {
 
   const getStatusColor = (status) => {
     const colors = {
-      active: "bg-green-100 text-green-800 border-green-200",
+      active: "bg-emerald-100 text-emerald-800 border-emerald-200",
       discharged: "bg-slate-100 text-slate-800 border-slate-200",
       hospitalized: "bg-red-100 text-red-800 border-red-200"
     };
@@ -240,8 +241,8 @@ export default function PatientDataManagement() {
   const getRiskColor = (level) => {
     const colors = {
       high: "bg-red-100 text-red-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      low: "bg-green-100 text-green-800"
+      medium: "bg-amber-100 text-amber-800",
+      low: "bg-emerald-100 text-emerald-800"
     };
     return colors[level] || colors.low;
   };
@@ -278,12 +279,9 @@ export default function PatientDataManagement() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading patient data...</p>
-        </div>
-      </div>
+      <PageContainer>
+        <LoadingState label="Loading patient data..." className="py-24" />
+      </PageContainer>
     );
   }
 
@@ -336,9 +334,9 @@ export default function PatientDataManagement() {
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm text-slate-600 truncate">Active</p>
-                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</p>
+                <p className="text-xl sm:text-2xl font-bold text-emerald-600">{stats.active}</p>
               </div>
-              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
+              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -348,9 +346,9 @@ export default function PatientDataManagement() {
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm text-slate-600 truncate">With Alerts</p>
-                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.withAlerts}</p>
+                <p className="text-xl sm:text-2xl font-bold text-amber-600">{stats.withAlerts}</p>
               </div>
-              <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500 flex-shrink-0" />
+              <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

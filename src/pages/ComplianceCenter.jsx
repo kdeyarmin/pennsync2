@@ -348,7 +348,7 @@ export default function ComplianceCenter() {
     switch (severity) {
       case 'critical': return 'bg-red-600 text-white';
       case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
+      case 'medium': return 'bg-amber-500 text-white';
       default: return 'bg-slate-500 text-white';
     }
   };
@@ -494,7 +494,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </div>
 
           {aiInsights && (
-            <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
+            <Card className="border-l-4 border-l-gold-400">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-navy-600" />
@@ -610,7 +610,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           {filteredIssues.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">All Clear!</h3>
                 <p className="text-slate-600">No compliance issues found.</p>
               </CardContent>

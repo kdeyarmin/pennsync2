@@ -252,9 +252,9 @@ export default function UserSettings() {
       />
 
       {saveSuccess && (
-        <Alert className="mb-6 bg-green-50 border-green-300">
-          <CheckCircle2 className="w-4 h-4 text-green-600" />
-          <AlertDescription className="text-green-800">
+        <Alert className="mb-6 bg-emerald-50 border-emerald-300">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <AlertDescription className="text-emerald-800">
             Your preferences have been saved successfully!
           </AlertDescription>
         </Alert>

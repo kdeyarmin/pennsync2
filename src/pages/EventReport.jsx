@@ -399,7 +399,7 @@ export default function EventReport() {
             </div>
 
             {/* Note */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
               <p className="text-sm font-medium text-slate-900">
                 Note: An event will not be considered submitted until you receive a confirmation that includes an event number.
               </p>

@@ -73,7 +73,7 @@ export default function ClinicalInsightsDashboard() {
                 <p className="text-xs sm:text-sm text-slate-600 truncate">Total Visits</p>
                 <p className="text-xl sm:text-2xl font-bold">{myVisitsCount}</p>
               </div>
-              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0" />
+              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

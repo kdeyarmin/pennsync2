@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
+import LoadingState from "@/components/ui/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -162,7 +164,7 @@ export default function AutomaticCarePlans() {
     e.preventDefault();
     
     if (formData.interventions.length === 0) {
-      alert("Please add at least one intervention");
+      toast.error("Please add at least one intervention");
       return;
     }
 
@@ -211,7 +213,7 @@ export default function AutomaticCarePlans() {
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'medium': return 'bg-amber-100 text-amber-800 border-amber-200';
       case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
       default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
@@ -221,7 +223,7 @@ export default function AutomaticCarePlans() {
     switch (careType) {
       case 'home_health': return 'bg-blue-100 text-blue-800';
       case 'hospice': return 'bg-navy-100 text-navy-800';
-      case 'both': return 'bg-green-100 text-green-800';
+      case 'both': return 'bg-emerald-100 text-emerald-800';
       default: return 'bg-slate-100 text-slate-800';
     }
   };
@@ -282,7 +284,7 @@ export default function AutomaticCarePlans() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-center text-slate-500 py-8">Loading triggers...</p>
+            <LoadingState label="Loading triggers..." className="py-8" />
           ) : triggers.length === 0 ? (
             <EmptyState
               icon={Zap}
@@ -317,7 +319,7 @@ export default function AutomaticCarePlans() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleToggleActive(trigger.id, trigger.is_active)}
-                          className={`min-h-[44px] ${trigger.is_active ? "text-green-600" : "text-slate-400"}`}
+                          className={`min-h-[44px] ${trigger.is_active ? "text-emerald-600" : "text-slate-400"}`}
                         >
                           {trigger.is_active ? (
                             <CheckCircle2 className="w-5 h-5" />

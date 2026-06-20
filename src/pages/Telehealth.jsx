@@ -181,7 +181,7 @@ export default function Telehealth() {
       <div className="px-3 sm:px-4 md:px-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: "Total Sessions", value: stats.total, icon: Video, color: "text-blue-600" },
-          { label: "Completed", value: stats.completed, icon: CheckCircle2, color: "text-green-600" },
+          { label: "Completed", value: stats.completed, icon: CheckCircle2, color: "text-emerald-600" },
           { label: "Upcoming", value: stats.scheduled, icon: Calendar, color: "text-amber-600" },
           { label: "Total Minutes", value: stats.totalMinutes, icon: Clock, color: "text-navy-600" }
         ].map(s => (
@@ -200,12 +200,12 @@ export default function Telehealth() {
       {/* Active session */}
       {activeSession && !showDocumentation && (
         <div className="px-3 sm:px-4 md:px-6 space-y-4 max-w-4xl">
-          <Card className="border-green-400 bg-green-50">
+          <Card className="border-emerald-400 bg-emerald-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                  <span className="font-semibold text-green-800">Active Session — {activeSession.patient_name}</span>
+                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" />
+                  <span className="font-semibold text-emerald-800">Active Session — {activeSession.patient_name}</span>
                 </div>
                 <Button size="sm" variant="outline" onClick={handleDisconnect} className="text-red-600 border-red-300">
                   End Session
@@ -357,7 +357,7 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
         />
       </div>
 
-      <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 h-11 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all mt-2" disabled={loading || !form.patient_id}>
+      <Button type="submit" className="w-full gap-2 h-11 rounded-lg font-semibold mt-2" disabled={loading || !form.patient_id}>
         <Video className="w-4 h-4" />
         {loading ? "Creating..." : "Create Session"}
       </Button>

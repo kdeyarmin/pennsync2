@@ -51,6 +51,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import LoadingState from "@/components/ui/LoadingState";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -122,7 +123,6 @@ export default function ReferralIntake() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [extractedFormData, setExtractedFormData] = useState(null);
-  const [isAnalyzing, _setIsAnalyzing] = useState(false);
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
   const [_processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -938,9 +938,9 @@ Actions available:
   const getStatusColor = (status) => {
     switch (status) {
       case 'new': return 'bg-blue-500';
-      case 'processing': return 'bg-yellow-500';
+      case 'processing': return 'bg-amber-500';
       case 'awaiting_info': return 'bg-orange-500';
-      case 'ready_for_admission': return 'bg-green-500';
+      case 'ready_for_admission': return 'bg-emerald-500';
       case 'archived': return 'bg-slate-500';
       case 'declined': return 'bg-red-500';
       default: return 'bg-slate-500';
@@ -1059,7 +1059,7 @@ Actions available:
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="text-center py-12 text-slate-500">Loading referrals...</div>
+            <LoadingState label="Loading referrals..." />
           ) : filteredReferrals.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
@@ -1108,17 +1108,20 @@ Actions available:
                           </p>
                         )}
                         {referral.patient_id && !referral.requires_manual_review && referral.match_confidence && (
-                          <Badge className={
-                            referral.match_confidence >= 90 ? "bg-green-600 text-xs mt-1" :
-                            referral.match_confidence >= 75 ? "bg-blue-600 text-xs mt-1" :
-                            "bg-slate-600 text-xs mt-1"
-                          }>
-                            {referral.match_confidence >= 90 ? "✓ " : ""}
+                          <Badge
+                            variant={
+                              referral.match_confidence >= 90 ? "success" :
+                              referral.match_confidence >= 75 ? "info" :
+                              "secondary"
+                            }
+                            className="gap-1 text-xs mt-1"
+                          >
+                            {referral.match_confidence >= 90 && <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />}
                             Matched ({Math.round(referral.match_confidence)}%)
                           </Badge>
                         )}
                         {referral.patient_id && !referral.requires_manual_review && !referral.match_confidence && (
-                          <Badge className="bg-green-600 text-xs mt-1">In System</Badge>
+                          <Badge className="bg-emerald-600 text-xs mt-1">In System</Badge>
                         )}
                         {referral.requires_manual_review && (
                           <div className="flex flex-col gap-1 mt-1">
@@ -1126,7 +1129,7 @@ Actions available:
                               Review Match
                             </Badge>
                             {referral.match_confidence && (
-                              <span className="text-xs text-yellow-700">
+                              <span className="text-xs text-amber-700">
                                 {Math.round(referral.match_confidence)}% confidence
                               </span>
                             )}
@@ -1187,7 +1190,7 @@ Actions available:
                          {referral.requires_manual_review ? (
                            <Button
                              size="sm"
-                             className="bg-yellow-500 hover:bg-yellow-600 text-white min-h-[36px] text-xs"
+                             className="bg-amber-500 hover:bg-amber-600 text-white min-h-[36px] text-xs"
                              onClick={() => setVerificationReferral(referral)}
                            >
                               <UserCheck className="w-4 h-4 mr-1" />
@@ -1197,7 +1200,7 @@ Actions available:
                            <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
                              <Button
                                size="sm"
-                               className="bg-green-600 hover:bg-green-700 text-white min-h-[36px] text-xs w-full"
+                               className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-[36px] text-xs w-full"
                              >
                                <Sparkles className="w-4 h-4 mr-1" />
                                Start Admission Note
@@ -1297,9 +1300,9 @@ Actions available:
 
             {extractedFormData && (
               <div className="space-y-3">
-                <Alert className="bg-green-50 border-green-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <AlertDescription className="text-green-900 text-sm">
+                <Alert className="bg-emerald-50 border-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <AlertDescription className="text-emerald-900 text-sm">
                     <strong>AI Extracted Data:</strong> Form fields have been auto-populated with comprehensive analysis.
                     {extractedFormData.confidence_score && (
                       <span className="ml-2 text-xs">
@@ -1383,7 +1386,7 @@ Actions available:
                   <Label htmlFor="patient-name" className="flex items-center gap-2 mb-1.5">
                     Patient Name (if known)
                     {extractedFormData?.patient_name && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Extracted</Badge>
                     )}
                   </Label>
                   <Input
@@ -1391,14 +1394,14 @@ Actions available:
                     placeholder="First Last"
                     value={newReferral.patient_name}
                     onChange={(e) => setNewReferral({ ...newReferral, patient_name: e.target.value })}
-                    className={`h-10 ${extractedFormData?.patient_name ? "border-green-300 bg-green-50" : ""}`}
+                    className={`h-10 ${extractedFormData?.patient_name ? "border-emerald-300 bg-emerald-50" : ""}`}
                   />
                 </div>
                 <div>
                   <Label htmlFor="referral-source" className="flex items-center gap-2 mb-1.5">
                     Referral Source
                     {extractedFormData?.referral_source && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Extracted</Badge>
                     )}
                   </Label>
                   <Input
@@ -1406,7 +1409,7 @@ Actions available:
                     placeholder="Hospital, physician, facility"
                     value={newReferral.referral_source}
                     onChange={(e) => setNewReferral({ ...newReferral, referral_source: e.target.value })}
-                    className={`h-10 ${extractedFormData?.referral_source ? "border-green-300 bg-green-50" : ""}`}
+                    className={`h-10 ${extractedFormData?.referral_source ? "border-emerald-300 bg-emerald-50" : ""}`}
                   />
                 </div>
               </div>
@@ -1416,7 +1419,7 @@ Actions available:
                   <Label htmlFor="referral-date" className="flex items-center gap-2 mb-1.5">
                     Referral Date
                     {extractedFormData?.referral_date && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Extracted</Badge>
                     )}
                   </Label>
                   <Input
@@ -1424,21 +1427,21 @@ Actions available:
                     type="date"
                     value={newReferral.referral_date}
                     onChange={(e) => setNewReferral({ ...newReferral, referral_date: e.target.value })}
-                    className={`h-10 ${extractedFormData?.referral_date ? "border-green-300 bg-green-50" : ""}`}
+                    className={`h-10 ${extractedFormData?.referral_date ? "border-emerald-300 bg-emerald-50" : ""}`}
                   />
                 </div>
                 <div>
                   <Label htmlFor="priority" className="flex items-center gap-2 mb-1.5">
                     Priority
                     {extractedFormData?.urgency_level && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Suggested</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Suggested</Badge>
                     )}
                   </Label>
                   <Select
                     value={newReferral.priority}
                     onValueChange={(value) => setNewReferral({ ...newReferral, priority: value })}
                   >
-                    <SelectTrigger id="priority" className={`h-10 ${extractedFormData?.urgency_level ? "border-green-300 bg-green-50" : ""}`}>
+                    <SelectTrigger id="priority" className={`h-10 ${extractedFormData?.urgency_level ? "border-emerald-300 bg-emerald-50" : ""}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1481,14 +1484,14 @@ Actions available:
                   disabled={isUploading}
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  {isAnalyzing ? (
+                  {isUploading ? (
                     <div className="space-y-2">
-                      <Sparkles className="w-12 h-12 text-blue-500 mx-auto animate-pulse" />
-                      <p className="text-blue-600 font-medium">Analyzing document with AI...</p>
+                      <Sparkles className="w-12 h-12 text-navy-500 mx-auto animate-pulse" />
+                      <p className="text-navy-600 font-medium">Analyzing document with AI...</p>
                       <p className="text-xs text-slate-500">Extracting patient information</p>
                     </div>
                   ) : uploadedFile ? (
-                    <div className="flex items-center justify-center gap-2 text-green-600">
+                    <div className="flex items-center justify-center gap-2 text-emerald-600">
                       <CheckCircle2 className="w-6 h-6" />
                       <span>File uploaded & analyzed successfully</span>
                     </div>
@@ -1573,7 +1576,7 @@ Actions available:
           <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <UserCheck className="w-6 h-6 text-yellow-600" />
+                <UserCheck className="w-6 h-6 text-amber-600" />
                 Patient Verification Required
               </DialogTitle>
             </DialogHeader>
@@ -1593,7 +1596,7 @@ Actions available:
           <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-yellow-600" />
+                <User className="w-5 h-5 text-amber-600" />
                 Patient Match Review
               </DialogTitle>
             </DialogHeader>

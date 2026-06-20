@@ -297,8 +297,7 @@ export default function ReferralProcessor() {
               referralData={extractedData}
               oasisSuggestions={null}
               patientData={null}
-              onSaveSection={(title, content) => {
-                console.log(`Saving ${title}:`, content);
+              onSaveSection={() => {
               }}
             />
 

@@ -256,9 +256,9 @@ Please review this incident in the Incident Reporting Dashboard.`
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'reported': return 'bg-yellow-500';
+      case 'reported': return 'bg-amber-500';
       case 'under_review': return 'bg-blue-500';
-      case 'resolved': return 'bg-green-500';
+      case 'resolved': return 'bg-emerald-500';
       default: return 'bg-slate-500';
     }
   };
@@ -267,7 +267,7 @@ Please review this incident in the Incident Reporting Dashboard.`
     switch (severity) {
       case 'high': return 'bg-red-600 text-white';
       case 'medium': return 'bg-orange-500 text-white';
-      case 'low': return 'bg-yellow-500 text-white';
+      case 'low': return 'bg-amber-500 text-white';
       default: return 'bg-slate-500 text-white';
     }
   };
@@ -567,7 +567,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div
-                      className="bg-gradient-to-r from-red-500 to-amber-500 h-2 rounded-full"
+                      className="bg-amber-500 h-2 rounded-full"
                       style={{ width: `${(count / incidents.length) * 100}%` }}
                     />
                   </div>
@@ -616,7 +616,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                           </span>
                           <span>Reported by: {incident.created_by}</span>
                           {incident.state_reportable_alert_sent_at && (
-                            <span className="text-green-700">Admins alerted</span>
+                            <span className="text-emerald-700">Admins alerted</span>
                           )}
                         </div>
                         {incident.state_reportable_pdf_url && (

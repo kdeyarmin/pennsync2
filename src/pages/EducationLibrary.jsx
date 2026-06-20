@@ -152,8 +152,8 @@ export default function EducationLibrary() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Send className="w-5 h-5 text-green-600" />
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <Send className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-900">{stats.totalSent}</p>
@@ -180,8 +180,8 @@ export default function EducationLibrary() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Star className="w-5 h-5 text-yellow-600" />
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Star className="w-5 h-5 text-amber-600" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-900 truncate">
@@ -354,7 +354,7 @@ export default function EducationLibrary() {
                             Patient: {sent.patient_name}
                           </p>
                         </div>
-                        <Badge className={sent.patient_acknowledged ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'}>
+                        <Badge className={sent.patient_acknowledged ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}>
                           {sent.patient_acknowledged ? 'Acknowledged' : 'Pending'}
                         </Badge>
                       </div>

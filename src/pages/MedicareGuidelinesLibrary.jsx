@@ -143,11 +143,11 @@ export default function MedicareGuidelinesLibrary() {
     const colors = {
       oasis: "bg-navy-100 text-navy-800",
       medicare_cop: "bg-red-100 text-red-800",
-      billing_reimbursement: "bg-green-100 text-green-800",
+      billing_reimbursement: "bg-emerald-100 text-emerald-800",
       clinical_documentation: "bg-blue-100 text-blue-800",
       home_health_regulations: "bg-indigo-100 text-indigo-800",
       hospice_regulations: "bg-gold-100 text-gold-800",
-      quality_measures: "bg-yellow-100 text-yellow-800",
+      quality_measures: "bg-amber-100 text-amber-800",
       compliance_audit: "bg-orange-100 text-orange-800",
       pdgm: "bg-teal-100 text-teal-800",
       other: "bg-slate-100 text-slate-800"
@@ -420,6 +420,7 @@ export default function MedicareGuidelinesLibrary() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Delete guideline"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       onClick={(e) => {
                         e.stopPropagation();

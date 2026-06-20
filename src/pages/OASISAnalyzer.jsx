@@ -445,10 +445,8 @@ export default function OASISAnalyzer() {
         if (bestMatch && bestMatch.confidence >= 85) {
           setSelectedPatientId(bestMatch.patient.id);
           // Avoid logging patient name (PHI) to the browser console.
-          console.log(`Auto-selected best match (${bestMatch.confidence}% confidence) — awaiting nurse confirmation to save`);
         } else if (bestMatch) {
           // Avoid logging patient name (PHI) to the browser console.
-          console.log(`Best match (${bestMatch.confidence}% confidence) — awaiting manual confirmation`);
         }
       }
     }
@@ -829,7 +827,6 @@ export default function OASISAnalyzer() {
           });
           
           if (textExtract.status === "success" && textExtract.output?.full_text) {
-            console.log("Text fallback successful, extracted", textExtract.output.full_text.length, "characters");
             
             // Use AI to parse the raw text for critical fields
             const parsedData = await invokeLLM({
@@ -1052,7 +1049,6 @@ Return JSON:
         throw new Error("PDF appears to be empty or unreadable. Please ensure it's a valid OASIS document with actual content.");
       }
 
-      console.log("Extracted OASIS content length:", oasisTextContent.length);
       
       // Parse scores helper
       const parseScore = (val) => {
@@ -1310,7 +1306,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
       if (shouldFlag && uploadedFileUrl) {
         // Will be flagged when saved to patient
-        console.log("OASIS flagged for audit review - scores below threshold");
       }
       
       // Use pre-extracted structured data merged with AI analysis for PDGM calculation
@@ -1673,8 +1668,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       {/* Clinical Note to OASIS Mapper */}
       {pdgmData && (
         <ClinicalNoteToOASISMapper
-          onMappingComplete={(mappedData) => {
-            console.log('Mapped fields:', mappedData);
+          onMappingComplete={() => {
           }}
           existingOASISData={pdgmData}
           extractedNarrative={extractedData?.output?.clinical_narrative}
@@ -1687,8 +1681,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           patientData={selectedPatient}
           clinicalContext={analysisResults?.summary}
           visitType={pdgmData?.patient_info?.assessment_type || 'admission'}
-          onDraftGenerated={(draft) => {
-            console.log('Draft generated:', draft);
+          onDraftGenerated={() => {
           }}
         />
       )}
@@ -1700,8 +1693,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           patientData={selectedPatient}
           clinicalContext={analysisResults?.summary}
           autoAnalyze={true}
-          onOpportunitiesFound={(opportunities) => {
-            console.log('Rescoring opportunities:', opportunities);
+          onOpportunitiesFound={() => {
           }}
         />
       )}
@@ -1723,8 +1715,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           clinicalNotes={analysisResults?.summary}
           patientData={selectedPatient}
           autoAnalyze={true}
-          onApplySuggestion={(suggestion) => {
-            console.log('Applying suggestion:', suggestion);
+          onApplySuggestion={() => {
             // Could integrate with OASIS editor if available
           }}
         />
@@ -1737,8 +1728,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           patientData={selectedPatient}
           clinicalNotes={analysisResults?.summary}
           autoRun={true}
-          onQAComplete={(qaResults) => {
-            console.log('QA checks complete:', qaResults);
+          onQAComplete={() => {
           }}
         />
       )}
@@ -1752,7 +1742,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           patientHistory={patientHistoricalData}
           autoValidate={true}
           onCorrection={(correction) => {
-            console.log('Applying AI correction:', correction);
             setPdgmData(prev => ({
               ...prev,
               [correction.m_item_code]: correction.suggested_value
@@ -1844,7 +1833,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                   pain_frequency: correctedData.m1242_pain_freq ?? prev?.clinical_items?.pain_frequency,
                 }
               }));
-              console.log('Applied corrections to PDGM data');
             }}
           />
 
@@ -2113,7 +2101,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             visitType={pdgmData?.patient_info?.assessment_type}
             autoReview={true}
             onReviewComplete={(reviewResults) => {
-              console.log('Document review complete:', reviewResults);
               logActivity(ActivityActions.NOTE_COMPLIANCE_CHECK, {
                 document_type: 'oasis',
                 overall_score: reviewResults.overall_score,
@@ -2346,8 +2333,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                   ?.map(opp => opp.comorbidity),
                 clinical_items: {}
               }}
-              onAnalysisComplete={(analysis) => {
-                console.log('PDGM Impact Analysis:', analysis);
+              onAnalysisComplete={() => {
               }}
             />
           )}
@@ -2370,9 +2356,8 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               originalPdgmData={pdgmData}
               originalPayment={originalPayment || 0}
               patientName={patientName}
-              onCreateActions={(scenarios) => {
+              onCreateActions={() => {
                 // Trigger action creation from scenarios
-                console.log("Creating actions from scenarios:", scenarios);
               }}
             />
             <OASISActionWorkflow
@@ -2467,7 +2452,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             patientId={selectedPatientId}
             onPathwaysActivated={(pathways) => {
               setTriggeredPathways(pathways);
-              console.log(`${pathways.length} pathways activated`);
             }}
           />
 

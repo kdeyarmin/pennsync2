@@ -25,10 +25,12 @@ import {
   CheckCircle2,
   Settings,
   MessageSquare,
-  Send
+  Send,
+  FileText
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import HandoutCustomizer from "../components/education/HandoutCustomizer";
@@ -84,21 +86,21 @@ const educationTopics = [
     id: 'stroke',
     title: 'Stroke Recovery',
     icon: Brain,
-    color: 'from-teal-500 to-green-500',
+    color: 'from-teal-500 to-emerald-500',
     description: 'Recovery tips, preventing another stroke, and recognizing warning signs.'
   },
   {
     id: 'wound_care',
     title: 'Wound Care',
     icon: Bandage,
-    color: 'from-green-500 to-emerald-500',
+    color: 'from-emerald-500 to-emerald-500',
     description: 'Proper wound care techniques, signs of infection, and promoting healing.'
   },
   {
     id: 'fall_prevention',
     title: 'Fall Prevention',
     icon: Shield,
-    color: 'from-yellow-500 to-orange-500',
+    color: 'from-amber-500 to-orange-500',
     description: 'Home safety tips and strategies to prevent falls at home.'
   },
   {
@@ -140,7 +142,7 @@ const educationTopics = [
     id: 'nutrition',
     title: 'Healthy Eating for Seniors',
     icon: Heart,
-    color: 'from-lime-500 to-green-500',
+    color: 'from-lime-500 to-emerald-500',
     description: 'Essential nutrients, meal planning, and overcoming common eating challenges.'
   },
   {
@@ -372,7 +374,6 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
-      console.log('Email response:', response);
 
       // Handle axios response wrapper
       const data = response?.data || response;
@@ -690,7 +691,7 @@ export default function PatientEducationHub() {
                   </div>
 
                   <div className="pt-4 border-t text-xs text-slate-500">
-                    <p>📄 Generated handouts include the Penn Home Health logo and are printer-friendly.</p>
+                    <p className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Generated handouts include the Penn Home Health logo and are printer-friendly.</p>
                   </div>
                 </>
               )}
@@ -719,13 +720,13 @@ export default function PatientEducationHub() {
         </TabsContent>
 
         <TabsContent value="teachback">
-          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+          <Suspense fallback={<LoadingState />}>
             <PatientEducation />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="tracking">
-          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+          <Suspense fallback={<LoadingState />}>
             <PatientEducationPortal />
           </Suspense>
         </TabsContent>

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { gradeTrainingAttempt } from "@/functions/gradeTrainingAttempt";
@@ -203,20 +204,10 @@ export default function TrainingCoursePlayer() {
   };
 
   if (!course) {
-    return (
-      <div className="max-w-3xl mx-auto p-8 flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-        <p className="text-slate-500">Loading course...</p>
-      </div>
-    );
+    return <LoadingState label="Loading course..." className="py-24" />;
   }
   if (!previewMode && !assignment) {
-    return (
-      <div className="max-w-3xl mx-auto p-8 flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-        <p className="text-slate-500">Loading assignment...</p>
-      </div>
-    );
+    return <LoadingState label="Loading assignment..." className="py-24" />;
   }
 
   const progressValue = STEP_PROGRESS[step] || 0;
@@ -254,7 +245,7 @@ export default function TrainingCoursePlayer() {
       )}
 
       {/* Course header card */}
-      <div className="rounded-2xl bg-gradient-to-r from-slate-800 to-blue-900 text-white p-4 sm:p-6 shadow-xl">
+      <div className="rounded-2xl bg-navy-900 text-white p-4 sm:p-6 shadow-lg">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
             <p className="text-blue-300 text-xs font-semibold uppercase tracking-wider mb-1">
@@ -278,7 +269,7 @@ export default function TrainingCoursePlayer() {
             </div>
           </div>
           {!previewMode && assignment?.pass_fail_result === "passed" && (
-            <Badge className="bg-emerald-500 text-white flex-shrink-0">✓ Passed</Badge>
+            <Badge variant="success" className="gap-1 flex-shrink-0"><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Passed</Badge>
           )}
         </div>
 
@@ -637,20 +628,19 @@ export default function TrainingCoursePlayer() {
       {/* ─── STEP: RESULT ─────────────────────────────────────────── */}
       {step === "result" && result && (
         <div className="space-y-4">
-          {/* Pass/Fail hero */}
-          <Card className={`border-0 shadow-lg ${result.passed ? "bg-gradient-to-r from-emerald-600 to-emerald-700" : "bg-gradient-to-r from-red-700 to-red-700"} text-white`}>
-            <CardContent className="p-8 text-center space-y-3">
-              {result.passed ? (
-                <CheckCircle2 className="w-16 h-16 mx-auto opacity-90" />
-              ) : (
-                <RotateCcw className="w-16 h-16 mx-auto opacity-90" />
-              )}
-              <h2 className="text-3xl font-extrabold">{result.passed ? "You Passed! 🎉" : "Not Quite Yet"}</h2>
-              <p className="text-lg opacity-90">
-                Score: <strong>{result.score}%</strong> &nbsp;•&nbsp; Passing: {result.passing_score}%
-              </p>
-            </CardContent>
-          </Card>
+          {/* Pass/Fail hero — plain wrapper so the status background isn't
+              overridden by Card's default bg-white. */}
+          <div className={`rounded-xl shadow-lg p-8 text-center space-y-3 text-white ${result.passed ? "bg-emerald-600" : "bg-red-700"}`}>
+            {result.passed ? (
+              <CheckCircle2 className="w-16 h-16 mx-auto opacity-90" />
+            ) : (
+              <RotateCcw className="w-16 h-16 mx-auto opacity-90" />
+            )}
+            <h2 className="text-3xl font-extrabold">{result.passed ? "You Passed!" : "Not Quite Yet"}</h2>
+            <p className="text-lg opacity-90">
+              Score: <strong>{result.score}%</strong> &nbsp;•&nbsp; Passing: {result.passing_score}%
+            </p>
+          </div>
 
           {/* Certificate */}
           {result.passed && result.certificate && (

@@ -105,9 +105,9 @@ export default function AITrainingGenerator() {
       />
 
       {/* Important Notice */}
-      <Alert className="bg-yellow-50 border-yellow-300">
-        <AlertTriangle className="w-4 h-4 text-yellow-600" />
-        <AlertDescription className="text-yellow-900">
+      <Alert className="bg-amber-50 border-amber-300">
+        <AlertTriangle className="w-4 h-4 text-amber-600" />
+        <AlertDescription className="text-amber-900">
           <strong>Review Required:</strong> All AI-generated content will be created in "Pending Review" status. An educator or admin must review and approve before it becomes active for employees.
         </AlertDescription>
       </Alert>
@@ -243,7 +243,7 @@ export default function AITrainingGenerator() {
           <Button
             onClick={handleGenerate}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-navy-600 to-indigo-600 hover:from-navy-700 hover:to-indigo-700"
+            className="w-full"
             size="lg"
           >
             {loading ? (
@@ -263,17 +263,17 @@ export default function AITrainingGenerator() {
 
       {/* Generation Result */}
       {generatedCourse && (
-        <Card className="border-2 border-green-300 bg-green-50">
+        <Card className="border-2 border-emerald-300 bg-emerald-50">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
-              <CardTitle className="text-green-900">Course Generated Successfully!</CardTitle>
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+              <CardTitle className="text-emerald-900">Course Generated Successfully!</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <h3 className="font-semibold text-slate-900 mb-1">{generatedCourse.title}</h3>
-              <Badge className="bg-yellow-500">Pending Review</Badge>
+              <Badge className="bg-amber-500">Pending Review</Badge>
               {generatedCourse.needs_sme_review && (
                 <Badge className="bg-orange-500 ml-2">SME Review Required</Badge>
               )}

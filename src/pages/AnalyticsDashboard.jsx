@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -357,7 +358,7 @@ export default function AnalyticsDashboard() {
       });
     } catch (error) {
       console.error('PDF export error:', error);
-      alert('Failed to export PDF: ' + error.message);
+      toast.error('Failed to export PDF: ' + error.message);
     }
   };
 
@@ -365,7 +366,7 @@ export default function AnalyticsDashboard() {
   const handleExportReport = () => {
     try {
       if (!metrics || !trendData || trendData.length === 0) {
-        alert('No data available to export. Please adjust your filters and try again.');
+        toast.error('No data available to export. Please adjust your filters and try again.');
         return;
       }
 
@@ -413,7 +414,7 @@ export default function AnalyticsDashboard() {
       a.remove();
     } catch (error) {
       console.error('Report generation error:', error);
-      alert('Failed to generate report: ' + error.message);
+      toast.error('Failed to generate report: ' + error.message);
     }
   };
 
