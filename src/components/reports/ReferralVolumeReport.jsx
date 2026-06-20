@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { exportToPDF } from "../utils/pdfExporter";
@@ -164,32 +165,30 @@ export default function ReferralVolumeReport({ dateRange }) {
           <CardTitle>Top Referral Sources</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Source</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Count</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Percentage</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Avg Priority</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {sourceChartData.sort((a, b) => b.count - a.count).slice(0, 10).map((item, index) => (
-                  <tr key={index} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-sm text-slate-900">{item.source}</td>
-                    <td className="px-4 py-3 text-sm text-slate-900">{item.count}</td>
-                    <td className="px-4 py-3 text-sm text-slate-900">
-                      {((item.count / filteredReferrals.length) * 100).toFixed(1)}%
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <Badge className="bg-blue-100 text-blue-800">Normal</Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Source</TableHead>
+                <TableHead>Count</TableHead>
+                <TableHead>Percentage</TableHead>
+                <TableHead>Avg Priority</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sourceChartData.sort((a, b) => b.count - a.count).slice(0, 10).map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell className="text-slate-900">{item.source}</TableCell>
+                  <TableCell className="text-slate-900">{item.count}</TableCell>
+                  <TableCell className="text-slate-900">
+                    {((item.count / filteredReferrals.length) * 100).toFixed(1)}%
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="info">Normal</Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

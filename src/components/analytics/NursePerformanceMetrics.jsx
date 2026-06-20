@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -200,57 +201,49 @@ export default function NursePerformanceMetrics({
               </div>
 
               {/* Detailed table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-100">
-                    <tr>
-                      <th className="text-left p-2">Nurse</th>
-                      <th className="text-center p-2">OASIS Avg</th>
-                      <th className="text-center p-2">Note Quality</th>
-                      <th className="text-center p-2">Compliance</th>
-                      <th className="text-center p-2">Pass Rate</th>
-                      <th className="text-center p-2">Activity</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {nurseMetrics.slice(0, 15).map((nurse, idx) => (
-                      <tr key={nurse.email} className={idx === 0 ? 'bg-amber-50' : ''}>
-                        <td className="p-2 font-medium">
-                          {idx === 0 && <Award className="w-4 h-4 inline mr-1 text-amber-600" />}
-                          {nurse.name}
-                        </td>
-                        <td className="p-2 text-center">
-                          {nurse.avgOASIS !== null ? (
-                            <Badge className={nurse.avgOASIS >= 80 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                              {nurse.avgOASIS}%
-                            </Badge>
-                          ) : '-'}
-                        </td>
-                        <td className="p-2 text-center">
-                          {nurse.avgNote !== null ? (
-                            <Badge className={nurse.avgNote >= 80 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                              {nurse.avgNote}%
-                            </Badge>
-                          ) : '-'}
-                        </td>
-                        <td className="p-2 text-center">
-                          {nurse.avgAudit !== null ? (
-                            <Badge className={nurse.avgAudit >= 80 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                              {nurse.avgAudit}%
-                            </Badge>
-                          ) : '-'}
-                        </td>
-                        <td className="p-2 text-center">
-                          {nurse.passRate !== null ? `${nurse.passRate}%` : '-'}
-                        </td>
-                        <td className="p-2 text-center text-slate-600">
-                          {nurse.totalActivity}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nurse</TableHead>
+                    <TableHead className="text-center">OASIS Avg</TableHead>
+                    <TableHead className="text-center">Note Quality</TableHead>
+                    <TableHead className="text-center">Compliance</TableHead>
+                    <TableHead className="text-center">Pass Rate</TableHead>
+                    <TableHead className="text-center">Activity</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {nurseMetrics.slice(0, 15).map((nurse, idx) => (
+                    <TableRow key={nurse.email} className={idx === 0 ? 'bg-gold-50' : ''}>
+                      <TableCell className="font-medium">
+                        {idx === 0 && <Award className="w-4 h-4 inline mr-1 text-gold-600" />}
+                        {nurse.name}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {nurse.avgOASIS !== null ? (
+                          <Badge variant={nurse.avgOASIS >= 80 ? 'success' : 'warning'}>{nurse.avgOASIS}%</Badge>
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {nurse.avgNote !== null ? (
+                          <Badge variant={nurse.avgNote >= 80 ? 'success' : 'warning'}>{nurse.avgNote}%</Badge>
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {nurse.avgAudit !== null ? (
+                          <Badge variant={nurse.avgAudit >= 80 ? 'success' : 'warning'}>{nurse.avgAudit}%</Badge>
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {nurse.passRate !== null ? `${nurse.passRate}%` : '-'}
+                      </TableCell>
+                      <TableCell className="text-center text-slate-600">
+                        {nurse.totalActivity}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </>
           )}
         </CardContent>
