@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -323,53 +324,10 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-blue-100 text-xs sm:text-sm mb-1 truncate">Avg Compliance</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{avgComplianceScore.toFixed(1)}%</p>
-              </div>
-              <Shield className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-200 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-red-100 text-xs sm:text-sm mb-1 truncate">Critical Issues</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{criticalIssuesCount}</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-red-200 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-orange-100 text-xs sm:text-sm mb-1 truncate">Total Issues</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{totalIssuesCount}</p>
-              </div>
-              <FileText className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-orange-200 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-green-100 text-xs sm:text-sm mb-1 truncate">Audits Reviewed</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{filteredAudits.length}</p>
-              </div>
-              <Calendar className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-200 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard label="Avg Compliance" value={`${avgComplianceScore.toFixed(1)}%`} icon={Shield} tone="navy" />
+        <StatCard label="Critical Issues" value={criticalIssuesCount} icon={AlertTriangle} tone="red" />
+        <StatCard label="Total Issues" value={totalIssuesCount} icon={FileText} tone="amber" />
+        <StatCard label="Audits Reviewed" value={filteredAudits.length} icon={Calendar} tone="emerald" />
       </div>
 
       {/* AI Insights */}

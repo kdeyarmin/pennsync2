@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -536,47 +537,15 @@ Please review this incident in the Incident Reporting Dashboard.`
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <AlertTriangle className="w-8 h-8 text-red-200" />
-            </div>
-            <p className="text-2xl font-bold">{incidents.length}</p>
-            <p className="text-xs text-red-100">Total Incidents</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="w-8 h-8 text-orange-200" />
-            </div>
-            <p className="text-2xl font-bold">{last30Days.length}</p>
-            <p className="text-xs text-orange-100">Last 30 Days</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="w-8 h-8 text-yellow-200" />
-            </div>
-            <p className="text-2xl font-bold">{bySeverity.high || 0}</p>
-            <p className="text-xs text-yellow-100">High Severity</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle2 className="w-8 h-8 text-blue-200" />
-            </div>
-            <p className="text-2xl font-bold">
-              {incidents.filter(i => i.status === 'resolved').length}
-            </p>
-            <p className="text-xs text-blue-100">Resolved</p>
-          </CardContent>
-        </Card>
+        <StatCard label="Total Incidents" value={incidents.length} icon={AlertTriangle} tone="navy" />
+        <StatCard label="Last 30 Days" value={last30Days.length} icon={Clock} tone="slate" />
+        <StatCard label="High Severity" value={bySeverity.high || 0} icon={TrendingUp} tone="red" />
+        <StatCard
+          label="Resolved"
+          value={incidents.filter(i => i.status === 'resolved').length}
+          icon={CheckCircle2}
+          tone="emerald"
+        />
       </div>
 
       {/* Trends by Type */}
