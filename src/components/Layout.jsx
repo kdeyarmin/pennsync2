@@ -257,7 +257,19 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <>
-      <Toaster position="top-right" richColors closeButton theme="light" />
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        theme="light"
+        toastOptions={{
+          classNames: {
+            toast: "rounded-xl border shadow-lg",
+            title: "font-semibold",
+            description: "text-slate-600",
+          },
+        }}
+      />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>

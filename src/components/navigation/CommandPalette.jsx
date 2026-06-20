@@ -92,10 +92,10 @@ export default function CommandPalette({ isAdmin }) {
         key={`${prefix}${page.page}`}
         value={`${prefix}${page.label} ${(page.keywords ?? []).join(" ")}`}
         onSelect={() => handleSelect(page.page)}
-        className="flex cursor-pointer items-center gap-3 px-3 py-2.5"
+        className="group flex cursor-pointer items-center gap-3 px-3 py-2.5"
       >
-        <Icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-        <span>{page.label}</span>
+        <Icon className="h-4 w-4 flex-shrink-0 text-slate-400 transition-colors group-aria-selected:text-navy-600" />
+        <span className="group-aria-selected:font-medium">{page.label}</span>
       </CommandItem>
     );
   }, [handleSelect]);
