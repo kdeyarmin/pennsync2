@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import StatCard from "@/components/ui/StatCard";
+import StatCard from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -1007,10 +1007,10 @@ Actions available:
         <TabsContent value="intake" className="space-y-4 sm:space-y-6">
       {/* Status Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <StatCard label="New" value={statusCounts.new} tone="navy" />
-        <StatCard label="Processing" value={statusCounts.processing} tone="amber" />
-        <StatCard label="Awaiting Info" value={statusCounts.awaiting_info} tone="slate" />
-        <StatCard label="Ready" value={statusCounts.ready_for_admission} tone="emerald" />
+        <StatCard label="New" value={statusCounts.new} icon={ClipboardList} tone="sky" />
+        <StatCard label="Processing" value={statusCounts.processing} icon={RefreshCw} tone="amber" />
+        <StatCard label="Awaiting Info" value={statusCounts.awaiting_info} icon={AlertCircle} tone="orange" />
+        <StatCard label="Ready" value={statusCounts.ready_for_admission} icon={CheckCircle2} tone="emerald" />
       </div>
 
       {/* Filters */}

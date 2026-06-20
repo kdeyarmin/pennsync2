@@ -5,28 +5,12 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import StatCard from "@/components/ui/stat-card";
 import { Users, FileText, PenTool, Settings, ArrowRight, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import SystemHealthMonitor from "./SystemHealthMonitor";
 import QuickHealthOverview from "./QuickHealthOverview";
 import { getDocumentDisplayName, getNormalizedSignatureStatus, getSignatureStatusLabel } from "@/components/signature/signatureUtils";
-
-const StatCard = ({ icon: Icon, label, value, trend }) => (
-  <Card className="modern-card-elevated">
-    <CardContent className="p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-slate-600 mb-1">{label}</p>
-          <p className="text-3xl font-bold text-slate-900">{value}</p>
-          {trend && <p className="text-xs text-green-600 mt-1">↑ {trend}</p>}
-        </div>
-        <div className="p-3 bg-blue-100 rounded-lg">
-          <Icon className="w-6 h-6 text-blue-600" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 export default function AdminDashboardOverview() {
   // Fetch user count

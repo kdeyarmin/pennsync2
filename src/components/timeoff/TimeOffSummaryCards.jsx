@@ -1,27 +1,7 @@
 import { useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import StatCard from "@/components/ui/stat-card";
 import { Hourglass, CalendarCheck, CalendarClock } from "lucide-react";
 import { approvedDaysInYear, isUpcoming, totalRequestedDays } from "./timeOffUtils";
-
-function StatCard({ icon: Icon, label, value, sub, accent }) {
-  return (
-    <Card className="border-l-4" style={{ borderLeftColor: accent }}>
-      <CardContent className="p-4 flex items-center gap-4">
-        <div
-          className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${accent}1a`, color: accent }}
-        >
-          <Icon className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-2xl font-bold text-slate-900 leading-tight">{value}</p>
-          <p className="text-sm font-medium text-slate-600 truncate">{label}</p>
-          {sub && <p className="text-xs text-slate-400 truncate">{sub}</p>}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function TimeOffSummaryCards({ requests = [] }) {
   const stats = useMemo(() => {

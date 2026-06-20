@@ -131,24 +131,18 @@ export const NAV_MANIFEST = [
     keywords: ["auto care plan", "ai care plan"],
   },
   {
-    page: "SmartOASISAssessment",
-    label: "OASIS Assessment",
-    icon: Brain,
-    category: "Patient Care",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["oasis", "assessment", "hha"],
-  },
-  {
-    // Hub combining the former OASIS Analyzer / Review / Clinical / Compliance /
-    // Documentation / Revenue / Analytics / Audit pages as tabs (?tab=…).
+    // Hub combining OASIS assessment entry (SmartOASISAssessment, the default
+    // "Assessment" tab) with the former OASIS Analyzer / Review / Clinical /
+    // Compliance / Documentation / Revenue / Analytics / Audit pages as tabs
+    // (?tab=…). SmartOASISAssessment has no standalone manifest entry — it is the
+    // Assessment tab here, and /SmartOASISAssessment redirects in (see routes.jsx).
     page: "OASISCenter",
     label: "OASIS Center",
     icon: ClipboardList,
     category: "Patient Care",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["oasis", "review", "analyze", "compliance", "documentation", "revenue", "audit", "analytics", "pdgm"],
+    keywords: ["oasis", "assessment", "hha", "complete", "review", "analyze", "compliance", "documentation", "revenue", "audit", "analytics", "pdgm"],
   },
   {
     page: "Incidents",
@@ -205,7 +199,9 @@ export const NAV_MANIFEST = [
     category: "Documentation",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation"],
+    // Includes the former Visit Scribe (now the "Record / Upload" tab) keywords so
+    // search still surfaces this hub for "scribe", "voice", "record audio", etc.
+    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation", "scribe", "voice", "visit", "record", "audio", "upload"],
   },
   {
     // Smart Notes is the default tab *inside* the Clinical Notes hub
@@ -219,15 +215,10 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "ClinicalDocumentation",
     keywords: ["smart note", "ai note", "documentation", "ai"],
   },
-  {
-    page: "VisitScribe",
-    label: "Visit Scribe",
-    icon: Mic,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["scribe", "dictation", "voice", "visit"],
-  },
+  // NOTE: Visit Scribe was folded into the Clinical Notes hub. Its Record/Upload
+  // audio capture is now the "Record / Upload" tab (its "Live Dictation" tab was a
+  // duplicate of Clinical Notes' own), so /VisitScribe redirects to
+  // /ClinicalDocumentation?tab=record (see REDIRECTS in src/routes.jsx).
   {
     page: "DocumentHub",
     label: "Documents",
@@ -504,7 +495,12 @@ export const NAV_MANIFEST = [
   // Compliance Center). Its name also collided with RegulatoryCompliance, so it
   // now redirects to /ComplianceCenter (see REDIRECTS in src/routes.jsx).
 
-  // ─── Administration (admin hub + management) ─────────────────────────────────
+  // ─── Administration (single slim sidebar section) ────────────────────────────
+  // The sidebar deliberately surfaces only the handful of daily-use admin
+  // destinations (Admin Console, Users, Reports & Analytics, Compliance Center).
+  // Every other admin tool is set category: null — it stays routed and is reached
+  // through the Admin Console launchpad (AdminConsoleDirectory) and ⌘K palette,
+  // rather than re-listing the whole admin surface in the sidebar.
   {
     page: "AdminOperations",
     label: "Admin Console",
@@ -520,7 +516,8 @@ export const NAV_MANIFEST = [
     label: "Super Admin",
     navLabel: "Super Admin",
     icon: Lock,
-    category: "Administration",
+    // Owner-only, rarely touched — reached via the Admin Console, not the sidebar.
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["super admin", "telnyx", "api secret", "integration", "provisioning", "phone setup", "owner"],
@@ -547,7 +544,8 @@ export const NAV_MANIFEST = [
     page: "AdminTraining",
     label: "Training Manager",
     icon: GraduationCap,
-    category: "Administration",
+    // Reached via Admin Console → Training & Education.
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["training manager", "assign training", "admin training"],
@@ -575,9 +573,8 @@ export const NAV_MANIFEST = [
   },
   {
     // Reached from the Admin Console directory ("Users & Staff") and the command
-    // palette. category is null: the old "Manage" section was never rendered
-    // (buildAdminItems only emits Administration / Analytics / Configuration), so
-    // labelling it that way only created a phantom heading.
+    // palette. category is null so it stays out of the sidebar (buildAdminItems
+    // emits only the single Administration section).
     page: "NursePerformanceDashboard",
     label: "Nurse Performance",
     icon: TrendingUp,
@@ -599,7 +596,8 @@ export const NAV_MANIFEST = [
     page: "ClinicalPathwayManager",
     label: "Clinical Pathways",
     icon: ClipboardList,
-    category: "Administration",
+    // Reached via Admin Console → Clinical Oversight.
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["pathways", "clinical pathways", "protocols"],
@@ -609,7 +607,9 @@ export const NAV_MANIFEST = [
     label: "Communications",
     navLabel: "Comms",
     icon: Radio,
-    category: "Administration",
+    // Reached via Admin Console → System & Configuration (also avoids colliding
+    // with the everyday "Communication" sidebar section).
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["sms", "calls", "fax", "telnyx", "phone", "delivery"],
@@ -627,7 +627,8 @@ export const NAV_MANIFEST = [
     page: "PatientDataManagement",
     label: "Data Management",
     icon: Database,
-    category: "Configuration",
+    // Reached via Admin Console → Data & Documents.
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["data", "management", "import", "patients"],
@@ -667,7 +668,7 @@ export const NAV_MANIFEST = [
     page: "ReportsAnalytics",
     label: "Reports & Analytics",
     icon: BarChart3,
-    category: "Analytics",
+    category: "Administration",
     adminOnly: true,
     breadcrumbParent: null,
     keywords: ["reports", "analytics", "metrics", "export", "data"],
@@ -705,11 +706,10 @@ export const NAV_MANIFEST = [
     page: "ComplianceCenter",
     label: "Compliance Center",
     icon: Shield,
-    category: "Analytics",
+    category: "Administration",
     adminOnly: true,
     breadcrumbParent: null,
     keywords: ["compliance", "audit", "quality", "metrics"],
-    // Note: adminItems shows this in Analytics category alongside Alerts
   },
 
   // ─── System / Admin Config ───────────────────────────────────────────────────
@@ -731,7 +731,8 @@ export const NAV_MANIFEST = [
     page: "AgencySettings",
     label: "Agency Settings",
     icon: Settings,
-    category: "Configuration",
+    // Reached via Admin Console → System & Configuration.
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["agency", "settings", "configuration"],
@@ -740,7 +741,8 @@ export const NAV_MANIFEST = [
     page: "PDGMRateSettings",
     label: "PDGM Rate Settings",
     icon: PieChart,
-    category: "Configuration",
+    // Reached via Admin Console → System & Configuration.
+    category: null,
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["pdgm", "case mix", "case-mix", "weights", "rates", "reimbursement", "billing", "cms"],
@@ -877,7 +879,11 @@ export function buildNavCategories(manifest) {
  * Dynamic badge/action values are injected by Layout after this call.
  */
 export function buildAdminItems(manifest) {
-  const categoryOrder = ["Administration", "Analytics", "Configuration"];
+  // A single slim "Administration" section. The former Analytics / Configuration
+  // sub-headings were folded in (and most of their items moved into the Admin
+  // Console launchpad) to stop the sidebar from re-listing the whole admin
+  // surface — see the Administration block in NAV_MANIFEST.
+  const categoryOrder = ["Administration"];
   const map = {};
   const routed = new Set(PAGE_NAMES);
   for (const entry of manifest) {

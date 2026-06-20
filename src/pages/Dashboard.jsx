@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/ui/PageHeader";
-import StatCard from "@/components/ui/StatCard";
+import StatCard from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
@@ -228,9 +228,27 @@ export default function Dashboard() {
           icon={Calendar}
           tone="emerald"
         />
-        <StatCard label="Active Care Plans" value={carePlans.length} sub={`${patients.length} patients`} icon={Target} tone="navy" />
-        <StatCard label="Note Enhancements" value={noteConversions.length} sub="AI-assisted" icon={FileText} tone="slate" />
-        <StatCard label="Time Saved" value={stats.timeSavedDisplay} sub="last 30 days" icon={Clock} tone="gold" />
+        <StatCard
+          label="Active Care Plans"
+          value={carePlans.length}
+          sub={`${patients.length} patients`}
+          icon={Target}
+          tone="navy"
+        />
+        <StatCard
+          label="Note Enhancements"
+          value={noteConversions.length}
+          sub="AI-assisted"
+          icon={FileText}
+          tone="slate"
+        />
+        <StatCard
+          label="Time Saved"
+          value={stats.timeSavedDisplay}
+          sub="last 30 days"
+          icon={Clock}
+          tone="gold"
+        />
       </div>
 
       {/* Quick Action Buttons — consistent navy hover accent (no rainbow). */}
