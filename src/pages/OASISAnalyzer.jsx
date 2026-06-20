@@ -361,10 +361,12 @@ export default function OASISAnalyzer() {
   // Load patient historical data for AI validation
   const loadPatientHistoricalData = async (patientId) => {
     try {
-      const [visits, previousOASIS] = await Promise.all([
+      const [visits, previousOASISRes] = await Promise.all([
         base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
-        base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 3)
+        // Routed through listOASISUploads so financial fields are stripped server-side for non-financial users.
+        base44.functions.invoke('listOASISUploads', { patientId, sort: '-created_date', limit: 3 })
       ]);
+      const previousOASIS = previousOASISRes?.data?.uploads || [];
 
       setPatientHistoricalData({
         previousScores: previousOASIS.map(o => ({
@@ -384,7 +386,9 @@ export default function OASISAnalyzer() {
   // Fetch saved OASIS uploads
   const { data: savedOASISUploads = [] } = useQuery({
     queryKey: ['oasisUploads'],
-    queryFn: () => base44.entities.OASISUpload.list('-created_date', 50),
+    // Routed through listOASISUploads so financial fields (estimated_payment,
+    // revenue_*) are stripped server-side for non-financial users.
+    queryFn: async () => (await base44.functions.invoke('listOASISUploads', { sort: '-created_date', limit: 50 }))?.data?.uploads || [],
   });
 
   // Save OASIS mutation

@@ -127,7 +127,7 @@ export default function PatientDetails() {
 
   const { data: _patientOASIS = [] } = useQuery({
     queryKey: ['patientOASIS', patientId],
-    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date'),
+    queryFn: async () => (await base44.functions.invoke('listOASISUploads', { patientId, sort: '-created_date' }))?.data?.uploads || [],
     initialData: [],
     enabled: !!patientId,
   });
