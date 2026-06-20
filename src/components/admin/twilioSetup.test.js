@@ -122,11 +122,9 @@ test("buildIntegrationSteps returns the ordered setup steps", () => {
   }
 });
 
-test("buildIntegrationSteps anchors use twilio- prefix", () => {
+test("buildIntegrationSteps uses the Telnyx secret anchor", () => {
   const steps = buildIntegrationSteps({});
-  for (const s of steps) {
-    assert.ok(s.anchor.startsWith("twilio-"), `anchor should start with twilio-: ${s.anchor}`);
-  }
+  assert.equal(byId(steps, "api_secret").anchor, "telnyx-secret");
 });
 
 test("buildIntegrationSteps with empty inputs leaves required steps undone", () => {

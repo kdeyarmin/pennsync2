@@ -154,7 +154,7 @@ export function buildIntegrationSteps({ secretStatus, agencySettings, provisioni
     id: "api_secret",
     title: "Add your Telnyx API key",
     kind: "required",
-    anchor: "twilio-secret",
+    anchor: "telnyx-secret",
     status: secretConfigured ? "done" : "todo",
     detail: secretConfigured
       ? `Configured${secretSuffix}.`
