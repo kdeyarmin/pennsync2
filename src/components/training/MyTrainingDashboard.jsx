@@ -10,12 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useIsEmbedded } from "@/components/ui/embeddedPage";
 import { Input } from "@/components/ui/input";
 import LoadingState from "@/components/ui/LoadingState";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
 export default function MyTrainingDashboard({ filterByType }) {
+  const embedded = useIsEmbedded();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -84,16 +86,18 @@ export default function MyTrainingDashboard({ filterByType }) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white p-5 sm:p-6 shadow-xl">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-          {filterByType === 'in_service' ? 'Compliance In-Services' : 'My Training'}
-        </h1>
-        <p className="text-sm sm:text-base text-blue-100">
-          {filterByType === 'in_service'
-            ? 'Required compliance training, scores, and certification status.'
-            : 'Assigned in-services, due dates, scores, certificates, and learning plan progress in one place.'}
-        </p>
-      </div>
+      {!embedded && (
+        <div className="rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white p-5 sm:p-6 shadow-xl">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+            {filterByType === 'in_service' ? 'Compliance In-Services' : 'My Training'}
+          </h1>
+          <p className="text-sm sm:text-base text-blue-100">
+            {filterByType === 'in_service'
+              ? 'Required compliance training, scores, and certification status.'
+              : 'Assigned in-services, due dates, scores, certificates, and learning plan progress in one place.'}
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[

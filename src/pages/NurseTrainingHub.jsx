@@ -28,6 +28,7 @@ import {
 import InteractiveTrainingModule from "../components/training/InteractiveTrainingModule";
 import PersonalizedTrainingRecommender from "../components/training/PersonalizedTrainingRecommender";
 import PageContainer from "@/components/ui/PageContainer";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 
 // Lazy spoke — the former Nurse Training (documentation skills) page is now a tab.
@@ -231,6 +232,7 @@ export default function NurseTrainingHub() {
         </Card>
       </div>
 
+      <EmbeddedPage>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -452,6 +454,7 @@ export default function NurseTrainingHub() {
           </Suspense>
         </TabsContent>
       </Tabs>
+      </EmbeddedPage>
     </PageContainer>
   );
 }

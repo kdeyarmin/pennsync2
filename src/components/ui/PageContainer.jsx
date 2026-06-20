@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useIsEmbedded } from "@/components/ui/embeddedPage";
 
 /**
  * PageContainer — the single, app-wide page shell.
@@ -21,6 +22,15 @@ import { cn } from "@/lib/utils";
  * margin.
  */
 export default function PageContainer({ children, className }) {
+  const embedded = useIsEmbedded();
+
+  // When embedded inside a hub page, the hub already provides the page width and
+  // centering — re-applying them here would nest the constraints. Keep only the
+  // vertical rhythm so the embedded sections stack cleanly under the hub header.
+  if (embedded) {
+    return <div className={cn("space-y-6", className)}>{children}</div>;
+  }
+
   return (
     <div className={cn("mx-auto w-full max-w-7xl space-y-6", className)}>
       {children}

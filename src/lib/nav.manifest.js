@@ -24,7 +24,7 @@
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, BookOpen, WifiOff,
-  Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2,
+  Mail, BookUser, Video, HelpCircle, AlertTriangle,
   Phone, Send, Heart, Activity, Database, Lock, Award,
   Clipboard, Filter, Globe,
   Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Mic, Pen, CalendarDays
@@ -423,15 +423,6 @@ export const NAV_MANIFEST = [
     keywords: ["training", "my courses", "progress", "education"],
   },
   {
-    page: "ClinicalSkillsChecklist",
-    label: "Skills Checklists",
-    icon: CheckCircle2,
-    category: "Learning & Resources",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["skills", "checklist", "competency", "evaluation"],
-  },
-  {
     page: "TrainingCoursePlayer",
     label: "Course Player",
     icon: GraduationCap,
@@ -753,15 +744,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["pdgm", "case mix", "case-mix", "weights", "rates", "reimbursement", "billing", "cms"],
-  },
-  {
-    page: "ManageNewFeatures",
-    label: "Manage Features",
-    icon: Zap,
-    category: "Configuration",
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["features", "manage", "flags"],
   },
   {
     page: "AIToolsCenter",

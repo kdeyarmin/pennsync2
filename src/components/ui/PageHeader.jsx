@@ -1,7 +1,7 @@
 import { isValidElement } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import FavoriteButton from "@/components/navigation/FavoriteButton";
+import { useIsEmbedded } from "@/components/ui/embeddedPage";
 import { cn } from "@/lib/utils";
 
 export default function PageHeader({
@@ -13,10 +13,29 @@ export default function PageHeader({
   description,
   badges = [],
   actions,
-  favoritePage,
+  // NOTE: call sites may still pass a `favoritePage` prop. Page favoriting was
+  // removed, so it is intentionally not read here and simply ignored.
   className,
   children,
 }) {
+  const embedded = useIsEmbedded();
+
+  // When this page is embedded inside a hub (which renders its own header),
+  // suppress the duplicate hero. Still render any actions/children so embedded
+  // sections keep their controls.
+  if (embedded) {
+    if (!actions && !children) return null;
+    return (
+      <div className="flex flex-col gap-4">
+        {actions && (
+          <div className="flex flex-shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            {actions}
+          </div>
+        )}
+        {children}
+      </div>
+    );
+  }
   // `icon` may be a component *reference* or an already-built element.
   // Don't gate on `typeof === "function"`: lucide-react icons (and any
   // forwardRef/memo component) are objects, not functions, so that check
@@ -77,9 +96,8 @@ export default function PageHeader({
             {children}
           </div>
 
-          {(actions || favoritePage) && (
+          {actions && (
             <div className="flex flex-shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
-              {favoritePage && <FavoriteButton type="page" id={favoritePage} name={title} />}
               {actions}
             </div>
           )}

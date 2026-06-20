@@ -482,14 +482,6 @@ export default function LearningCenter() {
                 </Button>
               </Link>
             )}
-            {isSupervisor && (
-              <Link to={createPageUrl('ClinicalSkillsChecklist')}>
-                <Button variant="outline" size="sm">
-                  <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                  Skills Checklists
-                </Button>
-              </Link>
-            )}
           </div>
         }
       />
@@ -1377,11 +1369,6 @@ export default function LearningCenter() {
                   <Link to={createPageUrl('ManagerSkillGapDashboard')}>
                     <Button variant="outline" size="sm">
                       <BarChart3 className="w-4 h-4 mr-1.5" /> Skill Gap Dashboard
-                    </Button>
-                  </Link>
-                  <Link to={createPageUrl('ClinicalSkillsChecklist')}>
-                    <Button variant="outline" size="sm">
-                      <CheckCircle2 className="w-4 h-4 mr-1.5" /> Skills Checklists
                     </Button>
                   </Link>
                 </>

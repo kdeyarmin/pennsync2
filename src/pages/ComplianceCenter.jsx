@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PageContainer from "@/components/ui/PageContainer";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -373,6 +374,7 @@ export default function ComplianceCenter() {
         favoritePage="ComplianceCenter"
       />
 
+      <EmbeddedPage>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -794,6 +796,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </Tabs>
         </TabsContent>
       </Tabs>
+      </EmbeddedPage>
     </PageContainer>
   );
 }
