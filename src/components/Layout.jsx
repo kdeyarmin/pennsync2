@@ -320,7 +320,7 @@ export default function Layout({ children, currentPageName }) {
         />
 
         <main id="main-content" className="flex-1 pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-navy-50/50 w-0 md:w-auto">
-          <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 animate-fade-in">
+          <div className="p-4 sm:p-6 md:p-8 lg:p-10 min-w-0 animate-fade-in max-w-[1600px] mx-auto">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}
           </div>

@@ -220,7 +220,7 @@ export default function Dashboard() {
       <AnnouncementsWidget />
 
       {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip). */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
         <StatCard
           label="Today's Visits"
           value={visits.filter(v => v.status === 'scheduled').length}
@@ -252,7 +252,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Action Buttons — consistent navy hover accent (no rainbow). */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 sm:gap-6 mb-8">
         {[
           { page: "SmartNoteAssistant", label: "Smart Notes",   Icon: FileText },
           { page: "SendFax",            label: "Send Fax",      Icon: Send },
@@ -264,12 +264,12 @@ export default function Dashboard() {
           const ItemIcon = item.Icon;
           return (
             <Link key={item.page} to={`/${item.page}`} className="group">
-              <Card className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-200">
-                <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[90px]">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-100 transition-all group-hover:bg-navy-50 group-hover:text-navy-600 group-hover:ring-navy-100">
-                    <ItemIcon className="h-5 w-5" />
+              <Card className="h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-navy-200 bg-white/50 hover:bg-white">
+                <CardContent className="p-4 sm:p-6 flex flex-col items-center justify-center text-center gap-3 min-h-[110px]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-200 transition-all group-hover:bg-navy-50 group-hover:text-navy-700 group-hover:ring-navy-200 shadow-sm">
+                    <ItemIcon className="h-6 w-6" />
                   </div>
-                  <h3 className="text-xs sm:text-sm font-semibold leading-tight text-slate-600 transition-colors group-hover:text-slate-900">{item.label}</h3>
+                  <h3 className="text-sm font-semibold leading-tight text-slate-600 transition-colors group-hover:text-navy-900">{item.label}</h3>
                 </CardContent>
               </Card>
             </Link>
@@ -279,7 +279,7 @@ export default function Dashboard() {
 
       {/* Route Optimizer */}
       {visits.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-8">
           <SmartRouteOptimizer
             visits={visits.filter(v => v.status === 'scheduled')}
             patients={patients}
@@ -305,27 +305,27 @@ export default function Dashboard() {
 
       <Suspense fallback={<div className="flex items-center justify-center py-12 text-slate-400"><Loader2 className="w-6 h-6 animate-spin mr-2" />Loading...</div>}>
         {/* AI Care Plan Proposals - Nurse Review */}
-        <div className="mb-6">
+        <div className="mb-8">
           <CarePlanProposalReviewer compact={true} />
         </div>
 
         {/* Hospitalization Risk Monitor */}
-        <div className="mb-6">
+        <div className="mb-8">
           <HospitalizationRiskWidget autoAnalyze={false} />
         </div>
 
         {/* High-Risk Patients Alert */}
-        <div className="mb-6">
+        <div className="mb-8">
           <HighRiskPatientsWidget />
         </div>
 
         {/* Pending Referrals */}
-        <div className="mb-6">
+        <div className="mb-8">
           <PendingReferralsWidget />
         </div>
 
         {/* Real-time Patient Alerts */}
-        <div className="mb-6">
+        <div className="mb-8">
           <RealTimePatientAlerts
             patients={patients}
             visits={visits}
@@ -336,7 +336,7 @@ export default function Dashboard() {
         </div>
 
         {/* Top Clinical Templates */}
-         <div className="mb-6">
+         <div className="mb-8">
            <TopTemplatesWidget />
          </div>
         </Suspense>
