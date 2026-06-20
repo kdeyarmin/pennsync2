@@ -94,7 +94,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <button
-        className="w-full px-4 py-3 bg-gradient-to-r from-navy-50 to-navy-50 border-b border-navy-100 flex items-center justify-between"
+        className="w-full px-4 py-3 bg-gradient-to-r from-navy-50 to-navy-100 border-b border-navy-100 flex items-center justify-between"
         onClick={() => setCollapsed(v => !v)}
       >
         <div className="flex items-center gap-2">

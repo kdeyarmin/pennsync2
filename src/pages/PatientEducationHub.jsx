@@ -113,7 +113,7 @@ const educationTopics = [
     id: 'dementia_care',
     title: 'Dementia & Memory Care',
     icon: Brain,
-    color: 'from-navy-500 to-navy-500',
+    color: 'from-navy-600 to-navy-500',
     description: 'Communication strategies, daily care tips, and caregiver support for dementia.'
   },
   {
