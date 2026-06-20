@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -42,6 +43,7 @@ import PageHeader from "@/components/ui/PageHeader";
 
 export default function MedicareGuidelinesLibrary() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedGuideline, setSelectedGuideline] = useState(null);
@@ -422,9 +424,9 @@ export default function MedicareGuidelinesLibrary() {
                       size="icon"
                       aria-label="Delete guideline"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        if (confirm('Are you sure you want to delete this guideline?')) {
+                        if (await confirm({ title: "Delete guideline?", description: "Are you sure you want to delete this guideline? This can't be undone.", confirmText: "Delete", destructive: true })) {
                           deleteGuidelineMutation.mutate(selectedGuideline.id);
                         }
                       }}

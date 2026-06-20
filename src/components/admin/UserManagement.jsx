@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ import { toast } from "sonner";
 
 export default function UserManagement({ users }) {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -151,7 +153,7 @@ export default function UserManagement({ users }) {
   };
 
   const handleApproveUser = async (userId) => {
-    if (confirm('Approve this user to access the system?')) {
+    if (await confirm({ title: "Approve user?", description: "Approve this user to access the system?", confirmText: "Approve" })) {
       updateUserMutation.mutate({ userId, data: { is_approved: true } });
       
       // Log approval
@@ -164,7 +166,7 @@ export default function UserManagement({ users }) {
   };
 
   const handleRevokeAccess = async (userId) => {
-    if (confirm('Revoke access for this user? They will no longer be able to use the system.')) {
+    if (await confirm({ title: "Revoke access?", description: "Revoke access for this user? They will no longer be able to use the system.", confirmText: "Revoke access", destructive: true })) {
       updateUserMutation.mutate({ userId, data: { is_approved: false } });
       
       // Log revocation
