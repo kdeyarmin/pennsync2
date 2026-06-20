@@ -186,21 +186,16 @@ export default function DesktopSidebar({
                       )}
                     </button>
                   ) : (
-                    (() => {
-                      const active = isActive(item.page);
-                      return (
-                        <Link
-                          key={item.page}
-                          to={createPageUrl(item.page)}
-                          className={navItemClasses(active)}
-                          title={collapsed ? item.name : undefined}
-                        >
-                          {active && <GoldIndicator />}
-                          <item.icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-navy-600' : ''}`} />
-                          {!collapsed && <span className="truncate">{item.name}</span>}
-                        </Link>
-                      );
-                    })()
+                    <Link
+                      key={item.page}
+                      to={createPageUrl(item.page)}
+                      className={navItemClasses(isActive(item.page))}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      {isActive(item.page) && <GoldIndicator />}
+                      <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive(item.page) ? 'text-navy-600' : ''}`} />
+                      {!collapsed && <span className="truncate">{item.name}</span>}
+                    </Link>
                   )
                 )}
                 {catIndex === 0 && <div className="border-t border-slate-200 my-2" />}

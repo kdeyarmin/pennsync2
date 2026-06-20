@@ -104,21 +104,16 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
                         </span>
                       </button>
                     ) : (
-                      (() => {
-                        const active = isActive(item.page);
-                        return (
-                          <Link
-                            key={item.page}
-                            to={createPageUrl(item.page)}
-                            onClick={onClose}
-                            className={navItemClasses(active)}
-                          >
-                            {active && <GoldIndicator />}
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-navy-600' : ''}`} />
-                            <span className="truncate">{item.name}</span>
-                          </Link>
-                        );
-                      })()
+                      <Link
+                        key={item.page}
+                        to={createPageUrl(item.page)}
+                        onClick={onClose}
+                        className={navItemClasses(isActive(item.page))}
+                      >
+                        {isActive(item.page) && <GoldIndicator />}
+                        <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive(item.page) ? 'text-navy-600' : ''}`} />
+                        <span className="truncate">{item.name}</span>
+                      </Link>
                     )
                   )}
                   {catIndex === 0 && <div className="border-t border-slate-200 my-2" />}

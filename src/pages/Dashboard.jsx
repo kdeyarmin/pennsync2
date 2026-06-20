@@ -258,14 +258,14 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-700 to-blue-600 border-blue-600 shadow-md">
+        <Card className="bg-gradient-to-br from-gold-500 to-gold-400 border-gold-400 shadow-md">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] sm:text-xs text-blue-200 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.timeSavedDisplay}</p>
+                <p className="text-[10px] sm:text-xs text-navy-900/70 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
+                <p className="text-2xl sm:text-3xl font-bold text-navy-900">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-blue-300 flex-shrink-0 opacity-70" />
+              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-navy-900/40 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
