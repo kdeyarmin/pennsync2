@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BookOpen, Download, Search, MessageCircle,
   FileText, Lightbulb, Award, Sparkles, Users,
-  ClipboardList, Phone, Mail, HelpCircle
+  ClipboardList, Phone, Mail, HelpCircle, Target, CheckCircle2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -401,10 +401,10 @@ export default function Help() {
                     {downloading ? 'Generating...' : 'User Manual PDF'}
                   </Button>
                   <div className="text-sm text-slate-600 space-y-2">
-                    <p>📘 Comprehensive feature documentation</p>
-                    <p>🎯 Step-by-step workflows</p>
-                    <p>💡 Best practices & pro tips</p>
-                    <p>✓ Compliance guidelines</p>
+                    <p className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-navy-500 flex-shrink-0" /> Comprehensive feature documentation</p>
+                    <p className="flex items-center gap-2"><Target className="w-4 h-4 text-navy-500 flex-shrink-0" /> Step-by-step workflows</p>
+                    <p className="flex items-center gap-2"><Lightbulb className="w-4 h-4 text-navy-500 flex-shrink-0" /> Best practices &amp; pro tips</p>
+                    <p className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" /> Compliance guidelines</p>
                   </div>
                 </CardContent>
               </Card>

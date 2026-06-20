@@ -283,10 +283,10 @@ export default function SecurityCompliance() {
           </div>
 
           {criticalEvents > 0 && (
-            <Alert className="bg-yellow-50 border-yellow-300">
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
-              <AlertDescription className="text-yellow-900">
-                <p className="font-semibold">⚠️ {criticalEvents} Critical Security Events Detected</p>
+            <Alert className="bg-amber-50 border-amber-300">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <AlertDescription className="text-amber-900">
+                <p className="font-semibold">{criticalEvents} Critical Security Events Detected</p>
                 <p className="text-sm">Review audit logs for failed access attempts or deletions.</p>
               </AlertDescription>
             </Alert>

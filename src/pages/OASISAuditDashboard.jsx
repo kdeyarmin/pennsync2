@@ -34,7 +34,8 @@ import {
   Calendar,
   Target,
   Shield,
-  Search
+  Search,
+  Lightbulb
 } from "lucide-react";
 import { format } from "date-fns";
 import OASISAuditReportGenerator from "../components/oasis/OASISAuditReportGenerator";
@@ -411,7 +412,7 @@ export default function OASISAuditDashboard() {
                           </div>
                           <p className="text-slate-700">{issue.issue}</p>
                           {issue.recommendation && (
-                            <p className="text-xs text-green-700 mt-1">💡 {issue.recommendation}</p>
+                            <p className="text-xs text-emerald-700 mt-1 flex items-start gap-1"><Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" /> {issue.recommendation}</p>
                           )}
                         </div>
                       ))}

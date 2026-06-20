@@ -179,14 +179,14 @@ export default function TemplateLibrary() {
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-medium text-slate-900 mb-2">📋 Visit Type Templates</h4>
+              <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-navy-600" /> Visit Type Templates</h4>
               <p className="text-sm text-slate-600">
                 Pre-built templates for Admission, Routine, Recertification, Discharge, PRN, 
                 and Supervisory visits with all required Medicare elements.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-slate-900 mb-2">💊 Condition-Specific</h4>
+              <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4 text-navy-600" /> Condition-Specific</h4>
               <p className="text-sm text-slate-600">
                 Specialized templates for CHF, COPD, Diabetes, Wound Care, Stroke, 
                 Orthopedic, Hospice, and Hypertension with condition-specific assessments.

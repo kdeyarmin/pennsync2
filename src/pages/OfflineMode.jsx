@@ -104,13 +104,13 @@ export default function OfflineMode() {
         <AlertDescription className="text-sm flex items-center gap-2">
           {isOnline ? (
             <>
-              <Wifi className="w-4 h-4 text-green-600" />
-              <span className="text-green-800">✅ Connected - Data will sync automatically</span>
+              <Wifi className="w-4 h-4 text-emerald-600" />
+              <span className="text-emerald-800">Connected — data will sync automatically</span>
             </>
           ) : (
             <>
-              <WifiOff className="w-4 h-4 text-orange-600" />
-              <span className="text-orange-800">⚠️ Offline - Using cached data</span>
+              <WifiOff className="w-4 h-4 text-amber-600" />
+              <span className="text-amber-800">Offline — using cached data</span>
             </>
           )}
         </AlertDescription>

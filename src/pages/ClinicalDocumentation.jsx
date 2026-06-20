@@ -74,7 +74,7 @@ export default function ClinicalDocumentation() {
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 mb-2">💡 Pro Tips</h4>
+                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4" /> Pro Tips</h4>
                     <ul className="space-y-1 text-sm text-blue-800">
                       <li>• Always select the patient first for better compliance checking</li>
                       <li>• Include vitals with clinical interpretation</li>
