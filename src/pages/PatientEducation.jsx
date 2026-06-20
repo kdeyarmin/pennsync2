@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -251,11 +252,7 @@ export default function PatientEducation() {
             </CardHeader>
             <CardContent>
               {teachBackRecords.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                  <p>No teach-back records yet.</p>
-                  <p className="text-sm">Generate educational materials and document patient understanding.</p>
-                </div>
+                <EmptyState icon={CheckCircle2} title="No teach-back records yet" description="Generate educational materials and document patient understanding." />
               ) : (
                 <div className="space-y-4">
                   {teachBackRecords.map((record, idx) => (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -235,25 +236,17 @@ export default function FaxContactsPage() {
           </CardContent>
         </Card>
       ) : filteredContacts.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <BookUser className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              {searchTerm ? "No contacts found" : "No contacts yet"}
-            </h3>
-            <p className="text-slate-500 mb-4">
-              {searchTerm
-                ? "Try a different search term"
-                : "Add your first contact or import from CSV"}
-            </p>
-            {!searchTerm && (
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Contact
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={BookUser}
+          title={searchTerm ? "No contacts found" : "No contacts yet"}
+          description={searchTerm ? "Try a different search term." : "Add your first contact or import from CSV."}
+          action={!searchTerm && (
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Contact
+            </Button>
+          )}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredContacts.map((contact) => (
