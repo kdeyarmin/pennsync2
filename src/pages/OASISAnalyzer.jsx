@@ -12,6 +12,7 @@ import {
 } from "@/components/oasis/oasisAnalytics";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -116,13 +117,11 @@ function OASISAnalyticsDashboard({ savedOASISUploads }) {
 
   if (savedOASISUploads.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-12 text-center">
-          <BarChart3 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">No Data Available</h3>
-          <p className="text-slate-600">Upload and analyze OASIS documents to see analytics and trends.</p>
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={BarChart3}
+        title="No data available"
+        description="Upload and analyze OASIS documents to see analytics and trends."
+      />
     );
   }
 
