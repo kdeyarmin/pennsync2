@@ -129,6 +129,7 @@ Return JSON with these keys:
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(null), 2000);
     } catch {
+      setCopiedKey(null);
       toast.error("Couldn't copy to the clipboard. Select the text and copy manually.");
     }
   };
@@ -141,6 +142,7 @@ Return JSON with these keys:
     try {
       await navigator.clipboard.writeText(text);
     } catch {
+      setCopiedAll(false);
       toast.error("Couldn't copy to the clipboard. Select the text and copy manually.");
       return;
     }

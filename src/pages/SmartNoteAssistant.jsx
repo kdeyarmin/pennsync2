@@ -238,9 +238,8 @@ export default function SmartNoteAssistant() {
 
   useEffect(() => {
     return () => {
-      if (recRef.current) {
-        recRef.current.stop();
-      }
+      try { recRef.current?.stop(); } catch { /* already stopped */ }
+      releaseDictation(recStopRef.current);
     };
   }, []);
 
@@ -460,33 +459,48 @@ export default function SmartNoteAssistant() {
       ai_reason: it.reason || "",
       related_visit_id: savedVisitId || undefined,
     }));
-    const queueOffline = async (message) => {
+    const queueForSync = async (toQueue) => {
       const { addToSyncQueue } = await import('@/lib/indexedDB');
-      await Promise.all(payloads.map((p) => addToSyncQueue('CREATE_TASK', p)));
-      setFollowUpTasks((prev) => [...payloads, ...prev]);
-      toast.success(message);
+      await Promise.all(toQueue.map((p) => addToSyncQueue('CREATE_TASK', p)));
     };
+
+    // Offline: queue everything; the OfflineManager drain creates them on reconnect.
     if (!navigator.onLine) {
       try {
-        await queueOffline(`Saved ${payloads.length} follow-up task${payloads.length !== 1 ? "s" : ""} offline — will sync when reconnected.`);
+        await queueForSync(payloads);
+        setFollowUpTasks((prev) => [...payloads, ...prev]);
+        toast.success(`Saved ${payloads.length} follow-up task${payloads.length !== 1 ? "s" : ""} offline — will sync when reconnected.`);
       } catch (err) {
         console.error("Failed to queue escalation task(s):", err);
         toast.error("Couldn't save the follow-up task offline.");
       }
       return;
     }
-    try {
-      const created = await Promise.all(payloads.map((p) => base44.entities.Task.create(p)));
-      setFollowUpTasks((prev) => [...created, ...prev]);
+
+    // Online: create each individually so a partial failure can't re-create the
+    // ones that already succeeded (Promise.all would reject the whole batch and
+    // the retry would duplicate the successes).
+    const results = await Promise.allSettled(payloads.map((p) => base44.entities.Task.create(p)));
+    const created = [];
+    const failed = [];
+    results.forEach((r, i) => (r.status === "fulfilled" ? created.push(r.value) : failed.push(payloads[i])));
+    if (created.length) setFollowUpTasks((prev) => [...created, ...prev]);
+    if (!failed.length) {
       toast.success(`Created ${created.length} provider follow-up task${created.length !== 1 ? "s" : ""}.`);
+      return;
+    }
+    // Queue ONLY the failures (a transient 5xx, not necessarily a disconnect),
+    // then kick the sync drain so they retry now — not just on the next
+    // offline→online transition, which may never come while we stay online.
+    console.error("Some escalation task creates failed; queuing for retry:", results.find((r) => r.status === "rejected")?.reason);
+    try {
+      await queueForSync(failed);
+      setFollowUpTasks((prev) => [...failed, ...prev]);
+      window.dispatchEvent(new Event('online'));
+      toast.message(`Couldn't reach the server for ${failed.length} follow-up task${failed.length !== 1 ? "s" : ""} — saved and retrying.`);
     } catch (err) {
-      console.error("Failed to create escalation task(s); queuing for retry:", err);
-      // Fall back to the offline queue so a flaky network never drops a critical follow-up.
-      try {
-        await queueOffline("Saved the follow-up task to retry when the connection is back.");
-      } catch {
-        toast.error("Couldn't create the follow-up task. Try again when online.");
-      }
+      console.error("Failed to queue failed escalation task(s):", err);
+      toast.error("Couldn't save the follow-up task. Try again.");
     }
   };
 
@@ -697,6 +711,7 @@ export default function SmartNoteAssistant() {
                         await navigator.clipboard.writeText(api.finalNote);
                         setCopied(true); setTimeout(() => setCopied(false), 2500);
                       } catch {
+                        setCopied(false);
                         toast.error("Couldn't copy to the clipboard. Select the note text and copy manually.");
                       }
                     }}

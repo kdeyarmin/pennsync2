@@ -276,6 +276,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       await navigator.clipboard.writeText(finalNote);
       setCopied(true); setTimeout(() => setCopied(false), 2500);
     } catch {
+      setCopied(false);
       toast.error("Couldn't copy to the clipboard. Select the note text and copy manually.");
     }
   };

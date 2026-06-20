@@ -19,6 +19,7 @@ export default function SmartNoteTabs({ activeTab, setActiveTab }) {
         return (
           <button
             key={tab.id}
+            type="button"
             role="tab"
             aria-selected={isActive}
             onClick={() => setActiveTab(tab.id)}

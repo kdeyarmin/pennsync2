@@ -73,6 +73,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
+      setCopied(false);
       toast.error("Couldn't copy to the clipboard. Select the text and copy manually.");
     }
   };

@@ -20,8 +20,12 @@ export default function DictationButton({ onText, disabled = false, title = "Dic
   const recRef = useRef(null);
   const stopRef = useRef(null);
 
-  // Stop any in-flight recognition if the button unmounts mid-dictation.
-  useEffect(() => () => { try { recRef.current?.stop(); } catch { /* already stopped */ } }, []);
+  // Stop any in-flight recognition if the button unmounts mid-dictation, and
+  // release the shared slot so the controller isn't left claimed by a dead mic.
+  useEffect(() => () => {
+    try { recRef.current?.stop(); } catch { /* already stopped */ }
+    releaseDictation(stopRef.current);
+  }, []);
 
   const toggle = () => {
     if (listening) { recRef.current?.stop(); setListening(false); releaseDictation(stopRef.current); return; }
