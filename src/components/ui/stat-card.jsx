@@ -82,10 +82,13 @@ export default function StatCard({
   const heading = title ?? label;
   const secondary = description ?? sub ?? subtitle;
 
-  // `trend` may be a direction ("up"/"down") paired with trendValue, or older
-  // call sites simply pass the text to show. Normalize both into one delta line.
+  // Only an explicit direction ("up"/"down", paired with `trendValue`) is a real
+  // KPI delta — that gets a green/red arrow. Older call sites pass a freeform
+  // status string ("Last 50 documents"), which is NOT a positive change, so it
+  // renders as a neutral note: no arrow, no up/down color.
   const isDirection = trend === "up" || trend === "down";
-  const deltaText = trendValue ?? (isDirection ? null : trend);
+  const deltaText = isDirection ? trendValue : null;
+  const noteText = isDirection ? null : trend;
   const deltaDown = trend === "down";
   const DeltaIcon = deltaDown ? TrendingDown : TrendingUp;
   const deltaColor = deltaDown ? "text-rose-600" : "text-emerald-600";
@@ -124,6 +127,9 @@ export default function StatCard({
                 <DeltaIcon className="h-4 w-4" aria-hidden="true" />
                 {deltaText}
               </span>
+            )}
+            {noteText && (
+              <p className="mt-1 truncate text-sm text-slate-500">{noteText}</p>
             )}
           </div>
 
