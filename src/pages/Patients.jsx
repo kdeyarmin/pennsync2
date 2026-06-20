@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Plus, User, FileText, ArrowUpDown, Users, UserCheck, Target, CalendarPlus } from "lucide-react";
 import { format } from 'date-fns';
 import { secureDelete, handleSecureError } from "../components/utils/security";
@@ -25,6 +24,7 @@ import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUp
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/empty-state";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
 import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
@@ -478,24 +478,17 @@ export default function Patients() {
             <PatientCardSkeleton />
           </>
         ) : filteredPatients.length === 0 ? (
-          <Card className="border-2 border-dashed">
-            <CardContent className="p-8 text-center">
-              <User className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No patients found</h3>
-              <p className="text-slate-500 mb-6">
-                {filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
-              </p>
-              {!filters.search && (
-                <Button
-                  onClick={() => setShowForm(true)}
-                  className="min-h-[44px]"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Patient
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={User}
+            title="No patients found"
+            description={filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
+            action={!filters.search && (
+              <Button onClick={() => setShowForm(true)} className="min-h-[44px]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Patient
+              </Button>
+            )}
+          />
         ) : (
           filteredPatients.map((patient) => (
             <SwipeablePatientCard
@@ -526,24 +519,18 @@ export default function Patients() {
             <PatientCardSkeleton />
           </>
         ) : filteredPatients.length === 0 ? (
-          <Card className="md:col-span-2 border-2 border-dashed">
-            <CardContent className="p-8 sm:p-12 text-center">
-              <User className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No patients found</h3>
-              <p className="text-slate-500 mb-6">
-                {filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
-              </p>
-              {!filters.search && (
-                <Button
-                  onClick={() => setShowForm(true)}
-                  className="min-h-[44px]"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Patient
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            className="md:col-span-2"
+            icon={User}
+            title="No patients found"
+            description={filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
+            action={!filters.search && (
+              <Button onClick={() => setShowForm(true)} className="min-h-[44px]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Patient
+              </Button>
+            )}
+          />
         ) : (
           <div className="md:col-span-2">
             <PaginatedPatientList

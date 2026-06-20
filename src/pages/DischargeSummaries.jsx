@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import EmptyState from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -149,10 +150,11 @@ export default function DischargeSummaries() {
               Loading summaries...
             </div>
           ) : filteredSummaries.length === 0 ? (
-            <div className="py-12 text-center">
-              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">No discharge summaries found</p>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="No discharge summaries found"
+              description="Discharge summaries will appear here once they're created."
+            />
           ) : (
             <div className="space-y-3">
               {filteredSummaries.map((summary) => {
