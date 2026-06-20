@@ -68,9 +68,9 @@ export default function MyLearning() {
     <PageContainer>
       <PageHeader
         icon={GraduationCap}
-        eyebrow="My Learning"
+        eyebrow="Learning & Resources"
         title="My Learning"
-        description="All your training, courses, transcripts, and continuing education"
+        description="Your courses, in-services, annual education, and transcripts — all in one place."
         favoritePage="MyLearning"
         actions={
           <Link to={createPageUrl('LearningCenter')}>

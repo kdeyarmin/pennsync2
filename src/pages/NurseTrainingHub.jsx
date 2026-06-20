@@ -170,7 +170,7 @@ export default function NurseTrainingHub() {
     <PageContainer>
       <PageHeader
         icon={GraduationCap}
-        eyebrow="My Learning"
+        eyebrow="Training"
         title="Nurse Training Hub"
         description="AI-powered personalized training and skill development"
         favoritePage="NurseTrainingHub"

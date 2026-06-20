@@ -357,9 +357,9 @@ export default function ComplianceCenter() {
     <PageContainer>
       <PageHeader
         icon={Shield}
-        eyebrow="Analytics"
+        eyebrow="Compliance"
         title="Compliance Center"
-        description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
+        description="Compliance monitoring, real-time alerts, regulatory tracking, and security & policies — all in one place."
         favoritePage="ComplianceCenter"
       />
 
