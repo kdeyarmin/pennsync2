@@ -123,7 +123,6 @@ export default function ReferralIntake() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [extractedFormData, setExtractedFormData] = useState(null);
-  const [isAnalyzing, _setIsAnalyzing] = useState(false);
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
   const [_processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -1485,10 +1484,10 @@ Actions available:
                   disabled={isUploading}
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  {isAnalyzing ? (
+                  {isUploading ? (
                     <div className="space-y-2">
-                      <Sparkles className="w-12 h-12 text-blue-500 mx-auto animate-pulse" />
-                      <p className="text-blue-600 font-medium">Analyzing document with AI...</p>
+                      <Sparkles className="w-12 h-12 text-navy-500 mx-auto animate-pulse" />
+                      <p className="text-navy-600 font-medium">Analyzing document with AI...</p>
                       <p className="text-xs text-slate-500">Extracting patient information</p>
                     </div>
                   ) : uploadedFile ? (
