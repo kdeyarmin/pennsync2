@@ -279,4 +279,152 @@ S6/S7 polish, and consolidating the near-duplicate `MedicalScribe`/`VisitScribe`
 routes (a product decision). The two LLM calls (generation + grounding) and the
 chart-save path still warrant a manual run against the live Base44 backend.
 
+---
+
+## Update — visit-over-visit trend comparison (2026-06-20)
+
+Closes the "check the note against the chart … so trends can be caught, and
+changes can be noted in the note" half of the product intent, which previously
+lived only in the separate `VitalsTrendAnalysis` tab and was not woven into the
+note-building flow.
+
+**New deterministic engine** — `compliance/visitComparison.js` (pure, offline,
+9 unit tests): `compareVisits(currentNote, priorNote)` extracts the same
+clinically-significant values the value-guard uses (BP, HR, O2, temp, weight,
+pain) from both the note being written and the patient's last saved note, and
+reports each metric whose change clears a per-metric noise threshold — with a
+`concern` flag when a value crosses a clinical threshold. `buildTrendSummary`
+renders a single, purely factual, plain-text sentence ("Compared to the prior
+documented visit, blood pressure 150/92 to 132/84 mmHg; …") — values only, no
+interpretation.
+
+**Wiring** — `ConstrainedNoteReviewer` now renders a **Changes Since Last
+Visit** panel (`VisitComparisonPanel`) in the review step for every caller that
+already supplies a prior note (`SmartNoteAssistant`, `UnifiedDocumentReview`).
+The nurse can opt to add the change summary to the note; when they do, the
+summary is whitelisted as source input so it passes the value-guard and grounding
+(its current values trace to the draft, its prior values to the chart note — it
+is real chart data, not an LLM invention), and it is appended verbatim rather
+than re-voiced. Opt-out leaves the note untouched. Gracefully renders nothing
+when there is no prior note or no comparable change.
+
+`detectSustainedTrends` extends this to **multi-visit** trends: it reads the last
+few notes from the patient's `enhanced_notes_history` (already on the chart
+record — no extra fetch) and flags any value that moved monotonically across ≥3
+consecutive visits past a per-metric total threshold (e.g. weight 180 → 184 →
+188 lbs). The single-visit delta can be noise; a sustained directional run is the
+clinically meaningful signal. These render as an **advisory** band in the same
+panel and are never auto-inserted (multi-visit significance is the nurse's call).
+
+## Update — chart cross-check (2026-06-20)
+
+Closes the broader "check the note against other info in that patient's chart"
+half of the intent: comparing the note not just to the prior visit's vitals but
+to the standing chart.
+
+**New deterministic engine** — `compliance/chartCrossCheck.js` (pure, offline,
+8 unit tests): `crossCheckChart(noteText, patient)` compares what the nurse
+documented this visit against the chart and surfaces advisory findings:
+
+- **Allergy conflict** (critical) — a medication named in the note that also
+  appears in the patient's documented allergies.
+- **Medication reconciliation** (info) — a note medication not on the chart's
+  `current_medications` list (new order vs. unreconciled chart).
+- **Fall-safety gap** (warning) — chart flags HIGH `functional_status.fall_risk`
+  but the note never mentions fall precautions / safety.
+
+It reuses the dictionary-backed `extractMedications` and the shared safety
+pattern, so it never invents a discrepancy.
+
+**Wiring** — `ConstrainedNoteReviewer` now takes a `patient` prop and renders a
+**Chart Cross-Check** panel (`ChartCrossCheckPanel`) at the top of the review
+step for callers that supply the chart record (`SmartNoteAssistant`,
+`UnifiedDocumentReview`). Advisory findings never edit the note or feed the
+value-guard, and the panel renders nothing when the note is consistent with the
+chart.
+
+**Save-time safety gate.** A *critical* cross-check finding (e.g. a documented
+medication the patient is allergic to) previously vanished once the note was
+generated — invisible at the moment of saving. The reviewer now re-surfaces
+critical findings in the final-note view with an explicit acknowledgment
+checkbox, exposes `chartRisk.hasUnacknowledgedCritical` on its `renderFinalNote`
+api, and `SmartNoteAssistant` disables Save-to-chart (with a defensive guard in
+`handleSave`) until the nurse acknowledges the conflict. Copy/PDF stay available;
+only the chart write is gated.
+
+**Persistence for reporting.** The chart conflicts and multi-visit trends now
+flow into the saved records so they reach compliance dashboards, not just the
+live UI. `compliance/reportingFields.js` (pure, 6 unit tests) maps them onto the
+existing fields: `ComplianceAudit.issues` (structured element/severity/problem),
+an escalated `ComplianceAudit.status` (`critical` whenever a critical conflict is
+present, regardless of coverage score), `Visit.ai_tags` (concise searchable
+`trend:<metric>:<dir>` / `chart_flag:<category>` tags), and `Visit.compliance_issues`
+(human-readable strings for critical conflicts). `ConstrainedNoteReviewer` carries
+`chartFindings` + `sustainedTrends` on its save-ready `result`, and
+`SmartNoteAssistant.persistNote` writes them on all three paths (online create,
+re-save update, and the offline sync-queue payload). The pure
+`buildVisitReportingFields` / `buildAuditFields` builders centralize "which field
+gets what" and are unit-tested (13 tests total) so the wiring can't silently drift.
+
+**Reporting follow-ups (hardening the above).**
+- *Offline visits now get an audit.* The offline save attaches an `__audit` meta
+  blob to the `CREATE_VISIT` queue item; the `OfflineManager` drain peels it off
+  (it is not a `Visit` field) and creates the matching `ComplianceAudit` after the
+  visit, so offline-documented visits are no longer invisible to the compliance
+  dashboards. Older queue items simply lack `__audit` and behave as before.
+- *Acknowledgment trail.* The critical-conflict checkbox now has an optional
+  rationale field; on save the override is persisted to a new
+  `ComplianceAudit.acknowledgment` object (`acknowledged_by` / `acknowledged_at` /
+  `justification` / `finding_ids`) and surfaced in `ComplianceAuditResults`, so an
+  audit can distinguish "reviewed and accepted with reason" from "never noticed".
+- *Re-save keeps the audit in step.* `persistNote` remembers the created audit id
+  (`savedAuditId`) and updates that row on re-save, so editing to resolve a
+  conflict clears the stale `critical` status/issues instead of leaving them.
+- *Auto-tagger reconciliation.* SmartNote's `ai_tags` are namespaced
+  (`trend:` / `chart_flag:`); `AIAutoTagger` now skips a visit only when it has a
+  *semantic* (non-system) tag and merges rather than overwrites, so writing trend
+  tags at save time no longer suppresses or clobbers clinical tagging.
+- *Severity + suggestion polish.* `toAuditIssues` translates the advisory
+  vocabulary (critical/warning/info) to the dashboard's color scale
+  (critical/high/low) and carries each finding's `recommendation` through as the
+  issue `suggestion`, so audit rows render the right color and an actionable fix.
+
+## Update — nurse-experience pass (2026-06-20)
+
+Six improvements aimed at field friction and turning the safety signals the
+engine already computes into one-tap actions:
+
+1. **Voice-dictate the gap-question answers.** Each required-element question in
+   `ConstrainedNoteReviewer` now has a mic button (`DictationButton`, reusing the
+   browser `SpeechRecognition` + `enhanceTranscription` the main note uses).
+   Dictated text *appends* to the answer and clears the "carried from last visit"
+   flag. Lets a nurse answer hands-free at the bedside instead of typing.
+2. **One-tap "routine negatives".** A *Confirm all routine negatives (no acute
+   changes)* button bulk-confirms every standard-negative element the nurse hasn't
+   typed an answer for, collapsing a dozen taps to one on a stable patient. Each
+   remains individually editable.
+3. **Per-patient draft recovery.** Drafts are now keyed per patient (plus an
+   `unassigned` bucket) instead of a single global slot, so switching patients
+   never clobbers another patient's in-progress note. Autosave writes under the
+   *active* patient (via ref, not a `patientId` effect dep, to avoid the clobber);
+   selecting a patient auto-restores their draft, and a note typed before a
+   patient is picked migrates to the patient chosen for it.
+4. **Critical chart conflict → action.** The critical-conflict panel and the
+   critical-vitals banner expose a *Create provider follow-up task* button. The
+   reviewer hands the findings to an `onEscalate` host callback;
+   `SmartNoteAssistant` persists them as high-priority `notify` `Task` records
+   (assigned to the nurse, linked to the visit) and surfaces them in the
+   follow-up panel. Guarded so a group can't be escalated twice.
+5. **Inline provenance ("show me the proof").** A *Show verification detail*
+   toggle annotates the final note sentence-by-sentence —
+   `compliance/provenance.js` (pure, 6 unit tests) reuses the value-guard's own
+   extraction to mark each value/medication green (traces to the nurse's input)
+   or red (not found), so the "every value verified" claim is inspectable.
+6. **Critical-vital escalation at documentation time.**
+   `compliance/noteEscalation.js` (pure, 5 unit tests) maps the note's extracted
+   vitals onto the shared `detectCriticalVitals` thresholds, so a hypertensive
+   crisis / severe hypoxia / 10-of-10 pain written into the note raises an
+   advisory provider-notification banner (with the same escalate action). Never
+   blocks saving a genuine reading.
+
 </content>

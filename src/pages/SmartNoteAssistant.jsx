@@ -23,6 +23,7 @@ import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNote
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import { toNoteConversionFields, deriveStructuredVisitFields } from "../components/smartNote/compliance/coverageScore";
+import { buildVisitReportingFields, buildAuditFields } from "../components/smartNote/compliance/reportingFields";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
@@ -51,6 +52,11 @@ const getVisitTypes = (careScope) => {
   return HOME_HEALTH_VISIT_TYPES;
 };
 
+// Drafts are saved per patient (plus an "unassigned" bucket for notes typed
+// before a patient is picked) so switching patients never clobbers another
+// patient's in-progress note.
+const draftKeyFor = (pid) => `smart_note_draft_v2:${pid || "unassigned"}`;
+
 import StepIndicator from "../components/smartNote/StepIndicator";
 import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
 import PageContainer from "@/components/ui/PageContainer";
@@ -64,19 +70,24 @@ export default function SmartNoteAssistant() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
+  const [savedAuditId, setSavedAuditId] = useState(null);
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
   const [activeTab, setActiveTab] = useState("builder");
-  const [hasDraft, setHasDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [signatureImage, setSignatureImage] = useState(null);
   const [followUpTasks, setFollowUpTasks] = useState([]);
   const [generatingTasks, setGeneratingTasks] = useState(false);
   const recRef = useRef(null);
   const textareaRef = useRef(null);
-  const DRAFT_KEY = "smart_note_draft_v2";
   const SAVED_PATIENT_KEY = "smart_note_patient_v1";
+  // Mirror the latest patient so the autosave effect can write under the active
+  // patient without re-subscribing on patientId (which would clobber drafts on
+  // switch). prevPatientRef drives the on-switch draft swap.
+  const patientIdRef = useRef(patientId);
+  const prevPatientRef = useRef(patientId);
+  patientIdRef.current = patientId;
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const careScope = currentUser?.care_scope || "home_health";
@@ -134,24 +145,61 @@ export default function SmartNoteAssistant() {
     sessionStorage.setItem(SAVED_PATIENT_KEY, JSON.stringify({ patientId, visitType }));
   }, [patientId, visitType]);
 
+  // On first mount, restore the draft for whatever bucket we start in (the saved
+  // patient, or the unassigned bucket) so an in-progress note survives a reload.
   useEffect(() => {
-    const saved = sessionStorage.getItem(DRAFT_KEY);
+    const saved = sessionStorage.getItem(draftKeyFor(patientIdRef.current));
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed.note?.trim().length > 20) {
+        setNote(parsed.note);
+        if (parsed.visitType) setVisitType(parsed.visitType);
+        setDraftRestored(true);
+      }
+    } catch { /* ignore a corrupt draft */ }
+  }, []);
+
+  // When the selected patient changes, load that patient's saved draft (resume
+  // where you left off). The outgoing patient's note was already autosaved under
+  // their own key, so switching never loses or cross-contaminates a draft. When
+  // arriving from the no-patient-yet state with a note already typed, carry it
+  // over (migrate) instead of wiping it.
+  useEffect(() => {
+    const prev = prevPatientRef.current;
+    if (prev === patientId) return;
+    prevPatientRef.current = patientId;
+    let incoming = null;
+    const saved = sessionStorage.getItem(draftKeyFor(patientId));
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.note?.trim().length > 20) setHasDraft(true);
-      } catch {}
+        incoming = parsed.note || "";
+        if (parsed.visitType) setVisitType(parsed.visitType);
+      } catch { incoming = null; }
     }
-  }, []);
+    if (incoming !== null) {
+      setNote(incoming);
+      setDraftRestored(incoming.trim().length > 20);
+    } else if (prev) {
+      // Switching between two real patients and the incoming one has no draft.
+      setNote("");
+      setDraftRestored(false);
+    }
+    // else: came from the unassigned bucket with nothing saved — keep the typed
+    // note so it isn't lost; it will autosave under the newly-selected patient.
+  }, [patientId]);
 
+  // Autosave under the ACTIVE patient (via ref) — deliberately not keyed on
+  // patientId, so a patient switch never writes the old note under the new key.
   useEffect(() => {
-    if (note.trim()) {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId }));
-      import('@/lib/indexedDB').then(({ saveDraftNoteLocally }) => {
-          saveDraftNoteLocally({ id: 'current_draft', note, visitType, patientId });
-      }).catch(console.error);
-    }
-  }, [note, visitType, patientId]);
+    if (!note.trim()) return;
+    const pid = patientIdRef.current;
+    sessionStorage.setItem(draftKeyFor(pid), JSON.stringify({ note, visitType, patientId: pid }));
+    import('@/lib/indexedDB').then(({ saveDraftNoteLocally }) => {
+        saveDraftNoteLocally({ id: `draft_${pid || 'unassigned'}`, note, visitType, patientId: pid });
+    }).catch(console.error);
+  }, [note, visitType]);
 
   useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
 
@@ -162,28 +210,6 @@ export default function SmartNoteAssistant() {
       }
     };
   }, []);
-
-  const restoreDraft = () => {
-    const saved = sessionStorage.getItem(DRAFT_KEY);
-    if (!saved) return;
-    let parsed;
-    try {
-      parsed = JSON.parse(saved);
-    } catch {
-      // Corrupted/partial draft — clear it and inform the user rather than
-      // throwing out of the restore handler with no feedback.
-      sessionStorage.removeItem(DRAFT_KEY);
-      setHasDraft(false);
-      toast.error("Saved draft could not be restored.");
-      return;
-    }
-    setNote(parsed.note || "");
-    setVisitType(parsed.visitType || "routine_visit");
-    setPatientId(parsed.patientId || "");
-    setHasDraft(false);
-    setDraftRestored(true);
-  };
-  const dismissDraft = () => { sessionStorage.removeItem(DRAFT_KEY); setHasDraft(false); };
 
   const startDictation = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -211,6 +237,7 @@ export default function SmartNoteAssistant() {
     if (!note || note.trim().length < 20) return;
     setSaved(false);
     setSavedVisitId(null);
+    setSavedAuditId(null);
     setStep(2);
   };
 
@@ -220,6 +247,10 @@ export default function SmartNoteAssistant() {
   const handleSave = async (api) => {
     if (!patientId || !currentUser?.email) {
       toast.error("Select a patient to save this note to their chart.");
+      return;
+    }
+    if (api.chartRisk?.hasUnacknowledgedCritical) {
+      toast.error("Acknowledge the chart safety conflict before saving to the chart.");
       return;
     }
     setSaving(true);
@@ -243,8 +274,21 @@ export default function SmartNoteAssistant() {
   // with a real, deterministic coverage score.
   const persistNote = async (result) => {
     if (!result || !patientId || !currentUser?.email) return;
-    const { finalNote: finalText, coverageScore, draftScore, presence, answeredIds, confirmedNegativeIds, answers } = result;
+    const { finalNote: finalText, coverageScore, draftScore, presence, answeredIds, confirmedNegativeIds, answers, chartFindings = [], sustainedTrends = [] } = result;
     const structured = deriveStructuredVisitFields(presence, { answeredIds, confirmedNegativeIds, textById: answers });
+    // Surface the deterministic chart conflicts + trends in the saved records so
+    // they reach the compliance dashboards, not just the live review UI.
+    const reportingFields = buildVisitReportingFields({ chartFindings, sustainedTrends });
+    // When a critical chart conflict was knowingly accepted, stamp who/when onto
+    // the nurse's override trail so the audit can show it was a reviewed decision.
+    // Gate on `acknowledged` (not merely the object's presence): the reviewer
+    // builds this object whenever critical findings exist even before the nurse
+    // checks the box, so persisting it unconditionally could stamp a false ack
+    // trail if a caller ever bypassed the save gate.
+    const acknowledgment = result.acknowledgment?.acknowledged
+      ? { acknowledged_by: currentUser.email, acknowledged_at: new Date().toISOString(), justification: result.acknowledgment.justification, finding_ids: result.acknowledgment.finding_ids }
+      : null;
+    const auditFields = buildAuditFields({ coverageScore, chartFindings, acknowledgment });
 
     if (!navigator.onLine) {
       const { addToSyncQueue } = await import('@/lib/indexedDB');
@@ -256,7 +300,10 @@ export default function SmartNoteAssistant() {
       const clientRequestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured });
+      // `__audit` is meta the drain peels off to also create a ComplianceAudit so
+      // offline-documented visits aren't invisible to the compliance dashboards;
+      // it is stripped before Visit.create (older queue items simply lack it).
+      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured, ...reportingFields, __audit: { nurse_email: currentUser.email, ...auditFields } });
       toast.success("Saved offline. Will sync when reconnected.");
       logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
       return;
@@ -272,8 +319,11 @@ export default function SmartNoteAssistant() {
         history[history.length - 1] = { ...history[history.length - 1], note: finalText, compliance_score: coverageScore };
       }
       await Promise.all([
-        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured }),
+        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured, ...reportingFields }),
         base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
+        // Keep the audit in step with the edit — a re-save that resolves a conflict
+        // must clear the stale `critical` status/issues, not leave them behind.
+        ...(savedAuditId ? [base44.entities.ComplianceAudit.update(savedAuditId, auditFields)] : []),
       ]);
       toast.success("Chart updated.");
       return;
@@ -282,7 +332,7 @@ export default function SmartNoteAssistant() {
     const visit = await base44.entities.Visit.create({
       patient_id: patientId, visit_date: visitDate, visit_type: visitType,
       status: "completed", nurse_notes: finalText, raw_transcription: note,
-      compliance_score: coverageScore, ...structured,
+      compliance_score: coverageScore, ...structured, ...reportingFields,
     });
     setSavedVisitId(visit.id);
 
@@ -294,7 +344,7 @@ export default function SmartNoteAssistant() {
       created_at: new Date().toISOString(),
     });
 
-    await Promise.all([
+    const [, , audit] = await Promise.all([
       base44.entities.Patient.update(patientId, { enhanced_notes_history: enhancedHistory, clinical_notes: finalText }),
       base44.entities.NoteConversion.create(toNoteConversionFields({
         coverageScore, draftPresenceScore: draftScore,
@@ -304,11 +354,12 @@ export default function SmartNoteAssistant() {
       })),
       base44.entities.ComplianceAudit.create({
         visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId,
-        audit_date: new Date().toISOString(), compliance_score: coverageScore,
-        status: coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical",
-        audit_type: "automated",
+        audit_date: new Date().toISOString(), audit_type: "automated",
+        ...auditFields,
       }),
     ]);
+    // Remember the audit so a later re-save updates it in place (see above).
+    if (audit?.id) setSavedAuditId(audit.id);
     generateTasksFromNote(finalText, visit.id);
     analyzeSupplyUsage(finalText, visit.id);
     toast.success("Saved to the patient's chart.");
@@ -346,9 +397,35 @@ export default function SmartNoteAssistant() {
   };
 
   const reset = () => {
-    setNote(""); setSaved(false); setSavedVisitId(null);
+    setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
-    sessionStorage.removeItem(DRAFT_KEY);
+    sessionStorage.removeItem(draftKeyFor(patientIdRef.current));
+  };
+
+  // Turn critical chart conflicts / vitals flagged in the reviewer into high-
+  // priority provider follow-up tasks (persisted to Task Management and shown in
+  // the panel). Best-effort: a failure (e.g. offline) is surfaced, not fatal.
+  const escalateToTasks = async (items) => {
+    if (!items?.length || !currentUser?.email) return;
+    try {
+      const created = await Promise.all(items.map((it) => base44.entities.Task.create({
+        patient_id: patientId || undefined,
+        title: it.title,
+        description: it.description || "",
+        type: "notify",
+        priority: "high",
+        status: "pending",
+        source: "manual",
+        assigned_to: currentUser.email,
+        ai_reason: it.reason || "",
+        related_visit_id: savedVisitId || undefined,
+      })));
+      setFollowUpTasks((prev) => [...created, ...prev]);
+      toast.success(`Created ${created.length} provider follow-up task${created.length !== 1 ? "s" : ""}.`);
+    } catch (err) {
+      console.error("Failed to create escalation task(s):", err);
+      toast.error("Couldn't create the follow-up task. Try again when online.");
+    }
   };
 
   const parseNoteSections = (text) => {
@@ -413,16 +490,6 @@ export default function SmartNoteAssistant() {
       {/* ── TAB: NOTE BUILDER ── */}
       {activeTab === "builder" && (
         <>
-          {hasDraft && step === 1 && (
-            <div className="flex items-center gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 shadow-sm">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-amber-800">Unsaved draft found</p>
-                <p className="text-xs text-amber-600">You have a note in progress from a previous session.</p>
-              </div>
-              <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs shrink-0" onClick={restoreDraft}>Restore</Button>
-              <Button size="sm" variant="ghost" className="h-8 text-xs text-amber-600 shrink-0" onClick={dismissDraft}>Discard</Button>
-            </div>
-          )}
           {draftRestored && (
             <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -545,7 +612,9 @@ export default function SmartNoteAssistant() {
               serviceLine={serviceLine}
               visitType={visitType}
               priorNote={getPriorNote(patientDetail || patient)}
+              patient={patientDetail || patient}
               currentUser={currentUser}
+              onEscalate={escalateToTasks}
               onBack={() => setStep(1)}
               renderFinalNote={(api) => (
                 <>
@@ -576,7 +645,7 @@ export default function SmartNoteAssistant() {
                     onSave={() => handleSave(api)}
                     saving={saving}
                     saved={saved && !api.dirty}
-                    saveDisabled={saving || !!(api.fixRequired && !api.fixRequired.offlinePending) || !patientId}
+                    saveDisabled={saving || !!(api.fixRequired && !api.fixRequired.offlinePending) || !patientId || api.chartRisk?.hasUnacknowledgedCritical}
                   />
                 </>
               )}

@@ -233,6 +233,20 @@ export default function ComplianceAuditResults({ users = [] }) {
                 </div>
               )}
 
+              {/* Nurse acknowledgment trail for a knowingly-accepted critical conflict */}
+              {selectedAudit.acknowledgment?.acknowledged_by && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+                  <p className="text-sm font-semibold text-amber-900 mb-1">Conflict acknowledged at documentation</p>
+                  <p className="text-xs text-amber-800">
+                    {selectedAudit.acknowledgment.acknowledged_by}
+                    {selectedAudit.acknowledgment.acknowledged_at && ` · ${new Date(selectedAudit.acknowledgment.acknowledged_at).toLocaleString()}`}
+                  </p>
+                  {selectedAudit.acknowledgment.justification && (
+                    <p className="text-sm text-amber-900 mt-1 italic">“{selectedAudit.acknowledgment.justification}”</p>
+                  )}
+                </div>
+              )}
+
               {/* Compliant Elements */}
               {selectedAudit.compliant_elements?.length > 0 && (
                 <div>
