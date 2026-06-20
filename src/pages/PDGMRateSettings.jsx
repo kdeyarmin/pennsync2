@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
+import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 import { PieChart, Save, RotateCcw, Info, ShieldCheck, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -202,19 +204,13 @@ export default function PDGMRateSettings() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-5">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-          <PieChart className="w-5 h-5 text-blue-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">PDGM Rate Settings</h1>
-          <p className="text-sm text-slate-500">
-            Enter and update your case-mix weights, base rate, and multipliers. Saved numbers
-            are applied to every PDGM payment estimate immediately.
-          </p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        icon={PieChart}
+        eyebrow="Configuration"
+        title="PDGM Rate Settings"
+        description="Enter and update your case-mix weights, base rate, and multipliers. Saved numbers are applied to every PDGM payment estimate immediately."
+      />
 
       <Alert className={meta.is_official ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}>
         {meta.is_official ? <ShieldCheck className="h-4 w-4 text-green-600" /> : <Info className="h-4 w-4 text-amber-600" />}
@@ -339,6 +335,6 @@ export default function PDGMRateSettings() {
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -218,85 +218,83 @@ export default function Dashboard() {
       {/* Admin Announcements */}
       <AnnouncementsWidget />
 
-      {/* Nurse Stats Cards */}
+      {/* Nurse Stats Cards — clean white cards with a restrained accent rule and
+          colored icon chip (navy/gold-forward), instead of fully-saturated tiles. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-emerald-600 to-emerald-500 border-emerald-500 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-emerald-100 font-semibold mb-1 uppercase tracking-wide">Today's Visits</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {visits.filter(v => v.status === 'scheduled').length}
-                </p>
-                <p className="text-[10px] sm:text-xs text-emerald-200 mt-0.5">
-                  {visits.filter(v => v.status === 'completed').length} completed
-                </p>
-              </div>
-              <Calendar className="w-9 h-9 sm:w-11 sm:h-11 text-emerald-300 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-navy-600 to-navy-500 border-navy-500 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-navy-100 font-semibold mb-1 uppercase tracking-wide">Active Care Plans</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {carePlans.length}
-                </p>
-                <p className="text-[10px] sm:text-xs text-navy-200 mt-0.5">
-                  {patients.length} patients
-                </p>
-              </div>
-              <Target className="w-9 h-9 sm:w-11 sm:h-11 text-navy-300 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-slate-300 font-semibold mb-1 uppercase tracking-wide">Note Enhancements</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {noteConversions.length}
-                </p>
-              </div>
-              <FileText className="w-9 h-9 sm:w-11 sm:h-11 text-slate-400 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-gold-500 to-gold-400 border-gold-400 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-navy-900/70 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
-                <p className="text-2xl sm:text-3xl font-bold text-navy-900">{stats.timeSavedDisplay}</p>
-              </div>
-              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-navy-900/40 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          {
+            label: "Today's Visits",
+            value: visits.filter(v => v.status === 'scheduled').length,
+            sub: `${visits.filter(v => v.status === 'completed').length} completed`,
+            Icon: Calendar,
+            tile: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+            accent: "from-emerald-400 to-emerald-500",
+          },
+          {
+            label: "Active Care Plans",
+            value: carePlans.length,
+            sub: `${patients.length} patients`,
+            Icon: Target,
+            tile: "bg-navy-50 text-navy-600 ring-navy-100",
+            accent: "from-navy-500 to-navy-600",
+          },
+          {
+            label: "Note Enhancements",
+            value: noteConversions.length,
+            sub: "AI-assisted",
+            Icon: FileText,
+            tile: "bg-slate-100 text-slate-600 ring-slate-200",
+            accent: "from-slate-400 to-slate-500",
+          },
+          {
+            label: "Time Saved",
+            value: stats.timeSavedDisplay,
+            sub: "last 30 days",
+            Icon: Clock,
+            tile: "bg-gold-100 text-gold-600 ring-gold-200",
+            accent: "from-gold-400 to-gold-500",
+          },
+        ].map((s) => {
+          const StatIcon = s.Icon;
+          return (
+            <Card key={s.label} className="relative overflow-hidden">
+              <span className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${s.accent}`} aria-hidden="true" />
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500">{s.label}</p>
+                    <p className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{s.value}</p>
+                    <p className="mt-0.5 text-[10px] sm:text-xs text-slate-400">{s.sub}</p>
+                  </div>
+                  <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ${s.tile}`}>
+                    <StatIcon className="h-5 w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Quick Action Buttons */}
+      {/* Quick Action Buttons — consistent navy hover accent (no rainbow). */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {[
-          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      iconClass: "text-slate-600 group-hover:text-blue-600"   },
-          { page: "SendFax",            label: "Send Fax",          Icon: Send,          iconClass: "text-slate-600 group-hover:text-indigo-600" },
-          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  iconClass: "text-slate-600 group-hover:text-emerald-600"  },
-          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          iconClass: "text-slate-600 group-hover:text-navy-600" },
-          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           iconClass: "text-slate-600 group-hover:text-orange-600" },
-          { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, iconClass: "text-slate-600 group-hover:text-red-600"    },
+          { page: "SmartNoteAssistant", label: "Smart Notes",   Icon: FileText },
+          { page: "SendFax",            label: "Send Fax",      Icon: Send },
+          { page: "CarePlanManagement", label: "Care Plans",    Icon: CheckCircle2 },
+          { page: "PatientEducationHub",label: "Pt. Education",  Icon: User },
+          { page: "VisitScribe",        label: "Visit Scribe",  Icon: Mic },
+          { page: "Incidents",          label: "Incidents",     Icon: AlertTriangle },
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (
             <Link key={item.page} to={`/${item.page}`} className="group">
-              <Card className="card-interactive h-full">
+              <Card className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-200">
                 <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[90px]">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-sm group-hover:border-slate-200 transition-all group-hover:scale-110">
-                    <ItemIcon className={`w-5 h-5 transition-colors ${item.iconClass}`} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-100 transition-all group-hover:bg-navy-50 group-hover:text-navy-600 group-hover:ring-navy-100">
+                    <ItemIcon className="h-5 w-5" />
                   </div>
-                  <h3 className="font-semibold text-xs sm:text-sm text-slate-600 group-hover:text-slate-900 transition-colors leading-tight">{item.label}</h3>
+                  <h3 className="text-xs sm:text-sm font-semibold leading-tight text-slate-600 transition-colors group-hover:text-slate-900">{item.label}</h3>
                 </CardContent>
               </Card>
             </Link>
