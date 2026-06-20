@@ -1,15 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * redriveFailedSms — cron "outbox" that re-sends outbound texts which Twilio
+ * redriveFailedSms — cron "outbox" that re-sends outbound texts which Telnyx
  * reported as failed for a TRANSIENT reason (timeout / network / 429 / 5xx).
  * Configure a schedule (e.g. every 10 minutes) in the Base44 dashboard.
  * Enable only ONE schedule.
  *
- * Redrive only fires on rows Twilio reported as failed, so re-sending is
- * appropriate. Twilio has no client idempotency key, so we can't rely on
+ * Redrive only fires on rows Telnyx reported as failed, so re-sending is
+ * appropriate. Telnyx has no client idempotency key, so we can't rely on
  * provider dedupe — double-send is prevented by the claim+re-read and by only
- * redriving rows Twilio explicitly reported failed (not ambiguous network errors).
+ * redriving rows Telnyx explicitly reported failed (not ambiguous network errors).
  * An attempt cap, an escalating backoff between attempts, and an age ceiling
  * guarantee a stuck message eventually settles into a terminal 'failed' state
  * instead of looping.
@@ -60,40 +60,50 @@ async function getAgencyConfig(base44: any) {
 }
 
 /**
- * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
- * row with provider 'twilio'. Either path configures the integration, so the
+ * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'telnyx'. Either path configures the integration, so the
  * Base44 dashboard env is optional.
  */
-async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
-  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-  let sid = envSid && envSid.trim() ? envSid.trim() : null;
-  let token = envToken && envToken.trim() ? envToken.trim() : null;
-  if (!sid || !token) {
-    try {
-      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
-      const rec = rows?.[0] || {};
-      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
-      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
-    } catch { /* ignore */ }
-  }
-  return { accountSid: sid, authToken: token };
+async function resolveTelnyxCreds(base44: any): Promise<{
+  apiKey: string | null;
+  publicKey: string | null;
+  messagingProfileId: string | null;
+  voiceConnectionId: string | null;
+  faxConnectionId: string | null;
+}> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
+  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
+  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
+  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+    const rec = rows?.[0] || {};
+    if (!apiKey) apiKey = pick(rec.api_key);
+    if (!publicKey) publicKey = pick(rec.public_key);
+    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
+    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
+    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
+  } catch { /* ignore */ }
+  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
 
-async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string, statusCallback?: string) {
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+async function sendTelnyx(apiKey: string, messagingProfileId: string | null, from: string, to: string, body: string, webhookUrl?: string) {
+  const url = `https://api.telnyx.com/v2/messages`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
-    const params = new URLSearchParams({ To: to, From: from, Body: body });
-    if (statusCallback) params.set('StatusCallback', statusCallback);
+    const payload: Record<string, unknown> = { from, to, text: body };
+    if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+    if (webhookUrl) payload.webhook_url = webhookUrl;
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
-      body: params.toString(),
+      body: JSON.stringify(payload),
       signal: controller.signal,
     });
     const data = await resp.json().catch(() => ({}));
@@ -210,7 +220,7 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { accountSid, authToken } = await resolveTwilioCreds(base44);
+    const { apiKey, messagingProfileId } = await resolveTelnyxCreds(base44);
     const { settings, smsEnabled } = await getAgencyConfig(base44);
     const runId = crypto.randomUUID();
     const now = Date.now();
@@ -218,12 +228,12 @@ Deno.serve(async (req) => {
     // without it a redriven message that later fails delivery is never retried
     // again and never surfaces a failed-delivery notification.
     const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
-    const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTwilioSmsStatus` : undefined;
+    const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTelnyxStatusWebhook` : undefined;
 
     const result = { scanned: 0, redriven: 0, recovered: 0, failed: 0, skipped: 0 };
 
-    if (!accountSid || !authToken || smsEnabled === false) {
-      return Response.json({ success: true, ...result, note: 'Twilio SMS not configured or disabled — nothing redriven.' });
+    if (!apiKey || smsEnabled === false) {
+      return Response.json({ success: true, ...result, note: 'Telnyx SMS not configured or disabled — nothing redriven.' });
     }
 
     const failedRows = await base44.asServiceRole.entities.SmsMessage
@@ -255,8 +265,8 @@ Deno.serve(async (req) => {
       // so a crash mid-send can never strand it as a terminal 'queued' (a later
       // run re-scans it once the backoff gap passes). retry_count/last_retry_at
       // advance here so the attempt is counted and the gap is enforced; the
-      // re-read confirms ownership against overlapping runs. Twilio has no client
-      // idempotency key, but redrive only fires on rows Twilio explicitly reported
+      // re-read confirms ownership against overlapping runs. Telnyx has no client
+      // idempotency key, but redrive only fires on rows Telnyx explicitly reported
       // as failed, so re-sending is appropriate; we can't rely on provider dedupe.
       const attempts = (Number(row.retry_count) || 0) + 1;
       try {
@@ -272,17 +282,17 @@ Deno.serve(async (req) => {
       result.redriven++;
 
       // The original client_message_id is kept for our own tracking but is NOT
-      // sent to Twilio — Twilio has no client idempotency key.
+      // sent to Telnyx — Telnyx has no client idempotency key.
       const clientMessageId = row.client_message_id || `redrive-${row.id}`;
       let resp;
       try {
-        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body, statusCallback);
+        resp = await sendTelnyx(apiKey!, messagingProfileId, row.from_number, row.to_number, row.body, statusCallback);
       } catch (netErr) {
         const aborted = (netErr as Error)?.name === 'AbortError';
         result.failed++;
         await base44.asServiceRole.entities.SmsMessage.update(row.id, {
           status: 'failed', redrive_claimed_by: null,
-          failure_reason: aborted ? 'Timed out reaching Twilio (redrive)' : `Network error reaching Twilio (redrive): ${(netErr as Error).message}`,
+          failure_reason: aborted ? 'Timed out reaching Telnyx (redrive)' : `Network error reaching Telnyx (redrive): ${(netErr as Error).message}`,
         }).catch(() => {});
         continue;
       }
@@ -291,17 +301,19 @@ Deno.serve(async (req) => {
         result.failed++;
         await base44.asServiceRole.entities.SmsMessage.update(row.id, {
           status: 'failed', redrive_claimed_by: null,
-          failure_reason: resp.data?.message || resp.data?.error || `Twilio API error (${resp.status}) (redrive)`,
+          failure_reason: resp.data?.errors?.[0]?.detail || resp.data?.errors?.[0]?.title || `Telnyx API error (${resp.status}) (redrive)`,
         }).catch(() => {});
         continue;
       }
 
       result.recovered++;
-      // Map Twilio status: 'queued'/'accepted' → 'queued', 'delivered' → 'delivered', else 'sent'.
-      const providerStatus = (resp.data?.status || '').toLowerCase();
+      // Map Telnyx recipient status: 'delivered' → 'delivered', everything else
+      // (queued/sending/sent/'') → 'sent' (matches the original non-delivered→sent).
+      const providerStatus = (resp.data?.data?.to?.[0]?.status || '').toLowerCase();
+      const mappedStatus = providerStatus === 'delivered' ? 'delivered' : 'sent';
       await base44.asServiceRole.entities.SmsMessage.update(row.id, {
-        provider_message_id: resp.data?.sid || row.provider_message_id || null,
-        status: providerStatus === 'delivered' ? 'delivered' : 'sent',
+        provider_message_id: resp.data?.data?.id || row.provider_message_id || null,
+        status: mappedStatus,
         failure_reason: null,
         client_message_id: clientMessageId,
         redrive_claimed_by: null,
@@ -312,7 +324,7 @@ Deno.serve(async (req) => {
         action: 'sms_redriven',
         entity_type: 'SmsMessage',
         entity_id: row.id,
-        details: { to_number: row.to_number, attempt: attempts, provider_message_id: resp.data?.sid || null },
+        details: { to_number: row.to_number, attempt: attempts, provider_message_id: resp.data?.data?.id || null },
         status: 'success',
       }).catch(() => {});
     }

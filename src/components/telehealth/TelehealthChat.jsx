@@ -6,8 +6,8 @@ import { Send, MessageSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Presentational chat panel. Messages and sending are owned by the parent
-// (VideoRoom), which transmits them over the Twilio data track so both sides
-// actually receive them.
+// (VideoRoom), which transmits them over the Telnyx Video data/message channel
+// so both sides actually receive them.
 export default function TelehealthChat({ messages = [], onSend, userName }) {
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef(null);

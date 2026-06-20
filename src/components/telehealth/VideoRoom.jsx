@@ -9,9 +9,39 @@ import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";
 import TelehealthChat from "./TelehealthChat";
 
+// VideoRoom — Telnyx Video room client (@telnyx/video v1).
+//
+// createTelehealthToken returns a Telnyx token:
+//   { token, room_id, room_name, identity, host_name, refresh_token }
+//
+// Validated against the installed @telnyx/video type surface (see
+// src/components/telehealth/telnyxVideoApi.test.js, which asserts every SDK
+// method/event used here actually exists):
+//   initialize({ roomId, clientToken, context }) -> Promise<Room>
+//   room.on(event, cb), room.connect(), room.disconnect()
+//   room.getState() -> { status, localParticipantId, participants: Map, streams: Map }
+//   room.addStream(key, { audio?: track, video?: track }), room.removeStream(key)
+//   room.addSubscription(participantId, key, { audio, video })
+//   room.getParticipantStream(participantId, key) -> Stream{ audioTrack, videoTrack }
+//   room.sendMessage(message, recipients?)
+//   events: connected, disconnected, state_changed, participant_joined/left,
+//           stream_published/unpublished, subscription_started/ended,
+//           track_enabled/disabled, message_received
+
+// The participant `context` we set is JSON.stringify({ identity }); read it back.
+function identityFromParticipant(p) {
+  if (!p) return "Participant";
+  try {
+    const ctx = typeof p.context === "string" ? JSON.parse(p.context) : p.context;
+    if (ctx?.identity) return ctx.identity;
+  } catch { /* context wasn't our JSON */ }
+  return p.id;
+}
+
 export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange, joinToken, videoDeviceId, audioDeviceId, waitingMessage = "Waiting for patient to join..." }) {
+  // Remote participants, keyed for rendering. Each: { id, identity, streamKeys }
   const [participants, setParticipants] = useState([]);
-  const [status, setStatus] = useState("connecting"); // connecting | connected | reconnecting | error
+  const [status, setStatus] = useState("connecting"); // connecting | connected | reconnecting | error | disconnected
   const [error, setError] = useState(null);
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
@@ -24,34 +54,62 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    const participantNames = [identity, ...participants.map((participant) => participant.identity)].filter(Boolean);
+    const participantNames = [identity, ...participants.map((p) => p.identity)].filter(Boolean);
     onParticipantListChange?.([...new Set(participantNames)]);
   }, [participants, identity, onParticipantListChange]);
 
   const localVideoRef = useRef(null);
   const containerRef = useRef(null);
-  const roomRef = useRef(null);
-  const screenTrackRef = useRef(null);
-  const cameraTrackRef = useRef(null);
-  const dataTrackRef = useRef(null);
+  const roomRef = useRef(null);          // the connected Telnyx Video Room
+  const localStreamRef = useRef(null);   // local MediaStream (camera + mic)
+  const screenStreamRef = useRef(null);  // active screen-share MediaStream
   const endedRef = useRef(false);
+  const wasConnectedRef = useRef(false);
 
-  // Append a chat message received over a remote participant's data track.
+  // Append a chat message received over the room's message channel.
   const handleIncomingMessage = useCallback((raw, senderIdentity) => {
     let text = raw;
     let ts = Date.now();
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
       text = parsed.text ?? raw;
       ts = parsed.ts ?? ts;
     } catch { /* fall back to the raw string */ }
-    setMessages(prev => [...prev, {
+    setMessages((prev) => [...prev, {
       id: `${senderIdentity}-${ts}-${Math.random().toString(36).slice(2, 6)}`,
       sender: senderIdentity,
       text,
       timestamp: new Date(ts).toISOString(),
       isSelf: false,
     }]);
+  }, []);
+
+  // Refresh the rendered remote-participant list from the room's current state.
+  // state.participants is a Map<id, Participant>; exclude the local participant.
+  const syncParticipants = useCallback((room) => {
+    if (!room) return;
+    const state = room.getState();
+    const localId = state.localParticipantId;
+    const remote = [...state.participants.values()]
+      .filter((p) => p && p.id !== localId && p.origin !== "local")
+      .map((p) => ({
+        id: p.id,
+        identity: identityFromParticipant(p),
+        streamKeys: Object.keys(p.streams || {}),
+      }));
+    setParticipants(remote);
+  }, []);
+
+  // Subscribe to every stream a remote participant publishes so its media flows
+  // to us; the SDK requires an explicit subscription before tracks arrive.
+  const subscribeRemote = useCallback(async (room, participantId, key) => {
+    const state = room.getState();
+    if (participantId === state.localParticipantId) return;
+    try {
+      await room.addSubscription(participantId, key, { audio: true, video: true });
+    } catch (e) {
+      console.error("subscribe error:", e);
+    }
   }, []);
 
   const connectToRoom = useCallback(async () => {
@@ -62,14 +120,11 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       const res = await createTelehealthToken(
         joinToken ? { room_name: roomName, join_token: joinToken } : { room_name: roomName, identity }
       );
-      const { token } = res.data;
-      // Surface the server's friendly reason (e.g. "Invalid or expired join
-      // link") instead of a cryptic Twilio "invalid token" error downstream.
+      const { token, room_id } = res.data || {};
       if (!token) throw new Error(res.data?.error || "We couldn't start the visit. Please try again.");
-      // For patients, greet them with the provider's name while they wait.
       if (joinToken && res.data.host_name) setProviderName(res.data.host_name);
 
-      const Video = (await import("twilio-video")).default;
+      const { initialize } = await import("@telnyx/video");
 
       // Honor the camera/mic chosen in the pre-join device check (bare deviceId
       // is an "ideal" hint, so a since-unplugged device falls back gracefully).
@@ -77,74 +132,117 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       const videoConstraint = { width: 1280, height: 720 };
       if (videoDeviceId) videoConstraint.deviceId = videoDeviceId;
 
-      const connectedRoom = await Video.connect(token, {
-        name: roomName,
-        audio: audioConstraint,
-        video: videoConstraint,
-        networkQuality: { local: 1, remote: 1 }
+      // initialize() returns a Promise<Room>; it must be awaited.
+      const room = await initialize({
+        roomId: room_id,
+        clientToken: token,
+        context: JSON.stringify({ identity }),
+        enableMessages: true,
       });
-
-      roomRef.current = connectedRoom;
+      roomRef.current = room;
       endedRef.current = false;
-      setStatus("connected");
-      setSessionStartTime(new Date());
 
-      // Publish a data track so in-call chat messages actually reach the other side.
-      try {
-        const dataTrack = new Video.LocalDataTrack();
-        dataTrackRef.current = dataTrack;
-        await connectedRoom.localParticipant.publishTrack(dataTrack);
-      } catch (chatErr) {
-        console.error("Chat data track error:", chatErr);
-      }
-
-      // Attach local camera video and keep a handle to the camera track so it
-      // can be restored after a screen share ends.
-      connectedRoom.localParticipant.videoTracks.forEach(publication => {
-        if (publication.track) {
-          cameraTrackRef.current = publication.track;
-          if (localVideoRef.current) {
-            localVideoRef.current.appendChild(publication.track.attach());
-          }
-        }
+      // Wire room lifecycle + participant events before connecting so we don't
+      // miss the initial participant set.
+      room.on("connected", () => {
+        wasConnectedRef.current = true;
+        setStatus("connected");
+        setSessionStartTime((t) => t || new Date());
+        syncParticipants(room);
       });
-
-      // Existing remote participants
-      setParticipants([...connectedRoom.participants.values()]);
-
-      connectedRoom.on("participantConnected", p => {
-        setParticipants(prev => [...prev, p]);
-        if (p.identity) toast.success(`${p.identity} joined the visit`);
-      });
-      connectedRoom.on("participantDisconnected", p => setParticipants(prev => prev.filter(x => x !== p)));
-      // Twilio recovers transient network drops on its own; surface that as a
-      // "Reconnecting…" state instead of treating the blip as the visit ending.
-      connectedRoom.on("reconnecting", () => setStatus("reconnecting"));
-      connectedRoom.on("reconnected", () => setStatus("connected"));
-      connectedRoom.on("disconnected", () => {
+      room.on("disconnected", () => {
         setStatus("disconnected");
         if (!endedRef.current) {
           endedRef.current = true;
           onDisconnect && onDisconnect();
         }
       });
+      // Derive a "Reconnecting…" state from the room status without inventing
+      // events: status returns to 'connecting' after a transient drop.
+      room.on("state_changed", (state) => {
+        if (state.status === "connecting" && wasConnectedRef.current) setStatus("reconnecting");
+        else if (state.status === "connected") setStatus("connected");
+      });
+      const onParticipantJoin = (participantId) => {
+        syncParticipants(room);
+        const p = room.getState().participants.get(participantId);
+        const who = p ? identityFromParticipant(p) : null;
+        if (who) toast.success(`${who} joined the visit`);
+      };
+      room.on("participant_joined", onParticipantJoin);
+      room.on("participant_left", () => syncParticipants(room));
+      // A remote stream was published → subscribe, then re-render once it starts.
+      room.on("stream_published", (participantId, key) => {
+        subscribeRemote(room, participantId, key);
+      });
+      room.on("stream_unpublished", () => syncParticipants(room));
+      room.on("subscription_started", () => syncParticipants(room));
+      room.on("subscription_ended", () => syncParticipants(room));
+      room.on("track_enabled", () => syncParticipants(room));
+      room.on("track_disabled", () => syncParticipants(room));
+      // In-call chat over the message channel. Signature is
+      // (participantId, message, recipients, state).
+      room.on("message_received", (participantId, message) => {
+        const p = room.getState().participants.get(participantId);
+        // message is a Telnyx Message { type: 'text', payload: string }.
+        handleIncomingMessage(message?.payload ?? message, p ? identityFromParticipant(p) : "Participant");
+      });
 
+      // Acquire local media honoring the chosen devices.
+      const localStream = await navigator.mediaDevices.getUserMedia({
+        audio: audioConstraint,
+        video: videoConstraint,
+      });
+      localStreamRef.current = localStream;
+      if (localVideoRef.current) {
+        const videoEl = document.createElement("video");
+        videoEl.autoplay = true;
+        videoEl.muted = true; // never echo our own mic
+        videoEl.playsInline = true;
+        videoEl.srcObject = localStream;
+        localVideoRef.current.innerHTML = "";
+        localVideoRef.current.appendChild(videoEl);
+      }
+
+      // connect() joins the room; addStream publishes the local camera + mic as
+      // the "self" stream (tracks passed individually, per the SDK).
+      await room.connect();
+      await room.addStream("self", {
+        audio: localStream.getAudioTracks()[0],
+        video: localStream.getVideoTracks()[0],
+      });
+
+      // Subscribe to anyone already publishing when we joined.
+      const state = room.getState();
+      for (const p of state.participants.values()) {
+        if (p.id === state.localParticipantId) continue;
+        for (const key of Object.keys(p.streams || {})) subscribeRemote(room, p.id, key);
+      }
+
+      if (!wasConnectedRef.current) {
+        wasConnectedRef.current = true;
+        setStatus("connected");
+        setSessionStartTime((t) => t || new Date());
+      }
+      syncParticipants(room);
     } catch (err) {
       const friendly = configNotReadyMessage(err);
       if (!friendly) console.error("Video connect error:", err);
       setError(friendly || err.message);
       setStatus("error");
     }
-  }, [roomName, identity, joinToken, videoDeviceId, audioDeviceId, onDisconnect]);
+  }, [roomName, identity, joinToken, videoDeviceId, audioDeviceId, onDisconnect, syncParticipants, subscribeRemote, handleIncomingMessage]);
 
   useEffect(() => {
     connectToRoom();
     return () => {
-      roomRef.current?.disconnect();
+      try { roomRef.current?.disconnect(); } catch { /* already gone */ }
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, [connectToRoom]);
 
-  // Live call timer (the previous duration display never ticked).
+  // Live call timer.
   useEffect(() => {
     if (!sessionStartTime) return;
     const id = setInterval(() => {
@@ -160,84 +258,91 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
+  // Mute by toggling the local track's enabled flag and republishing the new
+  // track to the "self" stream so remote participants see the change.
   const toggleAudio = () => {
-    roomRef.current?.localParticipant.audioTracks.forEach(pub => {
-      audioMuted ? pub.track?.enable() : pub.track?.disable();
-    });
-    setAudioMuted(m => !m);
+    const next = !audioMuted;
+    const track = localStreamRef.current?.getAudioTracks()[0];
+    if (track) {
+      track.enabled = !next;
+      try { roomRef.current?.updateStream("self", { audio: track }); } catch { /* optional */ }
+    }
+    setAudioMuted(next);
   };
 
   const toggleVideo = () => {
-    roomRef.current?.localParticipant.videoTracks.forEach(pub => {
-      videoMuted ? pub.track?.enable() : pub.track?.disable();
-    });
-    setVideoMuted(m => !m);
+    const next = !videoMuted;
+    const track = localStreamRef.current?.getVideoTracks()[0];
+    if (track) {
+      track.enabled = !next;
+      try { roomRef.current?.updateStream("self", { video: track }); } catch { /* optional */ }
+    }
+    setVideoMuted(next);
   };
 
   const disconnect = () => {
-    // Stop any active screen share so the capture indicator clears.
-    if (screenTrackRef.current) {
-      try { screenTrackRef.current.stop(); } catch { /* already stopped */ }
-      screenTrackRef.current = null;
+    if (screenStreamRef.current) {
+      try { screenStreamRef.current.getTracks().forEach((t) => t.stop()); } catch { /* already stopped */ }
+      screenStreamRef.current = null;
     }
-    const activeRoom = roomRef.current;
-    if (activeRoom && activeRoom.state !== "disconnected") {
+    const room = roomRef.current;
+    if (room && status !== "disconnected") {
       // Let the room's "disconnected" event invoke onDisconnect exactly once.
-      activeRoom.disconnect();
+      try { room.disconnect(); } catch { /* fall through */ }
     } else if (!endedRef.current) {
       endedRef.current = true;
       onDisconnect && onDisconnect();
     }
   };
 
-  // Twilio's LocalVideoTrack has no replaceTrack(); screen sharing works by
-  // unpublishing the camera track and publishing a screen-capture track, then
-  // restoring the camera when sharing stops.
+  // Screen sharing: publish a getDisplayMedia track as a named "screen" stream,
+  // restoring the camera preview when it stops.
   const stopScreenShare = () => {
-    const screenTrack = screenTrackRef.current;
-    if (!screenTrack) return; // already stopped — keep this idempotent
-    screenTrackRef.current = null;
-
-    const localParticipant = roomRef.current?.localParticipant;
-    localParticipant?.unpublishTrack(screenTrack);
-    screenTrack.detach().forEach(el => el.remove());
-    screenTrack.stop();
-
-    const camera = cameraTrackRef.current;
-    if (camera && localParticipant) {
-      localParticipant.publishTrack(camera);
-      if (localVideoRef.current) {
-        localVideoRef.current.appendChild(camera.attach());
-      }
-      videoMuted ? camera.disable() : camera.enable();
+    const screenStream = screenStreamRef.current;
+    if (!screenStream) return; // already stopped — keep this idempotent
+    screenStreamRef.current = null;
+    screenStream.getTracks().forEach((t) => t.stop());
+    try { roomRef.current?.removeStream("screen"); } catch { /* optional */ }
+    // Restore the local camera preview.
+    if (localVideoRef.current && localStreamRef.current) {
+      const videoEl = document.createElement("video");
+      videoEl.autoplay = true;
+      videoEl.muted = true;
+      videoEl.playsInline = true;
+      videoEl.srcObject = localStreamRef.current;
+      localVideoRef.current.innerHTML = "";
+      localVideoRef.current.appendChild(videoEl);
     }
     setScreenSharing(false);
   };
 
   const startScreenShare = async () => {
-    const localParticipant = roomRef.current?.localParticipant;
-    if (!localParticipant) return;
+    const room = roomRef.current;
+    if (!room) return;
 
     const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    const screenMediaTrack = screenStream.getVideoTracks()[0];
-    if (!screenMediaTrack) return;
+    screenStreamRef.current = screenStream;
 
-    // Swap the camera out of the published video slot.
-    const camera = cameraTrackRef.current;
-    if (camera) {
-      localParticipant.unpublishTrack(camera);
-      camera.detach().forEach(el => el.remove());
+    try {
+      await room.addStream("screen", { video: screenStream.getVideoTracks()[0] });
+    } catch (e) {
+      console.error("Screen publish error:", e);
     }
 
-    const publication = await localParticipant.publishTrack(screenMediaTrack, { name: `screen-${Date.now()}` });
-    const screenTrack = publication.track;
-    screenTrackRef.current = screenTrack;
+    // Preview the shared screen locally.
     if (localVideoRef.current) {
-      localVideoRef.current.appendChild(screenTrack.attach());
+      const videoEl = document.createElement("video");
+      videoEl.autoplay = true;
+      videoEl.muted = true;
+      videoEl.playsInline = true;
+      videoEl.srcObject = screenStream;
+      localVideoRef.current.innerHTML = "";
+      localVideoRef.current.appendChild(videoEl);
     }
 
     // The browser's own "Stop sharing" control ends the underlying track.
-    screenMediaTrack.onended = () => stopScreenShare();
+    const screenTrack = screenStream.getVideoTracks()[0];
+    if (screenTrack) screenTrack.onended = () => stopScreenShare();
     setScreenSharing(true);
   };
 
@@ -258,19 +363,20 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       }
     } catch (err) {
       // Most commonly the user dismissed the screen picker — leave the call as-is.
-      console.error('Screen share error:', err);
+      console.error("Screen share error:", err);
       setScreenSharing(false);
     }
   };
 
   const sendMessage = (text) => {
     try {
-      dataTrackRef.current?.send(JSON.stringify({ text, ts: Date.now() }));
+      // Telnyx requires a Message object { type: 'text', payload: string }.
+      roomRef.current?.sendMessage({ type: "text", payload: JSON.stringify({ text, ts: Date.now() }) });
     } catch (err) {
-      console.error('Chat send error:', err);
+      console.error("Chat send error:", err);
     }
-    // Data tracks don't echo back to the sender, so add our own message locally.
-    setMessages(prev => [...prev, {
+    // Messages don't echo back to the sender, so add our own locally.
+    setMessages((prev) => [...prev, {
       id: `self-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       sender: identity,
       text,
@@ -343,8 +449,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         </div>
 
         {/* Remote participants */}
-        {participants.map(participant => (
-          <RemoteParticipant key={participant.sid} participant={participant} onMessage={handleIncomingMessage} />
+        {participants.map((participant) => (
+          <RemoteParticipant key={participant.id} participant={participant} room={roomRef.current} />
         ))}
 
         {/* Waiting placeholder */}
@@ -365,7 +471,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
         onDisconnect={disconnect}
-        onToggleChat={() => setShowChat(v => !v)}
+        onToggleChat={() => setShowChat((v) => !v)}
         onToggleScreenShare={toggleScreenShare}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
@@ -378,28 +484,40 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   );
 }
 
-function RemoteParticipant({ participant, onMessage }) {
+function RemoteParticipant({ participant, room }) {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
 
   useEffect(() => {
-    const attachTrack = (track) => {
-      if (track.kind === "video" && videoRef.current) videoRef.current.appendChild(track.attach());
-      if (track.kind === "audio" && audioRef.current) audioRef.current.appendChild(track.attach());
-      if (track.kind === "data") track.on("message", (data) => onMessage?.(data, participant.identity));
-    };
+    if (!room) return undefined;
+    // Build a MediaStream from the participant's subscribed Telnyx streams
+    // (getParticipantStream(participantId, key) -> Stream{ audioTrack, videoTrack }).
+    const tracks = [];
+    for (const key of participant.streamKeys || []) {
+      const s = room.getParticipantStream(participant.id, key);
+      if (s?.audioTrack) tracks.push(s.audioTrack);
+      if (s?.videoTrack) tracks.push(s.videoTrack);
+    }
+    if (!tracks.length) return undefined;
+    const mediaStream = new MediaStream(tracks);
 
-    participant.tracks.forEach(pub => {
-      if (pub.isSubscribed && pub.track) attachTrack(pub.track);
-    });
-
-    participant.on("trackSubscribed", attachTrack);
-    participant.on("trackUnsubscribed", track => {
-      if (typeof track.detach === "function") track.detach().forEach(el => el.remove());
-    });
-
-    return () => participant.removeAllListeners();
-  }, [participant, onMessage]);
+    if (videoRef.current && mediaStream.getVideoTracks().length) {
+      const v = document.createElement("video");
+      v.autoplay = true;
+      v.playsInline = true;
+      v.srcObject = mediaStream;
+      videoRef.current.innerHTML = "";
+      videoRef.current.appendChild(v);
+    }
+    if (audioRef.current && mediaStream.getAudioTracks().length) {
+      const a = document.createElement("audio");
+      a.autoplay = true;
+      a.srcObject = mediaStream;
+      audioRef.current.innerHTML = "";
+      audioRef.current.appendChild(a);
+    }
+    return undefined;
+  }, [participant, room]);
 
   return (
     <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video">

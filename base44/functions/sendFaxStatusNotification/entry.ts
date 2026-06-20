@@ -1,5 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+/**
+ * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'telnyx'. Mirrors the SMS/voice handlers so fax functions work
+ * for agencies that store credentials in-app rather than in the dashboard env.
+ */
+async function resolveTelnyxCreds(base44: any): Promise<{
+  apiKey: string | null;
+  publicKey: string | null;
+  messagingProfileId: string | null;
+  voiceConnectionId: string | null;
+  faxConnectionId: string | null;
+}> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
+  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
+  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
+  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+    const rec = rows?.[0] || {};
+    if (!apiKey) apiKey = pick(rec.api_key);
+    if (!publicKey) publicKey = pick(rec.public_key);
+    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
+    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
+    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
+  } catch { /* ignore */ }
+  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -67,25 +97,22 @@ Please log in to your dashboard to view more details.
       }
     }
 
-    // Send SMS notification via Twilio
+    // Send SMS notification via Telnyx
     if (notifyPhone) {
       try {
-        const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-        const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-        const fromNumber = Deno.env.get('TWILIO_FAX_NUMBER'); // Reuse fax number or dedicated SMS number
+        const { apiKey, messagingProfileId } = await resolveTelnyxCreds(base44);
+        const fromNumber = Deno.env.get('TELNYX_FAX_NUMBER'); // Reuse fax number or dedicated SMS number
 
-        if (accountSid && authToken && fromNumber) {
-          const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+        if (apiKey && fromNumber) {
+          const payload: Record<string, unknown> = { from: fromNumber, to: notifyPhone, text: smsMessage };
+          if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+          const response = await fetch('https://api.telnyx.com/v2/messages', {
             method: 'POST',
             headers: {
-              'Authorization': `Basic ${btoa(`${accountSid}:${authToken}`)}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
             },
-            body: new URLSearchParams({
-              From: fromNumber,
-              To: notifyPhone,
-              Body: smsMessage,
-            }).toString(),
+            body: JSON.stringify(payload),
           });
 
           if (response.ok) {

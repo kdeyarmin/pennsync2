@@ -1,5 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+/**
+ * createTelehealthToken — mint a Telnyx Video join token for a telehealth
+ * session, using the SAME authorization model as createTelehealthToken (the
+ * Twilio Video path):
+ *
+ *  - PATIENT (guest) path: access via possession of the high-entropy, per-session
+ *    join token carried in the private invite link (?t=...). Unguessable, scoped
+ *    to one session, stops working once the visit is completed/cancelled.
+ *  - STAFF path: only the authenticated host, a listed participant, or an admin
+ *    may mint a grant.
+ *
+ * The Telnyx room is found-or-created by its unique_name (= session.room_name),
+ * then a client token is generated for that room. Returns { token, room_id,
+ * identity, room_name }.
+ */
+
 // A guest invite link (capability URL) is otherwise valid for as long as the
 // session stays scheduled/active, so a forgotten or leaked link would grant
 // audio/video access indefinitely. Bound the guest capability in time as well:
@@ -8,20 +24,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 // still expiring a stale link the same day. Staff joins are unaffected.
 const GUEST_JOIN_WINDOW_MS = 12 * 60 * 60 * 1000;
 
-// Constant-time comparison so the per-session join token can't be recovered
-// via response-timing analysis.
-function timingSafeEqual(a, b) {
+function timingSafeEqual(a: unknown, b: unknown): boolean {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
   let mismatch = 0;
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return mismatch === 0;
 }
 
-// The patient's capability token lives in the session's invite link (?t=...),
-// so guest joins need no extra entity field.
-function extractJoinToken(inviteLink) {
+function extractJoinToken(inviteLink: unknown): string {
   if (!inviteLink || typeof inviteLink !== 'string') return '';
   try {
     return new URL(inviteLink).searchParams.get('t') || '';
@@ -31,6 +41,50 @@ function extractJoinToken(inviteLink) {
   }
 }
 
+async function resolveTelnyxCreds(base44: any): Promise<{ apiKey: string | null }> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  if (!apiKey) {
+    try {
+      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+      apiKey = pick(rows?.[0]?.api_key);
+    } catch { /* ignore */ }
+  }
+  return { apiKey };
+}
+
+const TELNYX_API_BASE = 'https://api.telnyx.com/v2';
+
+/** Find a Telnyx room by unique_name, creating it if it doesn't exist yet. */
+async function findOrCreateRoom(apiKey: string, uniqueName: string): Promise<string> {
+  const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+  const findUrl = `${TELNYX_API_BASE}/rooms?filter[unique_name]=${encodeURIComponent(uniqueName)}`;
+  const findResp = await fetch(findUrl, { method: 'GET', headers });
+  if (findResp.ok) {
+    const found = await findResp.json().catch(() => ({}));
+    const existing = Array.isArray(found?.data) ? found.data.find((r: any) => r.unique_name === uniqueName) : null;
+    if (existing?.id) return existing.id;
+  }
+  const createResp = await fetch(`${TELNYX_API_BASE}/rooms`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ unique_name: uniqueName, enable_recording: false }),
+  });
+  const created = await createResp.json().catch(() => ({}));
+  if (createResp.ok && created?.data?.id) return created.data.id;
+  // A concurrent create can 422 on the unique_name — re-fetch before giving up.
+  if (createResp.status === 422) {
+    const retry = await fetch(findUrl, { method: 'GET', headers });
+    if (retry.ok) {
+      const found = await retry.json().catch(() => ({}));
+      const existing = Array.isArray(found?.data) ? found.data.find((r: any) => r.unique_name === uniqueName) : null;
+      if (existing?.id) return existing.id;
+    }
+  }
+  const firstErr = Array.isArray(created?.errors) ? created.errors[0] : null;
+  throw new Error(firstErr?.detail || firstErr?.title || `Could not provision Telnyx room (HTTP ${createResp.status})`);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -38,22 +92,13 @@ Deno.serve(async (req) => {
     const { room_name, join_token } = await req.json();
     if (!room_name) return Response.json({ error: 'room_name is required' }, { status: 400 });
 
-    // Service-role lookup so we can authorize the caller before minting any
-    // audio/video grant for this room.
     const sessions = await base44.asServiceRole.entities.TelehealthSession.filter({ room_name }, '-created_date', 1);
     const session = sessions[0];
     if (!session) return Response.json({ error: 'Telehealth session not found' }, { status: 404 });
 
-    let participantIdentity;
+    let participantIdentity: string;
 
     if (join_token) {
-      // PATIENT (guest) path. Access is granted by possession of the
-      // high-entropy, per-session token carried in the private invite link — a
-      // capability URL. This is deliberately NOT the old IDOR (where any
-      // authenticated user could join any room by name): the token is
-      // unguessable, scoped to a single session, and stops working once the
-      // visit is completed or cancelled. The identity is taken from the session
-      // (server-controlled) so a guest cannot impersonate the clinician.
       const expected = extractJoinToken(session.invite_link);
       if (!expected || !timingSafeEqual(String(join_token), expected)) {
         return Response.json({ error: 'Invalid or expired join link' }, { status: 403 });
@@ -70,9 +115,6 @@ Deno.serve(async (req) => {
       }
       participantIdentity = session.patient_name || 'Patient';
     } else {
-      // STAFF path. Only the authenticated host, a listed participant, or an
-      // admin may mint a grant — otherwise any authenticated user could join
-      // another patient's live A/V session (PHI breach).
       const user = await base44.auth.me();
       if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
       const participants = Array.isArray(session.participant_list) ? session.participant_list : [];
@@ -84,69 +126,35 @@ Deno.serve(async (req) => {
       participantIdentity = user.full_name || user.email;
     }
 
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const apiKey = Deno.env.get('TWILIO_API_KEY');
-    const apiSecret = Deno.env.get('TWILIO_API_SECRET');
+    const { apiKey } = await resolveTelnyxCreds(base44);
+    if (!apiKey) return Response.json({ error: 'Telnyx credentials not configured' }, { status: 500 });
 
-    if (!accountSid || !apiKey || !apiSecret) {
-      return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
+    const roomId = await findOrCreateRoom(apiKey, String(room_name));
+
+    // Mint a per-session client token for this room (1 hour TTL, matching the
+    // Twilio path). The token authorizes the bearer to join this room only.
+    const tokenResp = await fetch(`${TELNYX_API_BASE}/rooms/${roomId}/actions/generate_join_client_token`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token_ttl_secs: 3600, refresh_token_ttl_secs: 3600 }),
+    });
+    const tokenData = await tokenResp.json().catch(() => ({}));
+    if (!tokenResp.ok || !tokenData?.data?.token) {
+      const firstErr = Array.isArray(tokenData?.errors) ? tokenData.errors[0] : null;
+      console.error('Telnyx video token error', { status: tokenResp.status, code: firstErr?.code });
+      return Response.json({ error: 'Could not mint a Telnyx video token' }, { status: 502 });
     }
 
-    // Generate token via Twilio REST API
-    const tokenUrl = `https://iam.twilio.com/v1/Accounts/${accountSid}/Tokens`;
-    const credentials = btoa(`${apiKey}:${apiSecret}`);
-
-    const formBody = new URLSearchParams();
-    formBody.append('identity', participantIdentity);
-    formBody.append('ttl', '3600');
-
-    // Use Twilio's REST API to create a Video Grant token
-    // Build JWT manually since we're in Deno
-    const now = Math.floor(Date.now() / 1000);
-    const exp = now + 3600;
-
-    const header = { alg: 'HS256', typ: 'JWT', cty: 'twilio-fpa;v=1' };
-    const payload = {
-      jti: `${apiKey}-${now}`,
-      iss: apiKey,
-      sub: accountSid,
-      exp,
-      grants: {
-        identity: participantIdentity,
-        video: { room: room_name }
-      }
-    };
-
-    // UTF-8 safe base64url: btoa() throws on non-Latin1 characters, so a
-    // participant name with an accent/non-Latin script (e.g. "José") would
-    // crash token minting (500) and block their telehealth join. Encode the
-    // JSON as UTF-8 bytes first.
-    const encode = (obj) => {
-      const bytes = new TextEncoder().encode(JSON.stringify(obj));
-      let bin = '';
-      for (const b of bytes) bin += String.fromCharCode(b);
-      return btoa(bin).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    };
-    const headerB64 = encode(header);
-    const payloadB64 = encode(payload);
-    const signingInput = `${headerB64}.${payloadB64}`;
-
-    const key = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(apiSecret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput));
-    const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-      .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-    const token = `${signingInput}.${sigB64}`;
-
-    return Response.json({ token, identity: participantIdentity, room_name, host_name: session.host_name || null });
+    return Response.json({
+      token: tokenData.data.token,
+      refresh_token: tokenData.data.refresh_token || null,
+      room_id: roomId,
+      room_name,
+      identity: participantIdentity,
+      host_name: session.host_name || null,
+    });
   } catch (error) {
-    console.error('createTelehealthToken error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('createTelnyxVideoToken error:', (error as Error)?.message);
+    return Response.json({ error: 'Failed to create video token' }, { status: 500 });
   }
 });

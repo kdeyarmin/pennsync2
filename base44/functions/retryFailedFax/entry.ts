@@ -1,24 +1,33 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
- * row with provider 'twilio'. Mirrors the SMS/voice handlers so fax functions work
+ * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'telnyx'. Mirrors the SMS/voice handlers so fax functions work
  * for agencies that store credentials in-app rather than in the dashboard env.
  */
-async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
-  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-  let sid = envSid && envSid.trim() ? envSid.trim() : null;
-  let token = envToken && envToken.trim() ? envToken.trim() : null;
-  if (!sid || !token) {
-    try {
-      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
-      const rec = rows?.[0] || {};
-      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
-      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
-    } catch { /* ignore */ }
-  }
-  return { accountSid: sid, authToken: token };
+async function resolveTelnyxCreds(base44: any): Promise<{
+  apiKey: string | null;
+  publicKey: string | null;
+  messagingProfileId: string | null;
+  voiceConnectionId: string | null;
+  faxConnectionId: string | null;
+}> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
+  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
+  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
+  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+    const rec = rows?.[0] || {};
+    if (!apiKey) apiKey = pick(rec.api_key);
+    if (!publicKey) publicKey = pick(rec.public_key);
+    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
+    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
+    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
+  } catch { /* ignore */ }
+  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
 
 /**
@@ -62,13 +71,13 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Get Twilio credentials (env, then in-app IntegrationSecret)
-    const { accountSid, authToken } = await resolveTwilioCreds(base44);
-    const fromNumber = Deno.env.get('TWILIO_FAX_NUMBER');
+    // Get Telnyx credentials (env, then in-app IntegrationSecret)
+    const { apiKey, faxConnectionId } = await resolveTelnyxCreds(base44);
+    const fromNumber = Deno.env.get('TELNYX_FAX_NUMBER');
 
-    if (!accountSid || !authToken || !fromNumber) {
+    if (!apiKey || !faxConnectionId || !fromNumber) {
       return Response.json({
-        error: 'Twilio credentials not configured',
+        error: 'Telnyx credentials not configured',
         success: false
       }, { status: 500 });
     }
@@ -76,7 +85,7 @@ Deno.serve(async (req) => {
     // Claim the fax for retry BEFORE sending so two concurrent retries (e.g. a
     // double-click, or a manual retry racing the cron) can't both fax the PHI and
     // double-charge. Flip failed -> retrying with a token, then re-read; if we
-    // don't own the claim, another retry is already in flight. (Twilio's Fax API
+    // don't own the claim, another retry is already in flight. (Telnyx's Fax API
     // has no client idempotency key, so this claim is the double-send guard.)
     const runId = crypto.randomUUID();
     try {
@@ -100,42 +109,41 @@ Deno.serve(async (req) => {
       retry_claimed_by: null,
     }).catch(() => {});
 
-    const twilioUrl = `https://fax.twilio.com/v1/Faxes`;
+    const telnyxUrl = `https://api.telnyx.com/v2/faxes`;
 
     // Re-send the fax
-    const formData = new URLSearchParams();
-    formData.append('From', fromNumber);
-    formData.append('To', originalFax.to_number);
-    formData.append('MediaUrl', originalFax.document_url);
-
-    const auth = btoa(`${accountSid}:${authToken}`);
-
-    let twilioResponse: Response;
+    let telnyxResponse: Response;
     try {
-      twilioResponse = await fetch(twilioUrl, {
+      telnyxResponse = await fetch(telnyxUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
         },
-        body: formData.toString()
+        body: JSON.stringify({
+          connection_id: faxConnectionId,
+          from: fromNumber,
+          to: originalFax.to_number,
+          media_url: originalFax.document_url,
+          quality: 'high'
+        })
       });
     } catch (sendErr) {
       await releaseClaim();
       throw sendErr;
     }
 
-    if (!twilioResponse.ok) {
-      const errorData = await twilioResponse.text();
-      console.error('Twilio error:', errorData);
+    if (!telnyxResponse.ok) {
+      const errorData = await telnyxResponse.text();
+      console.error('Telnyx error:', errorData);
       await releaseClaim();
       return Response.json({
-        error: 'Failed to send fax via Twilio',
+        error: 'Failed to send fax via Telnyx',
         success: false
-      }, { status: twilioResponse.status });
+      }, { status: telnyxResponse.status });
     }
 
-    // Bookkeeping AFTER a successful Twilio send. If any of these steps throws
+    // Bookkeeping AFTER a successful Telnyx send. If any of these steps throws
     // (json parse, FaxLog.create, the final update), we must NOT fall through to
     // the outer catch and leave the original stranded in 'retrying' with a live
     // claim — that orphans an already-sent fax and blocks future retries. The
@@ -144,7 +152,7 @@ Deno.serve(async (req) => {
     let faxData: any;
     let newFaxLog: any = null;
     try {
-      faxData = await twilioResponse.json();
+      faxData = await telnyxResponse.json();
 
       // Create new FaxLog record for retry
       newFaxLog = await base44.entities.FaxLog.create({
@@ -154,7 +162,7 @@ Deno.serve(async (req) => {
         document_url: originalFax.document_url,
         document_name: originalFax.document_name + ' (Retry)',
         status: 'queued',
-        telnyx_fax_id: faxData?.sid,
+        telnyx_fax_id: faxData?.data?.id,
         pages: originalFax.pages,
         cover_page_details: originalFax.cover_page_details,
         patient_id: originalFax.patient_id,
@@ -176,11 +184,12 @@ Deno.serve(async (req) => {
       await base44.entities.FaxLog.update(fax_log_id, {
         status: 'retried',
         retry_claimed_by: null,
-        failure_reason: 'Retry was sent to Twilio, but follow-up logging failed.'
+        failure_reason: 'Retry was sent to Telnyx, but follow-up logging failed.'
       }).catch(() => {});
       return Response.json({
         success: true,
-        twilio_fax_id: faxData?.sid,
+        fax_id: faxData?.data?.id,
+        twilio_fax_id: faxData?.data?.id, // deprecated alias, kept for back-compat
         warning: 'Fax retry was sent, but recording the new log entry failed.'
       });
     }
@@ -188,7 +197,8 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       new_fax_log_id: newFaxLog.id,
-      twilio_fax_id: faxData?.sid,
+      fax_id: faxData?.data?.id,
+      twilio_fax_id: faxData?.data?.id, // deprecated alias, kept for back-compat
       retry_count: (originalFax.retry_count || 0) + 1,
       message: `Fax retry #${(originalFax.retry_count || 0) + 1} queued for ${originalFax.to_number}`
     });

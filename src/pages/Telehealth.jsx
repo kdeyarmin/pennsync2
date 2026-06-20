@@ -101,7 +101,7 @@ export default function Telehealth() {
       setShowDocumentation(false);
       return;
     }
-    // The in-room "End session" control, the outer button, and Twilio's own
+    // The in-room "End session" control, the outer button, and Telnyx's own
     // "disconnected" event can all fire at nearly the same moment. Complete the
     // session exactly once so we don't double-write the chart or stack toasts.
     if (endingRef.current) return;
@@ -168,7 +168,7 @@ export default function Telehealth() {
         icon={Video}
         eyebrow="Communication"
         title="Telehealth"
-        description="Secure video visits with patients via Twilio"
+        description="Secure video visits with patients via Telnyx"
         favoritePage="Telehealth"
         actions={
           <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">

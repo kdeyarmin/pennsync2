@@ -9,7 +9,7 @@ import TelehealthCall from '@/components/telehealth/TelehealthCall';
 // Public, no-login page a patient lands on after following their telehealth
 // invite link (/join?room=...&t=...). The token in the URL is the capability
 // that authorizes audio/video access; the backend validates it and mints a
-// Twilio grant scoped to this one room. No patient account is required.
+// Telnyx Video token scoped to this one room. No patient account is required.
 export default function JoinTelehealth() {
   const [searchParams] = useSearchParams();
   const roomName = searchParams.get('room');

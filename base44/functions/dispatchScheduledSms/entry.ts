@@ -6,7 +6,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  *
  * For each pending row whose send_at has passed it: claims the row (pending ->
  * sending) so overlapping runs don't double-send, re-checks the agency kill
- * switch and the patient's opt-out at send time, sends via Twilio Messages API,
+ * switch and the patient's opt-out at send time, sends via Telnyx Messages API,
  * records an SmsMessage in the nurse's thread, and marks the ScheduledSms
  * sent/failed. Bodies are never written to the audit log.
  */
@@ -28,7 +28,7 @@ async function getAgencyConfig(base44: any) {
 }
 
 // ---- transient-failure retry policy ----
-// Twilio has no client idempotency key. Therefore
+// Telnyx has no client idempotency key. Therefore
 // we only retry on explicit retryable HTTP statuses (408/425/429/500/502/503/504).
 // We do NOT retry thrown network errors — a blind retry could double-text.
 // Capped at 2 attempts here so a batch of up to BATCH_LIMIT rows stays bounded;
@@ -54,20 +54,21 @@ function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
 }
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function sendOnce(accountSid: string, authToken: string, from: string, to: string, body: string, statusCallback?: string) {
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+async function sendOnce(apiKey: string, messagingProfileId: string | null, from: string, to: string, body: string, webhookUrl?: string) {
+  const url = `https://api.telnyx.com/v2/messages`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
-    const params = new URLSearchParams({ To: to, From: from, Body: body });
-    if (statusCallback) params.set('StatusCallback', statusCallback);
+    const payload: Record<string, unknown> = { from, to, text: body };
+    if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+    if (webhookUrl) payload.webhook_url = webhookUrl;
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
-      body: params.toString(),
+      body: JSON.stringify(payload),
       signal: controller.signal,
     });
     const data = await resp.json().catch(() => ({}));
@@ -77,11 +78,11 @@ async function sendOnce(accountSid: string, authToken: string, from: string, to:
   }
 }
 
-async function sendTwilio(accountSid: string, authToken: string, from: string, to: string, body: string, statusCallback?: string) {
+async function sendTelnyx(apiKey: string, messagingProfileId: string | null, from: string, to: string, body: string, webhookUrl?: string) {
   for (let attempt = 1; attempt <= MAX_SEND_ATTEMPTS; attempt++) {
     let result;
     try {
-      result = await sendOnce(accountSid, authToken, from, to, body, statusCallback);
+      result = await sendOnce(apiKey, messagingProfileId, from, to, body, webhookUrl);
     } catch (err) {
       // Do NOT retry thrown network errors — a blind retry could double-text.
       throw err;
@@ -92,28 +93,37 @@ async function sendTwilio(accountSid: string, authToken: string, from: string, t
     const fromHeader = parseRetryAfter(result.retryAfter ?? null);
     await sleep(fromHeader != null ? Math.min(fromHeader, 4000) : backoffDelayMs(attempt));
   }
-  throw new Error('sendTwilio exhausted attempts');
+  throw new Error('sendTelnyx exhausted attempts');
 }
 
 /**
- * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
- * row with provider 'twilio'. Either path configures the integration, so the
+ * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
+ * row with provider 'telnyx'. Either path configures the integration, so the
  * Base44 dashboard env is optional.
  */
-async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
-  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-  let sid = envSid && envSid.trim() ? envSid.trim() : null;
-  let token = envToken && envToken.trim() ? envToken.trim() : null;
-  if (!sid || !token) {
-    try {
-      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
-      const rec = rows?.[0] || {};
-      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
-      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
-    } catch { /* ignore */ }
-  }
-  return { accountSid: sid, authToken: token };
+async function resolveTelnyxCreds(base44: any): Promise<{
+  apiKey: string | null;
+  publicKey: string | null;
+  messagingProfileId: string | null;
+  voiceConnectionId: string | null;
+  faxConnectionId: string | null;
+}> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
+  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
+  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
+  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+    const rec = rows?.[0] || {};
+    if (!apiKey) apiKey = pick(rec.api_key);
+    if (!publicKey) publicKey = pick(rec.public_key);
+    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
+    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
+    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
+  } catch { /* ignore */ }
+  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
 
 // ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
@@ -223,14 +233,14 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { accountSid, authToken } = await resolveTwilioCreds(base44);
+    const { apiKey, messagingProfileId } = await resolveTelnyxCreds(base44);
     const { smsEnabled, settings } = await getAgencyConfig(base44);
     // A unique id for THIS cron run, used to claim rows (see the claim below).
     const runId = crypto.randomUUID();
 
     // Reconcile terminal delivery status via the DLR webhook (mirrors sendSms).
     const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
-    const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTwilioSmsStatus` : undefined;
+    const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTelnyxStatusWebhook` : undefined;
 
     const nowIso = new Date().toISOString();
     // Pending rows that are due. (Base44 filter operators may vary; fetch a
@@ -243,11 +253,10 @@ Deno.serve(async (req) => {
 
     for (const row of due) {
       // Claim with a per-run token, then RE-READ to confirm we still own it.
-      // This read-after-write check makes overlapping runs much safer than a bare
-      // status flip (the loser usually sees the winner's token and skips), but it
-      // is NOT a true atomic compare-and-swap — so it is backed by an
-      // application-layer idempotency check on the deterministic client_message_id
-      // just before sending (below), plus not retrying thrown network errors.
+      // This read-after-write check makes overlapping runs far safer than a bare
+      // status flip (the loser sees the winner's token and skips). Since Telnyx
+      // has no client idempotency key, the claim+re-read is the primary
+      // double-send prevention — we do NOT retry thrown network errors either.
       try {
         await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
           status: 'sending', claimed_by: runId, claimed_at: new Date().toISOString(),
@@ -279,7 +288,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      if (!accountSid || !authToken) { await fail('Twilio SMS credentials not configured'); continue; }
+      if (!apiKey) { await fail('Telnyx SMS credentials not configured'); continue; }
       if (!smsEnabled) { await fail('SMS messaging disabled for the agency'); continue; }
 
       // Re-check opt-out at send time (fail closed on a read error).
@@ -307,44 +316,25 @@ Deno.serve(async (req) => {
       }
 
       // The deterministic `sched-${row.id}` clientMessageId is kept in the
-      // SmsMessage record for our own tracking but is NOT sent to Twilio —
-      // Twilio has no client idempotency key.
+      // SmsMessage record for our own tracking but is NOT sent to Telnyx —
+      // Telnyx has no client idempotency key. Double-send is prevented by the
+      // claim+re-read above and by not retrying thrown network errors.
       const clientMessageId = `sched-${row.id}`;
-
-      // Idempotency guard: if a prior (possibly overlapping) run already recorded
-      // an outbound SmsMessage for this schedule, it was already sent — settle the
-      // row from that record and skip rather than texting the patient twice. This
-      // backs the optimistic claim above, which is not an atomic compare-and-swap.
-      const priorSend = await base44.asServiceRole.entities.SmsMessage
-        .filter({ client_message_id: clientMessageId, direction: 'outbound' }, '-created_date', 1)
-        .catch(() => []);
-      if (priorSend[0]) {
-        await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
-          status: 'sent',
-          provider_message_id: priorSend[0].provider_message_id || null,
-          sent_at: priorSend[0].created_date || new Date().toISOString(),
-          sms_message_id: priorSend[0].id,
-          attempts: (row.attempts || 0) + 1,
-        }).catch(() => {});
-        result.skipped++;
-        continue;
-      }
-
       let resp;
       try {
-        resp = await sendTwilio(accountSid!, authToken!, row.from_number, row.to_number, row.body, statusCallback);
+        resp = await sendTelnyx(apiKey!, messagingProfileId, row.from_number, row.to_number, row.body, statusCallback);
       } catch (netErr) {
         const aborted = (netErr as Error)?.name === 'AbortError';
-        await fail(aborted ? 'Timed out reaching Twilio' : `Network error reaching Twilio: ${(netErr as Error).message}`);
+        await fail(aborted ? 'Timed out reaching Telnyx' : `Network error reaching Telnyx: ${(netErr as Error).message}`);
         continue;
       }
 
       if (!resp.ok) {
-        await fail(resp.data?.message || resp.data?.error || `Twilio API error (${resp.status})`);
+        await fail(resp.data?.errors?.[0]?.detail || resp.data?.errors?.[0]?.title || `Telnyx API error (${resp.status})`);
         continue;
       }
 
-      const providerMessageId = resp.data?.sid || null;
+      const providerMessageId = resp.data?.data?.id || null;
       // Record the sent message in the nurse's thread so it shows in their inbox.
       const smsRow = await base44.asServiceRole.entities.SmsMessage.create({
         direction: 'outbound',

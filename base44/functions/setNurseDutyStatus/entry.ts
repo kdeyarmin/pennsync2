@@ -83,7 +83,13 @@ Deno.serve(async (req) => {
       : off_duty_message;
 
     const update: Record<string, unknown> = {};
-    if (duty_status) update.duty_status = duty_status;
+    if (duty_status) {
+      update.duty_status = duty_status;
+      // Stamp when they toggled ON so the on-duty state expires nightly on its
+      // own (the webhook treats a toggle set on an earlier day as off). Clear it
+      // when toggling off.
+      update.duty_on_since = duty_status === 'on_duty' ? new Date().toISOString() : null;
+    }
     if (off_duty_message !== undefined) update.off_duty_message = cleanOffDuty;
     // Clear with null, set with an ISO string. Stored as-is and read live by the
     // inbound call/SMS webhooks, so the schedule needs no cron to take effect.
