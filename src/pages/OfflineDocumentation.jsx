@@ -56,8 +56,7 @@ export default function OfflineDocumentation() {
             <CardContent>
               <OfflineVisitDocumentation
                 patientId={selectedPatientId || 'demo-patient-123'}
-                onSaved={(data) => {
-                  console.log('Visit saved:', data);
+                onSaved={() => {
                 }}
               />
             </CardContent>

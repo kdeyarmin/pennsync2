@@ -128,7 +128,7 @@ export default function About() {
                   Get Started <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link to={createPageUrl("Support")}>
+              <Link to={createPageUrl("Help")}>
                 <Button variant="outline">Learn More</Button>
               </Link>
             </div>

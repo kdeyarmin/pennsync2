@@ -388,7 +388,6 @@ export default function DocumentVisit() {
         return;
         
       default:
-        console.log('Unhandled voice command:', action);
         return;
     }
     
@@ -924,8 +923,7 @@ Generate the complete clinical narrative based on the audio and context:`;
     setNarrativeText(prev => prev + '\n\n' + suggestion);
   };
 
-  const handleScrubComplete = (results) => {
-    console.log('Note scrubber completed:', results);
+  const handleScrubComplete = () => {
   };
 
   const handleIncidentReported = (reportText) => {

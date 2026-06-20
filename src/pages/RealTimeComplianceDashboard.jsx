@@ -439,7 +439,7 @@ export default function RealTimeComplianceDashboard() {
         title: 'Widespread Compliance Gap Detected',
         message: `"${commonIssues[0].name}" affecting ${commonIssues[0].affectedNurses} nurses`,
         action: 'Create agency-wide training module',
-        link: createPageUrl('StaffTrainingHub'),
+        link: createPageUrl('AdminTraining'),
         linkText: 'Assign Training'
       });
     }
@@ -452,7 +452,7 @@ export default function RealTimeComplianceDashboard() {
         title: 'OASIS Accuracy Concerns',
         message: `${lowAccuracyOASIS.length} OASIS submissions with accuracy < 70%`,
         action: 'Review OASIS training materials',
-        link: createPageUrl('StaffTrainingHub'),
+        link: createPageUrl('AdminTraining'),
         linkText: 'OASIS Training'
       });
     }
@@ -465,7 +465,7 @@ export default function RealTimeComplianceDashboard() {
         title: 'Staff Training Needed',
         message: `${nursesNeedingTraining.length} nurse(s) with compliance scores below 75%`,
         action: 'Assign personalized training plans',
-        link: createPageUrl('StaffTrainingHub'),
+        link: createPageUrl('AdminTraining'),
         linkText: 'Manage Training'
       });
     }
@@ -478,7 +478,7 @@ export default function RealTimeComplianceDashboard() {
         title: 'Critical Training Recommendations Pending',
         message: `${criticalTraining.length} critical training items not yet addressed`,
         action: 'Review and assign training immediately',
-        link: createPageUrl('StaffTrainingHub'),
+        link: createPageUrl('AdminTraining'),
         linkText: 'View Recommendations'
       });
     }
@@ -852,7 +852,7 @@ export default function RealTimeComplianceDashboard() {
                   )}
 
                   <div className="mt-3 flex gap-2">
-                    <Link to={createPageUrl('StaffTrainingHub')}>
+                    <Link to={createPageUrl('AdminTraining')}>
                       <Button size="sm" variant="outline" className="gap-1">
                         <GraduationCap className="w-3 h-3" />
                         Assign Training
@@ -953,7 +953,7 @@ export default function RealTimeComplianceDashboard() {
                       </Button>
                     </Link>
                     {nurse.trainingNeeds.length > 0 && (
-                      <Link to={createPageUrl('StaffTrainingHub')} className="w-full sm:w-auto">
+                      <Link to={createPageUrl('AdminTraining')} className="w-full sm:w-auto">
                         <Button size="sm" className="gap-1 bg-navy-600 w-full">
                           <GraduationCap className="w-3 h-3" />
                           Assign Training
@@ -1030,7 +1030,7 @@ export default function RealTimeComplianceDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-3">
-            <Link to={createPageUrl('StaffTrainingHub')}>
+            <Link to={createPageUrl('AdminTraining')}>
               <div className="p-3 bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-center gap-2 mb-1">
                   <Brain className="w-4 h-4 text-navy-600" />
@@ -1042,7 +1042,7 @@ export default function RealTimeComplianceDashboard() {
               </div>
             </Link>
 
-            <Link to={createPageUrl('StaffTrainingHub')}>
+            <Link to={createPageUrl('AdminTraining')}>
               <div className="p-3 bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-center gap-2 mb-1">
                   <ClipboardList className="w-4 h-4 text-blue-600" />
@@ -1054,7 +1054,7 @@ export default function RealTimeComplianceDashboard() {
               </div>
             </Link>
 
-            <Link to={createPageUrl('StaffTrainingHub')}>
+            <Link to={createPageUrl('AdminTraining')}>
               <div className="p-3 bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-center gap-2 mb-1">
                   <Shield className="w-4 h-4 text-green-600" />
@@ -1066,7 +1066,7 @@ export default function RealTimeComplianceDashboard() {
               </div>
             </Link>
 
-            <Link to={createPageUrl('StaffTrainingHub')}>
+            <Link to={createPageUrl('AdminTraining')}>
               <div className="p-3 bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-center gap-2 mb-1">
                   <Target className="w-4 h-4 text-indigo-600" />

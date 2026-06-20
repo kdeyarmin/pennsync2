@@ -46,8 +46,7 @@ export default function OASISClinicalReview() {
         pdgmData={pdgmData}
         analysisResults={analysisResults}
         patientId={patientId}
-        onPathwaysActivated={(pathways) => {
-          console.log('Pathways activated:', pathways);
+        onPathwaysActivated={() => {
         }}
       />
 

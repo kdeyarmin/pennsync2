@@ -374,7 +374,6 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
-      console.log('Email response:', response);
 
       // Handle axios response wrapper
       const data = response?.data || response;

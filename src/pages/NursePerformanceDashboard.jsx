@@ -639,10 +639,10 @@ export default function NursePerformanceDashboard() {
                               <p className="text-sm text-slate-600 mt-1">{goal.description}</p>
                             </div>
                             <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => { setEditingGoal(goal); setShowGoalDialog(true); }}>
+                              <Button variant="ghost" size="icon" aria-label="Edit goal" onClick={() => { setEditingGoal(goal); setShowGoalDialog(true); }}>
                                 <Edit2 className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteGoalMutation.mutate(goal.id)}>
+                              <Button variant="ghost" size="icon" aria-label="Delete goal" onClick={() => deleteGoalMutation.mutate(goal.id)}>
                                 <Trash2 className="w-4 h-4 text-red-600" />
                               </Button>
                             </div>
