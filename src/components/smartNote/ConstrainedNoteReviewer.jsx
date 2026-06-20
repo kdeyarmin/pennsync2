@@ -10,6 +10,8 @@ import { splitSentences } from "./compliance/factExtraction";
 import { generateConstrainedNote, groundNote } from "./compliance/generation";
 import { valueGuard } from "./compliance/valueGuard";
 import { computeCoverageScore, computeDraftPresenceScore } from "./compliance/coverageScore";
+import { compareVisits, buildTrendSummary } from "./compliance/visitComparison";
+import VisitComparisonPanel from "./VisitComparisonPanel";
 import NoteDiffView from "./NoteDiffView";
 
 /**
@@ -39,6 +41,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const [answers, setAnswers] = useState({});
   const [prefilledIds, setPrefilledIds] = useState(new Set());
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
+  const [includeTrend, setIncludeTrend] = useState(false);
   const [finalNote, setFinalNote] = useState("");
   const [verifiedNote, setVerifiedNote] = useState("");
   const [fixRequired, setFixRequired] = useState(null);
@@ -56,6 +59,12 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     return { normalized, required, presence, gaps, draftScore };
   }, [roughNote, serviceLine, visitType]);
 
+  // Deterministic visit-over-visit comparison: what measured values changed since
+  // the patient's last documented note. Pure + offline, derived from the same
+  // extraction the value-guard uses, so the trend summary is itself value-grounded.
+  const comparisons = useMemo(() => compareVisits(roughNote, priorNote), [roughNote, priorNote]);
+  const trendSummary = useMemo(() => buildTrendSummary(comparisons), [comparisons]);
+
   // Reset + pre-fill carry-forward answers whenever the SCAN changes. Keyed on
   // `analysis` only (not priorNote) and reads priorNote via a ref, so a late-
   // arriving prior note (async patient fetch) can't wipe answers the nurse has
@@ -64,7 +73,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const priorNoteRef = useRef("");
   priorNoteRef.current = priorNote;
   useEffect(() => {
-    setFinalNote(""); setVerifiedNote(""); setFixRequired(null);
+    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false);
     if (!analysis) { setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set()); return; }
     const prefill = computeCarryForward(priorNoteRef.current || "", analysis.gaps);
     setAnswers(prefill);
@@ -84,11 +93,16 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       .filter(e => e.severity !== "critical" && !answers[e.id]?.trim() && !confirmedNegatives.has(e.id))
       .map(e => e.notDocumentedPhrase);
   };
+  // The trend summary, when the nurse opts in, is whitelisted as input: its
+  // current values come from the draft and its prior values from the chart note,
+  // so it is legitimate source material (not an LLM invention) and must pass the
+  // value-guard / grounding rather than be flagged as unverified.
+  const activeTrendSummary = () => (includeTrend && trendSummary ? trendSummary : "");
   const buildAllowedInput = () => {
     if (!analysis) return "";
     const answerTexts = analysis.required.filter(e => answers[e.id]?.trim()).map(e => answers[e.id].trim());
     const negPhrases = analysis.required.filter(e => confirmedNegatives.has(e.id) && e.standardNegative).map(e => e.standardNegative.phrase);
-    return [analysis.normalized, ...answerTexts, ...negPhrases, ...computeNotDocumented()].join(" ");
+    return [analysis.normalized, ...answerTexts, ...negPhrases, ...computeNotDocumented(), activeTrendSummary()].filter(Boolean).join(" ");
   };
 
   // Save-ready snapshot the host (e.g. SmartNoteAssistant) persists to the chart.
@@ -142,8 +156,11 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
         setBuilding(false);
         return;
       }
-      const notDoc = computeNotDocumented();
-      const finalText = notDoc.length ? `${generated}\n\n${notDoc.join(" ")}` : generated;
+      // Append the opted-in trend summary and any "not documented" fallbacks. The
+      // trend summary is a deterministic, factual sentence (no LLM), so it is added
+      // verbatim rather than risk the scribe re-voicing its paired values.
+      const extras = [activeTrendSummary(), ...computeNotDocumented()].filter(Boolean);
+      const finalText = extras.length ? `${generated}\n\n${extras.join(" ")}` : generated;
       setFinalNote(finalText);
       applyVerification(finalText, await verifyNote(finalText));
     } catch (err) {
@@ -294,6 +311,13 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
               </div>
             </div>
           )}
+
+          <VisitComparisonPanel
+            comparisons={comparisons}
+            include={includeTrend}
+            onToggleInclude={setIncludeTrend}
+            summary={trendSummary}
+          />
 
           <div className="flex gap-3">
             <Button onClick={generate} disabled={criticalUnanswered.length > 0} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">

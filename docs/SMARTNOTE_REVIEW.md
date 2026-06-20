@@ -279,4 +279,33 @@ S6/S7 polish, and consolidating the near-duplicate `MedicalScribe`/`VisitScribe`
 routes (a product decision). The two LLM calls (generation + grounding) and the
 chart-save path still warrant a manual run against the live Base44 backend.
 
+---
+
+## Update — visit-over-visit trend comparison (2026-06-20)
+
+Closes the "check the note against the chart … so trends can be caught, and
+changes can be noted in the note" half of the product intent, which previously
+lived only in the separate `VitalsTrendAnalysis` tab and was not woven into the
+note-building flow.
+
+**New deterministic engine** — `compliance/visitComparison.js` (pure, offline,
+9 unit tests): `compareVisits(currentNote, priorNote)` extracts the same
+clinically-significant values the value-guard uses (BP, HR, O2, temp, weight,
+pain) from both the note being written and the patient's last saved note, and
+reports each metric whose change clears a per-metric noise threshold — with a
+`concern` flag when a value crosses a clinical threshold. `buildTrendSummary`
+renders a single, purely factual, plain-text sentence ("Compared to the prior
+documented visit, blood pressure 150/92 to 132/84 mmHg; …") — values only, no
+interpretation.
+
+**Wiring** — `ConstrainedNoteReviewer` now renders a **Changes Since Last
+Visit** panel (`VisitComparisonPanel`) in the review step for every caller that
+already supplies a prior note (`SmartNoteAssistant`, `UnifiedDocumentReview`).
+The nurse can opt to add the change summary to the note; when they do, the
+summary is whitelisted as source input so it passes the value-guard and grounding
+(its current values trace to the draft, its prior values to the chart note — it
+is real chart data, not an LLM invention), and it is appended verbatim rather
+than re-voiced. Opt-out leaves the note untouched. Gracefully renders nothing
+when there is no prior note or no comparable change.
+
 </content>
