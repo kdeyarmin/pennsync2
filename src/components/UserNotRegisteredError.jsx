@@ -44,7 +44,7 @@ const UserNotRegisteredError = () => {
               </ul>
             </div>
 
-            <Button onClick={() => logout()} variant="outline" className="w-full">
+            <Button onClick={() => { void logout(); }} variant="outline" className="w-full">
               <LogOut className="mr-2 h-4 w-4" /> Sign out
             </Button>
           </div>
