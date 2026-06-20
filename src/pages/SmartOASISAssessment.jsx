@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PageContainer from "@/components/ui/PageContainer";
+import { useIsEmbedded } from "@/components/ui/embeddedPage";
 import {
   ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2,
   Loader2, AlertCircle, AlertTriangle, Brain, Activity, ShieldAlert, Lightbulb
@@ -200,6 +201,10 @@ function RightPanel({ suggestions, complianceIssues, reasoningIssues, onAddToCar
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function SmartOASISAssessment() {
+  // When rendered as the "Assessment" tab of the OASIS Center hub, drop the
+  // standalone PageContainer and shrink the fixed full-screen height to fit under
+  // the hub's header + tab strip (otherwise the split-pane overflows the viewport).
+  const embedded = useIsEmbedded();
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState({});
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -302,9 +307,8 @@ export default function SmartOASISAssessment() {
 
   if (patientsLoading) return <AssessmentSkeleton />;
 
-  return (
-    <PageContainer>
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+  const shell = (
+    <div className={`flex flex-col overflow-hidden ${embedded ? "h-[calc(100vh-13rem)] min-h-[34rem] rounded-lg border border-slate-200" : "h-[calc(100vh-4rem)]"}`}>
       {/* Header */}
       <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
@@ -394,6 +398,7 @@ export default function SmartOASISAssessment() {
         onClose={() => setGuidanceOpen(false)}
       />
     </div>
-    </PageContainer>
   );
+
+  return embedded ? shell : <PageContainer>{shell}</PageContainer>;
 }
