@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { CHART_COLORS } from "@/constants/chartColors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -1106,36 +1107,34 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                   </ResponsiveContainer>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">Rank</th>
-                        <th className="text-left p-2">Nurse</th>
-                        <th className="text-right p-2">Visits</th>
-                        <th className="text-right p-2">Completion %</th>
-                        <th className="text-right p-2">Quality %</th>
-                        <th className="text-right p-2">Avg/Day</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportPreview.map((d, idx) => (
-                        <tr key={idx} className="border-b hover:bg-slate-50">
-                          <td className="p-2">
-                            <Badge className={idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-slate-400' : idx === 2 ? 'bg-orange-600' : 'bg-blue-500'}>
-                              #{idx + 1}
-                            </Badge>
-                          </td>
-                          <td className="p-2 font-medium">{d.name}</td>
-                          <td className="p-2 text-right">{d.totalVisits}</td>
-                          <td className="p-2 text-right">{d.completionRate}%</td>
-                          <td className="p-2 text-right">{d.docQuality}%</td>
-                          <td className="p-2 text-right">{d.avgVisitsPerDay}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Rank</TableHead>
+                      <TableHead>Nurse</TableHead>
+                      <TableHead className="text-right">Visits</TableHead>
+                      <TableHead className="text-right">Completion %</TableHead>
+                      <TableHead className="text-right">Quality %</TableHead>
+                      <TableHead className="text-right">Avg/Day</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reportPreview.map((d, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Badge className={idx === 0 ? 'bg-gold-400 text-navy-900' : idx === 1 ? 'bg-slate-300 text-slate-800' : idx === 2 ? 'bg-amber-500 text-white' : 'bg-navy-500 text-white'}>
+                            #{idx + 1}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{d.name}</TableCell>
+                        <TableCell className="text-right">{d.totalVisits}</TableCell>
+                        <TableCell className="text-right">{d.completionRate}%</TableCell>
+                        <TableCell className="text-right">{d.docQuality}%</TableCell>
+                        <TableCell className="text-right">{d.avgVisitsPerDay}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </>
             )}
 
