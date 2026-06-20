@@ -1,13 +1,21 @@
 import { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SearchablePatientSelect from '@/components/ui/SearchablePatientSelect';
 import OfflineSyncService from '../components/offline/OfflineSyncService';
 import OfflineVisitDocumentation from '../components/offline/OfflineVisitDocumentation';
-import { FileText, Upload, AlertCircle, Info } from 'lucide-react';
+import { FileText, Upload, AlertCircle, Info, UserSearch } from 'lucide-react';
 
 export default function OfflineDocumentation() {
-  const [selectedPatientId, _setSelectedPatientId] = useState(null);
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
+
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients', 'active'],
+    queryFn: () => base44.entities.Patient.filter({ status: 'active' }),
+  });
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -53,12 +61,29 @@ export default function OfflineDocumentation() {
                 Document patient visits with offline support - works seamlessly with or without internet
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <OfflineVisitDocumentation
-                patientId={selectedPatientId || 'demo-patient-123'}
-                onSaved={() => {
-                }}
-              />
+            <CardContent className="space-y-4">
+              <div className="space-y-2 max-w-md">
+                <label className="text-sm font-medium text-slate-700">Patient</label>
+                <SearchablePatientSelect
+                  patients={patients}
+                  value={selectedPatientId}
+                  onValueChange={setSelectedPatientId}
+                  placeholder="Select a patient to document..."
+                />
+              </div>
+
+              {selectedPatientId ? (
+                <OfflineVisitDocumentation
+                  patientId={selectedPatientId}
+                  onSaved={() => {}}
+                />
+              ) : (
+                <EmptyState
+                  icon={UserSearch}
+                  title="Select a patient to begin"
+                  description="Choose a patient above to start documenting a visit — your notes save locally and sync automatically when you're back online."
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
