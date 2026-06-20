@@ -14,11 +14,11 @@ const NO_ALLERGY = /\b(nkda|nka|none|no known)\b/i;
 /**
  * @param {string} noteText the note being written (rough draft or final)
  * @param {object} patient the full patient chart record
- * @returns {{ id: string, severity: "critical"|"warning"|"info", category: string, message: string }[]}
+ * @returns {{ id: string, severity: "critical"|"warning"|"info", category: string, message: string, recommendation: string }[]}
  */
 export function crossCheckChart(noteText, patient) {
   if (!noteText || !patient) return [];
-  /** @type {{ id: string, severity: "critical"|"warning"|"info", category: string, message: string }[]} */
+  /** @type {{ id: string, severity: "critical"|"warning"|"info", category: string, message: string, recommendation: string }[]} */
   const findings = [];
   const notedMeds = extractMedications(noteText);
 
@@ -34,6 +34,7 @@ export function crossCheckChart(noteText, patient) {
           severity: "critical",
           category: "Allergy",
           message: `The note references ${med}, which appears in this patient's documented allergies (“${allergies}”). Confirm this is intentional before finalizing.`,
+          recommendation: `Verify the allergy and the order before administering ${med}; document the clinical rationale or correct the note.`,
         });
       }
     }
@@ -55,6 +56,7 @@ export function crossCheckChart(noteText, patient) {
           severity: "info",
           category: "Medication",
           message: `${med} is documented in this note but is not on the chart medication list. Confirm it is a new order or reconcile the chart.`,
+          recommendation: `Confirm ${med} is a new order and reconcile the chart medication list.`,
         });
       }
     }
@@ -69,6 +71,7 @@ export function crossCheckChart(noteText, patient) {
       severity: "warning",
       category: "Safety",
       message: "The chart lists this patient as HIGH fall risk, but this note doesn't mention fall precautions or safety. Document the fall-safety assessment.",
+      recommendation: "Document the fall-safety assessment and the precautions taken this visit.",
     });
   }
 

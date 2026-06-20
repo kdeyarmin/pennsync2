@@ -35,8 +35,19 @@ export default function OfflineManager() {
             const existing = key
               ? await base44.entities.Visit.filter({ client_request_id: key })
               : [];
+            // `__audit` is reporting meta, not a Visit field — peel it off before
+            // the create so the offline visit also produces a ComplianceAudit and
+            // shows up in the compliance dashboards (older items simply lack it).
+            const { __audit, ...visitPayload } = item.payload || {};
             if (!existing || existing.length === 0) {
-              await base44.entities.Visit.create(item.payload);
+              const visit = await base44.entities.Visit.create(visitPayload);
+              if (__audit) {
+                await base44.entities.ComplianceAudit.create({
+                  visit_id: visit.id, patient_id: visitPayload.patient_id,
+                  audit_date: new Date().toISOString(), audit_type: 'automated',
+                  ...__audit,
+                });
+              }
             }
             await removeFromSyncQueue(item.id);
             syncedCount += 1;

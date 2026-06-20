@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brain, Tag, Loader2, CheckCircle2 } from "lucide-react";
+import { hasSemanticTags, mergeAiTags } from "@/components/smartNote/compliance/reportingFields";
 
 export default function AIAutoTagger() {
   const [isTagging, setIsTagging] = useState(false);
@@ -50,7 +51,10 @@ export default function AIAutoTagger() {
         const batch = visits.slice(i, i + 5);
         
         for (const visit of batch) {
-          if (!visit.nurse_notes || visit.ai_tags) {
+          // Skip only when the visit already has *semantic* tags; a visit that
+          // carries only SmartNote system tags (trend:/chart_flag:) still needs
+          // clinical tagging, and the merge below preserves those system tags.
+          if (!visit.nurse_notes || hasSemanticTags(visit.ai_tags)) {
             processed++;
             continue;
           }
@@ -78,7 +82,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
               }
             });
 
-            await updateVisitMutation.mutateAsync({ id: visit.id, tags });
+            await updateVisitMutation.mutateAsync({ id: visit.id, tags: mergeAiTags(visit.ai_tags, tags) });
             tagged.visits++;
           } catch (error) {
             console.error(`Error tagging visit ${visit.id}:`, error);

@@ -23,7 +23,7 @@ import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNote
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import { toNoteConversionFields, deriveStructuredVisitFields } from "../components/smartNote/compliance/coverageScore";
-import { toAuditIssues, escalateAuditStatus, toAiTags, toComplianceIssueStrings } from "../components/smartNote/compliance/reportingFields";
+import { buildVisitReportingFields, buildAuditFields } from "../components/smartNote/compliance/reportingFields";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
@@ -65,6 +65,7 @@ export default function SmartNoteAssistant() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
+  const [savedAuditId, setSavedAuditId] = useState(null);
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
@@ -212,6 +213,7 @@ export default function SmartNoteAssistant() {
     if (!note || note.trim().length < 20) return;
     setSaved(false);
     setSavedVisitId(null);
+    setSavedAuditId(null);
     setStep(2);
   };
 
@@ -252,9 +254,13 @@ export default function SmartNoteAssistant() {
     const structured = deriveStructuredVisitFields(presence, { answeredIds, confirmedNegativeIds, textById: answers });
     // Surface the deterministic chart conflicts + trends in the saved records so
     // they reach the compliance dashboards, not just the live review UI.
-    const aiTags = toAiTags(sustainedTrends, chartFindings);
-    const complianceIssueStrings = toComplianceIssueStrings(chartFindings);
-    const reportingFields = { ai_tags: aiTags, compliance_issues: complianceIssueStrings };
+    const reportingFields = buildVisitReportingFields({ chartFindings, sustainedTrends });
+    // When a critical chart conflict was knowingly accepted, stamp who/when onto
+    // the nurse's override trail so the audit can show it was a reviewed decision.
+    const acknowledgment = result.acknowledgment
+      ? { acknowledged_by: currentUser.email, acknowledged_at: new Date().toISOString(), justification: result.acknowledgment.justification, finding_ids: result.acknowledgment.finding_ids }
+      : null;
+    const auditFields = buildAuditFields({ coverageScore, chartFindings, acknowledgment });
 
     if (!navigator.onLine) {
       const { addToSyncQueue } = await import('@/lib/indexedDB');
@@ -266,7 +272,10 @@ export default function SmartNoteAssistant() {
       const clientRequestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured, ...reportingFields });
+      // `__audit` is meta the drain peels off to also create a ComplianceAudit so
+      // offline-documented visits aren't invisible to the compliance dashboards;
+      // it is stripped before Visit.create (older queue items simply lack it).
+      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured, ...reportingFields, __audit: { nurse_email: currentUser.email, ...auditFields } });
       toast.success("Saved offline. Will sync when reconnected.");
       logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
       return;
@@ -284,6 +293,9 @@ export default function SmartNoteAssistant() {
       await Promise.all([
         base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured, ...reportingFields }),
         base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
+        // Keep the audit in step with the edit — a re-save that resolves a conflict
+        // must clear the stale `critical` status/issues, not leave them behind.
+        ...(savedAuditId ? [base44.entities.ComplianceAudit.update(savedAuditId, auditFields)] : []),
       ]);
       toast.success("Chart updated.");
       return;
@@ -304,7 +316,7 @@ export default function SmartNoteAssistant() {
       created_at: new Date().toISOString(),
     });
 
-    await Promise.all([
+    const [, , audit] = await Promise.all([
       base44.entities.Patient.update(patientId, { enhanced_notes_history: enhancedHistory, clinical_notes: finalText }),
       base44.entities.NoteConversion.create(toNoteConversionFields({
         coverageScore, draftPresenceScore: draftScore,
@@ -314,12 +326,12 @@ export default function SmartNoteAssistant() {
       })),
       base44.entities.ComplianceAudit.create({
         visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId,
-        audit_date: new Date().toISOString(), compliance_score: coverageScore,
-        status: escalateAuditStatus(coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical", chartFindings),
-        issues: toAuditIssues(chartFindings),
-        audit_type: "automated",
+        audit_date: new Date().toISOString(), audit_type: "automated",
+        ...auditFields,
       }),
     ]);
+    // Remember the audit so a later re-save updates it in place (see above).
+    if (audit?.id) setSavedAuditId(audit.id);
     generateTasksFromNote(finalText, visit.id);
     analyzeSupplyUsage(finalText, visit.id);
     toast.success("Saved to the patient's chart.");
@@ -357,7 +369,7 @@ export default function SmartNoteAssistant() {
   };
 
   const reset = () => {
-    setNote(""); setSaved(false); setSavedVisitId(null);
+    setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
     sessionStorage.removeItem(DRAFT_KEY);
   };

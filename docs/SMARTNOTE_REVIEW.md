@@ -362,6 +362,31 @@ present, regardless of coverage score), `Visit.ai_tags` (concise searchable
 (human-readable strings for critical conflicts). `ConstrainedNoteReviewer` carries
 `chartFindings` + `sustainedTrends` on its save-ready `result`, and
 `SmartNoteAssistant.persistNote` writes them on all three paths (online create,
-re-save update, and the offline sync-queue payload).
+re-save update, and the offline sync-queue payload). The pure
+`buildVisitReportingFields` / `buildAuditFields` builders centralize "which field
+gets what" and are unit-tested (13 tests total) so the wiring can't silently drift.
+
+**Reporting follow-ups (hardening the above).**
+- *Offline visits now get an audit.* The offline save attaches an `__audit` meta
+  blob to the `CREATE_VISIT` queue item; the `OfflineManager` drain peels it off
+  (it is not a `Visit` field) and creates the matching `ComplianceAudit` after the
+  visit, so offline-documented visits are no longer invisible to the compliance
+  dashboards. Older queue items simply lack `__audit` and behave as before.
+- *Acknowledgment trail.* The critical-conflict checkbox now has an optional
+  rationale field; on save the override is persisted to a new
+  `ComplianceAudit.acknowledgment` object (`acknowledged_by` / `acknowledged_at` /
+  `justification` / `finding_ids`) and surfaced in `ComplianceAuditResults`, so an
+  audit can distinguish "reviewed and accepted with reason" from "never noticed".
+- *Re-save keeps the audit in step.* `persistNote` remembers the created audit id
+  (`savedAuditId`) and updates that row on re-save, so editing to resolve a
+  conflict clears the stale `critical` status/issues instead of leaving them.
+- *Auto-tagger reconciliation.* SmartNote's `ai_tags` are namespaced
+  (`trend:` / `chart_flag:`); `AIAutoTagger` now skips a visit only when it has a
+  *semantic* (non-system) tag and merges rather than overwrites, so writing trend
+  tags at save time no longer suppresses or clobbers clinical tagging.
+- *Severity + suggestion polish.* `toAuditIssues` translates the advisory
+  vocabulary (critical/warning/info) to the dashboard's color scale
+  (critical/high/low) and carries each finding's `recommendation` through as the
+  issue `suggestion`, so audit rows render the right color and an actionable fix.
 
 </content>

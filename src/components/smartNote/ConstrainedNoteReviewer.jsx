@@ -46,6 +46,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
   const [includeTrend, setIncludeTrend] = useState(false);
   const [acknowledgedRisks, setAcknowledgedRisks] = useState(false);
+  const [ackJustification, setAckJustification] = useState("");
   const [finalNote, setFinalNote] = useState("");
   const [verifiedNote, setVerifiedNote] = useState("");
   const [fixRequired, setFixRequired] = useState(null);
@@ -127,7 +128,14 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     const answeredIds = analysis.required.filter(e => answers[e.id]?.trim()).map(e => e.id);
     const confirmedNegativeIds = Array.from(confirmedNegatives);
     const coverageScore = computeCoverageScore({ requiredElements: analysis.required, presenceResults: analysis.presence, answeredIds, confirmedNegativeIds });
-    return { finalNote: text, coverageScore, draftScore: analysis.draftScore, presence: analysis.presence, required: analysis.required, answeredIds, confirmedNegativeIds, answers, chartFindings, sustainedTrends, comparisons };
+    // When the nurse saves over a critical chart conflict, capture the override
+    // trail (which findings, the rationale, and that it was acknowledged) so the
+    // host can stamp who/when and persist it to the compliance audit record.
+    const critical = chartFindings.filter((f) => f.severity === "critical");
+    const acknowledgment = critical.length
+      ? { acknowledged: acknowledgedRisks, justification: ackJustification.trim(), finding_ids: critical.map((f) => f.id) }
+      : null;
+    return { finalNote: text, coverageScore, draftScore: analysis.draftScore, presence: analysis.presence, required: analysis.required, answeredIds, confirmedNegativeIds, answers, chartFindings, sustainedTrends, comparisons, acknowledgment };
   };
 
   const verifyNote = async (text) => {
@@ -396,6 +404,15 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
                 <input type="checkbox" checked={acknowledgedRisks} onChange={(e) => setAcknowledgedRisks(e.target.checked)} className="w-4 h-4 mt-0.5 text-red-600 rounded shrink-0" />
                 <span>I have reviewed this against the chart and confirm the documentation is correct.</span>
               </label>
+              {acknowledgedRisks && (
+                <textarea
+                  value={ackJustification}
+                  onChange={(e) => setAckJustification(e.target.value)}
+                  rows={2}
+                  placeholder="Optional: note your clinical rationale (e.g. confirmed new order with provider). Saved to the compliance record."
+                  className="w-full text-sm rounded-lg border border-red-300 bg-white p-2 text-red-900 placeholder:text-red-400 focus:outline-none focus:ring-1 focus:ring-red-400"
+                />
+              )}
             </div>
           )}
 
