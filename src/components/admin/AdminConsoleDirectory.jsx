@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import {
   Search, ArrowRight, Users, GraduationCap, Stethoscope,
-  ShieldCheck, BarChart3, Database, Brain, Settings, LayoutGrid,
+  ShieldCheck, BarChart3, Database, Settings, LayoutGrid,
 } from "lucide-react";
 import { NAV_MAP, isLinkablePage } from "@/lib/nav.manifest";
 
@@ -57,7 +57,7 @@ const GROUPS = [
     icon: ShieldCheck,
     color: "text-emerald-600 bg-emerald-50",
     pages: [
-      "ComplianceCenter", "DocumentHub",
+      "ComplianceCenter",
     ],
   },
   {
@@ -72,20 +72,14 @@ const GROUPS = [
   },
   {
     title: "Data & Documents",
-    description: "Patient data, quality, duplicates, imports, and templates.",
+    description: "Patient data, quality, duplicates, imports, templates, the document hub, and AI document tooling.",
     icon: Database,
     color: "text-amber-600 bg-amber-50",
     pages: [
       "PatientDataManagement", "DuplicatePatients",
       "BulkDischargeImport", "TemplateManagement",
+      "DocumentHub", "AIToolsCenter",
     ],
-  },
-  {
-    title: "AI & Automation",
-    description: "AI tooling, auto-tagging, and OCR model training.",
-    icon: Brain,
-    color: "text-navy-600 bg-navy-50",
-    pages: ["AIToolsCenter"],
   },
   {
     title: "System & Configuration",

@@ -131,24 +131,18 @@ export const NAV_MANIFEST = [
     keywords: ["auto care plan", "ai care plan"],
   },
   {
-    page: "SmartOASISAssessment",
-    label: "OASIS Assessment",
-    icon: Brain,
-    category: "Patient Care",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["oasis", "assessment", "hha"],
-  },
-  {
-    // Hub combining the former OASIS Analyzer / Review / Clinical / Compliance /
-    // Documentation / Revenue / Analytics / Audit pages as tabs (?tab=…).
+    // Hub combining OASIS assessment entry (SmartOASISAssessment, the default
+    // "Assessment" tab) with the former OASIS Analyzer / Review / Clinical /
+    // Compliance / Documentation / Revenue / Analytics / Audit pages as tabs
+    // (?tab=…). SmartOASISAssessment has no standalone manifest entry — it is the
+    // Assessment tab here, and /SmartOASISAssessment redirects in (see routes.jsx).
     page: "OASISCenter",
     label: "OASIS Center",
     icon: ClipboardList,
     category: "Patient Care",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["oasis", "review", "analyze", "compliance", "documentation", "revenue", "audit", "analytics", "pdgm"],
+    keywords: ["oasis", "assessment", "hha", "complete", "review", "analyze", "compliance", "documentation", "revenue", "audit", "analytics", "pdgm"],
   },
   {
     page: "Incidents",
@@ -205,7 +199,9 @@ export const NAV_MANIFEST = [
     category: "Documentation",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation"],
+    // Includes the former Visit Scribe (now the "Record / Upload" tab) keywords so
+    // search still surfaces this hub for "scribe", "voice", "record audio", etc.
+    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation", "scribe", "voice", "visit", "record", "audio", "upload"],
   },
   {
     // Smart Notes is the default tab *inside* the Clinical Notes hub
@@ -219,15 +215,10 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "ClinicalDocumentation",
     keywords: ["smart note", "ai note", "documentation", "ai"],
   },
-  {
-    page: "VisitScribe",
-    label: "Visit Scribe",
-    icon: Mic,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["scribe", "dictation", "voice", "visit"],
-  },
+  // NOTE: Visit Scribe was folded into the Clinical Notes hub. Its Record/Upload
+  // audio capture is now the "Record / Upload" tab (its "Live Dictation" tab was a
+  // duplicate of Clinical Notes' own), so /VisitScribe redirects to
+  // /ClinicalDocumentation?tab=record (see REDIRECTS in src/routes.jsx).
   {
     page: "DocumentHub",
     label: "Documents",

@@ -95,9 +95,11 @@ export const REDIRECTS = [
   // entry/checking UI; send old links and bookmarks to the patient list.
   { from: '/MedicationReconciliation', to: '/Patients' },
   // ─── OASIS Center consolidation ──────────────────────────────────────────────
-  // The standalone OASIS analysis/review pages are now tabs of /OASISCenter.
-  // (RedirectTo preserves incoming ?query and router state onto the tab.)
-  { from: '/OASISAnalyzer', to: '/OASISCenter' },
+  // The standalone OASIS assessment/analysis/review pages are now tabs of
+  // /OASISCenter. "assessment" is the default tab, so the analyzer must pin its
+  // own tab. (RedirectTo preserves incoming ?query and router state onto the tab.)
+  { from: '/SmartOASISAssessment', to: '/OASISCenter' },
+  { from: '/OASISAnalyzer', to: '/OASISCenter?tab=analyze' },
   { from: '/OASISReview', to: '/OASISCenter?tab=review' },
   { from: '/OASISClinicalReview', to: '/OASISCenter?tab=clinical' },
   { from: '/OASISComplianceReview', to: '/OASISCenter?tab=quality' },
@@ -105,6 +107,10 @@ export const REDIRECTS = [
   { from: '/OASISRevenueAnalysis', to: '/OASISCenter?tab=revenue' },
   { from: '/OASISAnalyticsDashboard', to: '/OASISCenter?tab=analytics' },
   { from: '/OASISAuditDashboard', to: '/OASISCenter?tab=audit' },
+
+  // ─── Clinical Notes consolidation ────────────────────────────────────────────
+  // Visit Scribe's audio capture is now the Clinical Notes "Record / Upload" tab.
+  { from: '/VisitScribe', to: '/ClinicalDocumentation?tab=record' },
 
   // ─── Document Hub consolidation ──────────────────────────────────────────────
   // Signature, storage/intake, discharge and audit pages are now Document Hub tabs.
