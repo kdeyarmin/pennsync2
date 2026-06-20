@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -274,12 +275,7 @@ export default function DocumentSignatures() {
       )}
 
       {filteredSignatures.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-600">No signatures found</p>
-          </CardContent>
-        </Card>
+        <EmptyState icon={FileText} title="No signatures found" description="Signature requests will appear here once created." />
       )}
     </div>
   );

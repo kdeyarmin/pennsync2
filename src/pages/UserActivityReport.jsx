@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import StatCard from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -526,10 +527,7 @@ export default function UserActivityReport() {
                 ))}
 
                 {processedStats.length === 0 && (
-                  <div className="text-center py-12">
-                    <Activity className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500">No user activity found matching your criteria</p>
-                  </div>
+                  <EmptyState icon={Activity} title="No user activity found" description="No activity matches your current criteria." />
                 )}
               </div>
             </ScrollArea>

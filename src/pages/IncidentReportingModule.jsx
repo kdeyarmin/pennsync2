@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import StatCard from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -720,10 +721,7 @@ Please review this incident in the Incident Reporting Dashboard.`
               </div>
             ))}
             {recentIncidents.length === 0 && (
-              <div className="text-center py-8 text-slate-500">
-                <FileText className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                <p>No incidents reported yet</p>
-              </div>
+              <EmptyState icon={FileText} title="No incidents reported yet" description="Reported incidents will appear here." />
             )}
           </div>
         </CardContent>
