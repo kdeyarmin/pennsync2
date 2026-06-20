@@ -131,7 +131,7 @@ export default function OASISAutomationSettings() {
       revenue_opportunity: "bg-green-100 text-green-800",
       accuracy_concern: "bg-yellow-100 text-yellow-800",
       score_threshold: "bg-blue-100 text-blue-800",
-      clinical_concern: "bg-purple-100 text-purple-800"
+      clinical_concern: "bg-navy-100 text-navy-800"
     };
     return colors[type] || "bg-slate-100 text-slate-800";
   };

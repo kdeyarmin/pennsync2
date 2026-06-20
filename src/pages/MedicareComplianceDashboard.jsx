@@ -374,17 +374,17 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
 
       {/* AI Insights */}
       {aiInsights && (
-        <Card className="mb-4 sm:mb-6 md:mb-8 border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+        <Card className="mb-4 sm:mb-6 md:mb-8 border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
           <CardHeader className="p-3 sm:p-4 md:p-6">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <BarChart3 className="w-5 h-5 text-purple-600" />
+              <BarChart3 className="w-5 h-5 text-navy-600" />
               AI Strategic Insights
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
             {/* Overall Assessment */}
-            <div className="bg-white p-3 sm:p-4 rounded-lg border-2 border-purple-200">
-              <h3 className="font-bold text-purple-900 mb-2 text-sm sm:text-base">Overall Assessment</h3>
+            <div className="bg-white p-3 sm:p-4 rounded-lg border-2 border-navy-200">
+              <h3 className="font-bold text-navy-900 mb-2 text-sm sm:text-base">Overall Assessment</h3>
               <p className="text-sm sm:text-base text-slate-700">{aiInsights.overall_assessment}</p>
             </div>
 
@@ -763,7 +763,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                     <div key={idx} className="p-3 sm:p-4 bg-slate-50 rounded border min-h-[44px]">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-navy-500 rounded-full flex items-center justify-center flex-shrink-0">
                             <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                           </div>
                           <div className="min-w-0">
@@ -803,10 +803,10 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
           </div>
           
           {/* AI Training Module Generator */}
-          <Card className="border-2 border-purple-300">
+          <Card className="border-2 border-navy-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-600" />
+                <Sparkles className="w-5 h-5 text-navy-600" />
                 Generate Training from Compliance Data
               </CardTitle>
             </CardHeader>

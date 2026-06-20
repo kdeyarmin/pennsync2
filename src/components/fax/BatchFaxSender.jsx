@@ -128,7 +128,7 @@ export default function BatchFaxSender({ prefilledData }) {
       } else {
         const allUrls = coverSheetUrl ? [coverSheetUrl, ...orderedUrls] : orderedUrls;
         const merged = await base44.functions.invoke("mergePDFs", { pdf_urls: allUrls });
-        finalUrl = merged.data?.merged_url;
+        finalUrl = merged.data?.merged_pdf_url || finalUrl;
         if (!finalUrl) throw new Error("Merge failed");
       }
 
@@ -142,7 +142,7 @@ export default function BatchFaxSender({ prefilledData }) {
       setFiles([]);
       setToNumber("");
       setCoverSheetUrl(null);
-      queryClient.invalidateQueries(["fax-logs"]);
+      queryClient.invalidateQueries({ queryKey: ["fax-logs"] });
     } catch (err) {
       toast.error("Failed to send: " + err.message);
     } finally {

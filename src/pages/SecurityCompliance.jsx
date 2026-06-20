@@ -43,8 +43,6 @@ import {
   User,
   Info
 } from "lucide-react";
-import PageHeader from "@/components/ui/PageHeader";
-import PageContainer from "@/components/ui/PageContainer";
 import EncryptionStatusIndicator from "../components/security/EncryptionStatusIndicator";
 import AIAuditAnalyzer from "../components/security/AIAuditAnalyzer";
 import SecurityAuditScheduler from "../components/security/SecurityAuditScheduler";
@@ -255,20 +253,13 @@ export default function SecurityCompliance() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Shield}
-        eyebrow="Analytics"
-        title="Security & HIPAA Compliance"
-        description="Monitor security status, compliance metrics, and audit trail"
-        favoritePage="SecurityCompliance"
-        actions={
-          <Badge className="bg-green-600 text-lg px-4 py-2">
-            <CheckCircle2 className="w-5 h-5 mr-2" />
-            {complianceScore}% Compliant
-          </Badge>
-        }
-      />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-end">
+        <Badge className="bg-green-600 text-lg px-4 py-2">
+          <CheckCircle2 className="w-5 h-5 mr-2" />
+          {complianceScore}% Compliant
+        </Badge>
+      </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 mb-6 h-auto">
@@ -308,14 +299,14 @@ export default function SecurityCompliance() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm mb-1">PHI Access</p>
+                    <p className="text-navy-100 text-sm mb-1">PHI Access</p>
                     <p className="text-4xl font-bold">{phiAccess}</p>
                   </div>
-                  <Eye className="w-12 h-12 text-purple-200" />
+                  <Eye className="w-12 h-12 text-navy-200" />
                 </div>
               </CardContent>
             </Card>
@@ -826,6 +817,6 @@ export default function SecurityCompliance() {
           <AIAuditAnalyzer />
         </TabsContent>
       </Tabs>
-    </PageContainer>
+    </div>
   );
 }

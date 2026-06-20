@@ -456,25 +456,25 @@ For each failure, provide:
 
               {/* Quality Measure Gaps */}
               {qaResults.quality_measure_gaps?.length > 0 && (
-                <AccordionItem value="quality-gaps" className="border-2 border-purple-300 rounded-lg bg-purple-50">
+                <AccordionItem value="quality-gaps" className="border-2 border-navy-300 rounded-lg bg-navy-50">
                   <AccordionTrigger className="px-4 hover:no-underline">
                     <div className="flex items-center gap-2">
-                      <Target className="w-5 h-5 text-purple-600" />
+                      <Target className="w-5 h-5 text-navy-600" />
                       <span className="font-semibold">Quality Measure Gaps ({qaResults.quality_measure_gaps.length})</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pt-2">
                     <div className="space-y-3">
                       {qaResults.quality_measure_gaps.map((gap, idx) => (
-                        <div key={idx} className="bg-white rounded-lg border-2 border-purple-200 p-4">
+                        <div key={idx} className="bg-white rounded-lg border-2 border-navy-200 p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div>
-                              <h4 className="font-semibold text-purple-900">{gap.measure_name}</h4>
+                              <h4 className="font-semibold text-navy-900">{gap.measure_name}</h4>
                               {gap.measure_code && (
                                 <Badge variant="outline" className="mt-1 text-xs">{gap.measure_code}</Badge>
                               )}
                             </div>
-                            <Badge className="bg-purple-600 text-white">STAR Impact</Badge>
+                            <Badge className="bg-navy-600 text-white">STAR Impact</Badge>
                           </div>
 
                           <p className="text-sm text-slate-800 mb-3">{gap.what_is_missing}</p>

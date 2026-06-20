@@ -94,12 +94,12 @@ export default function StateSurveyVideos() {
       </Card>
 
       {/* Bag Technique Checklist */}
-      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Clipboard className="w-5 h-5 text-purple-600" />
+                <Clipboard className="w-5 h-5 text-navy-600" />
                 Bag Technique Checklist - Survey Ready
               </CardTitle>
               <p className="text-sm text-slate-600 mt-1">
@@ -133,9 +133,9 @@ export default function StateSurveyVideos() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Before You Begin */}
-          <div className="bg-white rounded-lg p-4 border border-purple-200">
+          <div className="bg-white rounded-lg p-4 border border-navy-200">
             <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <Badge className="bg-purple-600">Before You Begin</Badge>
+              <Badge className="bg-navy-600">Before You Begin</Badge>
             </h3>
             <div className="space-y-2">
               {[
@@ -160,7 +160,7 @@ export default function StateSurveyVideos() {
           </div>
 
           {/* Step 1: Prepare the Bag */}
-          <div className="bg-white rounded-lg p-4 border border-purple-200">
+          <div className="bg-white rounded-lg p-4 border border-navy-200">
             <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-blue-600">Step 1: Prepare the Bag</Badge>
             </h3>
@@ -194,7 +194,7 @@ export default function StateSurveyVideos() {
           </div>
 
           {/* Step 2: Perform Patient Care */}
-          <div className="bg-white rounded-lg p-4 border border-purple-200">
+          <div className="bg-white rounded-lg p-4 border border-navy-200">
             <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-green-600">Step 2: Perform Patient Care</Badge>
             </h3>
@@ -222,7 +222,7 @@ export default function StateSurveyVideos() {
           </div>
 
           {/* Step 3: Clean Reusable Equipment */}
-          <div className="bg-white rounded-lg p-4 border border-purple-200">
+          <div className="bg-white rounded-lg p-4 border border-navy-200">
             <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-orange-600">Step 3: Clean Reusable Equipment</Badge>
             </h3>
@@ -249,7 +249,7 @@ export default function StateSurveyVideos() {
           </div>
 
           {/* Step 4: Return Equipment to Bag */}
-          <div className="bg-white rounded-lg p-4 border border-purple-200">
+          <div className="bg-white rounded-lg p-4 border border-navy-200">
             <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-indigo-600">Step 4: Return Equipment to Bag</Badge>
             </h3>
@@ -278,7 +278,7 @@ export default function StateSurveyVideos() {
           </div>
 
           {/* Step 5: Complete Procedure and Clean Up */}
-          <div className="bg-white rounded-lg p-4 border border-purple-200">
+          <div className="bg-white rounded-lg p-4 border border-navy-200">
             <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Badge className="bg-teal-600">Step 5: Complete Procedure</Badge>
             </h3>

@@ -187,14 +187,14 @@ export default function AdminTrainingAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-navy-100 border-navy-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-700 font-medium">Pending Recs</p>
-                <p className="text-3xl font-bold text-purple-900">{unaddressedRecs}</p>
+                <p className="text-sm text-navy-700 font-medium">Pending Recs</p>
+                <p className="text-3xl font-bold text-navy-900">{unaddressedRecs}</p>
               </div>
-              <AlertCircle className="w-10 h-10 text-purple-600" />
+              <AlertCircle className="w-10 h-10 text-navy-600" />
             </div>
           </CardContent>
         </Card>

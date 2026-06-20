@@ -199,7 +199,7 @@ export default function PatientMatchSelector({
                     {bestMatch.confidence}% Match
                     </Badge>
                     {bestMatch.verifiedIdentifiers >= 3 && (
-                    <Badge className="bg-purple-600 text-white text-xs">
+                    <Badge className="bg-navy-600 text-white text-xs">
                     <Award className="w-3 h-3 mr-1" />
                     {bestMatch.verifiedIdentifiers} IDs Verified
                     </Badge>
@@ -252,14 +252,14 @@ export default function PatientMatchSelector({
 
         {/* Alternative Matches - More Prominent */}
         {hasAlternatives && (
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-300">
+          <div className="bg-gradient-to-r from-navy-50 to-pink-50 p-4 rounded-lg border-2 border-navy-300">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-purple-900">Alternative Matches</p>
+              <p className="text-sm font-semibold text-navy-900">Alternative Matches</p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAllMatches(!showAllMatches)}
-                className="text-purple-700"
+                className="text-navy-700"
               >
                 {showAllMatches ? 'Show Less' : `Show All (${matchResults.matches.length - 1})`}
               </Button>
@@ -268,8 +268,8 @@ export default function PatientMatchSelector({
               {matchResults.matches.slice(1, showAllMatches ? undefined : 4).map((match, idx) => (
                 <div 
                   key={idx}
-                  className={`bg-white p-3 rounded-lg border-2 cursor-pointer hover:border-purple-400 transition-all ${
-                    selectedPatientId === match.patient.id ? 'border-purple-500 ring-2 ring-purple-200' : 'border-slate-200'
+                  className={`bg-white p-3 rounded-lg border-2 cursor-pointer hover:border-navy-400 transition-all ${
+                    selectedPatientId === match.patient.id ? 'border-navy-500 ring-2 ring-navy-200' : 'border-slate-200'
                   }`}
                   onClick={() => handleConfirmMatch(match.patient.id, false)}
                 >
@@ -283,7 +283,7 @@ export default function PatientMatchSelector({
                       </Badge>
                     </div>
                     {selectedPatientId === match.patient.id && (
-                      <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                      <CheckCircle2 className="w-5 h-5 text-navy-600" />
                     )}
                   </div>
                   <div className="space-y-0.5">

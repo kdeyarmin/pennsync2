@@ -100,14 +100,14 @@ export default function ImportAnalyticsDashboard({ importHistory = [] }) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none">
+        <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white border-none">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-xs mb-1">Records Processed</p>
+                <p className="text-navy-100 text-xs mb-1">Records Processed</p>
                 <p className="text-2xl font-bold">{analytics.totalRecordsProcessed}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-purple-200" />
+              <TrendingUp className="w-8 h-8 text-navy-200" />
             </div>
           </CardContent>
         </Card>

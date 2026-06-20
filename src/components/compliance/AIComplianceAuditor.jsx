@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export default function AIComplianceAuditor({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [auditResults, setAuditResults] = useState(null);
   const [_expandedSection, _setExpandedSection] = useState(null);
+  const queryClient = useQueryClient();
 
   const { data: patient } = useQuery({
     queryKey: ['patient', patientId],
@@ -504,6 +505,10 @@ For each area, provide:
         audit_type: 'automated'
       });
 
+      // Refresh the compliance dashboards that read ComplianceAudit (prefix match
+      // covers the keyed variants ['complianceAudits', dateRange|timeRange]).
+      queryClient.invalidateQueries({ queryKey: ['complianceAudits'] });
+
     } catch (error) {
       console.error("Compliance audit failed:", error);
     }
@@ -541,11 +546,11 @@ For each area, provide:
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-purple-600" />
+            <Shield className="w-5 h-5 text-navy-600" />
             <span>AI Compliance Auditor</span>
             {auditResults && (
               <Badge className={getRiskColor(
@@ -560,7 +565,7 @@ For each area, provide:
             onClick={runComplianceAudit}
             disabled={isAnalyzing}
             size="sm"
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isAnalyzing ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
@@ -584,7 +589,7 @@ For each area, provide:
         {auditResults && (
           <div className="space-y-4">
             {/* Overall Score */}
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-navy-50 to-blue-50 rounded-lg">
               <div>
                 <p className="text-sm text-slate-600">Overall Compliance</p>
                 <p className={`text-3xl font-bold ${getComplianceColor(auditResults.compliance_level)}`}>
@@ -770,17 +775,17 @@ For each area, provide:
 
             {/* Continuity Issues */}
             {auditResults.continuity_issues?.length > 0 && (
-              <Card className="border-purple-200 bg-purple-50">
+              <Card className="border-navy-200 bg-navy-50">
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-purple-600" />
+                    <FileText className="w-4 h-4 text-navy-600" />
                     Continuity of Care Issues
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 space-y-3">
                   {auditResults.continuity_issues.map((issue, idx) => (
-                    <div key={idx} className="bg-white p-3 rounded border border-purple-200">
-                      <p className="font-medium text-sm text-purple-900 mb-2">{issue.issue}</p>
+                    <div key={idx} className="bg-white p-3 rounded border border-navy-200">
+                      <p className="font-medium text-sm text-navy-900 mb-2">{issue.issue}</p>
                       <div className="space-y-2 text-xs">
                         <div className="bg-red-50 p-2 rounded border border-red-200">
                           <p className="font-semibold text-red-800">Impact:</p>

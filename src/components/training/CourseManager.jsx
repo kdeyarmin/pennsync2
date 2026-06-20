@@ -67,7 +67,7 @@ export default function CourseManager() {
       compliance: 'bg-blue-100 text-blue-800',
       clinical: 'bg-green-100 text-green-800',
       safety: 'bg-yellow-100 text-yellow-800',
-      documentation: 'bg-purple-100 text-purple-800',
+      documentation: 'bg-navy-100 text-navy-800',
       onboarding: 'bg-indigo-100 text-indigo-800',
       leadership: 'bg-red-100 text-red-800',
     };

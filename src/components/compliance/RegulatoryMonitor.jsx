@@ -323,7 +323,7 @@ Return JSON:
       case 'pending_review': return 'bg-yellow-100 text-yellow-800';
       case 'under_review': return 'bg-blue-100 text-blue-800';
       case 'approved': return 'bg-green-100 text-green-800';
-      case 'implemented': return 'bg-purple-100 text-purple-800';
+      case 'implemented': return 'bg-navy-100 text-navy-800';
       case 'dismissed': return 'bg-slate-100 text-slate-800';
       default: return 'bg-slate-100 text-slate-800';
     }
@@ -342,7 +342,7 @@ Return JSON:
     <div className="space-y-6">
       {/* Header */}
       <Card className="border-indigo-200">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-indigo-600" />
@@ -387,8 +387,8 @@ Return JSON:
               <p className="text-2xl font-bold text-green-600">{approvedUpdates.length}</p>
               <p className="text-xs text-slate-600">Approved</p>
             </div>
-            <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <p className="text-2xl font-bold text-purple-600">{implementedUpdates.length}</p>
+            <div className="text-center p-3 bg-navy-50 rounded-lg">
+              <p className="text-2xl font-bold text-navy-600">{implementedUpdates.length}</p>
               <p className="text-xs text-slate-600">Implemented</p>
             </div>
             <div className="text-center p-3 bg-red-50 rounded-lg">
@@ -537,14 +537,14 @@ Return JSON:
 
               {/* Suggested Training */}
               {selectedUpdate.suggested_training?.length > 0 && (
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <p className="text-sm font-semibold text-purple-900 mb-2 flex items-center gap-1">
+                <div className="bg-navy-50 p-3 rounded-lg">
+                  <p className="text-sm font-semibold text-navy-900 mb-2 flex items-center gap-1">
                     <GraduationCap className="w-4 h-4" />
                     Training to Assign to Nurses:
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {selectedUpdate.suggested_training.map((topic, idx) => (
-                      <Badge key={idx} className="bg-purple-100 text-purple-800">
+                      <Badge key={idx} className="bg-navy-100 text-navy-800">
                         {topic}
                       </Badge>
                     ))}
@@ -586,7 +586,7 @@ Return JSON:
             </Button>
             <Button 
               onClick={handleImplement}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Settings className="w-4 h-4 mr-1" />
               Implement Now
@@ -636,7 +636,7 @@ function RegulatoryUpdateCard({ update, isAdmin, onReview, getImpactColor, getSt
                 <p className="text-slate-600">{update.full_details}</p>
                 {update.suggested_training?.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <GraduationCap className="w-4 h-4 text-purple-600" />
+                    <GraduationCap className="w-4 h-4 text-navy-600" />
                     {update.suggested_training.map((t, i) => (
                       <Badge key={i} variant="outline" className="text-xs">{t}</Badge>
                     ))}

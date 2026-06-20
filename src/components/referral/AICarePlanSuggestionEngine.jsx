@@ -387,8 +387,8 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                         <p className="text-xs font-semibold text-blue-900">Baseline</p>
                         <p className="text-sm text-slate-900">{plan.baseline_measurement}</p>
                       </div>
-                      <div className="bg-purple-50 p-2 rounded">
-                        <p className="text-xs font-semibold text-purple-900">Frequency</p>
+                      <div className="bg-navy-50 p-2 rounded">
+                        <p className="text-xs font-semibold text-navy-900">Frequency</p>
                         <p className="text-sm text-slate-900">{plan.frequency}</p>
                       </div>
                     </div>

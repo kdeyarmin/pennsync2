@@ -251,7 +251,7 @@ Return JSON:
   const getCriteriaColor = (color) => {
     const colors = {
       blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', progress: 'bg-blue-500' },
-      purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', progress: 'bg-purple-500' },
+      purple: { bg: 'bg-navy-50', border: 'border-navy-200', text: 'text-navy-700', progress: 'bg-navy-500' },
       green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', progress: 'bg-green-500' },
       orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', progress: 'bg-orange-500' }
     };
@@ -262,7 +262,7 @@ Return JSON:
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-indigo-600" />

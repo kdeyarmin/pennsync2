@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { validateSignerToken } from '@/functions/validateSignerToken';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Lock } from 'lucide-react';
+import { AlertCircle, Lock, CheckCircle2 } from 'lucide-react';
 import SignerPackageViewer from '@/components/signer/SignerPackageViewer';
 
 export default function SignerPortal() {
@@ -11,8 +11,21 @@ export default function SignerPortal() {
   const [isValid, setIsValid] = useState(false);
   const [packageData, setPackageData] = useState(null);
   const [error, setError] = useState(null);
+  const [isComplete, setIsComplete] = useState(false);
 
   const token = searchParams.get('token');
+
+  // Final signature: the backend single-uses (deactivates) the token, so we must
+  // NOT re-validate it (that would 403 → "Access Denied"). Show the completion
+  // confirmation from the all_signed flag instead; any earlier signature just
+  // refreshes the package status.
+  const handleSignatureComplete = (allSigned) => {
+    if (allSigned) {
+      setIsComplete(true);
+    } else {
+      validateToken();
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -28,12 +41,16 @@ export default function SignerPortal() {
     try {
       setIsLoading(true);
       const response = await validateSignerToken({ token });
-      
-      if (response.valid) {
+      // functions.invoke returns the full axios response (interceptResponses:false);
+      // the body is under .data. Reading response.valid directly always failed
+      // (undefined), so the portal showed "invalid link" for every valid token.
+      const result = response?.data || response;
+
+      if (result.valid) {
         setIsValid(true);
-        setPackageData(response);
+        setPackageData(result);
       } else {
-        setError(response.error || 'Invalid or expired access link.');
+        setError(result.error || 'Invalid or expired access link.');
       }
     } catch (err) {
       setError(err.message || 'Failed to validate access link.');
@@ -51,6 +68,30 @@ export default function SignerPortal() {
   }
 
 
+
+  if (isComplete) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-green-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-700">
+              <CheckCircle2 className="w-5 h-5" />
+              All Documents Signed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-700 mb-4">
+              Thank you — every document in this package has been signed. A copy and confirmation
+              have been recorded for the document administrator.
+            </p>
+            <p className="text-xs text-slate-600">
+              For your security this access link is now closed. You may close this window.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -148,7 +189,7 @@ export default function SignerPortal() {
         <SignerPackageViewer
           packageData={packageData}
           token={token}
-          onSignatureComplete={validateToken}
+          onSignatureComplete={handleSignatureComplete}
         />
 
         {/* Security Notice */}

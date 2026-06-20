@@ -5,14 +5,15 @@ function cn(...inputs) {
 }
 
 const buttonVariants = ({ variant = "default", size = "default", className } = {}) => {
-    const baseStyles = "inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 active:scale-95"
+    const baseStyles = "inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-500 disabled:pointer-events-none disabled:opacity-50 active:scale-95"
 
     const variants = {
-      default: "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg shadow-md",
+      default: "bg-navy-600 text-white hover:bg-navy-700 hover:shadow-lg shadow-md",
       destructive: "bg-red-600 text-white hover:bg-red-700 hover:shadow-lg shadow-md",
-      outline: "border border-slate-300 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-900 shadow-sm",
+      outline: "border border-slate-300 bg-white hover:bg-slate-50 hover:border-navy-300 text-slate-900 shadow-sm",
       ghost: "hover:bg-slate-100 hover:shadow-sm text-slate-900",
-      link: "text-blue-600 underline-offset-4 hover:underline hover:text-blue-700",
+      link: "text-navy-600 underline-offset-4 hover:underline hover:text-navy-700",
+      gold: "bg-gold-400 text-navy-900 hover:bg-gold-500 hover:shadow-lg shadow-md",
     }
 
     const sizes = {

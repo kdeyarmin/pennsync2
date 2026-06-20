@@ -91,8 +91,8 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
       return newDoc;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['patient-documents']);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-documents'] });
       toast.success("Document uploaded successfully");
       resetForm();
       onUploadComplete?.();
@@ -271,7 +271,7 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
                 Mark as sensitive document
               </label>
             </div>
-            <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="flex items-center gap-2 p-3 bg-navy-50 rounded-lg border border-navy-200">
               <input
                 type="checkbox"
                 id="auto-analyze"
@@ -280,7 +280,7 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
                 className="rounded"
               />
               <label htmlFor="auto-analyze" className="text-sm flex items-center gap-2 cursor-pointer">
-                <Brain className="w-4 h-4 text-purple-600" />
+                <Brain className="w-4 h-4 text-navy-600" />
                 Auto-analyze with AI after upload
               </label>
             </div>

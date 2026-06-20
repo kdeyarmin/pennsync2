@@ -228,11 +228,11 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
 
   return (
     <>
-      <Card className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+      <Card className="mb-6 bg-gradient-to-r from-navy-50 to-indigo-50 border-navy-200">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-navy-600 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
                 <ShieldCheck className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -244,7 +244,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
               onClick={analyzeSkillNeed}
               disabled={isAnalyzing || !narrativeText}
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              className="bg-gradient-to-r from-navy-600 to-indigo-600 hover:from-navy-700 hover:to-indigo-700"
             >
               {isAnalyzing ? (
                 <>
@@ -267,7 +267,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-2xl">
-              <ShieldCheck className="w-7 h-7 text-purple-600" />
+              <ShieldCheck className="w-7 h-7 text-navy-600" />
               Skilled Need Analysis Report
             </DialogTitle>
             <DialogDescription>
@@ -277,7 +277,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
 
           {isAnalyzing ? (
             <div className="py-12 text-center space-y-4">
-              <Sparkles className="w-16 h-16 mx-auto text-purple-600 animate-pulse" />
+              <Sparkles className="w-16 h-16 mx-auto text-navy-600 animate-pulse" />
               <div>
                 <p className="text-lg font-semibold text-slate-900">Analyzing Documentation...</p>
                 <p className="text-sm text-slate-600 mt-2">
@@ -316,8 +316,8 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
               {/* Interventions Analysis */}
               {analysis.interventions_identified && analysis.interventions_identified.length > 0 && (
                 <div className="space-y-3">
-                  <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
-                    <h4 className="font-bold text-purple-900 text-lg flex items-center gap-2">
+                  <div className="bg-navy-50 p-3 rounded-lg border-2 border-navy-200">
+                    <h4 className="font-bold text-navy-900 text-lg flex items-center gap-2">
                       <FileText className="w-5 h-5" />
                       Skilled Interventions Identified ({analysis.interventions_identified.length})
                     </h4>

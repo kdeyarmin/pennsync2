@@ -90,7 +90,16 @@ const MEASUREMENT_PATTERNS = [
   /\b\d{2,3}\/\d{2,3}\b/g, // blood pressure
   /\b\d{1,3}\s?%/g, // percentages (O2 sat, etc.)
   /\b\d{1,3}\s?x\s?\d{1,3}(?:\.\d+)?\s?(?:cm|mm)\b/gi, // wound dimensions 2x3 cm
-  /\b\d+(?:\.\d+)?\s?(?:cm|mm)\b/gi, // single measurement
+  // Single measurement, but NOT the second operand of an "NxM cm" dimension: a
+  // faithful rewrite that normalizes spacing ("4x5 cm" -> "4 x 5 cm") must not
+  // make the guard extract a spurious "5cm" token that the source lacks and then
+  // flag the correct note as a hallucinated value. We *consume* an optional
+  // leading "<digit> x " instead of using a lookbehind — String.match returns the
+  // whole match, so "4 x 5 cm" normalizes to the same "4x5cm" token the dimension
+  // pattern already emits (no spurious "5cm"), while a standalone "5 cm" still
+  // matches with an empty prefix. (Lookbehind is avoided because it throws a
+  // SyntaxError in Safari < 16.4.)
+  /(?:\d\s?x\s?)?\b\d+(?:\.\d+)?\s?(?:cm|mm)\b/gi, // single measurement
   /\b\d+(?:\.\d+)?\s?(?:mg|mcg|g|ml|units?|iu|tab(?:lets?)?|cc)\b/gi, // doses
   /\b\d{1,2}\/10\b/g, // pain / rating scales
   /\b\d{2,3}\s?(?:bpm|beats)/gi, // heart rate

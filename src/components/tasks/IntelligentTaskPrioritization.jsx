@@ -217,14 +217,14 @@ Return JSON:
   }
 
   return (
-    <Card className="border-purple-200">
+    <Card className="border-navy-200">
       <CardHeader 
-        className="py-3 bg-gradient-to-r from-purple-50 to-indigo-50 cursor-pointer"
+        className="py-3 bg-gradient-to-r from-navy-50 to-indigo-50 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Brain className="w-4 h-4 text-purple-600" />
+            <Brain className="w-4 h-4 text-navy-600" />
             Smart Task Prioritization
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -238,14 +238,14 @@ Return JSON:
         <CardContent className="p-4 space-y-4">
           {!prioritizedTasks ? (
             <div className="text-center py-4">
-              <ListTodo className="w-12 h-12 mx-auto mb-3 text-purple-300" />
+              <ListTodo className="w-12 h-12 mx-auto mb-3 text-navy-300" />
               <p className="text-sm text-slate-600 mb-3">
                 Let AI prioritize your {tasks.length} tasks for maximum efficiency
               </p>
               <Button
                 onClick={prioritizeTasks}
                 disabled={isPrioritizing}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-navy-600 hover:bg-navy-700"
               >
                 {isPrioritizing ? (
                   <>
@@ -284,9 +284,9 @@ Return JSON:
 
               {/* Immediate Actions */}
               {prioritizedTasks.immediate_actions?.length > 0 && (
-                <Alert className="bg-purple-50 border-purple-200">
-                  <Target className="w-4 h-4 text-purple-600" />
-                  <AlertDescription className="text-purple-900">
+                <Alert className="bg-navy-50 border-navy-200">
+                  <Target className="w-4 h-4 text-navy-600" />
+                  <AlertDescription className="text-navy-900">
                     <p className="font-semibold text-sm mb-1">Do These First:</p>
                     <ol className="text-xs space-y-1 list-decimal list-inside">
                       {prioritizedTasks.immediate_actions.map((action, idx) => (
@@ -334,7 +334,7 @@ Return JSON:
                         </p>
                       )}
                       <p className="text-xs text-slate-500 mt-1 italic">{task.priority_reason}</p>
-                      <p className="text-xs text-purple-700 mt-1">
+                      <p className="text-xs text-navy-700 mt-1">
                         💡 {task.suggested_action}
                       </p>
                     </div>

@@ -225,8 +225,12 @@ export default function FaxCoverSheetGenerator({
   };
 
   const handleToggle = () => {
+    // includeCover still holds the PRE-toggle value here, so the user is turning
+    // the cover sheet OFF when it is currently true. Clear the stale cover data in
+    // that case (the previous `!includeCover` test was inverted and never fired on
+    // un-check, leaving a stale cover sheet attached to the fax).
     setIncludeCover(!includeCover);
-    if (!includeCover) {
+    if (includeCover) {
       setCoverData(null);
       onCoverSheetReady?.(null, null);
     }

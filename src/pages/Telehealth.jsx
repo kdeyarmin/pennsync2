@@ -183,7 +183,7 @@ export default function Telehealth() {
           { label: "Total Sessions", value: stats.total, icon: Video, color: "text-blue-600" },
           { label: "Completed", value: stats.completed, icon: CheckCircle2, color: "text-green-600" },
           { label: "Upcoming", value: stats.scheduled, icon: Calendar, color: "text-amber-600" },
-          { label: "Total Minutes", value: stats.totalMinutes, icon: Clock, color: "text-purple-600" }
+          { label: "Total Minutes", value: stats.totalMinutes, icon: Clock, color: "text-navy-600" }
         ].map(s => (
           <Card key={s.label}>
             <CardContent className="p-4 flex items-center gap-3">

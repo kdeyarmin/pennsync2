@@ -57,9 +57,10 @@ export default function PDFSearchInterface() {
         limit: 50
       });
 
-      setSearchResults(response.data.results || []);
-      
-      if (response.data.results.length === 0) {
+      const results = response.data?.results || [];
+      setSearchResults(results);
+
+      if (results.length === 0) {
         toast.info("No results found");
       }
     } catch (error) {

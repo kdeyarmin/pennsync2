@@ -22,6 +22,14 @@ Deno.serve(async (req) => {
 
     // Check if already processed
     const existingFax = await base44.asServiceRole.entities.FaxLog.get(fax_log_id);
+    if (!existingFax) {
+      return Response.json({ error: 'Fax not found' }, { status: 404 });
+    }
+    // Only the sender (or an admin) may OCR/read a fax's PHI. Mirrors
+    // analyzeFaxContent / retryFailedFax; the prior code had no ownership check.
+    if (user.role !== 'admin' && existingFax.sent_by && existingFax.sent_by !== user.email) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
     if (existingFax?.ocr_processed && existingFax?.ocr_text) {
       return Response.json({
         success: true,

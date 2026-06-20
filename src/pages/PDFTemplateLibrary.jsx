@@ -1,10 +1,9 @@
 import PDFTemplateManager from "../components/documents/PDFTemplateManager";
-import PageContainer from "@/components/ui/PageContainer";
 
 export default function PDFTemplateLibrary() {
   return (
-    <PageContainer>
+    <div className="space-y-4 sm:space-y-6">
       <PDFTemplateManager />
-    </PageContainer>
+    </div>
   );
 }

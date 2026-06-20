@@ -17,11 +17,8 @@ import {
   CheckCircle2,
   Sparkles,
   ListChecks,
-  MessageSquare,
-  Heart
+  MessageSquare
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 
 import EducationMaterialGenerator from "../components/education/EducationMaterialGenerator";
 import TeachBackConfirmation from "../components/education/TeachBackConfirmation";
@@ -57,15 +54,7 @@ export default function PatientEducation() {
     : teachBackRecords;
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Heart}
-        eyebrow="Patient Care"
-        title="Patient Education Center"
-        description="Generate patient-friendly educational materials and document understanding"
-        favoritePage="PatientEducation"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Patient Selection */}
       <Card className="mb-6 border-blue-200">
         <CardContent className="p-4">
@@ -93,7 +82,7 @@ export default function PatientEducation() {
                 <Badge className="bg-blue-100 text-blue-800 h-10 px-4 flex items-center">
                   {selectedPatient.primary_diagnosis || 'No diagnosis'}
                 </Badge>
-                <Badge className="bg-purple-100 text-purple-800 h-10 px-4 flex items-center">
+                <Badge className="bg-navy-100 text-navy-800 h-10 px-4 flex items-center">
                   {selectedPatient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
                 </Badge>
               </div>
@@ -159,10 +148,10 @@ export default function PatientEducation() {
               diagnosis={selectedPatient?.primary_diagnosis}
             />
             <div className="space-y-4">
-              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-navy-200">
                 <CardContent className="p-4">
-                  <h3 className="font-bold text-purple-900 mb-2">💡 How to Use</h3>
-                  <ul className="text-sm text-purple-800 space-y-2">
+                  <h3 className="font-bold text-navy-900 mb-2">💡 How to Use</h3>
+                  <ul className="text-sm text-navy-800 space-y-2">
                     <li>1. Enter complex medical information</li>
                     <li>2. AI transforms it into simple language</li>
                     <li>3. Get analogies, FAQs, and speaking scripts</li>
@@ -219,7 +208,7 @@ export default function PatientEducation() {
               onTeachBackComplete={handleTeachBackRecorded}
             />
             <div className="space-y-4">
-              <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+              <Card className="bg-gradient-to-br from-indigo-50 to-navy-50 border-indigo-200">
                 <CardContent className="p-4">
                   <h3 className="font-bold text-indigo-900 mb-2">🎯 AI-Assisted Teach-Back</h3>
                   <p className="text-sm text-indigo-800 mb-3">
@@ -298,6 +287,6 @@ export default function PatientEducation() {
           </Card>
         </TabsContent>
       </Tabs>
-    </PageContainer>
+    </div>
   );
 }

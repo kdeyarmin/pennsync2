@@ -53,7 +53,7 @@ export default function SkillsTracker({ nurseEmail }) {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.NurseSkill.create({ ...data, nurse_email: nurseEmail }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['nurseSkills']);
+      queryClient.invalidateQueries({ queryKey: ['nurseSkills'] });
       setShowAddDialog(false);
       resetForm();
     }
@@ -62,14 +62,14 @@ export default function SkillsTracker({ nurseEmail }) {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.NurseSkill.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['nurseSkills']);
+      queryClient.invalidateQueries({ queryKey: ['nurseSkills'] });
       setEditingSkill(null);
     }
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.NurseSkill.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['nurseSkills'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nurseSkills'] })
   });
 
   const resetForm = () => {
@@ -114,7 +114,7 @@ export default function SkillsTracker({ nurseEmail }) {
     const colors = {
       beginner: 'bg-blue-100 text-blue-800',
       intermediate: 'bg-indigo-100 text-indigo-800',
-      advanced: 'bg-purple-100 text-purple-800',
+      advanced: 'bg-navy-100 text-navy-800',
       expert: 'bg-pink-100 text-pink-800'
     };
     return colors[level] || 'bg-slate-100 text-slate-800';

@@ -404,7 +404,7 @@ export default function ReferralPDFSummarizer({
                     size="sm"
                     onClick={downloadAdmissionPacket}
                     disabled={generatingPDF}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-navy-600 hover:bg-navy-700"
                   >
                     {generatingPDF ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
@@ -559,9 +559,9 @@ export default function ReferralPDFSummarizer({
 
             {/* Admission Details */}
             <AccordionItem value="admission">
-              <AccordionTrigger className="bg-purple-50 px-4 py-3 rounded-t-lg">
+              <AccordionTrigger className="bg-navy-50 px-4 py-3 rounded-t-lg">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-purple-600" />
+                  <Activity className="w-4 h-4 text-navy-600" />
                   <span className="font-semibold">Admission Details</span>
                 </div>
               </AccordionTrigger>
@@ -569,8 +569,8 @@ export default function ReferralPDFSummarizer({
                 <div className="space-y-2">
                   {Object.entries(extractedData.admission_details || {}).map(([key, value]) => (
                     value && value !== "Not documented in referral." && (
-                      <div key={key} className="bg-purple-50 p-2 rounded">
-                        <p className="text-xs font-semibold text-purple-900 capitalize">{key.replace(/_/g, ' ')}</p>
+                      <div key={key} className="bg-navy-50 p-2 rounded">
+                        <p className="text-xs font-semibold text-navy-900 capitalize">{key.replace(/_/g, ' ')}</p>
                         <p className="text-sm text-slate-900">{value}</p>
                       </div>
                     )
@@ -731,11 +731,11 @@ export default function ReferralPDFSummarizer({
                     )}
                     
                     {Array.isArray(extractedData.diagnoses?.recent_hospitalizations) && extractedData.diagnoses.recent_hospitalizations.length > 0 && (
-                      <div className="bg-purple-50 p-3 rounded">
-                        <p className="text-xs font-semibold text-purple-900 mb-2">Recent Hospitalizations</p>
+                      <div className="bg-navy-50 p-3 rounded">
+                        <p className="text-xs font-semibold text-navy-900 mb-2">Recent Hospitalizations</p>
                         <div className="space-y-2">
                           {extractedData.diagnoses.recent_hospitalizations.map((item, i) => (
-                            <div key={i} className="bg-white p-2 rounded border border-purple-200">
+                            <div key={i} className="bg-white p-2 rounded border border-navy-200">
                               <p className="text-sm font-semibold text-slate-900">{item.reason || item}</p>
                               {item.date && <p className="text-xs text-slate-600">Date: {item.date}</p>}
                               {item.hospital && <p className="text-xs text-slate-600">Hospital: {item.hospital}</p>}
@@ -976,15 +976,15 @@ export default function ReferralPDFSummarizer({
                   <div className="space-y-4">
                     {/* Mental Health Assessment */}
                     {extractedData.psychosocial.mental_health_assessment && (
-                      <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-500">
-                        <p className="text-xs font-semibold text-purple-900 mb-2">Mental Health & Behavioral Assessment</p>
+                      <div className="bg-navy-50 p-3 rounded border-l-4 border-navy-500">
+                        <p className="text-xs font-semibold text-navy-900 mb-2">Mental Health & Behavioral Assessment</p>
                         
                         {extractedData.psychosocial.mental_health_assessment.psychiatric_diagnoses?.length > 0 && (
                           <div className="mb-2">
-                            <p className="text-xs text-purple-800 font-medium">Psychiatric Diagnoses:</p>
+                            <p className="text-xs text-navy-800 font-medium">Psychiatric Diagnoses:</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {extractedData.psychosocial.mental_health_assessment.psychiatric_diagnoses.map((dx, i) => (
-                                <Badge key={i} className="bg-purple-600">{dx}</Badge>
+                                <Badge key={i} className="bg-navy-600">{dx}</Badge>
                               ))}
                             </div>
                           </div>
@@ -1187,8 +1187,8 @@ export default function ReferralPDFSummarizer({
                       </div>
                     )}
                     {extractedData.handwritten_notes.margin_annotations && (
-                      <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-500">
-                        <p className="text-xs font-semibold text-purple-900 mb-1">Margin Annotations</p>
+                      <div className="bg-navy-50 p-3 rounded border-l-4 border-navy-500">
+                        <p className="text-xs font-semibold text-navy-900 mb-1">Margin Annotations</p>
                         <p className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.handwritten_notes.margin_annotations}</p>
                       </div>
                     )}
@@ -1248,14 +1248,14 @@ export default function ReferralPDFSummarizer({
             {/* Admission Note Template */}
             {extractedData.admission_note_template && (
               <AccordionItem value="template">
-                <AccordionTrigger className="bg-purple-50 px-4 py-3 rounded-t-lg">
+                <AccordionTrigger className="bg-navy-50 px-4 py-3 rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-purple-600" />
+                    <FileText className="w-4 h-4 text-navy-600" />
                     <span className="font-semibold">AI-Generated Admission Note Template</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
-                  <div className="bg-purple-50 p-4 rounded border">
+                  <div className="bg-navy-50 p-4 rounded border">
                     <pre className="text-sm text-slate-900 whitespace-pre-wrap">{extractedData.admission_note_template}</pre>
                   </div>
                   <Button size="sm" variant="ghost" className="mt-2" onClick={() => copySection(extractedData.admission_note_template)}>
@@ -1279,10 +1279,10 @@ export default function ReferralPDFSummarizer({
           />
 
           {/* AI OASIS Assistant */}
-          <Card className="border-2 border-purple-300">
+          <Card className="border-2 border-navy-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-600" />
+                <Brain className="w-5 h-5 text-navy-600" />
                 AI OASIS Pre-Assessment
               </CardTitle>
             </CardHeader>

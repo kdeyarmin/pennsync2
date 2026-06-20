@@ -88,13 +88,13 @@ export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAler
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
-      <CardHeader className="py-4 bg-gradient-to-r from-purple-100 to-pink-100">
+    <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+      <CardHeader className="py-4 bg-gradient-to-r from-navy-100 to-pink-100">
         <CardTitle className="text-base flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-navy-600" />
           AI Predictive Risk Analysis
           {analysis && (
-            <Badge className="bg-purple-600 text-white ml-auto">
+            <Badge className="bg-navy-600 text-white ml-auto">
               {analysis.overall_risk_level}
             </Badge>
           )}
@@ -103,13 +103,13 @@ export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAler
       <CardContent className="p-4 space-y-4">
         {!analysis && !isAnalyzing && (
           <div className="text-center py-6">
-            <Brain className="w-12 h-12 mx-auto mb-3 text-purple-400" />
+            <Brain className="w-12 h-12 mx-auto mb-3 text-navy-400" />
             <p className="text-sm text-slate-600 mb-3">
               Analyze patient data to predict risk of adverse events
             </p>
             <Button
               onClick={runAnalysis}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Brain className="w-4 h-4 mr-2" />
               Run Risk Analysis
@@ -119,7 +119,7 @@ export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAler
 
         {isAnalyzing && (
           <div className="text-center py-6">
-            <Loader2 className="w-10 h-10 animate-spin mx-auto mb-3 text-purple-600" />
+            <Loader2 className="w-10 h-10 animate-spin mx-auto mb-3 text-navy-600" />
             <p className="text-sm text-slate-600">Analyzing patient data...</p>
             <p className="text-xs text-slate-500 mt-1">
               Evaluating vitals, diagnoses, social factors, and visit history

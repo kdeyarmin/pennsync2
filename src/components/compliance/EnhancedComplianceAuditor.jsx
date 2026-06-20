@@ -354,7 +354,7 @@ Return JSON:
   const getCategoryColor = (category) => {
     const colors = {
       oasis: 'bg-blue-100 text-blue-800',
-      medicare_cop: 'bg-purple-100 text-purple-800',
+      medicare_cop: 'bg-navy-100 text-navy-800',
       state_regulation: 'bg-green-100 text-green-800',
       agency_policy: 'bg-orange-100 text-orange-800',
       hipaa: 'bg-red-100 text-red-800',
@@ -365,7 +365,7 @@ Return JSON:
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-indigo-600" />

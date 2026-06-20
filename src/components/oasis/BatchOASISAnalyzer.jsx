@@ -310,7 +310,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
       case 'pending': return <FileText className="w-4 h-4 text-slate-400" />;
       case 'uploading': return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
       case 'uploaded': return <CheckCircle2 className="w-4 h-4 text-blue-500" />;
-      case 'analyzing': return <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />;
+      case 'analyzing': return <Loader2 className="w-4 h-4 text-navy-500 animate-spin" />;
       case 'success': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
       case 'error': return <XCircle className="w-4 h-4 text-red-500" />;
       default: return <FileText className="w-4 h-4 text-slate-400" />;
@@ -322,7 +322,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
       pending: "bg-slate-100 text-slate-700",
       uploading: "bg-blue-100 text-blue-700",
       uploaded: "bg-blue-100 text-blue-700",
-      analyzing: "bg-purple-100 text-purple-700",
+      analyzing: "bg-navy-100 text-navy-700",
       success: "bg-green-100 text-green-700",
       error: "bg-red-100 text-red-700"
     };
@@ -601,7 +601,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
                         size="sm" 
                         variant="outline"
                         onClick={() => setShowComparison(!showComparison)} 
-                        className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                        className="border-navy-300 text-navy-700 hover:bg-navy-50"
                       >
                         <GitCompare className="w-4 h-4 mr-1" />
                         {showComparison ? 'Hide' : 'Compare'}

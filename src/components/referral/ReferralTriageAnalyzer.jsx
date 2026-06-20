@@ -87,8 +87,11 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
 
   const handleCopyAnalysis = () => {
     const text = JSON.stringify(analysis, null, 2);
-    navigator.clipboard.writeText(text);
-    toast.success('Analysis copied to clipboard');
+    // Await the clipboard write so a rejected copy (permissions / insecure
+    // context) shows an error instead of a false "copied" toast + unhandled rejection.
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success('Analysis copied to clipboard'))
+      .catch(() => toast.error('Failed to copy to clipboard'));
   };
 
   const handleDownloadAnalysis = () => {

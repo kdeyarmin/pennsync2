@@ -147,7 +147,7 @@ Return JSON:
 
   const getCategoryColor = (category) => {
     const colors = {
-      functional_status: 'bg-purple-100 text-purple-800',
+      functional_status: 'bg-navy-100 text-navy-800',
       diagnosis: 'bg-blue-100 text-blue-800',
       comorbidity: 'bg-green-100 text-green-800',
       compliance: 'bg-orange-100 text-orange-800',
@@ -167,7 +167,7 @@ Return JSON:
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-lg flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-indigo-600" />
           AI Documentation Generator

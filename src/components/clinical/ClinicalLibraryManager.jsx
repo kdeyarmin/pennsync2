@@ -57,7 +57,7 @@ export default function ClinicalLibraryManager() {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.ClinicalLibraryTemplate.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-templates']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-templates'] });
       toast.success('Template created successfully');
       resetForm();
     }
@@ -66,7 +66,7 @@ export default function ClinicalLibraryManager() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.ClinicalLibraryTemplate.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-templates']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-templates'] });
       toast.success('Template updated successfully');
       resetForm();
     }
@@ -75,7 +75,7 @@ export default function ClinicalLibraryManager() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.ClinicalLibraryTemplate.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-templates']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-templates'] });
       toast.success('Template deleted');
     }
   });
@@ -83,7 +83,7 @@ export default function ClinicalLibraryManager() {
   const createFolderMutation = useMutation({
     mutationFn: (data) => base44.entities.ClinicalLibraryFolder.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-folders']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-folders'] });
       toast.success('Folder created');
     }
   });
@@ -91,7 +91,7 @@ export default function ClinicalLibraryManager() {
   const updateFolderMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.ClinicalLibraryFolder.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-folders']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-folders'] });
       toast.success('Folder updated');
     }
   });
@@ -99,7 +99,7 @@ export default function ClinicalLibraryManager() {
   const deleteFolderMutation = useMutation({
     mutationFn: (id) => base44.entities.ClinicalLibraryFolder.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clinical-folders']);
+      queryClient.invalidateQueries({ queryKey: ['clinical-folders'] });
       toast.success('Folder deleted');
     }
   });
@@ -398,7 +398,7 @@ export default function ClinicalLibraryManager() {
                           </code>
                           <Badge variant="outline">{template.category}</Badge>
                           {template.template_type === 'patient_specific' && (
-                            <Badge className="bg-purple-100 text-purple-800">
+                            <Badge className="bg-navy-100 text-navy-800">
                               <User className="w-3 h-3 mr-1" />
                               Patient-Specific
                             </Badge>
@@ -491,7 +491,7 @@ export default function ClinicalLibraryManager() {
                       setAIMode('generate');
                       setShowAIAssistant(true);
                     }}
-                    className="border-purple-300 text-purple-700"
+                    className="border-navy-300 text-navy-700"
                   >
                     <Sparkles className="w-3 h-3 mr-1" />
                     AI Generate
@@ -505,7 +505,7 @@ export default function ClinicalLibraryManager() {
                         setAIMode('improve');
                         setShowAIAssistant(true);
                       }}
-                      className="border-purple-300 text-purple-700"
+                      className="border-navy-300 text-navy-700"
                     >
                       <Sparkles className="w-3 h-3 mr-1" />
                       AI Suggestions
@@ -520,7 +520,7 @@ export default function ClinicalLibraryManager() {
                         setAIMode('refine');
                         setShowAIAssistant(true);
                       }}
-                      className="border-purple-300 text-purple-700"
+                      className="border-navy-300 text-navy-700"
                     >
                       <Sparkles className="w-3 h-3 mr-1" />
                       Refine Instructions
@@ -674,7 +674,7 @@ export default function ClinicalLibraryManager() {
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isLoading || updateMutation.isLoading}>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                 {editingTemplate ? 'Update' : 'Create'} Template
               </Button>
             </div>

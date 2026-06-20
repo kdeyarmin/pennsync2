@@ -44,7 +44,7 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
   };
 
   const getFileIcon = (type) => {
-    if (type === 'video') return <Video className="w-5 h-5 text-purple-600" />;
+    if (type === 'video') return <Video className="w-5 h-5 text-navy-600" />;
     if (type === 'document') return <FileText className="w-5 h-5 text-blue-600" />;
     return <File className="w-5 h-5 text-slate-600" />;
   };
@@ -67,7 +67,7 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
         {/* Upload Areas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Video Upload */}
-          <div className="border-2 border-dashed border-purple-300 rounded-lg p-4 text-center hover:bg-purple-50 transition-colors">
+          <div className="border-2 border-dashed border-navy-300 rounded-lg p-4 text-center hover:bg-navy-50 transition-colors">
             <input
               type="file"
               id="video-upload"
@@ -80,7 +80,7 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
               disabled={uploading}
             />
             <label htmlFor="video-upload" className="cursor-pointer">
-              <Video className="w-10 h-10 text-purple-500 mx-auto mb-2" />
+              <Video className="w-10 h-10 text-navy-500 mx-auto mb-2" />
               <p className="text-sm font-medium text-slate-900">Upload Video</p>
               <p className="text-xs text-slate-500 mt-1">MP4, WebM, etc.</p>
             </label>

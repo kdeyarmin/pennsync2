@@ -167,7 +167,7 @@ export default function NurseTrainingNeedsAnalyzer() {
     const colors = {
       documentation: "bg-blue-100 text-blue-800",
       clinical: "bg-green-100 text-green-800",
-      compliance: "bg-purple-100 text-purple-800",
+      compliance: "bg-navy-100 text-navy-800",
       safety: "bg-red-100 text-red-800",
       communication: "bg-indigo-100 text-indigo-800",
       technology: "bg-teal-100 text-teal-800"
@@ -195,7 +195,7 @@ export default function NurseTrainingNeedsAnalyzer() {
   return (
     <div className="space-y-6">
       {/* Header with Stats */}
-      <Card className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none">
+      <Card className="bg-gradient-to-r from-navy-600 to-indigo-600 text-white border-none">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -203,13 +203,13 @@ export default function NurseTrainingNeedsAnalyzer() {
                 <Brain className="w-6 h-6" />
                 AI-Tracked Training Needs
               </h2>
-              <p className="text-purple-100">
+              <p className="text-navy-100">
                 Automatically identifies learning opportunities from real-time corrections and recommendations
               </p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold">{trainingRecommendations.length}</p>
-              <p className="text-sm text-purple-100">Total Recommendations</p>
+              <p className="text-sm text-navy-100">Total Recommendations</p>
             </div>
           </div>
         </CardContent>
@@ -304,7 +304,7 @@ export default function NurseTrainingNeedsAnalyzer() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-purple-600" />
+            <Target className="w-5 h-5 text-navy-600" />
             Nurse Training Need Profiles
           </CardTitle>
         </CardHeader>
@@ -315,7 +315,7 @@ export default function NurseTrainingNeedsAnalyzer() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                      <div className="w-12 h-12 bg-gradient-to-br from-navy-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
                         {profile.nurse.full_name?.charAt(0) || 'U'}
                       </div>
                       <div>
@@ -341,9 +341,9 @@ export default function NurseTrainingNeedsAnalyzer() {
                       <p className="text-xs text-slate-500">Total</p>
                       <p className="text-lg font-bold">{profile.total}</p>
                     </div>
-                    <div className="text-center p-2 bg-purple-50 rounded">
-                      <p className="text-xs text-purple-600">Smart Notes</p>
-                      <p className="text-lg font-bold text-purple-600">{profile.smartNoteRecs}</p>
+                    <div className="text-center p-2 bg-navy-50 rounded">
+                      <p className="text-xs text-navy-600">Smart Notes</p>
+                      <p className="text-lg font-bold text-navy-600">{profile.smartNoteRecs}</p>
                     </div>
                     <div className="text-center p-2 bg-red-50 rounded">
                       <p className="text-xs text-red-600">Critical</p>
@@ -521,7 +521,7 @@ function _getTypeColor(type) {
   const colors = {
     documentation: "bg-blue-100 text-blue-800",
     clinical: "bg-green-100 text-green-800",
-    compliance: "bg-purple-100 text-purple-800",
+    compliance: "bg-navy-100 text-navy-800",
     safety: "bg-red-100 text-red-800",
     communication: "bg-indigo-100 text-indigo-800",
     technology: "bg-teal-100 text-teal-800"

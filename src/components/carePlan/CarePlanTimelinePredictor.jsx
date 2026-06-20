@@ -147,7 +147,7 @@ Return JSON:
 
   return (
     <Card className="border-blue-200">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-navy-50">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-blue-600" />

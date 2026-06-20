@@ -219,11 +219,11 @@ Return JSON:
   };
 
   return (
-    <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-purple-900">
-            <ClipboardCheck className="w-5 h-5 text-purple-600" />
+          <CardTitle className="flex items-center gap-2 text-navy-900">
+            <ClipboardCheck className="w-5 h-5 text-navy-600" />
             AI Documentation Audit
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ Return JSON:
               size="sm"
               onClick={runAudit}
               disabled={isAuditing || !narrativeText}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isAuditing ? (
                 <>
@@ -261,8 +261,8 @@ Return JSON:
         <CardContent className="pt-2">
           {!auditResult && !isAuditing && (
             <div className="text-center py-4">
-              <ClipboardCheck className="w-10 h-10 text-purple-300 mx-auto mb-2" />
-              <p className="text-sm text-purple-600">Run an audit to check compliance and quality</p>
+              <ClipboardCheck className="w-10 h-10 text-navy-300 mx-auto mb-2" />
+              <p className="text-sm text-navy-600">Run an audit to check compliance and quality</p>
             </div>
           )}
 

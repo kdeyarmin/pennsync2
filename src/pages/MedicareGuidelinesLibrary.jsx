@@ -140,7 +140,7 @@ export default function MedicareGuidelinesLibrary() {
 
   const getCategoryColor = (category) => {
     const colors = {
-      oasis: "bg-purple-100 text-purple-800",
+      oasis: "bg-navy-100 text-navy-800",
       medicare_cop: "bg-red-100 text-red-800",
       billing_reimbursement: "bg-green-100 text-green-800",
       clinical_documentation: "bg-blue-100 text-blue-800",

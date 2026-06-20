@@ -88,14 +88,14 @@ export default function DocumentationTraining() {
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200 bg-purple-50">
+        <Card className="border-navy-200 bg-navy-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-600 font-medium">Average Score</p>
-                <p className="text-2xl font-bold text-purple-900">{Math.round(averageScore)}%</p>
+                <p className="text-sm text-navy-600 font-medium">Average Score</p>
+                <p className="text-2xl font-bold text-navy-900">{Math.round(averageScore)}%</p>
               </div>
-              <Target className="w-8 h-8 text-purple-500" />
+              <Target className="w-8 h-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>

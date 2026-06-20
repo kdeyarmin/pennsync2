@@ -1448,10 +1448,10 @@ Return JSON:
                     {(() => {
                       const colorStyles = {
                         blue: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-600', label: 'text-blue-900', badge: 'bg-blue-500' },
-                        cyan: { bg: 'bg-cyan-50 border-cyan-200', text: 'text-cyan-600', label: 'text-cyan-900', badge: 'bg-cyan-500' },
+                        cyan: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600', label: 'text-navy-900', badge: 'bg-navy-500' },
                         red: { bg: 'bg-red-50 border-red-200', text: 'text-red-600', label: 'text-red-900', badge: 'bg-red-500' },
                         orange: { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-600', label: 'text-orange-900', badge: 'bg-orange-500' },
-                        purple: { bg: 'bg-purple-50 border-purple-200', text: 'text-purple-600', label: 'text-purple-900', badge: 'bg-purple-500' },
+                        purple: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600', label: 'text-navy-900', badge: 'bg-navy-500' },
                         pink: { bg: 'bg-pink-50 border-pink-200', text: 'text-pink-600', label: 'text-pink-900', badge: 'bg-pink-500' },
                         amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600', label: 'text-amber-900', badge: 'bg-amber-500' },
                         rose: { bg: 'bg-rose-50 border-rose-200', text: 'text-rose-600', label: 'text-rose-900', badge: 'bg-rose-500' },
@@ -1516,7 +1516,7 @@ Return JSON:
 
                   {/* Clinical Decision Support Alerts */}
                   {clinicalAlerts.length > 0 && (
-                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-lg border border-blue-300">
+                    <div className="bg-gradient-to-r from-blue-50 to-navy-50 p-3 rounded-lg border border-blue-300">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-sm font-bold text-blue-900 flex items-center gap-2">
                           <Stethoscope className="w-4 h-4" />
@@ -1714,7 +1714,7 @@ Return JSON:
                     <div className="space-y-6 p-1">
                       {/* Clinical Decision Support Alerts - Expanded View */}
                       {clinicalAlerts.length > 0 && (
-                        <Card className="border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50">
+                        <Card className="border-blue-300 bg-gradient-to-r from-blue-50 to-navy-50">
                           <CardHeader className="py-3 bg-blue-100">
                             <CardTitle className="text-sm flex items-center gap-2">
                               <Stethoscope className="w-4 h-4 text-blue-700" />
@@ -1782,9 +1782,9 @@ Return JSON:
                                 </div>
                               ))}
                             </div>
-                            <Alert className="mt-3 bg-cyan-50 border-cyan-200">
-                              <Info className="w-4 h-4 text-cyan-600" />
-                              <AlertDescription className="text-cyan-900 text-xs">
+                            <Alert className="mt-3 bg-navy-50 border-navy-200">
+                              <Info className="w-4 h-4 text-navy-600" />
+                              <AlertDescription className="text-navy-900 text-xs">
                                 These evidence-based alerts are triggered by clinical indicators detected in your documentation. 
                                 Following these guidelines improves patient outcomes, strengthens OASIS defensibility, and optimizes reimbursement.
                               </AlertDescription>
@@ -1893,10 +1893,10 @@ Return JSON:
                             {(() => {
                               const colorStyles = {
                                 blue: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-600' },
-                                cyan: { bg: 'bg-cyan-50 border-cyan-200', text: 'text-cyan-600' },
+                                cyan: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600' },
                                 red: { bg: 'bg-red-50 border-red-200', text: 'text-red-600' },
                                 orange: { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-600' },
-                                purple: { bg: 'bg-purple-50 border-purple-200', text: 'text-purple-600' },
+                                purple: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600' },
                                 pink: { bg: 'bg-pink-50 border-pink-200', text: 'text-pink-600' },
                                 amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600' },
                                 rose: { bg: 'bg-rose-50 border-rose-200', text: 'text-rose-600' },
@@ -2451,21 +2451,21 @@ Return JSON:
 
                         {/* Comorbidity Optimization */}
                         {oasisResults.pdgm_analysis.comorbidity_adjustment !== 'high' && (
-                          <div className="bg-white p-3 rounded border border-purple-200">
+                          <div className="bg-white p-3 rounded border border-navy-200">
                             <div className="flex items-start gap-2">
-                              <Badge className="bg-purple-500 text-white text-xs flex-shrink-0">Comorbidity Adj.</Badge>
+                              <Badge className="bg-navy-500 text-white text-xs flex-shrink-0">Comorbidity Adj.</Badge>
                               <div className="flex-1">
-                                <p className="text-sm font-medium text-purple-900">Improve Comorbidity Adjustment</p>
-                                <p className="text-xs text-purple-800 mt-1">
+                                <p className="text-sm font-medium text-navy-900">Improve Comorbidity Adjustment</p>
+                                <p className="text-xs text-navy-800 mt-1">
                                   Current adjustment: <strong>{oasisResults.pdgm_analysis.comorbidity_adjustment?.toUpperCase() || 'NONE'}</strong>.
                                   {oasisResults.pdgm_analysis.comorbidity_adjustment === 'none' && ' Document qualifying comorbidities to increase reimbursement.'}
                                   {oasisResults.pdgm_analysis.comorbidity_adjustment === 'low' && ' Document ONE high-impact comorbidity for HIGH adjustment.'}
                                 </p>
                                 <div className="mt-2 space-y-2">
                                   {/* High-impact comorbidity suggestions */}
-                                  <div className="bg-purple-50 p-2 rounded text-xs">
-                                    <p className="font-medium text-purple-800 mb-1">🎯 High-Impact Comorbidities (1 = HIGH adjustment):</p>
-                                    <ul className="text-purple-700 space-y-1">
+                                  <div className="bg-navy-50 p-2 rounded text-xs">
+                                    <p className="font-medium text-navy-800 mb-1">🎯 High-Impact Comorbidities (1 = HIGH adjustment):</p>
+                                    <ul className="text-navy-700 space-y-1">
                                       <li>• <strong>Diabetes with complications</strong> - neuropathy, nephropathy, retinopathy (E11.2x, E11.4x, E11.5x, E11.6x)</li>
                                       <li>• <strong>Heart Failure</strong> - CHF, HFrEF, HFpEF (I50.x)</li>
                                       <li>• <strong>COPD</strong> - chronic bronchitis, emphysema (J44.x, J43.x)</li>
@@ -2712,32 +2712,32 @@ Return JSON:
               {oasisResults.oasis_narrative_mismatches && oasisResults.oasis_narrative_mismatches.length > 0 && (
                 <div className="space-y-3">
                   <div 
-                    className="flex items-center justify-between cursor-pointer bg-purple-50 p-4 rounded-lg border-2 border-purple-200"
+                    className="flex items-center justify-between cursor-pointer bg-navy-50 p-4 rounded-lg border-2 border-navy-200"
                     onClick={() => toggleCategory('mismatches')}
                   >
                     <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-purple-600" />
+                      <AlertTriangle className="w-6 h-6 text-navy-600" />
                       <div>
-                        <h4 className="font-bold text-purple-900 text-lg">
+                        <h4 className="font-bold text-navy-900 text-lg">
                           🔍 OASIS vs Narrative Mismatches ({oasisResults.oasis_narrative_mismatches.length})
                         </h4>
-                        <p className="text-xs text-purple-700">Uploaded OASIS scores don't match clinical documentation</p>
+                        <p className="text-xs text-navy-700">Uploaded OASIS scores don't match clinical documentation</p>
                       </div>
                     </div>
                     {expandedCategories.includes('mismatches') ? (
-                      <ChevronUp className="w-5 h-5 text-purple-600" />
+                      <ChevronUp className="w-5 h-5 text-navy-600" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-purple-600" />
+                      <ChevronDown className="w-5 h-5 text-navy-600" />
                     )}
                   </div>
 
                   {expandedCategories.includes('mismatches') && (
                     <div className="space-y-3">
                       {oasisResults.oasis_narrative_mismatches.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-purple-500 bg-purple-50">
+                        <Card key={index} className="border-l-4 border-l-navy-500 bg-navy-50">
                           <CardContent className="p-4 space-y-2">
                             <div className="flex items-center justify-between">
-                              <h5 className="font-bold text-purple-900">{item.oasis_item}</h5>
+                              <h5 className="font-bold text-navy-900">{item.oasis_item}</h5>
                               <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : item.audit_risk === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`}>
                                 {item.audit_risk} audit risk
                               </Badge>
@@ -2828,9 +2828,9 @@ Return JSON:
                               </div>
                             )}
                             {item.pdgm_impact && (
-                              <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
-                                <p className="text-xs text-purple-700 font-medium">PDGM Impact:</p>
-                                <p className="text-purple-900">{item.pdgm_impact}</p>
+                              <div className="bg-navy-50 p-2 rounded border border-navy-200 text-sm">
+                                <p className="text-xs text-navy-700 font-medium">PDGM Impact:</p>
+                                <p className="text-navy-900">{item.pdgm_impact}</p>
                               </div>
                             )}
                             <Alert className="bg-blue-50 border-blue-200">
@@ -2931,7 +2931,7 @@ Return JSON:
                               </div>
                             </div>
                             {item.functional_level_change && (
-                              <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-300">
+                              <Badge variant="outline" className="bg-navy-50 text-navy-800 border-navy-300">
                                 {item.functional_level_change}
                               </Badge>
                             )}
@@ -3301,9 +3301,9 @@ Return JSON:
                             )}
 
                             {item.score_range_ambiguity && (
-                              <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
-                                <p className="text-xs text-purple-700 font-medium">🎯 Score Ambiguity:</p>
-                                <p className="text-purple-900">{item.score_range_ambiguity}</p>
+                              <div className="bg-navy-50 p-2 rounded border border-navy-200 text-sm">
+                                <p className="text-xs text-navy-700 font-medium">🎯 Score Ambiguity:</p>
+                                <p className="text-navy-900">{item.score_range_ambiguity}</p>
                               </div>
                             )}
 
@@ -3514,15 +3514,15 @@ Return JSON:
 
               {/* Quality Measures Impact */}
               {oasisResults.quality_measures_impact && oasisResults.quality_measures_impact.length > 0 && (
-                <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
-                  <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                <div className="bg-navy-50 p-4 rounded-lg border-2 border-navy-200">
+                  <h4 className="font-bold text-navy-900 mb-3 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
                     Quality Measures & Star Rating Impact
                   </h4>
                   <ul className="space-y-2">
                     {oasisResults.quality_measures_impact.map((measure, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-purple-900">
-                        <span className="font-bold text-purple-600 mt-0.5">★</span>
+                      <li key={index} className="flex items-start gap-2 text-sm text-navy-900">
+                        <span className="font-bold text-navy-600 mt-0.5">★</span>
                         <span>{measure}</span>
                       </li>
                     ))}

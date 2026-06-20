@@ -33,7 +33,21 @@ async function resolveTelnyxCreds(base44: any): Promise<{
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
+
+    // Authorization: privileged status-poll job (service-role FaxLog reads/writes
+    // + Twilio calls, no end user). Opt-in lockdown like checkExpiredInvitations
+    // (see §4); mirrors the admin-gated syncTwilioFaxStatuses.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     // Only poll faxes from the last 48 hours that are still pending
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     

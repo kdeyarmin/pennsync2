@@ -371,7 +371,7 @@ Provide specific suggestions that would help the nurse complete this step effici
         {/* Smart Suggestions Sidebar */}
         <div className="space-y-4">
           <Card className="border-2 border-indigo-400 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-indigo-100 to-purple-100 border-b-2 border-indigo-200">
+            <CardHeader className="bg-gradient-to-r from-indigo-100 to-navy-100 border-b-2 border-indigo-200">
               <CardTitle className="text-lg font-bold flex items-center gap-2 text-indigo-900">
                 <Sparkles className="w-5 h-5 text-indigo-700" />
                 Smart Suggestions

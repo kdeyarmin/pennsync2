@@ -40,7 +40,7 @@ export default function AdminTrainingAssignment() {
   const nursePerformance = users.map(user => {
     const userAudits = audits.filter(a => a.nurse_email === user.email);
     const avgCompliance = userAudits.length > 0
-      ? userAudits.reduce((sum, a) => sum + (a.overall_score || 0), 0) / userAudits.length
+      ? userAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / userAudits.length
       : 100;
     
     return {

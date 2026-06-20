@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,10 @@ export default function OfflineSyncManager() {
   const [syncResult, setSyncResult] = useState(null);
   const [pendingDrafts, setPendingDrafts] = useState([]);
   const [syncErrors, setSyncErrors] = useState([]);
+  // Reentrancy guard: a reconnect auto-sync overlapping a manual "Sync Now" tap
+  // would otherwise run two loops over the same drafts and create duplicate
+  // visits (the `isSyncing` state is read through a stale closure in the effect).
+  const isSyncingRef = useRef(false);
   const [conflicts, setConflicts] = useState([]);
   const [backgroundSyncEnabled, _setBackgroundSyncEnabled] = useState(true);
 
@@ -127,6 +131,8 @@ export default function OfflineSyncManager() {
 
   const syncOfflineData = async () => {
     if (!isOnline || pendingDrafts.length === 0) return;
+    if (isSyncingRef.current) return; // an overlapping run would duplicate visits
+    isSyncingRef.current = true;
 
     setIsSyncing(true);
     setSyncResult(null);
@@ -167,10 +173,18 @@ export default function OfflineSyncManager() {
         }
       }
 
-      // Keep only the drafts that actually failed (by index), drop the synced.
+      // Drop the synced drafts by id, re-reading the store immediately before the
+      // write so a draft saved DURING this async sync isn't clobbered by the stale
+      // closure snapshot (that was silent loss of a documented visit). Match by the
+      // stable draft.id assigned in OfflineNoteEditor.
       if (successCount > 0) {
-        const remaining = pendingDrafts.filter((_, i) => failedIndices.has(i));
-        localStorage.setItem('offline_visit_drafts', JSON.stringify(remaining));
+        const syncedIds = new Set(
+          pendingDrafts.filter((_, i) => !failedIndices.has(i)).map((d) => d.id).filter(Boolean)
+        );
+        let current = [];
+        try { current = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]'); } catch { current = []; }
+        const next = Array.isArray(current) ? current.filter((d) => !(d.id && syncedIds.has(d.id))) : [];
+        localStorage.setItem('offline_visit_drafts', JSON.stringify(next));
         loadPendingDrafts();
       }
 
@@ -194,6 +208,7 @@ export default function OfflineSyncManager() {
       });
     }
 
+    isSyncingRef.current = false;
     setIsSyncing(false);
     setSyncProgress(0);
   };

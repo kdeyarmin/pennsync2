@@ -407,10 +407,10 @@ export default function WorkflowExecutionEngine({
   // Show loading state while rules are loading
   if (isLoadingRules || isLoadingUser) {
     return (
-      <Card className="border-2 border-purple-300">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+      <Card className="border-2 border-navy-300">
+        <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
           <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-600" />
+            <Zap className="w-5 h-5 text-navy-600" />
             Automated Workflow Execution
           </CardTitle>
         </CardHeader>
@@ -429,10 +429,10 @@ export default function WorkflowExecutionEngine({
   // Show error state if rules or user data failed to load
   if (rulesError || userError) {
     return (
-      <Card className="border-2 border-purple-300">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+      <Card className="border-2 border-navy-300">
+        <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
           <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-600" />
+            <Zap className="w-5 h-5 text-navy-600" />
             Automated Workflow Execution
           </CardTitle>
         </CardHeader>
@@ -449,18 +449,18 @@ export default function WorkflowExecutionEngine({
   }
 
   return (
-    <Card className="border-2 border-purple-300">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-300">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-600" />
+            <Zap className="w-5 h-5 text-navy-600" />
             Automated Workflow Execution
           </CardTitle>
           <Button
             onClick={executeWorkflows}
             disabled={executing || !automationRules || automationRules.length === 0}
             size="sm"
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {executing ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Executing...</>
@@ -488,9 +488,9 @@ export default function WorkflowExecutionEngine({
         )}
 
         {lastRunSummary && (
-          <Alert className="mb-4 bg-violet-50 border-violet-200">
-            <Info className="w-4 h-4 text-violet-700" />
-            <AlertDescription className="text-violet-900 text-xs">
+          <Alert className="mb-4 bg-navy-50 border-navy-200">
+            <Info className="w-4 h-4 text-navy-700" />
+            <AlertDescription className="text-navy-900 text-xs">
               Last run at {new Date(lastRunSummary.runAt).toLocaleString()} ({lastRunSummary.runId}): {lastRunSummary.triggeredRules} triggered,
               {" "}{lastRunSummary.completedRules} completed, {lastRunSummary.failedRules} failed
               {lastRunSummary.partiallyCompletedRules > 0 && `, ${lastRunSummary.partiallyCompletedRules} partially completed`}.

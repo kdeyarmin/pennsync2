@@ -16,7 +16,7 @@ export default function DashboardCustomizer({ _currentUser, widgets, onUpdate })
       return await base44.auth.updateMe({ dashboard_preferences: preferences });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['currentUser']);
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       onUpdate?.(localWidgets);
       setIsOpen(false);
     }

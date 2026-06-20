@@ -119,9 +119,9 @@ Return JSON with:
 
   if (!quiz) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">
-          <Sparkles className="w-16 h-16 text-purple-500 mx-auto mb-4" />
+          <Sparkles className="w-16 h-16 text-navy-500 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-slate-900 mb-2">AI Quiz Generator</h3>
           <p className="text-slate-600 mb-6">
             Generate an interactive quiz based on the training material to assess understanding
@@ -129,7 +129,7 @@ Return JSON with:
           <Button
             onClick={generateQuiz}
             disabled={generating || !trainingContent}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
             size="lg"
           >
             {generating ? (
@@ -231,7 +231,7 @@ Return JSON with:
   const allAnswered = Object.keys(selectedAnswers).length === quiz.questions.length;
 
   return (
-    <Card className="border-2 border-purple-200">
+    <Card className="border-2 border-navy-200">
       <CardHeader>
         <div className="flex items-center justify-between mb-2">
           <CardTitle className="text-lg">{quiz.quiz_title}</CardTitle>
@@ -259,7 +259,7 @@ Return JSON with:
             onValueChange={(value) => handleAnswerSelect(currentQuestion, parseInt(value))}
           >
             {question.options.map((option, idx) => (
-              <div key={idx} className="flex items-center space-x-3 p-3 rounded-lg border-2 border-slate-200 hover:border-purple-300 hover:bg-purple-50 transition-colors">
+              <div key={idx} className="flex items-center space-x-3 p-3 rounded-lg border-2 border-slate-200 hover:border-navy-300 hover:bg-navy-50 transition-colors">
                 <RadioGroupItem value={idx.toString()} id={`option-${idx}`} />
                 <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer text-sm">
                   {option}
@@ -293,7 +293,7 @@ Return JSON with:
             <Button
               onClick={() => setCurrentQuestion(currentQuestion + 1)}
               disabled={selectedAnswers[currentQuestion] === undefined}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               Next <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

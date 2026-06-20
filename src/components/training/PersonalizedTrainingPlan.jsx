@@ -291,11 +291,11 @@ export default function PersonalizedTrainingPlan({
 
   if (isGenerating) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-          <p className="text-sm font-medium text-purple-900">Creating Your Personalized Training Plan...</p>
-          <p className="text-xs text-purple-700 mt-1">Analyzing your documentation patterns</p>
+          <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
+          <p className="text-sm font-medium text-navy-900">Creating Your Personalized Training Plan...</p>
+          <p className="text-xs text-navy-700 mt-1">Analyzing your documentation patterns</p>
         </CardContent>
       </Card>
     );
@@ -317,11 +317,11 @@ export default function PersonalizedTrainingPlan({
   const overallProgress = (completedModules / trainingPlan.modules.length) * 100;
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-purple-600" />
+            <Target className="w-4 h-4 text-navy-600" />
             Your Personalized Training Plan
           </div>
           <div className="flex items-center gap-2">
@@ -382,7 +382,7 @@ export default function PersonalizedTrainingPlan({
                         {module.status !== 'completed' && (
                           <Button
                             size="sm"
-                            className="h-7 text-xs bg-purple-600 hover:bg-purple-700"
+                            className="h-7 text-xs bg-navy-600 hover:bg-navy-700"
                             onClick={(e) => {
                               e.stopPropagation();
                               onStartModule?.(module);
@@ -427,7 +427,7 @@ export default function PersonalizedTrainingPlan({
                           >
                             <div className="flex items-center gap-2">
                               <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                lesson.type === 'quiz' ? 'bg-purple-100 text-purple-600' :
+                                lesson.type === 'quiz' ? 'bg-navy-100 text-navy-600' :
                                 lesson.type === 'practice' ? 'bg-green-100 text-green-600' :
                                 'bg-blue-100 text-blue-600'
                               }`}>

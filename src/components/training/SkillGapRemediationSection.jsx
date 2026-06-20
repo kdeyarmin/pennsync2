@@ -253,7 +253,7 @@ export default function SkillGapRemediationSection({
                     </Button>
                     <Button
                       size="sm"
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-navy-600 hover:bg-navy-700"
                       onClick={() => setActiveQuiz(module.quiz)}
                     >
                       <Brain className="w-3 h-3 mr-1" />
@@ -268,7 +268,7 @@ export default function SkillGapRemediationSection({
       )}
 
       {/* Header with Progress */}
-      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+      <Card className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-200">
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -393,7 +393,7 @@ export default function SkillGapRemediationSection({
               {recommendation.suggestedQuizzes.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                    <Brain className="w-4 h-4 text-purple-600" />
+                    <Brain className="w-4 h-4 text-navy-600" />
                     Knowledge Quizzes
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -404,7 +404,7 @@ export default function SkillGapRemediationSection({
                           key={quizId}
                           variant={isCompleted ? "outline" : "default"}
                           className={`justify-between h-auto py-3 ${
-                            isCompleted ? 'bg-green-50 border-green-300' : 'bg-purple-600 hover:bg-purple-700'
+                            isCompleted ? 'bg-green-50 border-green-300' : 'bg-navy-600 hover:bg-navy-700'
                           }`}
                           onClick={() => setActiveQuiz(quizId)}
                         >

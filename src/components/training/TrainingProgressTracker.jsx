@@ -70,7 +70,7 @@ export default function TrainingProgressTracker({ _userEmail, trainingProgress, 
   return (
     <div className="space-y-6">
       {/* Overall Progress */}
-      <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-navy-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Award className="w-5 h-5 text-indigo-600" />
@@ -222,16 +222,16 @@ export default function TrainingProgressTracker({ _userEmail, trainingProgress, 
       )}
 
       {/* Skill Level Badge */}
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
+      <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-pink-50">
         <CardContent className="p-6 text-center">
-          <Target className="w-12 h-12 text-purple-600 mx-auto mb-3" />
-          <h3 className="text-2xl font-bold text-purple-900 mb-1">
+          <Target className="w-12 h-12 text-navy-600 mx-auto mb-3" />
+          <h3 className="text-2xl font-bold text-navy-900 mb-1">
             {averagePracticeScore >= 90 ? 'Expert Documenter' :
              averagePracticeScore >= 80 ? 'Advanced' :
              averagePracticeScore >= 70 ? 'Intermediate' :
              averagePracticeScore >= 60 ? 'Developing' : 'Beginner'}
           </h3>
-          <p className="text-sm text-purple-700">Current Documentation Skill Level</p>
+          <p className="text-sm text-navy-700">Current Documentation Skill Level</p>
           {averagePracticeScore < 90 && (
             <p className="text-xs text-slate-600 mt-2">
               {90 - Math.round(averagePracticeScore)}% more to reach Expert level

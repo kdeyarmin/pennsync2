@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,10 @@ export default function OfflineDataManager() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isCaching, setIsCaching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  // Reentrancy guard: the [isOnline] auto-sync effect reads isSyncing through a
+  // stale closure, so a refetch/reconnect overlapping a manual sync would create
+  // each cached visit twice (no idempotency key on Visit.create).
+  const isSyncingRef = useRef(false);
   const [syncStatus, setSyncStatus] = useState(null);
 
   useEffect(() => {
@@ -129,6 +133,8 @@ export default function OfflineDataManager() {
 
   const syncOfflineData = async () => {
     if (!isOnline || !currentUser?.email) return;
+    if (isSyncingRef.current) return; // an overlapping run would duplicate visits
+    isSyncingRef.current = true;
 
     setIsSyncing(true);
     let successCount = 0;
@@ -180,6 +186,7 @@ export default function OfflineDataManager() {
       toast.error('Sync failed. Please try again.');
     }
 
+    isSyncingRef.current = false;
     setIsSyncing(false);
   };
 

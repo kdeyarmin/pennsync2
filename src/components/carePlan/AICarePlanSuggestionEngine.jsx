@@ -170,9 +170,9 @@ Return JSON with suggestions array.`,
 
   if (isGenerating) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-6 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4" />
           <p className="text-sm text-slate-600">AI analyzing {diagnosis} and generating Medicare-compliant care plan suggestions...</p>
         </CardContent>
       </Card>
@@ -181,10 +181,10 @@ Return JSON with suggestions array.`,
 
   if (!suggestions) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Care Plan Suggestions
           </CardTitle>
         </CardHeader>
@@ -202,11 +202,11 @@ Return JSON with suggestions array.`,
   }
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-b from-purple-50 to-white">
+    <Card className="border-2 border-navy-200 bg-gradient-to-b from-navy-50 to-white">
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Care Plan Suggestions
           </span>
           <Badge variant="outline">{suggestions.length} suggestions</Badge>
@@ -293,9 +293,9 @@ Return JSON with suggestions array.`,
                   )}
 
                   {/* Medicare Compliance */}
-                  <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                    <p className="text-xs font-semibold text-purple-900 mb-1">Medicare Compliance:</p>
-                    <p className="text-xs text-purple-800">{suggestion.medicare_compliance_note}</p>
+                  <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                    <p className="text-xs font-semibold text-navy-900 mb-1">Medicare Compliance:</p>
+                    <p className="text-xs text-navy-800">{suggestion.medicare_compliance_note}</p>
                   </div>
 
                   {/* Rationale */}
@@ -308,7 +308,7 @@ Return JSON with suggestions array.`,
                   {!isAccepted && (
                     <Button
                       onClick={() => handleAcceptSuggestion(suggestion, idx)}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      className="w-full bg-navy-600 hover:bg-navy-700"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add to Care Plan

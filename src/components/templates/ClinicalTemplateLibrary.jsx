@@ -47,7 +47,7 @@ const VISIT_TYPE_TEMPLATES = [
     name: 'Recertification',
     icon: RefreshCw,
     description: 'Comprehensive reassessment for continued care',
-    color: 'bg-purple-500',
+    color: 'bg-navy-500',
     sections: ['vital_signs', 'comprehensive_assessment', 'progress_summary', 'continued_need', 'updated_goals', 'physician_orders']
   },
   {
@@ -114,7 +114,7 @@ const CONDITION_TEMPLATES = [
     name: 'Stroke / CVA',
     icon: Brain,
     description: 'Post-stroke care and rehabilitation',
-    color: 'bg-purple-500',
+    color: 'bg-navy-500',
     focusAreas: ['neurological_assessment', 'mobility', 'speech', 'swallowing', 'fall_prevention', 'caregiver_training']
   },
   {

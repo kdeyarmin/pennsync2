@@ -91,12 +91,12 @@ Plan: ${summary.plan}` : "";
   };
 
   return (
-    <Card className="border border-violet-200 bg-violet-50">
+    <Card className="border border-navy-200 bg-navy-50">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-violet-600" />
-            <span className="text-sm font-semibold text-violet-800">AI Patient Summary</span>
+            <User className="w-4 h-4 text-navy-600" />
+            <span className="text-sm font-semibold text-navy-800">AI Patient Summary</span>
             {summary?.overall_condition && (
               <Badge className={`text-xs ${conditionColors[summary.overall_condition] || conditionColors.unchanged}`}>
                 {summary.overall_condition}
@@ -105,21 +105,21 @@ Plan: ${summary.plan}` : "";
           </div>
           <div className="flex items-center gap-2">
             {!summary && !loading && (
-              <Button size="sm" onClick={generateSummary} className="h-7 text-xs bg-violet-600 hover:bg-violet-700">
+              <Button size="sm" onClick={generateSummary} className="h-7 text-xs bg-navy-600 hover:bg-navy-700">
                 <FileText className="w-3 h-3 mr-1" /> Generate Summary
               </Button>
             )}
             {summary && (
               <>
-                <Button size="sm" variant="ghost" onClick={generateSummary} className="h-7 text-xs text-violet-600">Regenerate</Button>
-                <Button size="sm" variant="ghost" onClick={handleCopy} className="h-7 text-xs gap-1 text-violet-600">
+                <Button size="sm" variant="ghost" onClick={generateSummary} className="h-7 text-xs text-navy-600">Regenerate</Button>
+                <Button size="sm" variant="ghost" onClick={handleCopy} className="h-7 text-xs gap-1 text-navy-600">
                   {copied ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   {copied ? "Copied" : "Copy"}
                 </Button>
               </>
             )}
             {summary && (
-              <button onClick={() => setExpanded(!expanded)} className="text-violet-400 hover:text-violet-700">
+              <button onClick={() => setExpanded(!expanded)} className="text-navy-400 hover:text-navy-700">
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
             )}
@@ -127,7 +127,7 @@ Plan: ${summary.plan}` : "";
         </div>
 
         {loading && (
-          <div className="flex items-center gap-2 text-sm text-violet-600 py-2">
+          <div className="flex items-center gap-2 text-sm text-navy-600 py-2">
             <Loader2 className="w-4 h-4 animate-spin" /> Generating patient summary from your notes...
           </div>
         )}

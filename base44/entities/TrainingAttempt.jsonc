@@ -92,6 +92,11 @@
     "ip_address": {
       "type": "string",
       "description": "IP address for audit"
+    },
+    "badges_processed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set by awardBadgeOnCompletion once this attempt has been processed; gates idempotent badge/point/streak awards so a replayed attempt cannot double-award (covers attempts that earn no badge too)."
     }
   },
   "required": [

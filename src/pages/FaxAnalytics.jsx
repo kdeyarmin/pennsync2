@@ -7,9 +7,7 @@ import {
     PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, differenceInMinutes } from 'date-fns';
-import { BarChart3, FileText, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
-import PageContainer from '@/components/ui/PageContainer';
-import PageHeader from '@/components/ui/PageHeader';
+import { FileText, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
 
 const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
@@ -115,15 +113,7 @@ export default function FaxAnalytics() {
     }
 
     return (
-        <PageContainer>
-            <PageHeader
-                icon={BarChart3}
-                eyebrow="Communication"
-                title="Fax Analytics"
-                description="Monitor operational performance and transmission metrics"
-                favoritePage="FaxAnalytics"
-            />
-
+        <div className="space-y-4 sm:space-y-6">
             {/* Top Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="modern-card">
@@ -244,6 +234,6 @@ export default function FaxAnalytics() {
                     </CardContent>
                 </Card>
             </div>
-        </PageContainer>
+        </div>
     );
 }

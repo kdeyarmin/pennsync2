@@ -103,11 +103,11 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
 
   if (compact) {
     return (
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
+      <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-indigo-50">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-navy-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -139,7 +139,7 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
   return (
     <div className="space-y-6">
       {/* Level & Points Header */}
-      <Card className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none">
+      <Card className="bg-gradient-to-r from-navy-600 to-indigo-600 text-white border-none">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -147,7 +147,7 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
                 <Crown className="w-10 h-10 text-yellow-300" />
               </div>
               <div>
-                <p className="text-purple-100 text-sm">Current Level</p>
+                <p className="text-navy-100 text-sm">Current Level</p>
                 <h2 className="text-3xl font-bold">Level {currentLevel.level}: {currentLevel.name}</h2>
                 <div className="flex items-center gap-3 mt-2">
                   <Progress value={getProgressToNextLevel()} className="w-48 h-3 bg-white/20" />
@@ -158,19 +158,19 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
             <div className="flex gap-4">
               <div className="text-center">
                 <p className="text-3xl font-bold">{userStats.streak}</p>
-                <p className="text-xs text-purple-200 flex items-center gap-1">
+                <p className="text-xs text-navy-200 flex items-center gap-1">
                   <Flame className="w-3 h-3" /> Day Streak
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold">{earnedBadges.length}</p>
-                <p className="text-xs text-purple-200 flex items-center gap-1">
+                <p className="text-xs text-navy-200 flex items-center gap-1">
                   <Medal className="w-3 h-3" /> Badges
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold">{userStats.weeklyPoints || 0}</p>
-                <p className="text-xs text-purple-200 flex items-center gap-1">
+                <p className="text-xs text-navy-200 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" /> This Week
                 </p>
               </div>
@@ -197,7 +197,7 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <Award className="w-8 h-8 mx-auto mb-2 text-purple-500" />
+            <Award className="w-8 h-8 mx-auto mb-2 text-navy-500" />
             <p className="text-2xl font-bold">{userStats.completedTraining || 0}</p>
             <p className="text-xs text-slate-600">Training Completed</p>
           </CardContent>
@@ -249,7 +249,7 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-500" />
+            <Sparkles className="w-5 h-5 text-navy-500" />
             Weekly Challenges
           </CardTitle>
         </CardHeader>

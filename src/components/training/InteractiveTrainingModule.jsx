@@ -184,13 +184,13 @@ export default function InteractiveTrainingModule({ trainingData, onComplete, on
         {/* Scenario */}
         {currentStep === 'scenario' && (
           <Card>
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+            <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
               <CardTitle>Clinical Scenario</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <h3 className="font-semibold text-purple-900 mb-2">{content.scenario.title}</h3>
+                <div className="bg-navy-50 rounded-lg p-4 border border-navy-200">
+                  <h3 className="font-semibold text-navy-900 mb-2">{content.scenario.title}</h3>
                   <p className="text-slate-700 mb-3">{content.scenario.patient_background}</p>
                   <p className="text-slate-800 font-medium">{content.scenario.situation}</p>
                 </div>
@@ -243,12 +243,12 @@ export default function InteractiveTrainingModule({ trainingData, onComplete, on
                     <Button
                       onClick={handleCheckAnswer}
                       disabled={selectedAnswers[scenarioStep] === undefined}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-navy-600 hover:bg-navy-700"
                     >
                       Check Answer
                     </Button>
                   ) : (
-                    <Button onClick={handleNextStep} className="bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={handleNextStep} className="bg-navy-600 hover:bg-navy-700">
                       {scenarioStep < content.scenario.decision_points.length - 1 ? 'Next Question' : 'Continue to Quiz'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>

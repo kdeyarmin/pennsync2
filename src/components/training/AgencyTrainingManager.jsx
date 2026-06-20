@@ -73,7 +73,7 @@ export default function AgencyTrainingManager() {
   const createModuleMutation = useMutation({
     mutationFn: (data) => base44.entities.TrainingModule.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['trainingModules']);
+      queryClient.invalidateQueries({ queryKey: ['trainingModules'] });
       setShowModuleDialog(false);
       resetModuleForm();
     }
@@ -92,7 +92,7 @@ export default function AgencyTrainingManager() {
       return Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['allCompletions']);
+      queryClient.invalidateQueries({ queryKey: ['allCompletions'] });
       setShowAssignDialog(false);
     }
   });

@@ -345,7 +345,7 @@ Return only the structured clinical note, no preamble.`;
           <Button
             onClick={structureNote}
             disabled={isStructuring}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white gap-2 px-8 py-3 text-base shadow-md hover:shadow-lg"
+            className="bg-gradient-to-r from-navy-600 to-indigo-600 text-white gap-2 px-8 py-3 text-base shadow-md hover:shadow-lg"
             size="lg"
           >
             {isStructuring ? (

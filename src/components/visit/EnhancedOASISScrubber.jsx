@@ -299,17 +299,17 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
 
   return (
     <>
-      <Card className="border-purple-200 shadow-md">
+      <Card className="border-navy-200 shadow-md">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-purple-800">
+          <CardTitle className="flex items-center gap-2 text-navy-800">
             <Sparkles className="w-5 h-5" />
             Enhanced OASIS Scrubber
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Alert className="bg-purple-50 border-purple-200">
-            <FileCheck className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-900 text-sm">
+          <Alert className="bg-navy-50 border-navy-200">
+            <FileCheck className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-navy-900 text-sm">
               <p className="font-semibold mb-1">🎯 PDGM Optimization Tool</p>
               <p>Analyzes your documentation to suggest optimal OASIS responses and maximize appropriate reimbursement.</p>
             </AlertDescription>
@@ -318,7 +318,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
           <Button 
             onClick={analyzeOASIS}
             disabled={isAnalyzing || !narrativeText}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             {isAnalyzing ? (
               <>
@@ -345,7 +345,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <Sparkles className="w-6 h-6 text-purple-600" />
+              <Sparkles className="w-6 h-6 text-navy-600" />
               Enhanced OASIS Analysis & PDGM Optimization
             </DialogTitle>
             <DialogDescription>
@@ -475,7 +475,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
               <TabsContent value="oasis" className="space-y-3">
                 {analysis.oasis_item_suggestions && analysis.oasis_item_suggestions.length > 0 ? (
                   analysis.oasis_item_suggestions.map((item, idx) => (
-                    <Card key={idx} className="border-purple-200">
+                    <Card key={idx} className="border-navy-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
@@ -518,7 +518,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                           )}
 
                           {item.narrative_snippet && (
-                            <div className="p-2 bg-purple-50 rounded border border-purple-200">
+                            <div className="p-2 bg-navy-50 rounded border border-navy-200">
                               <div className="flex items-start justify-between mb-1">
                                 <p className="text-slate-600 text-xs">Suggested Narrative Text:</p>
                                 <Button
@@ -528,7 +528,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
                                     onAddSuggestion(item.narrative_snippet);
                                     setShowDialog(false);
                                   }}
-                                  className="h-6 px-2 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
+                                  className="h-6 px-2 text-navy-700 hover:text-navy-900 hover:bg-navy-100"
                                 >
                                   <Plus className="w-3 h-3 mr-1" />
                                   Add to Note
@@ -726,7 +726,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
             </Tabs>
           ) : (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600" />
             </div>
           )}
 

@@ -269,7 +269,7 @@ Return JSON:
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="p-8 text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Generating Your Personalized Learning</h3>
             <p className="text-slate-600">Creating micro-lesson, quiz, and scenario for: {skillGap?.area}</p>
           </CardContent>
@@ -285,7 +285,7 @@ Return JSON:
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             {moduleContent.module_title}
           </DialogTitle>
         </DialogHeader>
@@ -295,11 +295,11 @@ Return JSON:
           {steps.map((step, idx) => (
             <div 
               key={step.id}
-              className={`flex items-center gap-2 ${idx <= currentStep ? 'text-purple-600' : 'text-slate-400'}`}
+              className={`flex items-center gap-2 ${idx <= currentStep ? 'text-navy-600' : 'text-slate-400'}`}
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 idx < currentStep ? 'bg-green-100' : 
-                idx === currentStep ? 'bg-purple-100' : 'bg-slate-100'
+                idx === currentStep ? 'bg-navy-100' : 'bg-slate-100'
               }`}>
                 {idx < currentStep ? (
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -328,11 +328,11 @@ Return JSON:
               </div>
 
               {/* Learning Objectives */}
-              <div className="p-4 bg-purple-50 rounded-lg">
-                <h4 className="font-semibold text-purple-900 mb-2">Learning Objectives</h4>
+              <div className="p-4 bg-navy-50 rounded-lg">
+                <h4 className="font-semibold text-navy-900 mb-2">Learning Objectives</h4>
                 <ul className="space-y-1">
                   {moduleContent.learning_objectives?.map((obj, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-purple-800">
+                    <li key={idx} className="flex items-start gap-2 text-sm text-navy-800">
                       <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
                       {obj}
                     </li>
@@ -417,7 +417,7 @@ Return JSON:
                   <Button 
                     onClick={handleQuizSubmit}
                     disabled={Object.keys(quizAnswers).length !== moduleContent.quiz?.questions?.length}
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-navy-600 hover:bg-navy-700"
                   >
                     Submit Quiz
                   </Button>
@@ -495,9 +495,9 @@ Return JSON:
                     </div>
                   </div>
 
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <p className="text-sm font-semibold text-purple-900 mb-1">Your Challenge:</p>
-                    <p className="text-purple-800">{moduleContent.scenario?.challenge}</p>
+                  <div className="p-3 bg-navy-100 rounded-lg">
+                    <p className="text-sm font-semibold text-navy-900 mb-1">Your Challenge:</p>
+                    <p className="text-navy-800">{moduleContent.scenario?.challenge}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -517,7 +517,7 @@ Return JSON:
                 <Button 
                   onClick={evaluateScenarioResponse}
                   disabled={!scenarioResponse.trim() || isEvaluating}
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  className="w-full bg-navy-600 hover:bg-navy-700"
                 >
                   {isEvaluating ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Evaluating...</>
@@ -606,15 +606,15 @@ Return JSON:
                     </div>
                   </div>
 
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <p className="text-sm font-semibold text-purple-800 mb-1">Self-Assessment:</p>
-                    <p className="text-sm text-purple-700">{moduleContent.practice_exercise?.self_assessment}</p>
+                  <div className="p-3 bg-navy-50 rounded-lg">
+                    <p className="text-sm font-semibold text-navy-800 mb-1">Self-Assessment:</p>
+                    <p className="text-sm text-navy-700">{moduleContent.practice_exercise?.self_assessment}</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <div className="p-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg text-center">
-                <Award className="w-12 h-12 text-purple-600 mx-auto mb-2" />
+              <div className="p-6 bg-gradient-to-r from-navy-100 to-pink-100 rounded-lg text-center">
+                <Award className="w-12 h-12 text-navy-600 mx-auto mb-2" />
                 <h4 className="font-semibold text-lg text-slate-900 mb-1">Module Complete!</h4>
                 <p className="text-slate-600 mb-4">Great job completing this micro-learning module.</p>
                 <div className="flex items-center justify-center gap-4 text-sm">
@@ -643,7 +643,7 @@ Return JSON:
           {currentStep < steps.length - 1 ? (
             <Button 
               onClick={() => setCurrentStep(prev => prev + 1)}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               Next <ChevronRight className="w-4 h-4 ml-1" />
             </Button>

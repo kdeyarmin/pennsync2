@@ -278,7 +278,7 @@ export default function SystemHealthMonitor() {
           {[
             { label: "Active Users", value: metrics.active_users ?? "—", icon: Wifi, color: "text-indigo-600", bg: "bg-indigo-50" },
             { label: "Visits Today", value: metrics.visits_today ?? "—", icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "Total Users", value: metrics.total_users ?? "—", icon: Cpu, color: "text-purple-600", bg: "bg-purple-50" },
+            { label: "Total Users", value: metrics.total_users ?? "—", icon: Cpu, color: "text-navy-600", bg: "bg-navy-50" },
           ].map(({ label, value, icon: Icon, color, bg }) => (
             <div key={label} className={`rounded-xl p-3 ${bg} border border-slate-100`}>
               <div className="flex items-center gap-2 mb-1">

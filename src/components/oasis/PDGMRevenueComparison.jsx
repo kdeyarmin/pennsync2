@@ -110,7 +110,7 @@ function AlternativeScenarios({ scenarios, currentKey }) {
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1">
                   {data.admissionSource === 'institutional' ? (
-                    <Building2 className="w-3 h-3 text-purple-500" />
+                    <Building2 className="w-3 h-3 text-navy-500" />
                   ) : (
                     <Activity className="w-3 h-3 text-blue-500" />
                   )}
@@ -872,21 +872,21 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
 
             {/* Applied Corrections Detail */}
             {revenueData.corrected?._correctionCount > 0 && (
-              <div className="border border-purple-200 rounded-lg overflow-hidden">
+              <div className="border border-navy-200 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setShowCorrections(!showCorrections)}
-                  className="w-full flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 transition-colors"
+                  className="w-full flex items-center justify-between p-3 bg-navy-50 hover:bg-navy-100 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-purple-600" />
-                    <span className="text-sm font-medium text-purple-800">
+                    <Wrench className="w-4 h-4 text-navy-600" />
+                    <span className="text-sm font-medium text-navy-800">
                       {revenueData.corrected._correctionCount} Corrections Applied
                     </span>
                   </div>
                   {showCorrections ? (
-                    <ChevronUp className="w-4 h-4 text-purple-600" />
+                    <ChevronUp className="w-4 h-4 text-navy-600" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-purple-600" />
+                    <ChevronDown className="w-4 h-4 text-navy-600" />
                   )}
                 </button>
                 
@@ -904,7 +904,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
                           <ClipboardList className="w-3.5 h-3.5 text-orange-500 mt-0.5 flex-shrink-0" />
                         )}
                         {(correction.type === 'therapy' || correction.type === 'admission' || correction.type === 'other') && (
-                          <Wrench className="w-3.5 h-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
+                          <Wrench className="w-3.5 h-3.5 text-navy-500 mt-0.5 flex-shrink-0" />
                         )}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -912,7 +912,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
                               {correction.type.replace('_', ' ')}
                             </Badge>
                             {correction.item && correction.item !== 'multiple' && (
-                              <span className="font-mono text-purple-700">{correction.item}</span>
+                              <span className="font-mono text-navy-700">{correction.item}</span>
                             )}
                             {correction.change && (
                               <span className="text-green-600 font-medium">{correction.change}</span>

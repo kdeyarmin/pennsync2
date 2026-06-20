@@ -38,6 +38,25 @@ test("medication match is case-insensitive (no false flag on casing)", () => {
   assert.equal(valueGuard(output, input).ok, true);
 });
 
+test("does not flag a wound dimension when the note normalizes the spacing around x", () => {
+  // The nurse's draft writes the compact "4x5 cm"; the generated note faithfully
+  // rephrases it as "4 x 5 cm". This must NOT be flagged — the value is identical,
+  // only the spacing around the 'x' changed.
+  const input = "Sacral wound 4x5 cm with granulation tissue.";
+  const output = "Assessed a sacral wound measuring 4 x 5 cm with granulation tissue.";
+  const result = valueGuard(output, input);
+  assert.equal(result.ok, true);
+  assert.equal(result.unverified.length, 0);
+});
+
+test("still flags an invented single measurement that is absent from the input", () => {
+  const input = "Wound assessed, no dimensions recorded.";
+  const output = "Wound measured 7 cm in length.";
+  const result = valueGuard(output, input);
+  assert.equal(result.ok, false);
+  assert.ok(result.unverified.some((u) => u.type === "number" && u.value === "7cm"));
+});
+
 test("flags multiple invented values at once", () => {
   const input = "Patient stable.";
   const output = "BP 200/110, O2 84%, gave 250 mg.";

@@ -108,16 +108,16 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
   };
 
   return (
-    <Card className="border-2 border-purple-300">
+    <Card className="border-2 border-navy-300">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Shield className="w-5 h-5 text-purple-600" />
+          <Shield className="w-5 h-5 text-navy-600" />
           PHI De-Identification Tool
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert className="bg-purple-50 border-purple-300">
-          <AlertDescription className="text-purple-900 text-sm">
+        <Alert className="bg-navy-50 border-navy-300">
+          <AlertDescription className="text-navy-900 text-sm">
             <p className="font-semibold mb-1">🛡️ HIPAA Safe Harbor De-Identification</p>
             <p>Automatically removes 18 identifiers: names, dates, addresses, phone numbers, emails, SSN, MRN, ages {'>'} 89, etc.</p>
           </AlertDescription>
@@ -146,7 +146,7 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
         <Button
           onClick={deIdentify}
           disabled={isProcessing || !originalText}
-          className="w-full bg-purple-600 hover:bg-purple-700 min-h-[44px]"
+          className="w-full bg-navy-600 hover:bg-navy-700 min-h-[44px]"
         >
           {isProcessing ? (
             <>Processing...</>

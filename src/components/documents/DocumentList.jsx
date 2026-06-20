@@ -48,7 +48,7 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-slate-900 truncate">{doc.title}</h3>
               {doc.ai_analysis?.analyzed && (
-                <Brain className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                <Brain className="w-4 h-4 text-navy-600 flex-shrink-0" />
               )}
               {hasCriticalFlags && (
                 <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 animate-pulse" />
@@ -188,8 +188,8 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Document.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['patient-documents']);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-documents'] });
       toast.success("Document deleted");
     }
   });
@@ -217,7 +217,7 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
   const getCategoryColor = (category) => {
     const colors = {
       lab_results: "bg-blue-100 text-blue-800",
-      imaging: "bg-purple-100 text-purple-800",
+      imaging: "bg-navy-100 text-navy-800",
       consent_forms: "bg-green-100 text-green-800",
       insurance: "bg-yellow-100 text-yellow-800",
       referral: "bg-pink-100 text-pink-800",

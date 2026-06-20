@@ -2,6 +2,6 @@
 // component so it can also be rendered inside other pages (e.g. tabs/hubs).
 import MyTrainingDashboard from "@/components/training/MyTrainingDashboard";
 
-export default function MyTraining() {
-  return <MyTrainingDashboard />;
+export default function MyTraining({ filterByType }) {
+  return <MyTrainingDashboard filterByType={filterByType} />;
 }

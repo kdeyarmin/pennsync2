@@ -57,11 +57,11 @@ export default function PreVisitPrep({ patient, visit, previousVisit, carePlans 
   }
 
   return (
-    <Card className="bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200 mb-6">
+    <Card className="bg-gradient-to-r from-navy-50 to-blue-50 border-navy-200 mb-6">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <ClipboardCheck className="w-5 h-5 text-cyan-600" />
+            <ClipboardCheck className="w-5 h-5 text-navy-600" />
             Penn Sync Pre-Visit Prep
             <Badge variant="outline" className="bg-white">Ready for visit</Badge>
           </CardTitle>
@@ -228,8 +228,8 @@ export default function PreVisitPrep({ patient, visit, previousVisit, carePlans 
             )}
           </Accordion>
 
-          <Alert className="bg-white border-cyan-200">
-            <CheckCircle2 className="w-4 h-4 text-cyan-600" />
+          <Alert className="bg-white border-navy-200">
+            <CheckCircle2 className="w-4 h-4 text-navy-600" />
             <AlertDescription className="text-sm text-slate-700">
               <strong>Penn Sync Ready:</strong> All patient information loaded. Review alerts and care plans before documenting.
             </AlertDescription>

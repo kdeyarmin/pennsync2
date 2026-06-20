@@ -85,7 +85,7 @@ export default function ClinicalInsightsDashboard() {
                 <p className="text-xs sm:text-sm text-slate-600 truncate">Completion Rate</p>
                 <p className="text-xl sm:text-2xl font-bold">{completionRate}%</p>
               </div>
-              <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
+              <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-navy-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -129,7 +129,7 @@ export default function ClinicalInsightsDashboard() {
         <Card>
           <CardHeader className="p-3 sm:p-4 md:p-6">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Activity className="w-5 h-5 text-purple-600" />
+              <Activity className="w-5 h-5 text-navy-600" />
               Patient Progression Monitoring
             </CardTitle>
           </CardHeader>

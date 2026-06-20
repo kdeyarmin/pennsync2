@@ -417,7 +417,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="rounded-md border p-3">
-                        <div className="flex items-center gap-2 text-purple-700">
+                        <div className="flex items-center gap-2 text-navy-700">
                           <Signature className="w-4 h-4" />
                           <span>Signatures</span>
                         </div>

@@ -217,9 +217,9 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
                 <p className="text-xs text-green-600">Total Revenue</p>
                 <p className="text-xl font-bold text-green-900">{formatCurrency(cohorts[selectedCohort].total_revenue)}</p>
               </div>
-              <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
-                <p className="text-xs text-purple-600">Optimization Potential</p>
-                <p className="text-xl font-bold text-purple-900">+{formatCurrency(cohorts[selectedCohort].optimization_potential)}</p>
+              <div className="bg-navy-50 p-3 rounded-lg border border-navy-200 text-center">
+                <p className="text-xs text-navy-600">Optimization Potential</p>
+                <p className="text-xl font-bold text-navy-900">+{formatCurrency(cohorts[selectedCohort].optimization_potential)}</p>
               </div>
             </div>
 

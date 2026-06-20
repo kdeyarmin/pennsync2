@@ -17,8 +17,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'referral_id is required' }, { status: 400 });
     }
 
-    // Fetch the referral
-    const referral = await base44.asServiceRole.entities.Referral.filter({ id: referral_id });
+    // Fetch the referral with the USER-SCOPED client so RLS restricts it to
+    // referrals the caller may see (the frontend reads Referral the same way).
+    // The prior asServiceRole read bypassed RLS — any caller could read any
+    // referral's demographics/clinical PHI by id, despite the "fixed" comment.
+    const referral = await base44.entities.Referral.filter({ id: referral_id });
     if (!referral?.length || !referral[0].extracted_data) {
       return Response.json({ error: 'Referral not found or not processed' }, { status: 404 });
     }

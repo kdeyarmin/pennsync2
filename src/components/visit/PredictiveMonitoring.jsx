@@ -197,7 +197,7 @@ Return JSON:
       <CardContent className="space-y-4">
         {/* Hospitalization Risk */}
         {hospitalizationRisk && (
-          <Alert className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+          <Alert className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-200">
             <AlertDescription>
               <div className="flex items-center justify-between mb-3">
                 <div>

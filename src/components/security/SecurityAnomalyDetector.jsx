@@ -182,16 +182,16 @@ export default function SecurityAnomalyDetector() {
   };
 
   return (
-    <Card className="border-2 border-purple-300">
+    <Card className="border-2 border-navy-300">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Shield className="w-6 h-6 text-purple-600" />
+          <Shield className="w-6 h-6 text-navy-600" />
           Security Anomaly Detection
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert className="bg-purple-50 border-purple-300">
-          <AlertDescription className="text-purple-900">
+        <Alert className="bg-navy-50 border-navy-300">
+          <AlertDescription className="text-navy-900">
             <p className="font-semibold mb-2">AI-Powered Security Analysis</p>
             <p className="text-sm">
               Automatically detects unusual patterns in user activity, failed access attempts, 
@@ -203,7 +203,7 @@ export default function SecurityAnomalyDetector() {
         <Button
           onClick={analyzeSecurityPatterns}
           disabled={analyzing}
-          className="w-full bg-purple-600 hover:bg-purple-700 min-h-[44px]"
+          className="w-full bg-navy-600 hover:bg-navy-700 min-h-[44px]"
         >
           {analyzing ? (
             <>

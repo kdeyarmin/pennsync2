@@ -57,12 +57,12 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
     return (
       <Button
         onClick={() => analyzeMutation.mutate()}
-        disabled={analyzeMutation.isLoading}
+        disabled={analyzeMutation.isPending}
         size="sm"
         variant="outline"
         className="w-full"
       >
-        {analyzeMutation.isLoading ? (
+        {analyzeMutation.isPending ? (
           <>
             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
             Analyzing...
@@ -78,8 +78,8 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
   }
 
   return (
-    <Card className={compact ? '' : 'border-purple-200'}>
-      <CardHeader className={compact ? 'p-4' : 'bg-gradient-to-r from-purple-50 to-pink-50'}>
+    <Card className={compact ? '' : 'border-navy-200'}>
+      <CardHeader className={compact ? 'p-4' : 'bg-gradient-to-r from-navy-50 to-pink-50'}>
         <CardTitle className={`flex items-center justify-between ${compact ? 'text-base' : ''}`}>
           <span className="flex items-center gap-2">
             <Activity className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
@@ -88,7 +88,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
           {!compact && riskData && (
             <Button
               onClick={() => analyzeMutation.mutate()}
-              disabled={analyzeMutation.isLoading}
+              disabled={analyzeMutation.isPending}
               size="sm"
               variant="outline"
             >
@@ -100,14 +100,14 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
       <CardContent className={compact ? 'p-4' : 'p-6'}>
         {!riskData ? (
           <div className="text-center py-8">
-            <Activity className="w-12 h-12 mx-auto mb-3 text-purple-300" />
+            <Activity className="w-12 h-12 mx-auto mb-3 text-navy-300" />
             <p className="text-slate-600 mb-4">Run AI analysis to predict patient risks</p>
             <Button
               onClick={() => analyzeMutation.mutate()}
-              disabled={analyzeMutation.isLoading}
-              className="bg-purple-600 hover:bg-purple-700"
+              disabled={analyzeMutation.isPending}
+              className="bg-navy-600 hover:bg-navy-700"
             >
-              {analyzeMutation.isLoading ? (
+              {analyzeMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...
@@ -138,7 +138,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
                 riskData.overall_risk_level === 'medium' ? 'text-yellow-900' :
                 'text-green-900'
               }>
-                <strong>Overall Risk Level: {riskData.overall_risk_level.toUpperCase()}</strong>
+                <strong>Overall Risk Level: {(riskData.overall_risk_level || 'unknown').toUpperCase()}</strong>
                 {riskData.alerts_created > 0 && (
                   <p className="text-sm mt-1">
                     {riskData.alerts_created} new alert{riskData.alerts_created > 1 ? 's' : ''} created

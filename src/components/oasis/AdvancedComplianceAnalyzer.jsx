@@ -383,9 +383,9 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
                           </div>
 
                           {risk.historical_context && (
-                            <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                              <p className="text-xs text-purple-700 font-medium mb-1">Historical Context:</p>
-                              <p className="text-sm text-purple-900">{risk.historical_context}</p>
+                            <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                              <p className="text-xs text-navy-700 font-medium mb-1">Historical Context:</p>
+                              <p className="text-sm text-navy-900">{risk.historical_context}</p>
                             </div>
                           )}
                         </div>
@@ -480,9 +480,9 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
                         )}
 
                         {violation.audit_appeal_risk && (
-                          <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                            <p className="text-xs text-purple-700 font-medium mb-1">Audit/Appeal Risk:</p>
-                            <p className="text-sm text-purple-900">{violation.audit_appeal_risk}</p>
+                          <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                            <p className="text-xs text-navy-700 font-medium mb-1">Audit/Appeal Risk:</p>
+                            <p className="text-sm text-navy-900">{violation.audit_appeal_risk}</p>
                           </div>
                         )}
                       </AccordionContent>
@@ -523,9 +523,9 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
                         </div>
 
                         {/* Clinical Rationale */}
-                        <div className="bg-purple-50 p-3 rounded border border-purple-200 mb-3">
-                          <p className="text-xs text-purple-700 font-medium mb-1">Clinical Rationale:</p>
-                          <p className="text-sm text-purple-900">{remediation.clinical_rationale}</p>
+                        <div className="bg-navy-50 p-3 rounded border border-navy-200 mb-3">
+                          <p className="text-xs text-navy-700 font-medium mb-1">Clinical Rationale:</p>
+                          <p className="text-sm text-navy-900">{remediation.clinical_rationale}</p>
                         </div>
 
                         {/* Immediate Actions */}
@@ -592,10 +592,10 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
 
           {/* Trend Analysis */}
           {complianceReport.trend_analysis && (
-            <Card className="border-2 border-purple-300">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+            <Card className="border-2 border-navy-300">
+              <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-purple-600" />
+                  <TrendingUp className="w-5 h-5 text-navy-600" />
                   Compliance Trend Analysis
                 </CardTitle>
               </CardHeader>

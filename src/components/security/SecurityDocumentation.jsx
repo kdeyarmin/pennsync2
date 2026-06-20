@@ -73,12 +73,12 @@ export default function SecurityDocumentation() {
           {/* Access Control */}
           <div>
             <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-              <Eye className="w-5 h-5 text-purple-600" />
+              <Eye className="w-5 h-5 text-navy-600" />
               Row-Level Security (RLS)
-              <Badge className="bg-purple-500">Active</Badge>
+              <Badge className="bg-navy-500">Active</Badge>
             </h3>
-            <Alert className="bg-purple-50 border-purple-200">
-              <AlertDescription className="text-purple-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <AlertDescription className="text-navy-900">
                 <p className="font-semibold mb-2">✓ Granular Access Control</p>
                 <p className="mb-2">Users can only access data they created or are assigned to:</p>
                 <ul className="list-disc ml-5 space-y-1">

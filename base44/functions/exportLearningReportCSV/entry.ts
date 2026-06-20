@@ -121,7 +121,14 @@ Deno.serve(async (req) => {
         // (Days Until Expiry / Days Overdue / Progress % for a cert due today).
         const raw = row[h];
         const val = raw === undefined || raw === null ? '' : raw;
-        const escaped = String(val).replace(/"/g, '""');
+        let cell = String(val);
+        // CSV formula-injection guard: a cell starting with =, +, -, @ or a
+        // leading tab/CR is executed as a formula by Excel/Sheets even inside
+        // quotes. Prefix a single quote so an AI-generated course title like
+        // "=cmd|..." renders as text. Only text cells — numbers stay numeric so
+        // a negative count (e.g. Days Until Expiry) isn't turned into a string.
+        if (typeof raw !== 'number' && /^[=+\-@\t\r]/.test(cell)) cell = `'${cell}`;
+        const escaped = cell.replace(/"/g, '""');
         return `"${escaped}"`;
       }).join(','))
     ].join('\n');

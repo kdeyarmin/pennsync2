@@ -44,9 +44,13 @@ export default function VisitScribe() {
       return result;
     },
     onSuccess: (data) => {
-      const result = data?.data || data;
-      setTranscription(result.transcription || "");
-      setRoughNote(result.rough_note || result.transcription || "");
+      // functions.invoke returns the full axios response; this function's body
+      // additionally nests its payload under `data`, so peel two layers. The
+      // field is `generatedNote` (not `rough_note`).
+      const body = data?.data || data;
+      const payload = body?.data || body;
+      setTranscription(payload.transcription || "");
+      setRoughNote(payload.generatedNote || payload.transcription || "");
       logActivity(ActivityActions.NOTE_AI_GENERATED, { page: 'VisitScribe', source: 'audio_recording' });
     },
   });

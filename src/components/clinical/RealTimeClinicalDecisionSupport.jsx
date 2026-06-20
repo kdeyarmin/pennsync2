@@ -578,7 +578,7 @@ Return JSON:
                       <div key={idx} className="p-3 bg-white rounded-lg border">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <BookOpen className="w-4 h-4 text-purple-600" />
+                            <BookOpen className="w-4 h-4 text-navy-600" />
                             <span className="font-medium text-sm">{edu.topic}</span>
                           </div>
                           <Button
@@ -604,12 +604,12 @@ Return JSON:
                         </div>
 
                         {edu.teach_back_questions?.length > 0 && (
-                          <div className="p-2 bg-purple-50 rounded">
-                            <p className="text-xs font-semibold text-purple-700 mb-1">
+                          <div className="p-2 bg-navy-50 rounded">
+                            <p className="text-xs font-semibold text-navy-700 mb-1">
                               <Lightbulb className="w-3 h-3 inline mr-1" />
                               Teach-Back Questions:
                             </p>
-                            <ul className="list-disc ml-4 text-xs text-purple-800">
+                            <ul className="list-disc ml-4 text-xs text-navy-800">
                               {edu.teach_back_questions.map((q, i) => (
                                 <li key={i}>{q}</li>
                               ))}

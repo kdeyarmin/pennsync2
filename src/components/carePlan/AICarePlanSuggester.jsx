@@ -259,9 +259,9 @@ export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
                     </Alert>
 
                     {suggestion.medicare_considerations && (
-                      <Alert className="bg-purple-50 border-purple-200">
-                        <FileText className="w-4 h-4 text-purple-600" />
-                        <AlertDescription className="text-xs text-purple-800">
+                      <Alert className="bg-navy-50 border-navy-200">
+                        <FileText className="w-4 h-4 text-navy-600" />
+                        <AlertDescription className="text-xs text-navy-800">
                           <strong>Documentation Tip:</strong> {suggestion.medicare_considerations}
                         </AlertDescription>
                       </Alert>

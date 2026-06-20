@@ -187,7 +187,7 @@ Provide actionable handoff information including:
 
   return (
     <Card className="border-blue-200 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-100">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-navy-50 border-b border-blue-100">
         <CardTitle className="flex items-center gap-2">
           <FileText className="w-6 h-6 text-blue-600" />
           Patient Summary Generator

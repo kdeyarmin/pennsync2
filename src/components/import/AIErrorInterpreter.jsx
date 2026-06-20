@@ -73,9 +73,9 @@ Focus on the most common errors first.`;
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-indigo-50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-purple-900">
+        <CardTitle className="flex items-center gap-2 text-navy-900">
           <Brain className="w-5 h-5" />
           AI Error Interpreter
         </CardTitle>
@@ -83,14 +83,14 @@ Focus on the most common errors first.`;
       <CardContent>
         {!analysis ? (
           <div className="text-center py-6">
-            <Brain className="w-12 h-12 text-purple-400 mx-auto mb-3" />
+            <Brain className="w-12 h-12 text-navy-400 mx-auto mb-3" />
             <p className="text-sm text-slate-700 mb-4">
               Let AI analyze your import errors and provide intelligent solutions
             </p>
             <Button
               onClick={analyzeErrors}
               disabled={isAnalyzing || errors.length === 0}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isAnalyzing ? (
                 <>

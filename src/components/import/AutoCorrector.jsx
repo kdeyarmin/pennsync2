@@ -132,10 +132,10 @@ export default function AutoCorrector({ csvData, columnMapping, onCorrectedData 
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Wand2 className="w-5 h-5 text-purple-600" />
+          <Wand2 className="w-5 h-5 text-navy-600" />
           Auto-Correct Data
         </CardTitle>
       </CardHeader>
@@ -166,7 +166,7 @@ export default function AutoCorrector({ csvData, columnMapping, onCorrectedData 
             <Button
               onClick={autoCorrectData}
               disabled={isProcessing}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-navy-600 hover:bg-navy-700"
             >
               {isProcessing ? (
                 <>

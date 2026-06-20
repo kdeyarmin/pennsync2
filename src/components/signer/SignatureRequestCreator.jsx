@@ -62,7 +62,7 @@ export default function SignatureRequestCreator({ onCancel }) {
   };
 
   const addSigner = () => {
-    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-navy-500', 'bg-orange-500', 'bg-pink-500'];
     setSigners([
       ...signers, 
       { 

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 const FIELD_TYPES = [
   { value: "text", label: "Text Field", color: "bg-blue-100" },
-  { value: "signature", label: "Signature", color: "bg-purple-100" },
+  { value: "signature", label: "Signature", color: "bg-navy-100" },
   { value: "initials", label: "Initials", color: "bg-pink-100" },
   { value: "date", label: "Date", color: "bg-green-100" },
   { value: "checkbox", label: "Checkbox", color: "bg-yellow-100" },

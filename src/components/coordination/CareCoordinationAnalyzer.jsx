@@ -253,9 +253,9 @@ Return comprehensive analysis with actionable coordination alerts.`,
 
   if (isAnalyzing) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-navy-600 mx-auto mb-4" />
           <p className="text-lg font-medium text-slate-900 mb-2">Analyzing Care Coordination...</p>
           <p className="text-sm text-slate-600">
             Reviewing {visits.length} visits, {carePlans.length} care plans, {incidents.length} incidents...
@@ -297,14 +297,14 @@ Return comprehensive analysis with actionable coordination alerts.`,
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-purple-300 bg-purple-50">
+      <Card className="border-2 border-navy-300 bg-navy-50">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
+              <Brain className="w-5 h-5 text-navy-600" />
               Care Coordination Analysis
             </span>
-            <Badge className="bg-purple-600 text-white">
+            <Badge className="bg-navy-600 text-white">
               {alerts.length} gap(s) identified
             </Badge>
           </CardTitle>
@@ -327,7 +327,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
                   </Badge>
                   <Badge variant="outline">{alert.alert_type.replace(/_/g, ' ')}</Badge>
                   {alert.team_meeting_suggested && (
-                    <Badge className="bg-purple-100 text-purple-800">
+                    <Badge className="bg-navy-100 text-navy-800">
                       <Users className="w-3 h-3 mr-1" />
                       Team Meeting Needed
                     </Badge>
@@ -389,25 +389,25 @@ Return comprehensive analysis with actionable coordination alerts.`,
 
             {/* Team Meeting Details */}
             {alert.team_meeting_suggested && (
-              <div className="bg-purple-50 p-4 rounded border-2 border-purple-300">
+              <div className="bg-navy-50 p-4 rounded border-2 border-navy-300">
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="w-5 h-5 text-purple-600" />
-                  <p className="font-semibold text-purple-900">Interdisciplinary Team Meeting Recommended</p>
+                  <Calendar className="w-5 h-5 text-navy-600" />
+                  <p className="font-semibold text-navy-900">Interdisciplinary Team Meeting Recommended</p>
                 </div>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-xs font-semibold text-purple-900 mb-1">Suggested Attendees:</p>
+                    <p className="text-xs font-semibold text-navy-900 mb-1">Suggested Attendees:</p>
                     <div className="flex flex-wrap gap-2">
                       {alert.meeting_attendees?.map((attendee, i) => (
-                        <Badge key={i} className="bg-purple-100 text-purple-800">
+                        <Badge key={i} className="bg-navy-100 text-navy-800">
                           {attendee}
                         </Badge>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-purple-900 mb-1">Timeline:</p>
-                    <p className="text-sm text-purple-800">{alert.urgency_timeline}</p>
+                    <p className="text-xs font-semibold text-navy-900 mb-1">Timeline:</p>
+                    <p className="text-sm text-navy-800">{alert.urgency_timeline}</p>
                   </div>
                 </div>
               </div>

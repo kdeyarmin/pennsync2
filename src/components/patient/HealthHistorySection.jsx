@@ -220,10 +220,10 @@ export default function HealthHistorySection({ patient }) {
 
       {/* Surgeries & Hospitalizations */}
       <Card>
-        <CardHeader className="bg-purple-50">
+        <CardHeader className="bg-navy-50">
           <CardTitle className="text-lg flex items-center justify-between text-slate-900">
             <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-purple-600" />
+              <Activity className="w-5 h-5 text-navy-600" />
               Surgeries & Hospitalizations
             </div>
             <Button variant="ghost" size="sm" onClick={() => openEditDialog('surgeries')}>
@@ -246,7 +246,7 @@ export default function HealthHistorySection({ patient }) {
                         {hosp.date && (
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {format(new Date(hosp.date), 'MMM d, yyyy')}
+                            {Number.isNaN(new Date(hosp.date).getTime()) ? hosp.date : format(new Date(hosp.date), 'MMM d, yyyy')}
                           </span>
                         )}
                         {hosp.length_of_stay && (

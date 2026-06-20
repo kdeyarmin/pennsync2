@@ -47,7 +47,7 @@ export default function KPIDashboard({ dateRange }) {
   const filterByDate = (items, dateField) => {
     return items.filter(item => {
       const itemDate = new Date(item[dateField]);
-      return itemDate >= new Date(dateRange.start) && itemDate <= new Date(dateRange.end);
+      return itemDate >= new Date(dateRange.start) && itemDate <= new Date(dateRange.end + 'T23:59:59.999');
     });
   };
 
@@ -68,7 +68,7 @@ export default function KPIDashboard({ dateRange }) {
     : 0;
 
   // Calculate trends (compare with previous period)
-  const periodLength = (new Date(dateRange.end) - new Date(dateRange.start)) / (1000 * 60 * 60 * 24);
+  const periodLength = (new Date(dateRange.end + 'T23:59:59.999') - new Date(dateRange.start)) / (1000 * 60 * 60 * 24);
   const previousStart = new Date(new Date(dateRange.start).getTime() - periodLength * 24 * 60 * 60 * 1000);
   const previousReferrals = referrals.filter(r => {
     const date = new Date(r.referral_date);

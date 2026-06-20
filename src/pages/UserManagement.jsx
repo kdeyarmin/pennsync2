@@ -104,7 +104,10 @@ export default function UserManagement() {
   });
 
   const { data: invitations = [] } = useQuery({
-    queryKey: ['userInvitations'],
+    // Include the user count in the key so the "already signed up" filter below
+    // recomputes when a new user registers — otherwise a static key left a ghost
+    // "pending" invitation showing for someone who had just signed up.
+    queryKey: ['userInvitations', allUsers.length],
     queryFn: async () => {
       const allInvitations = await base44.entities.UserInvitation.list('-created_date');
       // Filter out invitations where user has already signed up
@@ -401,13 +404,13 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card className="modern-card border-purple-200">
+        <Card className="modern-card border-navy-200">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0" />
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-navy-500 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-slate-500 truncate">Admins</p>
-                <p className="text-xl sm:text-2xl font-bold text-purple-600">{stats.admins}</p>
+                <p className="text-xl sm:text-2xl font-bold text-navy-600">{stats.admins}</p>
               </div>
             </div>
           </CardContent>
@@ -829,7 +832,7 @@ export default function UserManagement() {
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveUser} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={handleSaveUser} className="bg-navy-600 hover:bg-navy-700">
               Save Changes
             </Button>
           </DialogFooter>

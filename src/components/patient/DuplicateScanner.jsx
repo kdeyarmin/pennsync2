@@ -288,7 +288,7 @@ export default function DuplicateScanner() {
         <CardTitle className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-indigo-600" />
           Enhanced Duplicate Scanner
-          <Badge className="ml-auto bg-purple-600 text-white">
+          <Badge className="ml-auto bg-navy-600 text-white">
             {scanMode === 'advanced' ? 'Multi-Algorithm' : 'Standard'}
           </Badge>
         </CardTitle>
@@ -327,7 +327,7 @@ export default function DuplicateScanner() {
                   variant={scanMode === 'advanced' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setScanMode('advanced')}
-                  className={scanMode === 'advanced' ? 'bg-purple-600' : ''}
+                  className={scanMode === 'advanced' ? 'bg-navy-600' : ''}
                 >
                   <Zap className="w-4 h-4 mr-2" />
                   Advanced Scan
@@ -343,8 +343,8 @@ export default function DuplicateScanner() {
 
             {/* Advanced Options */}
             {scanMode === 'advanced' && (
-              <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-300">
-                <h4 className="font-semibold text-purple-900 text-sm flex items-center gap-2">
+              <div className="space-y-3 p-4 bg-navy-50 rounded-lg border border-navy-300">
+                <h4 className="font-semibold text-navy-900 text-sm flex items-center gap-2">
                   <Settings className="w-4 h-4" />
                   Advanced Options
                 </h4>
@@ -462,7 +462,7 @@ export default function DuplicateScanner() {
             <Button
               onClick={scanAndRemoveDuplicates}
               disabled={isScanning}
-              className={`w-full ${scanMode === 'advanced' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+              className={`w-full ${scanMode === 'advanced' ? 'bg-navy-600 hover:bg-navy-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
               size="lg"
             >
               {isScanning ? (
@@ -501,7 +501,7 @@ export default function DuplicateScanner() {
                         Found {results.duplicate_groups_found} duplicate group(s) and merged {results.patients_removed} duplicate record(s).
                         {results.scan_mode === 'advanced' && (
                           <div className="mt-1 text-xs">
-                            <Badge className="bg-purple-600 text-white text-xs mt-1">
+                            <Badge className="bg-navy-600 text-white text-xs mt-1">
                               Advanced Multi-Algorithm Scan
                             </Badge>
                           </div>
@@ -523,11 +523,11 @@ export default function DuplicateScanner() {
                 </div>
 
                 {results.algorithms_used && (
-                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <p className="text-xs text-purple-700 mb-2 font-semibold">Algorithms Used:</p>
+                  <div className="p-3 bg-navy-50 rounded-lg border border-navy-200">
+                    <p className="text-xs text-navy-700 mb-2 font-semibold">Algorithms Used:</p>
                     <div className="flex flex-wrap gap-1">
                       {results.algorithms_used.map((algo, idx) => (
-                        <Badge key={idx} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                        <Badge key={idx} variant="outline" className="bg-navy-100 text-navy-800 text-xs">
                           {algo}
                         </Badge>
                       ))}

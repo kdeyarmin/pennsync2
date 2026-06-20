@@ -93,22 +93,22 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
 
   if (!analysis) {
     return (
-      <Card className="border-2 border-cyan-300 bg-cyan-50">
+      <Card className="border-2 border-navy-300 bg-navy-50">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2 text-cyan-900">
+          <CardTitle className="text-sm flex items-center gap-2 text-navy-900">
             <Activity className="w-4 h-4" />
             Clinical Trends Analysis
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-cyan-800 mb-3">
+          <p className="text-xs text-navy-800 mb-3">
             AI-powered analysis of vital signs, symptoms, and clinical data over time to identify patterns and risks.
           </p>
           <Button
             onClick={analyzePatient}
             disabled={isAnalyzing}
             size="sm"
-            className="bg-cyan-600 hover:bg-cyan-700 w-full"
+            className="bg-navy-600 hover:bg-navy-700 w-full"
           >
             {isAnalyzing ? (
               <>
@@ -130,14 +130,14 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
   const chartData = prepareVitalsChartData();
 
   return (
-    <Card className="border-2 border-cyan-300 bg-cyan-50">
+    <Card className="border-2 border-navy-300 bg-navy-50">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2 text-cyan-900">
+          <CardTitle className="text-sm flex items-center gap-2 text-navy-900">
             <Activity className="w-4 h-4" />
             Clinical Trends Analysis
           </CardTitle>
-          <Badge className="bg-cyan-600 text-white">
+          <Badge className="bg-navy-600 text-white">
             {analysis.data_analyzed?.visits} visits analyzed
           </Badge>
         </div>
@@ -276,14 +276,14 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
 
         {/* Comparative Insights */}
         {analysis.comparative_insights?.length > 0 && (
-          <Card className="bg-white border-l-4 border-purple-400">
+          <Card className="bg-white border-l-4 border-navy-400">
             <CardHeader className="pb-2">
               <div
                 className="flex items-center justify-between cursor-pointer"
                 onClick={() => toggleSection('comparative')}
               >
                 <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <GitCompare className="w-4 h-4 text-purple-600" />
+                  <GitCompare className="w-4 h-4 text-navy-600" />
                   Comparative Analysis
                 </h4>
                 {expandedSections.includes('comparative') ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -292,15 +292,15 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
             {expandedSections.includes('comparative') && (
               <CardContent className="space-y-2">
                 {analysis.comparative_insights.map((insight, idx) => (
-                  <Alert key={idx} className="bg-purple-50 border-purple-300">
-                    <GitCompare className="w-4 h-4 text-purple-600" />
+                  <Alert key={idx} className="bg-navy-50 border-navy-300">
+                    <GitCompare className="w-4 h-4 text-navy-600" />
                     <AlertDescription className="text-xs">
-                      <p className="font-semibold text-purple-900 mb-1">{insight.correlation}</p>
+                      <p className="font-semibold text-navy-900 mb-1">{insight.correlation}</p>
                       <div className="text-slate-700 space-y-1">
                         <p>Metric A: {insight.metric_a}</p>
                         <p>Metric B: {insight.metric_b}</p>
                         <p>Relationship: {insight.relationship}</p>
-                        <p className="text-purple-700 font-medium mt-2">Clinical Significance: {insight.clinical_significance}</p>
+                        <p className="text-navy-700 font-medium mt-2">Clinical Significance: {insight.clinical_significance}</p>
                       </div>
                     </AlertDescription>
                   </Alert>

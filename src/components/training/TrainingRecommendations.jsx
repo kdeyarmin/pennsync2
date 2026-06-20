@@ -137,24 +137,24 @@ Return JSON:
   };
 
   return (
-    <Card className="border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Training Recommendations
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         {!recommendations ? (
           <div className="text-center py-6">
-            <Sparkles className="w-12 h-12 text-purple-300 mx-auto mb-3" />
+            <Sparkles className="w-12 h-12 text-navy-300 mx-auto mb-3" />
             <p className="text-slate-600 mb-4">
               Get personalized training recommendations based on your skills, patient population, and career goals
             </p>
             <Button
               onClick={analyzeAndRecommend}
               disabled={isAnalyzing}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isAnalyzing ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
@@ -166,9 +166,9 @@ Return JSON:
         ) : (
           <div className="space-y-6">
             {/* Summary */}
-            <Alert className="bg-purple-50 border-purple-200">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <AlertDescription className="text-purple-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <Sparkles className="w-4 h-4 text-navy-600" />
+              <AlertDescription className="text-navy-900">
                 {recommendations.analysis_summary}
               </AlertDescription>
             </Alert>
@@ -187,7 +187,7 @@ Return JSON:
                         <Badge className={getUrgencyColor(rec.urgency)}>{rec.urgency}</Badge>
                       </div>
                       <p className="text-sm text-slate-600">{rec.reason}</p>
-                      <p className="text-xs text-purple-600 mt-1">Addresses: {rec.skill_gap_addressed}</p>
+                      <p className="text-xs text-navy-600 mt-1">Addresses: {rec.skill_gap_addressed}</p>
                       {onEnroll && (
                         <Button size="sm" className="mt-2" onClick={() => onEnroll(rec.module_title)}>
                           Enroll <ChevronRight className="w-3 h-3 ml-1" />

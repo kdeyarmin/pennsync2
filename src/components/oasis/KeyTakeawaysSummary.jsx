@@ -141,7 +141,7 @@ export default function KeyTakeawaysSummary({ analysisResults, revenueData }) {
 
   return (
     <Card className="border-2 border-indigo-300 shadow-lg">
-      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-100 to-purple-100">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-100 to-navy-100">
         <CardTitle className="text-lg flex items-center gap-2">
           <Zap className="w-5 h-5 text-indigo-600" />
           Key Takeaways
@@ -158,9 +158,9 @@ export default function KeyTakeawaysSummary({ analysisResults, revenueData }) {
             <p className="text-2xl font-bold text-blue-700">{analysisResults.accuracy_score}%</p>
             <p className="text-xs text-blue-600">Accuracy</p>
           </div>
-          <div className="text-center p-2 bg-purple-50 rounded-lg">
-            <p className="text-2xl font-bold text-purple-700">{analysisResults.compliance_score}%</p>
-            <p className="text-xs text-purple-600">Compliance</p>
+          <div className="text-center p-2 bg-navy-50 rounded-lg">
+            <p className="text-2xl font-bold text-navy-700">{analysisResults.compliance_score}%</p>
+            <p className="text-xs text-navy-600">Compliance</p>
           </div>
           <div className="text-center p-2 bg-green-50 rounded-lg">
             <p className="text-2xl font-bold text-green-700">{analysisResults.revenue_optimization_score}%</p>
@@ -195,7 +195,7 @@ export default function KeyTakeawaysSummary({ analysisResults, revenueData }) {
 
         {/* Priority Actions */}
         {topRecommendations.length > 0 && (
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg border border-indigo-200">
+          <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-3 rounded-lg border border-indigo-200">
             <p className="text-sm font-semibold text-indigo-800 mb-2 flex items-center gap-2">
               <ArrowRight className="w-4 h-4" />
               Priority Actions

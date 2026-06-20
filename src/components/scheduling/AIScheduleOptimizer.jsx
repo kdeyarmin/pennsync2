@@ -279,7 +279,7 @@ Return JSON:
       case 'overload': return <AlertTriangle className="w-4 h-4 text-red-600" />;
       case 'travel_impossible': return <Navigation className="w-4 h-4 text-orange-600" />;
       case 'time_conflict': return <Clock className="w-4 h-4 text-yellow-600" />;
-      case 'acuity_concern': return <Zap className="w-4 h-4 text-purple-600" />;
+      case 'acuity_concern': return <Zap className="w-4 h-4 text-navy-600" />;
       default: return <AlertTriangle className="w-4 h-4 text-slate-600" />;
     }
   };
@@ -287,7 +287,7 @@ Return JSON:
   return (
     <div className="space-y-4">
       <Card className="border-indigo-200">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Route className="w-5 h-5 text-indigo-600" />
@@ -340,11 +340,11 @@ Return JSON:
                   </p>
                   <p className="text-xs text-green-600">Est. End Time</p>
                 </div>
-                <div className="bg-purple-50 p-3 rounded-lg text-center">
-                  <p className="text-2xl font-bold text-purple-700">
+                <div className="bg-navy-50 p-3 rounded-lg text-center">
+                  <p className="text-2xl font-bold text-navy-700">
                     {optimizedSchedule.route_summary?.efficiency_score || 0}%
                   </p>
-                  <p className="text-xs text-purple-600">Efficiency</p>
+                  <p className="text-xs text-navy-600">Efficiency</p>
                 </div>
               </div>
 

@@ -8,10 +8,11 @@ const Badge = React.forwardRef((props, ref) => {
   const { className, variant = "default", ...otherProps } = props
   
   const variants = {
-    default: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm",
+    default: "bg-navy-600 text-white hover:bg-navy-700 shadow-sm",
     secondary: "bg-slate-200 text-slate-900 hover:bg-slate-300 shadow-sm",
     destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
     outline: "text-slate-900 border border-slate-300 hover:bg-slate-50",
+    gold: "bg-gold-100 text-gold-700 border border-gold-300 hover:bg-gold-200",
   }
   
   return (
