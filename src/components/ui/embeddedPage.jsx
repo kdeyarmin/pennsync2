@@ -16,6 +16,16 @@ export function useIsEmbedded() {
   return useContext(EmbeddedPageContext);
 }
 
+/**
+ * Renders its children only when the page is NOT embedded inside a hub. Use this
+ * to wrap a page's own top-level header/hero so it disappears when the page is
+ * rendered inside a hub tab (which already shows the hub header), while still
+ * showing normally on the page's standalone route.
+ */
+export function HideWhenEmbedded({ children }) {
+  return useIsEmbedded() ? null : children;
+}
+
 export default function EmbeddedPage({ children }) {
   return (
     <EmbeddedPageContext.Provider value={true}>
