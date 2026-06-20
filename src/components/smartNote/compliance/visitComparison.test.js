@@ -25,6 +25,16 @@ test("surfaces a meaningful blood-pressure change", () => {
   assert.equal(out.find((c) => c.key === "hr"), undefined);
 });
 
+test("a diastolic-only BP change is not rendered as 'same'", () => {
+  // 120/70 -> 120/82: systolic unchanged, diastolic +12 (clears the 8 mmHg
+  // threshold). Direction/delta must reflect the diastolic move, not systolic.
+  const out = compareVisits("BP 120/82", "BP 120/70");
+  const bp = out.find((c) => c.key === "bp");
+  assert.ok(bp, "expected a blood pressure row");
+  assert.equal(bp.direction, "up");
+  assert.equal(bp.delta, 12);
+});
+
 test("ignores changes below the minimum delta (measurement noise)", () => {
   // O2 96 -> 95 is a 1-point drop, below the 2-point threshold.
   const out = compareVisits("O2 95%", "O2 96%");

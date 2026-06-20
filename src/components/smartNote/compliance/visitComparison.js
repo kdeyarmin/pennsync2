@@ -70,6 +70,9 @@ export function compareVisits(currentText, priorText) {
     const dSys = cur.bp.sys - prev.bp.sys;
     const dDia = cur.bp.dia - prev.bp.dia;
     if (Math.abs(dSys) >= BP_MIN_DELTA || Math.abs(dDia) >= BP_MIN_DELTA) {
+      // Drive the row's direction/delta from whichever component moved more, so a
+      // diastolic-only change (e.g. 120/70 -> 120/82) isn't rendered as "same".
+      const dominant = Math.abs(dDia) > Math.abs(dSys) ? dDia : dSys;
       out.push({
         key: "bp",
         label: "Blood pressure",
@@ -77,9 +80,9 @@ export function compareVisits(currentText, priorText) {
         trailingUnit: "mmHg",
         prevStr: `${prev.bp.sys}/${prev.bp.dia}`,
         nextStr: `${cur.bp.sys}/${cur.bp.dia}`,
-        delta: dSys,
-        direction: dSys > 0 ? "up" : dSys < 0 ? "down" : "same",
-        concern: cur.bp.sys >= 160 || cur.bp.sys <= 90 || cur.bp.dia >= 100 || Math.abs(dSys) >= 20,
+        delta: dominant,
+        direction: dominant > 0 ? "up" : dominant < 0 ? "down" : "same",
+        concern: cur.bp.sys >= 160 || cur.bp.sys <= 90 || cur.bp.dia >= 100 || Math.abs(dSys) >= 20 || Math.abs(dDia) >= 20,
       });
     }
   }

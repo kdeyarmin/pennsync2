@@ -29,8 +29,8 @@ export default function OfflineManager() {
         for (const item of queue) {
           if (item.action === 'CREATE_VISIT') {
             // Idempotency: if a Visit with this client_request_id already exists
-            // (e.g. created on a prior interrupted drain), skip the create and
-            // just clear the queue item — never create a duplicate clinical record.
+            // (e.g. created on a prior interrupted drain), reuse it instead of
+            // creating a duplicate clinical record.
             const key = item.payload?.client_request_id;
             const existing = key
               ? await base44.entities.Visit.filter({ client_request_id: key })
@@ -39,9 +39,18 @@ export default function OfflineManager() {
             // the create so the offline visit also produces a ComplianceAudit and
             // shows up in the compliance dashboards (older items simply lack it).
             const { __audit, ...visitPayload } = item.payload || {};
-            if (!existing || existing.length === 0) {
-              const visit = await base44.entities.Visit.create(visitPayload);
-              if (__audit) {
+            const visit = (existing && existing.length > 0)
+              ? existing[0]
+              : await base44.entities.Visit.create(visitPayload);
+            // Guarantee the ComplianceAudit exists for this visit. A prior drain
+            // may have created the Visit but died before creating the audit (tab
+            // close, audit-create failure) — in which case clearing the queue here
+            // would otherwise leave the offline visit invisible to the dashboards.
+            // Runs whether the visit is new or pre-existing, keyed on visit_id so
+            // it never double-creates the audit.
+            if (__audit) {
+              const audits = await base44.entities.ComplianceAudit.filter({ visit_id: visit.id });
+              if (!audits || audits.length === 0) {
                 await base44.entities.ComplianceAudit.create({
                   visit_id: visit.id, patient_id: visitPayload.patient_id,
                   audit_date: new Date().toISOString(), audit_type: 'automated',

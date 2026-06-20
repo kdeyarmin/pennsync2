@@ -257,7 +257,11 @@ export default function SmartNoteAssistant() {
     const reportingFields = buildVisitReportingFields({ chartFindings, sustainedTrends });
     // When a critical chart conflict was knowingly accepted, stamp who/when onto
     // the nurse's override trail so the audit can show it was a reviewed decision.
-    const acknowledgment = result.acknowledgment
+    // Gate on `acknowledged` (not merely the object's presence): the reviewer
+    // builds this object whenever critical findings exist even before the nurse
+    // checks the box, so persisting it unconditionally could stamp a false ack
+    // trail if a caller ever bypassed the save gate.
+    const acknowledgment = result.acknowledgment?.acknowledged
       ? { acknowledged_by: currentUser.email, acknowledged_at: new Date().toISOString(), justification: result.acknowledgment.justification, finding_ids: result.acknowledgment.finding_ids }
       : null;
     const auditFields = buildAuditFields({ coverageScore, chartFindings, acknowledgment });

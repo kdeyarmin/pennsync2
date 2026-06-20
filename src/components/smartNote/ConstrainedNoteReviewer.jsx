@@ -80,7 +80,11 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
 
   // Deterministic chart cross-check: how the note lines up against the standing
   // chart (allergies, med list, fall risk). Advisory only — never edits the note.
-  const chartFindings = useMemo(() => crossCheckChart(roughNote, patient), [roughNote, patient]);
+  // Once a final note exists it cross-checks the text the nurse will actually
+  // SAVE (finalNote), not the rough draft, so editing out — or newly introducing
+  // — a conflict is reflected in the save-time safety gate and the persisted
+  // audit, rather than gating on (and persisting) a stale rough-draft conflict.
+  const chartFindings = useMemo(() => crossCheckChart(finalNote || roughNote, patient), [finalNote, roughNote, patient]);
 
   // Reset + pre-fill carry-forward answers whenever the SCAN changes. Keyed on
   // `analysis` only (not priorNote) and reads priorNote via a ref, so a late-
@@ -90,7 +94,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const priorNoteRef = useRef("");
   priorNoteRef.current = priorNote;
   useEffect(() => {
-    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false);
+    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false); setAckJustification("");
     if (!analysis) { setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set()); return; }
     const prefill = computeCarryForward(priorNoteRef.current || "", analysis.gaps);
     setAnswers(prefill);
