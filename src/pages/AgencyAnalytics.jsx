@@ -19,6 +19,7 @@ import {
 import { calculateStats, calculateNurseStats, formatCurrency } from "../components/utils/statsCalculator";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/stat-card";
 
 export default function AgencyAnalytics() {
   const [_dateRange, _setDateRange] = useState("30days");
@@ -105,29 +106,6 @@ export default function AgencyAnalytics() {
       rate: total > 0 ? ((completed / total) * 100).toFixed(1) : 0
     };
   }, [trainingCompletions]);
-
-  const StatCard = ({ title, value, subtitle, icon: Icon, trend, color = "indigo" }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-600">{title}</p>
-            <p className={`text-3xl font-bold mt-2 text-${color}-600`}>{value}</p>
-            {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
-          </div>
-          <div className={`h-12 w-12 rounded-lg bg-${color}-100 flex items-center justify-center`}>
-            <Icon className={`w-6 h-6 text-${color}-600`} />
-          </div>
-        </div>
-        {trend && (
-          <div className="flex items-center gap-1 mt-2">
-            <TrendingUp className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-medium text-green-600">{trend}</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
 
   return (
     <PageContainer>

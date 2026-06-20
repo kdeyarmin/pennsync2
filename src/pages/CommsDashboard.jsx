@@ -31,35 +31,13 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/stat-card";
 
 const TYPE_ICON = {
   sms: MessageSquare,
   call: Phone,
   fax: Send,
 };
-
-function StatCard({ title, value, sub, icon: Icon, tone = "blue" }) {
-  const tones = {
-    blue: "text-blue-600 bg-blue-50",
-    green: "text-green-600 bg-green-50",
-    amber: "text-amber-600 bg-amber-50",
-    purple: "text-navy-600 bg-navy-50",
-  };
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-4">
-        <div className={`rounded-lg p-3 ${tones[tone] || tones.blue}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground truncate">{title}</p>
-          <p className="text-2xl font-semibold leading-tight">{value}</p>
-          {sub && <p className="text-xs text-muted-foreground truncate">{sub}</p>}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function formatDay(key) {
   // key is 'YYYY-MM-DD'
