@@ -127,7 +127,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     const answeredIds = analysis.required.filter(e => answers[e.id]?.trim()).map(e => e.id);
     const confirmedNegativeIds = Array.from(confirmedNegatives);
     const coverageScore = computeCoverageScore({ requiredElements: analysis.required, presenceResults: analysis.presence, answeredIds, confirmedNegativeIds });
-    return { finalNote: text, coverageScore, draftScore: analysis.draftScore, presence: analysis.presence, required: analysis.required, answeredIds, confirmedNegativeIds, answers };
+    return { finalNote: text, coverageScore, draftScore: analysis.draftScore, presence: analysis.presence, required: analysis.required, answeredIds, confirmedNegativeIds, answers, chartFindings, sustainedTrends, comparisons };
   };
 
   const verifyNote = async (text) => {

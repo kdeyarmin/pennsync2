@@ -23,6 +23,7 @@ import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNote
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import { toNoteConversionFields, deriveStructuredVisitFields } from "../components/smartNote/compliance/coverageScore";
+import { toAuditIssues, escalateAuditStatus, toAiTags, toComplianceIssueStrings } from "../components/smartNote/compliance/reportingFields";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
@@ -247,8 +248,13 @@ export default function SmartNoteAssistant() {
   // with a real, deterministic coverage score.
   const persistNote = async (result) => {
     if (!result || !patientId || !currentUser?.email) return;
-    const { finalNote: finalText, coverageScore, draftScore, presence, answeredIds, confirmedNegativeIds, answers } = result;
+    const { finalNote: finalText, coverageScore, draftScore, presence, answeredIds, confirmedNegativeIds, answers, chartFindings = [], sustainedTrends = [] } = result;
     const structured = deriveStructuredVisitFields(presence, { answeredIds, confirmedNegativeIds, textById: answers });
+    // Surface the deterministic chart conflicts + trends in the saved records so
+    // they reach the compliance dashboards, not just the live review UI.
+    const aiTags = toAiTags(sustainedTrends, chartFindings);
+    const complianceIssueStrings = toComplianceIssueStrings(chartFindings);
+    const reportingFields = { ai_tags: aiTags, compliance_issues: complianceIssueStrings };
 
     if (!navigator.onLine) {
       const { addToSyncQueue } = await import('@/lib/indexedDB');
@@ -260,7 +266,7 @@ export default function SmartNoteAssistant() {
       const clientRequestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured });
+      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured, ...reportingFields });
       toast.success("Saved offline. Will sync when reconnected.");
       logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
       return;
@@ -276,7 +282,7 @@ export default function SmartNoteAssistant() {
         history[history.length - 1] = { ...history[history.length - 1], note: finalText, compliance_score: coverageScore };
       }
       await Promise.all([
-        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured }),
+        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured, ...reportingFields }),
         base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
       ]);
       toast.success("Chart updated.");
@@ -286,7 +292,7 @@ export default function SmartNoteAssistant() {
     const visit = await base44.entities.Visit.create({
       patient_id: patientId, visit_date: visitDate, visit_type: visitType,
       status: "completed", nurse_notes: finalText, raw_transcription: note,
-      compliance_score: coverageScore, ...structured,
+      compliance_score: coverageScore, ...structured, ...reportingFields,
     });
     setSavedVisitId(visit.id);
 
@@ -309,7 +315,8 @@ export default function SmartNoteAssistant() {
       base44.entities.ComplianceAudit.create({
         visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId,
         audit_date: new Date().toISOString(), compliance_score: coverageScore,
-        status: coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical",
+        status: escalateAuditStatus(coverageScore >= 90 ? "passed" : coverageScore >= 80 ? "flagged" : "critical", chartFindings),
+        issues: toAuditIssues(chartFindings),
         audit_type: "automated",
       }),
     ]);

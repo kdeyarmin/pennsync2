@@ -352,4 +352,16 @@ api, and `SmartNoteAssistant` disables Save-to-chart (with a defensive guard in
 `handleSave`) until the nurse acknowledges the conflict. Copy/PDF stay available;
 only the chart write is gated.
 
+**Persistence for reporting.** The chart conflicts and multi-visit trends now
+flow into the saved records so they reach compliance dashboards, not just the
+live UI. `compliance/reportingFields.js` (pure, 6 unit tests) maps them onto the
+existing fields: `ComplianceAudit.issues` (structured element/severity/problem),
+an escalated `ComplianceAudit.status` (`critical` whenever a critical conflict is
+present, regardless of coverage score), `Visit.ai_tags` (concise searchable
+`trend:<metric>:<dir>` / `chart_flag:<category>` tags), and `Visit.compliance_issues`
+(human-readable strings for critical conflicts). `ConstrainedNoteReviewer` carries
+`chartFindings` + `sustainedTrends` on its save-ready `result`, and
+`SmartNoteAssistant.persistNote` writes them on all three paths (online create,
+re-save update, and the offline sync-queue payload).
+
 </content>
