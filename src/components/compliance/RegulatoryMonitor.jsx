@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,9 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [implementationNotes, setImplementationNotes] = useState("");
   const [lastScanDate, setLastScanDate] = useState(null);
+  // Explicit human confirmation gate: ComplianceRule rows are NEVER mutated from
+  // AI-suggested content unless an admin ticks this box for the open update.
+  const [confirmRuleChanges, setConfirmRuleChanges] = useState(false);
 
   const { data: updates = [] } = useQuery({
     queryKey: ['regulatoryUpdates'],
@@ -83,50 +87,55 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
 
     try {
       const result = await invokeLLM({
-        prompt: `You are a healthcare regulatory monitoring AI. Generate realistic recent regulatory updates that a home health/hospice agency should be aware of.
+        prompt: `You are a healthcare regulatory monitoring assistant for a home health/hospice agency.
 
 Current date: ${format(new Date(), 'yyyy-MM-dd')}
 
-Generate 3-5 realistic regulatory updates from sources like CMS, Medicare, State health departments, OSHA, CDC. 
-Include a mix of:
-- Documentation requirement changes
-- Quality measure updates  
-- Safety/infection control updates
-- Billing/coding changes
-- Patient rights updates
+IMPORTANT — DO NOT FABRICATE. Do NOT invent specific regulations, rule numbers,
+citation references, or effective dates. If you are not certain a specific
+regulation exists and is real, do not state it as fact.
 
-For each update, provide detailed information about:
-1. What changed
-2. When it takes effect
-3. How it impacts nursing practice
-4. What compliance checks need updating
-5. What training nurses need
+Instead, produce 3-5 DRAFT REVIEW TOPICS: general, well-established compliance
+areas a home health/hospice agency should periodically re-verify against the
+official source (CMS, Medicare, State health department, OSHA, CDC, Joint
+Commission). These are AI-suggested prompts for a human compliance officer to
+research and confirm — NOT authoritative notices of new rules.
+
+For each topic:
+- Frame the title and summary as a topic to review (e.g. "Review: OASIS
+  documentation timeliness requirements"), not as an announced change.
+- Do NOT assert a specific effective_date unless it is a real, well-known,
+  verifiable date; otherwise leave effective_date empty.
+- In required_actions, the FIRST action must be to verify the topic against the
+  official primary source before acting.
+- compliance_check_updates are SUGGESTED checks to consider; phrase new_requirement
+  as a proposal to confirm, never as an in-force mandate.
 
 Return JSON:
 {
   "updates": [
     {
-      "title": "update title",
+      "title": "review topic title (framed as a topic to verify)",
       "source": "CMS" | "Medicare" | "Medicaid" | "State" | "OSHA" | "CDC" | "Joint_Commission" | "Other",
       "category": "documentation" | "oasis" | "safety" | "billing" | "quality" | "infection_control" | "patient_rights" | "hipaa" | "staffing",
-      "effective_date": "YYYY-MM-DD",
-      "summary": "2-3 sentence summary",
-      "full_details": "detailed explanation of the change and requirements",
+      "effective_date": "YYYY-MM-DD or empty string if not a known, verifiable date",
+      "summary": "2-3 sentence summary framed as 'review/confirm', not 'this changed'",
+      "full_details": "what to research and why it matters",
       "impact_level": "critical" | "high" | "medium" | "low",
       "affected_areas": ["list of affected practice areas"],
-      "required_actions": ["specific actions agency must take"],
+      "required_actions": ["FIRST: verify against the official primary source", "..."],
       "compliance_check_updates": [
         {
-          "check_name": "name of check to update",
-          "old_requirement": "what was required before",
-          "new_requirement": "what is required now"
+          "check_name": "suggested check to consider",
+          "old_requirement": "current practice (if known)",
+          "new_requirement": "proposed requirement to confirm with the official source"
         }
       ],
       "suggested_training": ["training topics for nurses"],
-      "reference_url": "example.gov/regulation-link"
+      "reference_url": "official source to verify (e.g. cms.gov), or empty string"
     }
   ],
-  "scan_summary": "brief summary of regulatory landscape"
+  "scan_summary": "brief note that these are AI-suggested review topics requiring human verification"
 }`,
         response_json_schema: {
           type: "object",
@@ -157,11 +166,19 @@ Return JSON:
         add_context_from_internet: true
       });
 
-      // Create regulatory updates in database
+      // Persist as AI-suggested DRAFTS pending human review. These are research
+      // prompts, not verified regulatory notices. The schema has no dedicated
+      // "is_ai_draft" field, so the draft caveat is folded into the summary so it
+      // travels with the record everywhere it is shown.
+      const DRAFT_PREFIX = '[AI-SUGGESTED DRAFT — verify against the official source before acting] ';
       for (const update of result.updates || []) {
+        const summary = update.summary?.startsWith(DRAFT_PREFIX)
+          ? update.summary
+          : `${DRAFT_PREFIX}${update.summary || ''}`;
         await createUpdateMutation.mutateAsync({
           ...update,
-          status: 'pending_review'
+          summary,
+          status: 'pending_review',
         });
       }
 
@@ -178,7 +195,20 @@ Return JSON:
   const handleReview = (update) => {
     setSelectedUpdate(update);
     setImplementationNotes("");
+    setConfirmRuleChanges(false);
     setReviewDialogOpen(true);
+  };
+
+  // Build a stable, auditor-matchable rule_code for any ComplianceRule created
+  // from a regulatory update so auditors can trace it back to its source.
+  const buildRuleCode = (update, checkName) => {
+    const src = (update?.source || 'REG').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) || 'REG';
+    const slug = String(checkName || 'rule')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 40);
+    return `REG-${src}-${slug}`;
   };
 
   const handleApprove = async () => {
@@ -211,40 +241,51 @@ Return JSON:
   const handleImplement = async () => {
     if (!selectedUpdate) return;
 
-    // 1. Apply compliance-check changes by upserting ComplianceRule records so the
-    //    documentation auditors immediately enforce the new requirement.
+    // 1. ComplianceRule changes are NOT applied automatically from AI-suggested
+    //    content. They are only created/updated when an admin has explicitly
+    //    confirmed (the "confirm rule changes" checkbox). Any rule created this
+    //    way is given a traceable rule_code so auditors can match it back to its
+    //    source regulatory update.
     const appliedChecks = [];
-    try {
-      for (const change of (selectedUpdate.compliance_check_updates || [])) {
-        if (!change?.check_name) continue;
-        const existing = await base44.entities.ComplianceRule
-          .filter({ rule_name: change.check_name }, '-created_date', 1)
-          .catch(() => []);
-        const description = change.new_requirement || existing[0]?.description || selectedUpdate.summary;
-        const severity = ['critical', 'high', 'medium', 'low'].includes(selectedUpdate.impact_level)
-          ? selectedUpdate.impact_level
-          : 'medium';
-        if (existing[0]) {
-          await base44.entities.ComplianceRule.update(existing[0].id, {
-            description,
-            severity,
-            is_active: true,
-            ...(selectedUpdate.effective_date ? { effective_date: selectedUpdate.effective_date } : {}),
-          });
-        } else {
-          await base44.entities.ComplianceRule.create({
-            rule_name: change.check_name,
-            rule_category: mapRuleCategory(selectedUpdate),
-            description,
-            severity,
-            is_active: true,
-            ...(selectedUpdate.effective_date ? { effective_date: selectedUpdate.effective_date } : {}),
-          });
+    if (confirmRuleChanges) {
+      try {
+        for (const change of (selectedUpdate.compliance_check_updates || [])) {
+          if (!change?.check_name) continue;
+          const existing = await base44.entities.ComplianceRule
+            .filter({ rule_name: change.check_name }, '-created_date', 1)
+            .catch(() => []);
+          const description = change.new_requirement || existing[0]?.description || selectedUpdate.summary;
+          const severity = ['critical', 'high', 'medium', 'low'].includes(selectedUpdate.impact_level)
+            ? selectedUpdate.impact_level
+            : 'medium';
+          const ruleCode = existing[0]?.rule_code || buildRuleCode(selectedUpdate, change.check_name);
+          // rule_code carries the auditor-matchable trace (it encodes the source
+          // and check name); the source update id is also noted in the description.
+          const tracedDescription = `${description}\n\n[Source: regulatory update ${selectedUpdate.id} — ${selectedUpdate.title}]`;
+          if (existing[0]) {
+            await base44.entities.ComplianceRule.update(existing[0].id, {
+              description: tracedDescription,
+              severity,
+              is_active: true,
+              rule_code: ruleCode,
+              ...(selectedUpdate.effective_date ? { effective_date: selectedUpdate.effective_date } : {}),
+            });
+          } else {
+            await base44.entities.ComplianceRule.create({
+              rule_name: change.check_name,
+              rule_code: ruleCode,
+              rule_category: mapRuleCategory(selectedUpdate),
+              description: tracedDescription,
+              severity,
+              is_active: true,
+              ...(selectedUpdate.effective_date ? { effective_date: selectedUpdate.effective_date } : {}),
+            });
+          }
+          appliedChecks.push(change.check_name);
         }
-        appliedChecks.push(change.check_name);
+      } catch (err) {
+        console.error('Failed to apply compliance updates:', err);
       }
-    } catch (err) {
-      console.error('Failed to apply compliance updates:', err);
     }
 
     // 2. Queue staff training as an admin task rather than auto-enrolling everyone
@@ -275,7 +316,9 @@ Return JSON:
     // 3. Record what was actually applied in the implementation notes.
     const summaryNote = [
       implementationNotes,
-      appliedChecks.length ? `Compliance checks updated: ${appliedChecks.join(', ')}.` : '',
+      appliedChecks.length
+        ? `Compliance checks created/updated after explicit admin confirmation: ${appliedChecks.join(', ')}.`
+        : 'No ComplianceRule changes were applied (admin did not confirm automated rule changes).',
       trainingTaskCreated ? `Training task created for: ${(selectedUpdate.suggested_training || []).join(', ')}.` : '',
     ].filter(Boolean).join('\n');
 
@@ -478,6 +521,15 @@ Return JSON:
 
           {selectedUpdate && (
             <div className="space-y-4">
+              <Alert className="bg-amber-50 border-amber-300">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <AlertDescription className="text-amber-900 text-sm">
+                  <strong>AI-suggested draft.</strong> This item was generated as a review topic and may
+                  not reflect a real or current regulation. Verify it against the official primary source
+                  before taking any action. Approving or implementing does not certify accuracy.
+                </AlertDescription>
+              </Alert>
+
               {/* Update Details */}
               <div>
                 <h3 className="font-semibold text-lg">{selectedUpdate.title}</h3>
@@ -548,6 +600,25 @@ Return JSON:
                         {topic}
                       </Badge>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Explicit confirmation to mutate ComplianceRule rows */}
+              {selectedUpdate.compliance_check_updates?.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="confirm-rule-changes"
+                      checked={confirmRuleChanges}
+                      onCheckedChange={(v) => setConfirmRuleChanges(!!v)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="confirm-rule-changes" className="text-xs text-red-900 cursor-pointer">
+                      <span className="font-semibold">I have verified these against the official source</span> and
+                      authorize creating/updating live ComplianceRule records from this update. Leaving this
+                      unchecked records the review and training task but makes NO changes to compliance rules.
+                    </label>
                   </div>
                 </div>
               )}

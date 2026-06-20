@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { submitIncidentReport } from "@/functions/submitIncidentReport";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -168,11 +169,20 @@ Return the report text only, no JSON.`,
   };
 
   const submitIncident = async () => {
+    // patient_id is required by the Incident schema. Guard before creating so we
+    // never write an incident with an undefined patient (which fails silently).
+    if (!patientId) {
+      alert("A patient must be selected before submitting an incident report.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Create incident record
-      const incident = await base44.entities.Incident.create({
+      // Route through the admin-alert path (submitIncidentReport) instead of
+      // calling Incident.create() directly, so clinical admins are notified.
+      const response = await submitIncidentReport({
         patient_id: patientId,
+        patient_name: patientName,
         incident_type: incidentType,
         incident_name: currentTypeConfig?.label,
         incident_date: incidentDate,
@@ -181,9 +191,9 @@ Return the report text only, no JSON.`,
         details: answers,
         report: generatedReport,
         physician_notified: notifications.physician || false,
-        office_notified: notifications.office || false,
-        status: 'reported'
+        immediate_alert: notifications.office || false,
       });
+      const incident = response?.data?.incident || response?.incident || response;
 
       // Send notifications
       if (notifications.physician && physicianEmail) {
@@ -386,7 +396,7 @@ Return the report text only, no JSON.`,
               <Button
                 className="flex-1 bg-red-600 hover:bg-red-700"
                 onClick={submitIncident}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !patientId}
               >
                 {isSubmitting ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>

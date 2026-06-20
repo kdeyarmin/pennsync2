@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
@@ -8,9 +9,11 @@ import IncidentForm from "@/components/incident/IncidentForm";
 import StateReportableForm from "@/components/incident/StateReportableForm";
 import IncidentRecentList from "@/components/incident/IncidentRecentList";
 import GuidedIncidentReporting from "@/components/incident/GuidedIncidentReporting";
+import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 
 export default function Incidents() {
   const queryClient = useQueryClient();
+  const [guidedPatientId, setGuidedPatientId] = useState("");
 
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
@@ -33,6 +36,11 @@ export default function Incidents() {
   });
 
   const _isAdmin = currentUser?.role === 'admin';
+
+  const guidedPatient = useMemo(
+    () => patients.find((patient) => patient.id === guidedPatientId),
+    [patients, guidedPatientId]
+  );
 
   return (
     <PageContainer>
@@ -67,7 +75,36 @@ export default function Incidents() {
         </TabsContent>
 
         <TabsContent value="guided">
-          <GuidedIncidentReporting />
+          <div className="space-y-4">
+            <div className="rounded-xl border bg-slate-50 p-4 space-y-2">
+              <label className="text-sm font-medium text-slate-700">Patient (required)</label>
+              <SearchablePatientSelect
+                patients={patients}
+                value={guidedPatientId}
+                onValueChange={setGuidedPatientId}
+                placeholder="Select patient before reporting"
+              />
+              {!guidedPatientId && (
+                <p className="text-xs text-amber-700">
+                  Select a patient to enable the guided incident report.
+                </p>
+              )}
+            </div>
+            <GuidedIncidentReporting
+              patientId={guidedPatientId}
+              patientName={
+                guidedPatient
+                  ? `${guidedPatient.first_name || ""} ${guidedPatient.last_name || ""}`.trim()
+                  : ""
+              }
+              physicianEmail={guidedPatient?.physician_email}
+              caregiverEmail={guidedPatient?.emergency_contact_email || guidedPatient?.caregiver_email}
+              onIncidentCreated={() => {
+                queryClient.invalidateQueries({ queryKey: ["my-incidents"] });
+                queryClient.invalidateQueries({ queryKey: ["notifications"] });
+              }}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="state-reportable">

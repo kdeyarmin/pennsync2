@@ -20,6 +20,7 @@ import {
   Plus
 } from "lucide-react";
 import { retrieveRelevantGuidelines } from "../smartNote/GuidelineContextRetriever";
+import { toast } from "sonner";
 
 export default function GuidelineComplianceChecker({
   noteContent,
@@ -27,7 +28,8 @@ export default function GuidelineComplianceChecker({
   visitType,
   patientData,
   careType = "home_health",
-  onIssueFound
+  onIssueFound,
+  onApplySuggestion
 }) {
   const [complianceResults, setComplianceResults] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -422,17 +424,28 @@ Return JSON with GRANULAR compliance analysis:
                                 <div className="bg-green-50 p-2 rounded border border-green-300">
                                   <p className="text-xs font-semibold text-green-800 mb-1">✅ Suggested Enhancement:</p>
                                   <p className="text-xs text-green-900 font-medium">"{req.suggested_enhanced_text}"</p>
-                                  {onIssueFound && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="mt-2 w-full h-6 text-xs"
-                                      onClick={() => onIssueFound([req])}
-                                    >
-                                      <Plus className="w-3 h-3 mr-1" />
-                                      Apply Enhancement
-                                    </Button>
-                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-2 w-full h-6 text-xs"
+                                    onClick={() => {
+                                      // Actually apply the suggested text. Prefer the
+                                      // dedicated apply handler; fall back to copying
+                                      // so the button is never a no-op.
+                                      if (onApplySuggestion) {
+                                        onApplySuggestion(req.suggested_enhanced_text, req);
+                                        toast.success('Enhancement added to note');
+                                      } else {
+                                        navigator.clipboard?.writeText(req.suggested_enhanced_text);
+                                        toast.success('Enhancement copied — paste it into your note');
+                                      }
+                                      // Still report the gap to any diagnostics consumer.
+                                      onIssueFound?.([req]);
+                                    }}
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Apply Enhancement
+                                  </Button>
                                 </div>
                               )}
                             </div>

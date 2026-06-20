@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { base44 } from "@/api/base44Client";
+import { logSecurityEvent } from "@/components/utils/security";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +33,7 @@ export default function MandatoryComplianceGate({
   const [complianceResult, setComplianceResult] = useState(null);
   const [acknowledgedIssues, setAcknowledgedIssues] = useState([]);
   const [overrideReason, setOverrideReason] = useState("");
+  const [isOverriding, setIsOverriding] = useState(false);
 
   const checkCompliance = async () => {
     if (!noteText || noteText.trim().length < 50) {
@@ -146,14 +150,28 @@ Return JSON:
         }
       });
 
-      setComplianceResult(result);
-      
-      if (result.passed) {
+      // Only treat an EXPLICIT passing result as a pass. A missing/false/failed
+      // result keeps the gate blocked (we never call onCompliancePassed).
+      const passed = result?.passed === true
+        && (!Array.isArray(result?.critical_issues) || result.critical_issues.length === 0);
+      setComplianceResult({ ...result, passed });
+
+      if (passed) {
         onCompliancePassed && onCompliancePassed(true);
       }
 
     } catch (error) {
       console.error("Error checking compliance:", error);
+      // The check could not be completed — do NOT pass. Surface a blocked state so
+      // the note is not finalized on a silent failure.
+      setComplianceResult({
+        passed: false,
+        score: 0,
+        overall_assessment: 'Compliance check could not be completed. The note is blocked until the check succeeds or is explicitly overridden.',
+        critical_issues: [],
+        warnings: [],
+      });
+      toast.error('Compliance check failed to run. The note remains blocked.');
     }
 
     setIsChecking(false);
@@ -179,14 +197,31 @@ Return JSON:
     return allWarningsAcknowledged && overrideReason.length >= 20;
   };
 
-  const handleOverride = () => {
-    // Log the override for audit purposes
-    console.log('Compliance override:', {
-      reason: overrideReason,
-      acknowledged: acknowledgedIssues,
-      timestamp: new Date().toISOString()
-    });
-    onCompliancePassed && onCompliancePassed(true, { overridden: true, reason: overrideReason });
+  const handleOverride = async () => {
+    if (!canOverride() || isOverriding) return;
+    setIsOverriding(true);
+    try {
+      // Persist a durable audit record of the override BEFORE allowing the note
+      // through. If we cannot record the override, we do NOT let the note pass.
+      const user = await base44.auth.me().catch(() => null);
+      await logSecurityEvent('COMPLIANCE_GATE_OVERRIDDEN', {
+        care_type: careType,
+        visit_type: visitType,
+        diagnosis: diagnosis || null,
+        compliance_score: complianceResult?.score ?? null,
+        override_reason: overrideReason,
+        acknowledged_warning_ids: acknowledgedIssues,
+        warning_count: complianceResult?.warnings?.length || 0,
+        overridden_by: user?.email || null,
+      }, 'warning');
+
+      onCompliancePassed && onCompliancePassed(true, { overridden: true, reason: overrideReason });
+    } catch (error) {
+      console.error('Failed to record compliance override:', error);
+      toast.error('Could not record the override. The note remains blocked until the override is logged.');
+    } finally {
+      setIsOverriding(false);
+    }
   };
 
   const getScoreColor = (score) => {
@@ -350,12 +385,14 @@ Return JSON:
                 />
                 <Button
                   onClick={handleOverride}
-                  disabled={!canOverride()}
+                  disabled={!canOverride() || isOverriding}
                   variant="outline"
                   className="w-full"
                 >
                   <FileWarning className="w-4 h-4 mr-2" />
-                  Override & Continue ({acknowledgedIssues.length}/{complianceResult.warnings?.length || 0} acknowledged)
+                  {isOverriding
+                    ? 'Recording override...'
+                    : `Override & Continue (${acknowledgedIssues.length}/${complianceResult.warnings?.length || 0} acknowledged)`}
                 </Button>
               </div>
             )}
