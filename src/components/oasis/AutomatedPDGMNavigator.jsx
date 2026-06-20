@@ -4,6 +4,7 @@ import { invokeLLM } from "@/lib/invokeLLM";
 import { buildPdgmNavigatorCsv } from "./pdgmNavigatorExport";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -1153,38 +1154,36 @@ PREDICT:
                   <div className="space-y-3">
                     {/* Point Breakdown Table */}
                     <div className="border rounded overflow-hidden">
-                      <table className="w-full text-xs">
-                        <thead className="bg-navy-100">
-                          <tr>
-                            <th className="text-left p-2">M-Item</th>
-                            <th className="text-center p-2">Score</th>
-                            <th className="text-center p-2">Max</th>
-                            <th className="text-left p-2">Contribution</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {navigation.functional_level?.point_breakdown && 
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>M-Item</TableHead>
+                            <TableHead className="text-center">Score</TableHead>
+                            <TableHead className="text-center">Max</TableHead>
+                            <TableHead>Contribution</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {navigation.functional_level?.point_breakdown &&
                             Object.entries(navigation.functional_level.point_breakdown).map(([key, data]) => (
-                              <tr key={key} className="hover:bg-slate-50">
-                                <td className="p-2 font-mono text-navy-700">{key.toUpperCase().replace('_', ' ')}</td>
-                                <td className="p-2 text-center font-bold">{data.score}</td>
-                                <td className="p-2 text-center text-slate-500">{data.max}</td>
-                                <td className="p-2 text-slate-600">{data.contribution}</td>
-                              </tr>
+                              <TableRow key={key}>
+                                <TableCell className="font-mono text-navy-700">{key.toUpperCase().replace('_', ' ')}</TableCell>
+                                <TableCell className="text-center font-bold">{data.score}</TableCell>
+                                <TableCell className="text-center text-slate-500">{data.max}</TableCell>
+                                <TableCell className="text-slate-600">{data.contribution}</TableCell>
+                              </TableRow>
                             ))
                           }
-                        </tbody>
-                        <tfoot className="bg-navy-50">
-                          <tr>
-                            <td className="p-2 font-semibold">Total</td>
-                            <td className="p-2 text-center font-bold text-navy-700">
+                          <TableRow className="bg-navy-50 hover:bg-navy-50">
+                            <TableCell className="font-semibold">Total</TableCell>
+                            <TableCell className="text-center font-bold text-navy-700">
                               {navigation.functional_level?.total_points}
-                            </td>
-                            <td className="p-2 text-center text-slate-500">30</td>
-                            <td className="p-2"></td>
-                          </tr>
-                        </tfoot>
-                      </table>
+                            </TableCell>
+                            <TableCell className="text-center text-slate-500">30</TableCell>
+                            <TableCell></TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
                     </div>
 
                     <div className="bg-slate-50 p-3 rounded border text-xs">
