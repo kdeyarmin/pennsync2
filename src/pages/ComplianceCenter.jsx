@@ -361,7 +361,7 @@ export default function ComplianceCenter() {
     );
   }
 
-  const _COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+  const _COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444'];
 
   return (
     <PageContainer>
@@ -580,7 +580,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="score" stroke="#3B82F6" strokeWidth={3} name="Compliance Score (%)" />
+                  <Line type="monotone" dataKey="score" stroke="#3557b0" strokeWidth={3} name="Compliance Score (%)" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

@@ -244,7 +244,7 @@ export default function CustomReportBuilder({ patients, visits, incidents, users
                   <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" fill="#3b82f6" />
+                  <Bar dataKey="value" fill="#3557b0" />
                 </BarChart>
               )}
               {chartType === "line" && (
@@ -254,7 +254,7 @@ export default function CustomReportBuilder({ patients, visits, incidents, users
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} />
+                  <Line type="monotone" dataKey="value" stroke="#3557b0" strokeWidth={2} />
                 </LineChart>
               )}
               {chartType === "pie" && (

@@ -137,7 +137,7 @@ export default function AdminTrainingAnalytics() {
       completions: count
     }));
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  const COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
   return (
     <PageContainer>
@@ -224,7 +224,7 @@ export default function AdminTrainingAnalytics() {
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="#264491"
                       dataKey="value"
                     >
                       {categoryChartData.map((entry, index) => (
@@ -248,7 +248,7 @@ export default function AdminTrainingAnalytics() {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="completions" stroke="#3B82F6" strokeWidth={2} />
+                    <Line type="monotone" dataKey="completions" stroke="#3557b0" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -295,7 +295,7 @@ export default function AdminTrainingAnalytics() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completions" fill="#3B82F6" name="Completions" />
+                  <Bar dataKey="completions" fill="#3557b0" name="Completions" />
                   <Bar dataKey="avgScore" fill="#10B981" name="Avg Score %" />
                 </BarChart>
               </ResponsiveContainer>
@@ -316,7 +316,7 @@ export default function AdminTrainingAnalytics() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="completions" stroke="#3B82F6" strokeWidth={3} name="Completions" />
+                  <Line type="monotone" dataKey="completions" stroke="#3557b0" strokeWidth={3} name="Completions" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

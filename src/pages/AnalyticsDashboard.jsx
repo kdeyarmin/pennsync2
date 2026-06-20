@@ -533,7 +533,7 @@ export default function AnalyticsDashboard() {
                   <Line 
                     type="monotone" 
                     dataKey="avgDocTime" 
-                    stroke="#3b82f6" 
+                    stroke="#3557b0" 
                     strokeWidth={2}
                     name="Doc Time (min)"
                     dot={{ r: 3 }}

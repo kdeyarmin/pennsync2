@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toCsvRows } from "@/components/admin/csvExport";
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const COLORS = ['#3557b0', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 export default function PDGMTrendDashboard() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -852,7 +852,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
               <Line 
                 type="monotone" 
                 dataKey="count" 
-                stroke="#3b82f6" 
+                stroke="#3557b0" 
                 strokeWidth={2}
                 name="Assessments"
               />
@@ -975,7 +975,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
                   labelLine={false}
                   label={(entry) => `${entry.name}: ${entry.value}`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {chartData.groupDist.map((entry, index) => (
@@ -1001,7 +1001,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#3b82f6" name="Patients" />
+                <Bar dataKey="value" fill="#3557b0" name="Patients" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -1094,7 +1094,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
                         <Tooltip />
                         <Legend />
                         <Line type="monotone" dataKey="upper_bound" stroke="#10b981" strokeDasharray="3 3" name="Upper Bound" />
-                        <Line type="monotone" dataKey="predicted_payment" stroke="#3b82f6" strokeWidth={3} name="Predicted Payment" />
+                        <Line type="monotone" dataKey="predicted_payment" stroke="#3557b0" strokeWidth={3} name="Predicted Payment" />
                         <Line type="monotone" dataKey="lower_bound" stroke="#ef4444" strokeDasharray="3 3" name="Lower Bound" />
                       </LineChart>
                     </ResponsiveContainer>

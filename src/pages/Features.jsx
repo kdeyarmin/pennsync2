@@ -661,8 +661,8 @@ export default function FeaturesPage() {
     h3 { color: #1F2937; margin-top: 20px; page-break-after: avoid; }
     h4 { color: #4B5563; margin-top: 15px; }
     .section { page-break-inside: avoid; margin-bottom: 30px; }
-    .step { background: #F9FAFB; border-left: 4px solid #3B82F6; padding: 15px; margin: 10px 0; border-radius: 4px; }
-    .step-number { display: inline-block; background: #3B82F6; color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold; margin-right: 8px; }
+    .step { background: #F9FAFB; border-left: 4px solid #3557b0; padding: 15px; margin: 10px 0; border-radius: 4px; }
+    .step-number { display: inline-block; background: #3557b0; color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold; margin-right: 8px; }
     .tip { background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px; margin: 10px 0; border-radius: 4px; }
     .tip-icon { color: #F59E0B; font-weight: bold; }
     .warning { background: #FEE2E2; border-left: 4px solid #DC2626; padding: 12px; margin: 10px 0; border-radius: 4px; }

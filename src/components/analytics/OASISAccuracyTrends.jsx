@@ -113,8 +113,8 @@ export default function OASISAccuracyTrends({ data = [], compact = false }) {
                 <AreaChart data={weeklyData}>
                   <defs>
                     <linearGradient id="accuracyGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3557b0" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3557b0" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -128,7 +128,7 @@ export default function OASISAccuracyTrends({ data = [], compact = false }) {
                   <Area 
                     type="monotone" 
                     dataKey="accuracy" 
-                    stroke="#3b82f6" 
+                    stroke="#3557b0" 
                     fill="url(#accuracyGradient)"
                     name="Accuracy"
                   />

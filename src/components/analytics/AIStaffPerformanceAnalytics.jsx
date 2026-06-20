@@ -512,7 +512,7 @@ Return detailed analysis suitable for management dashboard.`,
                 <Legend />
                 <Line type="monotone" dataKey="documentation_quality" stroke="#8B5CF6" name="Doc Quality" />
                 <Line type="monotone" dataKey="compliance_adherence" stroke="#10B981" name="Compliance" />
-                <Line type="monotone" dataKey="training_engagement" stroke="#3B82F6" name="Training" />
+                <Line type="monotone" dataKey="training_engagement" stroke="#3557b0" name="Training" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

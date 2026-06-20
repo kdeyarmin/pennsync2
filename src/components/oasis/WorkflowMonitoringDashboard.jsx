@@ -35,7 +35,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#10b981', '#3557b0', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function WorkflowMonitoringDashboard() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -299,7 +299,7 @@ export default function WorkflowMonitoringDashboard() {
                   labelLine={false}
                   label={({ name, value }) => `${name}: ${value}`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {statusDistribution.map((entry, index) => (

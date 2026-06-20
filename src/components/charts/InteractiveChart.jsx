@@ -158,7 +158,7 @@ export default function InteractiveChart({
                 labelLine={false}
                 label={(entry) => `${entry[xAxisKey]}: ${entry[yAxisKey]}`}
                 outerRadius={containerHeight / 3}
-                fill="#8884d8"
+                fill="#264491"
                 dataKey={dataKey || yAxisKey}
                 onClick={handleBarClick}
                 cursor={onDrillDown ? "pointer" : "default"}

@@ -11,7 +11,7 @@ import { Activity, Heart, Wind } from "lucide-react";
 const VITAL_CONFIG = [
   { key: "blood_pressure_systolic", label: "BP Systolic", color: "#ef4444", unit: "mmHg" },
   { key: "blood_pressure_diastolic", label: "BP Diastolic", color: "#f97316", unit: "mmHg" },
-  { key: "heart_rate", label: "Heart Rate", color: "#3b82f6", unit: "bpm" },
+  { key: "heart_rate", label: "Heart Rate", color: "#3557b0", unit: "bpm" },
   { key: "oxygen_saturation", label: "O₂ Sat", color: "#10b981", unit: "%" },
   { key: "temperature", label: "Temperature", color: "#a855f7", unit: "°F" },
   { key: "pain_level", label: "Pain Level", color: "#f59e0b", unit: "/10" },
@@ -91,7 +91,7 @@ export default function VitalsChart({ patientId }) {
               <Legend />
               <Line type="monotone" dataKey="blood_pressure_systolic" name="Systolic" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
               <Line type="monotone" dataKey="blood_pressure_diastolic" name="Diastolic" stroke="#f97316" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="heart_rate" name="Heart Rate" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="heart_rate" name="Heart Rate" stroke="#3557b0" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

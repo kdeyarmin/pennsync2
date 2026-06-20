@@ -127,7 +127,7 @@ export default function PDGMWhatIfBuilder({
     {
       name: 'What-If',
       revenue: scenarioRevenue || 0,
-      fill: revenueDiff > 0 ? '#22c55e' : revenueDiff < 0 ? '#ef4444' : '#3b82f6'
+      fill: revenueDiff > 0 ? '#22c55e' : revenueDiff < 0 ? '#ef4444' : '#3557b0'
     }
   ];
 

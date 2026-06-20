@@ -170,7 +170,7 @@ export default function RevenueImpactAnalysis({ data = [], compact = false }) {
                     />
                     <Legend />
                     <Area type="monotone" dataKey="actual" stroke="#22c55e" fill="url(#actualGradient)" name="Actual Revenue" />
-                    <Area type="monotone" dataKey="potential" stroke="#3b82f6" fill="none" strokeDasharray="5 5" name="Potential" />
+                    <Area type="monotone" dataKey="potential" stroke="#3557b0" fill="none" strokeDasharray="5 5" name="Potential" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

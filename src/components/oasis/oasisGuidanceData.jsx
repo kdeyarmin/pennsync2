@@ -12,13 +12,13 @@ export const OASIS_GUIDANCE = {
         title: "Chronic Heart Failure",
         description: "Patient with NYHA Class IV heart failure, frequent hospitalizations, but cardiologist has not documented terminal prognosis.",
         recommendedAnswer: "0 — No (unless physician specifically documents <12 months)",
-        color: "#3b82f6"
+        color: "#3557b0"
       },
       {
         title: "End-Stage COPD",
         description: "Patient on continuous oxygen, minimal activity tolerance, pulmonologist has documented 'end-stage' but no specific timeframe given.",
         recommendedAnswer: "0 — No (requires specific prognosis documentation)",
-        color: "#3b82f6"
+        color: "#3557b0"
       }
     ],
     howToAnswer: [

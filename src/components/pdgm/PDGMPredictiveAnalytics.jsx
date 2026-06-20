@@ -48,7 +48,7 @@ import {
   ComposedChart
 } from "recharts";
 
-const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = ['#3557b0', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function PDGMPredictiveAnalytics({ compact = false }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);

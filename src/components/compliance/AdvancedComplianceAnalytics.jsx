@@ -350,7 +350,7 @@ export default function AdvancedComplianceAnalytics({
                       <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                       <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Area type="monotone" dataKey="avgScore" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} name="Avg Score" />
+                      <Area type="monotone" dataKey="avgScore" stroke="#3557b0" fill="#3557b0" fillOpacity={0.3} name="Avg Score" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>

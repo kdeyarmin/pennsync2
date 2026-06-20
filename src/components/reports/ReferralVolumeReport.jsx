@@ -40,7 +40,7 @@ export default function ReferralVolumeReport({ dateRange }) {
     { priority: 'Low', count: filteredReferrals.filter(r => r.priority === 'low').length }
   ];
 
-  const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  const COLORS = ['#8b5cf6', '#3557b0', '#10b981', '#f59e0b', '#ef4444'];
 
   const handleExport = () => {
     exportToPDF({
@@ -144,7 +144,7 @@ export default function ReferralVolumeReport({ dateRange }) {
                   labelLine={false}
                   label={entry => `${entry.priority}: ${entry.count}`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="count"
                 >
                   {priorityData.map((entry, index) => (

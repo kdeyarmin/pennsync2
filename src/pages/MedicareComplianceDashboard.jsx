@@ -267,7 +267,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
     setIsGeneratingInsights(false);
   };
 
-  const _COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  const _COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
   return (
     <PageContainer>
@@ -467,7 +467,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                     <Pie
                       data={[
                         { name: '90-100% (Excellent)', value: filteredAudits.filter(a => a.compliance_score >= 90).length, color: '#10B981' },
-                        { name: '80-89% (Good)', value: filteredAudits.filter(a => a.compliance_score >= 80 && a.compliance_score < 90).length, color: '#3B82F6' },
+                        { name: '80-89% (Good)', value: filteredAudits.filter(a => a.compliance_score >= 80 && a.compliance_score < 90).length, color: '#3557b0' },
                         { name: '70-79% (Fair)', value: filteredAudits.filter(a => a.compliance_score >= 70 && a.compliance_score < 80).length, color: '#F59E0B' },
                         { name: '<70% (Poor)', value: filteredAudits.filter(a => a.compliance_score < 70).length, color: '#EF4444' }
                       ]}
@@ -476,12 +476,12 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={100}
-                      fill="#8884d8"
+                      fill="#264491"
                       dataKey="value"
                     >
                       {[
                         { name: '90-100%', value: filteredAudits.filter(a => a.compliance_score >= 90).length, color: '#10B981' },
-                        { name: '80-89%', value: filteredAudits.filter(a => a.compliance_score >= 80 && a.compliance_score < 90).length, color: '#3B82F6' },
+                        { name: '80-89%', value: filteredAudits.filter(a => a.compliance_score >= 80 && a.compliance_score < 90).length, color: '#3557b0' },
                         { name: '70-79%', value: filteredAudits.filter(a => a.compliance_score >= 70 && a.compliance_score < 80).length, color: '#F59E0B' },
                         { name: '<70%', value: filteredAudits.filter(a => a.compliance_score < 70).length, color: '#EF4444' }
                       ].map((entry, index) => (
@@ -557,7 +557,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                   <Line 
                     type="monotone" 
                     dataKey="score" 
-                    stroke="#3B82F6" 
+                    stroke="#3557b0" 
                     strokeWidth={3}
                     name="Compliance Score (%)"
                   />
@@ -739,7 +739,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                     <YAxis domain={[0, 100]} />
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Bar dataKey="score" fill="#3B82F6" name="Avg Compliance %" />
+                    <Bar dataKey="score" fill="#3557b0" name="Avg Compliance %" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

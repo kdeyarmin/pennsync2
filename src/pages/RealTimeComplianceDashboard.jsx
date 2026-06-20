@@ -508,7 +508,7 @@ export default function RealTimeComplianceDashboard() {
     return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
-  const COLORS_PIE = ['#EF4444', '#F97316', '#EAB308', '#3B82F6', '#10B981'];
+  const COLORS_PIE = ['#EF4444', '#F97316', '#EAB308', '#3557b0', '#10B981'];
 
   const featureDistribution = featureCompliance.map((f, _idx) => ({
     name: f.name,
@@ -985,7 +985,7 @@ export default function RealTimeComplianceDashboard() {
                   labelLine={false}
                   label={({ name, value }) => `${name}: ${value}`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {featureDistribution.map((entry, index) => (
@@ -1012,7 +1012,7 @@ export default function RealTimeComplianceDashboard() {
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="audits" fill="#8B5CF6" name="Audits" />
-                <Bar dataKey="oasis" fill="#3B82F6" name="OASIS" />
+                <Bar dataKey="oasis" fill="#3557b0" name="OASIS" />
                 <Bar dataKey="notes" fill="#10B981" name="Notes" />
               </BarChart>
             </ResponsiveContainer>

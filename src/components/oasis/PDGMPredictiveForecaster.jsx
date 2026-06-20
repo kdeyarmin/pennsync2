@@ -807,7 +807,7 @@ Return JSON:
                     <Tooltip formatter={(value) => formatCurrency(value)} />
                     <Legend wrapperStyle={{ fontSize: '10px' }} />
                     <Bar dataKey="Conservative" fill="#6b7280" />
-                    <Bar dataKey="Realistic" fill="#3b82f6" />
+                    <Bar dataKey="Realistic" fill="#3557b0" />
                     <Bar dataKey="Optimistic" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>

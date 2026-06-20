@@ -16,7 +16,7 @@ import {
   Cell
 } from "recharts";
 
-const _COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
+const _COLORS = ['#22c55e', '#3557b0', '#f59e0b', '#ef4444'];
 
 export default function ComplianceRatesChart({ data = [], notes = [], compact = false }) {
   // Weekly compliance trends
