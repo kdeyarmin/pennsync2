@@ -21,9 +21,18 @@ const VALID_STATUSES = ['opted_in', 'opted_out', 'unknown'];
 function normalizeE164(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const trimmed = String(raw).trim();
-  if (!/^\+?\d{8,15}$/.test(trimmed)) return null;
-  const digits = trimmed.replace(/[^\d]/g, '');
-  return `+${digits}`;
+  const digits = trimmed.replace(/[^\d]/g, "");
+
+  // US-centric normalization (matches other phone utilities in the repo).
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+
+  // Already E.164-ish international form.
+  if (trimmed.startsWith("+") && digits.length >= 8 && digits.length <= 15 && digits[0] !== "0") {
+    return `+${digits}`;
+  }
+
+  return null;
 }
 
 Deno.serve(async (req) => {
