@@ -49,18 +49,23 @@ export default function PageHeader({
   );
 
   return (
-    <Card className={cn("relative overflow-hidden border border-slate-200/80 bg-gradient-to-br from-white via-white to-navy-50/60 shadow-sm before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-navy-600 before:via-navy-500 before:to-gold-400", className)}>
-      <CardContent className="p-5 sm:p-6 md:p-7">
+    <Card className={cn("relative overflow-hidden border border-slate-200/80 bg-gradient-to-br from-white via-white to-navy-50/60 shadow-sm before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-1 before:bg-gradient-to-r before:from-navy-600 before:via-navy-500 before:to-gold-400", className)}>
+      {/* Decorative brand glow — purely cosmetic, sits behind the content. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-gradient-to-br from-navy-200/40 via-navy-100/25 to-gold-100/30 blur-3xl"
+      />
+      <CardContent className="relative p-5 sm:p-6 md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             {iconEl ? (
-              <div className="mb-3 flex items-center gap-3">
-                <div className={cn("flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-white shadow-sm", iconColor)}>
+              <div className="mb-3 flex items-center gap-3.5">
+                <div className={cn("flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-white shadow-md ring-1 ring-inset ring-white/15", iconColor)}>
                   {iconEl}
                 </div>
                 <div className="min-w-0">
                   {eyebrow && (
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-600">
                       {eyebrow}
                     </p>
                   )}
@@ -70,7 +75,7 @@ export default function PageHeader({
             ) : (
               <>
                 {eyebrow && (
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-600">
                     {eyebrow}
                   </p>
                 )}

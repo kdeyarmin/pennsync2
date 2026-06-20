@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
@@ -220,62 +221,32 @@ export default function Dashboard() {
 
       {/* Nurse Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-emerald-600 to-emerald-500 border-emerald-500 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-emerald-100 font-semibold mb-1 uppercase tracking-wide">Today's Visits</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {visits.filter(v => v.status === 'scheduled').length}
-                </p>
-                <p className="text-[10px] sm:text-xs text-emerald-200 mt-0.5">
-                  {visits.filter(v => v.status === 'completed').length} completed
-                </p>
-              </div>
-              <Calendar className="w-9 h-9 sm:w-11 sm:h-11 text-emerald-300 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-navy-600 to-navy-500 border-navy-500 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-navy-100 font-semibold mb-1 uppercase tracking-wide">Active Care Plans</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {carePlans.length}
-                </p>
-                <p className="text-[10px] sm:text-xs text-navy-200 mt-0.5">
-                  {patients.length} patients
-                </p>
-              </div>
-              <Target className="w-9 h-9 sm:w-11 sm:h-11 text-navy-300 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-slate-300 font-semibold mb-1 uppercase tracking-wide">Note Enhancements</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {noteConversions.length}
-                </p>
-              </div>
-              <FileText className="w-9 h-9 sm:w-11 sm:h-11 text-slate-400 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-gold-500 to-gold-400 border-gold-400 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-navy-900/70 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
-                <p className="text-2xl sm:text-3xl font-bold text-navy-900">{stats.timeSavedDisplay}</p>
-              </div>
-              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-navy-900/40 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          label="Today's Visits"
+          value={visits.filter(v => v.status === 'scheduled').length}
+          sub={`${visits.filter(v => v.status === 'completed').length} completed`}
+          icon={Calendar}
+          tone="emerald"
+        />
+        <StatCard
+          label="Active Care Plans"
+          value={carePlans.length}
+          sub={`${patients.length} patients`}
+          icon={Target}
+          tone="navy"
+        />
+        <StatCard
+          label="Note Enhancements"
+          value={noteConversions.length}
+          icon={FileText}
+          tone="slate"
+        />
+        <StatCard
+          label="Time Saved"
+          value={stats.timeSavedDisplay}
+          icon={Clock}
+          tone="gold"
+        />
       </div>
 
       {/* Quick Action Buttons */}
