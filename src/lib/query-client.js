@@ -1,8 +1,24 @@
 import { QueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 
 export const queryClientInstance = new QueryClient({
 	defaultOptions: {
+		mutations: {
+			// Safety net: a failed create/update/delete should never fail silently.
+			// Most mutations only defined onSuccess, so before this a server/network
+			// error left the user with no feedback (and sometimes a dialog that just
+			// "didn't do anything"). Mutations that need bespoke error handling can
+			// still override onError — react-query uses this only as the default.
+			onError: (error) => {
+				console.error('Mutation failed:', error);
+				const message =
+					typeof error?.message === 'string' && error.message.trim()
+						? error.message
+						: 'Something went wrong. Please try again.';
+				toast.error(message);
+			},
+		},
 		queries: {
 			refetchOnWindowFocus: false,
 			// Don't retry auth/permission/not-found errors — retrying a 401 just
