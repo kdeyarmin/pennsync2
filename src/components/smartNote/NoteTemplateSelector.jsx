@@ -26,8 +26,8 @@ const TEMPLATES = [
     id: "admission",
     label: "Admission / SOC",
     visitType: "admission",
-    color: "bg-purple-50 border-purple-200 hover:border-purple-400",
-    badgeColor: "bg-purple-100 text-purple-700",
+    color: "bg-navy-50 border-navy-200 hover:border-navy-400",
+    badgeColor: "bg-navy-100 text-navy-700",
     content: `• Admission source: [hospital / SNF / home]
 • Primary diagnosis: _ , secondary diagnoses: _
 • Baseline vital signs: BP _/_, HR _, RR _, O2 _%, Temp _°F, Wt _ lbs
@@ -143,14 +143,14 @@ export default function NoteTemplateSelector({ onSelect, currentVisitType }) {
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 sm:py-2.5 bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100 transition-colors min-h-[48px] sm:min-h-0"
+        className="w-full flex items-center justify-between px-4 py-3 sm:py-2.5 bg-gradient-to-r from-navy-50 to-indigo-50 hover:from-navy-100 hover:to-indigo-100 transition-colors min-h-[48px] sm:min-h-0"
       >
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-violet-600" />
-          <span className="text-sm font-semibold text-violet-700">Start from a Template</span>
-          <span className="text-xs text-violet-400 hidden sm:inline">pre-fill common visit types</span>
+          <Zap className="w-4 h-4 text-navy-600" />
+          <span className="text-sm font-semibold text-navy-700">Start from a Template</span>
+          <span className="text-xs text-navy-400 hidden sm:inline">pre-fill common visit types</span>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-violet-500" /> : <ChevronDown className="w-4 h-4 text-violet-500" />}
+        {open ? <ChevronUp className="w-4 h-4 text-navy-500" /> : <ChevronDown className="w-4 h-4 text-navy-500" />}
       </button>
 
       {open && (

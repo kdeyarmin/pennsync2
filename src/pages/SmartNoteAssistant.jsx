@@ -491,9 +491,9 @@ export default function SmartNoteAssistant() {
               <ComplianceChecklist isHospice={isHospice} />
 
               <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+                <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-navy-50 border-b border-indigo-100">
                   <span className="text-xs font-semibold text-indigo-700">Your Rough Notes / Bullet Points</span>
-                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-violet-600 hover:text-violet-800"
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-navy-600 hover:text-navy-800"
                     onClick={() => { setActiveTab("drafter"); }}>
                     <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
                   </Button>

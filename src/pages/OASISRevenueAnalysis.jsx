@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
 import EnhancedPDGMCaseMixAnalyzer from "../components/oasis/EnhancedPDGMCaseMixAnalyzer";
 import AutomatedPDGMNavigator from "../components/oasis/AutomatedPDGMNavigator";
@@ -13,7 +11,7 @@ import PDGMImpactAnalyzer from "../components/oasis/PDGMImpactAnalyzer";
 
 export default function OASISRevenueAnalysis() {
   const location = useLocation();
-  const { analysisResults, pdgmData, patientName, _uploadId } = location.state || {};
+  const { analysisResults, pdgmData, _uploadId } = location.state || {};
 
   if (!analysisResults || !pdgmData) {
     return (
@@ -33,27 +31,8 @@ export default function OASISRevenueAnalysis() {
     );
   }
 
-  const revenueScore = analysisResults.revenue_optimization_score || 0;
-
   return (
-    <PageContainer>
-      <PageHeader
-        icon={TrendingUp}
-        eyebrow="Patient Care"
-        title="OASIS Revenue Analysis"
-        description={patientName ? `Patient: ${patientName}` : "PDGM revenue analysis and optimization opportunities"}
-        favoritePage="OASISRevenueAnalysis"
-        badges={[{ label: `Revenue Optimization Score: ${revenueScore}`, className: "bg-green-100 text-green-800 hover:bg-green-100" }]}
-        actions={
-          <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Analyzer
-            </Button>
-          </Link>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Revenue Comparison */}
       <PDGMRevenueComparison 
         analysisResults={analysisResults}
@@ -112,6 +91,6 @@ export default function OASISRevenueAnalysis() {
           </CardContent>
         </Card>
       )}
-    </PageContainer>
+    </div>
   );
 }

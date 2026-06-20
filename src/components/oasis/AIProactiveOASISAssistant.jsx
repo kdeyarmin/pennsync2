@@ -450,14 +450,14 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-purple-600" />
+                      <Shield className="w-5 h-5 text-navy-600" />
                       Monitoring Flags
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
                       {analysis.monitoring_flags.map((flag, i) => (
-                        <Badge key={i} className="bg-purple-100 text-purple-800">
+                        <Badge key={i} className="bg-navy-100 text-navy-800">
                           {flag}
                         </Badge>
                       ))}

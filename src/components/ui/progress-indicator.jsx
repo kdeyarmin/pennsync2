@@ -9,7 +9,7 @@ export function ProgressBar({ value = 0, max = 100, label, variant = "default", 
     success: "from-green-500 to-emerald-600",
     warning: "from-amber-500 to-orange-600",
     critical: "from-red-500 to-rose-600",
-    ai: "from-purple-500 to-indigo-600"
+    ai: "from-navy-500 to-indigo-600"
   };
 
   return (
@@ -73,7 +73,7 @@ export function CircularProgress({ value = 0, size = 80, strokeWidth = 8, varian
     success: "stroke-green-600",
     warning: "stroke-amber-600",
     critical: "stroke-red-600",
-    ai: "stroke-purple-600"
+    ai: "stroke-navy-600"
   };
 
   return (

@@ -245,7 +245,7 @@ Example: "Goal progress: Improved. Blood pressure decreased to 132/78 from basel
                           generateProgress(plan);
                         }}
                         disabled={generatingFor === plan.id}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
+                        className="w-full bg-navy-600 hover:bg-navy-700"
                       >
                         {generatingFor === plan.id ? (
                           <>Generating...</>

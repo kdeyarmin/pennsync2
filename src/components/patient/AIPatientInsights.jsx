@@ -167,9 +167,9 @@ Be specific and actionable. Use actual data trends.`,
 
   if (isAnalyzing) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardContent className="p-6 text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-navy-600 mx-auto mb-4" />
           <p className="text-sm text-slate-900 font-semibold">Analyzing Patient Data...</p>
           <p className="text-xs text-slate-600 mt-2">🧠 Reviewing {visits?.length} visits, {incidents?.length} incidents, and clinical history</p>
         </CardContent>
@@ -179,15 +179,15 @@ Be specific and actionable. Use actual data trends.`,
 
   if (!insights) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI Patient Insights & Risk Prediction
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Button onClick={analyzePatient} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={analyzePatient} className="bg-navy-600 hover:bg-navy-700">
             <Sparkles className="w-4 h-4 mr-2" />
             Generate Insights
           </Button>

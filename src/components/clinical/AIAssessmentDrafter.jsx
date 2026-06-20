@@ -107,10 +107,10 @@ Format the response professionally for OASIS documentation. Be specific and use 
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-purple-200">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+      <Card className="border-2 border-navy-200">
+        <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI OASIS Assessment Drafter
           </CardTitle>
         </CardHeader>
@@ -131,7 +131,7 @@ Format the response professionally for OASIS documentation. Be specific and use 
           <Button
             onClick={generateAssessment}
             disabled={isGenerating || !customNotes.trim()}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             {isGenerating ? (
               <>
@@ -192,23 +192,23 @@ Format the response professionally for OASIS documentation. Be specific and use 
             </div>
 
             {/* Functional Status */}
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <h3 className="font-semibold text-purple-900 mb-2">Functional Status</h3>
+            <div className="bg-navy-50 p-4 rounded-lg border border-navy-200">
+              <h3 className="font-semibold text-navy-900 mb-2">Functional Status</h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="font-medium text-purple-800">Ambulation:</p>
+                  <p className="font-medium text-navy-800">Ambulation:</p>
                   <p className="text-slate-700">{draftedAssessment.functional_status.ambulation}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-purple-800">Transfers:</p>
+                  <p className="font-medium text-navy-800">Transfers:</p>
                   <p className="text-slate-700">{draftedAssessment.functional_status.transfers}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-purple-800">ADL Independence:</p>
+                  <p className="font-medium text-navy-800">ADL Independence:</p>
                   <p className="text-slate-700">{draftedAssessment.functional_status.adl_independence}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-purple-800">Assistive Devices:</p>
+                  <p className="font-medium text-navy-800">Assistive Devices:</p>
                   <p className="text-slate-700">{draftedAssessment.functional_status.assistive_devices}</p>
                 </div>
               </div>

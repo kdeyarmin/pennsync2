@@ -188,7 +188,7 @@ export default function AIComplianceInServicesHub() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-indigo-700 to-purple-700 text-white p-4 sm:p-6 shadow-xl">
+      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-indigo-700 to-navy-700 text-white p-4 sm:p-6 shadow-xl">
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">AI Compliance In-Services</h1>
         <p className="text-sm sm:text-base text-indigo-100">AI-powered in-services, competency testing, certificates, learning plan tracking, and compliance reporting inside your current learning center.</p>
       </div>
@@ -209,7 +209,7 @@ export default function AIComplianceInServicesHub() {
 
         <TabsContent value="builder" className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           <Card className="shadow-lg">
-            <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-indigo-50"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Sparkles className="w-5 h-5 text-purple-600" />AI In-Service Generator</CardTitle></CardHeader>
+            <CardHeader className="border-b bg-gradient-to-r from-navy-50 to-indigo-50"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Sparkles className="w-5 h-5 text-navy-600" />AI In-Service Generator</CardTitle></CardHeader>
             <CardContent className="space-y-4 p-4 sm:p-6">
               <div>
                 <label className="text-sm font-semibold mb-2 block text-slate-700">Topic *</label>
@@ -306,14 +306,14 @@ export default function AIComplianceInServicesHub() {
                 </div>
               </div>
               {/* AI Presenter Video Toggle */}
-              <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3 sm:p-4">
+              <div className="rounded-xl border border-navy-200 bg-navy-50/50 p-3 sm:p-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={generator.generate_videos} onCheckedChange={(checked) => setGenerator({ ...generator, generate_videos: !!checked })} className="w-5 h-5" />
-                  <Video className="w-4 h-4 text-purple-600" />
+                  <Video className="w-4 h-4 text-navy-600" />
                   <span className="font-medium text-sm">Generate AI presenter videos</span>
                 </label>
                 {generator.generate_videos && (
-                  <p className="text-xs text-purple-700 mt-2 ml-7">
+                  <p className="text-xs text-navy-700 mt-2 ml-7">
                     An AI avatar will narrate each module. Videos generate in the background (2-5 min per module).
                   </p>
                 )}
@@ -327,7 +327,7 @@ export default function AIComplianceInServicesHub() {
               )}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                 <Button
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 min-h-[48px] text-base font-semibold"
+                  className="flex-1 bg-navy-600 hover:bg-navy-700 min-h-[48px] text-base font-semibold"
                   onClick={runAIGeneration}
                   disabled={generating || !generator.topic.trim()}
                 >
@@ -367,7 +367,7 @@ export default function AIComplianceInServicesHub() {
                     </div>
                   </div>
                   {generateSuccess.video_generation_status === 'generating' && (
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-xs">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-navy-50 border border-navy-200 text-navy-800 text-xs">
                       <Video className="w-4 h-4 animate-pulse" />
                       <span className="font-medium">AI presenter videos are generating in the background. They will appear on each module when ready.</span>
                     </div>
@@ -442,7 +442,7 @@ export default function AIComplianceInServicesHub() {
                     <Badge variant="outline" className="text-xs">{course.category}</Badge>
                     <Badge variant="outline" className="text-xs">{course.business_line_scope}</Badge>
                     <Badge className={`text-xs ${course.status === 'published' ? 'bg-green-100 text-green-800' : course.status === 'archived' ? 'bg-slate-100 text-slate-800' : 'bg-amber-100 text-amber-800'}`}>{course.status}</Badge>
-                    {course.ai_generated && <Badge className="bg-purple-100 text-purple-800 text-xs">AI</Badge>}
+                    {course.ai_generated && <Badge className="bg-navy-100 text-navy-800 text-xs">AI</Badge>}
                   </div>
                   <p className="text-xs sm:text-sm text-slate-500 line-clamp-2">{course.short_description || course.description}</p>
                 </div>

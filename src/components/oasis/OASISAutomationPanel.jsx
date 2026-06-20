@@ -104,9 +104,9 @@ export default function OASISAutomationPanel({
 
   if (isLoading) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-6 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4" />
           <p className="text-sm text-slate-600">Analyzing clinical note and mapping to OASIS fields...</p>
         </CardContent>
       </Card>
@@ -149,10 +149,10 @@ export default function OASISAutomationPanel({
       )}
 
       {/* Summary Card */}
-      <Card className="border-2 border-purple-200 bg-gradient-to-b from-purple-50 to-white">
+      <Card className="border-2 border-navy-200 bg-gradient-to-b from-navy-50 to-white">
         <CardHeader className="py-4">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI OASIS Automation Results
           </CardTitle>
         </CardHeader>
@@ -160,7 +160,7 @@ export default function OASISAutomationPanel({
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white p-3 rounded-lg border border-slate-200">
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-2xl font-bold text-navy-600">
                 {overallSummary.total_items_mapped || oasisSuggestions.length}
               </p>
               <p className="text-xs text-slate-600">Items Mapped</p>

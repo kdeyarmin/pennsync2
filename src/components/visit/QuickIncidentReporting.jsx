@@ -94,9 +94,9 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
       id: 'medication_error',
       name: 'Medication Error',
       icon: Pill,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-300',
+      color: 'text-navy-600',
+      bgColor: 'bg-navy-50',
+      borderColor: 'border-navy-300',
       severity: 'high',
       fields: [
         { name: 'medication', label: 'Medication involved', type: 'text' },

@@ -209,11 +209,11 @@ export default function OASISPDFComparison({
   }
 
   return (
-    <Card className="border-2 border-purple-300">
+    <Card className="border-2 border-navy-300">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-purple-600" />
+            <FileText className="w-5 h-5 text-navy-600" />
             Side-by-Side PDF Comparison & Validation
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -234,9 +234,9 @@ export default function OASISPDFComparison({
         </div>
       </CardHeader>
       <CardContent>
-        <Alert className="mb-4 bg-purple-50 border-purple-200">
-          <Info className="w-4 h-4 text-purple-600" />
-          <AlertDescription className="text-purple-900">
+        <Alert className="mb-4 bg-navy-50 border-navy-200">
+          <Info className="w-4 h-4 text-navy-600" />
+          <AlertDescription className="text-navy-900">
             <p className="font-semibold mb-1">Interactive Data Validation</p>
             <p className="text-sm">
               Review the extracted data against the original PDF. Click <Edit className="w-3 h-3 inline" /> to edit any field, 
@@ -475,7 +475,7 @@ export default function OASISPDFComparison({
                 onDataCorrected(editValues);
               }
             }}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
             disabled={discrepancies.length === 0}
           >
             <CheckCircle2 className="w-4 h-4 mr-2" />

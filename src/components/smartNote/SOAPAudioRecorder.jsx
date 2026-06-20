@@ -115,7 +115,7 @@ Plan: ${soap.plan || 'N/A'}
         <Button 
           onClick={startRecording} 
           disabled={disabled}
-          className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
+          className="bg-navy-600 hover:bg-navy-700 text-white gap-2"
         >
           <FileAudio className="w-4 h-4" /> Record SOAP Visit
         </Button>
@@ -132,7 +132,7 @@ Plan: ${soap.plan || 'N/A'}
       )}
 
       {isProcessing && (
-        <Button disabled variant="outline" className="gap-2 text-purple-600 border-purple-200">
+        <Button disabled variant="outline" className="gap-2 text-navy-600 border-navy-200">
           <Loader2 className="w-4 h-4 animate-spin" /> Generating SOAP Note...
         </Button>
       )}

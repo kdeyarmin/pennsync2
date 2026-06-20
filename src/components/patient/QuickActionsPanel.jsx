@@ -46,7 +46,7 @@ export default function QuickActionsPanel({
       icon: Target,
       label: "Care Plan",
       description: `${activeCarePlans.length} active`,
-      color: "bg-purple-500 hover:bg-purple-600",
+      color: "bg-navy-500 hover:bg-navy-600",
       link: createPageUrl("CarePlanManagement")
     },
     {

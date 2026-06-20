@@ -397,12 +397,12 @@ export default function UserSettings() {
                 </div>
               )}
               {(!currentUser?.care_scope || currentUser.care_scope === "hospice" || currentUser.care_scope === "both") && (
-                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="p-4 bg-navy-50 rounded-lg border border-navy-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <Heart className="w-4 h-4 text-purple-600" />
-                    <p className="font-semibold text-purple-800 text-sm">Hospice Requirements</p>
+                    <Heart className="w-4 h-4 text-navy-600" />
+                    <p className="font-semibold text-navy-800 text-sm">Hospice Requirements</p>
                   </div>
-                  <ul className="text-xs text-purple-700 space-y-1">
+                  <ul className="text-xs text-navy-700 space-y-1">
                     <li>• Terminal prognosis ≤6 months documented (42 CFR §418.22)</li>
                     <li>• IDG/IDT meeting documentation every 15 days at minimum</li>
                     <li>• Comfort-focused goals — curative treatments discontinued</li>

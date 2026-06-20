@@ -221,7 +221,7 @@ Return detailed JSON with exact dollar amounts:`,
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <PieChart className="w-5 h-5 text-indigo-600" />
@@ -276,15 +276,15 @@ Return detailed JSON with exact dollar amounts:`,
 
         {/* Functional M-Item Breakdown */}
         {caseMixAnalysis.functional_m_item_breakdown?.length > 0 && (
-          <div className="bg-purple-50 p-3 rounded border border-purple-200">
-            <p className="text-sm font-semibold text-purple-900 mb-2">Functional M-Item Point Breakdown</p>
+          <div className="bg-navy-50 p-3 rounded border border-navy-200">
+            <p className="text-sm font-semibold text-navy-900 mb-2">Functional M-Item Point Breakdown</p>
             <div className="space-y-1">
               {caseMixAnalysis.functional_m_item_breakdown.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between text-xs bg-white p-2 rounded">
                   <span className="text-slate-700">{item.m_item}</span>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">Score: {item.score}</Badge>
-                    <Badge className="bg-purple-600 text-white">{item.points} pts</Badge>
+                    <Badge className="bg-navy-600 text-white">{item.points} pts</Badge>
                   </div>
                 </div>
               ))}
@@ -394,7 +394,7 @@ Return detailed JSON with exact dollar amounts:`,
         )}
 
         {/* Total Payment Summary */}
-        <Alert className="bg-gradient-to-r from-indigo-100 to-purple-100 border-indigo-300">
+        <Alert className="bg-gradient-to-r from-indigo-100 to-navy-100 border-indigo-300">
           <Info className="w-4 h-4 text-indigo-700" />
           <AlertDescription className="text-indigo-900">
             <p className="font-semibold mb-1">Total PDGM Payment: {formatCurrency(caseMixAnalysis.total_payment)}</p>

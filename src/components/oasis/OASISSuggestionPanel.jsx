@@ -78,9 +78,9 @@ export default function OASISSuggestionPanel({ suggestions, onAddToCarePlan, add
     <div className="flex flex-col h-full">
       <div className="px-4 pt-4 pb-2 flex-shrink-0">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-purple-500" />
+          <Sparkles className="w-4 h-4 text-navy-500" />
           <span className="text-sm font-bold text-slate-800">Smart Recommendations</span>
-          <span className="ml-auto text-xs bg-purple-100 text-purple-700 font-semibold rounded-full px-2 py-0.5">{suggestions.length} domains</span>
+          <span className="ml-auto text-xs bg-navy-100 text-navy-700 font-semibold rounded-full px-2 py-0.5">{suggestions.length} domains</span>
         </div>
         <p className="text-xs text-slate-400">Based on your assessment scores. Select interventions to add.</p>
       </div>

@@ -20,9 +20,9 @@ const OPTIONS = [
     label: "Hospice Nurse",
     description: "Comfort-focused end-of-life care, IDG/IDT documentation, comfort measures, symptom management, bereavement.",
     icon: Heart,
-    color: "border-purple-400 bg-purple-50",
-    selected: "bg-purple-600 border-purple-600 text-white",
-    iconColor: "text-purple-600",
+    color: "border-navy-400 bg-navy-50",
+    selected: "bg-navy-600 border-navy-600 text-white",
+    iconColor: "text-navy-600",
   },
   {
     value: "both",

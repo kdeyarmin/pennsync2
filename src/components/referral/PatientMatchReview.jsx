@@ -237,8 +237,8 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
           
           <div className="grid md:grid-cols-2 gap-4">
             {/* Referral Data */}
-            <Card className="border-2 border-purple-300">
-              <CardHeader className="bg-purple-50">
+            <Card className="border-2 border-navy-300">
+              <CardHeader className="bg-navy-50">
                 <CardTitle className="text-base flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   New Referral Data

@@ -10,9 +10,7 @@ import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAsse
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, UserPlus, ArrowRight, TrendingUp, Sparkles, Target, CheckCircle2, RefreshCw } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { FileText, UserPlus, ArrowRight, TrendingUp, Sparkles, Target, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function ReferralProcessor() {
@@ -141,17 +139,8 @@ export default function ReferralProcessor() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={RefreshCw}
-        eyebrow="Documentation"
-        title="Referral Processor"
-        description="Upload and process patient referral PDFs for admission"
-        favoritePage="ReferralProcessor"
-      />
-
-      <div className="space-y-4 sm:space-y-6">
-        <Alert className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-300">
+    <div className="space-y-4 sm:space-y-6">
+        <Alert className="bg-gradient-to-r from-blue-50 to-navy-50 border-blue-300">
           <FileText className="w-4 h-4 text-blue-600" />
           <AlertDescription className="text-blue-900">
             <p className="font-semibold mb-2">🚀 AI-Powered Referral Processing</p>
@@ -180,10 +169,10 @@ export default function ReferralProcessor() {
             />
 
             {/* PDGM Diagnosis Ranking */}
-            <Card className="border-2 border-purple-300 bg-purple-50">
+            <Card className="border-2 border-navy-300 bg-navy-50">
               <CardContent className="p-3 sm:p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-purple-900 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-semibold text-navy-900 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
                     PDGM Diagnosis Optimization
                   </h3>
@@ -191,7 +180,7 @@ export default function ReferralProcessor() {
                     onClick={rankDiagnoses}
                     disabled={isRankingDiagnoses}
                     size="sm"
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-navy-600 hover:bg-navy-700"
                   >
                     {isRankingDiagnoses ? (
                       <>
@@ -222,15 +211,15 @@ export default function ReferralProcessor() {
                           key={idx}
                           className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
                             selectedPrimaryDx === dx.diagnosis
-                              ? 'border-purple-600 bg-purple-100'
-                              : 'border-purple-200 bg-white hover:border-purple-400'
+                              ? 'border-navy-600 bg-navy-100'
+                              : 'border-navy-200 bg-white hover:border-navy-400'
                           }`}
                           onClick={() => setSelectedPrimaryDx(dx.diagnosis)}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <Badge className="bg-purple-600 text-white">#{dx.rank}</Badge>
+                                <Badge className="bg-navy-600 text-white">#{dx.rank}</Badge>
                                 <Badge className={`${
                                   dx.reimbursement_tier === 'High' ? 'bg-green-600' :
                                   dx.reimbursement_tier === 'Medium' ? 'bg-yellow-600' :
@@ -243,7 +232,7 @@ export default function ReferralProcessor() {
                               <p className="font-semibold text-slate-900">{dx.diagnosis}</p>
                             </div>
                             {selectedPrimaryDx === dx.diagnosis && (
-                              <CheckCircle2 className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                              <CheckCircle2 className="w-5 h-5 text-navy-600 flex-shrink-0" />
                             )}
                           </div>
 
@@ -432,7 +421,6 @@ export default function ReferralProcessor() {
             </Card>
           </>
         )}
-      </div>
-    </PageContainer>
+    </div>
   );
 }

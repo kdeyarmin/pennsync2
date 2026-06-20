@@ -43,7 +43,7 @@ function StatCard({ title, value, sub, icon: Icon, tone = "blue" }) {
     blue: "text-blue-600 bg-blue-50",
     green: "text-green-600 bg-green-50",
     amber: "text-amber-600 bg-amber-50",
-    purple: "text-purple-600 bg-purple-50",
+    purple: "text-navy-600 bg-navy-50",
   };
   return (
     <Card>

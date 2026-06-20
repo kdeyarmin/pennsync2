@@ -133,7 +133,7 @@ Return JSON:
       missing_diagnosis: "bg-red-100 text-red-800",
       underspecified: "bg-yellow-100 text-yellow-800",
       comorbidity_opportunity: "bg-blue-100 text-blue-800",
-      hcc_opportunity: "bg-purple-100 text-purple-800"
+      hcc_opportunity: "bg-navy-100 text-navy-800"
     };
     return colors[type] || "bg-slate-100 text-slate-800";
   };

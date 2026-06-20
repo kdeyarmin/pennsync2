@@ -263,7 +263,7 @@ Provide detailed feedback in JSON format:
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+      <Card className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-200">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>

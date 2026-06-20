@@ -336,7 +336,7 @@ Return comprehensive JSON:
       <CardHeader 
         className={`py-3 cursor-pointer ${unacknowledgedCritical.length > 0 
           ? 'bg-gradient-to-r from-red-100 to-orange-100' 
-          : 'bg-gradient-to-r from-indigo-50 to-purple-50'}`}
+          : 'bg-gradient-to-r from-indigo-50 to-navy-50'}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
@@ -501,7 +501,7 @@ Return comprehensive JSON:
                       Differential Considerations
                     </p>
                     {cdsResults.differential_considerations.map((diff, idx) => (
-                      <div key={idx} className="bg-purple-50 p-2 rounded border border-purple-200 mb-1">
+                      <div key={idx} className="bg-navy-50 p-2 rounded border border-navy-200 mb-1">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium">{diff.condition}</span>
                           <Badge variant="outline" className="text-xs">{diff.urgency}</Badge>
@@ -510,7 +510,7 @@ Return comprehensive JSON:
                           Supporting: {diff.supporting_findings?.join(', ')}
                         </p>
                         {diff.rule_out_with?.length > 0 && (
-                          <p className="text-xs text-purple-700 mt-1">
+                          <p className="text-xs text-navy-700 mt-1">
                             Rule out with: {diff.rule_out_with.join(', ')}
                           </p>
                         )}
@@ -689,16 +689,16 @@ Return comprehensive JSON:
                 {/* Care Plan Alignment */}
                 {cdsResults.care_plan_alignment?.gaps_identified?.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs font-semibold text-purple-800 mb-1">Care Plan Gaps</p>
+                    <p className="text-xs font-semibold text-navy-800 mb-1">Care Plan Gaps</p>
                     {cdsResults.care_plan_alignment.gaps_identified.map((gap, idx) => (
-                      <div key={idx} className="bg-purple-50 p-2 rounded border border-purple-200 mb-1">
+                      <div key={idx} className="bg-navy-50 p-2 rounded border border-navy-200 mb-1">
                         <p className="text-xs font-medium">{gap.goal}</p>
                         <p className="text-xs text-slate-600">{gap.gap}</p>
                         {gap.suggested_documentation && (
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 text-xs mt-1 text-purple-700"
+                            className="h-6 text-xs mt-1 text-navy-700"
                             onClick={() => handleInsert(gap.suggested_documentation)}
                           >
                             <Plus className="w-3 h-3 mr-1" />

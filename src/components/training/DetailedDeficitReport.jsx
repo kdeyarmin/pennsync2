@@ -75,7 +75,7 @@ export default function DetailedDeficitReport({
   return (
     <div className="space-y-6">
       {/* Analysis Summary */}
-      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+      <Card className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-indigo-600" />

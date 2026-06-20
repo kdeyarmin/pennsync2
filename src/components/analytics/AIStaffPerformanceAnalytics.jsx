@@ -371,9 +371,9 @@ Return detailed analysis suitable for management dashboard.`,
 
   if (isAnalyzing) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-navy-600 mx-auto mb-4" />
           <p className="text-lg font-medium text-slate-900 mb-2">AI Performance Analysis in Progress</p>
           <p className="text-sm text-slate-600">
             Analyzing {audits.length} audits, {visits.length} visits, {trainingCompletions.length} training records...
@@ -520,10 +520,10 @@ Return detailed analysis suitable for management dashboard.`,
       )}
 
       {/* Staff Profiles */}
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
+            <Users className="w-5 h-5 text-navy-600" />
             Individual Staff Profiles
           </CardTitle>
         </CardHeader>
@@ -531,7 +531,7 @@ Return detailed analysis suitable for management dashboard.`,
           {performanceData.staff_profiles?.map((profile, idx) => {
             const user = users.find(u => u.email === profile.nurse_email);
             return (
-              <Card key={idx} className="border-l-4 border-l-purple-500">
+              <Card key={idx} className="border-l-4 border-l-navy-500">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -552,7 +552,7 @@ Return detailed analysis suitable for management dashboard.`,
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-bold text-purple-600">{profile.overall_score}</p>
+                      <p className="text-3xl font-bold text-navy-600">{profile.overall_score}</p>
                       <p className="text-xs text-slate-500">Overall Score</p>
                     </div>
                   </div>
@@ -664,11 +664,11 @@ Return detailed analysis suitable for management dashboard.`,
                     </Badge>
                   </div>
                   <div className="grid md:grid-cols-2 gap-3">
-                    <div className="bg-purple-50 p-3 rounded">
-                      <p className="font-semibold text-purple-900 text-sm mb-1">📚 Training Modules</p>
+                    <div className="bg-navy-50 p-3 rounded">
+                      <p className="font-semibold text-navy-900 text-sm mb-1">📚 Training Modules</p>
                       <ul className="space-y-0.5">
                         {rec.training_modules?.map((mod, i) => (
-                          <li key={i} className="text-xs text-purple-800">• {mod}</li>
+                          <li key={i} className="text-xs text-navy-800">• {mod}</li>
                         ))}
                       </ul>
                     </div>

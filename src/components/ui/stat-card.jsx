@@ -33,9 +33,9 @@ export default function StatCard({
       icon: "text-red-600"
     },
     ai: {
-      gradient: "from-purple-500 to-indigo-600",
-      bg: "bg-purple-50",
-      icon: "text-purple-600"
+      gradient: "from-navy-500 to-indigo-600",
+      bg: "bg-navy-50",
+      icon: "text-navy-600"
     }
   };
 

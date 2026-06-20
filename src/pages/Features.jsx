@@ -1288,11 +1288,11 @@ export default function FeaturesPage() {
 
   const getCategoryColor = (color) => {
     const colors = {
-      purple: "from-purple-500 to-pink-500",
-      blue: "from-blue-500 to-cyan-500",
-      indigo: "from-indigo-500 to-purple-500",
+      purple: "from-navy-500 to-pink-500",
+      blue: "from-blue-500 to-navy-500",
+      indigo: "from-indigo-500 to-navy-500",
       green: "from-green-500 to-emerald-500",
-      cyan: "from-cyan-500 to-blue-500",
+      cyan: "from-navy-500 to-blue-500",
       orange: "from-orange-500 to-red-500",
       red: "from-red-500 to-pink-500",
       pink: "from-pink-500 to-rose-500",
@@ -1324,7 +1324,7 @@ export default function FeaturesPage() {
             <Button
               onClick={generateFeaturesPDF}
               disabled={isGeneratingPDF}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 min-h-[44px] w-full sm:w-auto"
+              className="bg-gradient-to-r from-blue-600 to-navy-600 hover:from-blue-700 hover:to-navy-700 min-h-[44px] w-full sm:w-auto"
             >
               {isGeneratingPDF ? (
                 <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
@@ -1366,9 +1366,9 @@ export default function FeaturesPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+          <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-navy-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
-              <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-1 sm:mb-2" />
+              <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-navy-600 mx-auto mb-1 sm:mb-2" />
               <p className="text-2xl sm:text-3xl font-bold text-slate-900">{Math.round(totalTimeSavedPerMonth / 60)}</p>
               <p className="text-xs sm:text-sm text-slate-600">hours saved per month</p>
             </CardContent>
@@ -1466,7 +1466,7 @@ export default function FeaturesPage() {
       </div>
 
       {/* Impact Summary */}
-      <Card className="mt-6 sm:mt-8 md:mt-12 bg-gradient-to-br from-blue-600 to-purple-600 text-white border-none">
+      <Card className="mt-6 sm:mt-8 md:mt-12 bg-gradient-to-br from-blue-600 to-navy-600 text-white border-none">
         <CardContent className="p-4 sm:p-6 md:p-8">
           <div className="text-center">
             <Sparkles className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-white opacity-90" />

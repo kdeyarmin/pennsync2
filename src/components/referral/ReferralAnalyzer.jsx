@@ -276,8 +276,8 @@ Referral Data: ${JSON.stringify(referralData)}`,
                 <p className="font-semibold text-blue-900">Frequency</p>
                 <p className="text-slate-900">{analysis.scheduling_recommendations?.recommended_visit_frequency}</p>
               </div>
-              <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                <p className="font-semibold text-purple-900">Duration</p>
+              <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                <p className="font-semibold text-navy-900">Duration</p>
                 <p className="text-slate-900">{analysis.scheduling_recommendations?.estimated_visit_duration_minutes} min</p>
               </div>
             </div>
@@ -342,10 +342,10 @@ Referral Data: ${JSON.stringify(referralData)}`,
       )}
 
       {/* Nurse Requirements */}
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <User className="w-5 h-5 text-purple-600" />
+            <User className="w-5 h-5 text-navy-600" />
             Nurse Requirements
           </CardTitle>
         </CardHeader>
@@ -353,7 +353,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-semibold text-slate-900 mb-2">Experience Level Required:</p>
-              <Badge className="bg-purple-600 text-white">{analysis.nurse_requirements?.experience_level}</Badge>
+              <Badge className="bg-navy-600 text-white">{analysis.nurse_requirements?.experience_level}</Badge>
             </div>
 
             {analysis.nurse_requirements?.required_certifications?.length > 0 && (

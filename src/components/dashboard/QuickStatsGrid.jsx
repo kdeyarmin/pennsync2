@@ -47,8 +47,8 @@ export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, _
       label: "Care Plans",
       value: activeCarePlans,
       subtitle: `${metGoals} goals met`,
-      color: "from-purple-500 to-purple-600",
-      textColor: "text-purple-600"
+      color: "from-navy-500 to-navy-600",
+      textColor: "text-navy-600"
     },
     {
       icon: AlertTriangle,

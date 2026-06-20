@@ -3,9 +3,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Stethoscope, ClipboardList } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { ArrowLeft, Stethoscope } from "lucide-react";
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
@@ -35,23 +33,7 @@ export default function OASISClinicalReview() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={ClipboardList}
-        eyebrow="Patient Care"
-        title="OASIS Clinical Review"
-        description={patientName ? `Patient: ${patientName}` : "Review AI-generated OASIS clinical recommendations and care planning"}
-        favoritePage="OASISClinicalReview"
-        actions={
-          <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Analyzer
-            </Button>
-          </Link>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Predictive Outcomes Analyzer */}
       <PredictiveOutcomesAnalyzer
         analysisResults={analysisResults}
@@ -96,7 +78,7 @@ export default function OASISClinicalReview() {
 
       {/* Clinical Data Summary */}
       <Card className="border-2 border-blue-200">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-navy-50">
           <CardTitle className="flex items-center gap-2">
             <Stethoscope className="w-5 h-5 text-blue-600" />
             Clinical Data Summary
@@ -116,7 +98,7 @@ export default function OASISClinicalReview() {
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-700 mb-2">Functional Level</p>
-              <Badge className="bg-purple-100 text-purple-800">
+              <Badge className="bg-navy-100 text-navy-800">
                 {pdgmData?.functional_level || 'Not determined'}
               </Badge>
             </div>
@@ -138,6 +120,6 @@ export default function OASISClinicalReview() {
           )}
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

@@ -133,9 +133,9 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-purple-900">
+        <CardTitle className="flex items-center gap-2 text-navy-900">
           <Scan className="w-6 h-6" />
           AI Document Scanner - Extract Patient Data
         </CardTitle>
@@ -160,7 +160,7 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
           />
           <label htmlFor="ocr-upload">
             <Button 
-              className="w-full bg-purple-600 hover:bg-purple-700" 
+              className="w-full bg-navy-600 hover:bg-navy-700" 
               disabled={isProcessing}
               asChild
             >
@@ -178,7 +178,7 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
             <div className="space-y-1">
               {files.map((file, idx) => (
                 <div key={idx} className="flex items-center gap-2 p-2 bg-white rounded border text-sm">
-                  <FileImage className="w-4 h-4 text-purple-600" />
+                  <FileImage className="w-4 h-4 text-navy-600" />
                   <span className="flex-1 truncate">{file.name}</span>
                   <Badge variant="outline" className="text-xs">
                     {(file.size / 1024).toFixed(0)} KB
@@ -188,7 +188,7 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
             </div>
             <Button
               onClick={processDocuments}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-navy-600 hover:bg-navy-700"
             >
               <Scan className="w-4 h-4 mr-2" />
               Extract Patient Data with AI

@@ -177,17 +177,17 @@ Provide actionable, specific feedback for each issue found.`;
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-blue-50">
         <CardTitle className="flex items-center gap-2">
-          <FileSearch className="w-6 h-6 text-purple-600" />
+          <FileSearch className="w-6 h-6 text-navy-600" />
           AI Document Review
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
         {isReviewing && (
           <div className="text-center py-8">
-            <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <p className="text-slate-600">AI is reviewing the OASIS document...</p>
           </div>
         )}
@@ -210,7 +210,7 @@ Provide actionable, specific feedback for each issue found.`;
             <p className="text-slate-600 mb-4">
               Get AI-powered analysis of this OASIS document for errors and compliance issues
             </p>
-            <Button onClick={performAIReview} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={performAIReview} className="bg-navy-600 hover:bg-navy-700">
               <FileSearch className="w-4 h-4 mr-2" />
               Start AI Review
             </Button>
@@ -225,7 +225,7 @@ Provide actionable, specific feedback for each issue found.`;
                 <CardContent className="p-4">
                   <p className="text-sm text-slate-600 mb-2">Quality Score</p>
                   <div className="flex items-center gap-3">
-                    <div className="text-4xl font-bold text-purple-600">
+                    <div className="text-4xl font-bold text-navy-600">
                       {reviewResults.overall_score}
                     </div>
                     <div className="flex-1">

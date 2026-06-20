@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,11 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Sparkles,
+  ListChecks,
+  Library,
+  BarChart3,
+  FileText,
   Target,
   Award,
   TrendingUp,
@@ -24,9 +30,43 @@ import PersonalizedTrainingRecommender from "../components/training/Personalized
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
+// Lazy spoke — the former Nurse Training (documentation skills) page is now a tab.
+const NurseTraining = lazy(() => import("@/pages/NurseTraining"));
+
+// Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
+// ?tab= deep-link so the retired Nurse Training page redirects to the right tab.
+// "personalized" is the default.
+const TAB_KEYS = ["personalized", "required", "library", "progress", "documentation"];
+
+const tabLoader = (
+  <div className="flex justify-center py-12">
+    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+  </div>
+);
+
 export default function NurseTrainingHub() {
   const [_selectedModule, setSelectedModule] = useState(null);
   const [activeTraining, setActiveTraining] = useState(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "personalized";
+
+  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
+  // redirect from the retired Nurse Training page deep-links correctly.
+  // "personalized" is the default, so it stays a clean /NurseTrainingHub.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "personalized" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /NurseTrainingHub. Only fires when the param resolved to
+  // the default tab, so a valid deep-link like ?tab=documentation is untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "personalized") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
 
   const queryClient = useQueryClient();
 
@@ -130,7 +170,7 @@ export default function NurseTrainingHub() {
     <PageContainer>
       <PageHeader
         icon={GraduationCap}
-        eyebrow="My Learning"
+        eyebrow="Training"
         title="Nurse Training Hub"
         description="AI-powered personalized training and skill development"
         favoritePage="NurseTrainingHub"
@@ -191,13 +231,31 @@ export default function NurseTrainingHub() {
         </Card>
       </div>
 
-      <Tabs defaultValue="personalized" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="personalized">AI Personalized</TabsTrigger>
-          <TabsTrigger value="required">Required</TabsTrigger>
-          <TabsTrigger value="library">Library</TabsTrigger>
-          <TabsTrigger value="progress">My Progress</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="personalized" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Personalized
+            </TabsTrigger>
+            <TabsTrigger value="required" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <ListChecks className="w-4 h-4 mr-2" />
+              Required
+            </TabsTrigger>
+            <TabsTrigger value="library" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Library className="w-4 h-4 mr-2" />
+              Library
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              My Progress
+            </TabsTrigger>
+            <TabsTrigger value="documentation" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <FileText className="w-4 h-4 mr-2" />
+              Documentation Training
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* AI Personalized Training */}
         <TabsContent value="personalized" className="space-y-6">
@@ -209,10 +267,10 @@ export default function NurseTrainingHub() {
 
           {/* AI-Generated Training Section */}
           {skillGaps.length > 0 && (
-            <Card className="border-purple-200">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+            <Card className="border-navy-200">
+              <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
                 <CardTitle className="flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-purple-600" />
+                  <Brain className="w-5 h-5 text-navy-600" />
                   Generate Custom Training
                 </CardTitle>
               </CardHeader>
@@ -222,7 +280,7 @@ export default function NurseTrainingHub() {
                 </p>
                 <div className="space-y-2">
                   {skillGaps.map((gap, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div key={idx} className="flex items-center justify-between p-4 bg-navy-50 rounded-lg border border-navy-200">
                       <div className="flex-1">
                         <p className="font-semibold text-slate-900">{gap.skill}</p>
                         <p className="text-sm text-slate-600">{gap.recommendation}</p>
@@ -231,7 +289,7 @@ export default function NurseTrainingHub() {
                       <Button
                         onClick={() => generateTrainingMutation.mutate(gap.skill)}
                         disabled={generateTrainingMutation.isPending}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-navy-600 hover:bg-navy-700"
                       >
                         {generateTrainingMutation.isPending ? (
                           <>
@@ -384,6 +442,14 @@ export default function NurseTrainingHub() {
               </ScrollArea>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Documentation Training — the former Nurse Training page (practice
+            scenarios, compliance quizzes, onboarding/ongoing learning paths). */}
+        <TabsContent value="documentation">
+          <Suspense fallback={tabLoader}>
+            <NurseTraining />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </PageContainer>

@@ -168,8 +168,8 @@ export default function ClinicalDocumentSigningFlow({
 
             {/* Patient/Guardian Signature */}
             <div className="flex items-start gap-3 pb-3 border-b">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                <Users className="w-4 h-4 text-purple-600" />
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center">
+                <Users className="w-4 h-4 text-navy-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-900">Patient/Guardian Signature</p>
@@ -227,7 +227,7 @@ export default function ClinicalDocumentSigningFlow({
                   setSigningDialogOpen(true);
                 }}
                 disabled={documentState?.patient_signed}
-                className={!documentState?.patient_signed ? "bg-purple-600 hover:bg-purple-700" : ""}
+                className={!documentState?.patient_signed ? "bg-navy-600 hover:bg-navy-700" : ""}
               >
                 <PenTool className="w-4 h-4 mr-2" />
                 {documentState?.patient_signed ? "Patient Signed" : "Sign as Patient/Guardian"}

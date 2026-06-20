@@ -134,15 +134,15 @@ Return JSON:
   };
 
   return (
-    <Card className="border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Simplified Explanation Generator
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
-        <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-sm text-purple-800">
+        <div className="bg-navy-50 p-3 rounded-lg border border-navy-200 text-sm text-navy-800">
           <Lightbulb className="w-4 h-4 inline mr-1" />
           Enter complex medical information and AI will transform it into simple, patient-friendly language with analogies.
         </div>
@@ -199,7 +199,7 @@ Example: 'Patient has CHF with reduced ejection fraction of 35%. Needs to unders
           <Button
             onClick={generateExplanation}
             disabled={isGenerating || !nurseInput.trim()}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             {isGenerating ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Simple Explanation...</>

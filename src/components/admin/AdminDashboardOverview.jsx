@@ -95,7 +95,7 @@ export default function AdminDashboardOverview() {
 
   const colorMap = {
     blue: "bg-slate-100 text-blue-600 group-hover:bg-blue-50 transition-colors",
-    purple: "bg-slate-100 text-purple-600 group-hover:bg-purple-50 transition-colors",
+    purple: "bg-slate-100 text-navy-600 group-hover:bg-navy-50 transition-colors",
     green: "bg-slate-100 text-emerald-600 group-hover:bg-emerald-50 transition-colors",
     orange: "bg-slate-100 text-orange-600 group-hover:bg-orange-50 transition-colors"
   };

@@ -463,7 +463,7 @@ Return JSON:
               className="h-8 w-8 p-0"
             >
               {bookmarkedItems[itemKey] ? (
-                <BookmarkCheck className="w-4 h-4 text-purple-600" />
+                <BookmarkCheck className="w-4 h-4 text-navy-600" />
               ) : (
                 <Bookmark className="w-4 h-4 text-slate-400" />
               )}
@@ -519,9 +519,9 @@ Return JSON:
       )}
 
       {item.interpretiveGuidelines && (
-        <Alert className="mt-2 py-1.5 px-2 bg-purple-50 border-purple-200">
-          <FileText className="w-3 h-3 text-purple-600" />
-          <AlertDescription className="text-xs text-purple-800">
+        <Alert className="mt-2 py-1.5 px-2 bg-navy-50 border-navy-200">
+          <FileText className="w-3 h-3 text-navy-600" />
+          <AlertDescription className="text-xs text-navy-800">
             <strong>Interpretive Guidelines:</strong> {item.interpretiveGuidelines}
           </AlertDescription>
         </Alert>
@@ -760,8 +760,8 @@ Return JSON:
             </div>
 
             {/* Clinical Groups */}
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 mb-4">
-              <h4 className="font-semibold text-purple-900 mb-2">PDGM Clinical Groups</h4>
+            <div className="bg-navy-50 p-4 rounded-lg border border-navy-200 mb-4">
+              <h4 className="font-semibold text-navy-900 mb-2">PDGM Clinical Groups</h4>
               <div className="flex flex-wrap gap-1">
                 {CMS_OASIS_REFERENCE.pdgmRules.clinicalGroups.map((group, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs bg-white">{group}</Badge>

@@ -256,7 +256,7 @@ Return JSON:
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-indigo-600" />
@@ -430,7 +430,7 @@ Return JSON:
                   <AccordionItem value="diagnosis" className="border rounded-lg">
                     <AccordionTrigger className="px-4 hover:no-underline">
                       <div className="flex items-center gap-2">
-                        <Stethoscope className="w-4 h-4 text-purple-600" />
+                        <Stethoscope className="w-4 h-4 text-navy-600" />
                         <span>Diagnosis-Narrative Alignment ({qualityAnalysis.diagnosis_alignment.length})</span>
                       </div>
                     </AccordionTrigger>

@@ -314,7 +314,7 @@ export default function UserManagement({ users }) {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge className={user.role === 'admin' ? 'bg-purple-500' : 'bg-blue-500'}>
+                      <Badge className={user.role === 'admin' ? 'bg-navy-500' : 'bg-blue-500'}>
                         {user.role}
                       </Badge>
                     </TableCell>
@@ -326,7 +326,7 @@ export default function UserManagement({ users }) {
                             user.care_scope === 'home_health'
                               ? 'border-blue-300 text-blue-700'
                               : user.care_scope === 'hospice'
-                              ? 'border-purple-300 text-purple-700'
+                              ? 'border-navy-300 text-navy-700'
                               : 'border-green-300 text-green-700'
                           }
                         >

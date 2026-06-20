@@ -155,7 +155,7 @@ export default function VitalsTrendAnalysis({ patientId }) {
           <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-purple-500" /> Heart Rate Trend
+                <TrendingUp className="w-4 h-4 text-navy-500" /> Heart Rate Trend
               </CardTitle>
             </CardHeader>
             <CardContent>

@@ -882,14 +882,14 @@ Return JSON:
   };
 
   return (
-    <Card className={`border-2 ${hasCriticalAlerts ? 'border-red-500 shadow-lg shadow-red-100' : hasAlerts || immediateAlerts.length > 0 ? 'border-orange-300' : hasProactiveAlerts ? 'border-amber-300' : 'border-purple-200'}`}>
+    <Card className={`border-2 ${hasCriticalAlerts ? 'border-red-500 shadow-lg shadow-red-100' : hasAlerts || immediateAlerts.length > 0 ? 'border-orange-300' : hasProactiveAlerts ? 'border-amber-300' : 'border-navy-200'}`}>
       <CardHeader 
-        className={`py-3 cursor-pointer ${hasCriticalAlerts ? 'bg-gradient-to-r from-red-100 to-red-50' : hasAlerts || immediateAlerts.length > 0 ? 'bg-gradient-to-r from-orange-50 to-amber-50' : hasProactiveAlerts ? 'bg-gradient-to-r from-amber-50 to-yellow-50' : 'bg-gradient-to-r from-purple-50 to-indigo-50'}`}
+        className={`py-3 cursor-pointer ${hasCriticalAlerts ? 'bg-gradient-to-r from-red-100 to-red-50' : hasAlerts || immediateAlerts.length > 0 ? 'bg-gradient-to-r from-orange-50 to-amber-50' : hasProactiveAlerts ? 'bg-gradient-to-r from-amber-50 to-yellow-50' : 'bg-gradient-to-r from-navy-50 to-indigo-50'}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldAlert className={`w-4 h-4 ${hasCriticalAlerts ? 'text-red-600 animate-pulse' : hasAlerts || immediateAlerts.length > 0 ? 'text-orange-600' : hasProactiveAlerts ? 'text-amber-600' : 'text-purple-600'}`} />
+            <ShieldAlert className={`w-4 h-4 ${hasCriticalAlerts ? 'text-red-600 animate-pulse' : hasAlerts || immediateAlerts.length > 0 ? 'text-orange-600' : hasProactiveAlerts ? 'text-amber-600' : 'text-navy-600'}`} />
             Clinical Decision Support
             {isProactiveAnalyzing && <Loader2 className="w-3 h-3 animate-spin text-amber-600" />}
             {hasCriticalAlerts && (
@@ -1029,7 +1029,7 @@ Return JSON:
           {!enhancedNote && proactiveAlerts && hasProactiveAlerts && (
             <div className="space-y-3">
               {proactiveAlerts.clinical_summary && (
-                <Alert className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-300">
+                <Alert className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-300">
                   <Brain className="w-4 h-4 text-indigo-600" />
                   <AlertDescription className="text-xs text-indigo-900">
                     <strong>Real-Time Clinical Guidance:</strong> {proactiveAlerts.clinical_summary}
@@ -1205,9 +1205,9 @@ Return JSON:
                             <Activity className="w-3 h-3 mr-1" /> Demonstration Recommended
                           </Badge>
                         )}
-                        <div className="bg-purple-50 p-2 rounded border border-purple-200 mb-2">
-                          <p className="text-xs font-semibold text-purple-900 mb-1">Teach-Back Question:</p>
-                          <p className="text-xs italic text-purple-800">"{ed.teach_back_question}"</p>
+                        <div className="bg-navy-50 p-2 rounded border border-navy-200 mb-2">
+                          <p className="text-xs font-semibold text-navy-900 mb-1">Teach-Back Question:</p>
+                          <p className="text-xs italic text-navy-800">"{ed.teach_back_question}"</p>
                         </div>
                         {ed.handout_recommendation && (
                           <p className="text-xs text-slate-600">💡 Handout: {ed.handout_recommendation}</p>
@@ -1264,14 +1264,14 @@ Return JSON:
               {/* NEXT VISIT PLANNING */}
               {proactiveAlerts.next_visit_planning?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-purple-800 mb-1 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-navy-800 mb-1 flex items-center gap-1">
                     <Calendar className="w-3 h-3" /> Plan for Next Visit
                   </p>
-                  <div className="bg-purple-50 p-2 rounded border border-purple-200">
+                  <div className="bg-navy-50 p-2 rounded border border-navy-200">
                     <ul className="text-xs text-slate-700 space-y-1">
                       {proactiveAlerts.next_visit_planning.map((item, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <span className="font-semibold text-purple-800">•</span>
+                          <span className="font-semibold text-navy-800">•</span>
                           <div>
                             <p className="font-medium">{item.item_to_monitor}</p>
                             <p className="text-slate-600">{item.why} - Check {item.timeframe}</p>
@@ -1290,7 +1290,7 @@ Return JSON:
             <Button
               onClick={analyzeForCDS}
               disabled={!enhancedNote || enhancedNote.length < 50}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-navy-600 hover:bg-navy-700"
               size="sm"
             >
               <ShieldAlert className="w-4 h-4 mr-2" />
@@ -1306,7 +1306,7 @@ Return JSON:
           )}
 
           {isAnalyzing && (
-            <div className="flex items-center justify-center py-4 text-purple-600">
+            <div className="flex items-center justify-center py-4 text-navy-600">
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
               <span className="text-sm">Analyzing clinical data...</span>
             </div>

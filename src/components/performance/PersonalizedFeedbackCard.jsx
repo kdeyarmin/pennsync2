@@ -14,7 +14,7 @@ export default function PersonalizedFeedbackCard({ feedback, onAcknowledge }) {
 
   return (
     <Card className="border-indigo-200">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="flex items-center gap-2 text-indigo-900">
           <MessageSquare className="w-5 h-5" />
           AI Coach Feedback

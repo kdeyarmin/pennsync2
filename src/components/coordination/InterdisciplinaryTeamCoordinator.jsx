@@ -162,7 +162,7 @@ Return recommendation with:
 
   return (
     <Card className="border-2 border-indigo-300">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 pb-3">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50 pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Users className="w-5 h-5 text-indigo-600" />
           AI Team Meeting Coordinator
@@ -290,9 +290,9 @@ Return recommendation with:
 
                 {/* Optimal Timing */}
                 {recommendation.optimal_timing && (
-                  <div className="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs">
-                    <Calendar className="w-4 h-4 text-purple-600" />
-                    <span className="text-purple-800">
+                  <div className="flex items-center gap-2 p-2 bg-navy-50 border border-navy-200 rounded text-xs">
+                    <Calendar className="w-4 h-4 text-navy-600" />
+                    <span className="text-navy-800">
                       <strong>Optimal Timing:</strong> {recommendation.optimal_timing}
                     </span>
                   </div>

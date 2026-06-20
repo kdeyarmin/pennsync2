@@ -107,8 +107,8 @@ export default function StaffTrainingOverview() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Target className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
+                <Target className="w-5 h-5 text-navy-600" />
               </div>
               <div>
                 <p className="text-sm text-slate-500">Avg Score</p>

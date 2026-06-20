@@ -67,7 +67,7 @@ export default function OCRTrainingMonitor() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             OCR Model Training & Accuracy
           </div>
           <Button
@@ -87,9 +87,9 @@ export default function OCRTrainingMonitor() {
       <CardContent className="space-y-6">
         {/* Status Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <div className="p-4 bg-navy-50 rounded-lg border border-navy-200">
             <p className="text-sm text-slate-600 mb-1">Available Feedback</p>
-            <p className="text-3xl font-bold text-purple-600">{unappliedFeedback.length}</p>
+            <p className="text-3xl font-bold text-navy-600">{unappliedFeedback.length}</p>
             <p className="text-xs text-slate-500 mt-1">
               {unappliedFeedback.length >= 5 ? 'Ready for training' : 'Need 5+ for training'}
             </p>

@@ -154,7 +154,7 @@ export default function VisualPDFTemplateEditor({
           <Card>
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-600" />
+                <Sparkles className="w-4 h-4 text-navy-600" />
                 Element Palette
               </CardTitle>
             </CardHeader>
@@ -602,7 +602,7 @@ function ElementPropertiesPanel({ element, allElements, onUpdate, onDelete, onDu
             </div>
 
             {element.properties.conditional && (
-              <div className="space-y-2 pl-6 border-l-2 border-purple-200">
+              <div className="space-y-2 pl-6 border-l-2 border-navy-200">
                 <div>
                   <Label className="text-xs">If field</Label>
                   <Select
@@ -679,7 +679,7 @@ function ElementPropertiesPanel({ element, allElements, onUpdate, onDelete, onDu
                   </div>
                 )}
 
-                <div className="bg-purple-50 p-2 rounded text-xs">
+                <div className="bg-navy-50 p-2 rounded text-xs">
                   <Eye className="w-3 h-3 inline mr-1" />
                   This field will only appear when the condition is met
                 </div>

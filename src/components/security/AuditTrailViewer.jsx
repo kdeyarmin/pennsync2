@@ -166,7 +166,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     if (actionLower.includes('view') || actionLower.includes('access')) return <Eye className="w-4 h-4 text-slate-600" />;
     if (actionLower.includes('login')) return <UnlockKeyhole className="w-4 h-4 text-green-600" />;
     if (actionLower.includes('logout') || actionLower.includes('denied')) return <Lock className="w-4 h-4 text-red-600" />;
-    if (actionLower.includes('data') || actionLower.includes('patient')) return <Database className="w-4 h-4 text-purple-600" />;
+    if (actionLower.includes('data') || actionLower.includes('patient')) return <Database className="w-4 h-4 text-navy-600" />;
     return <Shield className="w-4 h-4 text-slate-600" />;
   };
 
@@ -174,7 +174,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     if (action?.includes('delete') || action?.includes('reject') || action?.includes('denied')) return 'text-red-600';
     if (action?.includes('approved') || action?.includes('completed') || action?.includes('login')) return 'text-green-600';
     if (action?.includes('updated') || action?.includes('edited')) return 'text-blue-600';
-    if (action?.includes('access') || action?.includes('view')) return 'text-purple-600';
+    if (action?.includes('access') || action?.includes('view')) return 'text-navy-600';
     return 'text-slate-600';
   };
 
@@ -348,7 +348,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
                   {isLoading ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto" />
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto" />
                       </TableCell>
                     </TableRow>
                   ) : filteredLogs.length === 0 ? (

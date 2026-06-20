@@ -68,9 +68,9 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
 
   if (isLoading) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-6 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4" />
           <p className="text-sm text-slate-600">Analyzing patient data...</p>
         </CardContent>
       </Card>
@@ -96,10 +96,10 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
 
   if (compact) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardHeader className="py-4">
           <CardTitle className="text-base flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             Clinical Decision Support
             {(criticalAlerts.length > 0 || highAlerts.length > 0) && (
               <Badge className="bg-red-600 text-white animate-pulse">
@@ -138,11 +138,11 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="py-4 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="py-4 bg-gradient-to-r from-navy-50 to-indigo-50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Brain className="w-6 h-6 text-purple-600" />
+            <Brain className="w-6 h-6 text-navy-600" />
             AI Clinical Decision Support
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -190,7 +190,7 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
         {analysis.clinical_alerts?.length > 0 && (
           <div className="space-y-3">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-purple-600" />
+              <Shield className="w-5 h-5 text-navy-600" />
               Clinical Alerts ({analysis.clinical_alerts.length})
             </h3>
             <ScrollArea className="h-96">
@@ -224,7 +224,7 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
                           <ul className="text-xs text-slate-800 space-y-1">
                             {alert.clinical_evidence.map((evidence, i) => (
                               <li key={i} className="flex items-start gap-2">
-                                <span className="text-purple-600">•</span>
+                                <span className="text-navy-600">•</span>
                                 {evidence}
                               </li>
                             ))}
@@ -279,12 +279,12 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
 
                       {/* Nurse Education */}
                       {alert.nurse_education_resources?.length > 0 && (
-                        <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                          <p className="text-xs font-semibold text-purple-800 mb-2 flex items-center gap-1">
+                        <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                          <p className="text-xs font-semibold text-navy-800 mb-2 flex items-center gap-1">
                             <GraduationCap className="w-3 h-3" />
                             Nurse Training Resources:
                           </p>
-                          <ul className="text-xs text-purple-700 space-y-1">
+                          <ul className="text-xs text-navy-700 space-y-1">
                             {alert.nurse_education_resources.map((resource, i) => (
                               <li key={i} className="flex items-start gap-2">
                                 <ArrowRight className="w-3 h-3 mt-0.5 flex-shrink-0" />

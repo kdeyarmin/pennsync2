@@ -155,10 +155,10 @@ Provide a comprehensive yet concise dashboard summary in JSON:
 
   if (isLoading) {
     return (
-      <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
         <CardContent className="p-6 text-center">
-          <Loader2 className="w-8 h-8 text-purple-600 mx-auto mb-3 animate-spin" />
-          <p className="text-sm font-medium text-purple-900">Generating AI Summary...</p>
+          <Loader2 className="w-8 h-8 text-navy-600 mx-auto mb-3 animate-spin" />
+          <p className="text-sm font-medium text-navy-900">Generating AI Summary...</p>
         </CardContent>
       </Card>
     );
@@ -166,9 +166,9 @@ Provide a comprehensive yet concise dashboard summary in JSON:
 
   if (!summary) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardContent className="p-4">
-          <Button onClick={generateSummary} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={generateSummary} className="bg-navy-600 hover:bg-navy-700">
             <Sparkles className="w-4 h-4 mr-2" />
             Generate AI Summary
           </Button>
@@ -178,11 +178,11 @@ Provide a comprehensive yet concise dashboard summary in JSON:
   }
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Patient Dashboard Summary
           </CardTitle>
           <Button size="sm" variant="outline" onClick={generateSummary}>
@@ -218,15 +218,15 @@ Provide a comprehensive yet concise dashboard summary in JSON:
         )}
 
         {/* Key Highlights */}
-        <div className="bg-white p-3 rounded-lg border border-purple-200">
+        <div className="bg-white p-3 rounded-lg border border-navy-200">
           <h4 className="font-semibold text-sm mb-2 flex items-center gap-1">
-            <Activity className="w-4 h-4 text-purple-600" />
+            <Activity className="w-4 h-4 text-navy-600" />
             Key Highlights
           </h4>
           <ul className="space-y-1">
             {summary.key_highlights?.map((highlight, idx) => (
               <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
-                <span className="text-purple-600 font-bold">•</span>
+                <span className="text-navy-600 font-bold">•</span>
                 {highlight}
               </li>
             ))}
@@ -311,11 +311,11 @@ Provide a comprehensive yet concise dashboard summary in JSON:
 
         {/* Recommendations */}
         {summary.recommendations?.length > 0 && (
-          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+          <div className="bg-navy-50 p-3 rounded-lg border border-navy-200">
             <h4 className="font-semibold text-sm mb-2">Recommendations</h4>
             <ul className="space-y-1">
               {summary.recommendations.map((rec, idx) => (
-                <li key={idx} className="text-sm text-purple-900">• {rec}</li>
+                <li key={idx} className="text-sm text-navy-900">• {rec}</li>
               ))}
             </ul>
           </div>
@@ -323,7 +323,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
 
         {/* Upcoming Focus */}
         {summary.upcoming_focus?.length > 0 && (
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg border border-indigo-200">
+          <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-3 rounded-lg border border-indigo-200">
             <h4 className="font-semibold text-sm mb-2">Upcoming Focus Areas</h4>
             <ul className="space-y-1">
               {summary.upcoming_focus.map((focus, idx) => (

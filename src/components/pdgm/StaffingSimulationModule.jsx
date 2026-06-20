@@ -346,9 +346,9 @@ Return JSON:
                     <p className="text-xs text-green-600">Revenue Increase</p>
                     <p className="text-lg font-bold text-green-900">{formatCurrency(simulationResults.data.revenue_increase)}</p>
                   </div>
-                  <div className="bg-purple-50 p-2 rounded-lg border border-purple-200 text-center">
-                    <p className="text-xs text-purple-600">Net Margin</p>
-                    <p className="text-lg font-bold text-purple-900">{formatCurrency(simulationResults.data.net_margin_change)}</p>
+                  <div className="bg-navy-50 p-2 rounded-lg border border-navy-200 text-center">
+                    <p className="text-xs text-navy-600">Net Margin</p>
+                    <p className="text-lg font-bold text-navy-900">{formatCurrency(simulationResults.data.net_margin_change)}</p>
                   </div>
                   <div className="bg-orange-50 p-2 rounded-lg border border-orange-200 text-center">
                     <p className="text-xs text-orange-600">ROI</p>
@@ -477,10 +477,10 @@ Return JSON:
 
           {/* Service Line Simulation Results */}
           {simulationResults?.type === 'service_line' && simulationResults.data && (
-            <Card className="border-purple-200">
-              <CardHeader className="pb-2 bg-purple-50">
+            <Card className="border-navy-200">
+              <CardHeader className="pb-2 bg-navy-50">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-purple-600" />
+                  <Building2 className="w-4 h-4 text-navy-600" />
                   {simulationResults.data.service_name} - Financial Projection
                 </CardTitle>
               </CardHeader>
@@ -499,9 +499,9 @@ Return JSON:
                     <p className="text-xs text-orange-600">Breakeven</p>
                     <p className="text-lg font-bold text-orange-900">Month {simulationResults.data.breakeven_month}</p>
                   </div>
-                  <div className="bg-purple-50 p-2 rounded-lg border border-purple-200 text-center">
-                    <p className="text-xs text-purple-600">Case-Mix</p>
-                    <p className="text-lg font-bold text-purple-900">{simulationResults.data.pdgm_considerations?.avg_case_mix_weight}</p>
+                  <div className="bg-navy-50 p-2 rounded-lg border border-navy-200 text-center">
+                    <p className="text-xs text-navy-600">Case-Mix</p>
+                    <p className="text-lg font-bold text-navy-900">{simulationResults.data.pdgm_considerations?.avg_case_mix_weight}</p>
                   </div>
                 </div>
 

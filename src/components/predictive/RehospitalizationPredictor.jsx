@@ -301,7 +301,7 @@ Provide a comprehensive rehospitalization risk assessment with:
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Activity className="w-4 h-4 text-purple-600" />
+              <Activity className="w-4 h-4 text-navy-600" />
               AI Prediction Details
             </CardTitle>
           </CardHeader>

@@ -102,10 +102,10 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
 
   if (isGenerating) {
     return (
-      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardContent className="p-6 text-center">
-          <Loader2 className="w-8 h-8 text-purple-600 mx-auto mb-3 animate-spin" />
-          <p className="text-sm text-purple-900">Generating executive summary...</p>
+          <Loader2 className="w-8 h-8 text-navy-600 mx-auto mb-3 animate-spin" />
+          <p className="text-sm text-navy-900">Generating executive summary...</p>
         </CardContent>
       </Card>
     );
@@ -113,14 +113,14 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
 
   if (!summary) {
     return (
-      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              <p className="text-sm font-medium text-purple-900">Executive Summary</p>
+              <Sparkles className="w-5 h-5 text-navy-600" />
+              <p className="text-sm font-medium text-navy-900">Executive Summary</p>
             </div>
-            <Button size="sm" onClick={generateExecutiveSummary} className="bg-purple-600 hover:bg-purple-700">
+            <Button size="sm" onClick={generateExecutiveSummary} className="bg-navy-600 hover:bg-navy-700">
               <Sparkles className="w-4 h-4 mr-2" />
               Generate Summary
             </Button>
@@ -131,13 +131,13 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
   }
 
   return (
-    <Card className="border-2 border-purple-400 bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-400 bg-gradient-to-r from-navy-50 to-pink-50">
       <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             Executive Summary
-            <Badge className="bg-purple-600 text-white">AI-Generated</Badge>
+            <Badge className="bg-navy-600 text-white">AI-Generated</Badge>
           </CardTitle>
           {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </div>
@@ -146,9 +146,9 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
       {isExpanded && (
         <CardContent className="space-y-4">
           {/* Overall Assessment */}
-          <Alert className="bg-white border-purple-300">
-            <FileText className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-900 font-medium">
+          <Alert className="bg-white border-navy-300">
+            <FileText className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-navy-900 font-medium">
               {summary.overall_assessment}
             </AlertDescription>
           </Alert>
@@ -236,7 +236,7 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
           )}
 
           {/* Bottom Line */}
-          <Alert className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-300">
+          <Alert className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-300">
             <CheckCircle2 className="w-4 h-4 text-indigo-600" />
             <AlertDescription>
               <p className="text-sm font-semibold text-indigo-900">Bottom Line:</p>

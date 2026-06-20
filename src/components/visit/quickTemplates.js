@@ -142,8 +142,8 @@ Patient/caregiver verbalizes understanding. Will reassess in [timeframe].`
       name: "Medication Change",
       category: "Medications",
       icon: Pill,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      color: "text-navy-600",
+      bgColor: "bg-navy-50",
       template: `**MEDICATION CHANGE DOCUMENTATION**
 
 **MEDICATION RECONCILIATION PERFORMED:**
@@ -1500,8 +1500,8 @@ Patient/caregiver verbalizes understanding of CHF exacerbation, modified treatme
       name: "Stroke Assessment",
       category: "Neurological",
       icon: Brain,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      color: "text-navy-600",
+      bgColor: "bg-navy-50",
       template: `**POST-STROKE NEUROLOGICAL ASSESSMENT**
 
 **STROKE HISTORY:**

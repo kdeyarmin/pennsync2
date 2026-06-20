@@ -217,7 +217,7 @@ Return JSON format:
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             Choose a Quiz Topic
           </CardTitle>
         </CardHeader>
@@ -302,7 +302,7 @@ Return JSON format:
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Retake Quiz
               </Button>
-              <Button onClick={handleNewQuiz} className="bg-purple-600 hover:bg-purple-700">
+              <Button onClick={handleNewQuiz} className="bg-navy-600 hover:bg-navy-700">
                 Try Different Topic
               </Button>
             </div>
@@ -383,11 +383,11 @@ Return JSON format:
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
         <CardHeader>
           <div className="flex items-center justify-between mb-2">
             <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
+              <Brain className="w-5 h-5 text-navy-600" />
               {selectedTopic.title} Quiz
             </CardTitle>
             <Badge>{selectedTopic.difficulty}</Badge>
@@ -446,7 +446,7 @@ Return JSON format:
               <Button
                 onClick={handleSubmitQuiz}
                 disabled={!allAnswered}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-navy-600 hover:bg-navy-700"
               >
                 Submit Quiz
               </Button>

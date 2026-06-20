@@ -160,7 +160,7 @@ export default function WorkflowMonitoringDashboard() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-purple-600" />
+              <Activity className="w-5 h-5 text-navy-600" />
               Workflow Monitoring Dashboard
             </CardTitle>
             <Button onClick={exportData} variant="outline" size="sm">
@@ -227,7 +227,7 @@ export default function WorkflowMonitoringDashboard() {
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-slate-600 mb-1">Total Executions</p>
-            <p className="text-2xl font-bold text-purple-600">{stats.total_executions}</p>
+            <p className="text-2xl font-bold text-navy-600">{stats.total_executions}</p>
           </CardContent>
         </Card>
         <Card className="bg-green-50">
@@ -346,7 +346,7 @@ export default function WorkflowMonitoringDashboard() {
           ) : (
             <div className="space-y-3">
               {filteredExecutions.slice(0, 20).map((exec) => (
-                <Card key={exec.id} className="border-l-4 border-l-purple-500">
+                <Card key={exec.id} className="border-l-4 border-l-navy-500">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">

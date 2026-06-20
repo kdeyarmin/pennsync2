@@ -451,7 +451,7 @@ export default function Patients() {
           {selectedPatients.length === 2 && (
             <Button
               onClick={handleMergeSelected}
-              className="mt-2 bg-purple-600 hover:bg-purple-700 w-full sm:w-auto min-h-[44px]"
+              className="mt-2 bg-navy-600 hover:bg-navy-700 w-full sm:w-auto min-h-[44px]"
             >
               Merge Selected Patients
             </Button>

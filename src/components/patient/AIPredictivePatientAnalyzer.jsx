@@ -311,20 +311,20 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none">
+      <Card className="bg-gradient-to-r from-navy-600 to-indigo-600 text-white border-none">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Brain className="w-10 h-10" />
               <div>
                 <h2 className="text-2xl font-bold">AI Predictive Analysis</h2>
-                <p className="text-purple-100">Evidence-based clinical insights and risk assessment</p>
+                <p className="text-navy-100">Evidence-based clinical insights and risk assessment</p>
               </div>
             </div>
             <Button
               onClick={performAnalysis}
               disabled={isAnalyzing}
-              className="bg-white text-purple-600 hover:bg-purple-50"
+              className="bg-white text-navy-600 hover:bg-navy-50"
             >
               {isAnalyzing ? (
                 <>
@@ -440,7 +440,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-purple-600" />
+                <Target className="w-5 h-5 text-navy-600" />
                 Optimal Care Pathway Recommendations
               </CardTitle>
             </CardHeader>
@@ -459,11 +459,11 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-purple-50 border border-purple-200 rounded p-3">
+                  <div className="bg-navy-50 border border-navy-200 rounded p-3">
                     <h4 className="font-semibold text-sm mb-2">Monitoring Frequency</h4>
                     <p className="text-sm">{analysis.carePathwayRecommendations?.monitoringFrequency}</p>
                   </div>
-                  <div className="bg-purple-50 border border-purple-200 rounded p-3">
+                  <div className="bg-navy-50 border border-navy-200 rounded p-3">
                     <h4 className="font-semibold text-sm mb-2">Focus Areas</h4>
                     <ul className="space-y-1">
                       {analysis.carePathwayRecommendations?.focusAreas?.map((area, idx) => (
@@ -679,14 +679,14 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                 </div>
 
                 {analysis.educationRecommendations?.caregiverEducation?.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-200 rounded p-3">
-                    <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                  <div className="bg-navy-50 border border-navy-200 rounded p-3">
+                    <h4 className="font-semibold text-navy-900 mb-2 flex items-center gap-2">
                       <Users className="w-4 h-4" />
                       Family/Caregiver Education
                     </h4>
                     <ul className="space-y-1">
                       {analysis.educationRecommendations?.caregiverEducation?.map((item, idx) => (
-                        <li key={idx} className="text-sm text-purple-800">• {item}</li>
+                        <li key={idx} className="text-sm text-navy-800">• {item}</li>
                       ))}
                     </ul>
                   </div>
@@ -790,12 +790,12 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
       {!analysis && !isAnalyzing && (
         <Card>
           <CardContent className="p-12 text-center">
-            <Brain className="w-16 h-16 mx-auto mb-4 text-purple-600" />
+            <Brain className="w-16 h-16 mx-auto mb-4 text-navy-600" />
             <h3 className="text-xl font-semibold mb-2">Ready to Analyze</h3>
             <p className="text-slate-600 mb-4">
               Click "Start Analysis" to generate AI-powered predictive insights for this patient.
             </p>
-            <Button onClick={performAnalysis} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={performAnalysis} className="bg-navy-600 hover:bg-navy-700">
               <Brain className="w-4 h-4 mr-2" />
               Start Analysis
             </Button>

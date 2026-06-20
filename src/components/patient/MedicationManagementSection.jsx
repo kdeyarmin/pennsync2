@@ -123,14 +123,14 @@ export default function MedicationManagementSection({ patient }) {
     if (lower.includes('twice') || lower.includes('bid')) return 'bg-green-100 text-green-800';
     if (lower.includes('three') || lower.includes('tid')) return 'bg-yellow-100 text-yellow-800';
     if (lower.includes('four') || lower.includes('qid')) return 'bg-orange-100 text-orange-800';
-    if (lower.includes('prn') || lower.includes('needed')) return 'bg-purple-100 text-purple-800';
+    if (lower.includes('prn') || lower.includes('needed')) return 'bg-navy-100 text-navy-800';
     return 'bg-slate-100 text-slate-800';
   };
 
   return (
     <div>
       <Card>
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
           <CardTitle className="text-lg flex items-center justify-between text-slate-900">
             <div className="flex items-center gap-2">
               <Pill className="w-5 h-5 text-indigo-600" />

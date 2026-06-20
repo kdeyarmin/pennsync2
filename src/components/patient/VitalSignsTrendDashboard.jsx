@@ -89,7 +89,7 @@ export default function VitalSignsTrendDashboard({ patientId }) {
   return (
     <div className="space-y-4">
       {/* Trend Summary */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-4">
+      <div className="bg-gradient-to-r from-indigo-50 to-navy-50 border border-indigo-200 rounded-xl p-4">
         <p className="text-sm font-semibold text-indigo-900 mb-3 flex items-center gap-2">
           <TrendingUp className="w-4 h-4" /> Vital Signs Trends (First to Last Visit)
         </p>
@@ -160,7 +160,7 @@ export default function VitalSignsTrendDashboard({ patientId }) {
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-purple-500" /> Heart Rate & Temperature
+              <span className="w-3 h-3 rounded-full bg-navy-500" /> Heart Rate & Temperature
             </CardTitle>
           </CardHeader>
           <CardContent>

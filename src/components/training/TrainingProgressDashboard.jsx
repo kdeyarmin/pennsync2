@@ -115,14 +115,14 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-2 border-navy-200">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Total Hours</p>
-                <p className="text-3xl font-bold text-purple-600">{Math.round(stats.totalTime / 60)}</p>
+                <p className="text-3xl font-bold text-navy-600">{Math.round(stats.totalTime / 60)}</p>
               </div>
-              <Clock className="w-10 h-10 text-purple-600" />
+              <Clock className="w-10 h-10 text-navy-600" />
             </div>
           </CardContent>
         </Card>
@@ -246,19 +246,19 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
 
       {/* Open AI Recommendations */}
       {recommendations.length > 0 && (
-        <Card className="border-2 border-purple-300">
+        <Card className="border-2 border-navy-300">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-5 h-5 text-purple-600" />
+              <Target className="w-5 h-5 text-navy-600" />
               AI-Identified Learning Opportunities ({recommendations.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {recommendations.slice(0, 5).map((rec) => (
-                <div key={rec.id} className="border-l-4 border-purple-500 pl-3 py-2 bg-purple-50">
+                <div key={rec.id} className="border-l-4 border-navy-500 pl-3 py-2 bg-navy-50">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge className="bg-purple-600 text-white text-xs">
+                    <Badge className="bg-navy-600 text-white text-xs">
                       {rec.recommendation_type.replace(/_/g, ' ')}
                     </Badge>
                     <Badge variant="outline" className="text-xs">{rec.severity}</Badge>

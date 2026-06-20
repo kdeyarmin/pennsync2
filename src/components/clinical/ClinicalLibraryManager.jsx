@@ -398,7 +398,7 @@ export default function ClinicalLibraryManager() {
                           </code>
                           <Badge variant="outline">{template.category}</Badge>
                           {template.template_type === 'patient_specific' && (
-                            <Badge className="bg-purple-100 text-purple-800">
+                            <Badge className="bg-navy-100 text-navy-800">
                               <User className="w-3 h-3 mr-1" />
                               Patient-Specific
                             </Badge>
@@ -491,7 +491,7 @@ export default function ClinicalLibraryManager() {
                       setAIMode('generate');
                       setShowAIAssistant(true);
                     }}
-                    className="border-purple-300 text-purple-700"
+                    className="border-navy-300 text-navy-700"
                   >
                     <Sparkles className="w-3 h-3 mr-1" />
                     AI Generate
@@ -505,7 +505,7 @@ export default function ClinicalLibraryManager() {
                         setAIMode('improve');
                         setShowAIAssistant(true);
                       }}
-                      className="border-purple-300 text-purple-700"
+                      className="border-navy-300 text-navy-700"
                     >
                       <Sparkles className="w-3 h-3 mr-1" />
                       AI Suggestions
@@ -520,7 +520,7 @@ export default function ClinicalLibraryManager() {
                         setAIMode('refine');
                         setShowAIAssistant(true);
                       }}
-                      className="border-purple-300 text-purple-700"
+                      className="border-navy-300 text-navy-700"
                     >
                       <Sparkles className="w-3 h-3 mr-1" />
                       Refine Instructions

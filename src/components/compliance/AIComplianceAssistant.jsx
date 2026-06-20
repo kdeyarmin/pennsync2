@@ -122,12 +122,12 @@ Format your response in clear sections. Be specific and actionable.`,
   };
 
   return (
-    <Card className={`border-2 border-purple-300 ${compact ? '' : 'max-w-4xl'}`}>
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className={`border-2 border-navy-300 ${compact ? '' : 'max-w-4xl'}`}>
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Compliance Assistant
-          <Badge className="ml-auto bg-purple-600">42 CFR 484</Badge>
+          <Badge className="ml-auto bg-navy-600">42 CFR 484</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
@@ -170,7 +170,7 @@ Format your response in clear sections. Be specific and actionable.`,
                     <p className="text-sm">{msg.content}</p>
                   </div>
                 ) : (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                  <div className="bg-navy-50 border border-navy-200 rounded-lg p-4 space-y-3">
                     {/* Main Answer */}
                     <div className="prose prose-sm max-w-none">
                       <p className="text-sm text-slate-900 whitespace-pre-wrap">{msg.content.answer}</p>
@@ -178,15 +178,15 @@ Format your response in clear sections. Be specific and actionable.`,
 
                     {/* Relevant Regulations */}
                     {msg.content.relevant_regulations?.length > 0 && (
-                      <div className="bg-white p-3 rounded border border-purple-200">
-                        <p className="text-xs font-semibold text-purple-900 mb-2 flex items-center gap-1">
+                      <div className="bg-white p-3 rounded border border-navy-200">
+                        <p className="text-xs font-semibold text-navy-900 mb-2 flex items-center gap-1">
                           <FileText className="w-3 h-3" />
                           Relevant Regulations:
                         </p>
                         <div className="space-y-2">
                           {msg.content.relevant_regulations.map((reg, i) => (
-                            <div key={i} className="bg-purple-50 p-2 rounded">
-                              <p className="text-xs font-bold text-purple-900">{reg.reference} - {reg.title}</p>
+                            <div key={i} className="bg-navy-50 p-2 rounded">
+                              <p className="text-xs font-bold text-navy-900">{reg.reference} - {reg.title}</p>
                               <p className="text-xs text-slate-700 mt-1">{reg.summary}</p>
                             </div>
                           ))}
@@ -274,7 +274,7 @@ Format your response in clear sections. Be specific and actionable.`,
           <Button
             onClick={() => askQuestion()}
             disabled={isAsking || !question.trim()}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isAsking ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />

@@ -54,8 +54,8 @@ export const INTERVENTIONS_LIBRARY = [
   {
     id: "respiratory",
     category: "Respiratory",
-    dotColor: "bg-sky-400",
-    cardClass: "bg-sky-50 border-sky-200 text-sky-800",
+    dotColor: "bg-navy-400",
+    cardClass: "bg-navy-50 border-navy-200 text-navy-800",
     items: [
       { id: "resp-1", name: "Respiratory Assessment", description: "Auscultate lung sounds, assess breathing pattern and O2 sat", frequency: "Each visit", complianceTag: "OASIS M1400" },
       { id: "resp-2", name: "Inhaler Technique Teaching", description: "Evaluate and teach proper MDI/nebulizer technique", frequency: "Per need", complianceTag: "Document return demo" },
@@ -66,8 +66,8 @@ export const INTERVENTIONS_LIBRARY = [
   {
     id: "diabetes",
     category: "Diabetes Management",
-    dotColor: "bg-purple-400",
-    cardClass: "bg-purple-50 border-purple-200 text-purple-800",
+    dotColor: "bg-navy-400",
+    cardClass: "bg-navy-50 border-navy-200 text-navy-800",
     items: [
       { id: "dm-1", name: "Blood Glucose Monitoring", description: "Monitor BG and assess for hypo/hyperglycemia signs", frequency: "Each visit", complianceTag: "Document values" },
       { id: "dm-2", name: "Diabetic Foot Care", description: "Inspect feet for lesions and teach proper foot hygiene", frequency: "Each visit", complianceTag: "OASIS M1340" },

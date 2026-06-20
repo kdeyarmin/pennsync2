@@ -419,7 +419,7 @@ export default function SupplyManagementDashboard() {
                         {log.quantity_used} {log.unit} • {log.usage_date}
                       </p>
                       {log.extracted_from_note && (
-                        <Badge className="text-xs mt-1 bg-purple-100 text-purple-800">
+                        <Badge className="text-xs mt-1 bg-navy-100 text-navy-800">
                           Extracted from note ({log.extraction_confidence}%)
                         </Badge>
                       )}

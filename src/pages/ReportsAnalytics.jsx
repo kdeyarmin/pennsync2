@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, TrendingUp, Activity, Brain, RefreshCw } from "lucide-react";
+import { BarChart3, TrendingUp, Activity, Brain, RefreshCw, Building2, Loader2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import ReferralVolumeReport from "@/components/reports/ReferralVolumeReport";
@@ -14,6 +15,18 @@ import NursePerformanceReport from "@/components/reports/NursePerformanceReport"
 import OASISComplianceReport from "@/components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementReport";
 import KPIDashboard from "@/components/reports/KPIDashboard";
+
+const AdminReportsCenter = lazy(() => import("@/pages/AdminReportsCenter"));
+
+// Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
+// ?tab= deep-link so the retired Reports Center page redirects to the right tab.
+const TAB_KEYS = ["kpi", "referrals", "outcomes", "performance", "oasis", "pdgm", "population", "reports-center"];
+
+const tabLoader = (
+  <div className="flex justify-center py-12">
+    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+  </div>
+);
 
 export default function ReportsAnalytics() {
   const [dateRange, _setDateRange] = useState({
@@ -47,6 +60,25 @@ export default function ReportsAnalytics() {
   });
 
   const isAdmin = currentUser?.role === 'admin';
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "kpi";
+  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
+  // retired Reports Center page deep-links correctly. "kpi" is the default, so it
+  // stays a clean /ReportsAnalytics with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "kpi" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /ReportsAnalytics. Only fires when the param resolved to
+  // the default tab, so a valid deep-link like ?tab=reports-center is untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "kpi") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
 
   const runPopulationAnalysis = async () => {
     setAnalyzing(true);
@@ -93,7 +125,7 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
         favoritePage="ReportsAnalytics"
       />
 
-      <Tabs defaultValue="kpi" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
             <TabsTrigger value="kpi" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
@@ -119,6 +151,10 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
             <TabsTrigger value="population" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Brain className="w-4 h-4 mr-2" />
               Population Health
+            </TabsTrigger>
+            <TabsTrigger value="reports-center" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Building2 className="w-4 h-4 mr-2" />
+              Reports Center
             </TabsTrigger>
           </TabsList>
         </div>
@@ -232,6 +268,12 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
               )}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="reports-center">
+          <Suspense fallback={tabLoader}>
+            <AdminReportsCenter />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </PageContainer>

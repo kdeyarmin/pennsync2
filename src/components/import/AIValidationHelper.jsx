@@ -80,10 +80,10 @@ Return a JSON array with this structure:
   };
 
   return (
-    <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Validation Assistant
         </CardTitle>
       </CardHeader>
@@ -96,7 +96,7 @@ Return a JSON array with this structure:
             <Button
               onClick={generateSuggestions}
               disabled={isGenerating}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isGenerating ? (
                 <>
@@ -130,8 +130,8 @@ Return a JSON array with this structure:
             <ScrollArea className="h-96">
               <div className="space-y-3 pr-4">
                 {suggestions.map((suggestion, idx) => (
-                  <Alert key={idx} className="bg-white border-purple-200">
-                    <Lightbulb className="w-4 h-4 text-purple-600" />
+                  <Alert key={idx} className="bg-white border-navy-200">
+                    <Lightbulb className="w-4 h-4 text-navy-600" />
                     <AlertDescription>
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
@@ -145,7 +145,7 @@ Return a JSON array with this structure:
                           </div>
                         </div>
 
-                        <div className="pl-4 border-l-2 border-purple-200 space-y-1">
+                        <div className="pl-4 border-l-2 border-navy-200 space-y-1">
                           <p className="text-xs text-slate-600">
                             <strong>Issue:</strong> {suggestion.explanation}
                           </p>

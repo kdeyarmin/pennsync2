@@ -147,7 +147,7 @@ export default function FaxAddressBook({ onSelectContact }) {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm hover:from-indigo-700 hover:to-violet-700">
+            <Button className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-navy-600 text-white shadow-sm hover:from-indigo-700 hover:to-navy-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Contact
             </Button>

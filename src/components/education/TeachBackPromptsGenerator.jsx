@@ -291,7 +291,7 @@ Nurse Signature: _______________________`;
 
   return (
     <Card className="border-indigo-200">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-indigo-600" />
           AI Teach-Back Prompts Generator
@@ -416,16 +416,16 @@ Nurse Signature: _______________________`;
 
             {/* Follow-Up Prompt (if generated) */}
             {showFollowUp && followUpPrompt && (
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <p className="text-xs font-semibold text-purple-800 mb-2 flex items-center gap-1">
+              <div className="bg-navy-50 p-4 rounded-lg border border-navy-200">
+                <p className="text-xs font-semibold text-navy-800 mb-2 flex items-center gap-1">
                   <Lightbulb className="w-3 h-3" /> AI-Generated Follow-Up
                 </p>
-                <p className="text-purple-800 font-medium">"{followUpPrompt.follow_up_question}"</p>
-                <div className="mt-2 text-xs text-purple-700">
+                <p className="text-navy-800 font-medium">"{followUpPrompt.follow_up_question}"</p>
+                <div className="mt-2 text-xs text-navy-700">
                   <p><strong>Teaching Point:</strong> {followUpPrompt.teaching_point}</p>
                   <p className="mt-1"><strong>Example:</strong> {followUpPrompt.example_or_analogy}</p>
                 </div>
-                <p className="mt-2 text-purple-600 italic">{followUpPrompt.encouragement}</p>
+                <p className="mt-2 text-navy-600 italic">{followUpPrompt.encouragement}</p>
               </div>
             )}
 
@@ -477,7 +477,7 @@ Nurse Signature: _______________________`;
               </RadioGroup>
               
               {isGeneratingFollowUp && (
-                <p className="text-xs text-purple-600 mt-2 flex items-center gap-1">
+                <p className="text-xs text-navy-600 mt-2 flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   Generating follow-up prompt...
                 </p>

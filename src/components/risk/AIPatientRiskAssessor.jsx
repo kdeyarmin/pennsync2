@@ -265,18 +265,18 @@ Analyze the following risk domains and provide detailed scores and explanations:
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
+              <Brain className="w-5 h-5 text-navy-600" />
               AI Patient Risk Assessment
             </CardTitle>
             <Button
               onClick={performRiskAssessment}
               disabled={isAnalyzing || !patient}
               size="sm"
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isAnalyzing ? (
                 <>
@@ -294,9 +294,9 @@ Analyze the following risk domains and provide detailed scores and explanations:
         </CardHeader>
         <CardContent>
           {isAnalyzing && (
-            <Alert className="bg-purple-50 border-purple-200">
-              <Brain className="w-4 h-4 text-purple-600 animate-pulse" />
-              <AlertDescription className="text-purple-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <Brain className="w-4 h-4 text-navy-600 animate-pulse" />
+              <AlertDescription className="text-navy-900">
                 AI is analyzing patient data across multiple risk domains... This may take 30-60 seconds.
               </AlertDescription>
             </Alert>
@@ -314,7 +314,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
           {displayAssessment && (
             <div className="space-y-6">
               {/* Overall Risk Score */}
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg border-2 border-purple-200">
+              <div className="bg-gradient-to-r from-navy-50 to-indigo-50 p-6 rounded-lg border-2 border-navy-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-bold text-slate-900">Overall Risk Profile</h3>
                   <Badge className={`${getRiskColor(displayAssessment.overall_risk_level)} text-white text-lg px-4 py-2`}>
@@ -322,7 +322,7 @@ Analyze the following risk domains and provide detailed scores and explanations:
                   </Badge>
                 </div>
                 <div className="flex items-center gap-4 mb-3">
-                  <span className="text-4xl font-bold text-purple-600">{displayAssessment.overall_risk_score}</span>
+                  <span className="text-4xl font-bold text-navy-600">{displayAssessment.overall_risk_score}</span>
                   <span className="text-slate-600">/100</span>
                   <Progress value={displayAssessment.overall_risk_score} className="flex-1" />
                 </div>
@@ -411,11 +411,11 @@ Analyze the following risk domains and provide detailed scores and explanations:
                 </Card>
 
                 {/* Clinical Deterioration Risk */}
-                <Card className="border-2 border-purple-200">
+                <Card className="border-2 border-navy-200">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-purple-600" />
+                        <AlertTriangle className="w-5 h-5 text-navy-600" />
                         <h4 className="font-semibold">Clinical Deterioration</h4>
                       </div>
                       <Badge className={getRiskColor(displayAssessment.clinical_deterioration_risk_level)}>

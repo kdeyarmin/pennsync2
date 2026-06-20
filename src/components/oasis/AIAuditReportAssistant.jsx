@@ -117,7 +117,7 @@ Return JSON:
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="pb-2 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="pb-2 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-sm flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-indigo-600" />
           AI Audit Report Assistant

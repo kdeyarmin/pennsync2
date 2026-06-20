@@ -60,12 +60,12 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
   }
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+    <Card className="border-2 border-navy-200 bg-gradient-to-br from-navy-50 to-white">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-navy-600" />
           Smart Notes Context
-          <Badge className="ml-2 bg-purple-600 text-white">{visits.length} visits</Badge>
+          <Badge className="ml-2 bg-navy-600 text-white">{visits.length} visits</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -89,11 +89,11 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
               const snippets = extractKeySnippets(visit.nurse_notes);
               
               return (
-                <div key={visit.id} className="bg-white p-3 rounded-lg border border-purple-200">
+                <div key={visit.id} className="bg-white p-3 rounded-lg border border-navy-200">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <FileText className="w-4 h-4 text-purple-600" />
+                        <FileText className="w-4 h-4 text-navy-600" />
                         <span className="text-sm font-semibold text-slate-900">
                           {visit.visit_type?.replace(/_/g, ' ').toUpperCase()}
                         </span>
@@ -107,7 +107,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
                   {/* Snippets */}
                   <div className="space-y-2">
                     {snippets.map((snippet, sIdx) => (
-                      <div key={sIdx} className="bg-purple-50 p-2 rounded text-sm">
+                      <div key={sIdx} className="bg-navy-50 p-2 rounded text-sm">
                         <p className="text-slate-700 mb-2">{snippet}</p>
                         <div className="flex gap-2">
                           <Button
@@ -125,7 +125,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
                           <Button
                             size="sm"
                             onClick={() => handleInsertSnippet(snippet)}
-                            className="h-7 text-xs bg-purple-600 hover:bg-purple-700"
+                            className="h-7 text-xs bg-navy-600 hover:bg-navy-700"
                           >
                             <Plus className="w-3 h-3 mr-1" />
                             Insert
@@ -140,7 +140,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleInsertSnippet(visit.nurse_notes)}
-                        className="w-full text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                        className="w-full text-xs text-navy-600 hover:text-navy-700 hover:bg-navy-50"
                       >
                         Insert Full Note ({visit.nurse_notes.length} chars)
                       </Button>

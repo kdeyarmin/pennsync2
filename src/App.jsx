@@ -41,6 +41,22 @@ const AdminOnlyFallback = () => (
   </div>
 );
 
+// Redirect that PRESERVES the original query string and router state when
+// forwarding a retired/consolidated path to its new home. Consolidated pages
+// became hub tabs (e.g. /ReferralIntake?tab=admission); a plain <Navigate to>
+// would drop an incoming ?referral_id=/?id= or location.state, so merge the
+// incoming search params onto the target (target params win on conflict).
+const RedirectTo = ({ to }) => {
+  const location = useLocation();
+  const [path, targetQuery = ''] = to.split('?');
+  const params = new URLSearchParams(targetQuery);
+  for (const [key, value] of new URLSearchParams(location.search)) {
+    if (!params.has(key)) params.set(key, value);
+  }
+  const query = params.toString();
+  return <Navigate to={query ? `${path}?${query}` : path} state={location.state} replace />;
+};
+
 const AuthenticatedApp = () => {
   const location = useLocation();
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
@@ -59,7 +75,7 @@ const AuthenticatedApp = () => {
     return (
       <Suspense fallback={
         <div className="fixed inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-navy-700 rounded-full animate-spin"></div>
         </div>
       }>
         <Routes>
@@ -74,7 +90,7 @@ const AuthenticatedApp = () => {
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-navy-700 rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -102,7 +118,7 @@ const AuthenticatedApp = () => {
   return (
     <Suspense fallback={
       <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-navy-700 rounded-full animate-spin"></div>
       </div>
     }>
       <Routes>
@@ -126,7 +142,7 @@ const AuthenticatedApp = () => {
           />
         ))}
         {REDIRECTS.map(({ from, to }) => (
-          <Route key={from} path={from} element={<Navigate to={to} replace />} />
+          <Route key={from} path={from} element={<RedirectTo to={to} />} />
         ))}
         <Route path="*" element={<PageNotFound />} />
       </Routes>

@@ -354,10 +354,10 @@ Now parse the user's input above with maximum medical accuracy:`;
 
   return (
     <>
-      <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-indigo-50 border-navy-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-600" />
+            <Zap className="w-5 h-5 text-navy-600" />
             Voice Data Entry
             <Badge variant="outline" className="ml-auto">
               Hands-free Documentation
@@ -387,12 +387,12 @@ Now parse the user's input above with maximum medical accuracy:`;
             </AlertDescription>
           </Alert>
 
-          <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-lg border-2 border-dashed border-purple-200">
+          <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-lg border-2 border-dashed border-navy-200">
             {!isListening && !isProcessing && (
               <Button
                 onClick={startListening}
                 size="lg"
-                className="bg-purple-600 hover:bg-purple-700 w-full md:w-auto"
+                className="bg-navy-600 hover:bg-navy-700 w-full md:w-auto"
               >
                 <Mic className="w-5 h-5 mr-2" />
                 Start Voice Entry
@@ -435,7 +435,7 @@ Now parse the user's input above with maximum medical accuracy:`;
 
             {isProcessing && (
               <div className="flex flex-col items-center gap-3 py-8">
-                <Loader2 className="w-12 h-12 text-purple-600 animate-spin" />
+                <Loader2 className="w-12 h-12 text-navy-600 animate-spin" />
                 <div className="text-center">
                   <p className="font-semibold text-slate-900">Processing your input...</p>
                   <p className="text-sm text-slate-600">AI is extracting vitals and formatting narrative</p>

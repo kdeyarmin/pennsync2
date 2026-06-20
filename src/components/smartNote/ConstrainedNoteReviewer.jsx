@@ -257,7 +257,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
               </div>
               <p className="text-xs text-slate-500 mb-2">These required elements weren't in your draft. Answer what applies. Non-critical items left blank become an explicit "Not documented this visit." — never invented.</p>
               {prefilledIds.size > 0 && (
-                <p className="text-xs text-violet-700 bg-violet-50 border border-violet-200 rounded-lg px-3 py-2 mb-3">Some answers were carried from this patient's last visit — confirm each still applies before generating.</p>
+                <p className="text-xs text-navy-700 bg-navy-50 border border-navy-200 rounded-lg px-3 py-2 mb-3">Some answers were carried from this patient's last visit — confirm each still applies before generating.</p>
               )}
               <div className="space-y-3">
                 {gaps.map(g => {
@@ -269,7 +269,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-sm font-medium text-slate-900">{g.question}</p>
-                            {prefilledIds.has(g.id) && <span className="shrink-0 text-[10px] font-semibold text-violet-700 bg-violet-100 px-1.5 py-0.5 rounded-full">from last visit · confirm</span>}
+                            {prefilledIds.has(g.id) && <span className="shrink-0 text-[10px] font-semibold text-navy-700 bg-navy-100 px-1.5 py-0.5 rounded-full">from last visit · confirm</span>}
                           </div>
                           <p className="text-xs text-slate-400 mt-0.5">{g.copReference}</p>
                         </div>

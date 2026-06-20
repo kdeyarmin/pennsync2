@@ -13,15 +13,10 @@ import {
   ArrowLeft,
   CheckCircle2
 } from 'lucide-react';
-import PageContainer from '@/components/ui/PageContainer';
-import PageHeader from '@/components/ui/PageHeader';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import OfflineVisitNoteCapture from '../components/offline/OfflineVisitNoteCapture';
 import OfflineSyncService, { useOfflineSync } from '../components/offline/OfflineSyncService';
 
 export default function OfflineVisitDocumentation() {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const { isOnline, pendingCount } = useOfflineSync();
@@ -69,24 +64,7 @@ export default function OfflineVisitDocumentation() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={WifiOff}
-        eyebrow="Tools"
-        title="Offline Visit Documentation"
-        description="Document patient visits with or without internet connection"
-        favoritePage="OfflineVisitDocumentation"
-        actions={
-          <Button
-            variant="outline"
-            onClick={() => navigate(createPageUrl('Dashboard'))}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Connection & Sync Status */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
         <Card className={`border-2 ${isOnline ? 'border-green-300 bg-green-50' : 'border-orange-300 bg-orange-50'}`}>
@@ -119,14 +97,14 @@ export default function OfflineVisitDocumentation() {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-300 bg-purple-50">
+        <Card className="border-2 border-navy-300 bg-navy-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-700">Total Patients</p>
-                <p className="text-xl font-bold text-purple-700">{patients.length}</p>
+                <p className="text-xl font-bold text-navy-700">{patients.length}</p>
               </div>
-              <Users className="w-8 h-8 text-purple-500" />
+              <Users className="w-8 h-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
@@ -209,6 +187,6 @@ export default function OfflineVisitDocumentation() {
           </div>
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

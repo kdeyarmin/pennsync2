@@ -177,11 +177,11 @@ Return JSON:
 
   if (compact) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-purple-600" />
+              <TrendingUp className="w-4 h-4 text-navy-600" />
               PDGM Revenue Forecast
             </div>
             <Button size="sm" variant="ghost" onClick={generateForecast} disabled={isForecasting}>
@@ -194,7 +194,7 @@ Return JSON:
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-600">Projected Revenue ({timeframe}d)</span>
-                <span className="text-lg font-bold text-purple-700">
+                <span className="text-lg font-bold text-navy-700">
                   {formatCurrency(forecast.forecast_summary?.total_projected_revenue)}
                 </span>
               </div>
@@ -224,11 +224,11 @@ Return JSON:
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
+            <TrendingUp className="w-5 h-5 text-navy-600" />
             PDGM Case-Mix & Revenue Forecaster
           </div>
           <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ Return JSON:
               onClick={generateForecast}
               disabled={isForecasting}
               size="sm"
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isForecasting ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Forecasting...</>
@@ -259,9 +259,9 @@ Return JSON:
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
         {!forecast && !isForecasting && (
-          <Alert className="bg-purple-50 border-purple-200">
-            <BarChart3 className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-800 text-sm">
+          <Alert className="bg-navy-50 border-navy-200">
+            <BarChart3 className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-navy-800 text-sm">
               Generate predictive forecasts for PDGM case-mix scores and revenue based on patient data and historical patterns.
             </AlertDescription>
           </Alert>
@@ -279,10 +279,10 @@ Return JSON:
             <TabsContent value="summary" className="space-y-4 mt-4">
               {/* Key Metrics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
-                  <DollarSign className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-                  <p className="text-xs text-purple-600">Projected Revenue</p>
-                  <p className="text-xl font-bold text-purple-800">
+                <div className="bg-navy-50 p-3 rounded-lg border border-navy-200 text-center">
+                  <DollarSign className="w-5 h-5 text-navy-600 mx-auto mb-1" />
+                  <p className="text-xs text-navy-600">Projected Revenue</p>
+                  <p className="text-xl font-bold text-navy-800">
                     {formatCurrency(forecast.forecast_summary?.total_projected_revenue)}
                   </p>
                 </div>
@@ -369,7 +369,7 @@ Return JSON:
                   <div key={idx} className="p-3 bg-slate-50 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-sm">{pf.patient_name}</span>
-                      <Badge className="bg-purple-100 text-purple-800">
+                      <Badge className="bg-navy-100 text-navy-800">
                         {formatCurrency(pf.total_predicted_revenue)}
                       </Badge>
                     </div>

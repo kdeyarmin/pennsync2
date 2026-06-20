@@ -191,7 +191,7 @@ Evaluate whether the response meets Medicare home health documentation standards
       <CardHeader>
         <div className="flex items-center justify-between mb-2">
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             Interactive Simulation
           </CardTitle>
           <Badge>

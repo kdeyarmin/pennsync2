@@ -178,7 +178,7 @@ function RightPanel({ suggestions, complianceIssues, reasoningIssues, onAddToCar
         </TabsList>
 
         <TabsContent value="recommendations" className="flex-1 overflow-hidden flex flex-col mt-0 data-[state=inactive]:hidden">
-          <div className="flex-shrink-0 px-4 pt-2 pb-1 bg-gradient-to-r from-indigo-50 to-purple-50 border-b">
+          <div className="flex-shrink-0 px-4 pt-2 pb-1 bg-gradient-to-r from-indigo-50 to-navy-50 border-b">
             <p className="text-xs text-slate-400">Updates live as you complete the assessment</p>
           </div>
           <div className="flex-1 overflow-hidden flex flex-col">
@@ -296,7 +296,7 @@ export default function SmartOASISAssessment() {
 
   const careScopeBadge = {
     home_health: { label: "Home Health", color: "bg-blue-100 text-blue-800 border-blue-200" },
-    hospice: { label: "Hospice", color: "bg-purple-100 text-purple-800 border-purple-200" },
+    hospice: { label: "Hospice", color: "bg-navy-100 text-navy-800 border-navy-200" },
     both: { label: "Home Health + Hospice", color: "bg-indigo-100 text-indigo-800 border-indigo-200" },
   };
 

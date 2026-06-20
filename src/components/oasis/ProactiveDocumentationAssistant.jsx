@@ -215,16 +215,16 @@ For EACH gap found, provide:
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Documentation Assistant
-            {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin text-purple-500" />}
+            {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
           </CardTitle>
           {!gaps && !isAnalyzing && (
-            <Button onClick={analyzeDocumentation} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={analyzeDocumentation} className="bg-navy-600 hover:bg-navy-700">
               <Sparkles className="w-4 h-4 mr-2" />
               Analyze Documentation
             </Button>
@@ -235,8 +235,8 @@ For EACH gap found, provide:
       <CardContent>
         {isAnalyzing && (
           <div className="text-center py-12">
-            <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-            <p className="text-purple-700 font-medium">AI analyzing documentation for gaps...</p>
+            <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
+            <p className="text-navy-700 font-medium">AI analyzing documentation for gaps...</p>
             <p className="text-sm text-slate-600 mt-2">Checking reimbursement, quality, and compliance areas</p>
           </div>
         )}
@@ -245,7 +245,7 @@ For EACH gap found, provide:
           <div className="space-y-4">
             {/* Summary Card */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-white p-3 rounded-lg border-2 border-purple-300 text-center">
+              <div className="bg-white p-3 rounded-lg border-2 border-navy-300 text-center">
                 <p className="text-xs text-slate-600 mb-1">Documentation Score</p>
                 <p className={`text-3xl font-bold ${getScoreColor(gaps.overall_documentation_score)}`}>
                   {gaps.overall_documentation_score}%
@@ -262,8 +262,8 @@ For EACH gap found, provide:
             </div>
 
             {/* Summary */}
-            <Alert className="bg-purple-100 border-purple-300">
-              <AlertDescription className="text-purple-900">{gaps.summary}</AlertDescription>
+            <Alert className="bg-navy-100 border-navy-300">
+              <AlertDescription className="text-navy-900">{gaps.summary}</AlertDescription>
             </Alert>
 
             {/* Quick Wins */}
@@ -287,12 +287,12 @@ For EACH gap found, provide:
 
             {/* Documentation Gaps */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-purple-900">Documentation Gaps & AI Suggestions</h3>
+              <h3 className="font-semibold text-navy-900">Documentation Gaps & AI Suggestions</h3>
               {gaps.gaps?.map((gap, idx) => (
                 <div
                   key={idx}
                   className={`bg-white rounded-lg border-2 ${
-                    appliedSuggestions.has(idx) ? 'border-green-400 bg-green-50' : 'border-purple-200'
+                    appliedSuggestions.has(idx) ? 'border-green-400 bg-green-50' : 'border-navy-200'
                   } overflow-hidden`}
                 >
                   <div className="p-4">
@@ -371,9 +371,9 @@ For EACH gap found, provide:
                     </div>
 
                     {/* Suggested Narrative */}
-                    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-lg border-2 border-purple-300 mb-3">
+                    <div className="bg-gradient-to-r from-navy-50 to-indigo-50 p-3 rounded-lg border-2 border-navy-300 mb-3">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-semibold text-purple-900 flex items-center gap-1">
+                        <p className="text-xs font-semibold text-navy-900 flex items-center gap-1">
                           <Sparkles className="w-3 h-3" />
                           AI-Generated Narrative
                         </p>
@@ -410,14 +410,14 @@ For EACH gap found, provide:
                       )}
 
                       <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-purple-600">
+                        <p className="text-xs text-navy-600">
                           <strong>Add to:</strong> {gap.where_to_add}
                         </p>
                         <Button
                           onClick={() => handleApplySuggestion(gap, idx)}
                           disabled={appliedSuggestions.has(idx)}
                           size="sm"
-                          className="bg-purple-600 hover:bg-purple-700"
+                          className="bg-navy-600 hover:bg-navy-700"
                         >
                           {appliedSuggestions.has(idx) ? (
                             <><CheckCircle2 className="w-3 h-3 mr-2" /> Applied</>
@@ -468,9 +468,9 @@ For EACH gap found, provide:
                         )}
 
                         {gap.documentation_tips?.length > 0 && (
-                          <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                            <p className="text-xs font-semibold text-purple-900 mb-1">Documentation Tips</p>
-                            <ul className="text-xs text-purple-800 space-y-1">
+                          <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                            <p className="text-xs font-semibold text-navy-900 mb-1">Documentation Tips</p>
+                            <ul className="text-xs text-navy-800 space-y-1">
                               {gap.documentation_tips.map((tip, i) => (
                                 <li key={i}>✓ {tip}</li>
                               ))}

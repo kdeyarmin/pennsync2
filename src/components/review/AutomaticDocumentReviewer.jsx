@@ -295,9 +295,9 @@ Return detailed JSON analysis.`,
 
   if (isReviewing) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-navy-600 mx-auto mb-4" />
           <p className="text-lg font-medium text-slate-900 mb-2">AI Comprehensive Review in Progress</p>
           <p className="text-sm text-slate-600">
             Analyzing note against 42 CFR 484, Pennsylvania regulations, and quality standards...
@@ -309,10 +309,10 @@ Return detailed JSON analysis.`,
 
   if (!reviewResults && !autoReview) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FileCheck className="w-5 h-5 text-purple-600" />
+            <FileCheck className="w-5 h-5 text-navy-600" />
             Automatic Document Review
           </CardTitle>
         </CardHeader>
@@ -320,7 +320,7 @@ Return detailed JSON analysis.`,
           <p className="text-sm text-slate-600 mb-4">
             Comprehensive AI review of clinical documentation for Medicare compliance, accuracy, and quality.
           </p>
-          <Button onClick={performReview} className="w-full bg-purple-600 hover:bg-purple-700">
+          <Button onClick={performReview} className="w-full bg-navy-600 hover:bg-navy-700">
             <Sparkles className="w-4 h-4 mr-2" />
             Start Comprehensive Review
           </Button>
@@ -348,11 +348,11 @@ Return detailed JSON analysis.`,
       )}
 
       {/* Overall Summary */}
-      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <FileCheck className="w-5 h-5 text-purple-600" />
+              <FileCheck className="w-5 h-5 text-navy-600" />
               Comprehensive Review Results
             </span>
             <Badge className={getScoreBadge(reviewResults.overall_score)}>

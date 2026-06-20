@@ -176,7 +176,7 @@ Return JSON:
   }
 
   return (
-    <Card className={`border-2 ${summary ? 'border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50' : 'border-slate-200'}`}>
+    <Card className={`border-2 ${summary ? 'border-indigo-300 bg-gradient-to-br from-indigo-50 to-navy-50' : 'border-slate-200'}`}>
       <CardHeader 
         className="py-2 cursor-pointer hover:bg-slate-50 transition-colors"
         onClick={() => summary && setIsExpanded(!isExpanded)}
@@ -281,7 +281,7 @@ Return JSON:
             {summary.care_priorities?.length > 0 && (
               <div className="bg-white p-2 rounded-lg border">
                 <p className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
-                  <Target className="w-3 h-3 text-purple-600" /> Care Priorities
+                  <Target className="w-3 h-3 text-navy-600" /> Care Priorities
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {summary.care_priorities.map((p, idx) => (
