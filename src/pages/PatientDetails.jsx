@@ -344,7 +344,7 @@ export default function PatientDetails() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
+                  <User className="w-5 h-5 text-navy-600" />
                   Contact Information
                 </CardTitle>
               </CardHeader>
@@ -437,7 +437,7 @@ export default function PatientDetails() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-600" />
+                <Activity className="w-5 h-5 text-navy-600" />
                 Medical Information
               </CardTitle>
             </CardHeader>
@@ -691,7 +691,7 @@ export default function PatientDetails() {
                         plan.status === 'met' ? 'border-l-emerald-500' :
                         plan.status === 'not_met' ? 'border-l-red-500' :
                         plan.status === 'revised' ? 'border-l-amber-500' :
-                        'border-l-blue-500'
+                        'border-l-navy-500'
                       }`}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-2">
@@ -700,7 +700,7 @@ export default function PatientDetails() {
                               plan.status === 'met' ? 'bg-emerald-500' :
                               plan.status === 'not_met' ? 'bg-red-500' :
                               plan.status === 'revised' ? 'bg-amber-500' :
-                              'bg-blue-500'
+                              'bg-navy-500'
                             }>
                               {(plan.status || '').replace('_', ' ')}
                             </Badge>
@@ -830,7 +830,7 @@ export default function PatientDetails() {
             </CardTitle>
             <Button
               onClick={() => setShowVisitForm(!showVisitForm)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Visit
@@ -839,7 +839,7 @@ export default function PatientDetails() {
         </CardHeader>
         {showVisitForm && (
           <CardContent>
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-slate-50 border-slate-200">
               <CardContent className="p-4 space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
@@ -882,7 +882,7 @@ export default function PatientDetails() {
                     <Button variant="outline" onClick={() => setShowVisitForm(false)} className="min-h-[48px] sm:min-h-[40px]">
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateVisit} className="bg-blue-600 hover:bg-blue-700 min-h-[48px] sm:min-h-[40px]">
+                    <Button onClick={handleCreateVisit} className="bg-navy-600 hover:bg-navy-700 min-h-[48px] sm:min-h-[40px]">
                       Create Visit
                     </Button>
                   </div>

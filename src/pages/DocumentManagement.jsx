@@ -53,7 +53,7 @@ export default function DocumentManagement() {
                 <p className="text-sm text-slate-600">Total Documents</p>
                 <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
               </div>
-              <FileText className="w-8 h-8 text-indigo-600" />
+              <FileText className="w-8 h-8 text-navy-600" />
             </div>
           </CardContent>
         </Card>
@@ -100,7 +100,7 @@ export default function DocumentManagement() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {Object.entries(categoryCounts).map(([category, count]) => (
               <div key={category} className="text-center p-3 bg-slate-50 rounded-lg">
-                <p className="text-2xl font-bold text-indigo-600">{count}</p>
+                <p className="text-2xl font-bold text-navy-600">{count}</p>
                 <p className="text-xs text-slate-600 mt-1 capitalize">{category.replace(/_/g, ' ')}</p>
               </div>
             ))}

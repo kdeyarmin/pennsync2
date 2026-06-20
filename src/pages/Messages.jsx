@@ -38,7 +38,7 @@ import PhoneTopBar from "@/components/phone/PhoneTopBar";
 import ContactAvatar from "@/components/phone/ContactAvatar";
 import { shortAgo } from "@/components/phone/timeUtils";
 
-const PRIORITY_DOT = { urgent: "bg-red-500", high: "bg-orange-500", normal: "bg-blue-500" };
+const PRIORITY_DOT = { urgent: "bg-red-500", high: "bg-orange-500", normal: "bg-navy-600" };
 
 export default function Messages() {
   const queryClient = useQueryClient();
@@ -229,7 +229,7 @@ export default function Messages() {
         badges={unreadCount > 0 ? [{ label: `${unreadCount} Unread`, className: "bg-red-600 text-white hover:bg-red-600" }] : []}
         favoritePage="Messages"
         actions={
-          <Button onClick={() => setShowNewMessage(true)} className="min-h-[44px] w-full bg-blue-600 hover:bg-blue-700 sm:w-auto">
+          <Button onClick={() => setShowNewMessage(true)} className="min-h-[44px] w-full bg-navy-600 hover:bg-navy-700 sm:w-auto">
             <Send className="mr-2 h-4 w-4" />
             New Message
           </Button>
@@ -257,7 +257,7 @@ export default function Messages() {
                       <div
                         className={`whitespace-pre-wrap break-words px-3.5 py-2 text-[15px] leading-snug shadow-sm ${
                           mine
-                            ? "rounded-2xl rounded-br-md bg-blue-500 text-white"
+                            ? "rounded-2xl rounded-br-md bg-navy-600 text-white"
                             : "rounded-2xl rounded-bl-md bg-white text-slate-900 ring-1 ring-slate-200"
                         }`}
                       >
@@ -270,7 +270,7 @@ export default function Messages() {
                       {msg.patient_id && (
                         <Link
                           to={createPageUrl(`PatientDetails?id=${msg.patient_id}`)}
-                          className="mt-1 inline-flex items-center gap-1 px-1 text-[11px] text-blue-600 hover:underline"
+                          className="mt-1 inline-flex items-center gap-1 px-1 text-[11px] text-navy-600 hover:underline"
                         >
                           <User className="h-3 w-3" />
                           View Patient
@@ -284,7 +284,7 @@ export default function Messages() {
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-[11px] text-blue-600 hover:underline"
+                              className="flex items-center gap-1 text-[11px] text-navy-600 hover:underline"
                             >
                               <Paperclip className="h-3 w-3" />
                               Attachment {i + 1}
@@ -322,7 +322,7 @@ export default function Messages() {
                 onClick={handleReply}
                 disabled={!replyText.trim() || sendMessageMutation.isPending}
                 aria-label="Send reply"
-                className="h-9 w-9 flex-shrink-0 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300"
+                className="h-9 w-9 flex-shrink-0 rounded-full bg-navy-600 hover:bg-navy-700 disabled:bg-slate-300"
               >
                 <ArrowUp className="h-5 w-5" />
               </Button>
@@ -338,7 +338,7 @@ export default function Messages() {
                 <button
                   type="button"
                   onClick={() => setShowNewMessage(true)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-blue-600 hover:bg-blue-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-navy-600 hover:bg-navy-50"
                   title="New message"
                   aria-label="New message"
                 >
@@ -411,7 +411,7 @@ export default function Messages() {
                             </p>
                           </div>
                           {thread.unreadCount > 0 && (
-                            <span className="flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[11px] font-bold text-white">
+                            <span className="flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-navy-600 px-1.5 text-[11px] font-bold text-white">
                               {thread.unreadCount}
                             </span>
                           )}
@@ -523,7 +523,7 @@ export default function Messages() {
             <Button
               onClick={handleSendMessage}
               disabled={sendMessageMutation.isPending}
-              className="min-h-[44px] w-full bg-blue-600 hover:bg-blue-700 sm:w-auto"
+              className="min-h-[44px] w-full bg-navy-600 hover:bg-navy-700 sm:w-auto"
             >
               <Send className="mr-2 h-4 w-4" />
               Send Message

@@ -136,7 +136,7 @@ export default function SignerPortal() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Greeting */}
-        <Card className="mb-6 bg-blue-50 border-blue-200">
+        <Card className="mb-6 bg-navy-50 border-navy-200">
           <CardContent className="pt-6">
             <p className="text-sm">
               <span className="font-semibold text-slate-900">Hello {packageData.signerName},</span>

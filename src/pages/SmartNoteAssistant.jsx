@@ -581,7 +581,7 @@ export default function SmartNoteAssistant() {
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <User className="w-3.5 h-3.5 text-indigo-500" />
+                    <User className="w-3.5 h-3.5 text-navy-600" />
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Patient</label>
                     <span className="text-xs text-slate-400 font-normal normal-case ml-1">optional</span>
                   </div>
@@ -595,13 +595,13 @@ export default function SmartNoteAssistant() {
                 <div className="border-t border-slate-100" />
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
+                    <ClipboardList className="w-3.5 h-3.5 text-navy-600" />
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Visit Type</label>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {VISIT_TYPES.map(v => (
                       <button key={v.value} onClick={() => setVisitType(v.value)}
-                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${visitType === v.value ? "bg-indigo-600 border-indigo-600 text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50"}`}>
+                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${visitType === v.value ? "bg-navy-600 border-navy-600 text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-navy-300 hover:bg-navy-50"}`}>
                         {v.label}
                       </button>
                     ))}
@@ -610,7 +610,7 @@ export default function SmartNoteAssistant() {
               </div>
 
               {patient && (
-                <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-navy-700 bg-navy-50 border border-navy-200 rounded-lg px-3 py-2">
                   <User className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     <strong>{patient.first_name} {patient.last_name}</strong>
@@ -645,10 +645,10 @@ export default function SmartNoteAssistant() {
                   </Button>
                 </div>
                 {/* Enhanced Audio Recorder */}
-                <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex flex-wrap gap-2 items-center">
+                <div className="px-4 py-2 bg-navy-50 border-b border-navy-100 flex flex-wrap gap-2 items-center">
                   <Button
                     variant={listening ? "destructive" : "default"}
-                    className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                    className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-navy-600 hover:bg-navy-700 text-white'}`}
                     onClick={listening ? stopDictation : startDictation}
                   >
                     {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
@@ -670,7 +670,7 @@ export default function SmartNoteAssistant() {
                   <span className={`text-xs shrink-0 ${ready ? "text-emerald-600 font-medium" : "text-slate-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
-                  <Button onClick={startReview} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
+                  <Button onClick={startReview} disabled={!ready} className="bg-navy-600 hover:bg-navy-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
                     <Sparkles className="w-4 h-4" /> Check Compliance <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
