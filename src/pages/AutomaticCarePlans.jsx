@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
+import LoadingState from "@/components/ui/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -282,7 +283,7 @@ export default function AutomaticCarePlans() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-center text-slate-500 py-8">Loading triggers...</p>
+            <LoadingState label="Loading triggers..." className="py-8" />
           ) : triggers.length === 0 ? (
             <EmptyState
               icon={Zap}

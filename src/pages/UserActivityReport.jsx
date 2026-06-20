@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import StatCard from "@/components/ui/stat-card";
+import LoadingState from "@/components/ui/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -344,12 +345,7 @@ export default function UserActivityReport() {
 
         <TabsContent value="report" className="space-y-4 sm:space-y-6">
           {isLoading ? (
-            <div className="flex items-center justify-center py-24">
-              <div className="text-center">
-                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-slate-600">Loading activity data...</p>
-              </div>
-            </div>
+            <LoadingState label="Loading activity data..." className="py-24" />
           ) : (
             <>
         {/* Export Actions */}

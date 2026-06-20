@@ -51,6 +51,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import LoadingState from "@/components/ui/LoadingState";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -1059,7 +1060,7 @@ Actions available:
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="text-center py-12 text-slate-500">Loading referrals...</div>
+            <LoadingState label="Loading referrals..." />
           ) : filteredReferrals.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />

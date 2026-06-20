@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { gradeTrainingAttempt } from "@/functions/gradeTrainingAttempt";
@@ -203,20 +204,10 @@ export default function TrainingCoursePlayer() {
   };
 
   if (!course) {
-    return (
-      <div className="max-w-3xl mx-auto p-8 flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-        <p className="text-slate-500">Loading course...</p>
-      </div>
-    );
+    return <LoadingState label="Loading course..." className="py-24" />;
   }
   if (!previewMode && !assignment) {
-    return (
-      <div className="max-w-3xl mx-auto p-8 flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-        <p className="text-slate-500">Loading assignment...</p>
-      </div>
-    );
+    return <LoadingState label="Loading assignment..." className="py-24" />;
   }
 
   const progressValue = STEP_PROGRESS[step] || 0;

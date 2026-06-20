@@ -16,6 +16,7 @@ import {
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/stat-card";
+import LoadingState from "@/components/ui/LoadingState";
 import PatientSearchBar from "../components/dashboard/PatientSearchBar";
 import PatientQuickActions from "../components/dashboard/PatientQuickActions";
 import PatientOverviewCard from "../components/dashboard/PatientOverviewCard";
@@ -135,12 +136,9 @@ export default function PatientRecordDashboard() {
 
   if (loadingPatients) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading patient records...</p>
-        </div>
-      </div>
+      <PageContainer>
+        <LoadingState label="Loading patient records..." className="py-24" />
+      </PageContainer>
     );
   }
 

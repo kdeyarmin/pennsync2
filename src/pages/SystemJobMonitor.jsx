@@ -43,6 +43,7 @@ import {
 import { format } from "date-fns";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
 
 export default function SystemJobMonitor() {
   const queryClient = useQueryClient();
@@ -297,10 +298,7 @@ export default function SystemJobMonitor() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">
-              <RefreshCw className="w-8 h-8 animate-spin text-slate-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">Loading logs...</p>
-            </div>
+            <LoadingState label="Loading logs..." className="py-8" />
           ) : logs.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />

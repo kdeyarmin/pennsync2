@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import LoadingState from "@/components/ui/LoadingState";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { formatEastern } from "../components/utils/timezone";
@@ -278,12 +279,9 @@ export default function PatientDataManagement() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading patient data...</p>
-        </div>
-      </div>
+      <PageContainer>
+        <LoadingState label="Loading patient data..." className="py-24" />
+      </PageContainer>
     );
   }
 

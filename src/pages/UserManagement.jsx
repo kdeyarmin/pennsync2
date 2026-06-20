@@ -61,6 +61,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import LoadingState from "@/components/ui/LoadingState";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
 import { toast } from "sonner";
@@ -650,7 +651,7 @@ export default function UserManagement() {
         </CardHeader>
         <CardContent className="p-3 sm:p-4 md:p-6">
           {isLoading ? (
-            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-slate-500">Loading users...</div>
+            <LoadingState label="Loading users..." className="py-8 sm:py-12" />
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-slate-500">No users found</div>
           ) : (
