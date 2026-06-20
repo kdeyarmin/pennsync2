@@ -136,7 +136,7 @@ Return JSON:`,
 
   return (
     <Card className="border-2 border-navy-300">
-      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-navy-600" />
           AI Care Plan Recommendations

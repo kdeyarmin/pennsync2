@@ -145,7 +145,7 @@ export default function ComprehensiveFaxDashboard() {
     });
     return [
       { name: 'Urgent', value: counts.urgent, color: '#dc2626' },
-      { name: 'Normal', value: counts.normal, color: '#3b82f6' },
+      { name: 'Normal', value: counts.normal, color: '#3557b0' },
       { name: 'Low', value: counts.low, color: '#6b7280' }
     ].filter(d => d.value > 0);
   }, [filteredLogs]);
@@ -414,7 +414,7 @@ export default function ComprehensiveFaxDashboard() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="total" stroke="#3b82f6" name="Total" strokeWidth={2} />
+              <Line type="monotone" dataKey="total" stroke="#3557b0" name="Total" strokeWidth={2} />
               <Line type="monotone" dataKey="delivered" stroke="#10b981" name="Delivered" strokeWidth={2} />
               <Line type="monotone" dataKey="failed" stroke="#ef4444" name="Failed" strokeWidth={2} />
             </LineChart>
@@ -438,7 +438,7 @@ export default function ComprehensiveFaxDashboard() {
                   labelLine={false}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {statusDistribution.map((entry, index) => (
@@ -465,7 +465,7 @@ export default function ComprehensiveFaxDashboard() {
                   labelLine={false}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {priorityDistribution.map((entry, index) => (

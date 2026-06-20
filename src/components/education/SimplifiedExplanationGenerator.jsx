@@ -135,7 +135,7 @@ Return JSON:
 
   return (
     <Card className="border-navy-200">
-      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-navy-600" />
           AI Simplified Explanation Generator
@@ -304,8 +304,8 @@ Example: 'Patient has CHF with reduced ejection fraction of 35%. Needs to unders
             </div>
 
             {/* Encouraging Closing */}
-            <div className="bg-pink-50 p-3 rounded-lg border border-pink-200 text-center">
-              <p className="text-pink-800 font-medium">{explanation.encouraging_closing}</p>
+            <div className="bg-gold-50 p-3 rounded-lg border border-gold-200 text-center">
+              <p className="text-gold-800 font-medium">{explanation.encouraging_closing}</p>
             </div>
 
             {/* Regenerate */}

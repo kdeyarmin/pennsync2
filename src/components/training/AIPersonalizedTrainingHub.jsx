@@ -400,7 +400,7 @@ Create a personalized 4-week learning path with:
               <TabsContent value="micro" className="space-y-4">
                 {learningPath.custom_micro_lessons?.map((lesson, idx) => (
                   <Card key={idx} className="border-2 border-navy-200">
-                    <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
+                    <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
                       <CardTitle className="text-base">{lesson.title}</CardTitle>
                       <Badge className="w-fit">{lesson.skill_area}</Badge>
                     </CardHeader>

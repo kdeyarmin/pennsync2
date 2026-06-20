@@ -145,7 +145,7 @@ export default function MedicareGuidelinesLibrary() {
       billing_reimbursement: "bg-green-100 text-green-800",
       clinical_documentation: "bg-blue-100 text-blue-800",
       home_health_regulations: "bg-indigo-100 text-indigo-800",
-      hospice_regulations: "bg-pink-100 text-pink-800",
+      hospice_regulations: "bg-gold-100 text-gold-800",
       quality_measures: "bg-yellow-100 text-yellow-800",
       compliance_audit: "bg-orange-100 text-orange-800",
       pdgm: "bg-teal-100 text-teal-800",

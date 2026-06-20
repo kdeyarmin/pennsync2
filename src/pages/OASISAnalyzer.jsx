@@ -197,7 +197,7 @@ function OASISAnalyticsDashboard({ savedOASISUploads }) {
                   labelLine={false}
                   label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {demographicsData.gender.map((entry, index) => (
@@ -269,7 +269,7 @@ function OASISAnalyticsDashboard({ savedOASISUploads }) {
                 <YAxis label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="ambulation" stroke="#3b82f6" name="Ambulation" strokeWidth={2} />
+                <Line type="monotone" dataKey="ambulation" stroke="#3557b0" name="Ambulation" strokeWidth={2} />
                 <Line type="monotone" dataKey="transferring" stroke="#10b981" name="Transferring" strokeWidth={2} />
                 <Line type="monotone" dataKey="bathing" stroke="#f59e0b" name="Bathing" strokeWidth={2} />
               </LineChart>

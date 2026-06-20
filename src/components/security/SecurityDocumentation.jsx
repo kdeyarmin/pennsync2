@@ -160,12 +160,12 @@ export default function SecurityDocumentation() {
           {/* AI Security */}
           <div>
             <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-              <Database className="w-5 h-5 text-pink-600" />
+              <Database className="w-5 h-5 text-gold-600" />
               AI Integration Security
-              <Badge className="bg-pink-500">Active</Badge>
+              <Badge className="bg-gold-500">Active</Badge>
             </h3>
-            <Alert className="bg-pink-50 border-pink-200">
-              <AlertDescription className="text-pink-900">
+            <Alert className="bg-gold-50 border-gold-200">
+              <AlertDescription className="text-gold-900">
                 <p className="font-semibold mb-2">✓ Secure AI Processing</p>
                 <p className="mb-2">AI-powered features include security controls:</p>
                 <ul className="list-disc ml-5 space-y-1">
@@ -184,7 +184,7 @@ export default function SecurityDocumentation() {
               <Shield className="w-5 h-5 text-red-600" />
               HIPAA Compliance Status
             </h3>
-            <Alert className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200">
+            <Alert className="bg-gradient-to-r from-red-50 to-gold-50 border-red-200">
               <AlertDescription className="text-red-900">
                 <p className="font-semibold mb-3">Penn Sync HIPAA Security Rule Compliance:</p>
                 <div className="grid grid-cols-2 gap-2">

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 const FIELD_TYPES = [
   { value: "text", label: "Text Field", color: "bg-blue-100" },
   { value: "signature", label: "Signature", color: "bg-navy-100" },
-  { value: "initials", label: "Initials", color: "bg-pink-100" },
+  { value: "initials", label: "Initials", color: "bg-gold-100" },
   { value: "date", label: "Date", color: "bg-green-100" },
   { value: "checkbox", label: "Checkbox", color: "bg-yellow-100" },
   { value: "table", label: "Dynamic Table", color: "bg-orange-100" },
@@ -23,7 +23,7 @@ const TEXT_FORMATTING_OPTIONS = [
 ];
 
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px"];
-const COLORS = ["#000000", "#333333", "#666666", "#1f2937", "#dc2626", "#2563eb"];
+const COLORS = ["#000000", "#333333", "#666666", "#1f2937", "#dc2626", "#264491"];
 
 export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
   const canvasRef = useRef(null);

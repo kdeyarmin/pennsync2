@@ -3,7 +3,7 @@ import { GripVertical, X, CheckCircle2, Info, Link } from "lucide-react";
 import { getCategoryForItem } from "./InterventionLibrary";
 
 const GOALS = [
-  { id: "goal-1", label: "Wound Healing", color: "bg-rose-100 border-rose-300 text-rose-700" },
+  { id: "goal-1", label: "Wound Healing", color: "bg-red-100 border-red-300 text-red-700" },
   { id: "goal-2", label: "Medication Adherence", color: "bg-blue-100 border-blue-300 text-blue-700" },
   { id: "goal-3", label: "Fall Prevention", color: "bg-amber-100 border-amber-300 text-amber-700" },
   { id: "goal-4", label: "Cardiovascular Stability", color: "bg-red-100 border-red-300 text-red-700" },

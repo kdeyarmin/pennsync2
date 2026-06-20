@@ -184,7 +184,7 @@ const categoryColors = {
   functional: "bg-blue-100 text-blue-800",
   pain: "bg-red-100 text-red-800",
   neurological: "bg-indigo-100 text-indigo-800",
-  cardiac: "bg-rose-100 text-rose-800",
+  cardiac: "bg-red-100 text-red-800",
   diabetes: "bg-emerald-100 text-emerald-800",
   medication: "bg-navy-100 text-navy-800",
   respiratory: "bg-navy-100 text-navy-800",

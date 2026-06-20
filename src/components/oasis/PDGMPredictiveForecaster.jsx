@@ -366,7 +366,7 @@ Return JSON:
 
   return (
     <Card className="border-2 border-navy-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-pink-50">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-gold-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-navy-600" />
@@ -807,7 +807,7 @@ Return JSON:
                     <Tooltip formatter={(value) => formatCurrency(value)} />
                     <Legend wrapperStyle={{ fontSize: '10px' }} />
                     <Bar dataKey="Conservative" fill="#6b7280" />
-                    <Bar dataKey="Realistic" fill="#3b82f6" />
+                    <Bar dataKey="Realistic" fill="#3557b0" />
                     <Bar dataKey="Optimistic" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>

@@ -152,9 +152,9 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
       id: 'pressure_injury',
       name: 'New Pressure Injury',
       icon: Droplet,
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-50',
-      borderColor: 'border-pink-300',
+      color: 'text-gold-600',
+      bgColor: 'bg-gold-50',
+      borderColor: 'border-gold-300',
       severity: 'medium',
       fields: [
         { name: 'location', label: 'Location', type: 'text', placeholder: 'e.g., sacrum, heel' },

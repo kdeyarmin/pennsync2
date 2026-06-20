@@ -747,8 +747,8 @@ Discharging Nurse: [Name], RN`
       name: "Hospice Comfort Assessment",
       category: "Hospice Care",
       icon: HeartPulse,
-      color: "text-pink-600",
-      bgColor: "bg-pink-50",
+      color: "text-gold-600",
+      bgColor: "bg-gold-50",
       template: `**HOSPICE COMFORT ASSESSMENT**
 
 **PHYSICAL COMFORT:**

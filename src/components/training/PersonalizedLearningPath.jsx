@@ -90,7 +90,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>

@@ -12,13 +12,13 @@ export const OASIS_GUIDANCE = {
         title: "Chronic Heart Failure",
         description: "Patient with NYHA Class IV heart failure, frequent hospitalizations, but cardiologist has not documented terminal prognosis.",
         recommendedAnswer: "0 — No (unless physician specifically documents <12 months)",
-        color: "#3b82f6"
+        color: "#3557b0"
       },
       {
         title: "End-Stage COPD",
         description: "Patient on continuous oxygen, minimal activity tolerance, pulmonologist has documented 'end-stage' but no specific timeframe given.",
         recommendedAnswer: "0 — No (requires specific prognosis documentation)",
-        color: "#3b82f6"
+        color: "#3557b0"
       }
     ],
     howToAnswer: [
@@ -53,19 +53,19 @@ export const OASIS_GUIDANCE = {
         title: "Post-Surgical Hip Replacement",
         description: "Patient admitted after total hip replacement. Also has diabetes and hypertension managed with medications.",
         recommendedAnswer: "6 — Orthopedic (Hip/Knee) as this is the reason for admission",
-        color: "#6366f1"
+        color: "#264491"
       },
       {
         title: "CHF Exacerbation with Comorbidities",
         description: "Patient admitted due to acute CHF exacerbation requiring IV diuretics. Has history of COPD and diabetes.",
         recommendedAnswer: "2 — Heart Failure / CHF as primary reason for admission",
-        color: "#6366f1"
+        color: "#264491"
       },
       {
         title: "Diabetic Foot Ulcer",
         description: "Patient with poorly controlled diabetes admitted primarily for wound care of stage 3 diabetic foot ulcer.",
         recommendedAnswer: "5 — Wound / Pressure Ulcer (ulcer is primary focus of care)",
-        color: "#6366f1"
+        color: "#264491"
       }
     ],
     howToAnswer: [

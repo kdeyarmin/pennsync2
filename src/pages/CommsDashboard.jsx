@@ -175,7 +175,7 @@ export default function CommsDashboard() {
                   <YAxis allowDecimals={false} style={{ fontSize: "12px" }} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="SMS" fill="#3b82f6" />
+                  <Bar dataKey="SMS" fill="#3557b0" />
                   <Bar dataKey="Calls" fill="#22c55e" />
                   <Bar dataKey="Faxes" fill="#8b5cf6" />
                 </BarChart>

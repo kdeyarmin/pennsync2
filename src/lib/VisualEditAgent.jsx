@@ -29,7 +29,7 @@ export default function VisualEditAgent() {
 
 		// Use different styles for hover vs selected
 		if (isSelected) {
-			overlay.style.border = '2px solid #2563EB';
+			overlay.style.border = '2px solid #264491';
 		} else {
 			overlay.style.border = '2px solid #95a5fc';
 			overlay.style.backgroundColor = 'rgba(99, 102, 241, 0.05)';

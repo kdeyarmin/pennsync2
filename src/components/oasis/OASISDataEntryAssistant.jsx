@@ -272,7 +272,7 @@ Return structured JSON.`,
   };
 
   return (
-    <Card className="border-2 border-navy-200 bg-gradient-to-r from-navy-50 to-pink-50">
+    <Card className="border-2 border-navy-200 bg-gradient-to-r from-navy-50 to-gold-50">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-navy-600" />

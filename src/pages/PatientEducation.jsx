@@ -148,7 +148,7 @@ export default function PatientEducation() {
               diagnosis={selectedPatient?.primary_diagnosis}
             />
             <div className="space-y-4">
-              <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-navy-200">
+              <Card className="bg-gradient-to-br from-navy-50 to-gold-50 border-navy-200">
                 <CardContent className="p-4">
                   <h3 className="font-bold text-navy-900 mb-2">💡 How to Use</h3>
                   <ul className="text-sm text-navy-800 space-y-2">

@@ -309,7 +309,7 @@ Provide:
                   <YAxis yAxisId="right" orientation="right" />
                   <Tooltip />
                   <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="bp" stroke="#3b82f6" name="Blood Pressure" />
+                  <Line yAxisId="left" type="monotone" dataKey="bp" stroke="#3557b0" name="Blood Pressure" />
                   <Line yAxisId="right" type="monotone" dataKey="o2" stroke="#10b981" name="O2 Saturation" />
                 </LineChart>
               </ResponsiveContainer>

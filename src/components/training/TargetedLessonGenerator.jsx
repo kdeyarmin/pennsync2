@@ -499,7 +499,7 @@ Provide constructive feedback:`,
 
   return (
     <Card className="border-2 border-navy-200">
-      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">{module.title}</CardTitle>
           <Badge variant="outline">

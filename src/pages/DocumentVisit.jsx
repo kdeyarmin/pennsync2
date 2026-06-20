@@ -1622,11 +1622,11 @@ Generate the complete clinical narrative based on the audio and context:`;
                 </AlertDescription>
               </Alert>
 
-              <Card>
+              <Card className="border-l-4 border-l-navy-500">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
-                    Step 1: Visit Times
+                  <CardTitle className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-600 text-sm font-bold text-white">1</span>
+                    <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-navy-600" /> Visit Times</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1653,9 +1653,12 @@ Generate the complete clinical narrative based on the audio and context:`;
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-4 border-l-navy-500">
                 <CardHeader>
-                  <CardTitle>Step 2: Enter Vital Signs</CardTitle>
+                  <CardTitle className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-600 text-sm font-bold text-white">2</span>
+                    Enter Vital Signs
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <VitalSignsForm 
@@ -1679,9 +1682,12 @@ Generate the complete clinical narrative based on the audio and context:`;
                 />
               )}
 
-              <Card>
+              <Card className="border-l-4 border-l-navy-500">
                 <CardHeader>
-                  <CardTitle>Step 3: Generate Smart Template</CardTitle>
+                  <CardTitle className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-600 text-sm font-bold text-white">3</span>
+                    Generate Smart Template
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <TemplateGenerator
@@ -1745,7 +1751,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Alert className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+                  <Alert className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
                     <Sparkles className="w-4 h-4 text-navy-600" />
                     <AlertDescription className="text-navy-900">
                       <strong>🎤 Global Voice Commands are now active!</strong>

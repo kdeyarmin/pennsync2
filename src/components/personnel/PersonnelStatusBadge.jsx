@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 const statusClasses = {
   pending_approval: "bg-amber-100 text-amber-800",
   approved: "bg-emerald-100 text-emerald-800",
-  rejected: "bg-rose-100 text-rose-800",
+  rejected: "bg-red-100 text-red-800",
   expired: "bg-red-100 text-red-800",
 };
 

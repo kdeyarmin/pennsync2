@@ -220,7 +220,7 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
       imaging: "bg-navy-100 text-navy-800",
       consent_forms: "bg-green-100 text-green-800",
       insurance: "bg-yellow-100 text-yellow-800",
-      referral: "bg-pink-100 text-pink-800",
+      referral: "bg-gold-100 text-gold-800",
       progress_notes: "bg-indigo-100 text-indigo-800",
       discharge_summary: "bg-orange-100 text-orange-800",
       medication_list: "bg-teal-100 text-teal-800",

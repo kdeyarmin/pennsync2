@@ -613,7 +613,7 @@ Return JSON:
                 </CardContent>
               </Card>
 
-              <div className="p-6 bg-gradient-to-r from-navy-100 to-pink-100 rounded-lg text-center">
+              <div className="p-6 bg-gradient-to-r from-navy-100 to-gold-100 rounded-lg text-center">
                 <Award className="w-12 h-12 text-navy-600 mx-auto mb-2" />
                 <h4 className="font-semibold text-lg text-slate-900 mb-1">Module Complete!</h4>
                 <p className="text-slate-600 mb-4">Great job completing this micro-learning module.</p>

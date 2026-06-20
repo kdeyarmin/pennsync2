@@ -13,6 +13,10 @@ const Badge = React.forwardRef((props, ref) => {
     destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
     outline: "text-slate-900 border border-slate-300 hover:bg-slate-50",
     gold: "bg-gold-100 text-gold-700 border border-gold-300 hover:bg-gold-200",
+    // Soft, professional status chips (semantic, consistent across the app).
+    success: "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200",
+    warning: "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200",
+    info: "bg-navy-100 text-navy-800 border border-navy-200 hover:bg-navy-200",
   }
   
   return (

@@ -170,8 +170,8 @@ const REGULATORY_CATEGORIES = [
     id: "hospice_specific",
     name: "Hospice-Specific Requirements",
     icon: Heart,
-    color: "bg-pink-100 text-pink-800 border-pink-200",
-    iconColor: "text-pink-600",
+    color: "bg-gold-100 text-gold-800 border-gold-200",
+    iconColor: "text-gold-600",
     templates: [
       {
         name: "Hospice Philosophy, Levels of Care & Eligibility",
@@ -386,8 +386,8 @@ const REGULATORY_CATEGORIES = [
     id: "pa_child_abuse",
     name: "PA Child Abuse Recognition (Act 31)",
     icon: Baby,
-    color: "bg-rose-100 text-rose-800 border-rose-200",
-    iconColor: "text-rose-600",
+    color: "bg-red-100 text-red-800 border-red-200",
+    iconColor: "text-red-600",
     templates: [
       {
         name: "PA Act 31 — Child Abuse Recognition & Reporting",
@@ -616,7 +616,7 @@ export default function AnnualEducationTemplateLibrary({ onUseTemplate }) {
               >Home Health</button>
               <button
                 onClick={() => setBusLineFilter("hospice")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${businessLineFilter === "hospice" ? "bg-pink-600 text-white border-pink-600" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${businessLineFilter === "hospice" ? "bg-gold-600 text-white border-gold-600" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
               >Hospice</button>
             </div>
           </div>

@@ -383,7 +383,7 @@ Return JSON format:
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
         <CardHeader>
           <div className="flex items-center justify-between mb-2">
             <CardTitle className="flex items-center gap-2">

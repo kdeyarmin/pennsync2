@@ -1003,7 +1003,7 @@ export default function LearningCenter() {
                           <Badge className="bg-navy-100 text-navy-700 text-xs">In-Service</Badge>
                         )}
                         {isRequiredCourse(course) && (
-                          <Badge className="bg-rose-100 text-rose-700 text-xs">Required</Badge>
+                          <Badge className="bg-red-100 text-red-700 text-xs">Required</Badge>
                         )}
                       </div>
                     </div>

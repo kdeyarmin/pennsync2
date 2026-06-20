@@ -147,7 +147,7 @@ For each opportunity, calculate:
       comorbidity: 'bg-green-100 text-green-800 border-green-300',
       clinical: 'bg-navy-100 text-navy-800 border-navy-300',
       episode_timing: 'bg-orange-100 text-orange-800 border-orange-300',
-      therapy: 'bg-pink-100 text-pink-800 border-pink-300'
+      therapy: 'bg-gold-100 text-gold-800 border-gold-300'
     };
     return colors[category] || 'bg-slate-100 text-slate-800 border-slate-300';
   };

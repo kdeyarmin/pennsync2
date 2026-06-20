@@ -49,7 +49,7 @@ export default function OASISComplianceReview() {
       {/* Compliance Concerns */}
       {analysisResults.compliance_concerns && analysisResults.compliance_concerns.length > 0 && (
         <Card className="border-2 border-red-200">
-          <CardHeader className="bg-gradient-to-r from-red-50 to-pink-50">
+          <CardHeader className="bg-gradient-to-r from-red-50 to-gold-50">
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-600" />
               Compliance Concerns ({analysisResults.compliance_concerns.length})

@@ -79,7 +79,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
 
   return (
     <Card className={compact ? '' : 'border-navy-200'}>
-      <CardHeader className={compact ? 'p-4' : 'bg-gradient-to-r from-navy-50 to-pink-50'}>
+      <CardHeader className={compact ? 'p-4' : 'bg-gradient-to-r from-navy-50 to-gold-50'}>
         <CardTitle className={`flex items-center justify-between ${compact ? 'text-base' : ''}`}>
           <span className="flex items-center gap-2">
             <Activity className={compact ? 'w-4 h-4' : 'w-5 h-5'} />

@@ -31,7 +31,7 @@ import {
   Pie
 } from "recharts";
 
-const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
+const COLORS = ['#3557b0', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#0d9488', '#14b8a6'];
 
 export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
   const [segmentBy, setSegmentBy] = useState("clinical_group");
@@ -137,7 +137,7 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
                 <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                 <Tooltip formatter={(value) => formatCurrency(value)} />
                 <Legend />
-                <Bar dataKey="predicted_revenue" name="Predicted" fill="#6366f1" />
+                <Bar dataKey="predicted_revenue" name="Predicted" fill="#264491" />
                 <Bar dataKey="actual_revenue" name="Actual" fill="#22c55e" />
               </BarChart>
             </ResponsiveContainer>

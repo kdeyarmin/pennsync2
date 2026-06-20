@@ -155,7 +155,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
 
   if (isLoading) {
     return (
-      <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-gold-50">
         <CardContent className="p-6 text-center">
           <Loader2 className="w-8 h-8 text-navy-600 mx-auto mb-3 animate-spin" />
           <p className="text-sm font-medium text-navy-900">Generating AI Summary...</p>
@@ -178,7 +178,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
   }
 
   return (
-    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-gold-50">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">

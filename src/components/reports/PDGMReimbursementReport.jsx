@@ -31,7 +31,7 @@ export default function PDGMReimbursementReport({ dateRange }) {
   const totalReimbursement = caseMixData.reduce((sum, item) => sum + (item.count * item.avgReimbursement), 0);
   const avgReimbursement = filteredOASIS.length > 0 ? (totalReimbursement / filteredOASIS.length).toFixed(0) : 0;
 
-  const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  const COLORS = ['#8b5cf6', '#3557b0', '#10b981', '#f59e0b', '#ef4444'];
 
   const handleExport = () => {
     exportToPDF({
@@ -102,7 +102,7 @@ export default function PDGMReimbursementReport({ dateRange }) {
                   labelLine={false}
                   label={entry => `${entry.group}: ${entry.count}`}
                   outerRadius={100}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="count"
                 >
                   {caseMixData.map((entry, index) => (

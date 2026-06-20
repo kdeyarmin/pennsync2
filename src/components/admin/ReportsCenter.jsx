@@ -1042,7 +1042,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="visitCount" fill="#3b82f6" name="Total Visits" />
+                      <Bar dataKey="visitCount" fill="#3557b0" name="Total Visits" />
                       <Bar dataKey="completedVisits" fill="#10b981" name="Completed" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1100,7 +1100,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="completionRate" fill="#3b82f6" name="Completion Rate %" />
+                      <Bar dataKey="completionRate" fill="#3557b0" name="Completion Rate %" />
                       <Bar dataKey="docQuality" fill="#10b981" name="Doc Quality %" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1181,7 +1181,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                       <p className="text-3xl font-bold text-blue-600">${Math.round(reportPreview.costSavings).toLocaleString()}</p>
                     </CardContent>
                   </Card>
-                  <Card className="bg-gradient-to-br from-navy-50 to-pink-50">
+                  <Card className="bg-gradient-to-br from-navy-50 to-gold-50">
                     <CardContent className="p-6">
                       <p className="text-sm text-slate-600 mb-1">ROI</p>
                       <p className="text-3xl font-bold text-navy-600">{reportPreview.roi}%</p>
@@ -1198,7 +1198,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="count" fill="#3b82f6" name="Visit Count" />
+                      <Bar dataKey="count" fill="#3557b0" name="Visit Count" />
                       <Bar dataKey="revenue" fill="#10b981" name="Revenue ($)" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1217,7 +1217,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="visits" stroke="#3b82f6" strokeWidth={2} name="Total Visits" />
+                      <Line type="monotone" dataKey="visits" stroke="#3557b0" strokeWidth={2} name="Total Visits" />
                       <Line type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} name="Completed" />
                       <Line type="monotone" dataKey="incidents" stroke="#ef4444" strokeWidth={2} name="Incidents" />
                     </RechartsLineChart>

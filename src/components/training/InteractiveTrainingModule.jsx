@@ -184,7 +184,7 @@ export default function InteractiveTrainingModule({ trainingData, onComplete, on
         {/* Scenario */}
         {currentStep === 'scenario' && (
           <Card>
-            <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
+            <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
               <CardTitle>Clinical Scenario</CardTitle>
             </CardHeader>
             <CardContent className="p-6">

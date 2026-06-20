@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { format, subMonths, isWithinInterval, parseISO } from "date-fns";
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#10b981', '#3557b0', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function PDGMAnalyticsDashboard() {
   const [dateRange, setDateRange] = useState({
@@ -419,7 +419,7 @@ export default function PDGMAnalyticsDashboard() {
               <Line 
                 type="monotone" 
                 dataKey="accuracy" 
-                stroke="#3b82f6" 
+                stroke="#3557b0" 
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 name="Accuracy"
@@ -506,7 +506,7 @@ export default function PDGMAnalyticsDashboard() {
                     labelLine={false}
                     label={({ name, percentage }) => percentage > 0 ? `${name}: ${percentage}%` : ''}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill="#264491"
                     dataKey="value"
                   >
                     {optimizationAdoption.statusData.map((entry, index) => (

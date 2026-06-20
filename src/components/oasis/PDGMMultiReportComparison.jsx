@@ -514,7 +514,7 @@ export default function PDGMMultiReportComparison({
                   <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
                   <PolarRadiusAxis angle={90} domain={[0.8, 1.4]} tick={{ fontSize: 9 }} />
                   <Radar name={comparisonResult.labelA} dataKey="A" stroke="#9ca3af" fill="#9ca3af" fillOpacity={0.3} />
-                  <Radar name={comparisonResult.labelB} dataKey="B" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
+                  <Radar name={comparisonResult.labelB} dataKey="B" stroke="#264491" fill="#264491" fillOpacity={0.3} />
                   <Tooltip formatter={(value) => value.toFixed(4)} />
                   <Legend />
                 </RadarChart>
@@ -590,7 +590,7 @@ export default function PDGMMultiReportComparison({
                         <Tooltip />
                         <Legend />
                         <Bar dataKey={comparisonResult.labelA} fill="#9ca3af" />
-                        <Bar dataKey={comparisonResult.labelB} fill="#6366f1" />
+                        <Bar dataKey={comparisonResult.labelB} fill="#264491" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

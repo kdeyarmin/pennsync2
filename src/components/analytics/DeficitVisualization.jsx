@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { AlertTriangle, TrendingDown, Target } from "lucide-react";
 
-const _COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'];
+const _COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3557b0', '#8b5cf6'];
 
 export default function DeficitVisualization({ analysis, compact = false }) {
   if (!analysis || analysis.totalSuggestions === 0) {
@@ -91,7 +91,7 @@ export default function DeficitVisualization({ analysis, compact = false }) {
                 labelLine={false}
                 label={({ name, value }) => `${name}: ${value}`}
                 outerRadius={80}
-                fill="#8884d8"
+                fill="#264491"
                 dataKey="value"
               >
                 {severityData.map((entry, index) => (
@@ -116,7 +116,7 @@ export default function DeficitVisualization({ analysis, compact = false }) {
               <XAxis type="number" fontSize={12} />
               <YAxis dataKey="name" type="category" width={100} fontSize={12} />
               <Tooltip />
-              <Bar dataKey="value" fill="#3b82f6" radius={[0, 8, 8, 0]} />
+              <Bar dataKey="value" fill="#3557b0" radius={[0, 8, 8, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

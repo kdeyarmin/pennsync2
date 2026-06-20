@@ -157,7 +157,7 @@ export default function UserActivityLog() {
       'care_plan_update': 'bg-lime-100 text-lime-800',
       'task_create': 'bg-amber-100 text-amber-800',
       'task_complete': 'bg-green-100 text-green-800',
-      'incident_report': 'bg-rose-100 text-rose-800',
+      'incident_report': 'bg-red-100 text-red-800',
       'training_complete': 'bg-navy-100 text-navy-800',
       'note_enhanced': 'bg-indigo-100 text-indigo-800',
       'note_compliance_check': 'bg-blue-100 text-blue-800',
@@ -307,7 +307,7 @@ export default function UserActivityLog() {
         </Card>
 
         {/* Login Activity Stats */}
-        <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+        <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <LogIn className="w-5 h-5 text-navy-600" />

@@ -50,7 +50,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+const COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#0d9488'];
 
 export default function NursePerformanceDashboard() {
   const [selectedNurse, setSelectedNurse] = useState('');
@@ -421,11 +421,11 @@ export default function NursePerformanceDashboard() {
                           labelLine={false}
                           label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           outerRadius={80}
-                          fill="#8884d8"
+                          fill="#264491"
                           dataKey="value"
                         >
                           <Cell fill="#10B981" />
-                          <Cell fill="#3B82F6" />
+                          <Cell fill="#3557b0" />
                         </Pie>
                         <Tooltip />
                       </PieChart>
@@ -788,7 +788,7 @@ export default function NursePerformanceDashboard() {
                         <XAxis dataKey="week" />
                         <YAxis domain={[0, 100]} />
                         <Tooltip />
-                        <Line type="monotone" dataKey="score" stroke="#3B82F6" strokeWidth={2} />
+                        <Line type="monotone" dataKey="score" stroke="#3557b0" strokeWidth={2} />
                       </LineChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -846,7 +846,7 @@ export default function NursePerformanceDashboard() {
                           cx="50%"
                           cy="40%"
                           outerRadius={60}
-                          fill="#8884d8"
+                          fill="#264491"
                           dataKey="value"
                           label={({ percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
                         >

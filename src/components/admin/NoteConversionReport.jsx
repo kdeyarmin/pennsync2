@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { format, subDays } from "date-fns";
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+const COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#0d9488'];
 
 export default function NoteEnhancementReport() {
   const [timeRange, setTimeRange] = useState("7");
@@ -225,7 +225,7 @@ export default function NoteEnhancementReport() {
                   <XAxis dataKey="date" fontSize={12} />
                   <YAxis fontSize={12} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#3B82F6" name="Enhancements" />
+                  <Bar dataKey="count" fill="#3557b0" name="Enhancements" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -251,7 +251,7 @@ export default function NoteEnhancementReport() {
                     labelLine={true}
                     label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                     outerRadius={70}
-                    fill="#8884d8"
+                    fill="#264491"
                     dataKey="value"
                   >
                     {visitTypePieData.map((entry, index) => (

@@ -152,8 +152,19 @@ export default function Dashboard() {
     return (
       <div className="max-w-lg mx-auto pt-8 px-4">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Welcome to Penn Sync!</h1>
-          <p className="text-slate-500 mt-1">Let's set up your profile before we get started.</p>
+          <div className="mb-4 inline-flex items-center gap-2">
+            <img
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png"
+              alt="PennSync"
+              className="h-10 w-10 rounded-lg"
+            />
+            <span className="text-2xl font-bold tracking-tight text-navy-900">
+              Penn<span className="text-gold-600">Sync</span>
+            </span>
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">Welcome aboard</p>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900">Let’s set up your profile</h1>
+          <p className="text-slate-500 mt-1">Choose your care scope and we’ll tailor your dashboard.</p>
         </div>
         <CareScopeSelector currentUser={currentUser} onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ['currentUser'] });

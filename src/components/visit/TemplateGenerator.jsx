@@ -24,10 +24,10 @@ export default function TemplateGenerator({
   };
 
   return (
-    <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+    <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-navy-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 bg-gradient-to-br from-navy-500 to-gold-500 rounded-full flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
@@ -48,7 +48,7 @@ export default function TemplateGenerator({
               <Button
                 onClick={onTemplateGenerated}
                 disabled={isGenerating}
-                className="bg-gradient-to-r from-navy-600 to-pink-600 hover:from-navy-700 hover:to-pink-700"
+                className="bg-gradient-to-r from-navy-600 to-gold-600 hover:from-navy-700 hover:to-gold-700"
               >
                 {isGenerating ? (
                   <>

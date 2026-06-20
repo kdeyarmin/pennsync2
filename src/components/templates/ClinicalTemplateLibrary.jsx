@@ -106,7 +106,7 @@ const CONDITION_TEMPLATES = [
     name: 'Wound Care',
     icon: Scissors,
     description: 'Wound assessment and treatment',
-    color: 'bg-pink-500',
+    color: 'bg-gold-500',
     focusAreas: ['wound_measurements', 'wound_bed', 'drainage', 'periwound', 'dressing_change', 'infection_signs']
   },
   {
@@ -138,7 +138,7 @@ const CONDITION_TEMPLATES = [
     name: 'Hypertension',
     icon: Activity,
     description: 'Blood pressure management',
-    color: 'bg-rose-500',
+    color: 'bg-red-500',
     focusAreas: ['bp_monitoring', 'medication_compliance', 'diet_sodium', 'lifestyle_modifications', 'symptom_recognition']
   }
 ];

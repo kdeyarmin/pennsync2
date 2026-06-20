@@ -26,7 +26,7 @@ import {
   PolarRadiusAxis, Radar, Cell
 } from 'recharts';
 
-const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = ['#264491', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function EnhancedMultiReportComparison({ 
   savedReports = [], 

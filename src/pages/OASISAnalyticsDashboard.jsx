@@ -369,7 +369,7 @@ export default function OASISAnalyticsDashboard() {
                       formatter={(value) => `${value.toFixed(1)}%`}
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Area type="monotone" dataKey="overall" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} name="Overall" />
+                    <Area type="monotone" dataKey="overall" stroke="#3557b0" fill="#3557b0" fillOpacity={0.2} name="Overall" />
                     <Area type="monotone" dataKey="accuracy" stroke="#10b981" fill="#10b981" fillOpacity={0.2} name="Accuracy" />
                     <Area type="monotone" dataKey="compliance" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} name="Compliance" />
                   </AreaChart>
@@ -425,7 +425,7 @@ export default function OASISAnalyticsDashboard() {
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="#264491"
                       dataKey="value"
                     >
                       {chartData.typeDistribution.map((entry, index) => (

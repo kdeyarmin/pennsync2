@@ -69,7 +69,7 @@ export default function HealthTrendsChart({ visits, _patient }) {
             <Line 
               type="monotone" 
               dataKey="hr" 
-              stroke="#3b82f6" 
+              stroke="#3557b0" 
               name="Heart Rate"
               strokeWidth={2}
               dot={{ r: 4 }}

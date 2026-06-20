@@ -22,11 +22,11 @@ import {
 } from "lucide-react";
 
 const CATEGORY_CONFIG = {
-  'Homebound Status': { icon: Home, color: '#3b82f6' },
+  'Homebound Status': { icon: Home, color: '#3557b0' },
   'Skilled Need': { icon: Stethoscope, color: '#8b5cf6' },
   'Vital Signs': { icon: Activity, color: '#10b981' },
   'Assessment': { icon: ClipboardList, color: '#f59e0b' },
-  'Patient Response': { icon: MessageSquare, color: '#ec4899' },
+  'Patient Response': { icon: MessageSquare, color: '#0d9488' },
   'Medication': { icon: Pill, color: '#ef4444' },
   'Care Plan': { icon: Target, color: '#06b6d4' },
   'Functional Status': { icon: User, color: '#84cc16' },

@@ -235,7 +235,7 @@ export const exportToPDF = async (options = {}) => {
           [245, 158, 11],   // orange
           [239, 68, 68],    // red
           [139, 92, 246],   // purple
-          [236, 72, 153],   // pink
+          [220, 171, 53],   // gold
           [20, 184, 166],   // teal
           [249, 115, 22]    // orange-alt
         ];

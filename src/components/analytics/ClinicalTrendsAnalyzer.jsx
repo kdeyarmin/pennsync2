@@ -176,7 +176,7 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: '10px' }} />
                     <Line type="monotone" dataKey="BP_Systolic" stroke="#ef4444" strokeWidth={2} name="BP Sys" />
-                    <Line type="monotone" dataKey="Heart_Rate" stroke="#3b82f6" strokeWidth={2} name="HR" />
+                    <Line type="monotone" dataKey="Heart_Rate" stroke="#3557b0" strokeWidth={2} name="HR" />
                     <Line type="monotone" dataKey="O2_Sat" stroke="#10b981" strokeWidth={2} name="O2" />
                   </LineChart>
                 </ResponsiveContainer>
