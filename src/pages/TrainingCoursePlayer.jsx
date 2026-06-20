@@ -638,7 +638,7 @@ export default function TrainingCoursePlayer() {
       {step === "result" && result && (
         <div className="space-y-4">
           {/* Pass/Fail hero */}
-          <Card className={`border-0 shadow-lg ${result.passed ? "bg-gradient-to-r from-emerald-600 to-green-600" : "bg-gradient-to-r from-red-700 to-red-700"} text-white`}>
+          <Card className={`border-0 shadow-lg ${result.passed ? "bg-gradient-to-r from-emerald-600 to-emerald-700" : "bg-gradient-to-r from-red-700 to-red-700"} text-white`}>
             <CardContent className="p-8 text-center space-y-3">
               {result.passed ? (
                 <CheckCircle2 className="w-16 h-16 mx-auto opacity-90" />

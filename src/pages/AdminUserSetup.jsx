@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -143,10 +144,7 @@ export default function AdminUserSetup() {
         </CardHeader>
         <CardContent>
           {allUsers.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              <Shield className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-              <p>No users yet. Start by inviting your team members above.</p>
-            </div>
+            <EmptyState icon={Shield} title="No users yet" description="Start by inviting your team members above." />
           ) : (
             <div className="space-y-3">
               {allUsers.map((user) => (

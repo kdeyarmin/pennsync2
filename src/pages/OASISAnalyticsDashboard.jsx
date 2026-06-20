@@ -4,6 +4,7 @@ import { CHART_COLORS_6 } from "@/constants/chartColors";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -495,42 +496,40 @@ export default function OASISAnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               {topOpportunities.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="text-left p-3 font-medium text-slate-700">Patient</th>
-                        <th className="text-left p-3 font-medium text-slate-700">Category</th>
-                        <th className="text-left p-3 font-medium text-slate-700">Opportunity</th>
-                        <th className="text-center p-3 font-medium text-slate-700">Impact</th>
-                        <th className="text-center p-3 font-medium text-slate-700">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {topOpportunities.map((opp, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50">
-                          <td className="p-3 text-slate-900">{opp.patient || 'Unknown'}</td>
-                          <td className="p-3">
-                            <Badge variant="outline">{opp.category}</Badge>
-                          </td>
-                          <td className="p-3 text-slate-700">{opp.opportunity}</td>
-                          <td className="p-3 text-center">
-                            <Badge className={
-                              opp.impact === 'high' ? 'bg-green-600 text-white' :
-                              opp.impact === 'medium' ? 'bg-yellow-500 text-white' :
-                              'bg-blue-500 text-white'
-                            }>
-                              {opp.impact}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-center text-slate-600">
-                            {format(new Date(opp.date), 'MM/dd/yy')}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Opportunity</TableHead>
+                      <TableHead className="text-center">Impact</TableHead>
+                      <TableHead className="text-center">Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {topOpportunities.map((opp, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="text-slate-900">{opp.patient || 'Unknown'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{opp.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-700">{opp.opportunity}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={
+                            opp.impact === 'high' ? 'success' :
+                            opp.impact === 'medium' ? 'warning' :
+                            'info'
+                          }>
+                            {opp.impact}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center text-slate-600">
+                          {format(new Date(opp.date), 'MM/dd/yy')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               ) : (
                 <p className="text-center text-slate-500 py-8">No optimization opportunities identified yet</p>
               )}

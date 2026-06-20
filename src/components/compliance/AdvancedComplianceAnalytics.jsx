@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
@@ -544,58 +545,56 @@ export default function AdvancedComplianceAnalytics({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-3">Rank</th>
-                      <th className="text-left py-2 px-3">Nurse</th>
-                      <th className="text-center py-2 px-3">Audits</th>
-                      <th className="text-center py-2 px-3">Avg Score</th>
-                      <th className="text-center py-2 px-3">Pass Rate</th>
-                      <th className="text-center py-2 px-3">Avg Issues</th>
-                      <th className="text-center py-2 px-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {nursePerformance.map((nurse, idx) => (
-                      <tr key={nurse.email} className="border-b hover:bg-slate-50">
-                        <td className="py-2 px-3">
-                          {idx < 3 ? (
-                            <Badge className={
-                              idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                              idx === 1 ? 'bg-slate-300 text-slate-800' :
-                              'bg-orange-300 text-orange-900'
-                            }>
-                              #{idx + 1}
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-500">#{idx + 1}</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-3 font-medium">{nurse.name}</td>
-                        <td className="py-2 px-3 text-center">{nurse.totalAudits}</td>
-                        <td className="py-2 px-3 text-center">
-                          <span className={nurse.avgScore >= 85 ? 'text-green-600 font-semibold' : nurse.avgScore >= 70 ? 'text-yellow-600' : 'text-red-600'}>
-                            {nurse.avgScore}%
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-center">{nurse.passRate}%</td>
-                        <td className="py-2 px-3 text-center">{nurse.avgIssues}</td>
-                        <td className="py-2 px-3 text-center">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rank</TableHead>
+                    <TableHead>Nurse</TableHead>
+                    <TableHead className="text-center">Audits</TableHead>
+                    <TableHead className="text-center">Avg Score</TableHead>
+                    <TableHead className="text-center">Pass Rate</TableHead>
+                    <TableHead className="text-center">Avg Issues</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {nursePerformance.map((nurse, idx) => (
+                    <TableRow key={nurse.email}>
+                      <TableCell>
+                        {idx < 3 ? (
                           <Badge className={
-                            nurse.avgScore >= 85 ? 'bg-green-100 text-green-800' :
-                            nurse.avgScore >= 70 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
+                            idx === 0 ? 'bg-gold-100 text-gold-800 border border-gold-300' :
+                            idx === 1 ? 'bg-slate-200 text-slate-800' :
+                            'bg-amber-100 text-amber-800 border border-amber-200'
                           }>
-                            {nurse.avgScore >= 85 ? 'Excellent' : nurse.avgScore >= 70 ? 'Good' : 'Needs Improvement'}
+                            #{idx + 1}
                           </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        ) : (
+                          <span className="text-slate-500">#{idx + 1}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{nurse.name}</TableCell>
+                      <TableCell className="text-center">{nurse.totalAudits}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={nurse.avgScore >= 85 ? 'text-emerald-600 font-semibold' : nurse.avgScore >= 70 ? 'text-amber-600' : 'text-red-600'}>
+                          {nurse.avgScore}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">{nurse.passRate}%</TableCell>
+                      <TableCell className="text-center">{nurse.avgIssues}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant={
+                          nurse.avgScore >= 85 ? 'success' :
+                          nurse.avgScore >= 70 ? 'warning' :
+                          'destructive'
+                        }>
+                          {nurse.avgScore >= 85 ? 'Excellent' : nurse.avgScore >= 70 ? 'Good' : 'Needs Improvement'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

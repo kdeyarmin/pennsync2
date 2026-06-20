@@ -195,7 +195,7 @@ export default function TrainingModuleViewer({ module }) {
     lesson: "bg-blue-100 text-blue-800",
     video: "bg-navy-100 text-navy-800",
     policy: "bg-orange-100 text-orange-800",
-    checklist: "bg-teal-100 text-teal-800",
+    checklist: "bg-navy-100 text-navy-800",
     attestation: "bg-gold-100 text-gold-800",
     simulation: "bg-indigo-100 text-indigo-800",
   };
@@ -341,11 +341,11 @@ export default function TrainingModuleViewer({ module }) {
 
         {/* Clinical Pearl */}
         {content.clinical_pearl && (
-          <div className="rounded-xl bg-gradient-to-r from-teal-50 to-navy-50 border border-teal-200 p-4 flex gap-3">
-            <Stethoscope className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+          <div className="rounded-xl bg-gradient-to-r from-navy-50 to-navy-50 border border-navy-200 p-4 flex gap-3">
+            <Stethoscope className="w-5 h-5 text-navy-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-semibold text-teal-700 uppercase tracking-wide mb-1">Clinical Pearl</p>
-              <p className="text-teal-900 text-sm">{content.clinical_pearl}</p>
+              <p className="text-xs font-semibold text-navy-700 uppercase tracking-wide mb-1">Clinical Pearl</p>
+              <p className="text-navy-900 text-sm">{content.clinical_pearl}</p>
             </div>
           </div>
         )}

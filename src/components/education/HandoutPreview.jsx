@@ -56,7 +56,7 @@ export default function HandoutPreview({
               <h1 className="text-3xl font-bold text-center text-blue-700 mb-2">
                 {template.title}
               </h1>
-              <div className="h-1 w-32 bg-teal-500 mx-auto"></div>
+              <div className="h-1 w-32 bg-navy-500 mx-auto"></div>
             </div>
 
             {/* Patient Info */}
@@ -103,7 +103,7 @@ export default function HandoutPreview({
                   {/* Subsections */}
                   {section.subsections?.map((subsection, subIdx) => (
                     <div key={subIdx} className="ml-4 space-y-2">
-                      <h3 className="font-semibold text-teal-700 text-lg">• {subsection.subheading}</h3>
+                      <h3 className="font-semibold text-navy-700 text-lg">• {subsection.subheading}</h3>
                       {subsection.bullets && (
                         <ul className="ml-6 space-y-1">
                           {subsection.bullets.map((bullet, bulletIdx) => (

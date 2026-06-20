@@ -41,7 +41,8 @@ export default function OASISReview() {
   const { data: oasisRecords = [] } = useQuery({
     queryKey: ['oasisRecords'],
     queryFn: async () => {
-      const records = await base44.entities.OASISUpload.list();
+      // Routed through listOASISUploads so financial fields are stripped server-side for non-financial users.
+      const records = (await base44.functions.invoke('listOASISUploads', { limit: 200 }))?.data?.uploads || [];
       // Filter records that have AI-generated suggestions needing review
       return records.filter(r => r.extracted_data && Object.keys(r.extracted_data).some(
         key => r.extracted_data[key]?.source?.includes('ai_automation')

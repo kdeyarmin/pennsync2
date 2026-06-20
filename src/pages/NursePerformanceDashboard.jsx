@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -617,12 +618,7 @@ export default function NursePerformanceDashboard() {
               </div>
 
               {nurseGoals.length === 0 ? (
-                <Card>
-                  <CardContent className="p-12 text-center text-slate-500">
-                    <Target className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                    <p>No goals set yet. Create your first performance goal!</p>
-                  </CardContent>
-                </Card>
+                <EmptyState icon={Target} title="No goals set yet" description="Create your first performance goal to start tracking." />
               ) : (
                 <div className="grid md:grid-cols-2 gap-6">
                   {nurseGoals.map((goal) => {

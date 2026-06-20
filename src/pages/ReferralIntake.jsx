@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -50,7 +51,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
-import StatCard from "@/components/ui/stat-card";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -1122,8 +1122,8 @@ Actions available:
                         )}
                         {referral.requires_manual_review && (
                           <div className="flex flex-col gap-1 mt-1">
-                            <Badge className="bg-yellow-600 text-xs">
-                              ⚠️ Review Match
+                            <Badge variant="warning" className="text-xs">
+                              Review Match
                             </Badge>
                             {referral.match_confidence && (
                               <span className="text-xs text-yellow-700">

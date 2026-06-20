@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
+import StatCard from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -364,53 +366,10 @@ export default function UserActivityReport() {
 
         {/* Overall Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">Total Users</p>
-                  <p className="text-3xl font-bold text-blue-900 mt-1">{overallStats.total_users}</p>
-                </div>
-                <User className="w-12 h-12 text-blue-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Total Actions</p>
-                  <p className="text-3xl font-bold text-green-900 mt-1">{overallStats.total_actions}</p>
-                </div>
-                <MousePointer className="w-12 h-12 text-green-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-navy-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-navy-600 font-medium">Total Logins</p>
-                  <p className="text-3xl font-bold text-navy-900 mt-1">{overallStats.total_logins}</p>
-                </div>
-                <LogIn className="w-12 h-12 text-navy-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">Active (7 days)</p>
-                  <p className="text-3xl font-bold text-orange-900 mt-1">{overallStats.active_users}</p>
-                </div>
-                <Activity className="w-12 h-12 text-orange-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard label="Total Users" value={overallStats.total_users} icon={User} tone="navy" />
+          <StatCard label="Total Actions" value={overallStats.total_actions} icon={MousePointer} tone="emerald" />
+          <StatCard label="Total Logins" value={overallStats.total_logins} icon={LogIn} tone="slate" />
+          <StatCard label="Active (7 days)" value={overallStats.active_users} icon={Activity} tone="amber" />
         </div>
 
         {/* Filters */}
@@ -568,10 +527,7 @@ export default function UserActivityReport() {
                 ))}
 
                 {processedStats.length === 0 && (
-                  <div className="text-center py-12">
-                    <Activity className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500">No user activity found matching your criteria</p>
-                  </div>
+                  <EmptyState icon={Activity} title="No user activity found" description="No activity matches your current criteria." />
                 )}
               </div>
             </ScrollArea>

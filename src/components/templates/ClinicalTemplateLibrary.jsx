@@ -71,7 +71,7 @@ const VISIT_TYPE_TEMPLATES = [
     name: 'Supervisory Visit',
     icon: Eye,
     description: 'RN supervision of aide services',
-    color: 'bg-teal-500',
+    color: 'bg-navy-500',
     sections: ['aide_performance', 'care_plan_review', 'patient_satisfaction', 'competency_verification']
   }
 ];

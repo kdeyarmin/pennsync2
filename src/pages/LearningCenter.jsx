@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import EmptyState from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -867,13 +868,11 @@ export default function LearningCenter() {
         {/* Learning Plans Tab */}
         <TabsContent value="plans" className="space-y-3">
           {activePlans.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <LayoutDashboard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-slate-800">No learning plans assigned</h3>
-                <p className="text-slate-500 mt-1">Your manager or admin will assign learning plans as needed.</p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={LayoutDashboard}
+              title="No learning plans assigned"
+              description="Your manager or admin will assign learning plans as needed."
+            />
           ) : (
             activePlans.map(enrollment => {
               const isOverdue = enrollment.status === 'overdue' ||
@@ -970,17 +969,13 @@ export default function LearningCenter() {
           </div>
 
           {filteredCourses.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-slate-800">No courses found</h3>
-                <p className="text-slate-500 mt-1">
-                  {searchQuery || categoryFilter !== 'all'
-                    ? 'Try adjusting your search or filter.'
-                    : 'No published courses are available yet.'}
-                </p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={Search}
+              title="No courses found"
+              description={searchQuery || categoryFilter !== 'all'
+                ? 'Try adjusting your search or filter.'
+                : 'No published courses are available yet.'}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCourses.slice(0, catalogLimit).map(course => (
@@ -1094,13 +1089,11 @@ export default function LearningCenter() {
         {/* Competencies Tab */}
         <TabsContent value="competencies" className="space-y-3">
           {competencies.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-slate-800">No competencies assigned</h3>
-                <p className="text-slate-500 mt-1">Competencies for your role will appear here.</p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={CheckCircle2}
+              title="No competencies assigned"
+              description="Competencies for your role will appear here."
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {competencies.map(comp => (
@@ -1128,13 +1121,11 @@ export default function LearningCenter() {
         {/* Certificates Tab */}
         <TabsContent value="certificates" className="space-y-3">
           {certificates.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-slate-800">No certificates yet</h3>
-                <p className="text-slate-500 mt-1">Complete courses to earn certificates of completion.</p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={Award}
+              title="No certificates yet"
+              description="Complete courses to earn certificates of completion."
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {certificates.map(cert => {
@@ -1192,13 +1183,11 @@ export default function LearningCenter() {
         {/* Renewals Tab */}
         <TabsContent value="renewals" className="space-y-3">
           {renewals.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <CalendarClock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-slate-800">No upcoming renewals</h3>
-                <p className="text-slate-500 mt-1">Certificate expirations and training renewal dates will appear here.</p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={CalendarClock}
+              title="No upcoming renewals"
+              description="Certificate expirations and training renewal dates will appear here."
+            />
           ) : (
             <>
               <div className="flex justify-end">

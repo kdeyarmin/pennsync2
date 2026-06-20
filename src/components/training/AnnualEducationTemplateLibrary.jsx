@@ -116,8 +116,8 @@ const REGULATORY_CATEGORIES = [
     id: "patient_rights",
     name: "Patient Rights & Advance Directives",
     icon: Scale,
-    color: "bg-teal-100 text-teal-800 border-teal-200",
-    iconColor: "text-teal-600",
+    color: "bg-navy-100 text-navy-800 border-navy-200",
+    iconColor: "text-navy-600",
     templates: [
       {
         name: "Patient Rights, Responsibilities & Advance Directives",
@@ -449,8 +449,8 @@ const REGULATORY_CATEGORIES = [
     id: "body_mechanics",
     name: "Body Mechanics & Safe Patient Handling",
     icon: Users,
-    color: "bg-lime-100 text-lime-800 border-lime-200",
-    iconColor: "text-lime-600",
+    color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    iconColor: "text-emerald-600",
     templates: [
       {
         name: "Body Mechanics in Home Care and Hospice",

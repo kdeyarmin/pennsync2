@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -297,38 +299,36 @@ export default function AgencyAnalytics() {
                 <CardDescription>Individual nurse statistics and productivity</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Nurse</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Visits</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Completed</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Rate</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Time Saved</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {nurseStats.map((nurse) => (
-                        <tr key={nurse.email} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 text-sm font-medium text-slate-900">{nurse.full_name}</td>
-                          <td className="px-4 py-3 text-sm text-slate-600">{nurse.stats.totalVisits}</td>
-                          <td className="px-4 py-3 text-sm text-slate-600">{nurse.stats.completedVisits}</td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              nurse.stats.completionRate >= 80 ? 'bg-green-100 text-green-700' :
-                              nurse.stats.completionRate >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {nurse.stats.completionRate}%
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-600">{nurse.stats.timeSavedHours}h</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nurse</TableHead>
+                      <TableHead>Visits</TableHead>
+                      <TableHead>Completed</TableHead>
+                      <TableHead>Rate</TableHead>
+                      <TableHead>Time Saved</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {nurseStats.map((nurse) => (
+                      <TableRow key={nurse.email}>
+                        <TableCell className="font-medium text-slate-900">{nurse.full_name}</TableCell>
+                        <TableCell className="text-slate-600">{nurse.stats.totalVisits}</TableCell>
+                        <TableCell className="text-slate-600">{nurse.stats.completedVisits}</TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            nurse.stats.completionRate >= 80 ? 'success' :
+                            nurse.stats.completionRate >= 60 ? 'warning' :
+                            'destructive'
+                          }>
+                            {nurse.stats.completionRate}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-600">{nurse.stats.timeSavedHours}h</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>

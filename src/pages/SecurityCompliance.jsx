@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -275,60 +276,17 @@ export default function SecurityCompliance() {
         <TabsContent value="overview" className="space-y-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm mb-1">Compliance Score</p>
-                    <p className="text-4xl font-bold">{complianceScore}%</p>
-                  </div>
-                  <CheckCircle2 className="w-12 h-12 text-green-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm mb-1">Total Events</p>
-                    <p className="text-4xl font-bold">{securityLogs.length + userActivity.length}</p>
-                  </div>
-                  <Activity className="w-12 h-12 text-blue-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-navy-100 text-sm mb-1">PHI Access</p>
-                    <p className="text-4xl font-bold">{phiAccess}</p>
-                  </div>
-                  <Eye className="w-12 h-12 text-navy-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-red-100 text-sm mb-1">Critical Events</p>
-                    <p className="text-4xl font-bold">{criticalEvents}</p>
-                  </div>
-                  <AlertTriangle className="w-12 h-12 text-red-200" />
-                </div>
-              </CardContent>
-            </Card>
+            <StatCard label="Compliance Score" value={`${complianceScore}%`} icon={CheckCircle2} tone="emerald" />
+            <StatCard label="Total Events" value={securityLogs.length + userActivity.length} icon={Activity} tone="navy" />
+            <StatCard label="PHI Access" value={phiAccess} icon={Eye} tone="slate" />
+            <StatCard label="Critical Events" value={criticalEvents} icon={AlertTriangle} tone="red" />
           </div>
 
           {criticalEvents > 0 && (
-            <Alert className="bg-yellow-50 border-yellow-300">
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
-              <AlertDescription className="text-yellow-900">
-                <p className="font-semibold">⚠️ {criticalEvents} Critical Security Events Detected</p>
+            <Alert className="bg-amber-50 border-amber-300">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <AlertDescription className="text-amber-900">
+                <p className="font-semibold">{criticalEvents} Critical Security Events Detected</p>
                 <p className="text-sm">Review audit logs for failed access attempts or deletions.</p>
               </AlertDescription>
             </Alert>

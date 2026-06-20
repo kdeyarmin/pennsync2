@@ -12,6 +12,7 @@ import {
 } from "@/components/oasis/oasisAnalytics";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -54,6 +55,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
+import FinancialGate from "@/components/ui/FinancialGate";
 import EnhancedMultiReportComparison from "../components/oasis/EnhancedMultiReportComparison";
 import KeyTakeawaysSummary from "../components/oasis/KeyTakeawaysSummary";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
@@ -115,13 +117,11 @@ function OASISAnalyticsDashboard({ savedOASISUploads }) {
 
   if (savedOASISUploads.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-12 text-center">
-          <BarChart3 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">No Data Available</h3>
-          <p className="text-slate-600">Upload and analyze OASIS documents to see analytics and trends.</p>
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={BarChart3}
+        title="No data available"
+        description="Upload and analyze OASIS documents to see analytics and trends."
+      />
     );
   }
 
@@ -360,10 +360,12 @@ export default function OASISAnalyzer() {
   // Load patient historical data for AI validation
   const loadPatientHistoricalData = async (patientId) => {
     try {
-      const [visits, previousOASIS] = await Promise.all([
+      const [visits, previousOASISRes] = await Promise.all([
         base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
-        base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 3)
+        // Routed through listOASISUploads so financial fields are stripped server-side for non-financial users.
+        base44.functions.invoke('listOASISUploads', { patientId, sort: '-created_date', limit: 3 })
       ]);
+      const previousOASIS = previousOASISRes?.data?.uploads || [];
 
       setPatientHistoricalData({
         previousScores: previousOASIS.map(o => ({
@@ -383,7 +385,9 @@ export default function OASISAnalyzer() {
   // Fetch saved OASIS uploads
   const { data: savedOASISUploads = [] } = useQuery({
     queryKey: ['oasisUploads'],
-    queryFn: () => base44.entities.OASISUpload.list('-created_date', 50),
+    // Routed through listOASISUploads so financial fields (estimated_payment,
+    // revenue_*) are stripped server-side for non-financial users.
+    queryFn: async () => (await base44.functions.invoke('listOASISUploads', { sort: '-created_date', limit: 50 }))?.data?.uploads || [],
   });
 
   // Save OASIS mutation
@@ -1481,11 +1485,13 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                             <Badge className={oasis.scores?.overall >= 80 ? 'bg-green-100 text-green-800' : oasis.scores?.overall >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
                               Score: {oasis.scores?.overall || 'N/A'}%
                             </Badge>
-                            {oasis.estimated_payment && (
-                              <Badge variant="outline">
-                                ${oasis.estimated_payment?.toLocaleString()}
-                              </Badge>
-                            )}
+                            <FinancialGate>
+                              {oasis.estimated_payment && (
+                                <Badge variant="outline">
+                                  ${oasis.estimated_payment?.toLocaleString()}
+                                </Badge>
+                              )}
+                            </FinancialGate>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">
                             {new Date(oasis.created_date).toLocaleDateString()}
@@ -1500,12 +1506,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           </Card>
         </TabsContent>
 
-        {/* Analytics Tab */}
+        {/* Analytics Tab — payment trends & revenue stats; financial, admins only */}
         <TabsContent value="analytics" className="mt-4">
-          <div className="space-y-6">
-            <PDGMTrendDashboard />
-            <OASISAnalyticsDashboard savedOASISUploads={savedOASISUploads} />
-          </div>
+          <FinancialGate fallback={<p className="text-sm text-slate-500">Analytics are available to administrators.</p>}>
+            <div className="space-y-6">
+              <PDGMTrendDashboard />
+              <OASISAnalyticsDashboard savedOASISUploads={savedOASISUploads} />
+            </div>
+          </FinancialGate>
         </TabsContent>
 
         {/* Automation Tab */}
@@ -1535,7 +1543,10 @@ Return scores (0-100) and top 3-5 issues in each category.`,
         </TabsContent>
 
         <TabsContent value="batch" className="mt-4">
-          <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} onBatchComplete={handleBatchComplete} />
+          {/* Batch results/exports include estimated payment & revenue columns — admins only */}
+          <FinancialGate fallback={<p className="text-sm text-slate-500">Batch analysis includes payment/revenue data and is available to administrators.</p>}>
+            <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} onBatchComplete={handleBatchComplete} />
+          </FinancialGate>
         </TabsContent>
 
         <TabsContent value="single" className="mt-4">
@@ -1890,6 +1901,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FinancialGate>
                 <Link to="/OASISCenter?tab=revenue" state={{ analysisResults, pdgmData, patientName, uploadId: analysisId }}>
                   <Button className="w-full bg-green-600 hover:bg-green-700 h-auto py-4 flex flex-col items-center gap-2">
                     <DollarSign className="w-8 h-8" />
@@ -1899,6 +1911,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </div>
                   </Button>
                 </Link>
+                </FinancialGate>
                 <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, patientId: selectedPatientId }}>
                   <Button className="w-full bg-red-600 hover:bg-red-700 h-auto py-4 flex flex-col items-center gap-2">
                     <Shield className="w-8 h-8" />
@@ -1922,11 +1935,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardContent>
           </Card>
 
-          {/* Executive Summary - AI-Generated Quick Overview */}
-          <OASISExecutiveSummary
-            analysisResults={analysisResults}
-            pdgmData={pdgmData}
-          />
+          {/* Executive Summary - AI-Generated Quick Overview (includes revenue
+              optimization figures) — financial, admins only */}
+          <FinancialGate>
+            <OASISExecutiveSummary
+              analysisResults={analysisResults}
+              pdgmData={pdgmData}
+            />
+          </FinancialGate>
 
           {/* Auto-Generated Tasks Based on Analysis */}
           <OASISTaskGenerator
@@ -1937,18 +1953,22 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             onTasksCreated={(count) => console.log(`${count} tasks created`)}
           />
 
-          {/* Export Manager */}
-          <OASISExportManager
-            analysisResults={analysisResults}
-            pdgmData={pdgmData}
-            revenueData={revenueData}
-            navigationData={navigationData}
-            qualityScore={qualityScore}
-            patientName={patientName}
-          />
+          {/* Export Manager — exports include revenue optimization fields; admins only */}
+          <FinancialGate>
+            <OASISExportManager
+              analysisResults={analysisResults}
+              pdgmData={pdgmData}
+              revenueData={revenueData}
+              navigationData={navigationData}
+              qualityScore={qualityScore}
+              patientName={patientName}
+            />
+          </FinancialGate>
 
-          {/* Key Takeaways Summary - Most Important */}
-          <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
+          {/* Key Takeaways Summary (includes potential-revenue figures) — financial, admins only */}
+          <FinancialGate>
+            <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
+          </FinancialGate>
 
           {/* AI-Powered Automatic Document Review */}
           <AIDocumentReviewer
@@ -2030,15 +2050,19 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
                              <p className="text-sm text-slate-800 mb-2">{mismatch.explanation}</p>
 
-                             {mismatch.revenue_impact && (
-                               <div className="bg-green-50 p-2 rounded text-xs text-green-800 mb-1">
-                                 💰 Revenue Impact: {mismatch.revenue_impact}
-                               </div>
-                             )}
+                             <FinancialGate>
+                               {mismatch.revenue_impact && (
+                                 <div className="bg-emerald-50 p-2 rounded text-xs text-emerald-800 mb-1 flex items-start gap-1.5">
+                                   <DollarSign className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                   <span>Revenue Impact: {mismatch.revenue_impact}</span>
+                                 </div>
+                               )}
+                             </FinancialGate>
 
                              {mismatch.compliance_risk && (
-                               <div className="bg-red-50 p-2 rounded text-xs text-red-800 mb-2">
-                                 ⚠️ Compliance Risk: {mismatch.compliance_risk}
+                               <div className="bg-red-50 p-2 rounded text-xs text-red-800 mb-2 flex items-start gap-1.5">
+                                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                 <span>Compliance Risk: {mismatch.compliance_risk}</span>
                                </div>
                              )}
 
@@ -2146,12 +2170,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     {analysisResults.compliance_score}%
                   </p>
                 </div>
-                <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.revenue_optimization_score)}`}>
-                  <p className="text-xs text-slate-600 mb-1">Revenue Optimization (est.)</p>
-                  <p className={`text-3xl font-bold ${getScoreColor(analysisResults.revenue_optimization_score)}`}>
-                    {analysisResults.revenue_optimization_score}%
-                  </p>
-                </div>
+                <FinancialGate>
+                  <div className={`p-4 rounded-lg border-2 ${getScoreBg(analysisResults.revenue_optimization_score)}`}>
+                    <p className="text-xs text-slate-600 mb-1">Revenue Optimization (est.)</p>
+                    <p className={`text-3xl font-bold ${getScoreColor(analysisResults.revenue_optimization_score)}`}>
+                      {analysisResults.revenue_optimization_score}%
+                    </p>
+                  </div>
+                </FinancialGate>
               </div>
 
               {/* Summary */}
@@ -2284,8 +2310,10 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardContent>
           </Card>
 
+          {/* PDGM payment tools (navigator, case-mix $, impact, revenue) — financial, admins only */}
+          <FinancialGate>
           {/* Automated PDGM Navigator */}
-          <AutomatedPDGMNavigator 
+          <AutomatedPDGMNavigator
             analysisResults={analysisResults} 
             pdgmData={pdgmData}
             revenueData={null}
@@ -2332,7 +2360,10 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             onRevenueCalculated={(revData) => setRevenueData(revData)}
           />
 
-          {/* Scenario Planning & Action Workflow */}
+          </FinancialGate>
+
+          {/* Scenario Planning & Action Workflow — payment scenarios; financial, admins only */}
+          <FinancialGate>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <OASISScenarioManager
               analysisId={analysisId}
@@ -2352,6 +2383,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               patientName={patientName}
             />
           </div>
+          </FinancialGate>
 
           {/* Smart Note Data Import - Bi-directional sync */}
           <SmartNoteDataImport
@@ -2380,12 +2412,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             }}
           />
 
-          {/* Multi-Report Comparison */}
-          <EnhancedMultiReportComparison
-            savedReports={savedBatchResults}
-            currentReport={analysisResults}
-            currentPdgmData={pdgmData}
-          />
+          {/* Multi-Report Comparison — revenue summaries/chart/column; financial, admins only */}
+          <FinancialGate>
+            <EnhancedMultiReportComparison
+              savedReports={savedBatchResults}
+              currentReport={analysisResults}
+              currentPdgmData={pdgmData}
+            />
+          </FinancialGate>
 
           {/* AI Documentation Generator - Generate Draft Clinical Text */}
           <AIDocumentationGenerator
@@ -2446,13 +2480,15 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             onPathwaysTriggered={(pathways) => setTriggeredPathways(pathways)}
           />
 
-          {/* PDGM Predictive Forecaster */}
+          {/* PDGM Predictive Forecaster — revenue forecast; financial, admins only */}
+          <FinancialGate>
           <PDGMPredictiveForecaster
             pdgmData={pdgmData}
             analysisResults={analysisResults}
             currentPayment={originalPayment}
             triggeredPathways={triggeredPathways}
           />
+          </FinancialGate>
 
           {/* OASIS Validation Panel - Full Width for Prominence */}
           <OASISValidationPanel 
@@ -2542,7 +2578,8 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               </AccordionItem>
             )}
 
-            {/* Revenue Tips */}
+            {/* Revenue Tips — revenue optimization; financial, admins only */}
+            <FinancialGate>
             {analysisResults.revenue_tips?.length > 0 && (
               <AccordionItem value="revenue" className="border rounded-lg">
                 <AccordionTrigger className="px-4 hover:no-underline">
@@ -2590,6 +2627,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 </AccordionContent>
               </AccordionItem>
             )}
+            </FinancialGate>
 
             {/* Audit Risk Areas */}
             {analysisResults.audit_risk_areas?.length > 0 && (
@@ -2653,7 +2691,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                        </div>
                        {imp.exact_text_to_add && (
                          <div className="mt-2 p-2 bg-white rounded border border-blue-300">
-                           <p className="text-xs text-blue-600 mb-1 font-medium">📝 Exact Text to Add:</p>
+                           <p className="text-xs text-blue-600 mb-1 font-medium flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Exact Text to Add:</p>
                            <p className="text-sm text-blue-900 italic">"{imp.exact_text_to_add}"</p>
                          </div>
                        )}
@@ -2677,7 +2715,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-green-600" />
                     <span className="text-green-800">Rescore Opportunities ({analysisResults.specific_rescore_opportunities.length})</span>
-                    <Badge className="bg-green-600 text-white ml-2">💰 Revenue Impact</Badge>
+                    <FinancialGate><Badge className="bg-emerald-600 text-white ml-2"><DollarSign className="w-3 h-3 mr-1" />Revenue Impact</Badge></FinancialGate>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -2686,9 +2724,11 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                      <div key={idx} className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-300">
                        <div className="flex items-center justify-between mb-2">
                          <Badge className="bg-green-700 text-white font-mono">{opp.m_item}</Badge>
+                         <FinancialGate>
                          {opp.revenue_impact && (
                            <Badge className="bg-emerald-600 text-white">{opp.revenue_impact}</Badge>
                          )}
+                         </FinancialGate>
                        </div>
                        <div className="grid grid-cols-2 gap-2 mb-2">
                          <div className="bg-red-100 p-2 rounded text-center">
@@ -2705,7 +2745,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                          <p className="text-sm text-slate-800">{opp.clinical_evidence}</p>
                        </div>
                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                         <p className="text-xs text-blue-600 mb-1 font-medium">✅ Action Required:</p>
+                         <p className="text-xs text-blue-600 mb-1 font-medium flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Action Required:</p>
                          <p className="text-sm text-blue-900">{opp.action_required}</p>
                        </div>
                        <InlineDocumentationAssistant 
@@ -2742,7 +2782,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                        <p className="text-sm text-slate-700 mb-2">{doc.why_it_matters}</p>
                        {doc.suggested_text && (
                          <div className="bg-white p-2 rounded border border-amber-200">
-                           <p className="text-xs text-amber-600 mb-1 font-medium">📝 Suggested Documentation:</p>
+                           <p className="text-xs text-amber-600 mb-1 font-medium flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Suggested Documentation:</p>
                            <p className="text-sm text-slate-800 italic">"{doc.suggested_text}"</p>
                          </div>
                        )}
@@ -2780,7 +2820,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                             </Badge>
                           </div>
                         </div>
-                        <p className="text-sm text-green-700 mb-2">💰 Impact: {win.impact}</p>
+                        <p className="text-sm text-emerald-700 mb-2 flex items-center gap-1.5"><DollarSign className="w-4 h-4" /> Impact: {win.impact}</p>
                         {win.how_to && (
                           <div className="bg-white p-2 rounded border">
                             <p className="text-xs text-navy-600 mb-1 font-medium">How to do it:</p>

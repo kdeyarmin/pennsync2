@@ -219,7 +219,7 @@ export default function Dashboard() {
       {/* Admin Announcements */}
       <AnnouncementsWidget />
 
-      {/* Nurse Stats Cards */}
+      {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip). */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <StatCard
           label="Today's Visits"
@@ -238,36 +238,38 @@ export default function Dashboard() {
         <StatCard
           label="Note Enhancements"
           value={noteConversions.length}
+          sub="AI-assisted"
           icon={FileText}
           tone="slate"
         />
         <StatCard
           label="Time Saved"
           value={stats.timeSavedDisplay}
+          sub="last 30 days"
           icon={Clock}
           tone="gold"
         />
       </div>
 
-      {/* Quick Action Buttons */}
+      {/* Quick Action Buttons — consistent navy hover accent (no rainbow). */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {[
-          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      iconClass: "text-slate-600 group-hover:text-blue-600"   },
-          { page: "SendFax",            label: "Send Fax",          Icon: Send,          iconClass: "text-slate-600 group-hover:text-indigo-600" },
-          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  iconClass: "text-slate-600 group-hover:text-emerald-600"  },
-          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          iconClass: "text-slate-600 group-hover:text-navy-600" },
-          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           iconClass: "text-slate-600 group-hover:text-orange-600" },
-          { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, iconClass: "text-slate-600 group-hover:text-red-600"    },
+          { page: "SmartNoteAssistant", label: "Smart Notes",   Icon: FileText },
+          { page: "SendFax",            label: "Send Fax",      Icon: Send },
+          { page: "CarePlanManagement", label: "Care Plans",    Icon: CheckCircle2 },
+          { page: "PatientEducationHub",label: "Pt. Education",  Icon: User },
+          { page: "VisitScribe",        label: "Visit Scribe",  Icon: Mic },
+          { page: "Incidents",          label: "Incidents",     Icon: AlertTriangle },
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (
             <Link key={item.page} to={`/${item.page}`} className="group">
-              <Card className="card-interactive h-full">
+              <Card className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-200">
                 <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[90px]">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-sm group-hover:border-slate-200 transition-all group-hover:scale-110">
-                    <ItemIcon className={`w-5 h-5 transition-colors ${item.iconClass}`} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-100 transition-all group-hover:bg-navy-50 group-hover:text-navy-600 group-hover:ring-navy-100">
+                    <ItemIcon className="h-5 w-5" />
                   </div>
-                  <h3 className="font-semibold text-xs sm:text-sm text-slate-600 group-hover:text-slate-900 transition-colors leading-tight">{item.label}</h3>
+                  <h3 className="text-xs sm:text-sm font-semibold leading-tight text-slate-600 transition-colors group-hover:text-slate-900">{item.label}</h3>
                 </CardContent>
               </Card>
             </Link>

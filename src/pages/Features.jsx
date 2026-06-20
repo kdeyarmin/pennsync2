@@ -1291,9 +1291,9 @@ export default function FeaturesPage() {
       purple: "from-navy-500 to-gold-500",
       blue: "from-blue-500 to-navy-500",
       indigo: "from-indigo-500 to-navy-500",
-      green: "from-green-500 to-emerald-500",
+      green: "from-emerald-500 to-emerald-600",
       cyan: "from-navy-500 to-blue-500",
-      orange: "from-orange-500 to-red-500",
+      orange: "from-amber-500 to-amber-600",
       red: "from-red-500 to-red-600",
       pink: "from-gold-500 to-gold-600",
       gray: "from-slate-500 to-slate-600"
@@ -1336,7 +1336,7 @@ export default function FeaturesPage() {
             <Button
               onClick={generateUserManual}
               disabled={isGeneratingManual}
-              className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 min-h-[44px] w-full sm:w-auto"
+              className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 min-h-[44px] w-full sm:w-auto"
             >
               {isGeneratingManual ? (
                 <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
@@ -1358,9 +1358,9 @@ export default function FeaturesPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+          <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
-              <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-1 sm:mb-2" />
+              <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600 mx-auto mb-1 sm:mb-2" />
               <p className="text-2xl sm:text-3xl font-bold text-slate-900">{Math.round(totalTimeSavedPerWeek / 60)}</p>
               <p className="text-xs sm:text-sm text-slate-600">hours saved per week</p>
             </CardContent>
@@ -1374,9 +1374,9 @@ export default function FeaturesPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+          <Card className="bg-gradient-to-br from-gold-50 to-gold-100 border-gold-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
-              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-1 sm:mb-2" />
+              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-gold-600 mx-auto mb-1 sm:mb-2" />
               <p className="text-2xl sm:text-3xl font-bold text-slate-900">{Math.round(totalTimeSavedPerYear / 60 / 24)}</p>
               <p className="text-xs sm:text-sm text-slate-600">days saved per year</p>
             </CardContent>

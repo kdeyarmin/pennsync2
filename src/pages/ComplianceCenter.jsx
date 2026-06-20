@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
@@ -486,53 +487,10 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm mb-1">Avg Compliance</p>
-                    <p className="text-4xl font-bold">{avgComplianceScore.toFixed(1)}%</p>
-                  </div>
-                  <Shield className="w-12 h-12 text-blue-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-red-100 text-sm mb-1">Critical Issues</p>
-                    <p className="text-4xl font-bold">{criticalIssuesCount}</p>
-                  </div>
-                  <AlertTriangle className="w-12 h-12 text-red-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-sm mb-1">Total Issues</p>
-                    <p className="text-4xl font-bold">{totalIssuesCount}</p>
-                  </div>
-                  <FileText className="w-12 h-12 text-orange-200" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm mb-1">Audits Reviewed</p>
-                    <p className="text-4xl font-bold">{filteredAudits.length}</p>
-                  </div>
-                  <Calendar className="w-12 h-12 text-green-200" />
-                </div>
-              </CardContent>
-            </Card>
+            <StatCard label="Avg Compliance" value={`${avgComplianceScore.toFixed(1)}%`} icon={Shield} tone="navy" />
+            <StatCard label="Critical Issues" value={criticalIssuesCount} icon={AlertTriangle} tone="red" />
+            <StatCard label="Total Issues" value={totalIssuesCount} icon={FileText} tone="amber" />
+            <StatCard label="Audits Reviewed" value={filteredAudits.length} icon={Calendar} tone="emerald" />
           </div>
 
           {aiInsights && (
@@ -597,45 +555,11 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
         {/* Real-Time Monitoring (live, computed in this hub) */}
         <TabsContent value="live" className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-none">
-              <CardContent className="p-4">
-                <AlertTriangle className="w-8 h-8 text-red-200 mb-2" />
-                <p className="text-2xl font-bold">{criticalCount}</p>
-                <p className="text-xs text-red-100">Critical Issues</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none">
-              <CardContent className="p-4">
-                <TrendingDown className="w-8 h-8 text-orange-200 mb-2" />
-                <p className="text-2xl font-bold">{highCount}</p>
-                <p className="text-xs text-orange-100">High Priority</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white border-none">
-              <CardContent className="p-4">
-                <Users className="w-8 h-8 text-navy-200 mb-2" />
-                <p className="text-2xl font-bold">{affectedUsers}</p>
-                <p className="text-xs text-navy-100">Affected Staff</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
-              <CardContent className="p-4">
-                <Clock className="w-8 h-8 text-blue-200 mb-2" />
-                <p className="text-2xl font-bold">{overdueTraining}</p>
-                <p className="text-xs text-blue-100">Overdue Training</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none">
-              <CardContent className="p-4">
-                <Award className="w-8 h-8 text-green-200 mb-2" />
-                <p className="text-2xl font-bold">{expiringCreds}</p>
-                <p className="text-xs text-green-100">Expiring Creds</p>
-              </CardContent>
-            </Card>
+            <StatCard label="Critical Issues" value={criticalCount} icon={AlertTriangle} tone="red" />
+            <StatCard label="High Priority" value={highCount} icon={TrendingDown} tone="amber" />
+            <StatCard label="Affected Staff" value={affectedUsers} icon={Users} tone="navy" />
+            <StatCard label="Overdue Training" value={overdueTraining} icon={Clock} tone="slate" />
+            <StatCard label="Expiring Creds" value={expiringCreds} icon={Award} tone="gold" />
           </div>
 
           <Card>

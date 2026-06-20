@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -248,74 +249,70 @@ export default function StaffEducationComplianceReport() {
           <CardTitle className="text-base">Staff Training Performance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Staff Member</th>
-                  <th className="text-center p-2">Completed</th>
-                  <th className="text-center p-2">Avg Score</th>
-                  <th className="text-center p-2">Overdue</th>
-                  <th className="text-center p-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {complianceData.staffMetrics.map((staff, idx) => {
-                  const isAtRisk = staff.overdue > 0 || staff.avgScore < 70;
-                  const isExcellent = staff.avgScore >= 90 && staff.overdue === 0;
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Staff Member</TableHead>
+                <TableHead className="text-center">Completed</TableHead>
+                <TableHead className="text-center">Avg Score</TableHead>
+                <TableHead className="text-center">Overdue</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {complianceData.staffMetrics.map((staff, idx) => {
+                const isAtRisk = staff.overdue > 0 || staff.avgScore < 70;
+                const isExcellent = staff.avgScore >= 90 && staff.overdue === 0;
 
-                  return (
-                    <tr key={idx} className="border-b hover:bg-slate-50">
-                      <td className="p-2">
-                        <div>
-                          <p className="font-medium">{staff.name}</p>
-                          <p className="text-xs text-slate-500">{staff.email}</p>
-                        </div>
-                      </td>
-                      <td className="text-center p-2">
-                        <Badge variant="outline">{staff.completed} / {staff.total}</Badge>
-                      </td>
-                      <td className="text-center p-2">
-                        <Badge className={
-                          staff.avgScore >= 90 ? 'bg-green-600' :
-                          staff.avgScore >= 80 ? 'bg-blue-600' :
-                          staff.avgScore >= 70 ? 'bg-yellow-600' :
-                          'bg-red-600'
-                        }>
-                          {staff.avgScore}%
+                return (
+                  <TableRow key={idx}>
+                    <TableCell>
+                      <p className="font-medium text-slate-900">{staff.name}</p>
+                      <p className="text-xs text-slate-500">{staff.email}</p>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline">{staff.completed} / {staff.total}</Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={
+                        staff.avgScore >= 90 ? 'success' :
+                        staff.avgScore >= 80 ? 'info' :
+                        staff.avgScore >= 70 ? 'warning' :
+                        'destructive'
+                      }>
+                        {staff.avgScore}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {staff.overdue > 0 ? (
+                        <Badge variant="destructive">{staff.overdue}</Badge>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {isExcellent ? (
+                        <Badge variant="success">
+                          <Award className="w-3 h-3 mr-1" />
+                          Excellent
                         </Badge>
-                      </td>
-                      <td className="text-center p-2">
-                        {staff.overdue > 0 ? (
-                          <Badge className="bg-red-600">{staff.overdue}</Badge>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </td>
-                      <td className="text-center p-2">
-                        {isExcellent ? (
-                          <Badge className="bg-green-600 text-white">
-                            <Award className="w-3 h-3 mr-1" />
-                            Excellent
-                          </Badge>
-                        ) : isAtRisk ? (
-                          <Badge className="bg-orange-600 text-white">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            At Risk
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-blue-600 text-white">
-                            <TrendingUp className="w-3 h-3 mr-1" />
-                            On Track
-                          </Badge>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      ) : isAtRisk ? (
+                        <Badge variant="warning">
+                          <AlertTriangle className="w-3 h-3 mr-1" />
+                          At Risk
+                        </Badge>
+                      ) : (
+                        <Badge variant="info">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          On Track
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

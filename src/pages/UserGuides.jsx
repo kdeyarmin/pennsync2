@@ -367,8 +367,8 @@ export default function UserGuides() {
           {guides.filter(g => !g.featured).map((guide) => {
             const IconComponent = guide.icon;
             const colorClasses = {
-              blue: 'from-blue-500 to-blue-600',
-              green: 'from-green-500 to-green-600',
+              blue: 'from-navy-500 to-navy-600',
+              green: 'from-emerald-500 to-emerald-600',
               purple: 'from-navy-500 to-navy-600'
             };
 

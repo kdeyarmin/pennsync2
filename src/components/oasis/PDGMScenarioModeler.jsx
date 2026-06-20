@@ -66,7 +66,7 @@ ${JSON.stringify({
   comorbidities: baselineOasisData?.comorbidities,
   admission_source: baselineOasisData?.admission_source,
   episode_timing: baselineOasisData?.episode_timing,
-  baseline_payment: baselineNavigationData?.case_mix_calculation?.calculated_payment || 2031.64
+  baseline_payment: baselineNavigationData?.case_mix_calculation?.calculated_payment || 2038.22
 }, null, 2)}
 
 SIMULATED SCENARIO:

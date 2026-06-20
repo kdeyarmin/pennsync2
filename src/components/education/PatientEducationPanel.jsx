@@ -123,22 +123,22 @@ export default function PatientEducationPanel({ patientId }) {
 
   if (!materials) {
     return (
-      <Card className="border-2 border-teal-300 bg-teal-50">
+      <Card className="border-2 border-navy-300 bg-navy-50">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2 text-teal-900">
+          <CardTitle className="text-sm flex items-center gap-2 text-navy-900">
             <BookOpen className="w-4 h-4" />
             Patient Education Materials
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-teal-800 mb-3">
+          <p className="text-xs text-navy-800 mb-3">
             Generate personalized education materials based on diagnoses, medications, and care plans.
           </p>
           <Button
             onClick={generateMaterials}
             disabled={isGenerating}
             size="sm"
-            className="bg-teal-600 hover:bg-teal-700 w-full"
+            className="bg-navy-600 hover:bg-navy-700 w-full"
           >
             {isGenerating ? (
               <>
@@ -158,19 +158,19 @@ export default function PatientEducationPanel({ patientId }) {
   }
 
   return (
-    <Card className="border-2 border-teal-300 bg-teal-50">
+    <Card className="border-2 border-navy-300 bg-navy-50">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2 text-teal-900">
+          <CardTitle className="text-sm flex items-center gap-2 text-navy-900">
             <BookOpen className="w-4 h-4" />
             Patient Education Materials
           </CardTitle>
-          <Badge className="bg-teal-600 text-white">
+          <Badge className="bg-navy-600 text-white">
             {materials.materials?.length || 0} topics
           </Badge>
         </div>
         {materials.summary && (
-          <p className="text-xs text-teal-800 mt-2">{materials.summary}</p>
+          <p className="text-xs text-navy-800 mt-2">{materials.summary}</p>
         )}
       </CardHeader>
       <CardContent className="space-y-3">
@@ -180,14 +180,14 @@ export default function PatientEducationPanel({ patientId }) {
           const categoryColor = getCategoryColor(material.category);
 
           return (
-            <Card key={index} className="bg-white border-l-4 border-teal-400">
+            <Card key={index} className="bg-white border-l-4 border-navy-400">
               <CardContent className="p-4">
                 <div
                   className="flex items-start justify-between cursor-pointer"
                   onClick={() => toggleExpanded(index)}
                 >
                   <div className="flex items-start gap-2 flex-1">
-                    <CategoryIcon className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" />
+                    <CategoryIcon className="w-5 h-5 text-navy-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge className={`${categoryColor} text-white text-xs`}>
@@ -217,7 +217,7 @@ export default function PatientEducationPanel({ patientId }) {
                         <ul className="space-y-1">
                           {material.key_points.map((point, idx) => (
                             <li key={idx} className="text-xs text-slate-600 flex items-start gap-2">
-                              <span className="text-teal-600 font-bold">•</span>
+                              <span className="text-navy-600 font-bold">•</span>
                               <span>{point}</span>
                             </li>
                           ))}

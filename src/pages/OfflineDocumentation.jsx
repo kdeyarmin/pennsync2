@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import EmptyState from '@/components/ui/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OfflineSyncService from '../components/offline/OfflineSyncService';
 import OfflineVisitDocumentation from '../components/offline/OfflineVisitDocumentation';
@@ -72,10 +73,7 @@ export default function OfflineDocumentation() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-slate-500">
-                <AlertCircle className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                <p>Use the sync status widget above to view pending items</p>
-              </div>
+              <EmptyState icon={AlertCircle} title="No pending items here" description="Use the sync status widget above to view pending items." />
             </CardContent>
           </Card>
         </TabsContent>

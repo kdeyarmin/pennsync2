@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -283,14 +284,17 @@ export default function AutomaticCarePlans() {
           {isLoading ? (
             <p className="text-center text-slate-500 py-8">Loading triggers...</p>
           ) : triggers.length === 0 ? (
-            <div className="text-center py-12">
-              <Zap className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500 mb-4">No automatic care plan triggers configured yet</p>
-              <Button onClick={() => setShowDialog(true)} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Trigger
-              </Button>
-            </div>
+            <EmptyState
+              icon={Zap}
+              title="No automatic care plan triggers"
+              description="Create a trigger to automatically generate care plans from clinical signals."
+              action={
+                <Button onClick={() => setShowDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Trigger
+                </Button>
+              }
+            />
           ) : (
             <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>

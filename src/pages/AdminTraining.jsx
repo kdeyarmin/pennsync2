@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText } from "lucide-react";
@@ -302,12 +303,7 @@ export default function AdminTraining() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
-                  <CardContent className="py-12 text-center">
-                    <Users className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                    <p className="text-slate-600">Select a learning plan to view enrollments</p>
-                  </CardContent>
-                </Card>
+                <EmptyState icon={Users} title="No learning plan selected" description="Select a learning plan to view its enrollments." />
               )}
             </div>
           </div>

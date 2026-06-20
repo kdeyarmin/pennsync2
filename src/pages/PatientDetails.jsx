@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,7 +128,7 @@ export default function PatientDetails() {
 
   const { data: _patientOASIS = [] } = useQuery({
     queryKey: ['patientOASIS', patientId],
-    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date'),
+    queryFn: async () => (await base44.functions.invoke('listOASISUploads', { patientId, sort: '-created_date' }))?.data?.uploads || [],
     initialData: [],
     enabled: !!patientId,
   });
@@ -501,10 +502,7 @@ export default function PatientDetails() {
 
                 <TabsContent value="visits" className="space-y-4">
                   {visits.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p>No visit notes available</p>
-                    </div>
+                    <EmptyState icon={FileText} title="No visit notes" description="Visit notes will appear here once recorded." />
                   ) : (
                     <ScrollArea className="max-h-[500px]">
                       <div className="space-y-3">

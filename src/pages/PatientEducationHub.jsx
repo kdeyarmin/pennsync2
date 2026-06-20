@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -527,10 +528,7 @@ export default function PatientEducationHub() {
             </CardHeader>
             <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
               {!selectedTopic ? (
-                <div className="text-center py-8 text-slate-500">
-                  <BookOpen className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                  <p>Select a topic to generate a handout</p>
-                </div>
+                <EmptyState icon={BookOpen} title="Select a topic" description="Choose a topic above to generate a patient handout." />
               ) : (
                 <>
                   <div>

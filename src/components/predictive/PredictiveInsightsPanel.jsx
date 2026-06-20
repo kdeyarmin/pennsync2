@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -326,28 +327,26 @@ Provide comprehensive predictive insights including:
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-100">
-                    <tr>
-                      <th className="text-left p-2">Area</th>
-                      <th className="text-left p-2">Current State</th>
-                      <th className="text-left p-2">Recommended Action</th>
-                      <th className="text-left p-2">Expected Outcome</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {insights.resource_recommendations?.map((rec, idx) => (
-                      <tr key={idx}>
-                        <td className="p-2 font-medium">{rec.area}</td>
-                        <td className="p-2 text-slate-600">{rec.current_state}</td>
-                        <td className="p-2 text-blue-700">{rec.recommended_action}</td>
-                        <td className="p-2 text-green-700">{rec.expected_outcome}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Area</TableHead>
+                    <TableHead>Current State</TableHead>
+                    <TableHead>Recommended Action</TableHead>
+                    <TableHead>Expected Outcome</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {insights.resource_recommendations?.map((rec, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="font-medium">{rec.area}</TableCell>
+                      <TableCell className="text-slate-600">{rec.current_state}</TableCell>
+                      <TableCell className="text-navy-700">{rec.recommended_action}</TableCell>
+                      <TableCell className="text-emerald-700">{rec.expected_outcome}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </>

@@ -297,9 +297,9 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
               <p className="text-sm text-indigo-800 whitespace-pre-wrap">{educationMaterials.medication_guide}</p>
             </div>
 
-            <div className="bg-teal-50 p-4 rounded border border-teal-200">
-              <h3 className="font-semibold text-sm text-teal-900 mb-2">Medication Management Tips</h3>
-              <p className="text-sm text-teal-800 whitespace-pre-wrap">{educationMaterials.medication_management_tips}</p>
+            <div className="bg-navy-50 p-4 rounded border border-navy-200">
+              <h3 className="font-semibold text-sm text-navy-900 mb-2">Medication Management Tips</h3>
+              <p className="text-sm text-navy-800 whitespace-pre-wrap">{educationMaterials.medication_management_tips}</p>
             </div>
 
             <div className="bg-orange-50 p-4 rounded border border-orange-200">

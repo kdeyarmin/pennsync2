@@ -45,7 +45,7 @@ const RULE_CATEGORIES = [
   { value: 'state_regulation', label: 'State Regulation', color: 'bg-green-100 text-green-800' },
   { value: 'agency_policy', label: 'Agency Policy', color: 'bg-orange-100 text-orange-800' },
   { value: 'hipaa', label: 'HIPAA', color: 'bg-red-100 text-red-800' },
-  { value: 'quality_measure', label: 'Quality Measure', color: 'bg-teal-100 text-teal-800' },
+  { value: 'quality_measure', label: 'Quality Measure', color: 'bg-navy-100 text-navy-800' },
 ];
 
 const SEVERITY_OPTIONS = [
