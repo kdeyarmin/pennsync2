@@ -136,9 +136,35 @@
   }
 
   /* Non-content UI elements should not be selectable */
-  button, a[href], nav, header, [role="button"], [role="tab"], [role="tablist"], 
+  button, a[href], nav, header, [role="button"], [role="tab"], [role="tablist"],
   .sidebar, .mobile-header, .navigation {
     @apply select-none;
+  }
+
+  /* Refined, unobtrusive scrollbars on pointer devices for a more polished,
+     professional feel. Touch devices keep their native overlay scrollbars
+     (better on mobile), and `.scrollbar-hide` still wins where used. */
+  @media (pointer: fine) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgb(203 213 225) transparent; /* slate-300 on transparent */
+    }
+    *::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    *::-webkit-scrollbar-thumb {
+      background-color: rgb(203 213 225); /* slate-300 */
+      border-radius: 9999px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background-color: rgb(148 163 184); /* slate-400 */
+    }
   }
 }
 
