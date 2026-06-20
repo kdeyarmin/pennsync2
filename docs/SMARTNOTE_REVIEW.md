@@ -389,4 +389,42 @@ gets what" and are unit-tested (13 tests total) so the wiring can't silently dri
   (critical/high/low) and carries each finding's `recommendation` through as the
   issue `suggestion`, so audit rows render the right color and an actionable fix.
 
+## Update — nurse-experience pass (2026-06-20)
+
+Six improvements aimed at field friction and turning the safety signals the
+engine already computes into one-tap actions:
+
+1. **Voice-dictate the gap-question answers.** Each required-element question in
+   `ConstrainedNoteReviewer` now has a mic button (`DictationButton`, reusing the
+   browser `SpeechRecognition` + `enhanceTranscription` the main note uses).
+   Dictated text *appends* to the answer and clears the "carried from last visit"
+   flag. Lets a nurse answer hands-free at the bedside instead of typing.
+2. **One-tap "routine negatives".** A *Confirm all routine negatives (no acute
+   changes)* button bulk-confirms every standard-negative element the nurse hasn't
+   typed an answer for, collapsing a dozen taps to one on a stable patient. Each
+   remains individually editable.
+3. **Per-patient draft recovery.** Drafts are now keyed per patient (plus an
+   `unassigned` bucket) instead of a single global slot, so switching patients
+   never clobbers another patient's in-progress note. Autosave writes under the
+   *active* patient (via ref, not a `patientId` effect dep, to avoid the clobber);
+   selecting a patient auto-restores their draft, and a note typed before a
+   patient is picked migrates to the patient chosen for it.
+4. **Critical chart conflict → action.** The critical-conflict panel and the
+   critical-vitals banner expose a *Create provider follow-up task* button. The
+   reviewer hands the findings to an `onEscalate` host callback;
+   `SmartNoteAssistant` persists them as high-priority `notify` `Task` records
+   (assigned to the nurse, linked to the visit) and surfaces them in the
+   follow-up panel. Guarded so a group can't be escalated twice.
+5. **Inline provenance ("show me the proof").** A *Show verification detail*
+   toggle annotates the final note sentence-by-sentence —
+   `compliance/provenance.js` (pure, 6 unit tests) reuses the value-guard's own
+   extraction to mark each value/medication green (traces to the nurse's input)
+   or red (not found), so the "every value verified" claim is inspectable.
+6. **Critical-vital escalation at documentation time.**
+   `compliance/noteEscalation.js` (pure, 5 unit tests) maps the note's extracted
+   vitals onto the shared `detectCriticalVitals` thresholds, so a hypertensive
+   crisis / severe hypoxia / 10-of-10 pain written into the note raises an
+   advisory provider-notification banner (with the same escalate action). Never
+   blocks saving a genuine reading.
+
 </content>

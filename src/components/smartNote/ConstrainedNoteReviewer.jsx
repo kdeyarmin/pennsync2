@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowRight, HelpCircle, AlertTriangle, ShieldCheck, ShieldAlert, Loader2, Copy, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, HelpCircle, AlertTriangle, ShieldCheck, ShieldAlert, Loader2, Copy, CheckCircle2, Activity, BellRing, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeDraft } from "./compliance/normalize";
 import { getRequiredElements } from "./compliance/requiredElements";
@@ -15,6 +15,9 @@ import { crossCheckChart } from "./compliance/chartCrossCheck";
 import VisitComparisonPanel from "./VisitComparisonPanel";
 import ChartCrossCheckPanel from "./ChartCrossCheckPanel";
 import NoteDiffView from "./NoteDiffView";
+import DictationButton from "./DictationButton";
+import { annotateProvenance } from "./compliance/provenance";
+import { detectNoteCriticalVitals } from "./compliance/noteEscalation";
 
 /**
  * The canonical "constrained scribe" review flow, reusable across pages:
@@ -40,7 +43,7 @@ import NoteDiffView from "./NoteDiffView";
  *                     the reviewer renders the fact-check banner but defers the
  *                     note display + actions (e.g. Save-to-chart, PDF) to the host.
  */
-export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", priorNote = "", patient = null, currentUser, onFinalNote, onBack, renderFinalNote }) {
+export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", priorNote = "", patient = null, currentUser, onFinalNote, onBack, renderFinalNote, onEscalate }) {
   const [answers, setAnswers] = useState({});
   const [prefilledIds, setPrefilledIds] = useState(new Set());
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
@@ -52,6 +55,10 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const [fixRequired, setFixRequired] = useState(null);
   const [building, setBuilding] = useState(false);
   const [copied, setCopied] = useState(false);
+  // "Show me the proof" toggle + which escalation groups have already been turned
+  // into a provider follow-up task (so the button can't double-create).
+  const [showProvenance, setShowProvenance] = useState(false);
+  const [escalatedKeys, setEscalatedKeys] = useState(() => new Set());
 
   // Deterministic, instant, offline scan — no LLM, no invented score.
   const analysis = useMemo(() => {
@@ -86,6 +93,11 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   // audit, rather than gating on (and persisting) a stale rough-draft conflict.
   const chartFindings = useMemo(() => crossCheckChart(finalNote || roughNote, patient), [finalNote, roughNote, patient]);
 
+  // Deterministic critical-vital check on the note being written: a hypertensive
+  // crisis / severe hypoxia / 10-of-10 pain documented this visit surfaces an
+  // advisory provider-notification prompt. Never blocks saving.
+  const criticalVitals = useMemo(() => detectNoteCriticalVitals(finalNote || roughNote), [finalNote, roughNote]);
+
   // Reset + pre-fill carry-forward answers whenever the SCAN changes. Keyed on
   // `analysis` only (not priorNote) and reads priorNote via a ref, so a late-
   // arriving prior note (async patient fetch) can't wipe answers the nurse has
@@ -94,7 +106,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const priorNoteRef = useRef("");
   priorNoteRef.current = priorNote;
   useEffect(() => {
-    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false); setAckJustification("");
+    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false); setAckJustification(""); setShowProvenance(false); setEscalatedKeys(new Set());
     if (!analysis) { setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set()); return; }
     const prefill = computeCarryForward(priorNoteRef.current || "", analysis.gaps);
     setAnswers(prefill);
@@ -107,6 +119,19 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     setPrefilledIds(prev => { if (!prev.has(id)) return prev; const n = new Set(prev); n.delete(id); return n; });
   };
   const toggleNegative = (id) => setConfirmedNegatives(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  // Dictated answers append to (rather than replace) what's there, and clear the
+  // "carried from last visit" flag since the nurse just spoke a real answer.
+  const appendAnswer = (id, text) => {
+    setAnswers(prev => ({ ...prev, [id]: prev[id]?.trim() ? `${prev[id].trim()} ${text}` : text }));
+    setPrefilledIds(prev => { if (!prev.has(id)) return prev; const n = new Set(prev); n.delete(id); return n; });
+  };
+  // Hand a group of conflict/vital findings to the host to turn into provider
+  // follow-up tasks. Guarded so a group can only be escalated once.
+  const escalate = (key, items) => {
+    if (!onEscalate || !items.length || escalatedKeys.has(key)) return;
+    onEscalate(items);
+    setEscalatedKeys(prev => new Set(prev).add(key));
+  };
 
   const computeNotDocumented = () => {
     if (!analysis) return [];
@@ -245,6 +270,19 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const liveCoverage = analysis ? computeCoverageScore({ requiredElements: analysis.required, presenceResults: analysis.presence, answeredIds: analysis.required.filter(e => answers[e.id]?.trim()).map(e => e.id), confirmedNegativeIds: Array.from(confirmedNegatives) }) : 0;
   const tone = liveCoverage >= 90 ? "green" : liveCoverage >= 70 ? "orange" : "red";
   const dirty = !!finalNote && finalNote !== verifiedNote;
+  // Routine negatives the nurse hasn't typed an answer for — surfaced as a single
+  // bulk-confirm so a stable patient doesn't require a dozen individual taps.
+  const negatableGaps = gaps.filter(g => g.standardNegative && !answers[g.id]?.trim());
+  const hasUnconfirmedNegatives = negatableGaps.some(g => !confirmedNegatives.has(g.id));
+  const confirmAllRoutineNegatives = () => setConfirmedNegatives(prev => {
+    const n = new Set(prev);
+    gaps.forEach(g => { if (g.standardNegative && !answers[g.id]?.trim()) n.add(g.id); });
+    return n;
+  });
+  // Per-sentence provenance for the "show me the proof" panel (only computed when
+  // the toggle is open). Reuses the value-guard's extraction so it matches what
+  // gated verification.
+  const provenanceRows = showProvenance && finalNote ? annotateProvenance(finalNote, buildAllowedInput()) : [];
 
   if (!analysis) {
     return <div className="text-sm text-slate-500 p-4 bg-slate-50 border border-slate-200 rounded-xl">Add a rough note (at least 20 characters) to check Medicare compliance and generate a fully factual note.</div>;
@@ -278,6 +316,26 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
 
   return (
     <div className="space-y-4">
+      {criticalVitals.length > 0 && (
+        <div className="rounded-xl border-2 border-red-300 bg-red-50 p-4 space-y-2">
+          <h3 className="font-semibold text-red-800 flex items-center gap-2"><Activity className="w-4 h-4" /> Critical vital documented — consider provider notification</h3>
+          <ul className="text-sm text-red-800 space-y-0.5">
+            {criticalVitals.map((v) => (
+              <li key={v.id}><span className="font-semibold">{v.label}:</span> {v.detail}</li>
+            ))}
+          </ul>
+          <p className="text-xs text-red-600">Advisory only — you can still document and save a genuine reading.</p>
+          {onEscalate && (
+            <Button
+              onClick={() => escalate("vitals", criticalVitals.map((v) => ({ title: `Notify provider: ${v.label}`, description: v.detail, reason: "Critical vital sign documented this visit." })))}
+              disabled={escalatedKeys.has("vitals")}
+              className="bg-red-600 hover:bg-red-700 h-9 gap-2 text-sm font-semibold disabled:opacity-60"
+            >
+              {escalatedKeys.has("vitals") ? <><CheckCircle2 className="w-4 h-4" /> Follow-up task created</> : <><BellRing className="w-4 h-4" /> Create provider follow-up task</>}
+            </Button>
+          )}
+        </div>
+      )}
       {!finalNote && (
         <>
           {/* Coverage meter (deterministic, reproducible) */}
@@ -310,6 +368,12 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
                 <span className="text-xs text-slate-500 shrink-0">{answeredCount}/{gaps.length} addressed</span>
               </div>
               <p className="text-xs text-slate-500 mb-2">These required elements weren't in your draft. Answer what applies. Non-critical items left blank become an explicit "Not documented this visit." — never invented.</p>
+              {hasUnconfirmedNegatives && (
+                <button type="button" onClick={confirmAllRoutineNegatives}
+                  className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-1.5 hover:bg-indigo-100 active:scale-95 transition">
+                  <ListChecks className="w-3.5 h-3.5" /> Confirm all routine negatives (no acute changes)
+                </button>
+              )}
               {prefilledIds.size > 0 && (
                 <p className="text-xs text-navy-700 bg-navy-50 border border-navy-200 rounded-lg px-3 py-2 mb-3">Some answers were carried from this patient's last visit — confirm each still applies before generating.</p>
               )}
@@ -335,12 +399,15 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
                         </label>
                       )}
                       {!negConfirmed && (
-                        <textarea
-                          value={answers[g.id] || ""}
-                          onChange={e => setAnswer(g.id, e.target.value)}
-                          placeholder="Type your answer — written into the note in compliant language…"
-                          className="mt-2 w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none resize-none min-h-[56px] leading-relaxed"
-                        />
+                        <div className="mt-2 flex items-start gap-2">
+                          <textarea
+                            value={answers[g.id] || ""}
+                            onChange={e => setAnswer(g.id, e.target.value)}
+                            placeholder="Type or dictate your answer — written into the note in compliant language…"
+                            className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-400 outline-none resize-none min-h-[56px] leading-relaxed"
+                          />
+                          <DictationButton onText={(t) => appendAnswer(g.id, t)} />
+                        </div>
                       )}
                     </div>
                   );
@@ -398,6 +465,35 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
             </div>
           )}
 
+          {(!fixRequired || fixRequired.offlinePending) && (
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <button type="button" onClick={() => setShowProvenance((s) => !s)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-sm font-semibold text-slate-700">
+                <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-green-600" /> Show verification detail</span>
+                <span className="text-xs text-slate-400">{showProvenance ? "Hide" : "Show"}</span>
+              </button>
+              {showProvenance && (
+                <div className="p-4 space-y-2">
+                  <p className="text-xs text-slate-500">Each statement is checked against what you wrote. <span className="text-green-700 font-medium">Green</span> values trace to your input; <span className="text-red-700 font-medium">red</span> don't.</p>
+                  {provenanceRows.map((row, i) => (
+                    <div key={i} className={`text-sm rounded-lg border px-3 py-2 ${row.status === "unsupported" ? "border-red-200 bg-red-50" : row.status === "supported" ? "border-green-200 bg-green-50" : "border-slate-200 bg-slate-50"}`}>
+                      <p className="text-slate-800">{row.text}.</p>
+                      {row.tokens.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {row.tokens.map((t, j) => (
+                            <span key={j} className={`text-xs font-mono px-1.5 py-0.5 rounded ${t.supported ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                              {t.supported ? "✓" : "⚠"} {t.value}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {criticalChartFindings.length > 0 && (
             <div className="rounded-xl border-2 border-red-300 bg-red-50 p-4 space-y-2">
               <h3 className="font-semibold text-red-800 flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Chart safety conflict — review before saving</h3>
@@ -416,6 +512,16 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
                   placeholder="Optional: note your clinical rationale (e.g. confirmed new order with provider). Saved to the compliance record."
                   className="w-full text-sm rounded-lg border border-red-300 bg-white p-2 text-red-900 placeholder:text-red-400 focus:outline-none focus:ring-1 focus:ring-red-400"
                 />
+              )}
+              {onEscalate && (
+                <Button
+                  onClick={() => escalate("chart", criticalChartFindings.map((f) => ({ title: `Provider follow-up: ${f.category} conflict`, description: f.message, reason: f.recommendation })))}
+                  disabled={escalatedKeys.has("chart")}
+                  variant="outline"
+                  className="h-9 gap-2 text-sm font-semibold border-red-300 text-red-700 hover:bg-red-100 disabled:opacity-60"
+                >
+                  {escalatedKeys.has("chart") ? <><CheckCircle2 className="w-4 h-4" /> Follow-up task created</> : <><BellRing className="w-4 h-4" /> Create provider follow-up task</>}
+                </Button>
               )}
             </div>
           )}
