@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, User, FileText, ArrowUpDown, Users } from "lucide-react";
+import { Plus, User, FileText, ArrowUpDown, Users, UserCheck, Target, CalendarPlus } from "lucide-react";
 import { format } from 'date-fns';
 import { secureDelete, handleSecureError } from "../components/utils/security";
 import {
@@ -371,18 +371,42 @@ export default function Patients() {
         eyebrow="Patient Care"
         title="Patient Management"
         description="Manage the active roster, review duplicates, and keep imported census data clean and organized."
-        badges={[
-          { label: `${patients.length} patients`, className: "bg-blue-100 text-blue-800 hover:bg-blue-100" },
-          { label: `${patients.filter(patient => patient.status === 'active').length} active`, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" },
-        ]}
         favoritePage="Patients"
         actions={
-          <Button onClick={() => { setEditingPatient(null); setShowForm(true); }} className="bg-blue-600 hover:bg-blue-700 min-h-[46px] px-5">
+          <Button onClick={() => { setEditingPatient(null); setShowForm(true); }} className="min-h-[46px] px-5">
             <Plus className="w-4 h-4 mr-2" />
             Add Patient
           </Button>
         }
       />
+
+      {/* Roster summary — clean white stat cards (navy/gold), matching the Dashboard. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          { label: "Total Patients", value: patients.length, Icon: Users, tile: "bg-navy-50 text-navy-600 ring-navy-100", accent: "from-navy-500 to-navy-600" },
+          { label: "Active", value: patients.filter(p => p.status === 'active').length, Icon: UserCheck, tile: "bg-emerald-50 text-emerald-600 ring-emerald-100", accent: "from-emerald-400 to-emerald-500" },
+          { label: "With Care Plans", value: patients.filter(p => (carePlanCountByPatientId[p.id] || 0) > 0).length, Icon: Target, tile: "bg-gold-100 text-gold-600 ring-gold-200", accent: "from-gold-400 to-gold-500" },
+          { label: "New (30 days)", value: patients.filter(p => p.created_date && (Date.now() - new Date(p.created_date).getTime()) <= 30 * 86400000).length, Icon: CalendarPlus, tile: "bg-slate-100 text-slate-600 ring-slate-200", accent: "from-slate-400 to-slate-500" },
+        ].map((s) => {
+          const StatIcon = s.Icon;
+          return (
+            <Card key={s.label} className="relative overflow-hidden">
+              <span className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${s.accent}`} aria-hidden="true" />
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500">{s.label}</p>
+                    <p className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{s.value}</p>
+                  </div>
+                  <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ${s.tile}`}>
+                    <StatIcon className="h-5 w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       {showForm && (
         <PatientForm
@@ -478,7 +502,7 @@ export default function Patients() {
               {!filters.search && (
                 <Button
                   onClick={() => setShowForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 min-h-[44px]"
+                  className="min-h-[44px]"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Your First Patient
@@ -526,7 +550,7 @@ export default function Patients() {
               {!filters.search && (
                 <Button
                   onClick={() => setShowForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 min-h-[44px]"
+                  className="min-h-[44px]"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Your First Patient
