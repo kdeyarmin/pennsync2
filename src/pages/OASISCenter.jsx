@@ -45,7 +45,7 @@ const tabLoader = (
 );
 
 export default function OASISCenter() {
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: isUserLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
@@ -57,7 +57,12 @@ export default function OASISCenter() {
   // Resolve the active tab, defaulting to the first. The audit tab is admin-only,
   // so a non-admin requesting ?tab=audit resolves to the default tab instead.
   let activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "analyze";
-  if (ADMIN_TABS.includes(activeTab) && !isAdmin) {
+  // Wait for auth before canonicalizing an admin tab away: on first render
+  // currentUser is undefined (isAdmin false), so an admin deep-linking to e.g.
+  // ?tab=revenue must keep that tab until the user query resolves — otherwise the
+  // effect below would strip the param and drop them on Analyze. The admin-only
+  // tab *content* stays gated regardless.
+  if (!isUserLoading && ADMIN_TABS.includes(activeTab) && !isAdmin) {
     activeTab = "analyze";
   }
 
@@ -73,10 +78,10 @@ export default function OASISCenter() {
   // the default tab is plain /OASISCenter. Only fires when the param resolved to
   // the default tab, so a valid deep-link like ?tab=review is left untouched.
   useEffect(() => {
-    if (requestedTab !== null && activeTab === "analyze") {
+    if (!isUserLoading && requestedTab !== null && activeTab === "analyze") {
       setSearchParams({}, { replace: true });
     }
-  }, [requestedTab, activeTab, setSearchParams]);
+  }, [isUserLoading, requestedTab, activeTab, setSearchParams]);
 
   return (
     <PageContainer>

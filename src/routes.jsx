@@ -110,10 +110,10 @@ export const REDIRECTS = [
   // ─── Document Hub consolidation ──────────────────────────────────────────────
   // Signature, storage/intake, discharge and audit pages are now Document Hub tabs.
   { from: '/DocumentSignatures', to: '/DocumentHub?tab=signatures' },
-  { from: '/CreateSignatureRequest', to: '/DocumentHub?tab=signatures' },
-  { from: '/BulkSignatureRequests', to: '/DocumentHub?tab=signatures' },
+  { from: '/CreateSignatureRequest', to: '/DocumentHub?tab=signatures&view=create' },
+  { from: '/BulkSignatureRequests', to: '/DocumentHub?tab=signatures&view=bulk' },
   { from: '/DocumentManagement', to: '/DocumentHub?tab=documents' },
-  { from: '/DocumentIngestion', to: '/DocumentHub?tab=documents' },
+  { from: '/DocumentIngestion', to: '/DocumentHub?tab=documents&view=intake' },
   { from: '/DischargeSummaries', to: '/DocumentHub?tab=discharge' },
   { from: '/DocumentAuditLogs', to: '/DocumentHub?tab=audit' },
 
@@ -136,11 +136,11 @@ export const REDIRECTS = [
 
   // ─── Compliance Center consolidation ─────────────────────────────────────────
   // Monitoring, regulatory and security pages are now Compliance Center tabs.
-  { from: '/ComplianceMonitoringDashboard', to: '/ComplianceCenter?tab=dashboard' },
-  { from: '/RealTimeComplianceDashboard', to: '/ComplianceCenter?tab=dashboard' },
+  { from: '/ComplianceMonitoringDashboard', to: '/ComplianceCenter?tab=dashboard&view=monitoring' },
+  { from: '/RealTimeComplianceDashboard', to: '/ComplianceCenter?tab=dashboard&view=realtime' },
   { from: '/RegulatoryCompliance', to: '/ComplianceCenter?tab=regulatory' },
   { from: '/SecurityCompliance', to: '/ComplianceCenter?tab=security' },
-  { from: '/SecurityPolicy', to: '/ComplianceCenter?tab=security' },
+  { from: '/SecurityPolicy', to: '/ComplianceCenter?tab=security&view=policies' },
 
   // ─── Learning consolidation ──────────────────────────────────────────────────
   // The personal-training wrapper pages are now tabs of My Learning; NurseTraining

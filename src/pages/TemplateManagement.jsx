@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, Edit2, Trash2, FileText, FileType } from 'lucide-react';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
+import { isSuperAdmin } from '@/lib/superAdmin';
 
 const PDFTemplateLibrary = lazy(() => import('@/pages/PDFTemplateLibrary'));
 
@@ -34,24 +35,39 @@ export default function TemplateManagement() {
     content: '',
   });
 
+  const { data: currentUser, isLoading: isUserLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
+  // The document-template CRUD tab is admin-only; the PDF Templates tab stays
+  // open to everyone (the retired /PDFTemplateLibrary route was non-admin), so
+  // non-admins land on — and are limited to — the PDF tab.
+  const defaultTab = isAdmin ? 'templates' : 'pdf';
+  const validTabKeys = isAdmin ? ['templates', 'pdf'] : ['pdf'];
+
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
-  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : 'templates';
+  // Until auth resolves, honor any known tab; once loaded, fall back to the
+  // role-appropriate default (admins → templates, others → pdf).
+  const activeTab = isUserLoading
+    ? (TAB_KEYS.includes(requestedTab) ? requestedTab : 'templates')
+    : (validTabKeys.includes(requestedTab) ? requestedTab : defaultTab);
+
   // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
-  // retired PDF Template Library page deep-links correctly. "templates" is the
-  // default, so it stays a clean /TemplateManagement with no query string.
+  // retired PDF Template Library page deep-links correctly. The role default
+  // stays a clean /TemplateManagement with no query string.
   const handleTabChange = (value) => {
-    setSearchParams(value === 'templates' ? {} : { tab: value });
+    setSearchParams(value === defaultTab ? {} : { tab: value });
   };
 
-  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
-  // default tab is plain /TemplateManagement. Only fires when the param resolved
-  // to the default tab, so a valid deep-link like ?tab=pdf is left untouched.
+  // Converge on the canonical URL: strip a redundant ?tab= once auth resolves and
+  // the param matches the role default.
   useEffect(() => {
-    if (requestedTab !== null && activeTab === 'templates') {
+    if (!isUserLoading && requestedTab !== null && activeTab === defaultTab) {
       setSearchParams({}, { replace: true });
     }
-  }, [requestedTab, activeTab, setSearchParams]);
+  }, [isUserLoading, requestedTab, activeTab, defaultTab, setSearchParams]);
 
   // Fetch templates
   const { data: templates = [], isLoading } = useQuery({
@@ -129,10 +145,12 @@ export default function TemplateManagement() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
-            <TabsTrigger value="templates" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <FileText className="h-4 w-4 mr-2" />
-              Document Templates
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="templates" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                <FileText className="h-4 w-4 mr-2" />
+                Document Templates
+              </TabsTrigger>
+            )}
             <TabsTrigger value="pdf" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <FileType className="h-4 w-4 mr-2" />
               PDF Templates
@@ -140,6 +158,7 @@ export default function TemplateManagement() {
           </TabsList>
         </div>
 
+        {isAdmin && (
         <TabsContent value="templates" className="space-y-4 sm:space-y-6">
           {isLoading ? (
             <div className="flex items-center justify-center p-8">
@@ -255,6 +274,7 @@ export default function TemplateManagement() {
             </>
           )}
         </TabsContent>
+        )}
 
         <TabsContent value="pdf">
           <Suspense fallback={tabLoader}>

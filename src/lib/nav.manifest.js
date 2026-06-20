@@ -357,7 +357,10 @@ export const NAV_MANIFEST = [
     label: "Template Management",
     icon: FileText,
     category: null,
-    adminOnly: true,
+    // Route open to all; the document-template CRUD tab is admin-gated in-page
+    // while the PDF Templates tab stays reachable to non-admins (the retired
+    // /PDFTemplateLibrary route this absorbed was non-admin).
+    adminOnly: false,
     breadcrumbParent: "DocumentHub",
     keywords: ["template", "management"],
   },

@@ -37,7 +37,7 @@ const SpokeFallback = (
 export default function DocumentHub() {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: isUserLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
@@ -48,7 +48,22 @@ export default function DocumentHub() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
-  const activeTab = validTabKeys.includes(requestedTab) ? requestedTab : "signatures";
+  const requestedView = searchParams.get("view");
+  // Until auth resolves, honor a requested admin tab (the Audit content stays
+  // gated below) so an admin deep-linking to ?tab=audit isn't canonicalized away
+  // before currentUser loads.
+  const activeTab = isUserLoading
+    ? ([...TAB_KEYS, "audit"].includes(requestedTab) ? requestedTab : "signatures")
+    : (validTabKeys.includes(requestedTab) ? requestedTab : "signatures");
+
+  // Nested sub-tab selection, driven by ?view= so deep links (e.g. a retired
+  // /CreateSignatureRequest or /DocumentIngestion bookmark) open the right inner
+  // workflow instead of the sub-tab default.
+  const SIGNATURE_VIEWS = ["all", "create", "bulk"];
+  const DOCUMENT_VIEWS = ["storage", "intake"];
+  const signatureView = SIGNATURE_VIEWS.includes(requestedView) ? requestedView : "all";
+  const documentView = DOCUMENT_VIEWS.includes(requestedView) ? requestedView : "storage";
+  const handleViewChange = (view) => setSearchParams({ tab: activeTab, view });
 
   // Reflect the active tab in the URL so hub tabs are shareable/bookmarkable and
   // redirects from the retired pages deep-link correctly. "signatures" is the
@@ -57,15 +72,14 @@ export default function DocumentHub() {
     setSearchParams(value === "signatures" ? {} : { tab: value });
   };
 
-  // Converge on the canonical URL: strip a redundant or unknown ?tab= (e.g. a
-  // bookmarked ?tab=signatures, or a stale/forbidden tab key) so the default tab
-  // is plain /DocumentHub. Only fires when the param resolved to the default tab,
-  // so a valid deep-link like ?tab=discharge is left untouched.
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /DocumentHub. Skipped while a meaningful ?view= is
+  // present (a deep-linked sub-tab) and until auth resolves.
   useEffect(() => {
-    if (requestedTab !== null && activeTab === "signatures") {
+    if (!isUserLoading && requestedTab !== null && activeTab === "signatures" && !requestedView) {
       setSearchParams({}, { replace: true });
     }
-  }, [requestedTab, activeTab, setSearchParams]);
+  }, [isUserLoading, requestedTab, activeTab, requestedView, setSearchParams]);
 
   return (
     <PageContainer>
@@ -121,7 +135,7 @@ export default function DocumentHub() {
 
         {/* Signatures Tab — All / Create / Bulk sub-tabs */}
         <TabsContent value="signatures" className="space-y-6">
-          <Tabs defaultValue="all" className="space-y-4">
+          <Tabs value={signatureView} onValueChange={handleViewChange} className="space-y-4">
             <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
               <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
                 <TabsTrigger value="all" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
@@ -155,7 +169,7 @@ export default function DocumentHub() {
 
         {/* Documents Tab — Storage / Intake sub-tabs */}
         <TabsContent value="documents" className="space-y-6">
-          <Tabs defaultValue="storage" className="space-y-4">
+          <Tabs value={documentView} onValueChange={handleViewChange} className="space-y-4">
             <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
               <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
                 <TabsTrigger value="storage" className="min-h-[44px] px-4 text-sm whitespace-nowrap">

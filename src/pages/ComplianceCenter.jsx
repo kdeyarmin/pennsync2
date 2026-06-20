@@ -52,7 +52,18 @@ export default function ComplianceCenter() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
+  const requestedView = searchParams.get("view");
   const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "dashboard";
+
+  // Nested sub-tab selection, driven by ?view= so deep links (e.g. a retired
+  // /ComplianceMonitoringDashboard or /SecurityPolicy bookmark) open the right
+  // inner page instead of the sub-tab default.
+  const DASHBOARD_VIEWS = ["overview", "live", "monitoring", "realtime"];
+  const SECURITY_VIEWS = ["audit-logs", "policies"];
+  const dashboardView = DASHBOARD_VIEWS.includes(requestedView) ? requestedView : "overview";
+  const securityView = SECURITY_VIEWS.includes(requestedView) ? requestedView : "audit-logs";
+  const handleViewChange = (view) => setSearchParams({ tab: activeTab, view });
+
   // Reflect the active tab in the URL so tabs are shareable/bookmarkable and
   // redirects from the retired pages deep-link correctly. "dashboard" is the
   // default, so it stays a clean /ComplianceCenter with no query string.
@@ -60,15 +71,14 @@ export default function ComplianceCenter() {
     setSearchParams(value === "dashboard" ? {} : { tab: value });
   };
 
-  // Converge on the canonical URL: strip a redundant or unknown ?tab= (e.g. a
-  // bookmarked ?tab=dashboard, or a stale tab key) so the default tab is plain
-  // /ComplianceCenter. Only fires when the param resolved to the default tab, so
-  // a valid deep-link like ?tab=security is left untouched.
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /ComplianceCenter. Skipped while a meaningful ?view= is
+  // present (a deep-linked sub-tab).
   useEffect(() => {
-    if (requestedTab !== null && activeTab === "dashboard") {
+    if (requestedTab !== null && activeTab === "dashboard" && !requestedView) {
       setSearchParams({}, { replace: true });
     }
-  }, [requestedTab, activeTab, setSearchParams]);
+  }, [requestedTab, activeTab, requestedView, setSearchParams]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -383,7 +393,7 @@ export default function ComplianceCenter() {
 
         {/* Dashboard: Overview + live monitoring + merged dashboards */}
         <TabsContent value="dashboard" className="space-y-6">
-          <Tabs defaultValue="overview" className="space-y-6">
+          <Tabs value={dashboardView} onValueChange={handleViewChange} className="space-y-6">
             <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
               <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
                 <TabsTrigger value="overview" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
@@ -756,7 +766,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
 
         {/* Security & Policies Tab */}
         <TabsContent value="security">
-          <Tabs defaultValue="audit-logs" className="space-y-6">
+          <Tabs value={securityView} onValueChange={handleViewChange} className="space-y-6">
             <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
               <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
                 <TabsTrigger value="audit-logs" className="min-h-[44px] px-4 text-sm whitespace-nowrap">

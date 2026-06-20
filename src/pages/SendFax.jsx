@@ -65,7 +65,7 @@ const tabLoader = (
 );
 
 export default function SendFax() {
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: isUserLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
@@ -76,8 +76,10 @@ export default function SendFax() {
   const requestedTab = searchParams.get("tab");
   // Resolve the active tab, defaulting to the first. The analytics tab is
   // admin-only, so a non-admin requesting ?tab=analytics resolves to the default.
+  // Wait for auth to resolve before downgrading an admin tab so an admin
+  // deep-linking to ?tab=analytics isn't bounced before currentUser loads.
   let activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "upload";
-  if (ADMIN_TABS.includes(activeTab) && !isAdmin) {
+  if (!isUserLoading && ADMIN_TABS.includes(activeTab) && !isAdmin) {
     activeTab = "upload";
   }
 
@@ -100,10 +102,10 @@ export default function SendFax() {
   // so the default tab is plain /SendFax. Only fires when the param resolved to
   // the default tab, so a valid deep-link like ?tab=contacts is left untouched.
   useEffect(() => {
-    if (requestedTab !== null && activeTab === "upload") {
+    if (!isUserLoading && requestedTab !== null && activeTab === "upload") {
       setSearchParams({}, { replace: true });
     }
-  }, [requestedTab, activeTab, setSearchParams]);
+  }, [isUserLoading, requestedTab, activeTab, setSearchParams]);
 
   return (
     <PageContainer>
