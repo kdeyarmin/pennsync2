@@ -3,9 +3,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Stethoscope, ClipboardList } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { ArrowLeft, Stethoscope } from "lucide-react";
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
@@ -35,23 +33,7 @@ export default function OASISClinicalReview() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={ClipboardList}
-        eyebrow="Patient Care"
-        title="OASIS Clinical Review"
-        description={patientName ? `Patient: ${patientName}` : "Review AI-generated OASIS clinical recommendations and care planning"}
-        favoritePage="OASISClinicalReview"
-        actions={
-          <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Analyzer
-            </Button>
-          </Link>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Predictive Outcomes Analyzer */}
       <PredictiveOutcomesAnalyzer
         analysisResults={analysisResults}
@@ -138,6 +120,6 @@ export default function OASISClinicalReview() {
           )}
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

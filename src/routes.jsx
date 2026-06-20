@@ -94,6 +94,37 @@ export const REDIRECTS = [
   // Medication Reconciliation was retired along with the rest of the medication
   // entry/checking UI; send old links and bookmarks to the patient list.
   { from: '/MedicationReconciliation', to: '/Patients' },
+
+  // ─── OASIS Center consolidation ──────────────────────────────────────────────
+  // The standalone OASIS analysis/review pages are now tabs of /OASISCenter.
+  // (RedirectTo preserves incoming ?query and router state onto the tab.)
+  { from: '/OASISAnalyzer', to: '/OASISCenter' },
+  { from: '/OASISReview', to: '/OASISCenter?tab=review' },
+  { from: '/OASISClinicalReview', to: '/OASISCenter?tab=clinical' },
+  { from: '/OASISComplianceReview', to: '/OASISCenter?tab=quality' },
+  { from: '/OASISDocumentationReview', to: '/OASISCenter?tab=quality' },
+  { from: '/OASISRevenueAnalysis', to: '/OASISCenter?tab=revenue' },
+  { from: '/OASISAnalyticsDashboard', to: '/OASISCenter?tab=analytics' },
+  { from: '/OASISAuditDashboard', to: '/OASISCenter?tab=audit' },
+
+  // ─── Document Hub consolidation ──────────────────────────────────────────────
+  // Signature, storage/intake, discharge and audit pages are now Document Hub tabs.
+  { from: '/DocumentSignatures', to: '/DocumentHub?tab=signatures' },
+  { from: '/CreateSignatureRequest', to: '/DocumentHub?tab=signatures' },
+  { from: '/BulkSignatureRequests', to: '/DocumentHub?tab=signatures' },
+  { from: '/DocumentManagement', to: '/DocumentHub?tab=documents' },
+  { from: '/DocumentIngestion', to: '/DocumentHub?tab=documents' },
+  { from: '/DischargeSummaries', to: '/DocumentHub?tab=discharge' },
+  { from: '/DocumentAuditLogs', to: '/DocumentHub?tab=audit' },
+
+  // ─── Patient Education Hub consolidation ─────────────────────────────────────
+  { from: '/PatientEducation', to: '/PatientEducationHub?tab=teachback' },
+  { from: '/PatientEducationPortal', to: '/PatientEducationHub?tab=tracking' },
+
+  // ─── Referral Intake consolidation ───────────────────────────────────────────
+  // Processor and Admission Note are now steps (tabs) of the intake workflow.
+  { from: '/ReferralProcessor', to: '/ReferralIntake?tab=process' },
+  { from: '/ReferralAdmissionNote', to: '/ReferralIntake?tab=admission' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';

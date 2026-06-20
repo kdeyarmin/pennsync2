@@ -3,9 +3,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, Shield } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
 import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";
@@ -13,7 +11,7 @@ import AdvancedComplianceAnalyzer from "../components/oasis/AdvancedComplianceAn
 
 export default function OASISComplianceReview() {
   const location = useLocation();
-  const { analysisResults, pdgmData, patientName, patientId } = location.state || {};
+  const { analysisResults, pdgmData, patientId } = location.state || {};
 
   if (!analysisResults) {
     return (
@@ -33,37 +31,8 @@ export default function OASISComplianceReview() {
     );
   }
 
-  const complianceScore = analysisResults.compliance_score || 0;
-  const accuracyScore = analysisResults.accuracy_score || 0;
-
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Shield}
-        eyebrow="Patient Care"
-        title="OASIS Compliance Review"
-        description={patientName ? `Patient: ${patientName}` : undefined}
-        favoritePage="OASISComplianceReview"
-        actions={
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-            <Link to={createPageUrl("OASISAnalyzer")}>
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Analyzer
-              </Button>
-            </Link>
-            <div className="text-right">
-              <p className="text-sm text-slate-600">Compliance Score</p>
-              <div className="text-2xl font-bold text-blue-600">{complianceScore}%</div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-slate-600">Accuracy Score</p>
-              <div className="text-2xl font-bold text-navy-600">{accuracyScore}%</div>
-            </div>
-          </div>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Advanced AI Compliance Analyzer */}
       <AdvancedComplianceAnalyzer
         analysisResults={analysisResults}
@@ -169,6 +138,6 @@ export default function OASISComplianceReview() {
           />
         )}
       </div>
-    </PageContainer>
+    </div>
   );
 }

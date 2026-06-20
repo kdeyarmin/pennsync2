@@ -17,11 +17,8 @@ import {
   CheckCircle2,
   Sparkles,
   ListChecks,
-  MessageSquare,
-  Heart
+  MessageSquare
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 
 import EducationMaterialGenerator from "../components/education/EducationMaterialGenerator";
 import TeachBackConfirmation from "../components/education/TeachBackConfirmation";
@@ -57,15 +54,7 @@ export default function PatientEducation() {
     : teachBackRecords;
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Heart}
-        eyebrow="Patient Care"
-        title="Patient Education Center"
-        description="Generate patient-friendly educational materials and document understanding"
-        favoritePage="PatientEducation"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Patient Selection */}
       <Card className="mb-6 border-blue-200">
         <CardContent className="p-4">
@@ -298,6 +287,6 @@ export default function PatientEducation() {
           </Card>
         </TabsContent>
       </Tabs>
-    </PageContainer>
+    </div>
   );
 }

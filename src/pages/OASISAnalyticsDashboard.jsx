@@ -4,7 +4,6 @@ import { CHART_COLORS_6 } from "@/constants/chartColors";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -42,11 +41,8 @@ import {
   Minus,
   BarChart3,
   PieChart as PieChartIcon,
-  Download,
   Filter
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import { format, subDays } from "date-fns";
 
 export default function OASISAnalyticsDashboard() {
@@ -236,21 +232,7 @@ export default function OASISAnalyticsDashboard() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={BarChart3}
-        eyebrow="Patient Care"
-        title="OASIS Analytics Dashboard"
-        description="Performance insights and trends across all OASIS submissions"
-        favoritePage="OASISAnalyticsDashboard"
-        actions={
-          <Button variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Export Report
-          </Button>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -612,6 +594,6 @@ export default function OASISAnalyticsDashboard() {
           </CardContent>
         </Card>
       )}
-    </PageContainer>
+    </div>
   );
 }

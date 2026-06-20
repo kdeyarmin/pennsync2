@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -44,8 +44,10 @@ import {
   ClipboardList,
   Target,
   Trash2,
-  UserCheck
+  UserCheck,
+  Loader2
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import { format } from "date-fns";
@@ -61,7 +63,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { todayEastern } from "@/components/utils/timezone";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import { validateReferralFile, getDocumentType } from "../components/referral/referralUploadUtils";
@@ -70,7 +72,35 @@ import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
 
+const ReferralProcessor = lazy(() => import("./ReferralProcessor"));
+const ReferralAdmissionNote = lazy(() => import("./ReferralAdmissionNote"));
+
+// Tab keys for the referral intake workflow hub. Kept in sync with the
+// TabsTrigger values below and used to validate the ?tab= deep-link so the
+// retired standalone pages (Referral Processor, Referral Admission Note)
+// redirect straight to the right tab.
+const TAB_KEYS = ["intake", "process", "admission"];
+
 export default function ReferralIntake() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "intake";
+  // Reflect the active tab in the URL so workflow tabs are shareable/bookmarkable
+  // and redirects from the retired pages deep-link correctly. "intake" is the
+  // default, so it stays a clean /ReferralIntake with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "intake" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /ReferralIntake. Only fires when the param resolved to
+  // the default tab, leaving a valid deep-link like ?tab=process untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "intake") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
+
   const queryClient = useQueryClient();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [processingReferralId, setProcessingReferralId] = useState(null);
@@ -942,17 +972,38 @@ Actions available:
         description="Streamlined workflow for processing incoming referrals"
         favoritePage="ReferralIntake"
         actions={
-          <Button
-            onClick={() => setUploadDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">New Referral</span>
-            <span className="sm:hidden">New</span>
-          </Button>
+          activeTab === "intake" ? (
+            <Button
+              onClick={() => setUploadDialogOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">New Referral</span>
+              <span className="sm:hidden">New</span>
+            </Button>
+          ) : null
         }
       />
 
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="intake" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Intake
+            </TabsTrigger>
+            <TabsTrigger value="process" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Process
+            </TabsTrigger>
+            <TabsTrigger value="admission" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <FileText className="h-4 w-4 mr-2" />
+              Admission Note
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="intake" className="space-y-4 sm:space-y-6">
       {/* Status Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
@@ -1620,7 +1671,20 @@ Actions available:
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </TabsContent>
 
+        <TabsContent value="process">
+          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+            <ReferralProcessor />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="admission">
+          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+            <ReferralAdmissionNote />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

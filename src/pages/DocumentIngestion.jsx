@@ -3,9 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Zap, FileText } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { Zap, FileText } from "lucide-react";
 import DocumentIngestionUploader from "../components/documents/DocumentIngestionUploader";
 import DocumentToTriageMapper from "../components/referral/DocumentToTriageMapper";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -23,15 +21,7 @@ export default function DocumentIngestion() {
   }, [currentUser?.email]);
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Upload}
-        eyebrow="Documentation"
-        title="Document Ingestion"
-        description="Upload clinical documents (faxes, PDFs, scans) and use AI to extract patient data, vitals, and diagnoses"
-        favoritePage="DocumentIngestion"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       <Tabs defaultValue="extract" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200 rounded-lg p-1">
           <TabsTrigger value="extract" className="gap-1.5">
@@ -136,6 +126,6 @@ export default function DocumentIngestion() {
           </div>
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

@@ -11,7 +11,6 @@ import {
   computeSummaryStats,
 } from "@/components/oasis/oasisAnalytics";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,9 +84,7 @@ import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentRev
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import OASISDataEntryAssistant from "../components/oasis/OASISDataEntryAssistant";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { BarChart3, Search } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { BarChart3 } from "lucide-react";
 import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
 import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
 import PDGMTrendDashboard from "../components/oasis/PDGMTrendDashboard";
@@ -1414,15 +1411,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Search}
-        eyebrow="Patient Care"
-        title="OASIS Analyzer"
-        description="Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips"
-        favoritePage="OASISAnalyzer"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 sm:mb-6">
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
           <TabsList className="inline-flex md:grid md:w-full md:max-w-3xl md:grid-cols-5 gap-1 min-w-max h-auto">
@@ -1901,7 +1890,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link to={createPageUrl("OASISRevenueAnalysis")} state={{ analysisResults, pdgmData, patientName, uploadId: analysisId }}>
+                <Link to="/OASISCenter?tab=revenue" state={{ analysisResults, pdgmData, patientName, uploadId: analysisId }}>
                   <Button className="w-full bg-green-600 hover:bg-green-700 h-auto py-4 flex flex-col items-center gap-2">
                     <DollarSign className="w-8 h-8" />
                     <div className="text-center">
@@ -1910,7 +1899,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </div>
                   </Button>
                 </Link>
-                <Link to={createPageUrl("OASISComplianceReview")} state={{ analysisResults, pdgmData, patientName, patientId: selectedPatientId }}>
+                <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, patientId: selectedPatientId }}>
                   <Button className="w-full bg-red-600 hover:bg-red-700 h-auto py-4 flex flex-col items-center gap-2">
                     <Shield className="w-8 h-8" />
                     <div className="text-center">
@@ -1919,7 +1908,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </div>
                   </Button>
                 </Link>
-                <Link to={createPageUrl("OASISDocumentationReview")} state={{ analysisResults, pdgmData, patientName, navigationData }}>
+                <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, navigationData }}>
                   <Button className="w-full bg-navy-600 hover:bg-navy-700 h-auto py-4 flex flex-col items-center gap-2">
                     <FileText className="w-8 h-8" />
                     <div className="text-center">
@@ -2836,6 +2825,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       )}
         </TabsContent>
       </Tabs>
-    </PageContainer>
+    </div>
   );
 }

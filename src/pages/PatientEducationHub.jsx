@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, Suspense, lazy } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BookOpen,
   Download,
@@ -20,7 +22,9 @@ import {
   Search,
   Loader2,
   CheckCircle2,
-  Settings
+  Settings,
+  MessageSquare,
+  Send
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
@@ -30,6 +34,14 @@ import HandoutCustomizer from "../components/education/HandoutCustomizer";
 import HandoutPreview from "../components/education/HandoutPreview";
 import HandoutStyleCustomizer from "../components/education/HandoutStyleCustomizer";
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
+
+const PatientEducation = lazy(() => import("./PatientEducation"));
+const PatientEducationPortal = lazy(() => import("./PatientEducationPortal"));
+
+// Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
+// ?tab= deep-link so redirects from the retired standalone pages (Teach-Back,
+// Sent / Tracking) land on the right tab. "create" is the default.
+const TAB_KEYS = ["create", "teachback", "tracking"];
 
 const educationTopics = [
   {
@@ -197,6 +209,25 @@ export default function PatientEducationHub() {
     agencyName: '',
     agencyPhone: ''
   });
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "create";
+  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
+  // redirects from the retired pages deep-link correctly. "create" is the
+  // default, so it stays a clean /PatientEducationHub with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "create" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /PatientEducationHub. Only fires when the param resolved
+  // to the default tab, leaving valid deep-links like ?tab=teachback untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "create") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
@@ -370,6 +401,25 @@ export default function PatientEducationHub() {
         favoritePage="PatientEducationHub"
       />
 
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="create" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Create &amp; Customize
+            </TabsTrigger>
+            <TabsTrigger value="teachback" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Teach-Back
+            </TabsTrigger>
+            <TabsTrigger value="tracking" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Send className="h-4 w-4 mr-2" />
+              Sent / Tracking
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="create" className="space-y-4 sm:space-y-6">
       {/* AI Personalized Generator for Selected Patient */}
       {selectedPatient && (
         <div className="mb-4 sm:mb-6">
@@ -668,6 +718,20 @@ export default function PatientEducationHub() {
           handleEmail();
         }}
       />
+        </TabsContent>
+
+        <TabsContent value="teachback">
+          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+            <PatientEducation />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="tracking">
+          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+            <PatientEducationPortal />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

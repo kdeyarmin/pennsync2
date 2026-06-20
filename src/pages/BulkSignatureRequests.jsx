@@ -1,9 +1,6 @@
 import { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import BulkDocumentPackageCreator from '@/components/documents/BulkDocumentPackageCreator';
-import PageContainer from '@/components/ui/PageContainer';
-import PageHeader from '@/components/ui/PageHeader';
-import { Pen } from 'lucide-react';
 
 export default function BulkSignatureRequests() {
   useEffect(() => {
@@ -14,15 +11,8 @@ export default function BulkSignatureRequests() {
   }, []);
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Pen}
-        eyebrow="Documentation"
-        title="Bulk Signature Requests"
-        description="Send document signature requests to multiple patients at once using templates."
-        favoritePage="BulkSignatureRequests"
-      />
+    <div className="space-y-4 sm:space-y-6">
       <BulkDocumentPackageCreator />
-    </PageContainer>
+    </div>
   );
 }

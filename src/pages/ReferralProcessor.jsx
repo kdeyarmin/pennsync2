@@ -10,9 +10,7 @@ import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAsse
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, UserPlus, ArrowRight, TrendingUp, Sparkles, Target, CheckCircle2, RefreshCw } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { FileText, UserPlus, ArrowRight, TrendingUp, Sparkles, Target, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function ReferralProcessor() {
@@ -141,16 +139,7 @@ export default function ReferralProcessor() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={RefreshCw}
-        eyebrow="Documentation"
-        title="Referral Processor"
-        description="Upload and process patient referral PDFs for admission"
-        favoritePage="ReferralProcessor"
-      />
-
-      <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
         <Alert className="bg-gradient-to-r from-blue-50 to-navy-50 border-blue-300">
           <FileText className="w-4 h-4 text-blue-600" />
           <AlertDescription className="text-blue-900">
@@ -432,7 +421,6 @@ export default function ReferralProcessor() {
             </Card>
           </>
         )}
-      </div>
-    </PageContainer>
+    </div>
   );
 }

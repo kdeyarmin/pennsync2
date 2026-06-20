@@ -36,8 +36,6 @@ import {
   Shield,
   Search
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import { format } from "date-fns";
 import OASISAuditReportGenerator from "../components/oasis/OASISAuditReportGenerator";
 
@@ -174,15 +172,7 @@ export default function OASISAuditDashboard() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Eye}
-        eyebrow="Patient Care"
-        title="OASIS Audit Dashboard"
-        description="Review flagged OASIS documents and generate audit reports"
-        favoritePage="OASISAuditDashboard"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
@@ -560,6 +550,6 @@ export default function OASISAuditDashboard() {
           currentUser={currentUser}
         />
       )}
-    </PageContainer>
+    </div>
   );
 }

@@ -10,8 +10,6 @@ import {
   FileText, Search, Eye, Download, CheckCircle,
   Clock, Send
 } from 'lucide-react';
-import PageContainer from '@/components/ui/PageContainer';
-import PageHeader from '@/components/ui/PageHeader';
 
 import DischargeSummaryWorkflow from '../components/discharge/DischargeSummaryWorkflow';
 
@@ -73,15 +71,7 @@ export default function DischargeSummaries() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={FileText}
-        eyebrow="Documentation"
-        title="Discharge Summaries"
-        description="Review, sign, and manage patient discharge documentation"
-        favoritePage="DischargeSummaries"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -248,6 +238,6 @@ export default function DischargeSummaries() {
           }}
         />
       )}
-    </PageContainer>
+    </div>
   );
 }
