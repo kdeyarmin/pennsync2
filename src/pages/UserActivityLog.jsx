@@ -221,7 +221,7 @@ export default function UserActivityLog() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-navy-50 to-teal-50">
+        <Card className="bg-gradient-to-br from-navy-50 to-navy-100">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <BarChart3 className="w-8 h-8 text-navy-600" />

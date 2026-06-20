@@ -211,9 +211,9 @@ export default function NurseEducationVideos() {
 
       {/* Completion Message */}
       {completedVideos.length === totalVideos && (
-        <Card className="border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50">
+        <Card className="border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-emerald-100">
           <CardContent className="p-6 text-center">
-            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2">Congratulations!</h3>
