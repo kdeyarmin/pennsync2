@@ -1,8 +1,24 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryCache } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 
 export const queryClientInstance = new QueryClient({
+	// Safety net for failed data loads. Most pages never render an `isError`
+	// state, so before this a failed read just left an empty/forever-loading
+	// screen with no explanation. Surface one deduped toast (the fixed id
+	// collapses simultaneous failures from a multi-query page into a single
+	// message). Auth/permission/not-found are handled by the auth + route
+	// layers, so they don't toast here.
+	queryCache: new QueryCache({
+		onError: (error) => {
+			const status = error?.response?.status ?? error?.status;
+			if (status === 401 || status === 403 || status === 404) return;
+			console.error('Query failed:', error);
+			toast.error("Couldn't load some data. Check your connection and try again.", {
+				id: 'query-load-error',
+			});
+		},
+	}),
 	defaultOptions: {
 		mutations: {
 			// Safety net: a failed create/update/delete should never fail silently.

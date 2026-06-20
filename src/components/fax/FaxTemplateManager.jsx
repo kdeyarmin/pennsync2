@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,7 @@ import { toast } from "sonner";
 
 export default function FaxTemplateManager({ onApplyTemplate }) {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -99,7 +101,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
   };
 
   const handleDelete = async (tpl) => {
-    if (!confirm(`Delete template "${tpl.name}"?`)) return;
+    if (!(await confirm({ title: "Delete template?", description: `Delete template "${tpl.name}"? This can't be undone.`, confirmText: "Delete", destructive: true }))) return;
     try {
       await base44.entities.FaxTemplate.delete(tpl.id);
       queryClient.invalidateQueries({ queryKey: ["fax-templates"] });

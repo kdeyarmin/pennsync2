@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -54,6 +55,7 @@ import PageContainer from "@/components/ui/PageContainer";
 export default function AutomaticCarePlans() {
 
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [showDialog, setShowDialog] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState(null);
   const [interventionInput, setInterventionInput] = useState("");
@@ -196,8 +198,8 @@ export default function AutomaticCarePlans() {
     setShowDialog(true);
   };
 
-  const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this automatic care plan trigger?")) {
+  const handleDelete = async (id) => {
+    if (await confirm({ title: "Delete trigger?", description: "Are you sure you want to delete this automatic care plan trigger?", confirmText: "Delete", destructive: true })) {
       deleteTriggerMutation.mutate(id);
     }
   };

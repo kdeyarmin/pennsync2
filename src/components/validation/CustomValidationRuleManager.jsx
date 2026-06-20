@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import {
 } from "lucide-react";
 
 export default function CustomValidationRuleManager() {
+  const confirm = useConfirm();
   const [showDialog, setShowDialog] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
   const queryClient = useQueryClient();
@@ -114,8 +116,8 @@ export default function CustomValidationRuleManager() {
     setShowDialog(true);
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this validation rule?')) {
+  const handleDelete = async (id) => {
+    if (await confirm({ title: "Delete rule?", description: "Are you sure you want to delete this validation rule?", confirmText: "Delete", destructive: true })) {
       deleteRuleMutation.mutate(id);
     }
   };

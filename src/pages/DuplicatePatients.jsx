@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
 export default function DuplicatePatients() {
+  const confirm = useConfirm();
   const [isScanning, setIsScanning] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   const [duplicateGroups, setDuplicateGroups] = useState([]);
@@ -66,7 +68,7 @@ export default function DuplicatePatients() {
   };
 
   const handleMerge = async (keepPatient, mergePatients) => {
-    if (!confirm(`Are you sure you want to close ${mergePatients.length} duplicate patient(s) and keep "${keepPatient.first_name} ${keepPatient.last_name}"?`)) {
+    if (!(await confirm({ title: "Merge duplicates?", description: `Close ${mergePatients.length} duplicate patient(s) and keep "${keepPatient.first_name} ${keepPatient.last_name}"?`, confirmText: "Merge", destructive: true }))) {
       return;
     }
 
@@ -79,7 +81,7 @@ export default function DuplicatePatients() {
   };
 
   const handleClosePrimary = async (group) => {
-    if (!confirm(`Are you sure you want to close "${group.primary.first_name} ${group.primary.last_name}"?`)) {
+    if (!(await confirm({ title: "Close patient?", description: `Are you sure you want to close "${group.primary.first_name} ${group.primary.last_name}"?`, confirmText: "Close patient", destructive: true }))) {
       return;
     }
 
@@ -89,7 +91,7 @@ export default function DuplicatePatients() {
   };
 
   const handleCloseSpecific = async (groupPrimary, duplicatePatient) => {
-    if (!confirm(`Are you sure you want to close "${duplicatePatient.patient.first_name} ${duplicatePatient.patient.last_name}"?`)) {
+    if (!(await confirm({ title: "Close patient?", description: `Are you sure you want to close "${duplicatePatient.patient.first_name} ${duplicatePatient.patient.last_name}"?`, confirmText: "Close patient", destructive: true }))) {
       return;
     }
 

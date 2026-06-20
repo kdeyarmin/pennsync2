@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import TemplateVersionHistory from "./TemplateVersionHistory";
 
 export default function PDFTemplateManager() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [showFieldMapper, setShowFieldMapper] = useState(false);
@@ -239,8 +241,8 @@ export default function PDFTemplateManager() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => {
-                          if (confirm('Delete this template?')) {
+                        onClick={async () => {
+                          if (await confirm({ title: "Delete template?", description: "Delete this template? This can't be undone.", confirmText: "Delete", destructive: true })) {
                             deleteMutation.mutate(template.id);
                           }
                         }}

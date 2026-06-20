@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import ClinicalLibraryAnalytics from "./ClinicalLibraryAnalytics";
 import FolderTreeView from "./FolderTreeView";
 
 export default function ClinicalLibraryManager() {
+  const confirm = useConfirm();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
@@ -168,8 +170,8 @@ export default function ClinicalLibraryManager() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this template?')) {
+  const handleDelete = async (id) => {
+    if (await confirm({ title: "Delete template?", description: "Are you sure you want to delete this template?", confirmText: "Delete", destructive: true })) {
       deleteMutation.mutate(id);
     }
   };
@@ -190,18 +192,23 @@ export default function ClinicalLibraryManager() {
     updateFolderMutation.mutate({ id: folderId, data: { name: newName } });
   };
 
-  const handleDeleteFolder = (folderId) => {
+  const handleDeleteFolder = async (folderId) => {
     const templatesInFolder = templates.filter(t => t.folder_id === folderId);
     if (templatesInFolder.length > 0) {
-      if (!confirm(`This folder contains ${templatesInFolder.length} template(s). Delete anyway? Templates will be moved to uncategorized.`)) {
+      if (!(await confirm({ title: "Delete folder?", description: `This folder contains ${templatesInFolder.length} template(s). Delete anyway? Templates will be moved to uncategorized.`, confirmText: "Delete anyway", destructive: true }))) {
         return;
       }
       // Move templates to uncategorized
       templatesInFolder.forEach(t => {
         updateMutation.mutate({ id: t.id, data: { folder_id: null } });
       });
+      deleteFolderMutation.mutate(folderId);
+      if (selectedFolderId === folderId) {
+        setSelectedFolderId(null);
+      }
+      return;
     }
-    if (confirm('Delete this folder?')) {
+    if (await confirm({ title: "Delete folder?", description: "Delete this folder?", confirmText: "Delete", destructive: true })) {
       deleteFolderMutation.mutate(folderId);
       if (selectedFolderId === folderId) {
         setSelectedFolderId(null);

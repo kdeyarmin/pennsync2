@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -33,6 +34,7 @@ import AIContactExtractor from "../components/fax/AIContactExtractor";
 import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function FaxContactsPage() {
+  const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
@@ -283,8 +285,8 @@ export default function FaxContactsPage() {
                       size="icon"
                       aria-label="Delete contact"
                       className="h-8 w-8 text-red-600 hover:text-red-700"
-                      onClick={() => {
-                        if (confirm(`Delete ${contact.name}?`)) {
+                      onClick={async () => {
+                        if (await confirm({ title: "Delete contact?", description: `Delete ${contact.name}? This can't be undone.`, confirmText: "Delete", destructive: true })) {
                           deleteMutation.mutate(contact.id);
                         }
                       }}
