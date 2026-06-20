@@ -2,19 +2,11 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, User, FileText, ArrowUpDown, Users, UserCheck, Target, CalendarPlus } from "lucide-react";
-import { format } from 'date-fns';
+import { Plus, User, ArrowUpDown, Users, UserCheck, Target, CalendarPlus } from "lucide-react";
 import { secureDelete, handleSecureError } from "../components/utils/security";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 import PatientForm from "../components/patient/PatientForm";
 import { patientMatchesSearch } from "../components/patient/AdvancedPatientFilters";
-import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
 import BulkPatientActions from "../components/patient/BulkPatientActions";
@@ -55,8 +47,6 @@ export default function Patients() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
-  const [summaryPatient, setSummaryPatient] = useState(null);
   const [selectedPatients, setSelectedPatients] = useState([]);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
@@ -111,71 +101,10 @@ export default function Patients() {
     staleTime: 300000,
   });
 
-  // Fetch visits and care plans for summary dialog
-  const { data: summaryVisits = [] } = useQuery({
-    queryKey: ['summaryVisits', summaryPatient?.id],
-    queryFn: () => base44.entities.Visit.filter({ patient_id: summaryPatient.id, status: 'completed' }, '-visit_date', 10),
-    enabled: !!summaryPatient?.id,
-  });
-
-  const { data: summaryCarePlans = [] } = useQuery({
-    queryKey: ['summaryCarePlans', summaryPatient?.id],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: summaryPatient.id }),
-    enabled: !!summaryPatient?.id,
-  });
-
-  const _handleShowSummary = (patient) => {
-    setSummaryPatient(patient);
-    setShowSummaryDialog(true);
-  };
-
   // Handle query errors gracefully
   if (patientsError) {
     console.error('Error loading patients:', patientsError);
   }
-
-  const createPatientMutation = useMutation({
-    mutationFn: (patientData) => base44.entities.Patient.create(patientData),
-    onSuccess: (newPatient) => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      setShowForm(false);
-      setEditingPatient(null);
-      
-      toast.success(`Patient ${newPatient.first_name} ${newPatient.last_name} created successfully`);
-      
-      // Log patient creation
-      logActivity(ActivityActions.CREATE, {
-        entity_type: 'Patient',
-        entity_id: newPatient.id,
-        patient_name: `${newPatient.first_name} ${newPatient.last_name}`,
-        page: 'Patients'
-      });
-    },
-    onError: (error) => {
-      toast.error(`Failed to create patient: ${error.message}`);
-    }
-  });
-
-  const updatePatientMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Patient.update(id, data),
-    onSuccess: (updatedPatient, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      setShowForm(false);
-      setEditingPatient(null);
-      
-      toast.success('Patient updated successfully');
-      
-      // Log patient update
-      logActivity(ActivityActions.UPDATE, {
-        entity_type: 'Patient',
-        entity_id: variables.id,
-        page: 'Patients'
-      });
-    },
-    onError: (error) => {
-      toast.error(`Failed to update patient: ${error.message}`);
-    }
-  });
 
   const deletePatientMutation = useMutation({
     mutationFn: async (patientId) => {
@@ -205,43 +134,6 @@ export default function Patients() {
     setIsDeleting(true);
     deletePatientMutation.mutate(patientToDelete.id);
   };
-
-  const _handleSubmit = (data) => {
-    if (editingPatient) {
-      updatePatientMutation.mutate({ id: editingPatient.id, data });
-    } else {
-      createPatientMutation.mutate(data);
-    }
-  };
-
-  // Visit type template quick-add
-  const _createVisitFromTemplate = useMutation({
-    mutationFn: async ({ patientId, templateType }) => {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const visitData = {
-        patient_id: patientId,
-        visit_date: today,
-        visit_time: '', // Could be dynamic or default to empty
-        visit_type: templateType,
-        status: 'scheduled'
-      };
-      return base44.entities.Visit.create(visitData);
-    },
-    onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
-    toast.success('Visit scheduled successfully!');
-    },
-    onError: (error) => {
-      toast.error(`Failed to schedule visit: ${error.message}`);
-    }
-  });
-
-  const _visitTemplates = [
-    { type: 'routine_visit', label: 'Routine Visit', icon: '📋' },
-    { type: 'skilled_nursing', label: 'Skilled Nursing', icon: '💉' },
-    { type: 'admission', label: 'Admission', icon: '🏥' },
-    { type: 'recertification', label: 'Recertification', icon: '📝' },
-  ];
 
   const calculateAge = (dob) => {
     if (!dob) return null;
@@ -570,26 +462,6 @@ export default function Patients() {
       />
 
 
-
-      {/* Patient Summary Dialog */}
-                  <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
-                    <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-indigo-600" />
-                          Patient Summary: {summaryPatient?.first_name} {summaryPatient?.last_name}
-                        </DialogTitle>
-                      </DialogHeader>
-                      {summaryPatient && (
-                        <AIPatientSummaryReport
-                          patient={summaryPatient}
-                          previousVisits={summaryVisits}
-                          carePlans={summaryCarePlans}
-                          compact={false}
-                        />
-                      )}
-                    </DialogContent>
-                  </Dialog>
 
                   {/* Delete Confirmation Dialog */}
                   <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
