@@ -1,4 +1,4 @@
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, LogOut } from "lucide-react";
 
@@ -6,6 +6,12 @@ const LOGO_URL =
   "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png";
 
 const UserNotRegisteredError = () => {
+  // Route sign-out through AuthContext.logout (not base44.auth.logout directly)
+  // so cached PHI is purged — queryClient.clear() + clearCachedPHI() — before
+  // the token is removed. A de-registered user who was previously approved may
+  // still have patient data cached in localStorage/IndexedDB on a shared device.
+  const { logout } = useAuth();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-navy-50 via-white to-navy-100 p-4">
       <div className="w-full max-w-md">
@@ -38,7 +44,7 @@ const UserNotRegisteredError = () => {
               </ul>
             </div>
 
-            <Button onClick={() => base44.auth.logout()} variant="outline" className="w-full">
+            <Button onClick={() => logout()} variant="outline" className="w-full">
               <LogOut className="mr-2 h-4 w-4" /> Sign out
             </Button>
           </div>
