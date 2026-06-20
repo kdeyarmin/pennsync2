@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -296,28 +297,26 @@ export default function ClinicalReferencePanel() {
               <p className="text-sm text-slate-600">Normal ranges, concerning values, and critical thresholds for home health documentation.</p>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 pr-4 font-semibold text-slate-700">Parameter</th>
-                      <th className="text-left py-2 pr-4 font-semibold text-green-700">Normal</th>
-                      <th className="text-left py-2 pr-4 font-semibold text-yellow-700">Concern</th>
-                      <th className="text-left py-2 font-semibold text-red-700">Critical</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {VITALS_REFERENCE.map((row) => (
-                      <tr key={row.parameter} className="border-b hover:bg-slate-50">
-                        <td className="py-2 pr-4 font-medium text-slate-900">{row.parameter}</td>
-                        <td className="py-2 pr-4 text-green-700">{row.normal}</td>
-                        <td className="py-2 pr-4 text-yellow-700">{row.concern}</td>
-                        <td className="py-2 text-red-700">{row.critical}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Parameter</TableHead>
+                    <TableHead className="text-emerald-700">Normal</TableHead>
+                    <TableHead className="text-amber-700">Concern</TableHead>
+                    <TableHead className="text-red-700">Critical</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {VITALS_REFERENCE.map((row) => (
+                    <TableRow key={row.parameter}>
+                      <TableCell className="font-medium text-slate-900">{row.parameter}</TableCell>
+                      <TableCell className="text-emerald-700">{row.normal}</TableCell>
+                      <TableCell className="text-amber-700">{row.concern}</TableCell>
+                      <TableCell className="text-red-700">{row.critical}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
               <p className="text-xs text-slate-500 mt-3">* Values are general guidelines. Always follow physician-specific orders and patient baseline values.</p>
             </CardContent>
           </Card>
