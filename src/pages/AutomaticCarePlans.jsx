@@ -221,7 +221,7 @@ export default function AutomaticCarePlans() {
     switch (careType) {
       case 'home_health': return 'bg-blue-100 text-blue-800';
       case 'hospice': return 'bg-navy-100 text-navy-800';
-      case 'both': return 'bg-green-100 text-green-800';
+      case 'both': return 'bg-emerald-100 text-emerald-800';
       default: return 'bg-slate-100 text-slate-800';
     }
   };
@@ -317,7 +317,7 @@ export default function AutomaticCarePlans() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleToggleActive(trigger.id, trigger.is_active)}
-                          className={`min-h-[44px] ${trigger.is_active ? "text-green-600" : "text-slate-400"}`}
+                          className={`min-h-[44px] ${trigger.is_active ? "text-emerald-600" : "text-slate-400"}`}
                         >
                           {trigger.is_active ? (
                             <CheckCircle2 className="w-5 h-5" />

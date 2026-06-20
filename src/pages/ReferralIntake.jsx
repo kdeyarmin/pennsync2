@@ -940,7 +940,7 @@ Actions available:
       case 'new': return 'bg-blue-500';
       case 'processing': return 'bg-amber-500';
       case 'awaiting_info': return 'bg-orange-500';
-      case 'ready_for_admission': return 'bg-green-500';
+      case 'ready_for_admission': return 'bg-emerald-500';
       case 'archived': return 'bg-slate-500';
       case 'declined': return 'bg-red-500';
       default: return 'bg-slate-500';
@@ -1121,7 +1121,7 @@ Actions available:
                           </Badge>
                         )}
                         {referral.patient_id && !referral.requires_manual_review && !referral.match_confidence && (
-                          <Badge className="bg-green-600 text-xs mt-1">In System</Badge>
+                          <Badge className="bg-emerald-600 text-xs mt-1">In System</Badge>
                         )}
                         {referral.requires_manual_review && (
                           <div className="flex flex-col gap-1 mt-1">
@@ -1200,7 +1200,7 @@ Actions available:
                            <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
                              <Button
                                size="sm"
-                               className="bg-green-600 hover:bg-green-700 text-white min-h-[36px] text-xs w-full"
+                               className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-[36px] text-xs w-full"
                              >
                                <Sparkles className="w-4 h-4 mr-1" />
                                Start Admission Note
@@ -1300,9 +1300,9 @@ Actions available:
 
             {extractedFormData && (
               <div className="space-y-3">
-                <Alert className="bg-green-50 border-green-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <AlertDescription className="text-green-900 text-sm">
+                <Alert className="bg-emerald-50 border-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <AlertDescription className="text-emerald-900 text-sm">
                     <strong>AI Extracted Data:</strong> Form fields have been auto-populated with comprehensive analysis.
                     {extractedFormData.confidence_score && (
                       <span className="ml-2 text-xs">
@@ -1386,7 +1386,7 @@ Actions available:
                   <Label htmlFor="patient-name" className="flex items-center gap-2 mb-1.5">
                     Patient Name (if known)
                     {extractedFormData?.patient_name && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Extracted</Badge>
                     )}
                   </Label>
                   <Input
@@ -1394,14 +1394,14 @@ Actions available:
                     placeholder="First Last"
                     value={newReferral.patient_name}
                     onChange={(e) => setNewReferral({ ...newReferral, patient_name: e.target.value })}
-                    className={`h-10 ${extractedFormData?.patient_name ? "border-green-300 bg-green-50" : ""}`}
+                    className={`h-10 ${extractedFormData?.patient_name ? "border-emerald-300 bg-emerald-50" : ""}`}
                   />
                 </div>
                 <div>
                   <Label htmlFor="referral-source" className="flex items-center gap-2 mb-1.5">
                     Referral Source
                     {extractedFormData?.referral_source && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Extracted</Badge>
                     )}
                   </Label>
                   <Input
@@ -1409,7 +1409,7 @@ Actions available:
                     placeholder="Hospital, physician, facility"
                     value={newReferral.referral_source}
                     onChange={(e) => setNewReferral({ ...newReferral, referral_source: e.target.value })}
-                    className={`h-10 ${extractedFormData?.referral_source ? "border-green-300 bg-green-50" : ""}`}
+                    className={`h-10 ${extractedFormData?.referral_source ? "border-emerald-300 bg-emerald-50" : ""}`}
                   />
                 </div>
               </div>
@@ -1419,7 +1419,7 @@ Actions available:
                   <Label htmlFor="referral-date" className="flex items-center gap-2 mb-1.5">
                     Referral Date
                     {extractedFormData?.referral_date && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Extracted</Badge>
                     )}
                   </Label>
                   <Input
@@ -1427,21 +1427,21 @@ Actions available:
                     type="date"
                     value={newReferral.referral_date}
                     onChange={(e) => setNewReferral({ ...newReferral, referral_date: e.target.value })}
-                    className={`h-10 ${extractedFormData?.referral_date ? "border-green-300 bg-green-50" : ""}`}
+                    className={`h-10 ${extractedFormData?.referral_date ? "border-emerald-300 bg-emerald-50" : ""}`}
                   />
                 </div>
                 <div>
                   <Label htmlFor="priority" className="flex items-center gap-2 mb-1.5">
                     Priority
                     {extractedFormData?.urgency_level && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">Suggested</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">Suggested</Badge>
                     )}
                   </Label>
                   <Select
                     value={newReferral.priority}
                     onValueChange={(value) => setNewReferral({ ...newReferral, priority: value })}
                   >
-                    <SelectTrigger id="priority" className={`h-10 ${extractedFormData?.urgency_level ? "border-green-300 bg-green-50" : ""}`}>
+                    <SelectTrigger id="priority" className={`h-10 ${extractedFormData?.urgency_level ? "border-emerald-300 bg-emerald-50" : ""}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1491,7 +1491,7 @@ Actions available:
                       <p className="text-xs text-slate-500">Extracting patient information</p>
                     </div>
                   ) : uploadedFile ? (
-                    <div className="flex items-center justify-center gap-2 text-green-600">
+                    <div className="flex items-center justify-center gap-2 text-emerald-600">
                       <CheckCircle2 className="w-6 h-6" />
                       <span>File uploaded & analyzed successfully</span>
                     </div>

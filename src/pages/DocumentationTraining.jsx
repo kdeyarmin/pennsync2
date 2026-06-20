@@ -76,14 +76,14 @@ export default function DocumentationTraining() {
           </CardContent>
         </Card>
 
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-emerald-200 bg-emerald-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 font-medium">Practice Notes</p>
-                <p className="text-2xl font-bold text-green-900">{practiceSubmissions.length}</p>
+                <p className="text-sm text-emerald-600 font-medium">Practice Notes</p>
+                <p className="text-2xl font-bold text-emerald-900">{practiceSubmissions.length}</p>
               </div>
-              <FileText className="w-8 h-8 text-green-500" />
+              <FileText className="w-8 h-8 text-emerald-500" />
             </div>
           </CardContent>
         </Card>

@@ -424,9 +424,9 @@ export default function SmartNoteAssistant() {
             </div>
           )}
           {draftRestored && (
-            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <p className="text-xs text-green-700 font-medium">Draft restored.</p>
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <p className="text-xs text-emerald-700 font-medium">Draft restored.</p>
             </div>
           )}
 
@@ -524,7 +524,7 @@ export default function SmartNoteAssistant() {
                   className="w-full min-h-[240px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed" spellCheck={false}
                 />
                 <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50 gap-3">
-                  <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-slate-400"}`}>
+                  <span className={`text-xs shrink-0 ${ready ? "text-emerald-600 font-medium" : "text-slate-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
                   <Button onClick={startReview} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
@@ -550,8 +550,8 @@ export default function SmartNoteAssistant() {
               renderFinalNote={(api) => (
                 <>
                   {generatingTasks && (
-                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-                      <Loader2 className="w-4 h-4 animate-spin text-green-600 shrink-0" />
+                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800">
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600 shrink-0" />
                       Generating follow-up tasks from your note…
                     </div>
                   )}

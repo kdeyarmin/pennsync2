@@ -99,9 +99,9 @@ export default function AgencySettings() {
       />
 
         {successMessage && (
-          <Alert className="bg-green-50 border-green-200">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+          <Alert className="bg-emerald-50 border-emerald-200">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <AlertDescription className="text-emerald-800">{successMessage}</AlertDescription>
           </Alert>
         )}
 
@@ -218,7 +218,7 @@ export default function AgencySettings() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-600" />
+                <DollarSign className="w-5 h-5 text-emerald-600" />
                 Cost Analysis Settings
               </CardTitle>
               <CardDescription>

@@ -1104,7 +1104,7 @@ export default function LearningCenter() {
                         <h3 className="font-semibold text-slate-900">{comp.name}</h3>
                         <p className="text-sm text-slate-500">{comp.frequency} validation</p>
                       </div>
-                      <Badge className="bg-green-500">Active</Badge>
+                      <Badge className="bg-emerald-500">Active</Badge>
                     </div>
                   </CardContent>
                 </Card>

@@ -129,21 +129,21 @@ export default function NursePerformanceDashboard() {
   });
 
   const getScoreColor = (score) => {
-    if (score >= 90) return 'text-green-600 bg-green-50';
+    if (score >= 90) return 'text-emerald-600 bg-emerald-50';
     if (score >= 80) return 'text-blue-600 bg-blue-50';
     if (score >= 70) return 'text-amber-600 bg-amber-50';
     return 'text-red-600 bg-red-50';
   };
 
   const getGradeColor = (grade) => {
-    if (grade === 'A' || grade === 'A+') return 'bg-green-500';
+    if (grade === 'A' || grade === 'A+') return 'bg-emerald-500';
     if (grade === 'B' || grade === 'B+') return 'bg-blue-500';
     if (grade === 'C') return 'bg-amber-500';
     return 'bg-red-500';
   };
 
   const getBurnoutColor = (level) => {
-    if (level === 'low') return 'text-green-600 bg-green-50';
+    if (level === 'low') return 'text-emerald-600 bg-emerald-50';
     if (level === 'moderate') return 'text-amber-600 bg-amber-50';
     if (level === 'high') return 'text-orange-600 bg-orange-50';
     return 'text-red-600 bg-red-50';
@@ -260,7 +260,7 @@ export default function NursePerformanceDashboard() {
                     <p className="text-sm text-slate-600 mb-1">Enhancements Completed</p>
                     <p className="text-3xl font-bold text-slate-900">{metrics?.completed_visits || 0}</p>
                   </div>
-                  <FileText className="w-8 h-8 text-green-400" />
+                  <FileText className="w-8 h-8 text-emerald-400" />
                 </div>
               </CardContent>
             </Card>
@@ -320,7 +320,7 @@ export default function NursePerformanceDashboard() {
                 <Card>
                   <CardContent className="p-6">
                     <p className="text-sm text-slate-600 mb-2">Avg Note Length</p>
-                    <p className="text-3xl font-bold text-green-600">{docQuality?.avg_note_length || 0}</p>
+                    <p className="text-3xl font-bold text-emerald-600">{docQuality?.avg_note_length || 0}</p>
                     <p className="text-xs text-slate-500 mt-1">characters</p>
                   </CardContent>
                 </Card>
@@ -343,7 +343,7 @@ export default function NursePerformanceDashboard() {
                     <CardTitle className="text-lg">Quality Indicators</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
                       <span className="text-sm">Notes with AI Tags</span>
                       <span className="font-semibold">{docQuality?.notes_with_tags || 0}</span>
                     </div>
@@ -387,7 +387,7 @@ export default function NursePerformanceDashboard() {
                 <Card>
                   <CardContent className="p-6">
                     <p className="text-sm text-slate-600 mb-2">Care Plans</p>
-                    <p className="text-3xl font-bold text-green-600">{patientOutcomes?.care_plans_managed || 0}</p>
+                    <p className="text-3xl font-bold text-emerald-600">{patientOutcomes?.care_plans_managed || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -464,7 +464,7 @@ export default function NursePerformanceDashboard() {
                 <Card>
                   <CardContent className="p-6">
                     <p className="text-sm text-slate-600 mb-2">Avg Visits/Day</p>
-                    <p className="text-3xl font-bold text-green-600">{utilization?.avg_visits_per_day || 0}</p>
+                    <p className="text-3xl font-bold text-emerald-600">{utilization?.avg_visits_per_day || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -546,9 +546,9 @@ export default function NursePerformanceDashboard() {
                 )}
 
                 {burnoutRisk?.positive_indicators?.length > 0 && (
-                  <Card className="border-green-200">
-                    <CardHeader className="bg-green-50">
-                      <CardTitle className="flex items-center gap-2 text-green-900">
+                  <Card className="border-emerald-200">
+                    <CardHeader className="bg-emerald-50">
+                      <CardTitle className="flex items-center gap-2 text-emerald-900">
                         <CheckCircle2 className="w-5 h-5" />
                         Positive Indicators
                       </CardTitle>
@@ -557,7 +557,7 @@ export default function NursePerformanceDashboard() {
                       <ul className="space-y-2">
                         {burnoutRisk.positive_indicators.map((indicator, idx) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                             <span className="text-sm">{indicator}</span>
                           </li>
                         ))}
@@ -628,7 +628,7 @@ export default function NursePerformanceDashboard() {
                     
                     return (
                       <Card key={goal.id} className={
-                        goal.status === 'achieved' ? 'border-green-300 bg-green-50' :
+                        goal.status === 'achieved' ? 'border-emerald-300 bg-emerald-50' :
                         goal.status === 'missed' ? 'border-red-300 bg-red-50' :
                         'border-blue-300'
                       }>
@@ -678,9 +678,9 @@ export default function NursePerformanceDashboard() {
             <TabsContent value="insights" className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Strengths */}
-                <Card className="border-green-200">
-                  <CardHeader className="bg-green-50">
-                    <CardTitle className="flex items-center gap-2 text-green-900">
+                <Card className="border-emerald-200">
+                  <CardHeader className="bg-emerald-50">
+                    <CardTitle className="flex items-center gap-2 text-emerald-900">
                       <Award className="w-5 h-5" />
                       Key Strengths
                     </CardTitle>
@@ -689,7 +689,7 @@ export default function NursePerformanceDashboard() {
                     <ul className="space-y-3">
                       {insights?.strengths?.map((strength, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
                           <span className="text-slate-700">{strength}</span>
                         </li>
                       ))}
@@ -921,9 +921,9 @@ export default function NursePerformanceDashboard() {
                       <span className="text-slate-700">Total Suggestions Received</span>
                       <span className="text-2xl font-bold text-blue-600">{metrics?.total_suggestions_received}</span>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg">
                       <span className="text-slate-700">Suggestions Applied</span>
-                      <span className="text-2xl font-bold text-green-600">{metrics?.suggestions_applied}</span>
+                      <span className="text-2xl font-bold text-emerald-600">{metrics?.suggestions_applied}</span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-navy-50 rounded-lg">
                       <span className="text-slate-700">Acceptance Rate</span>
@@ -1003,7 +1003,7 @@ export default function NursePerformanceDashboard() {
                 <CardContent className="p-6">
                   {skillGaps.length === 0 ? (
                     <div className="text-center py-8 text-slate-500">
-                      <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-500" />
+                      <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-500" />
                       <p>No significant skill gaps identified. Great work!</p>
                     </div>
                   ) : (

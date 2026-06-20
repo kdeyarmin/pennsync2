@@ -408,7 +408,7 @@ export default function PatientDetails() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Stethoscope className="w-5 h-5 text-green-600" />
+                  <Stethoscope className="w-5 h-5 text-emerald-600" />
                   Physician & Payor
                 </CardTitle>
               </CardHeader>
@@ -452,8 +452,8 @@ export default function PatientDetails() {
                 </div>
 
                 <TabsContent value="allergies" className="space-y-4">
-                  <Alert className={patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}>
-                    <AlertTriangle className={`w-4 h-4 ${patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'text-red-600' : 'text-green-600'}`} />
+                  <Alert className={patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'bg-red-50 border-red-300' : 'bg-emerald-50 border-emerald-300'}>
+                    <AlertTriangle className={`w-4 h-4 ${patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'text-red-600' : 'text-emerald-600'}`} />
                     <AlertDescription>
                       <p className="font-semibold mb-2">Allergy Information</p>
                       <p className="text-sm">{sanitizeInput(patient.allergies) || 'No Known Drug Allergies (NKDA)'}</p>
@@ -688,7 +688,7 @@ export default function PatientDetails() {
                   <div className="space-y-3">
                     {carePlans.map((plan) => (
                       <Card key={plan.id} className={`border-l-4 ${
-                        plan.status === 'met' ? 'border-l-green-500' :
+                        plan.status === 'met' ? 'border-l-emerald-500' :
                         plan.status === 'not_met' ? 'border-l-red-500' :
                         plan.status === 'revised' ? 'border-l-amber-500' :
                         'border-l-blue-500'
@@ -697,7 +697,7 @@ export default function PatientDetails() {
                           <div className="flex justify-between items-start mb-2">
                             <p className="font-semibold text-slate-900">{sanitizeInput(plan.problem)}</p>
                             <Badge className={
-                              plan.status === 'met' ? 'bg-green-500' :
+                              plan.status === 'met' ? 'bg-emerald-500' :
                               plan.status === 'not_met' ? 'bg-red-500' :
                               plan.status === 'revised' ? 'bg-amber-500' :
                               'bg-blue-500'

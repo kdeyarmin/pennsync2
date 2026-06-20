@@ -225,7 +225,7 @@ export default function AdminTrainingAnalytics() {
                         <span className="font-medium text-sm">{nurse.name}</span>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{nurse.completions} completed</Badge>
-                          <Badge className="bg-green-500">{nurse.avgScore}% avg</Badge>
+                          <Badge className="bg-emerald-500">{nurse.avgScore}% avg</Badge>
                         </div>
                       </div>
                       <Progress value={(nurse.completions / modules.length) * 100} className="h-2" />

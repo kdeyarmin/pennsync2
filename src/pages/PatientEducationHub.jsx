@@ -85,14 +85,14 @@ const educationTopics = [
     id: 'stroke',
     title: 'Stroke Recovery',
     icon: Brain,
-    color: 'from-teal-500 to-green-500',
+    color: 'from-teal-500 to-emerald-500',
     description: 'Recovery tips, preventing another stroke, and recognizing warning signs.'
   },
   {
     id: 'wound_care',
     title: 'Wound Care',
     icon: Bandage,
-    color: 'from-green-500 to-emerald-500',
+    color: 'from-emerald-500 to-emerald-500',
     description: 'Proper wound care techniques, signs of infection, and promoting healing.'
   },
   {
@@ -141,7 +141,7 @@ const educationTopics = [
     id: 'nutrition',
     title: 'Healthy Eating for Seniors',
     icon: Heart,
-    color: 'from-lime-500 to-green-500',
+    color: 'from-lime-500 to-emerald-500',
     description: 'Essential nutrients, meal planning, and overcoming common eating challenges.'
   },
   {

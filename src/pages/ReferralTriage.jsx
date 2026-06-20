@@ -104,14 +104,14 @@ export default function ReferralTriage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 border-green-200">
+        <Card className="bg-emerald-50 border-emerald-200">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-1" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
               <div>
-                <p className="text-xs text-green-600 font-semibold uppercase">Structured Data</p>
-                <p className="text-2xl font-bold text-green-900">100%</p>
-                <p className="text-xs text-green-600 mt-1">automatically parsed</p>
+                <p className="text-xs text-emerald-600 font-semibold uppercase">Structured Data</p>
+                <p className="text-2xl font-bold text-emerald-900">100%</p>
+                <p className="text-xs text-emerald-600 mt-1">automatically parsed</p>
               </div>
             </div>
           </CardContent>

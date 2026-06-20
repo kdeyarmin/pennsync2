@@ -89,7 +89,7 @@ export default function SystemJobMonitor() {
 
   const getStatusIcon = (status) => {
     const icons = {
-      success: <CheckCircle2 className="w-5 h-5 text-green-600" />,
+      success: <CheckCircle2 className="w-5 h-5 text-emerald-600" />,
       error: <XCircle className="w-5 h-5 text-red-600" />,
       warning: <AlertTriangle className="w-5 h-5 text-amber-600" />,
       running: <Clock className="w-5 h-5 text-blue-600 animate-spin" />
@@ -99,7 +99,7 @@ export default function SystemJobMonitor() {
 
   const getStatusBadge = (status) => {
     const colors = {
-      success: "bg-green-100 text-green-800 border-green-300",
+      success: "bg-emerald-100 text-emerald-800 border-emerald-300",
       error: "bg-red-100 text-red-800 border-red-300",
       warning: "bg-amber-100 text-amber-800 border-amber-300",
       running: "bg-blue-100 text-blue-800 border-blue-300"
@@ -187,9 +187,9 @@ export default function SystemJobMonitor() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Success</p>
-                <p className="text-2xl font-bold text-green-600">{stats.success}</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.success}</p>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
           </CardContent>
         </Card>

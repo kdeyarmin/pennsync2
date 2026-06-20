@@ -245,7 +245,7 @@ export default function CarePlanManagement() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'bg-green-500';
+      case 'active': return 'bg-emerald-500';
       case 'met': return 'bg-blue-500';
       case 'not_met': return 'bg-red-500';
       case 'revised': return 'bg-amber-500';

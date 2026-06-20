@@ -172,11 +172,11 @@ export default function DuplicatePatients() {
       </Card>
 
       {hasScanned && duplicateGroups.length === 0 && !isScanning && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-emerald-200 bg-emerald-50">
           <CardContent className="p-8 text-center">
-            <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-green-900 mb-2">No Duplicates Found</h3>
-            <p className="text-sm text-green-700">
+            <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-emerald-900 mb-2">No Duplicates Found</h3>
+            <p className="text-sm text-emerald-700">
               The database is clean. No duplicate patient records detected.
             </p>
           </CardContent>
@@ -218,7 +218,7 @@ export default function DuplicatePatients() {
                         </div>
                       </div>
                       <Badge className={
-                        group.primary.status === 'active' ? 'bg-green-600' :
+                        group.primary.status === 'active' ? 'bg-emerald-600' :
                         group.primary.status === 'discharged' ? 'bg-slate-600' :
                         'bg-orange-600'
                       }>
@@ -230,7 +230,7 @@ export default function DuplicatePatients() {
                         size="sm"
                         onClick={() => handleMerge(group.primary, group.duplicates)}
                         disabled={mergePatientMutation.isPending}
-                        className="bg-green-600 hover:bg-green-700"
+                        className="bg-emerald-600 hover:bg-emerald-700"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-2" />
                         Keep This & Close Others
@@ -290,7 +290,7 @@ export default function DuplicatePatients() {
                           </div>
                           <div className="flex flex-col gap-2 ml-4">
                             <Badge className={
-                              dup.patient.status === 'active' ? 'bg-green-600' :
+                              dup.patient.status === 'active' ? 'bg-emerald-600' :
                               dup.patient.status === 'discharged' ? 'bg-slate-600' :
                               'bg-orange-600'
                             }>

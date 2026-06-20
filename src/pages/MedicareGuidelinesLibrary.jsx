@@ -143,7 +143,7 @@ export default function MedicareGuidelinesLibrary() {
     const colors = {
       oasis: "bg-navy-100 text-navy-800",
       medicare_cop: "bg-red-100 text-red-800",
-      billing_reimbursement: "bg-green-100 text-green-800",
+      billing_reimbursement: "bg-emerald-100 text-emerald-800",
       clinical_documentation: "bg-blue-100 text-blue-800",
       home_health_regulations: "bg-indigo-100 text-indigo-800",
       hospice_regulations: "bg-gold-100 text-gold-800",

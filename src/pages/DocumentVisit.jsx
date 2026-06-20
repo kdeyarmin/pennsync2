@@ -1292,9 +1292,9 @@ Generate the complete clinical narrative based on the audio and context:`;
       />
 
       {(isSaving || lastSaved) && (
-        <Alert className={`mb-4 ${isSaving ? 'bg-blue-50 border-blue-200' : hasUnsavedChanges ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
-          <Clock className={`w-4 h-4 ${isSaving ? 'text-blue-600' : hasUnsavedChanges ? 'text-orange-600' : 'text-green-600'}`} />
-          <AlertDescription className={`${isSaving ? 'text-blue-900' : hasUnsavedChanges ? 'text-orange-900' : 'text-green-900'}`}>
+        <Alert className={`mb-4 ${isSaving ? 'bg-blue-50 border-blue-200' : hasUnsavedChanges ? 'bg-orange-50 border-orange-200' : 'bg-emerald-50 border-emerald-200'}`}>
+          <Clock className={`w-4 h-4 ${isSaving ? 'text-blue-600' : hasUnsavedChanges ? 'text-orange-600' : 'text-emerald-600'}`} />
+          <AlertDescription className={`${isSaving ? 'text-blue-900' : hasUnsavedChanges ? 'text-orange-900' : 'text-emerald-900'}`}>
             {isSaving ? 'Saving...' : `Last saved: ${lastSaved ? lastSaved.toLocaleTimeString() : 'N/A'}`}
             {hasUnsavedChanges && !isSaving && ' • Unsaved changes'}
           </AlertDescription>
@@ -1599,7 +1599,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                   </Button>
                   <Button
                     onClick={handleSave}
-                    className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial text-sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 flex-1 sm:flex-initial text-sm"
                     disabled={!narrativeText || isProcessing || isSaving}
                   >
                     <Save className="w-4 h-4 mr-2" />
@@ -1790,9 +1790,9 @@ Generate the complete clinical narrative based on the audio and context:`;
                   </Alert>
 
                   {recognizedCommand && (
-                    <Alert className="bg-green-50 border-green-200 animate-in fade-in">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      <AlertDescription className="text-green-900">
+                    <Alert className="bg-emerald-50 border-emerald-200 animate-in fade-in">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <AlertDescription className="text-emerald-900">
                         <strong>Command Recognized:</strong> {recognizedCommand}
                       </AlertDescription>
                     </Alert>
@@ -1825,7 +1825,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="bg-green-600 hover:bg-green-700 w-full sm:w-auto text-sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto text-sm"
                   disabled={!narrativeText || isProcessing || isSaving}
                 >
                   <Save className="w-4 h-4 mr-2" />

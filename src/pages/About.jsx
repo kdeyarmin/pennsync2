@@ -107,8 +107,8 @@ export default function About() {
         <h2 className="text-3xl font-bold text-slate-900 mb-6">Why Choose Penn Sync?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {benefits.map((benefit, index) => (
-            <div key={index} className="flex items-start gap-3 bg-green-50 p-4 rounded-lg border border-green-200">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div key={index} className="flex items-start gap-3 bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
               <span className="text-slate-800 font-medium">{benefit}</span>
             </div>
           ))}

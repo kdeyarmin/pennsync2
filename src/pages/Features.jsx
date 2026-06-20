@@ -1447,9 +1447,9 @@ export default function FeaturesPage() {
                       <CardContent className="p-3 sm:p-4 md:p-6 pt-0 space-y-2 sm:space-y-3">
                         <p className="text-sm text-slate-600">{feature.description}</p>
                         
-                        <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
-                          <Clock className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-900">
+                        <div className="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                          <Clock className="w-4 h-4 text-emerald-600" />
+                          <span className="text-sm font-semibold text-emerald-900">
                             Saves: {feature.timeSaved}
                           </span>
                         </div>
@@ -1486,7 +1486,7 @@ export default function FeaturesPage() {
               </div>
               
               <div className="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
-                <Shield className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-green-200" />
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-emerald-200" />
                 <p className="font-semibold text-sm sm:text-base md:text-lg">100% Compliant</p>
                 <p className="text-xs sm:text-sm text-navy-100">Medicare requirements guaranteed</p>
               </div>

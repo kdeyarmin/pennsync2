@@ -454,9 +454,9 @@ export default function UserActivityReport() {
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
-                        <div className="p-3 bg-green-50 rounded-lg">
-                          <p className="text-xs text-green-600 font-medium">Total Actions</p>
-                          <p className="text-2xl font-bold text-green-900">{stat.total_actions}</p>
+                        <div className="p-3 bg-emerald-50 rounded-lg">
+                          <p className="text-xs text-emerald-600 font-medium">Total Actions</p>
+                          <p className="text-2xl font-bold text-emerald-900">{stat.total_actions}</p>
                         </div>
                         <div className="p-3 bg-navy-50 rounded-lg">
                           <p className="text-xs text-navy-600 font-medium">Logins</p>
@@ -514,7 +514,7 @@ export default function UserActivityReport() {
                             <p className="text-xs font-medium text-slate-600 mb-1">Entities Interacted:</p>
                             <div className="flex flex-wrap gap-1">
                               {stat.entities_interacted_list.map(entity => (
-                                <Badge key={entity} variant="outline" className="text-xs bg-green-50">
+                                <Badge key={entity} variant="outline" className="text-xs bg-emerald-50">
                                   {entity}
                                 </Badge>
                               ))}

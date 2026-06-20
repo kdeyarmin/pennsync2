@@ -263,11 +263,11 @@ export default function AITrainingGenerator() {
 
       {/* Generation Result */}
       {generatedCourse && (
-        <Card className="border-2 border-green-300 bg-green-50">
+        <Card className="border-2 border-emerald-300 bg-emerald-50">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
-              <CardTitle className="text-green-900">Course Generated Successfully!</CardTitle>
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+              <CardTitle className="text-emerald-900">Course Generated Successfully!</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">

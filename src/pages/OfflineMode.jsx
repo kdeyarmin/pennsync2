@@ -100,7 +100,7 @@ export default function OfflineMode() {
         </div>
 
         <TabsContent value="status" className="space-y-4 sm:space-y-6">
-      <Alert className={isOnline ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'}>
+      <Alert className={isOnline ? 'bg-emerald-50 border-emerald-300' : 'bg-orange-50 border-orange-300'}>
         <AlertDescription className="text-sm flex items-center gap-2">
           {isOnline ? (
             <>

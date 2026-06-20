@@ -119,22 +119,22 @@ export default function PDFTools() {
 
       {/* Result Display */}
       {resultUrl && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-emerald-200 bg-emerald-50">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              <FileText className="w-8 h-8 text-green-600 shrink-0 mt-1" />
+              <FileText className="w-8 h-8 text-emerald-600 shrink-0 mt-1" />
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-green-900 mb-2">
+                <h3 className="text-lg font-semibold text-emerald-900 mb-2">
                   PDF Ready!
                 </h3>
-                <p className="text-sm text-green-700 mb-4">
+                <p className="text-sm text-emerald-700 mb-4">
                   Your PDF has been processed successfully. You can now view or download it.
                 </p>
                 <div className="flex gap-2">
                   <Button
                     onClick={() => window.open(resultUrl, '_blank')}
                     variant="outline"
-                    className="border-green-600 text-green-700 hover:bg-green-100"
+                    className="border-emerald-600 text-emerald-700 hover:bg-emerald-100"
                   >
                     View PDF
                   </Button>
@@ -145,7 +145,7 @@ export default function PDFTools() {
                       link.download = `processed-${Date.now()}.pdf`;
                       link.click();
                     }}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-emerald-600 hover:bg-emerald-700"
                   >
                     Download PDF
                   </Button>

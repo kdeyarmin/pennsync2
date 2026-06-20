@@ -212,8 +212,8 @@ export default function PDGMRateSettings() {
         description="Enter and update your case-mix weights, base rate, and multipliers. Saved numbers are applied to every PDGM payment estimate immediately."
       />
 
-      <Alert className={meta.is_official ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}>
-        {meta.is_official ? <ShieldCheck className="h-4 w-4 text-green-600" /> : <Info className="h-4 w-4 text-amber-600" />}
+      <Alert className={meta.is_official ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}>
+        {meta.is_official ? <ShieldCheck className="h-4 w-4 text-emerald-600" /> : <Info className="h-4 w-4 text-amber-600" />}
         <AlertDescription className="text-sm">
           {meta.is_official
             ? "Marked as official CMS rates — PDGM results are treated as authoritative (not labeled an estimate)."

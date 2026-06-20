@@ -132,7 +132,7 @@ export default function TemplateLibrary() {
                     >
                       {copied ? (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                           Copied!
                         </>
                       ) : (
@@ -144,7 +144,7 @@ export default function TemplateLibrary() {
                     </Button>
                     <Button
                       onClick={handleUseInVisit}
-                      className="bg-green-600 hover:bg-green-700 gap-2"
+                      className="bg-emerald-600 hover:bg-emerald-700 gap-2"
                     >
                       <FileText className="w-4 h-4" />
                       Use in Visit Documentation

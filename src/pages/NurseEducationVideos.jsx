@@ -99,7 +99,7 @@ export default function NurseEducationVideos() {
   };
 
   const categoryColors = {
-    "OASIS": "bg-green-100 text-green-800",
+    "OASIS": "bg-emerald-100 text-emerald-800",
     "Documentation": "bg-navy-100 text-navy-800",
     "Safety": "bg-red-100 text-red-800",
     "Clinical": "bg-indigo-100 text-indigo-800"
@@ -151,7 +151,7 @@ export default function NurseEducationVideos() {
               <Card 
                 key={video.id}
                 className={`hover:shadow-lg transition-shadow ${
-                  completedVideos.includes(video.id) ? 'border-green-300 bg-green-50' : ''
+                  completedVideos.includes(video.id) ? 'border-emerald-300 bg-emerald-50' : ''
                 } ${video.priority === 'high' ? 'border-l-4 border-l-indigo-500' : ''}`}
               >
                 <CardHeader className="pb-3">
@@ -159,7 +159,7 @@ export default function NurseEducationVideos() {
                     <div className="flex-1">
                       <CardTitle className="text-base mb-2 flex items-center gap-2">
                         {completedVideos.includes(video.id) && (
-                          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         )}
                         <span>{video.title}</span>
                       </CardTitle>

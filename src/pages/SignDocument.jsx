@@ -141,10 +141,10 @@ export default function SignDocument() {
 
   const getSignerStatus = (signer) => {
     if (signatures[signer.id]) {
-      return { label: "Signed", color: "bg-green-600" };
+      return { label: "Signed", color: "bg-emerald-600" };
     }
     if (signer.signed_date) {
-      return { label: "Previously Signed", color: "bg-green-600" };
+      return { label: "Previously Signed", color: "bg-emerald-600" };
     }
     return { label: "Pending", color: "bg-amber-600" };
   };
@@ -252,7 +252,7 @@ export default function SignDocument() {
         <Button
           onClick={handleSubmitAll}
           disabled={updateSignatureMutation.isPending}
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-emerald-600 hover:bg-emerald-700"
         >
           <CheckCircle2 className="w-4 h-4 mr-2" />
           {updateSignatureMutation.isPending ? "Submitting..." : "Submit All Signatures"}

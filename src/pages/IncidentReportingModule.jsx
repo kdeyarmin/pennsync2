@@ -258,7 +258,7 @@ Please review this incident in the Incident Reporting Dashboard.`
     switch (status) {
       case 'reported': return 'bg-amber-500';
       case 'under_review': return 'bg-blue-500';
-      case 'resolved': return 'bg-green-500';
+      case 'resolved': return 'bg-emerald-500';
       default: return 'bg-slate-500';
     }
   };
@@ -616,7 +616,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                           </span>
                           <span>Reported by: {incident.created_by}</span>
                           {incident.state_reportable_alert_sent_at && (
-                            <span className="text-green-700">Admins alerted</span>
+                            <span className="text-emerald-700">Admins alerted</span>
                           )}
                         </div>
                         {incident.state_reportable_pdf_url && (
