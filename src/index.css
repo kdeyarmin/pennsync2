@@ -99,6 +99,18 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Accessibility: honor the OS "reduce motion" preference app-wide by
+     near-instantly resolving animations/transitions (skeleton sheen, fades,
+     hover lifts, smooth scroll). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* Prevent zoom on input focus (iOS Safari) */
   input, select, textarea {
     font-size: max(16px, 1em);
@@ -425,11 +437,11 @@
 
   /* Modern input styles */
   .input-modern {
-    @apply border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 bg-white;
+    @apply border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-navy-500 focus:border-navy-500 focus:shadow-md transition-all duration-200 bg-white;
   }
 
   .input-elevated {
-    @apply border-slate-200 rounded-lg px-4 py-2.5 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg transition-all duration-200 bg-white;
+    @apply border-slate-200 rounded-lg px-4 py-2.5 shadow-sm focus:ring-2 focus:ring-navy-500 focus:border-navy-500 focus:shadow-lg transition-all duration-200 bg-white;
   }
 
   /* Touch-optimized for mobile and tablet */
@@ -570,7 +582,7 @@
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible {
-    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+    @apply outline-none ring-2 ring-navy-500 ring-offset-2;
   }
 
   /* Smooth scrolling */
