@@ -227,7 +227,7 @@ Return JSON:
     "payment_impact": "how this combination affects payment"
   },
   "case_mix_calculation": {
-    "base_payment": 2031.64,
+    "base_payment": 2038.22,
     "clinical_weight": 0.0,
     "functional_multiplier": 0.0,
     "comorbidity_multiplier": 0.0,
@@ -372,7 +372,7 @@ ${type.toUpperCase()} DETAILS:
 ${JSON.stringify(item, null, 2)}
 
 CURRENT REVENUE DATA:
-Base Payment: ${revenueData?.original?.totalPayment || navigation?.case_mix_calculation?.calculated_payment || 2031.64}
+Base Payment: ${revenueData?.original?.totalPayment || navigation?.case_mix_calculation?.calculated_payment || 2038.22}
 Current Case-Mix: ${revenueData?.original?.caseMixWeight || navigation?.case_mix_calculation?.final_case_mix_weight || 1.0}
 
 AGENCY-SPECIFIC COST DATA (use these values for calculations):

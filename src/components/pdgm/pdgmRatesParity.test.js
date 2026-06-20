@@ -44,7 +44,7 @@ function extractNumber(name) {
 }
 
 test("DEFAULT_PDGM_RATES matches the backend calculatePDGM constants (no billing drift)", () => {
-  assert.equal(DEFAULT_PDGM_RATES.basePaymentRate, extractNumber("BASE_PAYMENT_RATE_2024"));
+  assert.equal(DEFAULT_PDGM_RATES.basePaymentRate, extractNumber("BASE_PAYMENT_RATE_2026"));
   assert.deepEqual(DEFAULT_PDGM_RATES.clinicalGroupWeights, extractObject("CLINICAL_GROUP_WEIGHTS"));
   assert.deepEqual(DEFAULT_PDGM_RATES.functionalThresholds, extractObject("FUNCTIONAL_THRESHOLDS"));
   assert.deepEqual(DEFAULT_PDGM_RATES.functionalMultipliers, extractObject("FUNCTIONAL_MULTIPLIERS"));
