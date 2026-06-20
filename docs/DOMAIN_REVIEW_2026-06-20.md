@@ -5,6 +5,34 @@ identify gaps that would break functionality or compliance. Every finding below
 was verified against the actual entity schemas (`base44/entities/*.jsonc`),
 backend function source (`base44/functions/*`), and component code — not inferred.
 
+## Remediation status
+
+All actionable findings were fixed across three commits on this branch, each
+verified green (build + lint 0-errors + util tests + 83 component tests):
+
+- **Round 1** — the six domain clusters below (comms entity schemas + enums,
+  DocumentSignature pipeline, patient/referral, clinical error-handling, training,
+  admin/platform orphans + offline).
+- **Round 1b** — security honesty + compliance enforcement + incident/report integrity.
+- **Round 2** — a deeper second pass found the *same* contract-drift class in code
+  paths the first pass didn't cover: more Notification/PatientAlert/Task writers
+  with invalid enums/fields (sendExpirationNotifications, monitorClinicalDataForCarePlanUpdates,
+  sendFaxStatusNotification, pollFaxStatuses, analyzeVisitForSupplyUsage,
+  reconcileMedications, predictiveRiskAnalysis), CallLog missing `note`/`disposition`,
+  HospitalizationRiskWidget's broken PatientAlert create, Task creates missing
+  required `assigned_to`, UserActivity RLS too narrow, and three signature
+  components still on the old DocumentSignature shape.
+
+**Known remaining (deliberately not auto-fixed):**
+1. **PDGM calculation** — the orphaned `groupPeriod` grouper and the hardcoded
+   case-mix weights in `calculatePDGM` need official CMS 2026 rate/grouping tables,
+   not invented numbers. The live path already discloses `isEstimate` until an admin
+   loads official values. Needs a real CMS data source / product decision.
+2. **`SignatureAuditTrail.jsx`** — filters `DocumentSignature` by `document_id`,
+   a field that has never existed on that entity (pre-existing; the viewer already
+   returned nothing). Fixing it properly needs an intended document↔signature
+   linkage decision rather than a mechanical change.
+
 ## How this review was run
 
 1. **Objective health gates** — production build, ESLint, and the full test suite
