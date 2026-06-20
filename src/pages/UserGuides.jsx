@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, BookOpen, Users, Stethoscope } from "lucide-react";
+import { FileText, Download, BookOpen, Users, Stethoscope, Star, Loader2 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
@@ -304,15 +304,16 @@ export default function UserGuides() {
         {guides.filter(g => g.featured).map((guide) => {
           const IconComponent = guide.icon;
           return (
-            <Card key={guide.type} className="border-4 border-navy-400 bg-gradient-to-br from-navy-50 to-indigo-50 mb-6">
+            <Card key={guide.type} className="border-l-4 border-l-navy-500 mb-6">
               <CardHeader>
                 <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-navy-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <IconComponent className="w-10 h-10 text-white" />
+                  <div className="w-20 h-20 rounded-lg bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100 flex items-center justify-center flex-shrink-0">
+                    <IconComponent className="w-10 h-10" />
                   </div>
                   <div className="flex-1">
-                    <div className="inline-block bg-navy-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2">
-                      ⭐ RECOMMENDED START HERE
+                    <div className="inline-flex items-center gap-1.5 bg-navy-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2">
+                      <Star className="w-3.5 h-3.5 fill-gold-400 text-gold-400" aria-hidden="true" />
+                      RECOMMENDED START HERE
                     </div>
                     <CardTitle className="text-2xl mb-1">{guide.title}</CardTitle>
                     <div className="flex items-center gap-2 mb-2">
@@ -339,11 +340,11 @@ export default function UserGuides() {
                 <Button
                   onClick={() => handleDownloadGuide(guide.type, guide.title)}
                   disabled={downloading === guide.type}
-                  className="w-full bg-gradient-to-r from-navy-500 to-indigo-600 hover:opacity-90 h-12 text-base"
+                  className="w-full h-12 text-base"
                 >
                   {downloading === guide.type ? (
                     <>
-                      <span className="animate-spin mr-2">⏳</span>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       Generating PDF...
                     </>
                   ) : (
@@ -366,18 +367,18 @@ export default function UserGuides() {
         <div className="grid md:grid-cols-2 gap-6">
           {guides.filter(g => !g.featured).map((guide) => {
             const IconComponent = guide.icon;
-            const colorClasses = {
-              blue: 'from-navy-500 to-navy-600',
-              green: 'from-emerald-500 to-emerald-600',
-              purple: 'from-navy-500 to-navy-600'
+            const iconChip = {
+              blue: 'bg-navy-50 text-navy-700 ring-navy-100',
+              green: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+              purple: 'bg-violet-50 text-violet-700 ring-violet-100'
             };
 
             return (
-              <Card key={guide.type} className="border-2 hover:shadow-xl transition-shadow">
+              <Card key={guide.type} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start gap-4">
-                    <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${colorClasses[guide.color]} flex items-center justify-center flex-shrink-0`}>
-                      <IconComponent className="w-8 h-8 text-white" />
+                    <div className={`w-16 h-16 rounded-lg ring-1 ring-inset ${iconChip[guide.color] || iconChip.blue} flex items-center justify-center flex-shrink-0`}>
+                      <IconComponent className="w-8 h-8" />
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-xl mb-1">{guide.title}</CardTitle>
@@ -395,7 +396,7 @@ export default function UserGuides() {
                     <ul className="space-y-1">
                       {guide.topics.map((topic, index) => (
                         <li key={index} className="text-sm text-slate-600 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-navy-600" />
                           {topic}
                         </li>
                       ))}
@@ -405,11 +406,11 @@ export default function UserGuides() {
                   <Button
                     onClick={() => handleDownloadGuide(guide.type, guide.title)}
                     disabled={downloading === guide.type}
-                    className={`w-full bg-gradient-to-r ${colorClasses[guide.color]} hover:opacity-90`}
+                    className="w-full"
                   >
                     {downloading === guide.type ? (
                       <>
-                        <span className="animate-spin mr-2">⏳</span>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Generating PDF...
                       </>
                     ) : (
