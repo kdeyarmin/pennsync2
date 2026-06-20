@@ -117,8 +117,7 @@ export default function About() {
 
       {/* CTA Section */}
       <div className="mb-12">
-        <Card className="bg-navy-50 border-navy-100">
-          <CardContent className="p-8 text-center">
+        <div className="rounded-xl border border-navy-100 bg-navy-50 p-8 text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to Transform Your Agency?</h2>
             <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
               Join home health and hospice organizations using Penn Sync to streamline operations, improve compliance, and deliver better patient care.
@@ -133,8 +132,7 @@ export default function About() {
                 <Button variant="outline">Learn More</Button>
               </Link>
             </div>
-          </CardContent>
-        </Card>
+        </div>
       </div>
     </PageContainer>
   );

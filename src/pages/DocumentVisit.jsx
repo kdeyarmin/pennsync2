@@ -1610,9 +1610,9 @@ Generate the complete clinical narrative based on the audio and context:`;
             </TabsContent>
 
             <TabsContent value="workflow" className="space-y-4 sm:space-y-6">
-              <Alert className="bg-navy-50 border-navy-100">
+              <Alert variant="info">
                 <Sparkles className="w-5 h-5 text-navy-600" />
-                <AlertDescription className="text-blue-900">
+                <AlertDescription>
                   <strong>Recommended AI Workflow:</strong>
                   <ol className="list-decimal ml-5 mt-2 space-y-1">
                     <li>Enter vital signs first (helps AI generate better content)</li>
@@ -1667,9 +1667,9 @@ Generate the complete clinical narrative based on the audio and context:`;
                     onChange={setVitalSigns}
                   />
                   {Object.keys(vitalSigns).length > 0 && (
-                    <Alert className="mt-4 bg-emerald-50 border-emerald-200">
+                    <Alert variant="success" className="mt-4">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <AlertDescription className="text-emerald-900">
+                      <AlertDescription>
                         Vital signs entered. These will be automatically incorporated into your note.
                       </AlertDescription>
                     </Alert>
@@ -1702,9 +1702,9 @@ Generate the complete clinical narrative based on the audio and context:`;
                   />
 
                   {hasGeneratedTemplate && (
-                    <Alert className="bg-emerald-50 border-emerald-200">
+                    <Alert variant="success">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <AlertDescription className="text-emerald-900">
+                      <AlertDescription>
                         Template generated! Review it in the Documentation tab or proceed to add your observations.
                       </AlertDescription>
                     </Alert>
@@ -1754,7 +1754,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Alert className="bg-navy-50 border-navy-100">
+                  <Alert variant="info">
                     <Sparkles className="w-4 h-4 text-navy-600" />
                     <AlertDescription className="text-navy-900">
                       <strong className="inline-flex items-center gap-1.5"><Mic className="w-4 h-4" aria-hidden="true" /> Global Voice Commands are now active!</strong>

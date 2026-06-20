@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import HandoutCustomizer from "../components/education/HandoutCustomizer";
@@ -720,13 +721,13 @@ export default function PatientEducationHub() {
         </TabsContent>
 
         <TabsContent value="teachback">
-          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+          <Suspense fallback={<LoadingState />}>
             <PatientEducation />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="tracking">
-          <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+          <Suspense fallback={<LoadingState />}>
             <PatientEducationPortal />
           </Suspense>
         </TabsContent>

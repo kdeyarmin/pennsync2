@@ -209,8 +209,7 @@ export default function NurseEducationVideos() {
 
       {/* Completion Message */}
       {completedVideos.length === totalVideos && (
-        <Card className="border-emerald-200 bg-emerald-50">
-          <CardContent className="p-6 text-center">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center">
             <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-white" />
             </div>
@@ -218,8 +217,7 @@ export default function NurseEducationVideos() {
             <p className="text-slate-600">
               You've completed all nurse education videos. Keep up the great work!
             </p>
-          </CardContent>
-        </Card>
+        </div>
       )}
     </PageContainer>
   );

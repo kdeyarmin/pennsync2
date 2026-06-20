@@ -628,20 +628,19 @@ export default function TrainingCoursePlayer() {
       {/* ─── STEP: RESULT ─────────────────────────────────────────── */}
       {step === "result" && result && (
         <div className="space-y-4">
-          {/* Pass/Fail hero */}
-          <Card className={`border-0 shadow-lg ${result.passed ? "bg-emerald-600" : "bg-red-700"} text-white`}>
-            <CardContent className="p-8 text-center space-y-3">
-              {result.passed ? (
-                <CheckCircle2 className="w-16 h-16 mx-auto opacity-90" />
-              ) : (
-                <RotateCcw className="w-16 h-16 mx-auto opacity-90" />
-              )}
-              <h2 className="text-3xl font-extrabold">{result.passed ? "You Passed!" : "Not Quite Yet"}</h2>
-              <p className="text-lg opacity-90">
-                Score: <strong>{result.score}%</strong> &nbsp;•&nbsp; Passing: {result.passing_score}%
-              </p>
-            </CardContent>
-          </Card>
+          {/* Pass/Fail hero — plain wrapper so the status background isn't
+              overridden by Card's default bg-white. */}
+          <div className={`rounded-xl shadow-lg p-8 text-center space-y-3 text-white ${result.passed ? "bg-emerald-600" : "bg-red-700"}`}>
+            {result.passed ? (
+              <CheckCircle2 className="w-16 h-16 mx-auto opacity-90" />
+            ) : (
+              <RotateCcw className="w-16 h-16 mx-auto opacity-90" />
+            )}
+            <h2 className="text-3xl font-extrabold">{result.passed ? "You Passed!" : "Not Quite Yet"}</h2>
+            <p className="text-lg opacity-90">
+              Score: <strong>{result.score}%</strong> &nbsp;•&nbsp; Passing: {result.passing_score}%
+            </p>
+          </div>
 
           {/* Certificate */}
           {result.passed && result.certificate && (
