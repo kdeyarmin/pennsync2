@@ -92,6 +92,12 @@
         }
       ]
     },
-    "write": {}
+    "write": {
+      "$or": [
+        { "sender_email": "{{user.email}}" },
+        { "recipients": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    }
   }
 }

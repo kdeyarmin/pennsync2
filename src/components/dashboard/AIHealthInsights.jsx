@@ -179,18 +179,18 @@ Provide comprehensive health trend analysis:
   };
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-white to-indigo-50 mb-6">
+    <Card className="border-2 border-navy-200 bg-gradient-to-br from-navy-50 via-white to-indigo-50 mb-6">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-6 h-6 text-purple-600" />
+            <Brain className="w-6 h-6 text-navy-600" />
             AI Health Insights & Trends
           </CardTitle>
           <Button
             onClick={generateInsights}
             disabled={isAnalyzing}
             size="sm"
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isAnalyzing ? (
               <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
@@ -204,7 +204,7 @@ Provide comprehensive health trend analysis:
       <CardContent>
         {isAnalyzing ? (
           <div className="text-center py-12">
-            <Brain className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-pulse" />
+            <Brain className="w-12 h-12 text-navy-400 mx-auto mb-4 animate-pulse" />
             <p className="text-slate-600">AI analyzing patient health trends...</p>
           </div>
         ) : insights ? (
@@ -367,16 +367,16 @@ Provide comprehensive health trend analysis:
 
             {/* Predictive Insights */}
             {insights.predictive_insights?.length > 0 && (
-              <Card className="border-purple-200 bg-purple-50">
+              <Card className="border-navy-200 bg-navy-50">
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-purple-900">
+                  <CardTitle className="text-sm flex items-center gap-2 text-navy-900">
                     <Brain className="w-5 h-5" />
                     Predictive Insights
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {insights.predictive_insights.map((pred, idx) => (
-                    <div key={idx} className="bg-white p-3 rounded border border-purple-200">
+                    <div key={idx} className="bg-white p-3 rounded border border-navy-200">
                       <div className="flex items-start justify-between mb-2">
                         <p className="font-semibold text-sm text-slate-900">{pred.prediction}</p>
                         <Badge className={
@@ -389,11 +389,11 @@ Provide comprehensive health trend analysis:
                       </div>
                       <p className="text-xs text-slate-600 mb-2">Expected: {pred.timeframe}</p>
                       {pred.preventive_measures?.length > 0 && (
-                        <div className="bg-purple-50 p-2 rounded mt-2">
-                          <p className="text-xs font-semibold text-purple-900 mb-1">Prevention:</p>
+                        <div className="bg-navy-50 p-2 rounded mt-2">
+                          <p className="text-xs font-semibold text-navy-900 mb-1">Prevention:</p>
                           <ul className="space-y-1">
                             {pred.preventive_measures.map((measure, i) => (
-                              <li key={i} className="text-xs text-purple-800">• {measure}</li>
+                              <li key={i} className="text-xs text-navy-800">• {measure}</li>
                             ))}
                           </ul>
                         </div>
@@ -406,11 +406,11 @@ Provide comprehensive health trend analysis:
           </div>
         ) : (
           <div className="text-center py-12">
-            <Brain className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+            <Brain className="w-16 h-16 text-navy-300 mx-auto mb-4" />
             <p className="text-slate-600 mb-4">Generate AI-powered health insights for this patient</p>
             <Button
               onClick={generateInsights}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Generate Health Insights

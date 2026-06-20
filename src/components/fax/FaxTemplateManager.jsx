@@ -187,7 +187,7 @@ export default function FaxTemplateManager({ onApplyTemplate }) {
                         </span>
                       )}
                       {tpl.subject && (
-                        <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center gap-1 bg-navy-50 text-navy-700 px-2 py-0.5 rounded-full">
                           <FileText className="w-3 h-3" /> {tpl.subject}
                         </span>
                       )}

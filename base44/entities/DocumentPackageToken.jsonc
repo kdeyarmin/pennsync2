@@ -63,5 +63,20 @@
     "token",
     "signer_email",
     "expires_at"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        { "signer_email": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "write": {
+      "$or": [
+        { "signer_email": "{{user.email}}" },
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    }
+  }
 }

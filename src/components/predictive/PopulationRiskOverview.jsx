@@ -172,13 +172,13 @@ export default function PopulationRiskOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-navy-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <Activity className="w-5 h-5 text-purple-600" />
+              <Activity className="w-5 h-5 text-navy-600" />
             </div>
-            <p className="text-3xl font-bold text-purple-900">{avgRiskScore}</p>
-            <p className="text-xs text-purple-700">Avg Risk Score</p>
+            <p className="text-3xl font-bold text-navy-900">{avgRiskScore}</p>
+            <p className="text-xs text-navy-700">Avg Risk Score</p>
           </CardContent>
         </Card>
 

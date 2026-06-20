@@ -143,10 +143,10 @@ export default function BulkPatientActions({ selectedPatients, onClearSelection 
             </Button>
             <Button
               onClick={() => updateStatusMutation.mutate(newStatus)}
-              disabled={!newStatus || updateStatusMutation.isLoading}
+              disabled={!newStatus || updateStatusMutation.isPending}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {updateStatusMutation.isLoading ? "Updating..." : "Update Status"}
+              {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -172,10 +172,10 @@ export default function BulkPatientActions({ selectedPatients, onClearSelection 
             </Button>
             <Button
               onClick={() => deletePatientsMutation.mutate()}
-              disabled={deletePatientsMutation.isLoading}
+              disabled={deletePatientsMutation.isPending}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deletePatientsMutation.isLoading ? "Deleting..." : "Delete Patients"}
+              {deletePatientsMutation.isPending ? "Deleting..." : "Delete Patients"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -309,26 +309,26 @@ Return as JSON:
                   <div className="flex items-center justify-between mb-3">
                     <p className="font-semibold">Overall Compliance Rate</p>
                     <div className="flex items-center gap-2">
-                      <span className={`text-2xl font-bold ${getScoreColor(report.documentation_compliance.overall_rate)}`}>
-                        {report.documentation_compliance.overall_rate}%
+                      <span className={`text-2xl font-bold ${getScoreColor(report.documentation_compliance?.overall_rate)}`}>
+                        {report.documentation_compliance?.overall_rate}%
                       </span>
-                      {getTrendIcon(report.documentation_compliance.trend)}
+                      {getTrendIcon(report.documentation_compliance?.trend)}
                     </div>
                   </div>
                   <Badge className={`${
-                    report.documentation_compliance.trend === 'improving' ? 'bg-green-100 text-green-800' :
-                    report.documentation_compliance.trend === 'declining' ? 'bg-red-100 text-red-800' :
+                    report.documentation_compliance?.trend === 'improving' ? 'bg-green-100 text-green-800' :
+                    report.documentation_compliance?.trend === 'declining' ? 'bg-red-100 text-red-800' :
                     'bg-slate-100 text-slate-800'
                   }`}>
-                    {report.documentation_compliance.trend}
+                    {report.documentation_compliance?.trend}
                   </Badge>
                 </div>
 
-                {report.documentation_compliance.common_gaps?.length > 0 && (
+                {report.documentation_compliance?.common_gaps?.length > 0 && (
                   <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                     <p className="font-semibold text-sm mb-2">Common Documentation Gaps</p>
                     <ul className="space-y-1">
-                      {report.documentation_compliance.common_gaps.map((gap, idx) => (
+                      {report.documentation_compliance?.common_gaps.map((gap, idx) => (
                         <li key={idx} className="text-sm text-yellow-900 flex items-start gap-2">
                           <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                           {gap}
@@ -338,11 +338,11 @@ Return as JSON:
                   </div>
                 )}
 
-                {report.documentation_compliance.top_performers?.length > 0 && (
+                {report.documentation_compliance?.top_performers?.length > 0 && (
                   <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                     <p className="font-semibold text-sm mb-2">Top Performers</p>
                     <ul className="space-y-1">
-                      {report.documentation_compliance.top_performers.map((performer, idx) => (
+                      {report.documentation_compliance?.top_performers.map((performer, idx) => (
                         <li key={idx} className="text-sm text-green-900 flex items-start gap-2">
                           <CheckCircle2 className="w-3 h-3 mt-0.5 flex-shrink-0" />
                           {performer}
@@ -379,25 +379,25 @@ Return as JSON:
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-white rounded-lg p-4 border border-slate-200 text-center">
                     <p className="text-2xl font-bold text-blue-600">
-                      {report.operational_metrics.visit_completion_rate}%
+                      {report.operational_metrics?.visit_completion_rate}%
                     </p>
                     <p className="text-xs text-slate-600 mt-1">Completion Rate</p>
                   </div>
                   <div className="bg-white rounded-lg p-4 border border-slate-200 text-center">
-                    <p className="text-2xl font-bold text-purple-600">
-                      {report.operational_metrics.avg_visits_per_patient?.toFixed(1)}
+                    <p className="text-2xl font-bold text-navy-600">
+                      {report.operational_metrics?.avg_visits_per_patient?.toFixed(1)}
                     </p>
                     <p className="text-xs text-slate-600 mt-1">Avg Visits/Patient</p>
                   </div>
                   <div className="bg-white rounded-lg p-4 border border-slate-200 text-center">
-                    <p className={`text-2xl font-bold ${getScoreColor(report.operational_metrics.efficiency_score)}`}>
-                      {report.operational_metrics.efficiency_score}%
+                    <p className={`text-2xl font-bold ${getScoreColor(report.operational_metrics?.efficiency_score)}`}>
+                      {report.operational_metrics?.efficiency_score}%
                     </p>
                     <p className="text-xs text-slate-600 mt-1">Efficiency Score</p>
                   </div>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <p className="text-sm text-slate-700">{report.operational_metrics.insights}</p>
+                  <p className="text-sm text-slate-700">{report.operational_metrics?.insights}</p>
                 </div>
               </TabsContent>
 
@@ -405,17 +405,17 @@ Return as JSON:
                 <div className="bg-white rounded-lg p-4 border border-slate-200">
                   <div className="flex items-center justify-between mb-3">
                     <p className="font-semibold">Safety Score</p>
-                    <span className={`text-2xl font-bold ${getScoreColor(report.risk_analysis.safety_score)}`}>
-                      {report.risk_analysis.safety_score}%
+                    <span className={`text-2xl font-bold ${getScoreColor(report.risk_analysis?.safety_score)}`}>
+                      {report.risk_analysis?.safety_score}%
                     </span>
                   </div>
                 </div>
 
-                {report.risk_analysis.high_risk_patterns?.length > 0 && (
+                {report.risk_analysis?.high_risk_patterns?.length > 0 && (
                   <div className="bg-red-50 rounded-lg p-4 border border-red-200">
                     <p className="font-semibold text-sm mb-2 text-red-900">High-Risk Patterns</p>
                     <ul className="space-y-1">
-                      {report.risk_analysis.high_risk_patterns.map((pattern, idx) => (
+                      {report.risk_analysis?.high_risk_patterns.map((pattern, idx) => (
                         <li key={idx} className="text-sm text-red-800 flex items-start gap-2">
                           <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                           {pattern}
@@ -427,7 +427,7 @@ Return as JSON:
 
                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                   <p className="font-semibold text-sm mb-2">Incident Trends</p>
-                  <p className="text-sm text-slate-700">{report.risk_analysis.incident_trends}</p>
+                  <p className="text-sm text-slate-700">{report.risk_analysis?.incident_trends}</p>
                 </div>
               </TabsContent>
             </Tabs>

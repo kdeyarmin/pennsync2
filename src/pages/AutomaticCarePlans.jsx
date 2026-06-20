@@ -219,7 +219,7 @@ export default function AutomaticCarePlans() {
   const getCareTypeColor = (careType) => {
     switch (careType) {
       case 'home_health': return 'bg-blue-100 text-blue-800';
-      case 'hospice': return 'bg-purple-100 text-purple-800';
+      case 'hospice': return 'bg-navy-100 text-navy-800';
       case 'both': return 'bg-green-100 text-green-800';
       default: return 'bg-slate-100 text-slate-800';
     }

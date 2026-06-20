@@ -66,10 +66,14 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
 
   const highlightText = (text, query) => {
     if (!query.trim() || !text) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
-    const parts = text.split(regex);
+    // Escape regex metacharacters so a query like "a(b" can't throw, and use a
+    // non-global anchored test regex — a global regex is stateful across .test()
+    // calls and would skip-highlight alternating matches.
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
+    const testRe = new RegExp(`^${escaped}$`, 'i');
     return parts.map((part, i) =>
-      regex.test(part) ? <mark key={i} className="bg-yellow-200 px-1 rounded">{part}</mark> : part
+      testRe.test(part) ? <mark key={i} className="bg-yellow-200 px-1 rounded">{part}</mark> : part
     );
   };
 
@@ -189,7 +193,7 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
                         </Button>
                       )}
                       {log.ocr_processed && onSelectFaxForAI && (
-                        <Button variant="outline" size="sm" onClick={() => onSelectFaxForAI(log.id)} className="text-purple-600 hover:text-purple-700">
+                        <Button variant="outline" size="sm" onClick={() => onSelectFaxForAI(log.id)} className="text-navy-600 hover:text-navy-700">
                           <Brain className="w-3 h-3 mr-1" /> AI Analyze
                         </Button>
                       )}

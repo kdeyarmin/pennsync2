@@ -23,14 +23,14 @@ const ACTION_CONFIG = {
   create: { icon: Plus, color: 'bg-blue-100 text-blue-800', label: 'Create' },
   update: { icon: Edit, color: 'bg-yellow-100 text-yellow-800', label: 'Update' },
   delete: { icon: Trash2, color: 'bg-red-100 text-red-800', label: 'Delete' },
-  export: { icon: Download, color: 'bg-purple-100 text-purple-800', label: 'Export' },
+  export: { icon: Download, color: 'bg-navy-100 text-navy-800', label: 'Export' },
   view_document: { icon: Eye, color: 'bg-indigo-100 text-indigo-800', label: 'View Document' },
   search: { icon: Search, color: 'bg-orange-100 text-orange-800', label: 'Search' }
 };
 
 const DEVICE_CONFIG = {
   mobile: { label: 'Mobile', color: 'bg-blue-100 text-blue-800' },
-  tablet: { label: 'Tablet', color: 'bg-purple-100 text-purple-800' },
+  tablet: { label: 'Tablet', color: 'bg-navy-100 text-navy-800' },
   desktop: { label: 'Desktop', color: 'bg-slate-100 text-slate-800' }
 };
 
@@ -81,7 +81,7 @@ export default function UserActivityDashboard() {
 
     if (searchTerm) {
       filtered = filtered.filter(a =>
-        a.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.page?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.entity_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||

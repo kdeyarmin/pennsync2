@@ -170,18 +170,18 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
   if (!patient) return null;
 
   return (
-    <Card className="border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Patient Summary
           </CardTitle>
           <Button
             onClick={generateSummary}
             disabled={isGenerating}
             size="sm"
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isGenerating ? (
               <>
@@ -245,8 +245,8 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
             </div>
 
             {/* Overview */}
-            <Alert className="bg-purple-50 border-purple-200">
-              <AlertDescription className="text-purple-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <AlertDescription className="text-navy-900">
                 <strong>Overview:</strong> {summary.overview}
               </AlertDescription>
             </Alert>

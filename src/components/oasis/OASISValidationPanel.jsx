@@ -52,11 +52,11 @@ export default function OASISValidationPanel({ pdgmData, analysisResults }) {
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-purple-600" />
+            <ShieldCheck className="w-5 h-5 text-navy-600" />
             OASIS Validation Report
           </div>
           <div className="flex items-center gap-2">
@@ -251,7 +251,7 @@ function performValidationChecks(pdgmData, _analysisResults) {
   const categories = [
     {
       name: "Admission Source & Episode Timing",
-      icon: <Building2 className="w-4 h-4 text-purple-600" />,
+      icon: <Building2 className="w-4 h-4 text-navy-600" />,
       issues: admissionChecks
     },
     {

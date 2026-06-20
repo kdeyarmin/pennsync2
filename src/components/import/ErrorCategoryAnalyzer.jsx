@@ -37,7 +37,7 @@ const ERROR_CATEGORIES = {
   DATE_ERROR: {
     label: "Date Issues",
     icon: Calendar,
-    color: "bg-purple-100 text-purple-800 border-purple-300",
+    color: "bg-navy-100 text-navy-800 border-navy-300",
     keywords: ["date", "dob", "admission", "future", "past"]
   },
   CONTACT_INFO: {
@@ -110,10 +110,10 @@ export default function ErrorCategoryAnalyzer({ validationErrors, onSelectErrors
   const sortedCategories = Object.entries(categorizedErrors).sort((a, b) => b[1].length - a[1].length);
 
   return (
-    <Card className="border-2 border-purple-200">
+    <Card className="border-2 border-navy-200">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
-          <Info className="w-5 h-5 text-purple-600" />
+          <Info className="w-5 h-5 text-navy-600" />
           Error Analysis by Category
         </CardTitle>
       </CardHeader>

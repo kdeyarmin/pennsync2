@@ -186,18 +186,18 @@ ${draftDocumentation.caregiver_support}`;
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             OASIS Draft Documentation Generator
           </CardTitle>
           {!draftDocumentation && (
             <Button
               onClick={generateDraft}
               disabled={isGenerating}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isGenerating ? (
                 <>
@@ -218,15 +218,15 @@ ${draftDocumentation.caregiver_support}`;
       <CardContent>
         {!draftDocumentation && !isGenerating && (
           <div className="text-center py-8 text-slate-600">
-            <FileText className="w-12 h-12 text-purple-400 mx-auto mb-3" />
+            <FileText className="w-12 h-12 text-navy-400 mx-auto mb-3" />
             <p>Click "Generate Draft" to create comprehensive OASIS documentation</p>
           </div>
         )}
 
         {isGenerating && (
           <div className="text-center py-12">
-            <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-            <p className="text-purple-700">Generating Medicare-compliant documentation...</p>
+            <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
+            <p className="text-navy-700">Generating Medicare-compliant documentation...</p>
           </div>
         )}
 
@@ -364,12 +364,12 @@ ${draftDocumentation.caregiver_support}`;
                   <p className="text-sm text-blue-900">{draftDocumentation.skilled_need_justification}</p>
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-300">
-                  <h4 className="font-semibold text-purple-900 mb-3">Goals & Interventions</h4>
+                <div className="bg-navy-50 p-4 rounded-lg border border-navy-300">
+                  <h4 className="font-semibold text-navy-900 mb-3">Goals & Interventions</h4>
                   {draftDocumentation.goals_and_interventions?.map((goal, idx) => (
                     <div key={idx} className="bg-white p-3 rounded mb-2">
                       <Badge className="mb-2">Goal {idx + 1}</Badge>
-                      <p className="text-sm font-medium text-purple-900 mb-1">{goal.goal}</p>
+                      <p className="text-sm font-medium text-navy-900 mb-1">{goal.goal}</p>
                       <p className="text-xs text-slate-600 mb-2">Problem: {goal.problem}</p>
                       <p className="text-xs text-slate-700 mb-1">
                         <strong>Interventions:</strong> {goal.interventions.join('; ')}

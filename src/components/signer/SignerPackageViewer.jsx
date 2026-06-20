@@ -23,10 +23,10 @@ export default function SignerPackageViewer({
         documentId={selectedDocId}
         packageData={packageData}
         token={token}
-        onComplete={() => {
+        onComplete={(allSigned) => {
           setIsSigningMode(false);
           setSelectedDocId(null);
-          onSignatureComplete();
+          onSignatureComplete(allSigned);
         }}
         onCancel={() => {
           setIsSigningMode(false);

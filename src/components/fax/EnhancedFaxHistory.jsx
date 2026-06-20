@@ -27,7 +27,7 @@ export default function EnhancedFaxHistory({ patientId }) {
   const retryMutation = useMutation({
     mutationFn: (faxLogId) => retryFailedFax({ fax_log_id: faxLogId }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-logs']);
+      queryClient.invalidateQueries({ queryKey: ['fax-logs'] });
       toast.success("Fax retry initiated");
     },
     onError: (error) => {
@@ -125,7 +125,7 @@ export default function EnhancedFaxHistory({ patientId }) {
                       {getStatusIcon(log.status)}
                       {getPriorityBadge(log.priority)}
                       {log.cover_page_details && (
-                        <Badge variant="outline" className="text-purple-700 border-purple-300">
+                        <Badge variant="outline" className="text-navy-700 border-navy-300">
                           <Star className="w-3 h-3 mr-1" />
                           Cover Page
                         </Badge>

@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,14 +13,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Shield, AlertTriangle, TrendingDown, Users, FileText, Calendar, BarChart3, Clock, Award, Bell, Search, CheckCircle2,
-  BookOpen
+  BookOpen, LayoutDashboard, Lock, Loader2
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import ComplianceReportGenerator from "@/components/compliance/ComplianceReportGenerator";
 import AIComplianceAssistant from "@/components/compliance/AIComplianceAssistant";
-import RegulatoryCompliance from "@/pages/RegulatoryCompliance";
+
+const RegulatoryCompliance = lazy(() => import("@/pages/RegulatoryCompliance"));
+const ComplianceMonitoringDashboard = lazy(() => import("@/pages/ComplianceMonitoringDashboard"));
+const RealTimeComplianceDashboard = lazy(() => import("@/pages/RealTimeComplianceDashboard"));
+const SecurityCompliance = lazy(() => import("@/pages/SecurityCompliance"));
+const SecurityPolicy = lazy(() => import("@/pages/SecurityPolicy"));
+
+// Top-level tab keys, kept in sync with the TabsTrigger values below. Used to
+// validate the ?tab= deep-link so the retired standalone pages (Compliance
+// Monitoring, Real-Time Compliance, Regulatory Compliance, Security & Compliance,
+// Security Policy) redirect straight to the right tab.
+const TAB_KEYS = ["dashboard", "regulatory", "security"];
+
+const tabLoader = (
+  <div className="flex justify-center py-12">
+    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+  </div>
+);
 
 export default function ComplianceCenter() {
   const [timeRange, setTimeRange] = useState(30);
@@ -31,6 +49,36 @@ export default function ComplianceCenter() {
   const [severityFilter, setSeverityFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState(new Set());
   const _queryClient = useQueryClient();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const requestedView = searchParams.get("view");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "dashboard";
+
+  // Nested sub-tab selection, driven by ?view= so deep links (e.g. a retired
+  // /ComplianceMonitoringDashboard or /SecurityPolicy bookmark) open the right
+  // inner page instead of the sub-tab default.
+  const DASHBOARD_VIEWS = ["overview", "live", "monitoring", "realtime"];
+  const SECURITY_VIEWS = ["audit-logs", "policies"];
+  const dashboardView = DASHBOARD_VIEWS.includes(requestedView) ? requestedView : "overview";
+  const securityView = SECURITY_VIEWS.includes(requestedView) ? requestedView : "audit-logs";
+  const handleViewChange = (view) => setSearchParams({ tab: activeTab, view });
+
+  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and
+  // redirects from the retired pages deep-link correctly. "dashboard" is the
+  // default, so it stays a clean /ComplianceCenter with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "dashboard" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /ComplianceCenter. Skipped while a meaningful ?view= is
+  // present (a deep-linked sub-tab).
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "dashboard" && !requestedView) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, requestedView, setSearchParams]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -319,32 +367,56 @@ export default function ComplianceCenter() {
     <PageContainer>
       <PageHeader
         icon={Shield}
-        eyebrow="Analytics"
+        eyebrow="Compliance"
         title="Compliance Center"
-        description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
+        description="Compliance monitoring, real-time alerts, regulatory tracking, and security & policies — all in one place."
         favoritePage="ComplianceCenter"
       />
 
-      <Tabs defaultValue="medicare" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
-            <TabsTrigger value="medicare" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <Shield className="w-4 h-4 mr-2" />
-              Medicare CoP
-            </TabsTrigger>
-            <TabsTrigger value="monitoring" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <AlertTriangle className="w-4 h-4 mr-2" />
-              Real-Time Monitoring
+            <TabsTrigger value="dashboard" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <LayoutDashboard className="w-4 h-4 mr-2" />
+              Dashboard
             </TabsTrigger>
             <TabsTrigger value="regulatory" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <BookOpen className="w-4 h-4 mr-2" />
-              Regulatory Updates
+              Regulatory
+            </TabsTrigger>
+            <TabsTrigger value="security" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Lock className="w-4 h-4 mr-2" />
+              Security &amp; Policies
             </TabsTrigger>
           </TabsList>
         </div>
 
+        {/* Dashboard: Overview + live monitoring + merged dashboards */}
+        <TabsContent value="dashboard" className="space-y-6">
+          <Tabs value={dashboardView} onValueChange={handleViewChange} className="space-y-6">
+            <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+              <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                <TabsTrigger value="overview" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="live" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Real-Time Monitoring
+                </TabsTrigger>
+                <TabsTrigger value="monitoring" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Monitoring
+                </TabsTrigger>
+                <TabsTrigger value="realtime" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Real-Time Insights
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
         {/* Medicare Compliance Dashboard */}
-        <TabsContent value="medicare" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex flex-col sm:flex-row gap-3 flex-1">
               <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(parseInt(v))}>
@@ -462,16 +534,16 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </div>
 
           {aiInsights && (
-            <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+            <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-600" />
+                  <BarChart3 className="w-5 h-5 text-navy-600" />
                   AI Strategic Insights
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-white p-4 rounded-lg border-2 border-purple-200">
-                  <h3 className="font-bold text-purple-900 mb-2">Overall Assessment</h3>
+                <div className="bg-white p-4 rounded-lg border-2 border-navy-200">
+                  <h3 className="font-bold text-navy-900 mb-2">Overall Assessment</h3>
                   <p className="text-slate-700">{aiInsights.overall_assessment}</p>
                 </div>
                 {aiInsights.action_plan && (
@@ -520,8 +592,8 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </div>
         </TabsContent>
 
-        {/* Real-Time Monitoring */}
-        <TabsContent value="monitoring" className="space-y-6">
+        {/* Real-Time Monitoring (live, computed in this hub) */}
+        <TabsContent value="live" className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-none">
               <CardContent className="p-4">
@@ -539,11 +611,11 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none">
+            <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white border-none">
               <CardContent className="p-4">
-                <Users className="w-8 h-8 text-purple-200 mb-2" />
+                <Users className="w-8 h-8 text-navy-200 mb-2" />
                 <p className="text-2xl font-bold">{affectedUsers}</p>
-                <p className="text-xs text-purple-100">Affected Staff</p>
+                <p className="text-xs text-navy-100">Affected Staff</p>
               </CardContent>
             </Card>
 
@@ -669,9 +741,57 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           )}
         </TabsContent>
 
+            {/* Compliance Monitoring (merged page) */}
+            <TabsContent value="monitoring">
+              <Suspense fallback={tabLoader}>
+                <ComplianceMonitoringDashboard />
+              </Suspense>
+            </TabsContent>
+
+            {/* Real-Time Compliance (merged page) */}
+            <TabsContent value="realtime">
+              <Suspense fallback={tabLoader}>
+                <RealTimeComplianceDashboard />
+              </Suspense>
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
         {/* Regulatory Tab */}
         <TabsContent value="regulatory">
-          <RegulatoryCompliance />
+          <Suspense fallback={tabLoader}>
+            <RegulatoryCompliance />
+          </Suspense>
+        </TabsContent>
+
+        {/* Security & Policies Tab */}
+        <TabsContent value="security">
+          <Tabs value={securityView} onValueChange={handleViewChange} className="space-y-6">
+            <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+              <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                <TabsTrigger value="audit-logs" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Audit Logs
+                </TabsTrigger>
+                <TabsTrigger value="policies" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                  <Lock className="w-4 h-4 mr-2" />
+                  Policies
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="audit-logs">
+              <Suspense fallback={tabLoader}>
+                <SecurityCompliance />
+              </Suspense>
+            </TabsContent>
+
+            <TabsContent value="policies">
+              <Suspense fallback={tabLoader}>
+                <SecurityPolicy />
+              </Suspense>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </PageContainer>

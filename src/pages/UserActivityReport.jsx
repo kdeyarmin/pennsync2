@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { lazy, Suspense, useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart3,
   Activity,
@@ -15,7 +17,9 @@ import {
   Download,
   Search,
   Clock,
-  MousePointer
+  MousePointer,
+  Archive,
+  Loader2
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
@@ -24,10 +28,41 @@ import { formatEastern } from "../components/utils/timezone";
 import { jsPDF } from "jspdf";
 import { toCsvRows } from "@/components/admin/csvExport";
 
+const UserActivityLog = lazy(() => import("@/pages/UserActivityLog"));
+
+// Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
+// ?tab= deep-link so the retired Activity Log page redirects to the right tab.
+const TAB_KEYS = ["report", "log"];
+
+const tabLoader = (
+  <div className="flex justify-center py-12">
+    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+  </div>
+);
+
 export default function UserActivityReport() {
   const [timeRange, setTimeRange] = useState("30"); // days
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("total_actions");
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "report";
+  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
+  // retired Activity Log page deep-links correctly. "report" is the default, so it
+  // stays a clean /UserActivityReport with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "report" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /UserActivityReport. Only fires when the param resolved
+  // to the default tab, so a valid deep-link like ?tab=log is left untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "report") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
 
   // Fetch user activity data
   const { data: activities = [], isLoading } = useQuery({
@@ -279,17 +314,6 @@ export default function UserActivityReport() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading activity data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <PageContainer>
       <PageHeader
@@ -298,19 +322,43 @@ export default function UserActivityReport() {
         title="User Activity Report"
         description="Comprehensive analytics on user engagement and activity"
         favoritePage="UserActivityReport"
-        actions={
-          <div className="flex gap-2">
-            <Button onClick={exportToCSV} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
-            <Button onClick={exportToPDF} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export PDF
-            </Button>
-          </div>
-        }
       />
+
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="report" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Report
+            </TabsTrigger>
+            <TabsTrigger value="log" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Archive className="h-4 w-4 mr-2" />
+              Activity Log
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="report" className="space-y-4 sm:space-y-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-600">Loading activity data...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+        {/* Export Actions */}
+        <div className="flex justify-end gap-2">
+          <Button onClick={exportToCSV} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button onClick={exportToPDF} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
 
         {/* Overall Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -338,14 +386,14 @@ export default function UserActivityReport() {
             </CardContent>
           </Card>
 
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
+          <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-navy-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Total Logins</p>
-                  <p className="text-3xl font-bold text-purple-900 mt-1">{overallStats.total_logins}</p>
+                  <p className="text-sm text-navy-600 font-medium">Total Logins</p>
+                  <p className="text-3xl font-bold text-navy-900 mt-1">{overallStats.total_logins}</p>
                 </div>
-                <LogIn className="w-12 h-12 text-purple-500 opacity-50" />
+                <LogIn className="w-12 h-12 text-navy-500 opacity-50" />
               </div>
             </CardContent>
           </Card>
@@ -449,9 +497,9 @@ export default function UserActivityReport() {
                           <p className="text-xs text-green-600 font-medium">Total Actions</p>
                           <p className="text-2xl font-bold text-green-900">{stat.total_actions}</p>
                         </div>
-                        <div className="p-3 bg-purple-50 rounded-lg">
-                          <p className="text-xs text-purple-600 font-medium">Logins</p>
-                          <p className="text-2xl font-bold text-purple-900">{stat.logins}</p>
+                        <div className="p-3 bg-navy-50 rounded-lg">
+                          <p className="text-xs text-navy-600 font-medium">Logins</p>
+                          <p className="text-2xl font-bold text-navy-900">{stat.logins}</p>
                         </div>
                         <div className="p-3 bg-blue-50 rounded-lg">
                           <p className="text-xs text-blue-600 font-medium">Pages</p>
@@ -527,6 +575,16 @@ export default function UserActivityReport() {
             </ScrollArea>
           </CardContent>
         </Card>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="log">
+          <Suspense fallback={tabLoader}>
+            <UserActivityLog />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

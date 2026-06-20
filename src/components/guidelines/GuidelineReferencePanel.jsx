@@ -84,7 +84,7 @@ export default function GuidelineReferencePanel({
 
   const getCategoryColor = (category) => {
     const colors = {
-      oasis: "bg-purple-100 text-purple-800",
+      oasis: "bg-navy-100 text-navy-800",
       medicare_cop: "bg-red-100 text-red-800",
       clinical_documentation: "bg-blue-100 text-blue-800",
       home_health_regulations: "bg-indigo-100 text-indigo-800",

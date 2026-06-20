@@ -13,7 +13,7 @@ const SECTION_ICONS = {
 
 const SECTION_COLORS = {
   vitals: "border-blue-200 bg-blue-50",
-  assessment: "border-purple-200 bg-purple-50",
+  assessment: "border-navy-200 bg-navy-50",
   plan: "border-green-200 bg-green-50",
   education: "border-amber-200 bg-amber-50",
   safety: "border-red-200 bg-red-50",

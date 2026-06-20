@@ -167,11 +167,11 @@ Return up to 10 matching codes with their descriptions. Include common codes for
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="py-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="py-3 bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileCode className="w-4 h-4 text-purple-600" />
+            <FileCode className="w-4 h-4 text-navy-600" />
             ICD-10 Code Suggester
           </div>
           <Button
@@ -217,7 +217,7 @@ Return up to 10 matching codes with their descriptions. Include common codes for
               {searchResults.map((result, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-1.5 bg-white rounded border hover:bg-purple-50 cursor-pointer"
+                  className="flex items-center justify-between p-1.5 bg-white rounded border hover:bg-navy-50 cursor-pointer"
                   onClick={() => toggleCodeSelection(result)}
                 >
                   <div className="flex items-center gap-2">
@@ -241,8 +241,8 @@ Return up to 10 matching codes with their descriptions. Include common codes for
         {suggestedCodes.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <p className="text-xs font-semibold text-purple-800">AI-Suggested Codes</p>
+              <Sparkles className="w-4 h-4 text-navy-600" />
+              <p className="text-xs font-semibold text-navy-800">AI-Suggested Codes</p>
             </div>
             <div className="space-y-2 max-h-60 overflow-auto">
               {suggestedCodes.map((code, idx) => {
@@ -251,7 +251,7 @@ Return up to 10 matching codes with their descriptions. Include common codes for
                   <div
                     key={idx}
                     className={`p-2 rounded-lg border cursor-pointer transition-all ${
-                      isSelected ? 'bg-purple-100 border-purple-300' : 'bg-white hover:bg-purple-50'
+                      isSelected ? 'bg-navy-100 border-navy-300' : 'bg-white hover:bg-navy-50'
                     }`}
                     onClick={() => toggleCodeSelection(code)}
                   >
@@ -271,14 +271,14 @@ Return up to 10 matching codes with their descriptions. Include common codes for
                         <p className="text-xs font-medium text-slate-900 mt-1">{code.description}</p>
                       </div>
                       {isSelected ? (
-                        <CheckCircle2 className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-navy-600 flex-shrink-0" />
                       ) : (
                         <Plus className="w-5 h-5 text-slate-400 flex-shrink-0" />
                       )}
                     </div>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-5 text-[10px] text-purple-600 mt-1 p-0">
+                        <Button variant="ghost" size="sm" className="h-5 text-[10px] text-navy-600 mt-1 p-0">
                           <Info className="w-3 h-3 mr-1" /> View Rationale
                         </Button>
                       </PopoverTrigger>
@@ -296,9 +296,9 @@ Return up to 10 matching codes with their descriptions. Include common codes for
 
         {/* No suggestions yet */}
         {!isAnalyzing && suggestedCodes.length === 0 && narrativeText && narrativeText.length >= 50 && (
-          <Alert className="bg-purple-50 border-purple-200">
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-800 text-xs">
+          <Alert className="bg-navy-50 border-navy-200">
+            <Sparkles className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-navy-800 text-xs">
               Click "Analyze Note" to get AI-suggested ICD-10 codes based on your documentation.
             </AlertDescription>
           </Alert>

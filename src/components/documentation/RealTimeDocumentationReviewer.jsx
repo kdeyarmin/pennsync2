@@ -375,9 +375,9 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
 
       {/* Quick Wins */}
       {analysis.quick_wins?.length > 0 && (
-        <Card className="border-2 border-purple-300 bg-purple-50">
+        <Card className="border-2 border-navy-300 bg-navy-50">
           <CardHeader>
-            <CardTitle className="text-purple-900 flex items-center gap-2">
+            <CardTitle className="text-navy-900 flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               Quick Wins - Highest Impact Changes
             </CardTitle>
@@ -385,9 +385,9 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
           <CardContent>
             <div className="space-y-3">
               {analysis.quick_wins.slice(0, 5).map((win, index) => (
-                <div key={index} className="bg-white p-3 rounded-lg border border-purple-200">
+                <div key={index} className="bg-white p-3 rounded-lg border border-navy-200">
                   <div className="flex items-start gap-2">
-                    <Badge className="bg-purple-600 text-white">{win.priority}</Badge>
+                    <Badge className="bg-navy-600 text-white">{win.priority}</Badge>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900">{win.quick_fix}</p>
                       <p className="text-xs text-slate-600 mt-1">{win.impact}</p>

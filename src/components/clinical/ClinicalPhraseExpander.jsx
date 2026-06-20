@@ -134,7 +134,7 @@ export default function ClinicalPhraseExpander({
                           {template.phrase}
                         </code>
                         {template.template_type === 'patient_specific' && (
-                          <span className="text-xs text-purple-600">Patient-Specific</span>
+                          <span className="text-xs text-navy-600">Patient-Specific</span>
                         )}
                       </div>
                       <p className="text-xs text-slate-600 mt-1 line-clamp-1">

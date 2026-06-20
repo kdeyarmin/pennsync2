@@ -46,7 +46,7 @@ function isMissed(call) {
 }
 
 function CallTypeIcon({ call }) {
-  if (call.call_mode === "off_duty_transfer") return <PhoneForwarded className="h-3.5 w-3.5 text-purple-600" />;
+  if (call.call_mode === "off_duty_transfer") return <PhoneForwarded className="h-3.5 w-3.5 text-navy-600" />;
   if (call.direction === "outbound") return <PhoneOutgoing className="h-3.5 w-3.5 text-slate-500" />;
   if (isMissed(call)) return <PhoneMissed className="h-3.5 w-3.5 text-red-500" />;
   return <PhoneIncoming className="h-3.5 w-3.5 text-green-600" />;

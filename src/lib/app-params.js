@@ -77,9 +77,18 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 
 const getAppParams = () => {
 	const currentUrl = isNode ? undefined : window.location.href;
-	if (getAppParamValue('clear_access_token') === 'true') {
-		storage.removeItem('base44_access_token');
-		storage.removeItem('token');
+	// `clear_access_token` is a ONE-SHOT directive ("clear the stored token now"),
+	// not a persisted preference. Read it straight from the URL — never through
+	// getAppParamValue, which writes the value to storage and would then re-clear
+	// the token on EVERY subsequent load (a permanent logout loop once the param
+	// is ever seen). Also drop any flag a prior version persisted so an already
+	// affected session self-heals on the next load.
+	if (!isNode) {
+		storage.removeItem('base44_clear_access_token');
+		if (new URLSearchParams(window.location.search).get('clear_access_token') === 'true') {
+			storage.removeItem('base44_access_token');
+			storage.removeItem('token');
+		}
 	}
 
 	const appId = getAppParamValue('app_id', { defaultValue: import.meta.env.VITE_BASE44_APP_ID });

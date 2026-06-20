@@ -283,11 +283,11 @@ export default function EnhancedMultiReportComparison({
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <GitCompare className="w-5 h-5 text-purple-600" />
+            <GitCompare className="w-5 h-5 text-navy-600" />
             Multi-Report PDGM Comparison
           </div>
           <Badge variant="outline" className="text-xs">
@@ -317,7 +317,7 @@ export default function EnhancedMultiReportComparison({
                   key={report.id}
                   className={`flex items-center gap-3 p-2 rounded-lg border transition-colors cursor-pointer ${
                     selectedReports.includes(report.id) 
-                      ? 'bg-purple-50 border-purple-300' 
+                      ? 'bg-navy-50 border-navy-300' 
                       : 'bg-white border-slate-200 hover:bg-slate-50'
                   }`}
                   onClick={() => toggleReportSelection(report.id)}
@@ -358,7 +358,7 @@ export default function EnhancedMultiReportComparison({
         <Button
           onClick={runComparison}
           disabled={isComparing || selectedReports.length < 2}
-          className="w-full bg-purple-600 hover:bg-purple-700"
+          className="w-full bg-navy-600 hover:bg-navy-700"
         >
           {isComparing ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Comparing {selectedReports.length} Reports...</>
@@ -406,10 +406,10 @@ export default function EnhancedMultiReportComparison({
                   {formatCurrency(comparisonResults.statistics.avgRevenue)}
                 </p>
               </div>
-              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 text-center">
-                <TrendingUp className="w-4 h-4 text-purple-600 mx-auto mb-1" />
-                <p className="text-xs text-purple-600">Range</p>
-                <p className="text-sm font-bold text-purple-700">
+              <div className="p-3 bg-navy-50 rounded-lg border border-navy-200 text-center">
+                <TrendingUp className="w-4 h-4 text-navy-600 mx-auto mb-1" />
+                <p className="text-xs text-navy-600">Range</p>
+                <p className="text-sm font-bold text-navy-700">
                   {formatCurrency(comparisonResults.statistics.revenueRange)}
                 </p>
               </div>
@@ -444,7 +444,7 @@ export default function EnhancedMultiReportComparison({
             {/* Case-Mix Components Radar */}
             <div className="bg-slate-50 rounded-lg p-4 border">
               <p className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-purple-600" />
+                <Activity className="w-4 h-4 text-navy-600" />
                 Case-Mix Component Comparison
               </p>
               <ResponsiveContainer width="100%" height={250}>
@@ -471,7 +471,7 @@ export default function EnhancedMultiReportComparison({
             {/* Detailed Report Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-xs border rounded-lg overflow-hidden">
-                <thead className="bg-purple-100">
+                <thead className="bg-navy-100">
                   <tr>
                     <th className="p-2 text-left font-semibold">Report</th>
                     <th className="p-2 text-center font-semibold">Revenue</th>
@@ -544,7 +544,7 @@ export default function EnhancedMultiReportComparison({
                     <AlertDescription>
                       <p className="font-semibold text-sm">{diff.title}</p>
                       <p className="text-xs text-slate-700 mt-1">{diff.description}</p>
-                      <p className="text-xs text-purple-700 mt-1 font-medium">💡 {diff.impact}</p>
+                      <p className="text-xs text-navy-700 mt-1 font-medium">💡 {diff.impact}</p>
                     </AlertDescription>
                   </Alert>
                 ))}

@@ -392,11 +392,11 @@ Generate the homebound documentation now:`;
 
   return (
     <>
-      <Card className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+      <Card className="mb-6 bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-200">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-navy-600 rounded-full flex items-center justify-center shadow-lg">
                 <Home className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -406,7 +406,7 @@ Generate the homebound documentation now:`;
             </div>
             <Button
               onClick={() => setShowAssistant(true)}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              className="bg-gradient-to-r from-indigo-600 to-navy-600 hover:from-indigo-700 hover:to-navy-700"
             >
               <Shield className="w-4 h-4 mr-2" />
               Verify Homebound Status
@@ -574,9 +574,9 @@ Generate the homebound documentation now:`;
 
             {/* Step 1: Objective Observations */}
             <TabsContent value="step-1" className="space-y-6">
-              <Alert className="bg-purple-50 border-purple-200">
-                <Eye className="w-4 h-4 text-purple-600" />
-                <AlertDescription className="text-purple-900">
+              <Alert className="bg-navy-50 border-navy-200">
+                <Eye className="w-4 h-4 text-navy-600" />
+                <AlertDescription className="text-navy-900">
                   <strong>Medicare Auditors Look For:</strong> Specific, measurable observations that objectively support homebound status. Select all that apply.
                 </AlertDescription>
               </Alert>
@@ -777,7 +777,7 @@ Generate the homebound documentation now:`;
                     <Button
                       onClick={generateHomeboundText}
                       disabled={isGenerating || (validationResults && validationResults.issues.some(i => i.severity === 'critical'))}
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600"
+                      className="bg-gradient-to-r from-indigo-600 to-navy-600"
                     >
                       {isGenerating ? (
                         <>

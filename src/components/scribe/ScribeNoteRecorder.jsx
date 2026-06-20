@@ -106,11 +106,15 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
         diagnosis: diagnosis,
       });
 
-      if (response.data) {
+      // functions.invoke returns the full axios response; this function's body
+      // also nests its payload under `data`, so the fields live at
+      // response.data.data (not response.data).
+      const payload = response?.data?.data || response?.data;
+      if (payload) {
         onNoteGenerated({
-          transcription: response.data.transcription,
-          generatedNote: response.data.generatedNote,
-          treatmentSuggestions: response.data.treatmentSuggestions,
+          transcription: payload.transcription,
+          generatedNote: payload.generatedNote,
+          treatmentSuggestions: payload.treatmentSuggestions,
         });
       }
     } catch (error) {

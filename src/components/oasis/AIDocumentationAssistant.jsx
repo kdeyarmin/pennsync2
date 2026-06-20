@@ -188,10 +188,10 @@ Return JSON:
   if (!analysisResults) return null;
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="text-lg flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Documentation Assistant
         </CardTitle>
       </CardHeader>
@@ -211,7 +211,7 @@ Return JSON:
           <TabsContent value="suggestions">
             {!suggestions ? (
               <div className="text-center py-6">
-                <Lightbulb className="w-12 h-12 text-purple-300 mx-auto mb-3" />
+                <Lightbulb className="w-12 h-12 text-navy-300 mx-auto mb-3" />
                 <p className="text-sm text-slate-600 mb-4">
                   Generate AI-powered documentation text to address identified issues
                 </p>
@@ -293,9 +293,9 @@ Return JSON:
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="space-y-3 p-2">
-                          <div className="bg-purple-50 p-3 rounded border border-purple-200">
+                          <div className="bg-navy-50 p-3 rounded border border-navy-200">
                             <div className="flex items-center justify-between mb-1">
-                              <p className="text-xs font-semibold text-purple-700">Suggested Documentation:</p>
+                              <p className="text-xs font-semibold text-navy-700">Suggested Documentation:</p>
                               <div className="flex gap-1">
                                 <Button 
                                   size="sm" 
@@ -315,7 +315,7 @@ Return JSON:
                                 )}
                               </div>
                             </div>
-                            <p className="text-sm text-purple-900 italic">"{suggestion.suggested_text}"</p>
+                            <p className="text-sm text-navy-900 italic">"{suggestion.suggested_text}"</p>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div className="bg-slate-50 p-2 rounded">
@@ -429,9 +429,9 @@ Return JSON:
                           )}
 
                           {exp.documentation_example && (
-                            <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                              <p className="text-xs font-semibold text-purple-700">Example Documentation:</p>
-                              <p className="text-xs text-purple-900 italic">"{exp.documentation_example}"</p>
+                            <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                              <p className="text-xs font-semibold text-navy-700">Example Documentation:</p>
+                              <p className="text-xs text-navy-900 italic">"{exp.documentation_example}"</p>
                             </div>
                           )}
                         </div>

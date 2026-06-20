@@ -20,7 +20,7 @@ import PageContainer from "@/components/ui/PageContainer";
  * PhoneCenter — a nurse's hub for patient texting, masked call history,
  * callbacks, scheduled texts, and on/off-duty controls, presented like a real
  * phone: a device frame with a bottom tab bar that switches between app screens.
- * All communication goes through the nurse's Twilio work number so their personal
+ * All communication goes through the nurse's Telnyx work number so their personal
  * cell is never exposed.
  */
 export default function PhoneCenter() {

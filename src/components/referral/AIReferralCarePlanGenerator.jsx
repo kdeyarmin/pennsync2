@@ -119,25 +119,25 @@ export default function AIReferralCarePlanGenerator({
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Target className="w-5 h-5 text-purple-600" />
+          <Target className="w-5 h-5 text-navy-600" />
           AI Care Plan Generator
-          <Badge className="bg-purple-600 text-white">Powered by AI</Badge>
+          <Badge className="bg-navy-600 text-white">Powered by AI</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {generatedPlans.length === 0 ? (
           <div className="text-center py-8">
-            <Target className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+            <Target className="w-12 h-12 text-navy-400 mx-auto mb-4" />
             <p className="text-slate-600 mb-4">
               Generate AI-powered care plans based on the referral analysis and patient data
             </p>
             <Button
               onClick={handleGenerate}
               disabled={generating}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {generating ? (
                 <>
@@ -154,9 +154,9 @@ export default function AIReferralCarePlanGenerator({
           </div>
         ) : (
           <>
-            <Alert className="bg-purple-50 border-purple-300">
-              <AlertCircle className="w-4 h-4 text-purple-600" />
-              <AlertDescription className="text-purple-900 text-sm">
+            <Alert className="bg-navy-50 border-navy-300">
+              <AlertCircle className="w-4 h-4 text-navy-600" />
+              <AlertDescription className="text-navy-900 text-sm">
                 Review and edit the AI-generated care plans below. You can modify any field before saving.
               </AlertDescription>
             </Alert>

@@ -167,7 +167,7 @@ export default function CustomReportGenerator({
 
     if (format === 'json') {
       content = JSON.stringify(reportData, null, 2);
-      filename = `compliance-report-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      filename = `compliance-report-${new Date().toISOString().split('T')[0]}.json`;
       type = 'application/json';
     } else {
       // CSV format

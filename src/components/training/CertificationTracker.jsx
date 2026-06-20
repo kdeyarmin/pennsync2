@@ -221,7 +221,7 @@ export default function CertificationTracker({ nurseEmail, isAdminView = false }
                         <div className="space-y-1 text-sm text-slate-600">
                           <p className="flex items-center gap-2">
                             <Calendar className="w-3 h-3" />
-                            Completed: {format(parseISO(cert.completion_date), 'MMM d, yyyy')}
+                            Completed: {cert.completion_date ? format(parseISO(cert.completion_date), 'MMM d, yyyy') : '—'}
                           </p>
                           {cert.expiration_date && (
                             <p className="flex items-center gap-2">

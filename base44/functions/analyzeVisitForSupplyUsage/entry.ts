@@ -18,6 +18,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Authorize against the patient (assigned nurse or admin) before writing a
+    // SupplyUsageLog stamped with this patient_id and decrementing shared
+    // SupplyItem inventory. RLS-independent code check (mirrors getScopedPatientAlerts).
+    const [supplyPatient] = await base44.asServiceRole.entities.Patient.filter({ id: patientId }, '', 1);
+    if (!supplyPatient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+    if (user.role !== 'admin' && supplyPatient.created_by !== user.email && !(Array.isArray(supplyPatient.assigned_nurses) && supplyPatient.assigned_nurses.includes(user.email))) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Use LLM to extract supply/medication usage from visit notes
     const extractionPrompt = `You are a clinical documentation analyzer. Extract all medications and medical supplies mentioned as being used or administered during this visit. For each supply/medication, identify:
 1. Name of the medication or supply

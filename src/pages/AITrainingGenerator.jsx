@@ -81,8 +81,9 @@ export default function AITrainingGenerator() {
     setLoading(true);
 
     try {
-      const result = await generateTrainingCourse(formData);
-      setGeneratedCourse(result);
+      const response = await generateTrainingCourse(formData);
+      // functions.invoke returns the full axios response; body is under .data.
+      setGeneratedCourse(response?.data || response);
       toast.success('Training course generated successfully!');
     } catch (error) {
       const friendly = configNotReadyMessage(error);
@@ -242,7 +243,7 @@ export default function AITrainingGenerator() {
           <Button
             onClick={handleGenerate}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="w-full bg-gradient-to-r from-navy-600 to-indigo-600 hover:from-navy-700 hover:to-indigo-700"
             size="lg"
           >
             {loading ? (

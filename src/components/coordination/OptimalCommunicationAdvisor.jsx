@@ -101,7 +101,7 @@ Consider patient preferences, accessibility needs, and likelihood of successful 
 
   return (
     <Card className="border-2 border-teal-300">
-      <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50 pb-3">
+      <CardHeader className="bg-gradient-to-r from-teal-50 to-navy-50 pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-teal-600" />
           AI Communication Strategy Advisor
@@ -161,10 +161,10 @@ Consider patient preferences, accessibility needs, and likelihood of successful 
 
             {/* Timing */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                <Clock className="w-4 h-4 text-purple-600 mb-1" />
-                <p className="text-xs font-semibold text-purple-900">Best Time</p>
-                <p className="text-xs text-purple-800">{recommendation.best_time_of_day}</p>
+              <div className="p-3 bg-navy-50 border border-navy-200 rounded-lg">
+                <Clock className="w-4 h-4 text-navy-600 mb-1" />
+                <p className="text-xs font-semibold text-navy-900">Best Time</p>
+                <p className="text-xs text-navy-800">{recommendation.best_time_of_day}</p>
               </div>
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <Calendar className="w-4 h-4 text-blue-600 mb-1" />

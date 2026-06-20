@@ -440,7 +440,7 @@ export default function CarePlanManagement() {
               <span><strong className="text-slate-700">{complianceCount}</strong> compliant</span>
             </span>
             <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              <Sparkles className="w-3.5 h-3.5 text-navy-500" />
               <span><strong className="text-slate-700">{linkedCount}</strong> linked</span>
             </span>
           </div>
@@ -553,14 +553,14 @@ export default function CarePlanManagement() {
           </CardContent>
         </Card>
 
-        <Card className="modern-card border-l-4 border-l-purple-500 bg-white shadow-md">
+        <Card className="modern-card border-l-4 border-l-navy-500 bg-white shadow-md">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-slate-500 text-xs sm:text-sm font-medium mb-1 truncate">Goals Met</p>
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">{metGoals}</p>
               </div>
-              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-purple-500/20 flex-shrink-0" />
+              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-navy-500/20 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -749,7 +749,7 @@ export default function CarePlanManagement() {
                         setShowAITools(true);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className={selectedPatient?.id === patientId ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      className={selectedPatient?.id === patientId ? "bg-navy-600 hover:bg-navy-700" : ""}
                     >
                       <Sparkles className="w-4 h-4 mr-1" />
                       AI Tools
@@ -804,7 +804,7 @@ export default function CarePlanManagement() {
                         setShowAITools(true);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className={`min-h-[44px] ${selectedPatient?.id === patientId ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                      className={`min-h-[44px] ${selectedPatient?.id === patientId ? "bg-navy-600 hover:bg-navy-700" : ""}`}
                     >
                       <Sparkles className="w-4 h-4 mr-1" />
                       <span className="hidden sm:inline">AI Tools</span>
@@ -895,7 +895,7 @@ export default function CarePlanManagement() {
         </TabsContent>
 
         <TabsContent value="builder">
-          <BuilderTab />
+          {BuilderTab()}
         </TabsContent>
       </Tabs>
 

@@ -277,7 +277,7 @@ Return JSON:
       medication_risk: <AlertTriangle className="w-4 h-4 text-orange-600" />,
       fall_risk: <TrendingDown className="w-4 h-4 text-yellow-600" />,
       readmission_risk: <Heart className="w-4 h-4 text-red-500" />,
-      infection_risk: <Shield className="w-4 h-4 text-purple-600" />,
+      infection_risk: <Shield className="w-4 h-4 text-navy-600" />,
       symptom_escalation: <TrendingDown className="w-4 h-4 text-orange-500" />,
       care_gap: <Clock className="w-4 h-4 text-blue-600" />,
       urgent_intervention: <Zap className="w-4 h-4 text-red-600" />
@@ -316,11 +316,11 @@ Return JSON:
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="text-base flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             Proactive Risk Analysis
             {existingAlerts.length > 0 && (
               <Badge className="bg-red-600 text-white">{existingAlerts.length} Active</Badge>
@@ -330,7 +330,7 @@ Return JSON:
             size="sm"
             onClick={runProactiveAnalysis}
             disabled={isAnalyzing}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isAnalyzing ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
@@ -352,7 +352,7 @@ Return JSON:
         )}
 
         {analysisResults && !isAnalyzing && (
-          <Alert className="mb-4 bg-purple-50 border-purple-200">
+          <Alert className="mb-4 bg-navy-50 border-navy-200">
             <Brain className="w-4 h-4" />
             <AlertDescription>
               Analyzed {analysisResults.total_analyzed} patients. Found {analysisResults.alerts_generated} potential risks 

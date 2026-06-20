@@ -18,6 +18,27 @@ Deno.serve(async (req) => {
     }
 
     const attemptData = attempt[0];
+
+    // Authorization: a user may only earn badges from their OWN attempt. The
+    // attempt was read with the user-scoped client, but enforce ownership
+    // explicitly so a forwarded/guessed attempt_id can't award to this account.
+    if (user.role !== 'admin' && attemptData.user_id && attemptData.user_id !== user.email) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Idempotency (complete): once an attempt has been processed, re-running is a
+    // no-op — this covers attempts that earn NO badge too, which would otherwise
+    // re-bump streak/courses on every replay. The UserBadge check below is a
+    // backstop for attempts processed before this marker field existed.
+    if (attemptData.badges_processed_at) {
+      return Response.json({ success: true, already_awarded: true, badges_awarded: 0, badges: [] });
+    }
+    const priorBadges = await base44.entities.UserBadge
+      .filter({ user_id: user.email }, '-earned_at', 500).catch(() => []);
+    if (priorBadges.some((b) => b?.trigger_context?.attempt_id === attemptData.id)) {
+      return Response.json({ success: true, already_awarded: true, badges_awarded: 0, badges: [] });
+    }
+
     const badgesAwarded = [];
 
     // Get or create leaderboard entry
@@ -172,6 +193,12 @@ Deno.serve(async (req) => {
         }
       });
     }
+
+    // Mark the attempt processed so any replay short-circuits at the top. Done
+    // last so a mid-processing failure doesn't mark it done with no awards.
+    await base44.entities.TrainingAttempt.update(attemptData.id, {
+      badges_processed_at: new Date().toISOString(),
+    }).catch((e) => console.error('Failed to mark attempt badges_processed_at:', e?.message));
 
     return Response.json({
       success: true,

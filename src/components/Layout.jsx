@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 import { buildNavCategories, buildAdminItems, NAV_MANIFEST } from "@/lib/nav.manifest";
+import { isSuperAdmin } from "@/lib/superAdmin";
 
 import DesktopSidebar from "@/components/layout/DesktopSidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -59,7 +60,11 @@ export default function Layout({ children, currentPageName }) {
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
   }, [currentPageName]);
 
-  const isAdmin = currentUser?.role === 'admin';
+  // Match App.jsx's route guard (role === 'admin' OR the platform super admin by
+  // owner-email / super_admin account_type). Without this, an unpromoted super
+  // admin reaches admin routes by URL but gets NO admin nav — including the only
+  // link to SuperAdminConfig, defeating the ensureSuperAdmin self-bootstrap.
+  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
   const isApproved = currentUser?.is_approved === true || isAdmin;
   const isTimeOffApprover = isAdmin || currentUser?.is_manager === true;
 
@@ -227,12 +232,12 @@ export default function Layout({ children, currentPageName }) {
 
   if (currentUser && !isApproved) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-navy-50 to-navy-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <Card className="border-yellow-300 shadow-xl">
+          <Card className="border-gold-300 shadow-xl">
             <CardContent className="p-8 text-center">
-              <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Clock className="w-10 h-10 text-yellow-600" />
+              <div className="w-20 h-20 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Clock className="w-10 h-10 text-gold-600" />
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mb-3">Account Pending Approval</h1>
               <p className="text-slate-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
@@ -288,7 +293,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-slate-100 w-0 md:w-auto">
+        <main id="main-content" className="flex-1 pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-navy-50/50 w-0 md:w-auto">
           <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 animate-fade-in">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}

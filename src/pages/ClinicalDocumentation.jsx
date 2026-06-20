@@ -62,7 +62,7 @@ export default function ClinicalDocumentation() {
 
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      <Mic className="w-5 h-5 text-purple-600" />
+                      <Mic className="w-5 h-5 text-navy-600" />
                       Live Dictation
                     </h3>
                     <p className="text-slate-600">

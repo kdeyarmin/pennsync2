@@ -378,37 +378,37 @@ Return detailed JSON analysis:`,
 
               {/* Functional Impact */}
               {impactAnalysis.aiAnalysis.case_mix_breakdown?.functional_impact && (
-                <div className="bg-purple-50 p-3 rounded border border-purple-200">
+                <div className="bg-navy-50 p-3 rounded border border-navy-200">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-purple-900">Functional Impairment Level</p>
-                    <Badge className="bg-purple-600 text-white">
+                    <p className="text-sm font-semibold text-navy-900">Functional Impairment Level</p>
+                    <Badge className="bg-navy-600 text-white">
                       +{formatCurrency(impactAnalysis.aiAnalysis.case_mix_breakdown.functional_impact.dollar_impact)}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-xs mb-2">
-                    <Badge variant="outline" className="text-purple-700">
+                    <Badge variant="outline" className="text-navy-700">
                       {impactAnalysis.aiAnalysis.case_mix_breakdown.functional_impact.original_level}
                     </Badge>
-                    <ArrowRight className="w-3 h-3 text-purple-500" />
-                    <Badge className="bg-purple-600 text-white">
+                    <ArrowRight className="w-3 h-3 text-navy-500" />
+                    <Badge className="bg-navy-600 text-white">
                       {impactAnalysis.aiAnalysis.case_mix_breakdown.functional_impact.new_level}
                     </Badge>
                   </div>
                   {impactAnalysis.aiAnalysis.case_mix_breakdown.functional_impact.driving_m_items?.length > 0 && (
                     <div className="mt-2 space-y-1">
-                      <p className="text-xs font-semibold text-purple-800">Key M-Item Changes:</p>
+                      <p className="text-xs font-semibold text-navy-800">Key M-Item Changes:</p>
                       {impactAnalysis.aiAnalysis.case_mix_breakdown.functional_impact.driving_m_items.map((item, idx) => (
-                        <div key={idx} className="bg-white p-2 rounded text-xs border border-purple-100">
+                        <div key={idx} className="bg-white p-2 rounded text-xs border border-navy-100">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-purple-900">{item.m_item}</span>
+                            <span className="font-medium text-navy-900">{item.m_item}</span>
                             <span className="text-green-700 font-bold">+{item.points_added} pts</span>
                           </div>
-                          <div className="flex items-center gap-2 text-purple-700 mb-1">
+                          <div className="flex items-center gap-2 text-navy-700 mb-1">
                             <span>Score: {item.original_score}</span>
                             <ArrowRight className="w-3 h-3" />
                             <span className="font-bold">{item.new_score}</span>
                           </div>
-                          <p className="text-purple-600 italic">{item.clinical_justification}</p>
+                          <p className="text-navy-600 italic">{item.clinical_justification}</p>
                         </div>
                       ))}
                     </div>
@@ -454,7 +454,7 @@ Return detailed JSON analysis:`,
 
             {/* Optimization Strategy */}
             {impactAnalysis.aiAnalysis.optimization_strategy?.priority_changes && (
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200">
+              <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-4 rounded-lg border border-indigo-200">
                 <h3 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
                   <Zap className="w-4 h-4" />
                   Priority Optimization Strategy
@@ -545,8 +545,8 @@ Return detailed JSON analysis:`,
 
             {/* Implementation Roadmap */}
             {impactAnalysis.aiAnalysis.implementation_roadmap?.length > 0 && (
-              <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-lg border border-cyan-200">
-                <h3 className="font-semibold text-cyan-900 mb-3 flex items-center gap-2">
+              <div className="bg-gradient-to-r from-navy-50 to-blue-50 p-4 rounded-lg border border-navy-200">
+                <h3 className="font-semibold text-navy-900 mb-3 flex items-center gap-2">
                   <Target className="w-4 h-4" />
                   Implementation Roadmap
                 </h3>
@@ -558,14 +558,14 @@ Return detailed JSON analysis:`,
                           <p className="text-sm font-semibold text-slate-900">{phase.phase}</p>
                           <p className="text-xs text-slate-600">{phase.timeline}</p>
                         </div>
-                        <Badge className="bg-cyan-600 text-white">
+                        <Badge className="bg-navy-600 text-white">
                           +{formatCurrency(phase.expected_payment_gain)}
                         </Badge>
                       </div>
                       <ul className="text-xs text-slate-700 space-y-1">
                         {phase.actions?.map((action, aIdx) => (
                           <li key={aIdx} className="flex items-start gap-1">
-                            <CheckCircle2 className="w-3 h-3 mt-0.5 flex-shrink-0 text-cyan-600" />
+                            <CheckCircle2 className="w-3 h-3 mt-0.5 flex-shrink-0 text-navy-600" />
                             {action}
                           </li>
                         ))}

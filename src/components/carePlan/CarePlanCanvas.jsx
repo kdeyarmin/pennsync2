@@ -8,7 +8,7 @@ const GOALS = [
   { id: "goal-3", label: "Fall Prevention", color: "bg-amber-100 border-amber-300 text-amber-700" },
   { id: "goal-4", label: "Cardiovascular Stability", color: "bg-red-100 border-red-300 text-red-700" },
   { id: "goal-5", label: "Functional Independence", color: "bg-green-100 border-green-300 text-green-700" },
-  { id: "goal-6", label: "Symptom Management", color: "bg-purple-100 border-purple-300 text-purple-700" },
+  { id: "goal-6", label: "Symptom Management", color: "bg-navy-100 border-navy-300 text-navy-700" },
 ];
 
 function CompliancePill({ tag }) {

@@ -13,7 +13,6 @@ import {
   BookOpen, CheckCircle2, Clock, Loader2, Send, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
-import PageContainer from "@/components/ui/PageContainer";
 
 export default function PatientEducationPortal() {
   const queryClient = useQueryClient();
@@ -98,13 +97,13 @@ export default function PatientEducationPortal() {
   const deliveredMaterials = materials.filter(m => m.delivery_status === "delivered");
 
   return (
-    <PageContainer>
+    <div className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Patient Selection */}
         <Card className="lg:row-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-purple-600" />
+              <BookOpen className="w-5 h-5 text-navy-600" />
               Select Patient
             </CardTitle>
           </CardHeader>
@@ -124,8 +123,8 @@ export default function PatientEducationPortal() {
                     onClick={() => setSelectedPatientId(p.id)}
                     className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                       selectedPatientId === p.id
-                        ? "border-purple-600 bg-purple-50"
-                        : "border-slate-200 hover:border-purple-300 bg-white"
+                        ? "border-navy-600 bg-navy-50"
+                        : "border-slate-200 hover:border-navy-300 bg-white"
                     }`}
                   >
                     <p className="font-semibold text-sm text-slate-900">
@@ -185,7 +184,7 @@ export default function PatientEducationPortal() {
             <Button
               onClick={() => generateEducationMutation.mutate(selectedPatientId)}
               disabled={generateEducationMutation.isPending}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {generateEducationMutation.isPending ? (
                 <>
@@ -260,7 +259,7 @@ export default function PatientEducationPortal() {
           </Tabs>
         </>
       )}
-    </PageContainer>
+    </div>
   );
 }
 

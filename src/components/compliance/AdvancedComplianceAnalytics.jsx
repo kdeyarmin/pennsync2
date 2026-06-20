@@ -300,10 +300,10 @@ export default function AdvancedComplianceAnalytics({
               <p className="text-xs text-green-100">Pass Rate</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white">
             <CardContent className="p-4 text-center">
               <p className="text-3xl font-bold">{overallStats.totalAudits}</p>
-              <p className="text-xs text-purple-100">Total Audits</p>
+              <p className="text-xs text-navy-100">Total Audits</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
@@ -445,7 +445,7 @@ export default function AdvancedComplianceAnalytics({
             <Card>
               <CardHeader className="py-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Target className="w-4 h-4 text-purple-600" />
+                  <Target className="w-4 h-4 text-navy-600" />
                   Risk Distribution
                 </CardTitle>
               </CardHeader>

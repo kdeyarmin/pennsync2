@@ -215,9 +215,9 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
 
         {/* PDGM Estimate */}
         {assessment.estimated_pdgm_group && (
-          <Alert className="bg-purple-50 border-purple-300">
-            <TrendingUp className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-xs text-purple-900">
+          <Alert className="bg-navy-50 border-navy-300">
+            <TrendingUp className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-xs text-navy-900">
               <strong>Estimated PDGM Group:</strong> {assessment.estimated_pdgm_group}
             </AlertDescription>
           </Alert>
@@ -383,9 +383,9 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
                       )}
 
                       {item.pdgm_impact && (
-                        <div className="bg-purple-100 border border-purple-300 rounded p-2">
-                          <p className="text-xs font-semibold text-purple-900 mb-1">PDGM Impact:</p>
-                          <p className="text-xs text-purple-800">{item.pdgm_impact}</p>
+                        <div className="bg-navy-100 border border-navy-300 rounded p-2">
+                          <p className="text-xs font-semibold text-navy-900 mb-1">PDGM Impact:</p>
+                          <p className="text-xs text-navy-800">{item.pdgm_impact}</p>
                         </div>
                       )}
                     </div>

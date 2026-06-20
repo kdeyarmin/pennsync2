@@ -341,10 +341,10 @@ Return JSON with detailed analysis and actionable recommendations.
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-700">Functional Impairment Opportunities</p>
                   {analysis.functional_impairment_analysis.optimization_opportunities.map((opp, idx) => (
-                    <div key={idx} className="bg-purple-50 p-2 rounded border border-purple-200">
+                    <div key={idx} className="bg-navy-50 p-2 rounded border border-navy-200">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-medium text-purple-900">{opp.area}</p>
-                        <Badge className="text-[10px] bg-purple-600 text-white">
+                        <p className="text-xs font-medium text-navy-900">{opp.area}</p>
+                        <Badge className="text-[10px] bg-navy-600 text-white">
                           {opp.payment_impact}
                         </Badge>
                       </div>
@@ -409,7 +409,7 @@ Return JSON with detailed analysis and actionable recommendations.
 
               {/* Summary */}
               {analysis.summary && (
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded border border-indigo-200">
+                <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-3 rounded border border-indigo-200">
                   <p className="text-xs text-indigo-900">{analysis.summary}</p>
                 </div>
               )}

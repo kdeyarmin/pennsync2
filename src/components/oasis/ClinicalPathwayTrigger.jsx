@@ -166,7 +166,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Route className="w-5 h-5 text-indigo-600" />
@@ -188,7 +188,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
         {triggeredPathways.map((pathway, idx) => (
           <div key={idx} className="border-2 border-indigo-300 rounded-lg overflow-hidden">
             {/* Pathway Header */}
-            <div className="bg-gradient-to-r from-indigo-100 to-purple-100 p-4">
+            <div className="bg-gradient-to-r from-indigo-100 to-navy-100 p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-indigo-900 text-lg">{pathway.pathway_name}</h3>
                 <Badge className={getPriorityColor(pathway.priority_level)}>
@@ -287,14 +287,14 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
 
               {/* Functional Focus Areas */}
               {pathway.functional_focus_areas && pathway.functional_focus_areas.length > 0 && (
-                <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                <div className="bg-navy-50 p-3 rounded-lg border border-navy-200">
                   <div className="flex items-center gap-2 mb-3">
-                    <Activity className="w-4 h-4 text-purple-600" />
-                    <h4 className="font-semibold text-purple-900">Functional Assessment Focus</h4>
+                    <Activity className="w-4 h-4 text-navy-600" />
+                    <h4 className="font-semibold text-navy-900">Functional Assessment Focus</h4>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {pathway.functional_focus_areas.map((area, fIdx) => (
-                      <Badge key={fIdx} className="bg-purple-200 text-purple-800">
+                      <Badge key={fIdx} className="bg-navy-200 text-navy-800">
                         {area}
                       </Badge>
                     ))}
@@ -304,17 +304,17 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
 
               {/* Auto-Generate Tasks */}
               {pathway.recommended_tasks && pathway.recommended_tasks.length > 0 && (
-                <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-3 rounded-lg border border-cyan-200">
+                <div className="bg-gradient-to-r from-navy-50 to-blue-50 p-3 rounded-lg border border-navy-200">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <ClipboardList className="w-4 h-4 text-cyan-600" />
-                      <h4 className="font-semibold text-cyan-900">Recommended Tasks</h4>
+                      <ClipboardList className="w-4 h-4 text-navy-600" />
+                      <h4 className="font-semibold text-navy-900">Recommended Tasks</h4>
                     </div>
                     <Button
                       onClick={() => createPathwayTasks(pathway)}
                       disabled={!patientId || createTaskMutation.isPending}
                       size="sm"
-                      className="bg-cyan-600 hover:bg-cyan-700"
+                      className="bg-navy-600 hover:bg-navy-700"
                     >
                       {createTaskMutation.isPending ? (
                         <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Creating...</>
@@ -373,7 +373,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
             </div>
             <div className="bg-white p-2 rounded">
               <p className="text-slate-500">Recommended Tasks</p>
-              <p className="text-lg font-bold text-cyan-700">
+              <p className="text-lg font-bold text-navy-700">
                 {triggeredPathways.reduce((sum, p) => sum + (p.recommended_tasks?.length || 0), 0)}
               </p>
             </div>

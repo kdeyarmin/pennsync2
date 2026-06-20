@@ -298,11 +298,11 @@ Return detailed compliance analysis in JSON format.`;
   if (!visitType) return null;
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
       <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Shield className="w-5 h-5 text-purple-600" />
+            <Shield className="w-5 h-5 text-navy-600" />
             Visit-Type Compliance Review
             {complianceResults && (
               <Badge className={getRiskColor(complianceResults.audit_risk_level)}>
@@ -318,7 +318,7 @@ Return detailed compliance analysis in JSON format.`;
                   e.stopPropagation();
                   performComplianceCheck();
                 }}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-navy-600 hover:bg-navy-700"
               >
                 Check Compliance
               </Button>
@@ -332,8 +332,8 @@ Return detailed compliance analysis in JSON format.`;
         <CardContent className="space-y-4">
           {isChecking && (
             <div className="flex items-center justify-center py-6 gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
-              <span className="text-sm text-purple-700">Running compliance check...</span>
+              <Loader2 className="w-5 h-5 animate-spin text-navy-600" />
+              <span className="text-sm text-navy-700">Running compliance check...</span>
             </div>
           )}
 
@@ -350,10 +350,10 @@ Return detailed compliance analysis in JSON format.`;
             <>
               {/* Overall Score Summary */}
               <div className="grid grid-cols-3 gap-3">
-                <Card className="border-2 border-purple-200">
+                <Card className="border-2 border-navy-200">
                   <CardContent className="p-3 text-center">
                     <p className="text-xs text-slate-600 mb-1">Compliance Score</p>
-                    <p className="text-2xl font-bold text-purple-700">
+                    <p className="text-2xl font-bold text-navy-700">
                       {complianceResults.overall_compliance_score}%
                     </p>
                     <Badge variant="outline" className="mt-1 text-xs">
@@ -362,7 +362,7 @@ Return detailed compliance analysis in JSON format.`;
                   </CardContent>
                 </Card>
 
-                <Card className="border-2 border-purple-200">
+                <Card className="border-2 border-navy-200">
                   <CardContent className="p-3 text-center">
                     <p className="text-xs text-slate-600 mb-1">Visit Type</p>
                     <p className="text-sm font-bold text-slate-900">
@@ -374,7 +374,7 @@ Return detailed compliance analysis in JSON format.`;
                   </CardContent>
                 </Card>
 
-                <Card className="border-2 border-purple-200">
+                <Card className="border-2 border-navy-200">
                   <CardContent className="p-3 text-center">
                     <p className="text-xs text-slate-600 mb-1">Elements</p>
                     <p className="text-2xl font-bold text-slate-900">
@@ -615,14 +615,14 @@ Return detailed compliance analysis in JSON format.`;
 
               {/* Next Steps */}
               {complianceResults.next_steps?.length > 0 && (
-                <div className="bg-purple-100 p-3 rounded border border-purple-300">
-                  <p className="text-sm font-semibold text-purple-900 mb-2">
+                <div className="bg-navy-100 p-3 rounded border border-navy-300">
+                  <p className="text-sm font-semibold text-navy-900 mb-2">
                     Recommended Next Steps
                   </p>
                   <ol className="space-y-1">
                     {complianceResults.next_steps.map((step, idx) => (
-                      <li key={idx} className="text-xs text-purple-900 flex items-start gap-2">
-                        <span className="bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs">
+                      <li key={idx} className="text-xs text-navy-900 flex items-start gap-2">
+                        <span className="bg-navy-600 text-white rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs">
                           {idx + 1}
                         </span>
                         {step}

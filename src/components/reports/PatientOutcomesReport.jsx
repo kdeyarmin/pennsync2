@@ -16,7 +16,7 @@ export default function PatientOutcomesReport({ dateRange }) {
 
   const _filteredPatients = patients.filter(p => {
     const admissionDate = new Date(p.admission_date);
-    return admissionDate >= new Date(dateRange.start) && admissionDate <= new Date(dateRange.end);
+    return admissionDate >= new Date(dateRange.start) && admissionDate <= new Date(dateRange.end + 'T23:59:59.999');
   });
 
   const activePatients = patients.filter(p => p.status === 'active').length;
@@ -35,7 +35,7 @@ export default function PatientOutcomesReport({ dateRange }) {
     exportToPDF({
       filename: `patient-outcomes-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
       title: 'Patient Outcomes Report',
-      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end), 'MMM d, yyyy')}`,
+      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}`,
       content: [
         { type: 'heading', text: 'Outcome Summary' },
         { type: 'text', text: `Total Patients: ${patients.length}` },

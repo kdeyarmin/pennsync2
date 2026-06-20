@@ -248,7 +248,7 @@ export default function AnnualMandatoryEducationHub() {
 
         <TabsContent value="builder" className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-purple-600" />AI Annual Education Generator</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-navy-600" />AI Annual Education Generator</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <Input placeholder="Topic" value={generator.topic} onChange={(e) => setGenerator({ ...generator, topic: e.target.value })} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

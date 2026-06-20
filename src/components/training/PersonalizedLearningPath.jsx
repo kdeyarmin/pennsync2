@@ -90,12 +90,12 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-6 h-6 text-purple-600" />
+                <Sparkles className="w-6 h-6 text-navy-600" />
                 <h3 className="text-2xl font-bold text-slate-900">Your AI-Personalized Learning Path</h3>
               </div>
               <p className="text-slate-700 mb-3">{learningPath.motivation_message}</p>
@@ -122,7 +122,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
               <p className="text-sm text-slate-600 mb-1">Progress</p>
               <div className="flex items-center gap-3">
                 <Progress value={progressPercent} className="flex-1" />
-                <span className="text-lg font-bold text-purple-600">{completedCount}/{totalCount}</span>
+                <span className="text-lg font-bold text-navy-600">{completedCount}/{totalCount}</span>
               </div>
             </div>
             <div className="bg-white rounded-lg p-4 border">
@@ -158,7 +158,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
               key={idx}
               className={`border-2 ${
                 completed ? 'border-green-300 bg-green-50' :
-                isNext ? 'border-purple-300 bg-purple-50' :
+                isNext ? 'border-navy-300 bg-navy-50' :
                 'border-slate-200'
               }`}
             >
@@ -167,7 +167,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
                   {/* Sequence Number */}
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                     completed ? 'bg-green-500 text-white' :
-                    isNext ? 'bg-purple-500 text-white' :
+                    isNext ? 'bg-navy-500 text-white' :
                     'bg-slate-300 text-slate-600'
                   }`}>
                     {completed ? <CheckCircle2 className="w-6 h-6" /> : <span className="text-lg font-bold">{idx + 1}</span>}
@@ -182,7 +182,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
                           <Badge className={getPriorityColor(item.priority)}>
                             {item.priority} priority
                           </Badge>
-                          {isNext && <Badge className="bg-purple-500">Next Up</Badge>}
+                          {isNext && <Badge className="bg-navy-500">Next Up</Badge>}
                         </div>
                         <p className="text-sm text-slate-600 mb-2">{item.module.description}</p>
                       </div>
@@ -206,7 +206,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
                       <ul className="space-y-1">
                         {item.learning_objectives?.map((obj, objIdx) => (
                           <li key={objIdx} className="text-sm text-slate-600 flex items-start gap-2">
-                            <span className="text-purple-600 mt-1">•</span>
+                            <span className="text-navy-600 mt-1">•</span>
                             <span>{obj}</span>
                           </li>
                         ))}
@@ -225,7 +225,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
                     <Button
                       onClick={() => onStartModule(item.module)}
                       disabled={completed}
-                      className={completed ? '' : isNext ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                      className={completed ? '' : isNext ? 'bg-navy-600 hover:bg-navy-700' : ''}
                     >
                       {completed ? (
                         <>

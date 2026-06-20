@@ -206,10 +206,10 @@ Generate the complete document now with all available fields pre-filled:`;
   return (
     <>
       <div className="space-y-6">
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
+      <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-indigo-50">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-purple-600 rounded-lg">
+            <div className="p-2 bg-navy-600 rounded-lg">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -274,7 +274,7 @@ Generate the complete document now with all available fields pre-filled:`;
               <Button
                 onClick={handleGenerate}
                 disabled={!selectedPatientId || !documentType || isGenerating}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-navy-600 hover:bg-navy-700"
                 size="lg"
               >
                 {isGenerating ? (
@@ -322,11 +322,11 @@ Generate the complete document now with all available fields pre-filled:`;
                   </div>
                   
                   {selectedDocType && (
-                    <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                      <p className="text-sm font-semibold text-purple-900 mb-1">
+                    <div className="mt-4 p-3 bg-navy-50 border border-navy-200 rounded-lg">
+                      <p className="text-sm font-semibold text-navy-900 mb-1">
                         Will Generate:
                       </p>
-                      <p className="text-sm text-purple-700">{selectedDocType.description}</p>
+                      <p className="text-sm text-navy-700">{selectedDocType.description}</p>
                     </div>
                   )}
                 </div>

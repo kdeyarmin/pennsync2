@@ -16,10 +16,7 @@ import {
   Users,
   CheckCircle2,
   RefreshCw,
-  Monitor
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import {
   Select,
   SelectContent,
@@ -337,24 +334,18 @@ Compliance Management System`;
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Monitor}
-        eyebrow="Analytics"
-        title="Compliance Monitoring"
-        description="Real-time compliance tracking and alerts"
-        favoritePage="ComplianceMonitoringDashboard"
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefreshAll}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-        }
-      />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-slate-600">Real-time compliance tracking and alerts</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefreshAll}
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
@@ -378,13 +369,13 @@ Compliance Management System`;
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none">
+        <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white border-none">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <Users className="w-8 h-8 text-purple-200" />
+              <Users className="w-8 h-8 text-navy-200" />
             </div>
             <p className="text-2xl font-bold">{affectedUsers}</p>
-            <p className="text-xs text-purple-100">Affected Staff</p>
+            <p className="text-xs text-navy-100">Affected Staff</p>
           </CardContent>
         </Card>
 
@@ -464,7 +455,7 @@ Compliance Management System`;
               </Button>
               <Button
                 onClick={handleNotifySelected}
-                disabled={selectedUsers.size === 0 || sendNotificationMutation.isLoading}
+                disabled={selectedUsers.size === 0 || sendNotificationMutation.isPending}
                 className="bg-orange-600 hover:bg-orange-700 flex-1 lg:flex-none"
               >
                 <Bell className="w-4 h-4 mr-2" />
@@ -562,6 +553,6 @@ Compliance Management System`;
           })}
         </div>
       )}
-    </PageContainer>
+    </div>
   );
 }

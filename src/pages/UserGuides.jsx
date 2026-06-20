@@ -304,14 +304,14 @@ export default function UserGuides() {
         {guides.filter(g => g.featured).map((guide) => {
           const IconComponent = guide.icon;
           return (
-            <Card key={guide.type} className="border-4 border-purple-400 bg-gradient-to-br from-purple-50 to-indigo-50 mb-6">
+            <Card key={guide.type} className="border-4 border-navy-400 bg-gradient-to-br from-navy-50 to-indigo-50 mb-6">
               <CardHeader>
                 <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-navy-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg">
                     <IconComponent className="w-10 h-10 text-white" />
                   </div>
                   <div className="flex-1">
-                    <div className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2">
+                    <div className="inline-block bg-navy-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2">
                       ⭐ RECOMMENDED START HERE
                     </div>
                     <CardTitle className="text-2xl mb-1">{guide.title}</CardTitle>
@@ -329,7 +329,7 @@ export default function UserGuides() {
                   <div className="grid grid-cols-2 gap-2">
                     {guide.topics.map((topic, index) => (
                       <div key={index} className="text-sm text-slate-600 flex items-center gap-2 bg-white p-2 rounded">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-600" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-navy-600" />
                         {topic}
                       </div>
                     ))}
@@ -339,7 +339,7 @@ export default function UserGuides() {
                 <Button
                   onClick={() => handleDownloadGuide(guide.type, guide.title)}
                   disabled={downloading === guide.type}
-                  className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:opacity-90 h-12 text-base"
+                  className="w-full bg-gradient-to-r from-navy-500 to-indigo-600 hover:opacity-90 h-12 text-base"
                 >
                   {downloading === guide.type ? (
                     <>
@@ -369,7 +369,7 @@ export default function UserGuides() {
             const colorClasses = {
               blue: 'from-blue-500 to-blue-600',
               green: 'from-green-500 to-green-600',
-              purple: 'from-purple-500 to-purple-600'
+              purple: 'from-navy-500 to-navy-600'
             };
 
             return (

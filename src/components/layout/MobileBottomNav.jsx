@@ -12,7 +12,7 @@ const BOTTOM_NAV_ITEMS = [
 
 export default function MobileBottomNav({ isActive, unreadMessageCount }) {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900 border-t border-slate-700/60 shadow-2xl print:hidden safe-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] print:hidden safe-bottom">
       <div className="grid grid-cols-5 h-16">
         {BOTTOM_NAV_ITEMS.map(({ page, Icon, label, hasBadge }) => {
           const badge = hasBadge ? unreadMessageCount : 0;
@@ -20,12 +20,12 @@ export default function MobileBottomNav({ isActive, unreadMessageCount }) {
           return (
             <Link key={page} to={createPageUrl(page)}
               className={`flex flex-col items-center justify-center gap-0.5 relative transition-colors active:scale-95 ${
-                active ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+                active ? "text-navy-700" : "text-slate-400 hover:text-slate-600"
               }`}
             >
-              {active && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-blue-400 rounded-full" />}
+              {active && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gold-400 rounded-full" />}
               <div className={`relative p-1.5 rounded-xl ${
-                active ? 'bg-blue-500/20' : ''
+                active ? 'bg-navy-50' : ''
               }`}>
                 <Icon className="w-5 h-5" />
                 {badge > 0 && (
@@ -33,7 +33,7 @@ export default function MobileBottomNav({ isActive, unreadMessageCount }) {
                 )}
               </div>
               <span className={`text-[10px] font-medium leading-tight ${
-                active ? 'text-blue-400 font-semibold' : ''
+                active ? 'text-navy-700 font-semibold' : ''
               }`}>{label}</span>
             </Link>
           );

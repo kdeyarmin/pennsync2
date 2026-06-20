@@ -41,7 +41,7 @@ export default function RiskTrendVisualizer({ trends }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-purple-600" />
+          <TrendingUp className="w-5 h-5 text-navy-600" />
           Vital Sign Trends
         </CardTitle>
       </CardHeader>

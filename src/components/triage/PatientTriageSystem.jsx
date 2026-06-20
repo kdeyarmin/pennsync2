@@ -633,7 +633,7 @@ function TriageResultCard({ result, rank }) {
                   {result.aiAnalysis && (
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <h4 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                        <Brain className="w-4 h-4 text-purple-600" />
+                        <Brain className="w-4 h-4 text-navy-600" />
                         AI Triage Assessment
                       </h4>
                       <p className="text-sm text-slate-700 mb-3">{result.aiAnalysis.urgency_rationale}</p>

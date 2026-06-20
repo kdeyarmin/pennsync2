@@ -212,13 +212,13 @@ For each patient, provide:
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
+              <Brain className="w-5 h-5 text-navy-600" />
               AI-Powered Readmission Analysis
             </CardTitle>
             <Button 
               onClick={generateAIPredictions}
               disabled={analyzing || highRiskCount === 0}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {analyzing ? (
                 <>

@@ -256,9 +256,9 @@ Return a deterioration risk assessment with:
 
                   {/* Monitoring Frequency */}
                   {analysis.monitoring_frequency && (
-                    <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                      <p className="text-xs font-semibold text-purple-900">Monitoring Frequency</p>
-                      <p className="text-xs text-purple-800 mt-1">{analysis.monitoring_frequency}</p>
+                    <div className="p-3 bg-navy-50 rounded-lg border border-navy-200">
+                      <p className="text-xs font-semibold text-navy-900">Monitoring Frequency</p>
+                      <p className="text-xs text-navy-800 mt-1">{analysis.monitoring_frequency}</p>
                     </div>
                   )}
                 </div>

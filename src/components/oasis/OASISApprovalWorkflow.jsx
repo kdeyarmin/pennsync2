@@ -103,16 +103,16 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
 
   return (
     <div className="space-y-4">
-      <Alert className="bg-purple-50 border-purple-200">
-        <Shield className="w-4 h-4 text-purple-600" />
-        <AlertDescription className="text-sm text-purple-800">
+      <Alert className="bg-navy-50 border-navy-200">
+        <Shield className="w-4 h-4 text-navy-600" />
+        <AlertDescription className="text-sm text-navy-800">
           <strong>Supervisor Review Queue:</strong> Review and approve nurse-completed OASIS reviews before final submission.
         </AlertDescription>
       </Alert>
 
       {pendingItems.map((item) => (
-        <Card key={item.patientId} className="border-2 border-purple-200">
-          <CardHeader className="py-4 bg-gradient-to-r from-purple-50 to-blue-50">
+        <Card key={item.patientId} className="border-2 border-navy-200">
+          <CardHeader className="py-4 bg-gradient-to-r from-navy-50 to-blue-50">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg">

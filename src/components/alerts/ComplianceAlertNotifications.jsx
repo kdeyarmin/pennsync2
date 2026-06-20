@@ -111,9 +111,9 @@ export default function ComplianceAlertNotifications({
 
   if (isLoading) {
     return (
-      <Card className={compact ? 'border-slate-200' : 'border-2 border-purple-200'}>
+      <Card className={compact ? 'border-slate-200' : 'border-2 border-navy-200'}>
         <CardContent className="p-4 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto" />
           <p className="text-sm text-slate-600 mt-2">Loading compliance alerts...</p>
         </CardContent>
       </Card>
@@ -125,11 +125,11 @@ export default function ComplianceAlertNotifications({
   }
 
   return (
-    <Card className={`${compact ? 'border-slate-200' : 'border-2 border-purple-200'} ${criticalCount > 0 ? 'ring-2 ring-red-400' : ''}`}>
+    <Card className={`${compact ? 'border-slate-200' : 'border-2 border-navy-200'} ${criticalCount > 0 ? 'ring-2 ring-red-400' : ''}`}>
       <CardHeader className="py-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Bell className={`w-5 h-5 ${criticalCount > 0 ? 'text-red-600 animate-pulse' : 'text-purple-600'}`} />
+            <Bell className={`w-5 h-5 ${criticalCount > 0 ? 'text-red-600 animate-pulse' : 'text-navy-600'}`} />
             Compliance Alerts
             {(criticalCount > 0 || highCount > 0) && (
               <div className="flex gap-1">

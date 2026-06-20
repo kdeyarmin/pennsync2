@@ -7,7 +7,7 @@ const actionConfig = {
   sent: { icon: Mail, color: "bg-blue-100 text-blue-800", label: "Sent" },
   signed: { icon: CheckCircle2, color: "bg-green-100 text-green-800", label: "Signed" },
   viewed: { icon: Clock, color: "bg-slate-100 text-slate-800", label: "Viewed" },
-  archived: { icon: FileArchive, color: "bg-purple-100 text-purple-800", label: "Archived" },
+  archived: { icon: FileArchive, color: "bg-navy-100 text-navy-800", label: "Archived" },
   declined: { icon: AlertCircle, color: "bg-red-100 text-red-800", label: "Declined" }
 };
 

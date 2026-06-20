@@ -96,12 +96,12 @@ export default function ReferralDocumentViewer({ patientId }) {
         const isProcessed = !!referral.processed_document_url;
         
         return (
-        <Card key={referral.id} className="border-l-4 border-l-purple-500">
+        <Card key={referral.id} className="border-l-4 border-l-navy-500">
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <FileText className="w-4 h-4 text-purple-600" />
+                  <FileText className="w-4 h-4 text-navy-600" />
                   <p className="font-semibold text-slate-900">
                     {referral.patient_name || 'Unknown Patient'}
                   </p>
@@ -150,7 +150,7 @@ export default function ReferralDocumentViewer({ patientId }) {
                     )}
                     <Button
                       size="sm"
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-navy-600 hover:bg-navy-700"
                       onClick={() => {
                         setSelectedReferral({ ...referral, documentUrl });
                         setSendDialogOpen(true);
@@ -164,8 +164,8 @@ export default function ReferralDocumentViewer({ patientId }) {
               </div>
             </div>
             {referral.diagnosis && (
-              <div className="bg-purple-50 p-2 rounded">
-                <p className="text-xs font-semibold text-purple-900">Primary Diagnosis</p>
+              <div className="bg-navy-50 p-2 rounded">
+                <p className="text-xs font-semibold text-navy-900">Primary Diagnosis</p>
                 <p className="text-sm text-slate-900">{referral.diagnosis}</p>
               </div>
             )}
@@ -220,7 +220,7 @@ export default function ReferralDocumentViewer({ patientId }) {
             <Button
               onClick={handleSendDocument}
               disabled={!recipientEmail || isSending}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isSending ? (
                 <>

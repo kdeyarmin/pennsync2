@@ -112,7 +112,7 @@ export default function MedicalHistoryTimeline({ patient, visits, incidents, car
     const colors = {
       blue: 'bg-blue-500 border-blue-200',
       red: 'bg-red-500 border-red-200',
-      purple: 'bg-purple-500 border-purple-200',
+      purple: 'bg-navy-500 border-navy-200',
       green: 'bg-green-500 border-green-200',
       indigo: 'bg-indigo-500 border-indigo-200',
       gray: 'bg-slate-500 border-slate-200',

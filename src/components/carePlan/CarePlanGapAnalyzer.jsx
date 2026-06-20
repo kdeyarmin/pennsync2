@@ -155,7 +155,7 @@ Return comprehensive analysis including:
 
   return (
     <Card className="border-2 border-blue-300">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 pb-3">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-navy-50 pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Target className="w-5 h-5 text-blue-600" />
           AI Care Plan Gap Analysis

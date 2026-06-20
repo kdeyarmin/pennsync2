@@ -66,12 +66,12 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
         
         const updatedInterventions = [
           ...(carePlan.interventions || []),
-          ...proposal.proposed_interventions
+          ...(proposal.proposed_interventions || [])
         ];
 
         const updatedGoals = [
           ...(carePlan.goals || []),
-          ...proposal.proposed_goals
+          ...(proposal.proposed_goals || [])
         ];
 
         await base44.entities.CarePlan.update(proposal.care_plan_id, {
@@ -178,7 +178,7 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Brain className="w-6 h-6 text-purple-600" />
+              <Brain className="w-6 h-6 text-navy-600" />
               AI Care Plan Proposals
             </h2>
             <p className="text-slate-600 text-sm mt-1">
@@ -248,9 +248,9 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
               {isExpanded && (
                 <CardContent className="space-y-4">
                   {/* AI Rationale */}
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <p className="text-xs font-semibold text-purple-900 mb-1">AI Analysis:</p>
-                    <p className="text-sm text-purple-800">{proposal.ai_analysis?.rationale}</p>
+                  <div className="bg-navy-50 border border-navy-200 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-navy-900 mb-1">AI Analysis:</p>
+                    <p className="text-sm text-navy-800">{proposal.ai_analysis?.rationale}</p>
                   </div>
 
                   {/* Trigger Data */}

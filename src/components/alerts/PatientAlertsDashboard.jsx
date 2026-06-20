@@ -406,16 +406,16 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
                             <p className="text-sm text-slate-600 mt-1 line-clamp-2">{alert.message}</p>
 
                             {alert.data_sources?.clinical_event_id && (
-                              <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs">
+                              <div className="mt-2 p-2 bg-navy-50 border border-navy-200 rounded text-xs">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <Activity className="w-3 h-3 text-purple-600" />
-                                  <span className="font-medium text-purple-900">Linked Clinical Event</span>
+                                  <Activity className="w-3 h-3 text-navy-600" />
+                                  <span className="font-medium text-navy-900">Linked Clinical Event</span>
                                 </div>
-                                <div className="text-purple-700">
+                                <div className="text-navy-700">
                                   <span className="font-medium">Type:</span> {alert.data_sources.event_type?.replace(/_/g, ' ')}
                                 </div>
                                 {alert.data_sources.structured_data && (
-                                  <div className="text-purple-700 mt-1">
+                                  <div className="text-navy-700 mt-1">
                                     {Object.entries(alert.data_sources.structured_data).slice(0, 2).map(([key, value]) => (
                                       <div key={key}>
                                         <span className="font-medium">{key}:</span> {String(value)}
@@ -517,10 +517,10 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
 
                 {/* Clinical Event Details */}
                 {selectedAlert.data_sources?.clinical_event_id && (
-                  <Card className="border-purple-300 bg-purple-50">
+                  <Card className="border-navy-300 bg-navy-50">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-purple-600" />
+                        <Activity className="w-4 h-4 text-navy-600" />
                         Clinical Event Details
                       </CardTitle>
                     </CardHeader>
@@ -544,7 +544,7 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
                           <div className="mt-1 p-2 bg-white rounded border text-xs space-y-1">
                             {Object.entries(selectedAlert.data_sources.structured_data).map(([key, value]) => (
                               <div key={key} className="flex gap-2">
-                                <span className="font-medium text-purple-700">{key}:</span>
+                                <span className="font-medium text-navy-700">{key}:</span>
                                 <span className="text-slate-600">{String(value)}</span>
                               </div>
                             ))}

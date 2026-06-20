@@ -118,7 +118,7 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-purple-600" />
+              <GraduationCap className="w-5 h-5 text-navy-600" />
               Patient Education Material Generator
             </CardTitle>
           </CardHeader>
@@ -155,13 +155,13 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
             {additionalContext && (
               <div>
                 <Label>Context from Smart Notes</Label>
-                <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-sm">
+                <div className="bg-navy-50 p-3 rounded-lg border border-navy-200 text-sm">
                   <p className="text-slate-700 whitespace-pre-wrap">{additionalContext}</p>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => setAdditionalContext("")}
-                    className="mt-2 text-xs text-purple-600"
+                    className="mt-2 text-xs text-navy-600"
                   >
                     Clear Context
                   </Button>
@@ -182,8 +182,8 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
               </Label>
             </div>
 
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <p className="text-sm text-purple-900">
+            <div className="bg-navy-50 p-4 rounded-lg border border-navy-200">
+              <p className="text-sm text-navy-900">
                 <strong>Tailored for:</strong> {patient.first_name} {patient.last_name}
                 {patient.functional_status?.cognitive_status && (
                   <> • Cognitive Status: {patient.functional_status.cognitive_status}</>
@@ -194,7 +194,7 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
             <Button 
               onClick={generateEducationMaterial} 
               disabled={isGenerating}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-navy-600 hover:bg-navy-700"
             >
               {isGenerating ? (
                 <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>

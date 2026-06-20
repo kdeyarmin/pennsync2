@@ -227,17 +227,17 @@ Provide specific, actionable insights with confidence levels.`;
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-blue-50">
         <CardTitle className="flex items-center gap-2">
-          <Brain className="w-6 h-6 text-purple-600" />
+          <Brain className="w-6 h-6 text-navy-600" />
           AI Predictive Analytics
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
         {!predictions && !isAnalyzing && (
           <div className="text-center py-8">
-            <Brain className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+            <Brain className="w-16 h-16 text-navy-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Generate Predictive Insights
             </h3>
@@ -246,7 +246,7 @@ Provide specific, actionable insights with confidence levels.`;
             </p>
             <Button
               onClick={analyzePredictiveRisks}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Activity className="w-4 h-4 mr-2" />
               Analyze Patient Risk Profile
@@ -256,7 +256,7 @@ Provide specific, actionable insights with confidence levels.`;
 
         {isAnalyzing && (
           <div className="text-center py-12">
-            <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <p className="text-slate-600">Analyzing patient data and generating predictions...</p>
           </div>
         )}
@@ -439,7 +439,7 @@ Provide specific, actionable insights with confidence levels.`;
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Activity className="w-5 h-5 text-purple-600" />
+                    <Activity className="w-5 h-5 text-navy-600" />
                     <h4 className="font-bold">Resource Utilization Forecast</h4>
                   </div>
                   <div className="space-y-2 text-sm">

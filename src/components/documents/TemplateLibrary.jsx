@@ -150,10 +150,10 @@ export default function TemplateLibrary() {
   const templateCategoryColor = (category) => {
     const colors = {
       consent: 'bg-blue-100 text-blue-800',
-      assessment: 'bg-purple-100 text-purple-800',
+      assessment: 'bg-navy-100 text-navy-800',
       care_plan: 'bg-green-100 text-green-800',
       discharge: 'bg-orange-100 text-orange-800',
-      admission: 'bg-cyan-100 text-cyan-800',
+      admission: 'bg-navy-100 text-navy-800',
       other: 'bg-slate-100 text-slate-800'
     };
     return colors[category] || colors.other;

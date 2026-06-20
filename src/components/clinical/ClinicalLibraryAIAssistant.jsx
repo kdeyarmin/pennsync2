@@ -236,7 +236,7 @@ ${response}`,
             <Button
               onClick={startGeneration}
               disabled={isProcessing}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isProcessing ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -251,7 +251,7 @@ ${response}`,
               onClick={improveCurrent}
               disabled={isProcessing}
               variant="outline"
-              className="border-purple-300 text-purple-700"
+              className="border-navy-300 text-navy-700"
             >
               {isProcessing ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -266,7 +266,7 @@ ${response}`,
               onClick={refineInstructions}
               disabled={isProcessing}
               variant="outline"
-              className="border-purple-300 text-purple-700"
+              className="border-navy-300 text-navy-700"
             >
               {isProcessing ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -280,10 +280,10 @@ ${response}`,
       )}
 
       {conversation.length > 0 && (
-        <Card className="border-purple-200">
+        <Card className="border-navy-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <Sparkles className="w-4 h-4 text-navy-600" />
               AI Assistant
             </CardTitle>
           </CardHeader>
@@ -295,7 +295,7 @@ ${response}`,
                   className={`p-3 rounded-lg text-sm ${
                     msg.role === 'user'
                       ? 'bg-blue-50 ml-8'
-                      : 'bg-purple-50 mr-8'
+                      : 'bg-navy-50 mr-8'
                   }`}
                 >
                   <div className="font-semibold mb-1 text-xs text-slate-600">

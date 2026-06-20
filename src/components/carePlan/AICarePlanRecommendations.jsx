@@ -135,25 +135,25 @@ Return JSON:`,
   };
 
   return (
-    <Card className="border-2 border-purple-300">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-300">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Care Plan Recommendations
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
         {!recommendations ? (
           <div className="space-y-3">
-            <Alert className="bg-purple-50 border-purple-200">
-              <AlertDescription className="text-sm text-purple-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <AlertDescription className="text-sm text-navy-900">
                 AI will analyze patient diagnosis, visit history, functional status, and existing care plans to recommend personalized care plan goals.
               </AlertDescription>
             </Alert>
             <Button
               onClick={analyzeAndRecommend}
               disabled={isAnalyzing || !patient}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-navy-600 hover:bg-navy-700"
             >
               {isAnalyzing ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Patient Data...</>
@@ -192,7 +192,7 @@ Return JSON:`,
                   return (
                     <Card 
                       key={idx} 
-                      className={`border-2 ${isAccepted ? 'border-green-300 bg-green-50' : 'border-purple-200'}`}
+                      className={`border-2 ${isAccepted ? 'border-green-300 bg-green-50' : 'border-navy-200'}`}
                     >
                       <CardContent className="p-4 space-y-3">
                         {/* Header */}

@@ -24,15 +24,15 @@ export default function TemplateGenerator({
   };
 
   return (
-    <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+    <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 bg-gradient-to-br from-navy-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-slate-900 mb-2">AI Smart Template</h3>
-            <Alert className="bg-white border-purple-200 mb-4">
+            <Alert className="bg-white border-navy-200 mb-4">
               <AlertDescription className="text-sm text-slate-700">
                 Generate a pre-filled Medicare-compliant template based on:
                 <ul className="list-disc ml-5 mt-2 space-y-1">
@@ -48,7 +48,7 @@ export default function TemplateGenerator({
               <Button
                 onClick={onTemplateGenerated}
                 disabled={isGenerating}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="bg-gradient-to-r from-navy-600 to-pink-600 hover:from-navy-700 hover:to-pink-700"
               >
                 {isGenerating ? (
                   <>

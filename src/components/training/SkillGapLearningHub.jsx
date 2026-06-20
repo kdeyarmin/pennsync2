@@ -61,7 +61,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
   const handleModuleComplete = (result) => {
     setShowModule(false);
     setActiveSkillGap(null);
-    queryClient.invalidateQueries(['microLearningProgress']);
+    queryClient.invalidateQueries({ queryKey: ['microLearningProgress'] });
     
     // Update stored gaps
     const updatedGaps = storedGaps.filter(g => g.area !== result.skill_area);
@@ -85,8 +85,8 @@ export default function SkillGapLearningHub({ nurseEmail }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <Brain className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center">
+              <Brain className="w-5 h-5 text-navy-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{storedGaps.length}</p>
@@ -163,12 +163,12 @@ export default function SkillGapLearningHub({ nurseEmail }) {
           ) : (
             <div className="space-y-3">
               {storedGaps.map((gap, idx) => (
-                <Card key={idx} className="border-purple-200 hover:border-purple-400 transition-colors">
+                <Card key={idx} className="border-navy-200 hover:border-navy-400 transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Brain className="w-4 h-4 text-purple-600" />
+                          <Brain className="w-4 h-4 text-navy-600" />
                           <h4 className="font-semibold text-slate-900">{gap.area}</h4>
                         </div>
                         <p className="text-sm text-slate-600 mb-2">{gap.evidence}</p>
@@ -181,7 +181,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
                       </div>
                       <Button 
                         onClick={() => handleStartLearning(gap)}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-navy-600 hover:bg-navy-700"
                       >
                         <Play className="w-4 h-4 mr-2" /> Start Learning
                       </Button>

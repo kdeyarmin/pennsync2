@@ -29,9 +29,9 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Target className="w-5 h-5 text-purple-600" />
+            <Target className="w-5 h-5 text-navy-600" />
             Active Care Plans
-            <Badge className="bg-purple-600">{activeCarePlans.length}</Badge>
+            <Badge className="bg-navy-600">{activeCarePlans.length}</Badge>
           </CardTitle>
           <Button size="sm" variant="outline" asChild>
             <Link to={createPageUrl('CarePlanManagement')}>
@@ -43,10 +43,10 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
       </CardHeader>
       <CardContent>
         {totalGoals > 0 && (
-          <div className="mb-4 p-3 bg-purple-50 rounded-lg">
+          <div className="mb-4 p-3 bg-navy-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-slate-700">Overall Progress</p>
-              <span className="text-sm font-semibold text-purple-700">
+              <span className="text-sm font-semibold text-navy-700">
                 {metGoals}/{totalGoals} goals met
               </span>
             </div>
@@ -65,7 +65,7 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
               const isOverdue = plan.target_date && new Date(plan.target_date) < new Date();
               
               return (
-                <div key={plan.id} className="p-3 bg-white rounded-lg border border-slate-200 hover:border-purple-300 transition-colors">
+                <div key={plan.id} className="p-3 bg-white rounded-lg border border-slate-200 hover:border-navy-300 transition-colors">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <p className="font-semibold text-sm text-slate-900 mb-1">{plan.problem}</p>

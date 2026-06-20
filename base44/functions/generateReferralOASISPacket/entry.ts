@@ -931,7 +931,7 @@ Also provide:
       homeboundReasons.push('Requires maximal/substantial assistance with ADLs including dressing and toileting');
     }
     if (demo.age && parseInt(demo.age) >= 90) {
-      homeboundReasons.push('Advanced age (96 years) with generalized weakness and endurance limitations');
+      homeboundReasons.push(`Advanced age (${parseInt(demo.age)} years) with generalized weakness and endurance limitations`);
     }
     
     homeboundReasons.push('Leaving home requires considerable and taxing effort');

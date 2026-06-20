@@ -38,20 +38,20 @@ export default function ClinicalLibrary() {
           </div>
         </div>
 
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 sm:p-6">
-          <h3 className="font-semibold text-purple-900 mb-2 sm:mb-3 text-sm sm:text-base">Patient-Specific Templates</h3>
-          <p className="text-xs sm:text-sm text-purple-800 mb-3 sm:mb-4">
+        <div className="bg-navy-50 border border-navy-200 rounded-lg p-4 sm:p-6">
+          <h3 className="font-semibold text-navy-900 mb-2 sm:mb-3 text-sm sm:text-base">Patient-Specific Templates</h3>
+          <p className="text-xs sm:text-sm text-navy-800 mb-3 sm:mb-4">
             Automatically pulls patient data to personalize documentation.
           </p>
           <div className="space-y-2 text-xs sm:text-sm">
             <div className="bg-white rounded p-2 sm:p-3">
-              <code className="text-purple-600 font-mono text-xs sm:text-sm">wound care provided</code>
+              <code className="text-navy-600 font-mono text-xs sm:text-sm">wound care provided</code>
               <p className="text-slate-600 mt-1 text-[10px] sm:text-xs">
                 Uses patient's wound data to generate specific care notes
               </p>
             </div>
             <div className="bg-white rounded p-2 sm:p-3">
-              <code className="text-purple-600 font-mono text-xs sm:text-sm">medication review</code>
+              <code className="text-navy-600 font-mono text-xs sm:text-sm">medication review</code>
               <p className="text-slate-600 mt-1 text-[10px] sm:text-xs">
                 Includes patient's current medications in documentation
               </p>

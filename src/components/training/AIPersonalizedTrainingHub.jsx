@@ -278,14 +278,14 @@ Create a personalized 4-week learning path with:
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-200">
+        <Card className="border-2 border-navy-200">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">AI Recommendations</p>
-                <p className="text-3xl font-bold text-purple-600">{performanceMetrics.totalRecommendations}</p>
+                <p className="text-3xl font-bold text-navy-600">{performanceMetrics.totalRecommendations}</p>
               </div>
-              <Brain className="w-10 h-10 text-purple-600" />
+              <Brain className="w-10 h-10 text-navy-600" />
             </div>
             <p className="text-sm text-slate-500 mt-2">To be addressed</p>
           </CardContent>
@@ -293,7 +293,7 @@ Create a personalized 4-week learning path with:
       </div>
 
       {/* AI Learning Path Generator */}
-      <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-navy-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-600" />
@@ -309,7 +309,7 @@ Create a personalized 4-week learning path with:
               <Button
                 onClick={generateLearningPath}
                 disabled={isGeneratingPath}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                className="bg-gradient-to-r from-indigo-600 to-navy-600 hover:from-indigo-700 hover:to-navy-700"
               >
                 {isGeneratingPath ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Performance Data...</>
@@ -399,8 +399,8 @@ Create a personalized 4-week learning path with:
 
               <TabsContent value="micro" className="space-y-4">
                 {learningPath.custom_micro_lessons?.map((lesson, idx) => (
-                  <Card key={idx} className="border-2 border-purple-200">
-                    <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+                  <Card key={idx} className="border-2 border-navy-200">
+                    <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
                       <CardTitle className="text-base">{lesson.title}</CardTitle>
                       <Badge className="w-fit">{lesson.skill_area}</Badge>
                     </CardHeader>

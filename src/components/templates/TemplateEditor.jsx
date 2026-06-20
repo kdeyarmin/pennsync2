@@ -157,7 +157,7 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
+              <Sparkles className="w-5 h-5 text-navy-600" />
               Quick Fill - Clinical Responses
             </CardTitle>
           </CardHeader>
@@ -214,7 +214,7 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
             <Button
               onClick={handleEnhanceWithAI}
               disabled={isEnhancing}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              className="w-full bg-gradient-to-r from-navy-600 to-pink-600 hover:from-navy-700 hover:to-pink-700"
             >
               {isEnhancing ? (
                 <>

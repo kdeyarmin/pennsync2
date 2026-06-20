@@ -159,9 +159,9 @@ Return JSON with these keys:
     <div className="space-y-4">
       {/* Title */}
       <div className="flex items-center gap-2">
-        <FileText className="w-4 h-4 text-purple-600" />
+        <FileText className="w-4 h-4 text-navy-600" />
         <h3 className="text-sm font-bold text-slate-800">Visit Summary Generator</h3>
-        <Badge className="bg-purple-100 text-purple-700 text-xs">AI</Badge>
+        <Badge className="bg-navy-100 text-navy-700 text-xs">AI</Badge>
       </div>
       <p className="text-xs text-slate-500">Select a completed visit to generate a structured summary from its transcript.</p>
 
@@ -201,7 +201,7 @@ Return JSON with these keys:
       <Button
         onClick={generate}
         disabled={!hasTranscript || loading}
-        className="w-full bg-purple-600 hover:bg-purple-700 h-9 gap-2 text-sm font-semibold"
+        className="w-full bg-navy-600 hover:bg-navy-700 h-9 gap-2 text-sm font-semibold"
       >
         {loading
           ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating Summary…</>

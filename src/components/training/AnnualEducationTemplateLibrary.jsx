@@ -74,8 +74,8 @@ const REGULATORY_CATEGORIES = [
     id: "abuse_neglect",
     name: "Abuse, Neglect & Exploitation",
     icon: Shield,
-    color: "bg-purple-100 text-purple-800 border-purple-200",
-    iconColor: "text-purple-600",
+    color: "bg-navy-100 text-navy-800 border-navy-200",
+    iconColor: "text-navy-600",
     templates: [
       {
         name: "Recognizing and Reporting Abuse, Neglect & Exploitation",
@@ -260,8 +260,8 @@ const REGULATORY_CATEGORIES = [
     id: "medication_safety",
     name: "Medication Safety",
     icon: Pill,
-    color: "bg-cyan-100 text-cyan-800 border-cyan-200",
-    iconColor: "text-cyan-600",
+    color: "bg-navy-100 text-navy-800 border-navy-200",
+    iconColor: "text-navy-600",
     templates: [
       {
         name: "Medication Management & Safety",
@@ -323,8 +323,8 @@ const REGULATORY_CATEGORIES = [
     id: "documentation_standards",
     name: "Clinical Documentation Standards",
     icon: FileText,
-    color: "bg-violet-100 text-violet-800 border-violet-200",
-    iconColor: "text-violet-600",
+    color: "bg-navy-100 text-navy-800 border-navy-200",
+    iconColor: "text-navy-600",
     templates: [
       {
         name: "Clinical Documentation Standards & Best Practices",
@@ -344,8 +344,8 @@ const REGULATORY_CATEGORIES = [
     id: "qapi",
     name: "Quality Assessment & Performance Improvement",
     icon: BarChart3,
-    color: "bg-sky-100 text-sky-800 border-sky-200",
-    iconColor: "text-sky-600",
+    color: "bg-navy-100 text-navy-800 border-navy-200",
+    iconColor: "text-navy-600",
     templates: [
       {
         name: "QAPI Program Participation & Quality Improvement",
@@ -428,8 +428,8 @@ const REGULATORY_CATEGORIES = [
     id: "ethics",
     name: "Ethics & Ethical Decision-Making",
     icon: Scale,
-    color: "bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200",
-    iconColor: "text-fuchsia-600",
+    color: "bg-navy-100 text-navy-800 border-navy-200",
+    iconColor: "text-navy-600",
     templates: [
       {
         name: "Ethics in Healthcare — Ethical Decision-Making",

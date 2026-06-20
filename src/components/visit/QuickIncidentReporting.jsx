@@ -94,9 +94,9 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
       id: 'medication_error',
       name: 'Medication Error',
       icon: Pill,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-300',
+      color: 'text-navy-600',
+      bgColor: 'bg-navy-50',
+      borderColor: 'border-navy-300',
       severity: 'high',
       fields: [
         { name: 'medication', label: 'Medication involved', type: 'text' },
@@ -268,43 +268,37 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
     }
 
     // Logic to manage listening state based on `showDialog` and `isSubmitting`
+    let startTimer = null;
     if ((showDialog || isSubmitting) && isListeningRef.current) {
       // If dialog is open OR we are submitting, and we are currently listening, stop listening
       recognitionRef.current.stop();
       isListeningRef.current = false;
       setVoiceCommandStatus("idle"); // Update status
     } else if (!showDialog && !isSubmitting && !isListeningRef.current) {
-      // If dialog is closed AND not submitting, AND we are NOT listening, try to start listening
-      // Add a small delay to prevent starting too quickly after stopping,
-      // which can sometimes cause browser issues with SpeechRecognition.
-      setTimeout(() => {
+      // Dialog closed, not submitting, not listening → (re)start after a short
+      // delay (starting too soon after a stop throws in some browsers). This is
+      // now the SINGLE start path: the previous code ALSO called start()
+      // synchronously just below, so on mount BOTH fired and raced into
+      // "InvalidStateError: already started". The timer is cleared on cleanup so a
+      // queued start can't fire after unmount or among rapid dialog toggles.
+      startTimer = setTimeout(() => {
         if (recognitionRef.current && !isListeningRef.current) {
           try {
             recognitionRef.current.start();
           } catch (e) {
-            console.warn("Speech recognition failed to start (dialog closed/submit complete):", e);
+            console.warn("Speech recognition failed to start:", e);
             setVoiceCommandStatus("error: restart failed");
           }
         }
-      }, 500); // 500ms delay
+      }, 500);
     }
 
-    // Initial start when component mounts if not already listening, dialog is not open, and not submitting
-    if (!isListeningRef.current && recognitionRef.current && !showDialog && !isSubmitting) {
-        try {
-            recognitionRef.current.start();
-        } catch (e) {
-            console.warn("Speech recognition failed to start initially:", e);
-            setVoiceCommandStatus("error: initial start failed");
-        }
-    }
-
-    // Cleanup function: stop listening when component unmounts
+    // Cleanup: clear any pending start, and stop listening on unmount / re-run.
     return () => {
+      if (startTimer) clearTimeout(startTimer);
       if (recognitionRef.current && isListeningRef.current) {
         recognitionRef.current.stop();
         isListeningRef.current = false;
-        console.log("Voice command listening stopped (component unmount).");
       }
     };
   }, [showDialog, isSubmitting, handleIncidentSelect]); // Dependencies for useEffect. `incidentTypes` is a constant.

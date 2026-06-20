@@ -34,12 +34,9 @@ import {
   UserX,
   Key,
   Mail,
-  Send,
-  Archive
+  Send
 } from "lucide-react";
 import { formatEastern } from "../components/utils/timezone";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 
 export default function UserActivityLog() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -142,18 +139,18 @@ export default function UserActivityLog() {
       'create': 'bg-green-100 text-green-800',
       'update': 'bg-blue-100 text-blue-800',
       'delete': 'bg-red-100 text-red-800',
-      'export': 'bg-purple-100 text-purple-800',
+      'export': 'bg-navy-100 text-navy-800',
       'error': 'bg-red-600 text-white',
       'view': 'bg-slate-100 text-slate-800',
       'generate': 'bg-indigo-100 text-indigo-800',
       'page_visit': 'bg-slate-100 text-slate-800',
-      'login': 'bg-purple-100 text-purple-800',
-      'oasis_upload': 'bg-cyan-100 text-cyan-800',
+      'login': 'bg-navy-100 text-navy-800',
+      'oasis_upload': 'bg-navy-100 text-navy-800',
       'oasis_analyze': 'bg-teal-100 text-teal-800',
       'oasis_save': 'bg-emerald-100 text-emerald-800',
-      'patient_match': 'bg-violet-100 text-violet-800',
+      'patient_match': 'bg-navy-100 text-navy-800',
       'dispute_match': 'bg-orange-100 text-orange-800',
-      'visit_document': 'bg-sky-100 text-sky-800',
+      'visit_document': 'bg-navy-100 text-navy-800',
       'visit_start': 'bg-green-100 text-green-800',
       'visit_complete': 'bg-emerald-100 text-emerald-800',
       'care_plan_create': 'bg-lime-100 text-lime-800',
@@ -161,7 +158,7 @@ export default function UserActivityLog() {
       'task_create': 'bg-amber-100 text-amber-800',
       'task_complete': 'bg-green-100 text-green-800',
       'incident_report': 'bg-rose-100 text-rose-800',
-      'training_complete': 'bg-fuchsia-100 text-fuchsia-800',
+      'training_complete': 'bg-navy-100 text-navy-800',
       'note_enhanced': 'bg-indigo-100 text-indigo-800',
       'note_compliance_check': 'bg-blue-100 text-blue-800',
       'alert_viewed': 'bg-yellow-100 text-yellow-800',
@@ -175,9 +172,9 @@ export default function UserActivityLog() {
       'invitation_sent': 'bg-indigo-100 text-indigo-800',
       'invitation_resent': 'bg-indigo-100 text-indigo-800',
       'invitation_deleted': 'bg-red-100 text-red-800',
-      'document_generated': 'bg-purple-100 text-purple-800',
+      'document_generated': 'bg-navy-100 text-navy-800',
       'document_signed': 'bg-green-100 text-green-800',
-      'document_uploaded': 'bg-cyan-100 text-cyan-800',
+      'document_uploaded': 'bg-navy-100 text-navy-800',
       'document_deleted': 'bg-red-100 text-red-800',
       'settings_updated': 'bg-blue-100 text-blue-800',
       'role_permission_changed': 'bg-blue-100 text-blue-800'
@@ -186,15 +183,7 @@ export default function UserActivityLog() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Archive}
-        eyebrow="Admin"
-        title="User Activity Log"
-        description="Monitor all user actions across the system"
-        favoritePage="UserActivityLog"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
         <Card>
@@ -211,7 +200,7 @@ export default function UserActivityLog() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <User className="w-8 h-8 text-purple-600" />
+              <User className="w-8 h-8 text-navy-600" />
               <div>
                 <p className="text-xs text-slate-500">Active Users</p>
                 <p className="text-2xl font-bold">{new Set(filteredActivities.map(a => a.user_email)).size}</p>
@@ -219,7 +208,7 @@ export default function UserActivityLog() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-indigo-50 to-purple-50">
+        <Card className="bg-gradient-to-br from-indigo-50 to-navy-50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-indigo-600" />
@@ -232,13 +221,13 @@ export default function UserActivityLog() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-cyan-50 to-teal-50">
+        <Card className="bg-gradient-to-br from-navy-50 to-teal-50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <BarChart3 className="w-8 h-8 text-cyan-600" />
+              <BarChart3 className="w-8 h-8 text-navy-600" />
               <div>
-                <p className="text-xs text-cyan-700 font-medium">OASIS Analyzed</p>
-                <p className="text-2xl font-bold text-cyan-900">
+                <p className="text-xs text-navy-700 font-medium">OASIS Analyzed</p>
+                <p className="text-2xl font-bold text-navy-900">
                   {filteredActivities.filter(a => a.action === 'oasis_analyze').length}
                 </p>
               </div>
@@ -272,7 +261,7 @@ export default function UserActivityLog() {
       {/* Enhanced Activity Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Note Enhancement Stats by User */}
-        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+        <Card className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-200">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="w-5 h-5 text-indigo-600" />
@@ -318,10 +307,10 @@ export default function UserActivityLog() {
         </Card>
 
         {/* Login Activity Stats */}
-        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+        <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <LogIn className="w-5 h-5 text-purple-600" />
+              <LogIn className="w-5 h-5 text-navy-600" />
               Login Activity
             </CardTitle>
           </CardHeader>
@@ -345,7 +334,7 @@ export default function UserActivityLog() {
                         <p className="text-sm font-medium text-slate-900">{user.full_name}</p>
                         <p className="text-xs text-slate-500">{user.role}</p>
                       </div>
-                      <Badge className="bg-purple-600 text-white">
+                      <Badge className="bg-navy-600 text-white">
                         {userLogins.length} logins
                       </Badge>
                     </div>
@@ -473,7 +462,7 @@ export default function UserActivityLog() {
                         
                         {/* Enhanced detail display for specific actions */}
                         {activity.action === 'login' && activity.details?.login_time && (
-                          <p className="text-xs text-purple-700 mt-1">
+                          <p className="text-xs text-navy-700 mt-1">
                             Session started at {formatEastern(activity.details.login_time, 'HH:mm')}
                           </p>
                         )}
@@ -518,6 +507,6 @@ export default function UserActivityLog() {
           )}
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

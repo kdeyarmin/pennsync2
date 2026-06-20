@@ -886,7 +886,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none">
+      <Card className="bg-gradient-to-r from-blue-600 to-navy-600 text-white border-none">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -1005,7 +1005,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
           <Card key={type.value} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setReportType(type.value)}>
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-navy-500 rounded-lg flex items-center justify-center">
                   <type.icon className="w-6 h-6 text-white" />
                 </div>
                 {reportType === type.value && (
@@ -1181,10 +1181,10 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                       <p className="text-3xl font-bold text-blue-600">${Math.round(reportPreview.costSavings).toLocaleString()}</p>
                     </CardContent>
                   </Card>
-                  <Card className="bg-gradient-to-br from-purple-50 to-pink-50">
+                  <Card className="bg-gradient-to-br from-navy-50 to-pink-50">
                     <CardContent className="p-6">
                       <p className="text-sm text-slate-600 mb-1">ROI</p>
-                      <p className="text-3xl font-bold text-purple-600">{reportPreview.roi}%</p>
+                      <p className="text-3xl font-bold text-navy-600">{reportPreview.roi}%</p>
                     </CardContent>
                   </Card>
                 </div>

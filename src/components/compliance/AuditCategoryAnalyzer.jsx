@@ -86,7 +86,7 @@ export default function AuditCategoryAnalyzer({ audits = [] }) {
 
   return (
     <Card className="border-2 border-blue-200">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 py-3">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-navy-50 py-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-blue-600" />
           Issues by Documentation Category

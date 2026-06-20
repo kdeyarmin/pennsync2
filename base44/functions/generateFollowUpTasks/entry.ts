@@ -16,10 +16,13 @@ Deno.serve(async (req) => {
       // patient's PHI into the prompt via a guessed patientId.
       const patients = await base44.entities.Patient.filter({ id: patientId });
       const patient = patients[0];
-      if (patient) {
-        patientName = `${patient.first_name} ${patient.last_name}`;
-        patientContext = `Patient: ${patientName}, Primary Diagnosis: ${patient.primary_diagnosis || diagnosis || 'Not documented'}, Secondary Diagnoses: ${(patient.secondary_diagnoses || []).join(', ') || 'None'}`;
+      // Make the access check BLOCKING: if the RLS-scoped read returns nothing
+      // the caller can't see this patient, so don't attach AI Tasks to it below.
+      if (!patient) {
+        return Response.json({ error: 'Patient not found' }, { status: 404 });
       }
+      patientName = `${patient.first_name} ${patient.last_name}`;
+      patientContext = `Patient: ${patientName}, Primary Diagnosis: ${patient.primary_diagnosis || diagnosis || 'Not documented'}, Secondary Diagnoses: ${(patient.secondary_diagnoses || []).join(', ') || 'None'}`;
     }
 
     const response = await base44.integrations.Core.InvokeLLM({

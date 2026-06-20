@@ -112,7 +112,7 @@ export default function ValidationSummary({ validationErrors, validRecords, tota
         )}
 
         {/* Severity Breakdown */}
-        <Alert className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <Alert className="bg-gradient-to-r from-blue-50 to-navy-50 border-blue-200">
           <FileText className="w-4 h-4 text-blue-600" />
           <AlertDescription>
             <div className="space-y-1 text-sm">
