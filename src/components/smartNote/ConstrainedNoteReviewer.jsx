@@ -10,7 +10,7 @@ import { splitSentences } from "./compliance/factExtraction";
 import { generateConstrainedNote, groundNote } from "./compliance/generation";
 import { valueGuard } from "./compliance/valueGuard";
 import { computeCoverageScore, computeDraftPresenceScore } from "./compliance/coverageScore";
-import { compareVisits, buildTrendSummary } from "./compliance/visitComparison";
+import { compareVisits, buildTrendSummary, detectSustainedTrends } from "./compliance/visitComparison";
 import { crossCheckChart } from "./compliance/chartCrossCheck";
 import VisitComparisonPanel from "./VisitComparisonPanel";
 import ChartCrossCheckPanel from "./ChartCrossCheckPanel";
@@ -67,6 +67,14 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   // extraction the value-guard uses, so the trend summary is itself value-grounded.
   const comparisons = useMemo(() => compareVisits(roughNote, priorNote), [roughNote, priorNote]);
   const trendSummary = useMemo(() => buildTrendSummary(comparisons), [comparisons]);
+
+  // Multi-visit sustained trends from the patient's saved note history (already
+  // on the chart record — no extra fetch). Oldest -> newest, current note last.
+  const sustainedTrends = useMemo(() => {
+    const history = Array.isArray(patient?.enhanced_notes_history) ? patient.enhanced_notes_history : [];
+    const priorTexts = history.slice(-4).map((h) => h?.note || "").filter(Boolean);
+    return detectSustainedTrends([...priorTexts, roughNote]);
+  }, [patient, roughNote]);
 
   // Deterministic chart cross-check: how the note lines up against the standing
   // chart (allergies, med list, fall risk). Advisory only — never edits the note.
@@ -323,6 +331,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
 
           <VisitComparisonPanel
             comparisons={comparisons}
+            trends={sustainedTrends}
             include={includeTrend}
             onToggleInclude={setIncludeTrend}
             summary={trendSummary}

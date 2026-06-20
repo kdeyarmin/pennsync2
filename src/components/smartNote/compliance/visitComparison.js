@@ -124,3 +124,62 @@ export function buildTrendSummary(comparisons) {
   });
   return `Compared to the prior documented visit, ${segments.join("; ")}.`;
 }
+
+// ── Multi-visit (sustained) trend detection ────────────────────────────────
+// A single-visit delta can be noise; a value that moves the same direction
+// across several consecutive visits is the clinically meaningful signal (e.g.
+// weight climbing each visit -> possible fluid retention). These read from the
+// patient's saved note history, which the caller already has — no extra fetch.
+
+const TREND_METRICS = [
+  { key: "bp_sys", label: "Systolic BP", trailingUnit: "mmHg", get: (m) => m.bp?.sys ?? null, minTotal: 12 },
+  { key: "hr", label: "Heart rate", trailingUnit: "bpm", get: (m) => m.hr, minTotal: 12 },
+  { key: "o2", label: "Oxygen saturation", get: (m) => m.o2, fmt: (x) => `${x}%`, minTotal: 3 },
+  { key: "weight", label: "Weight", trailingUnit: "lbs", get: (m) => m.weight, minTotal: 4 },
+  { key: "pain", label: "Pain", get: (m) => m.pain, fmt: (x) => `${x}/10`, minTotal: 3 },
+];
+
+const MIN_TREND_RUN = 3; // values (visits) required to call something a trend
+
+/**
+ * Detect values that have moved monotonically across the most recent consecutive
+ * visits. Pure + offline.
+ * @param {string[]} noteTexts ordered oldest -> newest, INCLUDING the current note last
+ * @returns {{ key: string, label: string, direction: "up"|"down", display: string, values: number[] }[]}
+ */
+export function detectSustainedTrends(noteTexts) {
+  const texts = (noteTexts || []).filter((t) => t && t.trim());
+  if (texts.length < MIN_TREND_RUN) return [];
+  const metricsByNote = texts.map(extractMetrics);
+  /** @type {{ key: string, label: string, direction: "up"|"down", display: string, values: number[] }[]} */
+  const out = [];
+
+  for (const m of TREND_METRICS) {
+    // Walk back from the newest note collecting consecutive present values.
+    const tail = [];
+    for (let i = metricsByNote.length - 1; i >= 0; i--) {
+      const val = m.get(metricsByNote[i]);
+      if (val == null) break;
+      tail.push(val);
+    }
+    if (tail.length < MIN_TREND_RUN) continue;
+    const series = tail.reverse(); // back to oldest -> newest
+
+    const rising = series.every((v, i) => i === 0 || v > series[i - 1]);
+    const falling = series.every((v, i) => i === 0 || v < series[i - 1]);
+    if (!rising && !falling) continue;
+    if (Math.abs(series[series.length - 1] - series[0]) < m.minTotal) continue;
+
+    const fmt = m.fmt || ((x) => `${x}`);
+    const unit = m.trailingUnit ? ` ${m.trailingUnit}` : "";
+    out.push({
+      key: m.key,
+      label: m.label,
+      direction: rising ? "up" : "down",
+      values: series,
+      display: `${series.map(fmt).join(" → ")}${unit}`,
+    });
+  }
+
+  return out;
+}

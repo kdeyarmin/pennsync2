@@ -308,6 +308,14 @@ is real chart data, not an LLM invention), and it is appended verbatim rather
 than re-voiced. Opt-out leaves the note untouched. Gracefully renders nothing
 when there is no prior note or no comparable change.
 
+`detectSustainedTrends` extends this to **multi-visit** trends: it reads the last
+few notes from the patient's `enhanced_notes_history` (already on the chart
+record — no extra fetch) and flags any value that moved monotonically across ≥3
+consecutive visits past a per-metric total threshold (e.g. weight 180 → 184 →
+188 lbs). The single-visit delta can be noise; a sustained directional run is the
+clinically meaningful signal. These render as an **advisory** band in the same
+panel and are never auto-inserted (multi-visit significance is the nurse's call).
+
 ## Update — chart cross-check (2026-06-20)
 
 Closes the broader "check the note against other info in that patient's chart"

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { compareVisits, buildTrendSummary, extractPain } from "./visitComparison.js";
+import { compareVisits, buildTrendSummary, extractPain, detectSustainedTrends } from "./visitComparison.js";
 
 test("extractPain pulls the first N/10 rating", () => {
   assert.equal(extractPain("pain 6/10 at the wound site"), 6);
@@ -70,4 +70,42 @@ test("buildTrendSummary is factual, plain-text, and value-grounded", () => {
 test("buildTrendSummary is empty when nothing changed", () => {
   assert.equal(buildTrendSummary([]), "");
   assert.equal(buildTrendSummary(compareVisits("BP 130/80", "BP 130/80")), "");
+});
+
+test("detectSustainedTrends needs at least three visits", () => {
+  assert.deepEqual(detectSustainedTrends(["weight 180 lbs", "weight 188 lbs"]), []);
+});
+
+test("detects a sustained weight climb across visits (oldest -> newest)", () => {
+  const trends = detectSustainedTrends(["weight 180 lbs", "weight 184 lbs", "weight 188 lbs"]);
+  const wt = trends.find((t) => t.key === "weight");
+  assert.ok(wt, "expected a weight trend");
+  assert.equal(wt.direction, "up");
+  assert.deepEqual(wt.values, [180, 184, 188]);
+  assert.equal(wt.display, "180 → 184 → 188 lbs");
+});
+
+test("detects a sustained oxygen decline", () => {
+  const trends = detectSustainedTrends(["O2 97%", "O2 95%", "O2 92%"]);
+  const o2 = trends.find((t) => t.key === "o2");
+  assert.ok(o2);
+  assert.equal(o2.direction, "down");
+  assert.equal(o2.display, "97% → 95% → 92%");
+});
+
+test("non-monotonic values are not a trend", () => {
+  const trends = detectSustainedTrends(["weight 180 lbs", "weight 190 lbs", "weight 182 lbs"]);
+  assert.equal(trends.find((t) => t.key === "weight"), undefined);
+});
+
+test("a small but monotonic drift below the total threshold is not a trend", () => {
+  // 180 -> 181 -> 182 is monotonic but only +2 lbs total (< 4 lb threshold).
+  const trends = detectSustainedTrends(["weight 180 lbs", "weight 181 lbs", "weight 182 lbs"]);
+  assert.equal(trends.find((t) => t.key === "weight"), undefined);
+});
+
+test("a break in the most recent run stops the trend", () => {
+  // Newest note has no weight, so the consecutive-from-newest run is too short.
+  const trends = detectSustainedTrends(["weight 180 lbs", "weight 184 lbs", "BP 130/80"]);
+  assert.equal(trends.find((t) => t.key === "weight"), undefined);
 });
