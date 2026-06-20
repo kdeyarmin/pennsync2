@@ -222,6 +222,10 @@ export default function SmartNoteAssistant() {
       toast.error("Select a patient to save this note to their chart.");
       return;
     }
+    if (api.chartRisk?.hasUnacknowledgedCritical) {
+      toast.error("Acknowledge the chart safety conflict before saving to the chart.");
+      return;
+    }
     setSaving(true);
     try {
       let result = api.result;
@@ -577,7 +581,7 @@ export default function SmartNoteAssistant() {
                     onSave={() => handleSave(api)}
                     saving={saving}
                     saved={saved && !api.dirty}
-                    saveDisabled={saving || !!(api.fixRequired && !api.fixRequired.offlinePending) || !patientId}
+                    saveDisabled={saving || !!(api.fixRequired && !api.fixRequired.offlinePending) || !patientId || api.chartRisk?.hasUnacknowledgedCritical}
                   />
                 </>
               )}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowRight, HelpCircle, AlertTriangle, ShieldCheck, Loader2, Copy, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, HelpCircle, AlertTriangle, ShieldCheck, ShieldAlert, Loader2, Copy, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeDraft } from "./compliance/normalize";
 import { getRequiredElements } from "./compliance/requiredElements";
@@ -45,6 +45,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const [prefilledIds, setPrefilledIds] = useState(new Set());
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
   const [includeTrend, setIncludeTrend] = useState(false);
+  const [acknowledgedRisks, setAcknowledgedRisks] = useState(false);
   const [finalNote, setFinalNote] = useState("");
   const [verifiedNote, setVerifiedNote] = useState("");
   const [fixRequired, setFixRequired] = useState(null);
@@ -88,7 +89,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const priorNoteRef = useRef("");
   priorNoteRef.current = priorNote;
   useEffect(() => {
-    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false);
+    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false);
     if (!analysis) { setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set()); return; }
     const prefill = computeCarryForward(priorNoteRef.current || "", analysis.gaps);
     setAnswers(prefill);
@@ -247,6 +248,12 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     );
   }
 
+  // Critical chart conflicts (e.g. a documented med the patient is allergic to)
+  // must stay visible at the save step and be acknowledged before saving — not
+  // just shown during drafting and then forgotten.
+  const criticalChartFindings = chartFindings.filter((f) => f.severity === "critical");
+  const hasUnacknowledgedCritical = criticalChartFindings.length > 0 && !acknowledgedRisks;
+
   const finalApi = {
     finalNote, setFinalNote, building, copy, copied,
     verified: !dirty && !fixRequired,
@@ -254,6 +261,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     coverage: liveCoverage,
     recheck,
     result: computeResult(finalNote),
+    chartRisk: { findings: criticalChartFindings, hasUnacknowledgedCritical },
   };
 
   return (
@@ -375,6 +383,19 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
           ) : (
             <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
               <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" /> Every value and statement in this note was verified against what you wrote. Copy it into your EMR.
+            </div>
+          )}
+
+          {criticalChartFindings.length > 0 && (
+            <div className="rounded-xl border-2 border-red-300 bg-red-50 p-4 space-y-2">
+              <h3 className="font-semibold text-red-800 flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Chart safety conflict — review before saving</h3>
+              {criticalChartFindings.map((f) => (
+                <p key={f.id} className="text-sm text-red-800"><span className="font-semibold">{f.category}:</span> {f.message}</p>
+              ))}
+              <label className="flex items-start gap-2 text-sm text-red-900 cursor-pointer pt-1">
+                <input type="checkbox" checked={acknowledgedRisks} onChange={(e) => setAcknowledgedRisks(e.target.checked)} className="w-4 h-4 mt-0.5 text-red-600 rounded shrink-0" />
+                <span>I have reviewed this against the chart and confirm the documentation is correct.</span>
+              </label>
             </div>
           )}
 

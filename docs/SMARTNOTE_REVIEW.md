@@ -339,8 +339,17 @@ pattern, so it never invents a discrepancy.
 **Wiring** — `ConstrainedNoteReviewer` now takes a `patient` prop and renders a
 **Chart Cross-Check** panel (`ChartCrossCheckPanel`) at the top of the review
 step for callers that supply the chart record (`SmartNoteAssistant`,
-`UnifiedDocumentReview`). It is **purely advisory** — it never edits the note or
-feeds the value-guard — and renders nothing when the note is consistent with the
+`UnifiedDocumentReview`). Advisory findings never edit the note or feed the
+value-guard, and the panel renders nothing when the note is consistent with the
 chart.
+
+**Save-time safety gate.** A *critical* cross-check finding (e.g. a documented
+medication the patient is allergic to) previously vanished once the note was
+generated — invisible at the moment of saving. The reviewer now re-surfaces
+critical findings in the final-note view with an explicit acknowledgment
+checkbox, exposes `chartRisk.hasUnacknowledgedCritical` on its `renderFinalNote`
+api, and `SmartNoteAssistant` disables Save-to-chart (with a defensive guard in
+`handleSave`) until the nurse acknowledges the conflict. Copy/PDF stay available;
+only the chart write is gated.
 
 </content>
