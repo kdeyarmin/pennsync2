@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
 import { toast } from "sonner";
 import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
@@ -218,62 +219,18 @@ export default function Dashboard() {
       {/* Admin Announcements */}
       <AnnouncementsWidget />
 
-      {/* Nurse Stats Cards — clean white cards with a restrained accent rule and
-          colored icon chip (navy/gold-forward), instead of fully-saturated tiles. */}
+      {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip). */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        {[
-          {
-            label: "Today's Visits",
-            value: visits.filter(v => v.status === 'scheduled').length,
-            sub: `${visits.filter(v => v.status === 'completed').length} completed`,
-            Icon: Calendar,
-            tile: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-            accent: "from-emerald-400 to-emerald-500",
-          },
-          {
-            label: "Active Care Plans",
-            value: carePlans.length,
-            sub: `${patients.length} patients`,
-            Icon: Target,
-            tile: "bg-navy-50 text-navy-600 ring-navy-100",
-            accent: "from-navy-500 to-navy-600",
-          },
-          {
-            label: "Note Enhancements",
-            value: noteConversions.length,
-            sub: "AI-assisted",
-            Icon: FileText,
-            tile: "bg-slate-100 text-slate-600 ring-slate-200",
-            accent: "from-slate-400 to-slate-500",
-          },
-          {
-            label: "Time Saved",
-            value: stats.timeSavedDisplay,
-            sub: "last 30 days",
-            Icon: Clock,
-            tile: "bg-gold-100 text-gold-600 ring-gold-200",
-            accent: "from-gold-400 to-gold-500",
-          },
-        ].map((s) => {
-          const StatIcon = s.Icon;
-          return (
-            <Card key={s.label} className="relative overflow-hidden">
-              <span className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${s.accent}`} aria-hidden="true" />
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500">{s.label}</p>
-                    <p className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{s.value}</p>
-                    <p className="mt-0.5 text-[10px] sm:text-xs text-slate-400">{s.sub}</p>
-                  </div>
-                  <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ${s.tile}`}>
-                    <StatIcon className="h-5 w-5" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        <StatCard
+          label="Today's Visits"
+          value={visits.filter(v => v.status === 'scheduled').length}
+          sub={`${visits.filter(v => v.status === 'completed').length} completed`}
+          icon={Calendar}
+          tone="emerald"
+        />
+        <StatCard label="Active Care Plans" value={carePlans.length} sub={`${patients.length} patients`} icon={Target} tone="navy" />
+        <StatCard label="Note Enhancements" value={noteConversions.length} sub="AI-assisted" icon={FileText} tone="slate" />
+        <StatCard label="Time Saved" value={stats.timeSavedDisplay} sub="last 30 days" icon={Clock} tone="gold" />
       </div>
 
       {/* Quick Action Buttons — consistent navy hover accent (no rainbow). */}

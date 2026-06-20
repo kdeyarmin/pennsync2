@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -1006,30 +1007,10 @@ Actions available:
         <TabsContent value="intake" className="space-y-4 sm:space-y-6">
       {/* Status Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-3 sm:p-4">
-            <p className="text-blue-100 text-xs sm:text-sm mb-1">New</p>
-            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.new}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
-          <CardContent className="p-3 sm:p-4">
-            <p className="text-yellow-100 text-xs sm:text-sm mb-1">Processing</p>
-            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.processing}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-3 sm:p-4">
-            <p className="text-orange-100 text-xs sm:text-sm mb-1">Awaiting Info</p>
-            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.awaiting_info}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className="p-3 sm:p-4">
-            <p className="text-green-100 text-xs sm:text-sm mb-1">Ready</p>
-            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.ready_for_admission}</p>
-          </CardContent>
-        </Card>
+        <StatCard label="New" value={statusCounts.new} tone="navy" />
+        <StatCard label="Processing" value={statusCounts.processing} tone="amber" />
+        <StatCard label="Awaiting Info" value={statusCounts.awaiting_info} tone="slate" />
+        <StatCard label="Ready" value={statusCounts.ready_for_admission} tone="emerald" />
       </div>
 
       {/* Filters */}

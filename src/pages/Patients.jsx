@@ -24,6 +24,7 @@ import PaginatedPatientList from "../components/patient/PaginatedPatientList";
 import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import StatCard from "@/components/ui/StatCard";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
 import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
@@ -380,32 +381,17 @@ export default function Patients() {
         }
       />
 
-      {/* Roster summary — clean white stat cards (navy/gold), matching the Dashboard. */}
+      {/* Roster summary — shared StatCard treatment, matching the Dashboard. */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[
-          { label: "Total Patients", value: patients.length, Icon: Users, tile: "bg-navy-50 text-navy-600 ring-navy-100", accent: "from-navy-500 to-navy-600" },
-          { label: "Active", value: patients.filter(p => p.status === 'active').length, Icon: UserCheck, tile: "bg-emerald-50 text-emerald-600 ring-emerald-100", accent: "from-emerald-400 to-emerald-500" },
-          { label: "With Care Plans", value: patients.filter(p => (carePlanCountByPatientId[p.id] || 0) > 0).length, Icon: Target, tile: "bg-gold-100 text-gold-600 ring-gold-200", accent: "from-gold-400 to-gold-500" },
-          { label: "New (30 days)", value: patients.filter(p => p.created_date && (Date.now() - new Date(p.created_date).getTime()) <= 30 * 86400000).length, Icon: CalendarPlus, tile: "bg-slate-100 text-slate-600 ring-slate-200", accent: "from-slate-400 to-slate-500" },
-        ].map((s) => {
-          const StatIcon = s.Icon;
-          return (
-            <Card key={s.label} className="relative overflow-hidden">
-              <span className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${s.accent}`} aria-hidden="true" />
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500">{s.label}</p>
-                    <p className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{s.value}</p>
-                  </div>
-                  <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ${s.tile}`}>
-                    <StatIcon className="h-5 w-5" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        <StatCard label="Total Patients" value={patients.length} icon={Users} tone="navy" />
+        <StatCard label="Active" value={patients.filter(p => p.status === 'active').length} icon={UserCheck} tone="emerald" />
+        <StatCard label="With Care Plans" value={patients.filter(p => (carePlanCountByPatientId[p.id] || 0) > 0).length} icon={Target} tone="gold" />
+        <StatCard
+          label="New (30 days)"
+          value={patients.filter(p => p.created_date && (Date.now() - new Date(p.created_date).getTime()) <= 30 * 86400000).length}
+          icon={CalendarPlus}
+          tone="slate"
+        />
       </div>
 
       {showForm && (

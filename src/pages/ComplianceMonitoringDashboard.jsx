@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import StatCard from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -349,65 +350,12 @@ Compliance Management System`;
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <AlertTriangle className="w-8 h-8 text-red-200" />
-            </div>
-            <p className="text-2xl font-bold">{criticalCount}</p>
-            <p className="text-xs text-red-100">Critical Issues</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingDown className="w-8 h-8 text-orange-200" />
-            </div>
-            <p className="text-2xl font-bold">{highCount}</p>
-            <p className="text-xs text-orange-100">High Priority</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Users className="w-8 h-8 text-navy-200" />
-            </div>
-            <p className="text-2xl font-bold">{affectedUsers}</p>
-            <p className="text-xs text-navy-100">Affected Staff</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="w-8 h-8 text-blue-200" />
-            </div>
-            <p className="text-2xl font-bold">{overdueTraining}</p>
-            <p className="text-xs text-blue-100">Overdue Training</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Award className="w-8 h-8 text-green-200" />
-            </div>
-            <p className="text-2xl font-bold">{expiringCreds}</p>
-            <p className="text-xs text-green-100">Expiring Creds</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <FileWarning className="w-8 h-8 text-indigo-200" />
-            </div>
-            <p className="text-2xl font-bold">{incompleteDoc}</p>
-            <p className="text-xs text-indigo-100">Incomplete Docs</p>
-          </CardContent>
-        </Card>
+        <StatCard label="Critical Issues" value={criticalCount} icon={AlertTriangle} tone="red" />
+        <StatCard label="High Priority" value={highCount} icon={TrendingDown} tone="amber" />
+        <StatCard label="Affected Staff" value={affectedUsers} icon={Users} tone="navy" />
+        <StatCard label="Overdue Training" value={overdueTraining} icon={Clock} tone="slate" />
+        <StatCard label="Expiring Creds" value={expiringCreds} icon={Award} tone="gold" />
+        <StatCard label="Incomplete Docs" value={incompleteDoc} icon={FileWarning} tone="navy" />
       </div>
 
       {/* Filters and Actions */}
