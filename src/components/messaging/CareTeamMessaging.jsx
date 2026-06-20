@@ -281,16 +281,16 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
         <CardContent className="space-y-3">
           {/* AI Thread Summary */}
           {threadSummary && (
-            <Alert className="bg-purple-50 border-purple-300">
-              <Sparkles className="w-4 h-4 text-purple-600" />
+            <Alert className="bg-navy-50 border-navy-300">
+              <Sparkles className="w-4 h-4 text-navy-600" />
               <AlertDescription>
-                <p className="text-sm font-semibold text-purple-900 mb-2">AI Thread Summary</p>
-                <p className="text-sm text-purple-800 mb-2">{threadSummary.summary}</p>
+                <p className="text-sm font-semibold text-navy-900 mb-2">AI Thread Summary</p>
+                <p className="text-sm text-navy-800 mb-2">{threadSummary.summary}</p>
                 
                 {threadSummary.key_points?.length > 0 && (
                   <div className="mb-2">
-                    <p className="text-xs font-semibold text-purple-900">Key Points:</p>
-                    <ul className="text-xs text-purple-800 list-disc list-inside">
+                    <p className="text-xs font-semibold text-navy-900">Key Points:</p>
+                    <ul className="text-xs text-navy-800 list-disc list-inside">
                       {threadSummary.key_points.map((point, idx) => (
                         <li key={idx}>{point}</li>
                       ))}
@@ -300,8 +300,8 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
 
                 {threadSummary.action_items?.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-purple-900">Action Items:</p>
-                    <ul className="text-xs text-purple-800 list-disc list-inside">
+                    <p className="text-xs font-semibold text-navy-900">Action Items:</p>
+                    <ul className="text-xs text-navy-800 list-disc list-inside">
                       {threadSummary.action_items.map((item, idx) => (
                         <li key={idx}>{item.action} {item.assigned_to && `(${item.assigned_to})`}</li>
                       ))}
@@ -404,7 +404,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                     </Button>
                     <Button
                       size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 text-xs"
+                      className="bg-navy-600 hover:bg-navy-700 text-xs"
                       onClick={() => window.location.href = createPageUrl(`ReferralAdmissionNote?referral_id=${msg.related_event_id}`)}
                     >
                       <Sparkles className="w-3 h-3 mr-1" />

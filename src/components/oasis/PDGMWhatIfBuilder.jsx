@@ -146,11 +146,11 @@ export default function PDGMWhatIfBuilder({
   if (!scenarioData) return null;
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-indigo-50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-purple-600" />
+            <Sliders className="w-5 h-5 text-navy-600" />
             What-If Scenario Builder
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export default function PDGMWhatIfBuilder({
             </div>
             <div className="text-right">
               <p className="text-xs text-slate-500">Per Episode</p>
-              <p className="text-lg font-semibold text-purple-700">
+              <p className="text-lg font-semibold text-navy-700">
                 {formatCurrency(scenarioRevenue)}
               </p>
             </div>

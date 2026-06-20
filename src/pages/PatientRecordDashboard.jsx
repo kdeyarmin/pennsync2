@@ -196,14 +196,14 @@ export default function PatientRecordDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
+          <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-navy-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Visits (7 days)</p>
-                  <p className="text-3xl font-bold text-purple-900 mt-1">{stats.recentVisits}</p>
+                  <p className="text-sm text-navy-600 font-medium">Visits (7 days)</p>
+                  <p className="text-3xl font-bold text-navy-900 mt-1">{stats.recentVisits}</p>
                 </div>
-                <Calendar className="w-12 h-12 text-purple-500 opacity-50" />
+                <Calendar className="w-12 h-12 text-navy-500 opacity-50" />
               </div>
             </CardContent>
           </Card>

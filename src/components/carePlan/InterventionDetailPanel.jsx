@@ -195,9 +195,9 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-500" />
+              <Sparkles className="w-4 h-4 text-navy-500" />
               <span className="text-sm font-semibold text-slate-700">AI Documentation Guide</span>
-              <span className="text-[10px] text-purple-600 bg-purple-50 border border-purple-200 rounded-full px-1.5 py-0.5 font-medium">AI</span>
+              <span className="text-[10px] text-navy-600 bg-navy-50 border border-navy-200 rounded-full px-1.5 py-0.5 font-medium">AI</span>
             </div>
             {expanded.ai ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </button>
@@ -205,7 +205,7 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
           {expanded.ai && (
             <div className="px-4 pb-4">
               {loadingAI ? (
-                <div className="flex items-center gap-2 text-xs text-purple-600 bg-purple-50 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-xs text-navy-600 bg-navy-50 rounded-lg p-3">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Generating compliance insights...
                 </div>
@@ -213,9 +213,9 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
                 <div className="text-xs text-red-500 bg-red-50 rounded-lg p-2.5">Could not load insights. Please retry.</div>
               ) : aiInsight ? (
                 <div className="space-y-3">
-                  <div className="bg-purple-50 rounded-lg p-2.5 border border-purple-100">
-                    <p className="text-[10px] font-bold text-purple-700 uppercase mb-1">Clinical Rationale</p>
-                    <p className="text-xs text-purple-900 leading-relaxed">{aiInsight.rationale}</p>
+                  <div className="bg-navy-50 rounded-lg p-2.5 border border-navy-100">
+                    <p className="text-[10px] font-bold text-navy-700 uppercase mb-1">Clinical Rationale</p>
+                    <p className="text-xs text-navy-900 leading-relaxed">{aiInsight.rationale}</p>
                   </div>
                   <div className="bg-emerald-50 rounded-lg p-2.5 border border-emerald-100">
                     <p className="text-[10px] font-bold text-emerald-700 uppercase mb-1">💡 Documentation Tip</p>
@@ -228,7 +228,7 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
                 </div>
               ) : (
                 <Button size="sm" variant="outline" className="w-full" onClick={fetchAIInsight}>
-                  <Sparkles className="w-3.5 h-3.5 mr-1.5 text-purple-500" />
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5 text-navy-500" />
                   Generate AI Insights
                 </Button>
               )}

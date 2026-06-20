@@ -280,10 +280,10 @@ Generate a complete, detailed admission note that a skilled nurse would write af
 
   if (!generatedNote) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Admission Note Generator
           </CardTitle>
         </CardHeader>
@@ -293,7 +293,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
           </p>
           <Button 
             onClick={generateAdmissionNote}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Generate Admission Note
@@ -304,12 +304,12 @@ Generate a complete, detailed admission note that a skilled nurse would write af
   }
 
   return (
-    <Card className="border-2 border-purple-300">
+    <Card className="border-2 border-navy-300">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
+              <Sparkles className="w-5 h-5 text-navy-600" />
               AI-Generated Admission Note
             </CardTitle>
             <AIFieldIndicator confidence={95} source="AI Generated" />
@@ -351,7 +351,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
                   size="sm" 
                   variant="outline"
                   onClick={generateAdmissionNote}
-                  className="text-purple-600"
+                  className="text-navy-600"
                 >
                   <Sparkles className="w-4 h-4 mr-1" />
                   Regenerate
@@ -369,7 +369,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
             className="min-h-[600px] font-mono text-sm"
           />
         ) : (
-          <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
+          <div className="bg-navy-50 p-6 rounded-lg border border-navy-200">
             <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 leading-relaxed">
               {generatedNote}
             </pre>

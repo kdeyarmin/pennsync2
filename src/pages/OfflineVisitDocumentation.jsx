@@ -119,14 +119,14 @@ export default function OfflineVisitDocumentation() {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-300 bg-purple-50">
+        <Card className="border-2 border-navy-300 bg-navy-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-700">Total Patients</p>
-                <p className="text-xl font-bold text-purple-700">{patients.length}</p>
+                <p className="text-xl font-bold text-navy-700">{patients.length}</p>
               </div>
-              <Users className="w-8 h-8 text-purple-500" />
+              <Users className="w-8 h-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>

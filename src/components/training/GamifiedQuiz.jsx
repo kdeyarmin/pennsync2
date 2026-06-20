@@ -127,9 +127,9 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
               <p className="text-2xl font-bold text-green-600">{score}/{questions.length}</p>
               <p className="text-sm text-slate-600">Correct</p>
             </div>
-            <div className="p-4 bg-white rounded-lg border-2 border-purple-200">
-              <Star className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-purple-600">{points}</p>
+            <div className="p-4 bg-white rounded-lg border-2 border-navy-200">
+              <Star className="w-8 h-8 text-navy-600 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-navy-600">{points}</p>
               <p className="text-sm text-slate-600">Points</p>
             </div>
             <div className="p-4 bg-white rounded-lg border-2 border-orange-200">
@@ -176,9 +176,9 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
               <span className="text-sm font-bold text-orange-600">{streak}</span>
             </div>
             {/* Points */}
-            <div className="flex items-center gap-1 px-3 py-1 bg-purple-100 rounded-full">
-              <Star className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-bold text-purple-600">{points}</span>
+            <div className="flex items-center gap-1 px-3 py-1 bg-navy-100 rounded-full">
+              <Star className="w-4 h-4 text-navy-600" />
+              <span className="text-sm font-bold text-navy-600">{points}</span>
             </div>
             {/* Timer */}
             <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${
@@ -219,7 +219,7 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
                     className={`flex items-center space-x-2 p-4 border-2 rounded-lg transition-all ${
                       showCorrect ? 'border-green-500 bg-green-50' :
                       showWrong ? 'border-red-500 bg-red-50' :
-                      isSelected ? 'border-purple-500 bg-purple-50' :
+                      isSelected ? 'border-navy-500 bg-navy-50' :
                       'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >

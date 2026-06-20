@@ -217,7 +217,7 @@ export default function NotificationPreferences({ currentUser }) {
 
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center gap-3">
-              <Smartphone className="w-5 h-5 text-purple-600" />
+              <Smartphone className="w-5 h-5 text-navy-600" />
               <div>
                 <Label htmlFor="push-toggle" className="text-base font-medium">
                   Push Notifications

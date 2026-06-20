@@ -197,7 +197,7 @@ ${editedNote}`,
                           variant="outline"
                           className={
                             treatment.category === 'medication' ? 'bg-blue-50 text-blue-700' :
-                            treatment.category === 'therapy' ? 'bg-purple-50 text-purple-700' :
+                            treatment.category === 'therapy' ? 'bg-navy-50 text-navy-700' :
                             treatment.category === 'monitoring' ? 'bg-orange-50 text-orange-700' :
                             'bg-green-50 text-green-700'
                           }

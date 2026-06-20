@@ -11,7 +11,7 @@ export default function Breadcrumbs({ currentPageName, customPath = [] }) {
     <nav className="mb-4 flex items-center space-x-1 overflow-x-auto py-2 text-sm text-slate-600">
       <Link
         to={createPageUrl("Dashboard")}
-        className="flex flex-shrink-0 items-center transition-colors hover:text-indigo-600"
+        className="flex flex-shrink-0 items-center transition-colors hover:text-navy-700"
       >
         <Home className="w-4 h-4" />
       </Link>
@@ -22,7 +22,7 @@ export default function Breadcrumbs({ currentPageName, customPath = [] }) {
           {crumb.page && index < breadcrumbs.length - 1 ? (
             <Link
               to={createPageUrl(crumb.page)}
-              className="whitespace-nowrap transition-colors hover:text-indigo-600"
+              className="whitespace-nowrap transition-colors hover:text-navy-700"
             >
               {crumb.label}
             </Link>

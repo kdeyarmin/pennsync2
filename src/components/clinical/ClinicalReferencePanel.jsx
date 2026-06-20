@@ -180,14 +180,14 @@ const VITALS_REFERENCE = [
 const categoryColors = {
   wound: "bg-orange-100 text-orange-800",
   safety: "bg-yellow-100 text-yellow-800",
-  mental: "bg-purple-100 text-purple-800",
+  mental: "bg-navy-100 text-navy-800",
   functional: "bg-blue-100 text-blue-800",
   pain: "bg-red-100 text-red-800",
   neurological: "bg-indigo-100 text-indigo-800",
   cardiac: "bg-rose-100 text-rose-800",
   diabetes: "bg-emerald-100 text-emerald-800",
-  medication: "bg-cyan-100 text-cyan-800",
-  respiratory: "bg-sky-100 text-sky-800",
+  medication: "bg-navy-100 text-navy-800",
+  respiratory: "bg-navy-100 text-navy-800",
 };
 
 export default function ClinicalReferencePanel() {

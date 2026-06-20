@@ -149,8 +149,8 @@ export default function OASISComparisonView({
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-purple-200">
-        <CardHeader className="py-4 bg-gradient-to-r from-purple-50 to-blue-50">
+      <Card className="border-2 border-navy-200">
+        <CardHeader className="py-4 bg-gradient-to-r from-navy-50 to-blue-50">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">

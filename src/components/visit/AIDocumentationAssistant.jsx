@@ -197,7 +197,7 @@ Return JSON:
     switch (category) {
       case 'assessment': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'intervention': return 'bg-green-100 text-green-800 border-green-200';
-      case 'education': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'education': return 'bg-navy-100 text-navy-800 border-navy-200';
       case 'compliance': return 'bg-orange-100 text-orange-800 border-orange-200';
       default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
@@ -215,7 +215,7 @@ Return JSON:
   if (!patient || !visit) return null;
 
   return (
-    <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50">
+    <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-navy-50">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-indigo-900">
@@ -405,13 +405,13 @@ Return JSON:
 
               {/* Education Topics */}
               {suggestions.education_topics?.length > 0 && (
-                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="text-xs font-semibold text-purple-800 mb-2">
+                <div className="p-3 bg-navy-50 rounded-lg border border-navy-200">
+                  <p className="text-xs font-semibold text-navy-800 mb-2">
                     📚 Relevant Patient Education Topics
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {suggestions.education_topics.map((topic, idx) => (
-                      <Badge key={idx} className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                      <Badge key={idx} className="bg-navy-100 text-navy-800 border-navy-200 text-xs">
                         {topic}
                       </Badge>
                     ))}

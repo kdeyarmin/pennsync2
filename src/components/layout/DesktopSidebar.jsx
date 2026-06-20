@@ -5,6 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, ChevronLeft, ChevronRight, Sparkles, Users, LogOut, Search } from "lucide-react";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 
+// Active nav item: light navy tint with a gold left indicator bar.
+function navItemClasses(active) {
+  return `group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+    active
+      ? "bg-navy-50 text-navy-800 font-semibold"
+      : "text-slate-600 hover:bg-slate-100 hover:text-navy-700"
+  }`;
+}
+
+function GoldIndicator() {
+  return <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-gold-400" aria-hidden="true" />;
+}
+
 export default function DesktopSidebar({
   collapsed, onToggleCollapse,
   currentUser, isAdmin,
@@ -12,20 +25,24 @@ export default function DesktopSidebar({
   isActive, onLogout,
 }) {
   return (
-    <aside className={`hidden md:flex flex-col bg-slate-900 border-r border-slate-700/60 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0 flex-shrink-0`}>
+    <aside className={`hidden md:flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0 flex-shrink-0`}>
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-3 border-b border-slate-700/60 flex-shrink-0">
+      <div className="h-16 flex items-center justify-between px-3 border-b border-slate-200 flex-shrink-0">
         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 min-w-0">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png"
             alt="Penn Sync Logo"
             className="w-8 h-8 rounded-lg flex-shrink-0"
           />
-          {!collapsed && <span className="font-bold text-base text-white truncate">Penn Sync</span>}
+          {!collapsed && (
+            <span className="font-bold text-base text-navy-900 truncate tracking-tight">
+              Penn<span className="text-gold-600">Sync</span>
+            </span>
+          )}
         </Link>
         <Button
           variant="ghost" size="icon"
-          className="h-7 w-7 text-slate-400 hover:text-white hover:bg-slate-700 flex-shrink-0"
+          className="h-7 w-7 text-slate-400 hover:text-navy-700 hover:bg-slate-100 flex-shrink-0"
           onClick={onToggleCollapse}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -38,21 +55,21 @@ export default function DesktopSidebar({
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
-          className={`flex items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors mb-2 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'w-full px-3 py-2'}`}
+          className={`flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-navy-700 transition-colors mb-2 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'w-full px-3 py-2'}`}
           title="Search pages (Ctrl/Cmd+K)"
         >
           <Search className="w-4 h-4 flex-shrink-0" />
           {!collapsed && (
             <>
               <span className="text-sm flex-1 text-left">Search…</span>
-              <kbd className="text-[10px] font-mono bg-slate-700/70 text-slate-300 rounded px-1.5 py-0.5 border border-slate-600/60">⌘K</kbd>
+              <kbd className="text-[10px] font-mono bg-white text-slate-500 rounded px-1.5 py-0.5 border border-slate-200">⌘K</kbd>
             </>
           )}
         </button>
         {!collapsed && (
-          <div className="flex items-center gap-2 px-3 py-1.5 mb-2 bg-emerald-900/40 border border-emerald-700/40 rounded-lg">
-            <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-            <span className="text-xs font-semibold text-emerald-400">Secure Session</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 mb-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <Shield className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+            <span className="text-xs font-semibold text-emerald-700">Secure Session</span>
           </div>
         )}
 
@@ -60,7 +77,7 @@ export default function DesktopSidebar({
         {(currentUser?.favorited_pages?.length > 0 || currentUser?.favorited_patients?.length > 0) && (
           <>
             {!collapsed && (
-              <p className="px-3 py-1 text-xs font-semibold text-amber-400 uppercase flex items-center gap-1 mt-2">
+              <p className="px-3 py-1 text-xs font-semibold text-gold-600 uppercase flex items-center gap-1 mt-2">
                 <Sparkles className="w-3 h-3" /> Favorites
               </p>
             )}
@@ -68,13 +85,15 @@ export default function DesktopSidebar({
               const allItems = navCategories.flatMap(cat => cat.items).concat(adminItems.flatMap(a => a.items));
               const pageItem = allItems.find(item => item.page === pageName);
               if (!pageItem) return null;
+              const active = isActive(pageName);
               return (
                 <Link
                   key={`fav-${pageName}`}
                   to={createPageUrl(pageName)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(pageName) ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"}`}
+                  className={navItemClasses(active)}
                   title={collapsed ? pageItem.name : undefined}
                 >
+                  {active && <GoldIndicator />}
                   <pageItem.icon className="w-4 h-4 flex-shrink-0" />
                   {!collapsed && <span className="truncate">{pageItem.name}</span>}
                 </Link>
@@ -84,62 +103,62 @@ export default function DesktopSidebar({
               <Link
                 key={`fav-patient-${patient.id}`}
                 to={createPageUrl(`PatientDetails?id=${patient.id}`)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-navy-700"
                 title={collapsed ? patient.name : undefined}
               >
                 <Users className="w-4 h-4 flex-shrink-0" />
                 {!collapsed && <span className="truncate">{patient.name}</span>}
               </Link>
             ))}
-            <div className="border-t border-slate-700/60 my-2" />
+            <div className="border-t border-slate-200 my-2" />
           </>
         )}
 
         {navCategories.map((category, catIndex) => (
           <div key={catIndex}>
             {category.category && !collapsed && (
-              <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 {category.category}
               </p>
             )}
-            {category.items.map((item) => (
-              <Link
-                key={item.page}
-                to={createPageUrl(item.page)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-                  isActive(item.page)
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                }`}
-                title={collapsed ? item.name : undefined}
-              >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && (
-                  <span className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="truncate">{item.name}</span>
-                    {item.badge > 0 && (
-                      <Badge className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 ml-auto flex-shrink-0 h-5 min-w-[20px] flex items-center justify-center">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </span>
-                )}
-                {collapsed && item.badge > 0 && (
-                  <div className="absolute right-1 top-1 w-2 h-2 bg-red-500 rounded-full" />
-                )}
-              </Link>
-            ))}
-            {catIndex === 0 && <div className="border-t border-slate-700/60 my-2" />}
+            {category.items.map((item) => {
+              const active = isActive(item.page);
+              return (
+                <Link
+                  key={item.page}
+                  to={createPageUrl(item.page)}
+                  className={navItemClasses(active)}
+                  title={collapsed ? item.name : undefined}
+                >
+                  {active && <GoldIndicator />}
+                  <item.icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-navy-600' : ''}`} />
+                  {!collapsed && (
+                    <span className="flex items-center gap-2 flex-1 min-w-0">
+                      <span className="truncate">{item.name}</span>
+                      {item.badge > 0 && (
+                        <Badge className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 ml-auto flex-shrink-0 h-5 min-w-[20px] flex items-center justify-center">
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </span>
+                  )}
+                  {collapsed && item.badge > 0 && (
+                    <div className="absolute right-1 top-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </Link>
+              );
+            })}
+            {catIndex === 0 && <div className="border-t border-slate-200 my-2" />}
           </div>
         ))}
 
         {isAdmin && (
           <>
-            <div className="border-t border-slate-700/60 my-2" />
+            <div className="border-t border-slate-200 my-2" />
             {adminItems.map((category, catIndex) => (
               <div key={catIndex}>
                 {category.category && !collapsed && (
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     {category.category}
                   </p>
                 )}
@@ -148,7 +167,7 @@ export default function DesktopSidebar({
                     <button
                       key={item.name}
                       onClick={item.action}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-slate-300 hover:bg-slate-800 hover:text-white w-full relative"
+                      className={`${navItemClasses(false)} w-full`}
                       title={collapsed ? item.name : undefined}
                     >
                       <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -167,22 +186,24 @@ export default function DesktopSidebar({
                       )}
                     </button>
                   ) : (
-                    <Link
-                      key={item.page}
-                      to={createPageUrl(item.page)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isActive(item.page)
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                      }`}
-                      title={collapsed ? item.name : undefined}
-                    >
-                      <item.icon className="w-4 h-4 flex-shrink-0" />
-                      {!collapsed && <span className="truncate">{item.name}</span>}
-                    </Link>
+                    (() => {
+                      const active = isActive(item.page);
+                      return (
+                        <Link
+                          key={item.page}
+                          to={createPageUrl(item.page)}
+                          className={navItemClasses(active)}
+                          title={collapsed ? item.name : undefined}
+                        >
+                          {active && <GoldIndicator />}
+                          <item.icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-navy-600' : ''}`} />
+                          {!collapsed && <span className="truncate">{item.name}</span>}
+                        </Link>
+                      );
+                    })()
                   )
                 )}
-                {catIndex === 0 && <div className="border-t border-slate-700/60 my-2" />}
+                {catIndex === 0 && <div className="border-t border-slate-200 my-2" />}
               </div>
             ))}
           </>
@@ -190,22 +211,22 @@ export default function DesktopSidebar({
       </nav>
 
       {/* User Footer */}
-      <div className="border-t border-slate-700/60 p-3 flex-shrink-0">
+      <div className="border-t border-slate-200 p-3 flex-shrink-0">
         {!collapsed && <FeedbackButton />}
         <div className={`flex items-center gap-2 mt-2 ${collapsed ? 'justify-center flex-col' : ''}`}>
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+          <div className="w-8 h-8 bg-gradient-to-br from-navy-500 to-navy-700 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
             {currentUser?.full_name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{currentUser?.full_name || 'User'}</p>
-              <p className="text-xs text-slate-400 truncate">{currentUser?.role || 'user'}</p>
+              <p className="text-sm font-medium text-slate-900 truncate">{currentUser?.full_name || 'User'}</p>
+              <p className="text-xs text-slate-500 truncate capitalize">{currentUser?.role || 'user'}</p>
             </div>
           )}
           <Button
             variant="ghost" size="icon"
             onClick={onLogout}
-            className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-slate-800 flex-shrink-0"
+            className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-slate-100 flex-shrink-0"
             title="Logout"
           >
             <LogOut className="w-4 h-4" />

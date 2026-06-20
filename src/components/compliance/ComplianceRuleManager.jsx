@@ -41,7 +41,7 @@ import {
 
 const RULE_CATEGORIES = [
   { value: 'oasis', label: 'OASIS', color: 'bg-blue-100 text-blue-800' },
-  { value: 'medicare_cop', label: 'Medicare CoP', color: 'bg-purple-100 text-purple-800' },
+  { value: 'medicare_cop', label: 'Medicare CoP', color: 'bg-navy-100 text-navy-800' },
   { value: 'state_regulation', label: 'State Regulation', color: 'bg-green-100 text-green-800' },
   { value: 'agency_policy', label: 'Agency Policy', color: 'bg-orange-100 text-orange-800' },
   { value: 'hipaa', label: 'HIPAA', color: 'bg-red-100 text-red-800' },

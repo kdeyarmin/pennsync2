@@ -150,10 +150,10 @@ Focus on tasks that require specialized expertise or coordination.`,
   }
 
   return (
-    <Card className="border-2 border-purple-300">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 pb-3">
+    <Card className="border-2 border-navy-300">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50 pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <UserCog className="w-5 h-5 text-purple-600" />
+          <UserCog className="w-5 h-5 text-navy-600" />
           AI Task Assignment Generator
         </CardTitle>
       </CardHeader>
@@ -168,7 +168,7 @@ Focus on tasks that require specialized expertise or coordination.`,
         {!suggestedTasks.length && !isGenerating && (
           <Button
             onClick={generateTaskAssignments}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             <Brain className="w-4 h-4 mr-2" />
             Generate Task Assignments
@@ -177,7 +177,7 @@ Focus on tasks that require specialized expertise or coordination.`,
 
         {isGenerating && (
           <div className="text-center py-6">
-            <Loader2 className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-2" />
+            <Loader2 className="w-8 h-8 text-navy-600 animate-spin mx-auto mb-2" />
             <p className="text-sm text-slate-600">Generating task assignments...</p>
           </div>
         )}
@@ -225,7 +225,7 @@ Focus on tasks that require specialized expertise or coordination.`,
               <Button
                 onClick={handleCreateTasks}
                 disabled={selectedTasks.length === 0 || isCreating}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
+                className="flex-1 bg-navy-600 hover:bg-navy-700"
               >
                 {isCreating ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

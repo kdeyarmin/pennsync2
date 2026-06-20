@@ -344,7 +344,7 @@ export default function PDGMMultiReportComparison({
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-lg flex items-center gap-2">
           <GitCompare className="w-5 h-5 text-indigo-600" />
           Multi-Report PDGM Comparison
@@ -394,9 +394,9 @@ export default function PDGMMultiReportComparison({
           </TabsContent>
 
           <TabsContent value="reports" className="mt-4 space-y-3">
-            <Alert className="bg-purple-50 border-purple-200">
-              <Info className="w-4 h-4 text-purple-600" />
-              <AlertDescription className="text-purple-800 text-sm">
+            <Alert className="bg-navy-50 border-navy-200">
+              <Info className="w-4 h-4 text-navy-600" />
+              <AlertDescription className="text-navy-800 text-sm">
                 Compare two OASIS analysis reports side-by-side to identify differences.
               </AlertDescription>
             </Alert>
@@ -623,17 +623,17 @@ export default function PDGMMultiReportComparison({
             {comparisonResult.adminChanges.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-purple-600" />
+                  <Heart className="w-4 h-4 text-navy-600" />
                   Admission & Timing Changes
                 </p>
                 {comparisonResult.adminChanges.map((change, idx) => (
-                  <div key={idx} className="p-2 rounded border bg-purple-50 border-purple-200 text-xs">
+                  <div key={idx} className="p-2 rounded border bg-navy-50 border-navy-200 text-xs">
                     <span className="font-medium">{change.label}: </span>
                     <span className="capitalize">{change.valueA}</span>
                     <span className="text-slate-400 mx-1">(×{change.multiplierA?.toFixed(2)})</span>
                     <ArrowRight className="w-3 h-3 inline mx-1" />
-                    <span className="capitalize font-medium text-purple-700">{change.valueB}</span>
-                    <span className="text-purple-500 mx-1">(×{change.multiplierB?.toFixed(2)})</span>
+                    <span className="capitalize font-medium text-navy-700">{change.valueB}</span>
+                    <span className="text-navy-500 mx-1">(×{change.multiplierB?.toFixed(2)})</span>
                   </div>
                 ))}
               </div>

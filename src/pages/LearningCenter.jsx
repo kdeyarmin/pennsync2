@@ -501,7 +501,7 @@ export default function LearningCenter() {
           { label: 'Overdue', value: overdueAssignments.length, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
           { label: 'Due This Week', value: dueSoonAssignments.length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
           { label: 'Completed', value: completedAssignments.length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-          { label: 'Certificates', value: certificates.length, icon: Award, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+          { label: 'Certificates', value: certificates.length, icon: Award, color: 'text-navy-600', bg: 'bg-navy-50', border: 'border-navy-200' },
           { label: 'Competencies', value: competencies.length, icon: Target, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
         ].map(item => {
           const Icon = item.icon;
@@ -629,12 +629,12 @@ export default function LearningCenter() {
 
       {/* Continuing Education (CEU) earned */}
       {ceu.total > 0 && (
-        <Card className="border-purple-200 bg-purple-50/30">
+        <Card className="border-navy-200 bg-navy-50/30">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-6 h-6 text-purple-600" />
+                <div className="w-11 h-11 bg-navy-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-6 h-6 text-navy-600" />
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900">Continuing Education Earned</h3>
@@ -642,7 +642,7 @@ export default function LearningCenter() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-3xl font-bold text-purple-600">{ceu.total}</p>
+                <p className="text-3xl font-bold text-navy-600">{ceu.total}</p>
                 <p className="text-xs text-slate-500">CEU hours</p>
               </div>
             </div>
@@ -675,7 +675,7 @@ export default function LearningCenter() {
                   { label: 'Points', value: leaderboardEntry.total_points || 0, icon: Trophy, color: 'text-amber-600' },
                   { label: 'Badges', value: leaderboardEntry.badges_earned || 0, icon: Award, color: 'text-blue-600' },
                   { label: 'Day Streak', value: leaderboardEntry.current_streak || 0, icon: Flame, color: 'text-orange-600' },
-                  { label: 'Perfect Scores', value: leaderboardEntry.perfect_scores || 0, icon: Star, color: 'text-purple-600' },
+                  { label: 'Perfect Scores', value: leaderboardEntry.perfect_scores || 0, icon: Star, color: 'text-navy-600' },
                 ].map(item => {
                   const Icon = item.icon;
                   return (
@@ -1008,7 +1008,7 @@ export default function LearningCenter() {
                           <Badge className="bg-indigo-100 text-indigo-700 text-xs">Annual</Badge>
                         )}
                         {course.training_type === 'in_service' && (
-                          <Badge className="bg-purple-100 text-purple-700 text-xs">In-Service</Badge>
+                          <Badge className="bg-navy-100 text-navy-700 text-xs">In-Service</Badge>
                         )}
                         {isRequiredCourse(course) && (
                           <Badge className="bg-rose-100 text-rose-700 text-xs">Required</Badge>

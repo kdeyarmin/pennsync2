@@ -43,21 +43,21 @@ const educationTopics = [
     id: 'copd',
     title: 'COPD',
     icon: Activity,
-    color: 'from-blue-500 to-cyan-500',
+    color: 'from-blue-500 to-navy-500',
     description: 'Breathing techniques, medication management, and lifestyle tips for COPD patients.'
   },
   {
     id: 'copd_oxygen',
     title: 'Home Oxygen Therapy',
     icon: Activity,
-    color: 'from-sky-500 to-blue-500',
+    color: 'from-navy-500 to-blue-500',
     description: 'Safe use of home oxygen equipment, oxygen therapy guidelines, and troubleshooting.'
   },
   {
     id: 'diabetes',
     title: 'Diabetes Management',
     icon: Droplet,
-    color: 'from-purple-500 to-indigo-500',
+    color: 'from-navy-500 to-indigo-500',
     description: 'Blood sugar monitoring, diet, medications, and preventing diabetes complications.'
   },
   {
@@ -92,7 +92,7 @@ const educationTopics = [
     id: 'pain_management',
     title: 'Pain Management',
     icon: AlertCircle,
-    color: 'from-pink-500 to-purple-500',
+    color: 'from-pink-500 to-navy-500',
     description: 'Managing pain safely with medications and non-drug approaches.'
   },
   {
@@ -113,7 +113,7 @@ const educationTopics = [
     id: 'dementia_care',
     title: 'Dementia & Memory Care',
     icon: Brain,
-    color: 'from-violet-500 to-purple-500',
+    color: 'from-navy-500 to-navy-500',
     description: 'Communication strategies, daily care tips, and caregiver support for dementia.'
   },
   {
@@ -134,7 +134,7 @@ const educationTopics = [
     id: 'pneumonia',
     title: 'Pneumonia Recovery',
     icon: Activity,
-    color: 'from-cyan-500 to-blue-500',
+    color: 'from-navy-500 to-blue-500',
     description: 'Recovery tips, breathing exercises, and preventing pneumonia complications.'
   },
   {
@@ -148,14 +148,14 @@ const educationTopics = [
     id: 'parkinsons',
     title: 'Parkinson\'s Disease',
     icon: Brain,
-    color: 'from-purple-500 to-pink-500',
+    color: 'from-navy-500 to-pink-500',
     description: 'Living with Parkinson\'s, medication management, and daily living strategies.'
   },
   {
     id: 'catheter_care',
     title: 'Urinary Catheter Care',
     icon: Droplet,
-    color: 'from-teal-500 to-cyan-500',
+    color: 'from-teal-500 to-navy-500',
     description: 'Daily catheter care, preventing infection, and managing drainage bags.'
   },
   {

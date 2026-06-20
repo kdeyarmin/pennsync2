@@ -384,7 +384,7 @@ Return as JSON:
                     <p className="text-xs text-slate-600 mt-1">Completion Rate</p>
                   </div>
                   <div className="bg-white rounded-lg p-4 border border-slate-200 text-center">
-                    <p className="text-2xl font-bold text-purple-600">
+                    <p className="text-2xl font-bold text-navy-600">
                       {report.operational_metrics?.avg_visits_per_patient?.toFixed(1)}
                     </p>
                     <p className="text-xs text-slate-600 mt-1">Avg Visits/Patient</p>

@@ -426,7 +426,7 @@ export default function PatientDetails() {
                 {patient.payor && (
                   <div>
                     <p className="text-sm font-medium text-slate-500">Payor</p>
-                    <Badge className="bg-purple-100 text-purple-800">{sanitizeInput(patient.payor)}</Badge>
+                    <Badge className="bg-navy-100 text-navy-800">{sanitizeInput(patient.payor)}</Badge>
                   </div>
                 )}
               </CardContent>
@@ -788,13 +788,13 @@ export default function PatientDetails() {
 
       {/* OASIS Generation Prompt */}
       {showOASISPrompt && oasisTriggerVisit && (
-        <Alert className="mb-6 bg-purple-50 border-purple-300">
-          <Sparkles className="w-4 h-4 text-purple-600" />
+        <Alert className="mb-6 bg-navy-50 border-navy-300">
+          <Sparkles className="w-4 h-4 text-navy-600" />
           <AlertDescription>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-purple-900 mb-1">OASIS Assessment Required</p>
-                <p className="text-sm text-purple-800">
+                <p className="font-semibold text-navy-900 mb-1">OASIS Assessment Required</p>
+                <p className="text-sm text-navy-800">
                   A {oasisTriggerVisit.visit_type} visit has been created. Generate OASIS assessment now?
                 </p>
               </div>
@@ -808,7 +808,7 @@ export default function PatientDetails() {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-navy-600 hover:bg-navy-700"
                   onClick={() => {
                     setShowOASISPrompt(false);
                   }}

@@ -256,17 +256,17 @@ Return JSON with GRANULAR compliance analysis:
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-b from-purple-50 to-white">
+    <Card className="border-2 border-navy-300 bg-gradient-to-b from-navy-50 to-white">
       <CardHeader className="py-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-purple-600" />
+            <Shield className="w-5 h-5 text-navy-600" />
             Guideline-Based Compliance Check
           </CardTitle>
           <Button
             onClick={checkCompliance}
             disabled={isChecking || !noteContent || noteContent.length < 50}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isChecking ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking...</>
@@ -290,7 +290,7 @@ Return JSON with GRANULAR compliance analysis:
         {complianceResults && (
           <>
             {/* Overall Score */}
-            <div className="p-4 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg border-2 border-purple-200">
+            <div className="p-4 bg-gradient-to-r from-navy-100 to-blue-100 rounded-lg border-2 border-navy-200">
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <p className="text-sm text-slate-700">Guideline Compliance Score</p>

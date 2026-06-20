@@ -199,11 +199,11 @@ Return JSON:
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Documentation Assistant
           </div>
           {suggestions && (
@@ -221,14 +221,14 @@ Return JSON:
       <CardContent className="space-y-4 pt-4">
         {isGenerating ? (
           <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
+            <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">AI is analyzing your documentation and generating improvement suggestions...</p>
             <p className="text-xs text-slate-400 mt-1">Creating specific examples and templates</p>
           </div>
         ) : !suggestions ? (
           <Button
             onClick={generateSuggestions}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             <Sparkles className="w-4 h-4 mr-2" /> Generate Documentation Suggestions
           </Button>
@@ -236,7 +236,7 @@ Return JSON:
           <>
             {/* Summary Alert */}
             <Alert className={`${getPriorityColor(suggestions.priority_level).bg} border-2 ${getPriorityColor(suggestions.priority_level).border}`}>
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <Sparkles className="w-4 h-4 text-navy-600" />
               <AlertDescription className={suggestions.priority_level.text}>
                 <p className="font-semibold mb-1">{suggestions.summary}</p>
                 <p className="text-sm">{suggestions.overall_recommendation}</p>
@@ -310,7 +310,7 @@ Return JSON:
                       <AccordionTrigger className={`px-4 py-3 hover:no-underline ${colors.bg} rounded-t-lg`}>
                         <div className="flex items-center justify-between w-full pr-4">
                           <div className="flex items-center gap-2">
-                            <CategoryIcon className="w-4 h-4 text-purple-600" />
+                            <CategoryIcon className="w-4 h-4 text-navy-600" />
                             <span className="font-medium text-slate-800">{suggestion.oasis_item}</span>
                             <Badge className={getPriorityBadge(suggestion.priority)}>
                               {suggestion.priority}
@@ -405,8 +405,8 @@ Return JSON:
 
                           {/* M-Item Impact */}
                           {suggestion.m_item_scoring_impact && (
-                            <div className="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
-                              <p className="font-medium text-purple-700">Scoring Impact: {suggestion.m_item_scoring_impact}</p>
+                            <div className="bg-navy-50 p-2 rounded border border-navy-200 text-xs">
+                              <p className="font-medium text-navy-700">Scoring Impact: {suggestion.m_item_scoring_impact}</p>
                             </div>
                           )}
 

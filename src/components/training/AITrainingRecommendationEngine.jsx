@@ -142,24 +142,24 @@ Return JSON:
   };
 
   return (
-    <Card className="border-2 border-purple-200">
+    <Card className="border-2 border-navy-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-navy-600" />
           AI Training Recommendations
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {!recommendations ? (
           <div className="text-center py-8">
-            <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-3" />
+            <Sparkles className="w-12 h-12 text-navy-400 mx-auto mb-3" />
             <p className="text-slate-600 mb-4">
               AI will analyze performance data, audit findings, and alerts to recommend targeted training
             </p>
             <Button
               onClick={analyzeTrainingNeeds}
               disabled={isAnalyzing}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isAnalyzing ? (
                 <>
@@ -177,8 +177,8 @@ Return JSON:
         ) : (
           <div className="space-y-4">
             {/* Overall Assessment */}
-            <Alert className="bg-purple-50 border-purple-200">
-              <AlertTriangle className="w-4 h-4 text-purple-600" />
+            <Alert className="bg-navy-50 border-navy-200">
+              <AlertTriangle className="w-4 h-4 text-navy-600" />
               <AlertDescription>
                 <p className="font-semibold mb-1">Performance Assessment</p>
                 <p className="text-sm">{recommendations.overall_assessment}</p>
@@ -231,7 +231,7 @@ Return JSON:
                           <Button
                             size="sm"
                             onClick={() => onAssignTraining(training)}
-                            className="bg-purple-600 hover:bg-purple-700"
+                            className="bg-navy-600 hover:bg-navy-700"
                           >
                             Assign
                           </Button>

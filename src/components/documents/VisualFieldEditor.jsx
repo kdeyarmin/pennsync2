@@ -75,7 +75,7 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
       number: "bg-orange-100",
       select: "bg-indigo-100",
       checkbox: "bg-yellow-100",
-      signature: "bg-purple-100",
+      signature: "bg-navy-100",
     };
 
     return colorMap[type] || "bg-slate-100";
@@ -188,7 +188,7 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                       <p className="text-xs text-slate-600 bg-slate-50 p-1 rounded">Default: {field.default_value}</p>
                     )}
                     {field.conditional && (
-                      <p className="text-xs text-purple-600 bg-purple-50 p-1 rounded">Conditional visibility</p>
+                      <p className="text-xs text-navy-600 bg-navy-50 p-1 rounded">Conditional visibility</p>
                     )}
                   </div>
                 </Card>

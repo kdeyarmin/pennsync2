@@ -117,14 +117,14 @@ export default function ReferralTriage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-purple-50 border-purple-200">
+        <Card className="bg-navy-50 border-navy-200">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-1" />
+              <AlertCircle className="w-5 h-5 text-navy-600 flex-shrink-0 mt-1" />
               <div>
-                <p className="text-xs text-purple-600 font-semibold uppercase">Risk Flagged</p>
-                <p className="text-2xl font-bold text-purple-900">Auto</p>
-                <p className="text-xs text-purple-600 mt-1">priority assignment</p>
+                <p className="text-xs text-navy-600 font-semibold uppercase">Risk Flagged</p>
+                <p className="text-2xl font-bold text-navy-900">Auto</p>
+                <p className="text-xs text-navy-600 mt-1">priority assignment</p>
               </div>
             </div>
           </CardContent>

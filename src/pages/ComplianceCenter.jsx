@@ -462,16 +462,16 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </div>
 
           {aiInsights && (
-            <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+            <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-600" />
+                  <BarChart3 className="w-5 h-5 text-navy-600" />
                   AI Strategic Insights
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-white p-4 rounded-lg border-2 border-purple-200">
-                  <h3 className="font-bold text-purple-900 mb-2">Overall Assessment</h3>
+                <div className="bg-white p-4 rounded-lg border-2 border-navy-200">
+                  <h3 className="font-bold text-navy-900 mb-2">Overall Assessment</h3>
                   <p className="text-slate-700">{aiInsights.overall_assessment}</p>
                 </div>
                 {aiInsights.action_plan && (
@@ -539,11 +539,11 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none">
+            <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white border-none">
               <CardContent className="p-4">
-                <Users className="w-8 h-8 text-purple-200 mb-2" />
+                <Users className="w-8 h-8 text-navy-200 mb-2" />
                 <p className="text-2xl font-bold">{affectedUsers}</p>
-                <p className="text-xs text-purple-100">Affected Staff</p>
+                <p className="text-xs text-navy-100">Affected Staff</p>
               </CardContent>
             </Card>
 

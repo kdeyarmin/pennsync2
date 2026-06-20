@@ -221,10 +221,10 @@ Provide detailed comparison showing what changed and why.`;
   };
 
   return (
-    <Card className="border-2 border-cyan-400 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50">
+    <Card className="border-2 border-navy-400 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-blue-50">
         <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="w-6 h-6 text-cyan-600" />
+          <Lightbulb className="w-6 h-6 text-navy-600" />
           PDGM Scenario Modeler
         </CardTitle>
       </CardHeader>
@@ -251,10 +251,10 @@ Provide detailed comparison showing what changed and why.`;
             </div>
 
             {/* Functional Scores */}
-            <Card className="border-purple-200">
-              <CardHeader className="pb-3 bg-purple-50">
+            <Card className="border-navy-200">
+              <CardHeader className="pb-3 bg-navy-50">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-purple-600" />
+                  <Activity className="w-4 h-4 text-navy-600" />
                   Functional Scores
                 </CardTitle>
               </CardHeader>
@@ -368,7 +368,7 @@ Provide detailed comparison showing what changed and why.`;
               <Button
                 onClick={runSimulation}
                 disabled={isSimulating}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                className="flex-1 bg-navy-600 hover:bg-navy-700"
               >
                 {isSimulating ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Simulating...</>
@@ -410,7 +410,7 @@ Provide detailed comparison showing what changed and why.`;
                         </p>
                       </div>
                       <div className="flex items-center justify-center">
-                        <ArrowRight className="w-6 h-6 text-cyan-600" />
+                        <ArrowRight className="w-6 h-6 text-navy-600" />
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded border-2 border-green-400">
                         <p className="text-xs text-green-600 mb-1">Simulated</p>
@@ -452,10 +452,10 @@ Provide detailed comparison showing what changed and why.`;
                 </Card>
 
                 {/* Functional Analysis */}
-                <Card className="border-2 border-purple-400">
-                  <CardHeader className="pb-3 bg-purple-50">
+                <Card className="border-2 border-navy-400">
+                  <CardHeader className="pb-3 bg-navy-50">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-purple-600" />
+                      <Activity className="w-4 h-4 text-navy-600" />
                       Functional Impact
                     </CardTitle>
                   </CardHeader>
@@ -463,7 +463,7 @@ Provide detailed comparison showing what changed and why.`;
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div className="text-center p-3 bg-white rounded border">
                         <p className="text-xs text-slate-600">Total Points</p>
-                        <p className="text-2xl font-bold text-purple-700">
+                        <p className="text-2xl font-bold text-navy-700">
                           {simulationResult.functional_analysis?.total_points}
                         </p>
                         <Badge variant="outline" className="text-xs mt-1">
@@ -489,9 +489,9 @@ Provide detailed comparison showing what changed and why.`;
                     </div>
 
                     {simulationResult.functional_analysis?.key_drivers?.length > 0 && (
-                      <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                        <p className="text-xs text-purple-700 font-semibold mb-1">Key Drivers:</p>
-                        <ul className="text-xs text-purple-800 space-y-1">
+                      <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                        <p className="text-xs text-navy-700 font-semibold mb-1">Key Drivers:</p>
+                        <ul className="text-xs text-navy-800 space-y-1">
                           {simulationResult.functional_analysis.key_drivers.map((driver, i) => (
                             <li key={i}>• {driver}</li>
                           ))}
@@ -548,11 +548,11 @@ Provide detailed comparison showing what changed and why.`;
                     </CardHeader>
                     <CardContent className="pt-4">
                       {simulationResult.quality_impact.improvement_measures_affected?.length > 0 && (
-                        <div className="bg-purple-50 p-3 rounded border border-purple-200 mb-3">
-                          <p className="text-xs text-purple-700 font-semibold mb-2">Affected Measures:</p>
+                        <div className="bg-navy-50 p-3 rounded border border-navy-200 mb-3">
+                          <p className="text-xs text-navy-700 font-semibold mb-2">Affected Measures:</p>
                           <ul className="space-y-1">
                             {simulationResult.quality_impact.improvement_measures_affected.map((measure, i) => (
-                              <li key={i} className="text-sm text-purple-800">• {measure}</li>
+                              <li key={i} className="text-sm text-navy-800">• {measure}</li>
                             ))}
                           </ul>
                         </div>
@@ -645,7 +645,7 @@ Provide detailed comparison showing what changed and why.`;
               <ScrollArea className="max-h-[600px]">
                 <div className="space-y-3">
                   {scenarios.map((scenario, idx) => (
-                    <Card key={scenario.id} className="border-2 hover:border-cyan-400 transition-colors">
+                    <Card key={scenario.id} className="border-2 hover:border-navy-400 transition-colors">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
@@ -691,7 +691,7 @@ Provide detailed comparison showing what changed and why.`;
                             size="sm"
                             variant="outline"
                             onClick={() => toggleCompareScenario(scenario)}
-                            className={selectedScenarios.find(s => s.id === scenario.id) ? 'bg-cyan-100' : ''}
+                            className={selectedScenarios.find(s => s.id === scenario.id) ? 'bg-navy-100' : ''}
                           >
                             <BarChart3 className="w-3 h-3 mr-2" />
                             Compare
@@ -723,8 +723,8 @@ Provide detailed comparison showing what changed and why.`;
               </div>
             ) : (
               <div className="space-y-4">
-                <Alert className="bg-cyan-50 border-cyan-300">
-                  <AlertDescription className="text-sm text-cyan-900">
+                <Alert className="bg-navy-50 border-navy-300">
+                  <AlertDescription className="text-sm text-navy-900">
                     Comparing {selectedScenarios.length} scenario{selectedScenarios.length !== 1 ? 's' : ''}
                   </AlertDescription>
                 </Alert>

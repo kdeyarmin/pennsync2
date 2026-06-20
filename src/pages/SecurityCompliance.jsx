@@ -308,14 +308,14 @@ export default function SecurityCompliance() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm mb-1">PHI Access</p>
+                    <p className="text-navy-100 text-sm mb-1">PHI Access</p>
                     <p className="text-4xl font-bold">{phiAccess}</p>
                   </div>
-                  <Eye className="w-12 h-12 text-purple-200" />
+                  <Eye className="w-12 h-12 text-navy-200" />
                 </div>
               </CardContent>
             </Card>

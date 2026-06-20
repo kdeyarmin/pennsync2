@@ -170,7 +170,7 @@ Provide actionable insights in a structured format with clear sections.`,
           <Button
             onClick={generateAIInsights}
             disabled={aiInsightsLoading || failedLogs.length === 0}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600"
+            className="bg-gradient-to-r from-navy-600 to-indigo-600"
           >
             <Brain className="w-4 h-4 mr-2" />
             {aiInsightsLoading ? "Analyzing..." : "Generate AI Insights"}
@@ -231,10 +231,10 @@ Provide actionable insights in a structured format with clear sections.`,
 
       {/* AI Insights Section */}
       {aiInsights && (
-        <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-indigo-50 border-navy-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
+              <Brain className="w-5 h-5 text-navy-600" />
               AI-Powered Insights
             </CardTitle>
             <CardDescription>Automated analysis of fax transmission patterns</CardDescription>

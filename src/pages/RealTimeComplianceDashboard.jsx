@@ -887,7 +887,7 @@ export default function RealTimeComplianceDashboard() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-navy-600" />
             Nurse Performance - Compliance Breakdown
           </CardTitle>
         </CardHeader>
@@ -913,8 +913,8 @@ export default function RealTimeComplianceDashboard() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
-                    <div className="bg-purple-50 p-2 rounded text-center">
-                      <p className="text-[10px] sm:text-xs text-purple-600 mb-1">Smart Notes</p>
+                    <div className="bg-navy-50 p-2 rounded text-center">
+                      <p className="text-[10px] sm:text-xs text-navy-600 mb-1">Smart Notes</p>
                       <p className={`text-lg sm:text-xl font-bold ${getScoreColor(nurse.noteAvgScore)}`}>
                         {nurse.noteAvgScore || '--'}
                       </p>
@@ -963,7 +963,7 @@ export default function RealTimeComplianceDashboard() {
                     </Link>
                     {nurse.trainingNeeds.length > 0 && (
                       <Link to={createPageUrl('StaffTrainingHub')} className="w-full sm:w-auto">
-                        <Button size="sm" className="gap-1 bg-purple-600 w-full">
+                        <Button size="sm" className="gap-1 bg-navy-600 w-full">
                           <GraduationCap className="w-3 h-3" />
                           Assign Training
                         </Button>
@@ -1030,10 +1030,10 @@ export default function RealTimeComplianceDashboard() {
       </div>
 
       {/* Training Resources */}
-      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-purple-600" />
+            <GraduationCap className="w-5 h-5 text-navy-600" />
             Training Resources for Common Issues
           </CardTitle>
         </CardHeader>
@@ -1042,7 +1042,7 @@ export default function RealTimeComplianceDashboard() {
             <Link to={createPageUrl('StaffTrainingHub')}>
               <div className="p-3 bg-white rounded-lg border hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-center gap-2 mb-1">
-                  <Brain className="w-4 h-4 text-purple-600" />
+                  <Brain className="w-4 h-4 text-navy-600" />
                   <span className="font-medium text-sm">Smart Note Documentation Training</span>
                 </div>
                 <p className="text-xs text-slate-600">

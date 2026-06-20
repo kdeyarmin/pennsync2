@@ -166,7 +166,7 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-indigo-600" />
@@ -201,8 +201,8 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
                 <p className="text-2xl font-bold text-green-700">{aggregatedData.avgCompliance}%</p>
                 <p className="text-xs text-slate-600">Avg Compliance</p>
               </div>
-              <div className="bg-purple-50 p-3 rounded-lg text-center">
-                <p className="text-2xl font-bold text-purple-700">{aggregatedData.passRate}%</p>
+              <div className="bg-navy-50 p-3 rounded-lg text-center">
+                <p className="text-2xl font-bold text-navy-700">{aggregatedData.passRate}%</p>
                 <p className="text-xs text-slate-600">Pass Rate</p>
               </div>
             </div>

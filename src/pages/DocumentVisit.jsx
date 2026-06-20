@@ -1745,9 +1745,9 @@ Generate the complete clinical narrative based on the audio and context:`;
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Alert className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-                    <Sparkles className="w-4 h-4 text-purple-600" />
-                    <AlertDescription className="text-purple-900">
+                  <Alert className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+                    <Sparkles className="w-4 h-4 text-navy-600" />
+                    <AlertDescription className="text-navy-900">
                       <strong>🎤 Global Voice Commands are now active!</strong>
                       <p className="mt-2 mb-3">Speak commands like "insert cardiovascular" or "save documentation" anytime in the app to trigger actions.</p>
                       <div className="grid grid-cols-2 gap-2 text-xs">

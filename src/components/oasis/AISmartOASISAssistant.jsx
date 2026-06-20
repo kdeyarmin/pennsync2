@@ -529,10 +529,10 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-blue-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-blue-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI-Powered OASIS Assistant
           </CardTitle>
         </CardHeader>
@@ -542,7 +542,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <Button
                 onClick={analyzePatientData}
                 disabled={isAnalyzing}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-navy-600 hover:bg-navy-700"
                 size="lg"
               >
                 {isAnalyzing ? (
@@ -565,9 +565,9 @@ Patient Data: ${JSON.stringify(contextData)}`,
             <>
               {/* Summary Stats */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <div className="bg-white p-3 rounded-lg border-2 border-purple-200">
+                <div className="bg-white p-3 rounded-lg border-2 border-navy-200">
                   <p className="text-xs text-slate-600">Items Analyzed</p>
-                  <p className="text-2xl font-bold text-purple-600">{suggestions.summary?.total_items_analyzed || 0}</p>
+                  <p className="text-2xl font-bold text-navy-600">{suggestions.summary?.total_items_analyzed || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-green-200">
                   <p className="text-xs text-slate-600">High Confidence</p>
@@ -718,28 +718,28 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
           {/* Diagnosis Optimization */}
           {suggestions.diagnosis_optimization?.length > 0 && (
-            <Card className="border-2 border-purple-400 bg-purple-50">
+            <Card className="border-2 border-navy-400 bg-navy-50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-purple-900">
+                <CardTitle className="flex items-center gap-2 text-navy-900">
                   <Target className="w-5 h-5" />
                   Primary Diagnosis Documentation Review
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Alert className="bg-purple-100 border-purple-400">
-                  <AlertDescription className="text-purple-900 text-sm">
+                <Alert className="bg-navy-100 border-navy-400">
+                  <AlertDescription className="text-navy-900 text-sm">
                     <strong>Primary Diagnosis Selection:</strong> Choose the primary diagnosis that most accurately reflects the focus of the current plan of care.
                   </AlertDescription>
                 </Alert>
                 {suggestions.diagnosis_optimization.map((diag, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-lg border-2 border-purple-300">
+                  <div key={idx} className="bg-white p-4 rounded-lg border-2 border-navy-300">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex-1">
                         <Badge className="bg-red-500 mb-2">Current</Badge>
                         <p className="text-sm text-slate-700">{diag.current_primary}</p>
                         <p className="text-xs text-slate-500">{diag.clinical_group_current}</p>
                       </div>
-                      <ArrowRight className="w-8 h-8 text-purple-600 mx-4" />
+                      <ArrowRight className="w-8 h-8 text-navy-600 mx-4" />
                       <div className="flex-1">
                         <Badge className="bg-green-500 mb-2">Recommended</Badge>
                         <p className="text-sm font-semibold text-slate-900">{diag.recommended_primary}</p>
@@ -825,8 +825,8 @@ Patient Data: ${JSON.stringify(contextData)}`,
                         <p className="text-sm text-slate-800 font-mono whitespace-pre-wrap">{func.documentation_example}</p>
                       </div>
 
-                      <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                        <p className="text-xs font-semibold text-purple-900 mb-2">🔬 Clinical Indicators to Assess:</p>
+                      <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                        <p className="text-xs font-semibold text-navy-900 mb-2">🔬 Clinical Indicators to Assess:</p>
                         <ul className="text-sm text-slate-800 space-y-1 list-disc list-inside">
                           {func.clinical_indicators?.map((ind, iIdx) => (
                             <li key={iIdx}>{ind}</li>
@@ -1019,11 +1019,11 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
                 {/* Alternative Clinical Groups */}
                 {suggestions.pdgm_analysis.alternative_clinical_groups?.length > 0 && (
-                  <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-                    <h4 className="font-semibold text-purple-900 mb-3">Alternative Clinical Groups to Consider</h4>
+                  <div className="bg-navy-50 border-2 border-navy-300 rounded-lg p-4">
+                    <h4 className="font-semibold text-navy-900 mb-3">Alternative Clinical Groups to Consider</h4>
                     <div className="space-y-2">
                       {suggestions.pdgm_analysis.alternative_clinical_groups.map((alt, idx) => (
-                        <div key={idx} className="bg-white p-3 rounded-lg border border-purple-200">
+                        <div key={idx} className="bg-white p-3 rounded-lg border border-navy-200">
                           <div className="flex items-start justify-between mb-1">
                             <p className="font-semibold text-slate-900">{alt.clinical_group}</p>
                             <div className="flex items-center gap-2">
@@ -1114,7 +1114,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-600" />
+                <Sparkles className="w-5 h-5 text-navy-600" />
                 Smart OASIS Suggestions ({suggestions.oasis_suggestions?.length || 0})
               </CardTitle>
             </CardHeader>
@@ -1184,8 +1184,8 @@ Patient Data: ${JSON.stringify(contextData)}`,
                             </div>
 
                             {item.documentation_needed && (
-                              <div className="bg-purple-50 p-2 rounded text-xs mt-2 border border-purple-200">
-                                <p className="font-semibold text-purple-900 mb-1">📋 Documentation Required:</p>
+                              <div className="bg-navy-50 p-2 rounded text-xs mt-2 border border-navy-200">
+                                <p className="font-semibold text-navy-900 mb-1">📋 Documentation Required:</p>
                                 <p className="text-slate-700">{item.documentation_needed}</p>
                               </div>
                             )}
@@ -1203,8 +1203,8 @@ Patient Data: ${JSON.stringify(contextData)}`,
                             )}
 
                             {item.clinical_considerations && (
-                              <div className="mt-2 bg-purple-50 p-2 rounded text-xs border border-purple-200">
-                                <p className="font-semibold text-purple-900 mb-1">Clinical Considerations:</p>
+                              <div className="mt-2 bg-navy-50 p-2 rounded text-xs border border-navy-200">
+                                <p className="font-semibold text-navy-900 mb-1">Clinical Considerations:</p>
                                 <p className="text-slate-700">{item.clinical_considerations}</p>
                               </div>
                             )}
@@ -1223,7 +1223,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
                                 <Button
                                   size="sm"
                                   onClick={() => handleApplySuggestion(item)}
-                                  className="bg-purple-600 hover:bg-purple-700"
+                                  className="bg-navy-600 hover:bg-navy-700"
                                 >
                                   <CheckCircle2 className="w-3 h-3 mr-1" />
                                   Apply Suggestion

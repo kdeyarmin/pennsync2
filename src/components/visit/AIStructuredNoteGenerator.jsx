@@ -133,7 +133,7 @@ Return as JSON:
   const canGenerate = patient && (vitalSigns || oasisData || observations);
 
   return (
-    <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50">
+    <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-navy-50">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-indigo-600" />

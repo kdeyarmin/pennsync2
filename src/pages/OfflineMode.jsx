@@ -88,19 +88,19 @@ export default function OfflineMode() {
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200">
+        <Card className="border-navy-200">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-purple-600 font-medium mb-1 truncate">Storage Used</p>
-                <p className="text-2xl sm:text-3xl font-bold text-purple-900">
+                <p className="text-xs sm:text-sm text-navy-600 font-medium mb-1 truncate">Storage Used</p>
+                <p className="text-2xl sm:text-3xl font-bold text-navy-900">
                   {(
                     (localStorage.getItem('offline_patient_data')?.length || 0) / 1024
                   ).toFixed(0)}
                   <span className="text-base sm:text-lg ml-1">KB</span>
                 </p>
               </div>
-              <Database className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400 flex-shrink-0" />
+              <Database className="w-8 h-8 sm:w-10 sm:h-10 text-navy-400 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

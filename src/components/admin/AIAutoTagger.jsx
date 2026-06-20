@@ -140,10 +140,10 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
   };
 
   return (
-    <Card className="border-2 border-purple-200">
+    <Card className="border-2 border-navy-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-navy-600" />
           AI Auto-Tagger
         </CardTitle>
       </CardHeader>
@@ -176,7 +176,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
         <Button
           onClick={autoTagAll}
           disabled={isTagging}
-          className="w-full bg-purple-600 hover:bg-purple-700"
+          className="w-full bg-navy-600 hover:bg-navy-700"
         >
           {isTagging ? (
             <>

@@ -399,7 +399,7 @@ export default function OASISAnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <PieChartIcon className="w-5 h-5 text-purple-600" />
+                  <PieChartIcon className="w-5 h-5 text-navy-600" />
                   Score Distribution
                 </CardTitle>
               </CardHeader>

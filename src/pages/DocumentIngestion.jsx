@@ -76,10 +76,10 @@ export default function DocumentIngestion() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <Card className="bg-gradient-to-br from-navy-50 to-navy-100 border-navy-200">
               <CardContent className="pt-6">
-                <h3 className="font-semibold text-purple-900 mb-2">Clinical Info</h3>
-                <p className="text-xs text-purple-800">
+                <h3 className="font-semibold text-navy-900 mb-2">Clinical Info</h3>
+                <p className="text-xs text-navy-800">
                   Identifies diagnoses, medications, allergies, and clinical assessments
                 </p>
               </CardContent>

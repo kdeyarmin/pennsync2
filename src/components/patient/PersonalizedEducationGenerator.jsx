@@ -271,9 +271,9 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
               <p className="text-sm text-blue-800 whitespace-pre-wrap">{educationMaterials.condition_overview}</p>
             </div>
 
-            <div className="bg-purple-50 p-4 rounded border border-purple-200">
-              <h3 className="font-semibold text-sm text-purple-900 mb-2">Daily Self-Care</h3>
-              <p className="text-sm text-purple-800 whitespace-pre-wrap">{educationMaterials.self_care_instructions}</p>
+            <div className="bg-navy-50 p-4 rounded border border-navy-200">
+              <h3 className="font-semibold text-sm text-navy-900 mb-2">Daily Self-Care</h3>
+              <p className="text-sm text-navy-800 whitespace-pre-wrap">{educationMaterials.self_care_instructions}</p>
             </div>
 
             {educationMaterials.key_takeaways?.length > 0 && (

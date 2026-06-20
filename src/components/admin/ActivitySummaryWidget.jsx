@@ -124,18 +124,18 @@ export default function ActivitySummaryWidget() {
       </Card>
 
       {/* Document Activity Summary */}
-      <Card className="border-purple-200">
+      <Card className="border-navy-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-purple-600" />
+            <FileText className="w-5 h-5 text-navy-600" />
             Document Operations
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
-            <div className="p-2 rounded-lg bg-purple-50">
-              <p className="text-purple-700 font-medium">Generated</p>
-              <p className="text-2xl font-bold text-purple-900">
+            <div className="p-2 rounded-lg bg-navy-50">
+              <p className="text-navy-700 font-medium">Generated</p>
+              <p className="text-2xl font-bold text-navy-900">
                 {documentActions.filter(a => a.action === 'document_generated').length}
               </p>
             </div>

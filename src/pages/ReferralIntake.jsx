@@ -1106,7 +1106,7 @@ Actions available:
                           </Badge>
                         )}
                         {referral.analysis_results?.intake_analysis?.category?.primary && (
-                          <Badge className="bg-purple-100 text-purple-700 text-xs mt-1">
+                          <Badge className="bg-navy-100 text-navy-700 text-xs mt-1">
                             {referral.analysis_results.intake_analysis.category.primary.replace(/_/g, ' ')}
                           </Badge>
                         )}
@@ -1186,7 +1186,7 @@ Actions available:
                                <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
                                  <Button
                                    size="sm"
-                                   className="bg-purple-600 hover:bg-purple-700 text-white min-h-[36px] text-xs w-full"
+                                   className="bg-navy-600 hover:bg-navy-700 text-white min-h-[36px] text-xs w-full"
                                  >
                                    <Sparkles className="w-4 h-4 mr-1" />
                                    Create Note
@@ -1299,9 +1299,9 @@ Actions available:
                 
                 {/* Suggested Tasks Preview */}
                 {extractedFormData.suggested_initial_tasks?.length > 0 && (
-                  <Alert className="bg-purple-50 border-purple-300">
-                    <ClipboardCheck className="w-4 h-4 text-purple-600" />
-                    <AlertDescription className="text-purple-900 text-sm">
+                  <Alert className="bg-navy-50 border-navy-300">
+                    <ClipboardCheck className="w-4 h-4 text-navy-600" />
+                    <AlertDescription className="text-navy-900 text-sm">
                       <strong>AI Suggested {extractedFormData.suggested_initial_tasks.length} Initial Tasks</strong>
                       <div className="mt-2 text-xs space-y-1">
                         {extractedFormData.suggested_initial_tasks.slice(0, 3).map((task, idx) => (
@@ -1507,7 +1507,7 @@ Actions available:
           <DialogContent className="max-w-[98vw] sm:max-w-6xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-600" />
+                <Sparkles className="w-5 h-5 text-navy-600" />
                 AI Referral Processor
               </DialogTitle>
             </DialogHeader>

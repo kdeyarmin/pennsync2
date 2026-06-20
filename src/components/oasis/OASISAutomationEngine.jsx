@@ -174,7 +174,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
       compliance: <AlertTriangle className="w-4 h-4 text-orange-600" />,
       revenue: <Sparkles className="w-4 h-4 text-green-600" />,
       clinical: <Users className="w-4 h-4 text-blue-600" />,
-      documentation: <FileText className="w-4 h-4 text-purple-600" />
+      documentation: <FileText className="w-4 h-4 text-navy-600" />
     };
     return icons[category] || icons.documentation;
   };
@@ -183,10 +183,10 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
 
   if (isAnalyzing) {
     return (
-      <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-indigo-50">
         <CardContent className="p-6 text-center">
-          <Loader2 className="w-8 h-8 text-purple-600 mx-auto mb-3 animate-spin" />
-          <p className="text-sm font-medium text-purple-900">
+          <Loader2 className="w-8 h-8 text-navy-600 mx-auto mb-3 animate-spin" />
+          <p className="text-sm font-medium text-navy-900">
             AI is analyzing results and generating follow-up actions...
           </p>
         </CardContent>
@@ -197,13 +197,13 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
   if (suggestedActions.length === 0) return null;
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-indigo-50">
       <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-600" />
+            <Zap className="w-5 h-5 text-navy-600" />
             AI-Suggested Follow-Up Actions
-            <Badge className="bg-purple-600 text-white ml-2">
+            <Badge className="bg-navy-600 text-white ml-2">
               {suggestedActions.length} suggested
             </Badge>
           </CardTitle>
@@ -235,7 +235,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
                   key={idx}
                   className={`border-2 rounded-lg p-4 transition-all ${
                     selectedActions.includes(idx)
-                      ? 'bg-white border-purple-400 shadow-md'
+                      ? 'bg-white border-navy-400 shadow-md'
                       : 'bg-white border-slate-200'
                   }`}
                 >
@@ -269,8 +269,8 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
                         </div>
                       </div>
 
-                      <div className="bg-purple-50 p-2 rounded text-xs border border-purple-200">
-                        <p className="text-purple-900">
+                      <div className="bg-navy-50 p-2 rounded text-xs border border-navy-200">
+                        <p className="text-navy-900">
                           <strong>Why:</strong> {action.reason}
                         </p>
                       </div>
@@ -318,7 +318,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
                 size="sm"
                 onClick={handleCreateTasks}
                 disabled={selectedActions.length === 0 || createTasksMutation.isPending}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-navy-600 hover:bg-navy-700"
               >
                 {createTasksMutation.isPending ? (
                   <>

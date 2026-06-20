@@ -325,10 +325,10 @@ export default function ComprehensiveFaxDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Total Cost</p>
-                <p className="text-3xl font-bold text-purple-600">${metrics.totalCost.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-navy-600">${metrics.totalCost.toFixed(2)}</p>
                 <p className="text-xs text-slate-500 mt-1">${metrics.avgCostPerFax} avg/fax</p>
               </div>
-              <DollarSign className="w-10 h-10 text-purple-600" />
+              <DollarSign className="w-10 h-10 text-navy-600" />
             </div>
           </CardContent>
         </Card>

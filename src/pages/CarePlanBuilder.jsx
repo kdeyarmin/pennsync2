@@ -230,7 +230,7 @@ export default function CarePlanBuilder() {
             <span><strong className="text-slate-700">{complianceCount}</strong> compliant</span>
           </span>
           <span className="flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+            <Sparkles className="w-3.5 h-3.5 text-navy-500" />
             <span><strong className="text-slate-700">{linkedCount}</strong> linked</span>
           </span>
         </div>

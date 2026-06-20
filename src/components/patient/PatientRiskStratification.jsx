@@ -434,12 +434,12 @@ Return JSON:
               {riskData.predictive_insights?.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
-                    <Brain className="w-4 h-4 text-purple-500" />
+                    <Brain className="w-4 h-4 text-navy-500" />
                     Predictive Insights
                   </h4>
                   <div className="space-y-1">
                     {riskData.predictive_insights.map((insight, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs p-2 bg-purple-50 rounded border border-purple-200">
+                      <div key={idx} className="flex items-start gap-2 text-xs p-2 bg-navy-50 rounded border border-navy-200">
                         <Badge variant="outline" className="text-xs flex-shrink-0">{insight.confidence}</Badge>
                         <div>
                           <span>{insight.insight}</span>

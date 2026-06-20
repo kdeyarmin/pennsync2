@@ -176,8 +176,8 @@ Make the care plan specific to home health nursing, focusing on skilled nursing 
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             {/* Nursing Diagnoses */}
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <h3 className="font-semibold text-purple-900 mb-3">Nursing Diagnoses</h3>
+            <div className="bg-navy-50 p-4 rounded-lg border border-navy-200">
+              <h3 className="font-semibold text-navy-900 mb-3">Nursing Diagnoses</h3>
               <div className="space-y-3">
                 {generatedPlan.nursing_diagnoses?.map((dx, idx) => (
                   <div key={idx} className="bg-white p-3 rounded border">

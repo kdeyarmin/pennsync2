@@ -757,9 +757,9 @@ Provide optimistic, realistic, and conservative scenarios.`,
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-600">Avg Case Mix</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.avgCaseMix}</p>
+                <p className="text-2xl font-bold text-navy-600">{stats.avgCaseMix}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-purple-600" />
+              <TrendingUp className="w-8 h-8 text-navy-600" />
             </div>
           </CardContent>
         </Card>
@@ -779,10 +779,10 @@ Provide optimistic, realistic, and conservative scenarios.`,
 
       {/* AI Predictions */}
       {predictions && (
-        <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+        <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-purple-600" />
+              <TrendingUp className="w-5 h-5 text-navy-600" />
               AI Payment Predictions - Next 3 Months
             </CardTitle>
           </CardHeader>
@@ -791,14 +791,14 @@ Provide optimistic, realistic, and conservative scenarios.`,
               <p className="text-sm text-red-600">{predictions.error}</p>
             ) : (
               <>
-                <Badge className="bg-purple-600 text-white mb-2">
+                <Badge className="bg-navy-600 text-white mb-2">
                   Trend: {predictions.trend_direction}
                 </Badge>
                 <div className="grid grid-cols-3 gap-3">
                   {predictions.predictions?.map((pred, idx) => (
                     <div key={idx} className="bg-white p-3 rounded-lg border">
                       <p className="text-xs text-slate-500">{pred.month}</p>
-                      <p className="text-xl font-bold text-purple-700">${Math.round(pred.predicted_payment).toLocaleString()}</p>
+                      <p className="text-xl font-bold text-navy-700">${Math.round(pred.predicted_payment).toLocaleString()}</p>
                       <p className="text-xs text-slate-600">~{pred.predicted_count} cases</p>
                       <Badge variant="outline" className="text-xs mt-1">{pred.confidence}</Badge>
                     </div>
@@ -806,10 +806,10 @@ Provide optimistic, realistic, and conservative scenarios.`,
                 </div>
                 {predictions.key_insights?.length > 0 && (
                   <div className="bg-white p-3 rounded border">
-                    <p className="text-sm font-semibold text-purple-900 mb-2">Key Insights:</p>
+                    <p className="text-sm font-semibold text-navy-900 mb-2">Key Insights:</p>
                     <ul className="space-y-1">
                       {predictions.key_insights.map((insight, idx) => (
-                        <li key={idx} className="text-sm text-purple-800">• {insight}</li>
+                        <li key={idx} className="text-sm text-navy-800">• {insight}</li>
                       ))}
                     </ul>
                   </div>
@@ -888,7 +888,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
 
       {/* Key Drivers Analysis */}
       {driverAnalysis && (
-        <Card className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50">
+        <Card className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-navy-50">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Activity className="w-5 h-5 text-blue-600" />
@@ -1160,15 +1160,15 @@ Provide optimistic, realistic, and conservative scenarios.`,
                 </div>
 
                 {/* Strategic Recommendations */}
-                <Card className="border-2 border-purple-300 bg-purple-50">
+                <Card className="border-2 border-navy-300 bg-navy-50">
                   <CardHeader>
-                    <CardTitle className="text-lg text-purple-900">Strategic Recommendations</CardTitle>
+                    <CardTitle className="text-lg text-navy-900">Strategic Recommendations</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ol className="space-y-2">
                       {forecast.strategic_recommendations?.map((rec, idx) => (
-                        <li key={idx} className="text-sm text-purple-900 flex items-start gap-2">
-                          <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">
+                        <li key={idx} className="text-sm text-navy-900 flex items-start gap-2">
+                          <span className="bg-navy-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">
                             {idx + 1}
                           </span>
                           {rec}
@@ -1301,10 +1301,10 @@ Provide optimistic, realistic, and conservative scenarios.`,
 
         {/* Pathway Simulation Tab */}
         <TabsContent value="simulation" className="space-y-6 mt-6">
-          <Card className="border-2 border-purple-300">
+          <Card className="border-2 border-navy-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-purple-600" />
+                <Activity className="w-5 h-5 text-navy-600" />
                 Care Pathway Impact Simulation
               </CardTitle>
             </CardHeader>
@@ -1350,7 +1350,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
                   <Button
                     onClick={simulateCarePathway}
                     disabled={isSimulating || filteredData.length < 10}
-                    className="w-full mt-5 bg-purple-600 hover:bg-purple-700"
+                    className="w-full mt-5 bg-navy-600 hover:bg-navy-700"
                   >
                     {isSimulating ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Simulating...</>

@@ -202,14 +202,14 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
       {/* Conditional Visibility */}
       <button
         onClick={() => setShowConditional(!showConditional)}
-        className="flex items-center gap-2 text-sm font-medium text-purple-600 hover:text-purple-700 w-full justify-between"
+        className="flex items-center gap-2 text-sm font-medium text-navy-600 hover:text-navy-700 w-full justify-between"
       >
         Conditional Visibility
         <ChevronDown className="w-4 h-4" style={{ transform: showConditional ? "rotate(180deg)" : "" }} />
       </button>
 
       {showConditional && (
-        <div className="p-3 bg-purple-50 rounded-lg space-y-2 text-sm">
+        <div className="p-3 bg-navy-50 rounded-lg space-y-2 text-sm">
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">Show if field equals:</label>
             <Input placeholder="Field name" className="text-xs" />

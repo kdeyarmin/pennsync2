@@ -201,10 +201,10 @@ Return JSON with the complete material:`,
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-purple-300">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-300">
+        <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Personalized Education Generator
           </CardTitle>
         </CardHeader>
@@ -257,7 +257,7 @@ Return JSON with the complete material:`,
           <Button
             onClick={generateMaterial}
             disabled={isGenerating}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             {isGenerating ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Personalized Material...</>
@@ -312,7 +312,7 @@ Return JSON with the complete material:`,
                   {educationMaterial.sections?.map((section, idx) => (
                     <div key={idx} className="bg-white p-4 rounded-lg border-2 border-slate-200">
                       <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <span className="bg-purple-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">
+                        <span className="bg-navy-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">
                           {idx + 1}
                         </span>
                         {section.section_title}
@@ -323,12 +323,12 @@ Return JSON with the complete material:`,
                         </p>
                       </div>
                       {section.key_points?.length > 0 && (
-                        <div className="mt-3 bg-purple-50 p-3 rounded border border-purple-200">
-                          <p className="text-xs font-semibold text-purple-800 mb-2">Key Points:</p>
+                        <div className="mt-3 bg-navy-50 p-3 rounded border border-navy-200">
+                          <p className="text-xs font-semibold text-navy-800 mb-2">Key Points:</p>
                           <ul className="space-y-1">
                             {section.key_points.map((point, i) => (
-                              <li key={i} className="text-xs text-purple-900 flex items-start gap-2">
-                                <CheckCircle2 className="w-3 h-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                              <li key={i} className="text-xs text-navy-900 flex items-start gap-2">
+                                <CheckCircle2 className="w-3 h-3 text-navy-600 mt-0.5 flex-shrink-0" />
                                 <span>{point}</span>
                               </li>
                             ))}

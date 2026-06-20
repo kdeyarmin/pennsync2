@@ -272,10 +272,10 @@ Return structured JSON.`,
   };
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-200 bg-gradient-to-r from-navy-50 to-pink-50">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Data Entry Assistant
         </CardTitle>
       </CardHeader>
@@ -289,7 +289,7 @@ Return structured JSON.`,
               </AlertDescription>
             </Alert>
 
-            <div className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center bg-white">
+            <div className="border-2 border-dashed border-navy-300 rounded-lg p-6 text-center bg-white">
               <input
                 type="file"
                 accept=".pdf,.docx"
@@ -297,7 +297,7 @@ Return structured JSON.`,
                 className="hidden"
                 id="oasis-assistant-upload"
               />
-              <FileText className="w-10 h-10 text-purple-400 mx-auto mb-3" />
+              <FileText className="w-10 h-10 text-navy-400 mx-auto mb-3" />
               <p className="text-sm text-slate-600 mb-2">
                 {file ? file.name : "No file selected"}
               </p>
@@ -315,7 +315,7 @@ Return structured JSON.`,
               <Button
                 onClick={handleExtract}
                 disabled={isExtracting}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-navy-600 hover:bg-navy-700"
               >
                 {isExtracting ? (
                   <>
@@ -349,10 +349,10 @@ Return structured JSON.`,
 
             {/* AI Insights - Compliance Issues */}
             {isAnalyzingInsights && (
-              <Card className="border-purple-200 bg-purple-50">
+              <Card className="border-navy-200 bg-navy-50">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
-                  <p className="text-sm text-purple-900">AI is analyzing data for compliance issues and clinical insights...</p>
+                  <Loader2 className="w-5 h-5 animate-spin text-navy-600" />
+                  <p className="text-sm text-navy-900">AI is analyzing data for compliance issues and clinical insights...</p>
                 </CardContent>
               </Card>
             )}
@@ -568,7 +568,7 @@ Return structured JSON.`,
               <Button
                 onClick={handleConfirm}
                 disabled={isAnalyzingInsights}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
+                className="flex-1 bg-navy-600 hover:bg-navy-700"
               >
                 <Send className="w-4 h-4 mr-2" />
                 Confirm & Analyze
@@ -576,8 +576,8 @@ Return structured JSON.`,
             </div>
 
             {/* Summary of AI Findings */}
-            <div className="bg-purple-50 p-3 rounded border border-purple-200">
-              <p className="text-xs text-purple-800 mb-2">
+            <div className="bg-navy-50 p-3 rounded border border-navy-200">
+              <p className="text-xs text-navy-800 mb-2">
                 <strong>AI Pre-Analysis Summary:</strong>
               </p>
               <div className="grid grid-cols-3 gap-2 text-xs">
@@ -594,7 +594,7 @@ Return structured JSON.`,
                   <p className="text-slate-600">Care Pathways</p>
                 </div>
               </div>
-              <p className="text-xs text-purple-700 mt-2">
+              <p className="text-xs text-navy-700 mt-2">
                 Review flagged fields (highlighted in red) before confirming.
               </p>
             </div>

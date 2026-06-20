@@ -298,7 +298,7 @@ Return JSON array:
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Brain className="w-6 h-6 text-purple-600" />
+            <Brain className="w-6 h-6 text-navy-600" />
             AI Predictive Risk Scoring
           </h2>
           <p className="text-sm text-slate-600">
@@ -314,7 +314,7 @@ Return JSON array:
           <Button 
             onClick={analyzePatientRisks}
             disabled={isAnalyzing}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isAnalyzing ? (
               <>
@@ -419,7 +419,7 @@ Return JSON array:
       {isAnalyzing ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <RefreshCw className="w-12 h-12 mx-auto mb-4 text-purple-500 animate-spin" />
+            <RefreshCw className="w-12 h-12 mx-auto mb-4 text-navy-500 animate-spin" />
             <p className="text-lg font-medium text-slate-700">Analyzing Patient Risk Factors...</p>
             <p className="text-sm text-slate-500">This may take a moment</p>
           </CardContent>
@@ -543,7 +543,7 @@ Return JSON array:
                         <ul className="space-y-1">
                           {assessment.priority_interventions.slice(0, 3).map((intervention, idx) => (
                             <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
-                              <ChevronRight className="w-3 h-3 mt-0.5 text-purple-500 flex-shrink-0" />
+                              <ChevronRight className="w-3 h-3 mt-0.5 text-navy-500 flex-shrink-0" />
                               {intervention}
                             </li>
                           ))}

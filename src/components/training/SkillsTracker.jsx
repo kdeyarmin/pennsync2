@@ -114,7 +114,7 @@ export default function SkillsTracker({ nurseEmail }) {
     const colors = {
       beginner: 'bg-blue-100 text-blue-800',
       intermediate: 'bg-indigo-100 text-indigo-800',
-      advanced: 'bg-purple-100 text-purple-800',
+      advanced: 'bg-navy-100 text-navy-800',
       expert: 'bg-pink-100 text-pink-800'
     };
     return colors[level] || 'bg-slate-100 text-slate-800';

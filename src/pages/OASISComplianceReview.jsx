@@ -58,7 +58,7 @@ export default function OASISComplianceReview() {
             </div>
             <div className="text-right">
               <p className="text-sm text-slate-600">Accuracy Score</p>
-              <div className="text-2xl font-bold text-purple-600">{accuracyScore}%</div>
+              <div className="text-2xl font-bold text-navy-600">{accuracyScore}%</div>
             </div>
           </div>
         }

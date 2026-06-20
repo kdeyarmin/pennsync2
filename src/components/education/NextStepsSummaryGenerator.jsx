@@ -411,8 +411,8 @@ Return JSON:
             </div>
 
             {/* Medication Reminders */}
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <h4 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+            <div className="bg-navy-50 p-4 rounded-lg border border-navy-200">
+              <h4 className="font-semibold text-navy-900 mb-3 flex items-center gap-2">
                 <Pill className="w-4 h-4" /> Medication Reminders
               </h4>
               <div className="space-y-2">
@@ -420,7 +420,7 @@ Return JSON:
                   <div key={idx} className="bg-white p-2 rounded border">
                     <p className="font-medium text-sm">{med.medication}</p>
                     <p className="text-xs text-slate-700">{med.reminder}</p>
-                    <p className="text-xs text-purple-600 mt-1">💡 {med.tip}</p>
+                    <p className="text-xs text-navy-600 mt-1">💡 {med.tip}</p>
                   </div>
                 ))}
               </div>

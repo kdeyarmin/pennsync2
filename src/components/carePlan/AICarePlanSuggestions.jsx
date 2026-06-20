@@ -155,18 +155,18 @@ Return JSON:
   if (!patient) return null;
 
   return (
-    <Card className="border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Care Plan Suggestions
           </CardTitle>
           <Button
             onClick={generateSuggestions}
             disabled={isGenerating}
             size="sm"
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isGenerating ? (
               <>
@@ -233,7 +233,7 @@ Return JSON:
                         <Button
                           size="sm"
                           onClick={() => handleAddSuggestion(suggestion, idx)}
-                          className="bg-purple-600 hover:bg-purple-700"
+                          className="bg-navy-600 hover:bg-navy-700"
                         >
                           <Plus className="w-4 h-4 mr-1" />
                           Add
@@ -256,7 +256,7 @@ Return JSON:
                     <p className="text-xs text-slate-500 italic">{suggestion.rationale}</p>
                     
                     {suggestion.estimated_days_to_achieve && (
-                      <p className="text-xs text-purple-600 mt-2">
+                      <p className="text-xs text-navy-600 mt-2">
                         ⏱ Estimated achievement: ~{suggestion.estimated_days_to_achieve} days
                       </p>
                     )}

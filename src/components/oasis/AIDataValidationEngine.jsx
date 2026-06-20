@@ -238,16 +238,16 @@ For each issue found, provide:
   };
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-indigo-50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI Data Validation Engine
-            {isValidating && <Loader2 className="w-4 h-4 animate-spin text-purple-500" />}
+            {isValidating && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
           </CardTitle>
           {!validationResults && !isValidating && (
-            <Button onClick={performValidation} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={performValidation} className="bg-navy-600 hover:bg-navy-700">
               <Brain className="w-4 h-4 mr-2" />
               Validate Data
             </Button>
@@ -258,14 +258,14 @@ For each issue found, provide:
       <CardContent>
         {isValidating && (
           <div className="text-center py-8">
-            <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-            <p className="text-sm text-purple-700">Analyzing OASIS data for accuracy and optimization...</p>
+            <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
+            <p className="text-sm text-navy-700">Analyzing OASIS data for accuracy and optimization...</p>
           </div>
         )}
 
         {!isValidating && !validationResults && (
           <div className="text-center py-8">
-            <Shield className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+            <Shield className="w-12 h-12 text-navy-400 mx-auto mb-4" />
             <p className="text-sm text-slate-600">Click "Validate Data" to check for inconsistencies and optimization opportunities</p>
           </div>
         )}

@@ -603,27 +603,27 @@ Be thorough and specific. For critical items, provide exact template text the nu
               {scrubResults.grammar_issues && scrubResults.grammar_issues.length > 0 && (
                 <div className="space-y-3">
                   <div 
-                    className="flex items-center justify-between cursor-pointer bg-purple-50 p-3 rounded-lg border-2 border-purple-200"
+                    className="flex items-center justify-between cursor-pointer bg-navy-50 p-3 rounded-lg border-2 border-navy-200"
                     onClick={() => toggleSection('grammar')}
                   >
                     <div className="flex items-center gap-3">
-                      <Edit className="w-6 h-6 text-purple-600" />
-                      <h4 className="font-bold text-purple-900 text-lg">
+                      <Edit className="w-6 h-6 text-navy-600" />
+                      <h4 className="font-bold text-navy-900 text-lg">
                         Grammar & Style ({scrubResults.grammar_issues.length})
                       </h4>
                     </div>
                     {expandedSections.includes('grammar') ? (
-                      <ChevronUp className="w-5 h-5 text-purple-600" />
+                      <ChevronUp className="w-5 h-5 text-navy-600" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-purple-600" />
+                      <ChevronDown className="w-5 h-5 text-navy-600" />
                     )}
                   </div>
 
                   {expandedSections.includes('grammar') && (
-                    <div className="bg-purple-50 p-4 rounded border border-purple-200 space-y-2">
+                    <div className="bg-navy-50 p-4 rounded border border-navy-200 space-y-2">
                       {scrubResults.grammar_issues.map((issue, index) => (
                         <div key={index} className="text-sm">
-                          <p className="text-purple-900">
+                          <p className="text-navy-900">
                             <strong>{issue.issue}:</strong>
                           </p>
                           <p className="text-slate-700 ml-4">

@@ -150,14 +150,14 @@ export default function NurseTraining() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-navy-100 border-navy-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-700 font-medium">Recommendations</p>
-                <p className="text-3xl font-bold text-purple-900">{recommendations?.length || 0}</p>
+                <p className="text-sm text-navy-700 font-medium">Recommendations</p>
+                <p className="text-3xl font-bold text-navy-900">{recommendations?.length || 0}</p>
               </div>
-              <Target className="w-10 h-10 text-purple-600" />
+              <Target className="w-10 h-10 text-navy-600" />
             </div>
           </CardContent>
         </Card>

@@ -29,7 +29,7 @@ export default function TopTemplatesWidget() {
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-600" />
+          <Sparkles className="w-4 h-4 text-navy-600" />
           Top Clinical Phrases
         </CardTitle>
       </CardHeader>
@@ -37,7 +37,7 @@ export default function TopTemplatesWidget() {
         {topTemplates.length === 0 ? (
           <div className="text-center py-6 text-slate-500">
             <p className="text-sm">No templates used yet</p>
-            <Link to={createPageUrl("ResourceLibrary")} className="text-xs text-purple-600 hover:underline mt-2 block">
+            <Link to={createPageUrl("ResourceLibrary")} className="text-xs text-navy-600 hover:underline mt-2 block">
               Create your first template
             </Link>
           </div>
@@ -45,7 +45,7 @@ export default function TopTemplatesWidget() {
           <div className="space-y-2">
             {topTemplates.map((template, idx) => (
               <div key={template.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                <Badge className="bg-purple-600 text-white shrink-0 text-xs">{idx + 1}</Badge>
+                <Badge className="bg-navy-600 text-white shrink-0 text-xs">{idx + 1}</Badge>
                 <div className="flex-1 min-w-0">
                   <code className="text-xs font-mono text-slate-900 truncate block">
                     {template.phrase}
@@ -54,12 +54,12 @@ export default function TopTemplatesWidget() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <TrendingUp className="w-3 h-3 text-slate-400" />
-                  <span className="text-xs font-semibold text-purple-600">{template.usage_count}</span>
+                  <span className="text-xs font-semibold text-navy-600">{template.usage_count}</span>
                 </div>
               </div>
             ))}
             <Link to={createPageUrl("ResourceLibrary")}>
-              <button className="w-full mt-2 text-xs text-purple-600 hover:text-purple-700 font-medium py-2 hover:bg-purple-50 rounded transition-colors">
+              <button className="w-full mt-2 text-xs text-navy-600 hover:text-navy-700 font-medium py-2 hover:bg-navy-50 rounded transition-colors">
                 View All Templates →
               </button>
             </Link>

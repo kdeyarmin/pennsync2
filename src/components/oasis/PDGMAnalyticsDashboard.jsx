@@ -328,10 +328,10 @@ export default function PDGMAnalyticsDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-purple-600" />
+              <TrendingUp className="w-4 h-4 text-navy-600" />
               <span className="text-xs text-slate-500">Opportunity</span>
             </div>
-            <p className="text-2xl font-bold text-purple-700">${summaryStats.totalOpportunityValue.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-navy-700">${summaryStats.totalOpportunityValue.toLocaleString()}</p>
           </CardContent>
         </Card>
 

@@ -254,11 +254,11 @@ Generate the family update now:`;
 
   return (
     <>
-      <Card className="bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-blue-50 border-navy-200">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="w-5 h-5 text-cyan-600" />
+              <Users className="w-5 h-5 text-navy-600" />
               Family Communication
               <Badge variant="outline" className="bg-white">Saves 5-10 min</Badge>
             </CardTitle>
@@ -268,7 +268,7 @@ Generate the family update now:`;
                 loadFamilyContacts();
               }}
               size="sm"
-              className="bg-cyan-600 hover:bg-cyan-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Mail className="w-4 h-4 mr-2" />
               Send Family Update
@@ -276,8 +276,8 @@ Generate the family update now:`;
           </div>
         </CardHeader>
         <CardContent>
-          <Alert className="bg-white border-cyan-200">
-            <Users className="w-4 h-4 text-cyan-600" />
+          <Alert className="bg-white border-navy-200">
+            <Users className="w-4 h-4 text-navy-600" />
             <AlertDescription className="text-slate-700">
               Automatically generate and send a warm, family-friendly visit summary to caregivers and loved ones.
             </AlertDescription>
@@ -457,7 +457,7 @@ Generate the family update now:`;
               <Button
                 onClick={sendToFamily}
                 disabled={isSending || recipients.length === 0}
-                className="bg-cyan-600 hover:bg-cyan-700"
+                className="bg-navy-600 hover:bg-navy-700"
               >
                 {isSending ? (
                   <>

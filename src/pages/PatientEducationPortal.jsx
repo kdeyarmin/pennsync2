@@ -104,7 +104,7 @@ export default function PatientEducationPortal() {
         <Card className="lg:row-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-purple-600" />
+              <BookOpen className="w-5 h-5 text-navy-600" />
               Select Patient
             </CardTitle>
           </CardHeader>
@@ -124,8 +124,8 @@ export default function PatientEducationPortal() {
                     onClick={() => setSelectedPatientId(p.id)}
                     className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                       selectedPatientId === p.id
-                        ? "border-purple-600 bg-purple-50"
-                        : "border-slate-200 hover:border-purple-300 bg-white"
+                        ? "border-navy-600 bg-navy-50"
+                        : "border-slate-200 hover:border-navy-300 bg-white"
                     }`}
                   >
                     <p className="font-semibold text-sm text-slate-900">
@@ -185,7 +185,7 @@ export default function PatientEducationPortal() {
             <Button
               onClick={() => generateEducationMutation.mutate(selectedPatientId)}
               disabled={generateEducationMutation.isPending}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {generateEducationMutation.isPending ? (
                 <>

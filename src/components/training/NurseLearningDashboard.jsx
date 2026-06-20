@@ -81,16 +81,16 @@ export default function NurseLearningDashboard({
     <div className="space-y-6">
       {/* AI-Identified Deficits with Auto-Recommendations */}
       {deficitAnalysis?.deficits && deficitAnalysis.deficits.length > 0 && (
-        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+        <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
+              <Sparkles className="w-5 h-5 text-navy-600" />
               AI-Detected Documentation Patterns
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-white/70 p-3 rounded-lg border border-purple-200">
-              <p className="text-sm text-purple-900 mb-2">
+            <div className="bg-white/70 p-3 rounded-lg border border-navy-200">
+              <p className="text-sm text-navy-900 mb-2">
                 Based on {deficitAnalysis.totalSuggestions} AI suggestions from your recent documentation, 
                 we've identified areas where additional training could strengthen your skills:
               </p>
@@ -318,10 +318,10 @@ export default function NurseLearningDashboard({
             {recentActivity.map((activity) => (
               <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                 <div className={`p-2 rounded-lg ${
-                  activity.module_type === 'quiz' ? 'bg-purple-100' : 'bg-indigo-100'
+                  activity.module_type === 'quiz' ? 'bg-navy-100' : 'bg-indigo-100'
                 }`}>
                   {activity.module_type === 'quiz' ? (
-                    <Brain className="w-4 h-4 text-purple-600" />
+                    <Brain className="w-4 h-4 text-navy-600" />
                   ) : (
                     <FileText className="w-4 h-4 text-indigo-600" />
                   )}

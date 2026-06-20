@@ -657,18 +657,18 @@ Return JSON format:
               {/* Monitoring */}
               <div>
                 <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-purple-600" />
+                  <Eye className="w-5 h-5 text-navy-600" />
                   Monitoring Parameters
                 </h3>
                 <div className="grid gap-3">
                   {interventionPlan.monitoring.map((param, i) => (
-                    <div key={i} className="p-3 bg-purple-50 border border-purple-200 rounded">
+                    <div key={i} className="p-3 bg-navy-50 border border-navy-200 rounded">
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium">{param.parameter}</p>
                           <p className="text-sm text-slate-600">Target: {param.target}</p>
                         </div>
-                        <Badge className="bg-purple-600">{param.frequency}</Badge>
+                        <Badge className="bg-navy-600">{param.frequency}</Badge>
                       </div>
                     </div>
                   ))}

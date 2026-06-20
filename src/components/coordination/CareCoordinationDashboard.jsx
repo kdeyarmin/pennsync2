@@ -70,9 +70,9 @@ export default function CareCoordinationDashboard() {
 
       {/* Summary Cards */}
       <div className="grid md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+        <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white">
           <CardContent className="p-4">
-            <p className="text-purple-100 text-sm mb-1">Active Alerts</p>
+            <p className="text-navy-100 text-sm mb-1">Active Alerts</p>
             <p className="text-3xl font-bold">{activeAlerts.length}</p>
           </CardContent>
         </Card>
@@ -145,7 +145,7 @@ export default function CareCoordinationDashboard() {
                         </Badge>
                         <Badge variant="outline">{alert.alert_type.replace(/_/g, ' ')}</Badge>
                         {alert.team_meeting_suggested && (
-                          <Badge className="bg-purple-100 text-purple-800">
+                          <Badge className="bg-navy-100 text-navy-800">
                             Team Meeting
                           </Badge>
                         )}

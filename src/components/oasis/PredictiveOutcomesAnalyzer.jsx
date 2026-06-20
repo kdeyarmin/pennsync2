@@ -397,7 +397,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
 
   return (
     <Card className="border-2 border-indigo-300 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Brain className="w-6 h-6 text-indigo-600" />
@@ -490,8 +490,8 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
               </Alert>
 
               {predictions.readmission_risk?.intervention_impact && (
-                <Alert className="bg-purple-50 border-purple-200 mt-2">
-                  <AlertDescription className="text-sm text-purple-900">
+                <Alert className="bg-navy-50 border-navy-200 mt-2">
+                  <AlertDescription className="text-sm text-navy-900">
                     <strong>Intervention Impact:</strong> {predictions.readmission_risk?.intervention_impact}
                   </AlertDescription>
                 </Alert>
@@ -521,9 +521,9 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                   <p className="text-xs text-orange-600">Pessimistic</p>
                   <p className="text-xl font-bold text-orange-700">{predictions.length_of_stay?.pessimistic_scenario} days</p>
                 </div>
-                <div className="text-center p-3 bg-purple-50 rounded border">
-                  <p className="text-xs text-purple-600">Predicted</p>
-                  <p className="text-2xl font-bold text-purple-700">{predictions.length_of_stay?.predicted_days} days</p>
+                <div className="text-center p-3 bg-navy-50 rounded border">
+                  <p className="text-xs text-navy-600">Predicted</p>
+                  <p className="text-2xl font-bold text-navy-700">{predictions.length_of_stay?.predicted_days} days</p>
                 </div>
               </div>
 
@@ -549,10 +549,10 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
           </Card>
 
           {/* Functional Trajectory */}
-          <Card className="border-2 border-purple-300">
-            <CardHeader className="bg-purple-50">
+          <Card className="border-2 border-navy-300">
+            <CardHeader className="bg-navy-50">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Activity className="w-5 h-5 text-purple-600" />
+                <Activity className="w-5 h-5 text-navy-600" />
                 Functional Outcome Trajectory
               </CardTitle>
             </CardHeader>
@@ -570,11 +570,11 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                 </div>
                 <div className="text-center p-3 bg-white rounded border-2">
                   <p className="text-xs text-slate-600">Improvement Likelihood</p>
-                  <p className="text-2xl font-bold text-purple-600">{predictions.functional_trajectory?.improvement_likelihood}%</p>
+                  <p className="text-2xl font-bold text-navy-600">{predictions.functional_trajectory?.improvement_likelihood}%</p>
                 </div>
                 <div className="text-center p-3 bg-white rounded border-2">
                   <p className="text-xs text-slate-600">Timeline to Goals</p>
-                  <p className="text-sm font-bold text-purple-700">{predictions.functional_trajectory?.timeline_to_goals}</p>
+                  <p className="text-sm font-bold text-navy-700">{predictions.functional_trajectory?.timeline_to_goals}</p>
                 </div>
               </div>
 
@@ -600,8 +600,8 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
               )}
 
               {predictions.functional_trajectory?.predicted_discharge_functional_level && (
-                <Alert className="bg-purple-50 border-purple-200">
-                  <AlertDescription className="text-sm text-purple-900">
+                <Alert className="bg-navy-50 border-navy-200">
+                  <AlertDescription className="text-sm text-navy-900">
                     <strong>Predicted Discharge Level:</strong> {predictions.functional_trajectory.predicted_discharge_functional_level}
                   </AlertDescription>
                 </Alert>
@@ -740,10 +740,10 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
 
           {/* Clinical Outcomes */}
           {predictions.clinical_outcomes && (
-            <Card className="border-2 border-cyan-300">
-              <CardHeader className="bg-cyan-50">
+            <Card className="border-2 border-navy-300">
+              <CardHeader className="bg-navy-50">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-cyan-600" />
+                  <Activity className="w-5 h-5 text-navy-600" />
                   Clinical Outcome Predictions
                 </CardTitle>
               </CardHeader>
@@ -782,7 +782,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                   {predictions.clinical_outcomes.wound_healing_timeline && (
                     <div className="p-3 bg-white rounded border">
                       <p className="text-xs text-slate-600 mb-1">Wound Healing Timeline</p>
-                      <p className="text-sm font-bold text-purple-600">{predictions.clinical_outcomes.wound_healing_timeline}</p>
+                      <p className="text-sm font-bold text-navy-600">{predictions.clinical_outcomes.wound_healing_timeline}</p>
                     </div>
                   )}
                 </div>
@@ -872,9 +872,9 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                         )}
 
                         <div className="grid grid-cols-2 gap-2 mb-2">
-                          <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                            <p className="text-xs text-purple-600 mb-1">Resources Needed:</p>
-                            <p className="text-sm text-purple-900">{strategy.resources_needed}</p>
+                          <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                            <p className="text-xs text-navy-600 mb-1">Resources Needed:</p>
+                            <p className="text-sm text-navy-900">{strategy.resources_needed}</p>
                           </div>
                           <div className="bg-orange-50 p-2 rounded border border-orange-200">
                             <p className="text-xs text-orange-600 mb-1">Monitoring:</p>
@@ -921,7 +921,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                   </div>
                   <div className="text-center p-3 bg-white rounded border">
                     <p className="text-xs text-slate-600 mb-1">OT Sessions</p>
-                    <p className="text-2xl font-bold text-purple-700">{predictions.resource_allocation_plan.ot_sessions_recommended}</p>
+                    <p className="text-2xl font-bold text-navy-700">{predictions.resource_allocation_plan.ot_sessions_recommended}</p>
                   </div>
                   <div className="text-center p-3 bg-white rounded border">
                     <p className="text-xs text-slate-600 mb-1">Aide Visits/Week</p>
@@ -967,10 +967,10 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
 
           {/* Care Planning Insights */}
           {predictions.care_planning_insights && (
-            <Card className="border-2 border-purple-400 bg-gradient-to-r from-purple-50 to-pink-50">
+            <Card className="border-2 border-navy-400 bg-gradient-to-r from-navy-50 to-pink-50">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Target className="w-5 h-5 text-purple-600" />
+                  <Target className="w-5 h-5 text-navy-600" />
                   Care Planning Insights
                 </CardTitle>
               </CardHeader>
@@ -1074,9 +1074,9 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 mb-2">
-                          <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                            <p className="text-xs text-purple-600 mb-1">Category:</p>
-                            <p className="text-sm text-purple-900">{rec.category}</p>
+                          <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                            <p className="text-xs text-navy-600 mb-1">Category:</p>
+                            <p className="text-sm text-navy-900">{rec.category}</p>
                           </div>
                           <div className="bg-green-50 p-2 rounded border border-green-200">
                             <p className="text-xs text-green-600 mb-1">Timeline:</p>

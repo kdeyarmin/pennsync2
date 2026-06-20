@@ -81,11 +81,11 @@ export default function TrainingProgressChart({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Brain className="w-4 h-4 text-purple-600" />
+              <Brain className="w-4 h-4 text-navy-600" />
               <p className="text-xs text-slate-600">Avg Quiz Score</p>
             </div>
             <p className="text-2xl font-bold">{avgScore}%</p>
-            <Progress value={avgScore} className="h-1.5 mt-2 [&>div]:bg-purple-500" />
+            <Progress value={avgScore} className="h-1.5 mt-2 [&>div]:bg-navy-500" />
           </CardContent>
         </Card>
 

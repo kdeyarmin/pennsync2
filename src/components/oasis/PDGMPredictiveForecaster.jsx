@@ -365,11 +365,11 @@ Return JSON:
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             PDGM Predictive Forecaster
           </div>
           <div className="flex items-center gap-2">
@@ -675,19 +675,19 @@ Return JSON:
           <>
             {isPredicting ? (
               <div className="text-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
+                <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
                 <p className="text-sm text-slate-600">Generating predictive scenarios...</p>
               </div>
             ) : !predictions ? (
-          <Button onClick={generatePredictions} className="w-full bg-purple-600 hover:bg-purple-700">
+          <Button onClick={generatePredictions} className="w-full bg-navy-600 hover:bg-navy-700">
             <Sparkles className="w-4 h-4 mr-2" />
             Generate Revenue Predictions
           </Button>
         ) : (
           <>
             {/* Payment Scenarios Comparison */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-purple-200">
-              <h3 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-4 rounded-lg border border-navy-200">
+              <h3 className="font-semibold text-navy-900 mb-3 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Payment Scenarios
               </h3>
@@ -712,7 +712,7 @@ Return JSON:
                   className={`p-4 rounded-lg border-2 ${
                     idx === 0 ? 'bg-slate-50 border-slate-300' :
                     idx === 1 ? 'bg-green-50 border-green-300' :
-                    idx === predictions.scenarios.length - 1 ? 'bg-purple-50 border-purple-300' :
+                    idx === predictions.scenarios.length - 1 ? 'bg-navy-50 border-navy-300' :
                     'bg-blue-50 border-blue-300'
                   }`}
                 >
@@ -732,7 +732,7 @@ Return JSON:
                   <div className="grid grid-cols-3 gap-2 my-3">
                     <div className="bg-white p-2 rounded text-center">
                       <p className="text-xs text-slate-500">Payment</p>
-                      <p className="text-lg font-bold text-purple-700">
+                      <p className="text-lg font-bold text-navy-700">
                         {formatCurrency(scenario.projected_payment)}
                       </p>
                     </div>
@@ -759,7 +759,7 @@ Return JSON:
                     <div className="flex items-center gap-2">
                       <span className="text-slate-600">Probability:</span>
                       <Progress value={scenario.probability} className="h-2 flex-1" />
-                      <span className="font-bold text-purple-700">{scenario.probability}%</span>
+                      <span className="font-bold text-navy-700">{scenario.probability}%</span>
                     </div>
                   </div>
 
@@ -841,8 +841,8 @@ Return JSON:
 
             {/* Recommendations */}
             {predictions.recommendations && (
-              <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-lg border border-cyan-200">
-                <h3 className="font-semibold text-cyan-900 mb-3 flex items-center gap-2">
+              <div className="bg-gradient-to-r from-navy-50 to-blue-50 p-4 rounded-lg border border-navy-200">
+                <h3 className="font-semibold text-navy-900 mb-3 flex items-center gap-2">
                   <Target className="w-4 h-4" />
                   Strategic Roadmap
                 </h3>

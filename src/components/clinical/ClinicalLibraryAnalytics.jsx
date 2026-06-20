@@ -84,9 +84,9 @@ export default function ClinicalLibraryAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-600 mb-1">Total Templates</p>
-                <p className="text-2xl font-bold text-purple-600">{analytics.totalTemplates}</p>
+                <p className="text-2xl font-bold text-navy-600">{analytics.totalTemplates}</p>
               </div>
-              <Calendar className="w-8 h-8 text-purple-500" />
+              <Calendar className="w-8 h-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
@@ -173,7 +173,7 @@ export default function ClinicalLibraryAnalytics() {
                   <p className="text-xs text-slate-600">{data.count} templates created</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-purple-600">{data.usage}</p>
+                  <p className="text-sm font-bold text-navy-600">{data.usage}</p>
                   <p className="text-xs text-slate-500">total uses</p>
                 </div>
               </div>

@@ -105,7 +105,7 @@ Return JSON:
       ) : (
         <div className="space-y-3">
           {/* Main Documentation Text */}
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg border-2 border-indigo-300">
+          <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-3 rounded-lg border-2 border-indigo-300">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-indigo-800 flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
@@ -147,9 +147,9 @@ Return JSON:
           </div>
 
           {/* M-Item Support */}
-          <div className="bg-purple-50 p-2 rounded border border-purple-200">
-            <p className="text-xs font-medium text-purple-800 mb-1">🎯 M-Item Scoring Support:</p>
-            <p className="text-xs text-purple-900">{suggestion.m_item_support}</p>
+          <div className="bg-navy-50 p-2 rounded border border-navy-200">
+            <p className="text-xs font-medium text-navy-800 mb-1">🎯 M-Item Scoring Support:</p>
+            <p className="text-xs text-navy-900">{suggestion.m_item_support}</p>
           </div>
 
           {/* Key Elements */}

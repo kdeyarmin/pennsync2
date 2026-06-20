@@ -85,17 +85,17 @@ export default function PatientChartRecommendations({ patientId }) {
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI-Generated Recommendations ({pendingRecs.length} pending)
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="space-y-3">
           {pendingRecs.map((rec) => (
-            <Card key={rec.id} className="border-l-4 border-l-purple-500 cursor-pointer hover:shadow-md transition-shadow"
+            <Card key={rec.id} className="border-l-4 border-l-navy-500 cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => setSelectedRec(rec)}
             >
               <CardContent className="p-3">
@@ -142,7 +142,7 @@ export default function PatientChartRecommendations({ patientId }) {
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-purple-600" />
+                <Lightbulb className="w-5 h-5 text-navy-600" />
                 {selectedRec?.title}
               </DialogTitle>
             </DialogHeader>
@@ -185,7 +185,7 @@ export default function PatientChartRecommendations({ patientId }) {
                     <ol className="space-y-1">
                       {selectedRec.implementation_steps.map((step, idx) => (
                         <li key={idx} className="text-sm text-slate-800 flex items-start gap-2">
-                          <span className="bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">
+                          <span className="bg-navy-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">
                             {idx + 1}
                           </span>
                           {step}
@@ -220,7 +220,7 @@ export default function PatientChartRecommendations({ patientId }) {
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Accept
                   </Button>
-                  <Button onClick={handleComplete} className="bg-purple-600 hover:bg-purple-700">
+                  <Button onClick={handleComplete} className="bg-navy-600 hover:bg-navy-700">
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Complete
                   </Button>

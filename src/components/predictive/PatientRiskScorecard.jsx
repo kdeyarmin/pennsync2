@@ -141,11 +141,11 @@ Analyze all risk factors and provide:
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-2 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-2 bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-purple-600" />
+            <User className="w-5 h-5 text-navy-600" />
             {patient.first_name} {patient.last_name} - Risk Scorecard
           </div>
           <Button

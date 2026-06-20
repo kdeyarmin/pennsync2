@@ -66,7 +66,7 @@ const GROUPS = [
     title: "Reports & Analytics",
     description: "Agency reporting, KPIs, predictive analytics, and exports.",
     icon: BarChart3,
-    color: "text-violet-600 bg-violet-50",
+    color: "text-navy-600 bg-navy-50",
     pages: [
       "ReportsAnalytics", "AdminReportsCenter", "AgencyAnalytics",
       "AnalyticsDashboard", "PredictiveAnalytics", "FaxAnalytics",
@@ -86,7 +86,7 @@ const GROUPS = [
     title: "AI & Automation",
     description: "AI tooling, auto-tagging, and OCR model training.",
     icon: Brain,
-    color: "text-fuchsia-600 bg-fuchsia-50",
+    color: "text-navy-600 bg-navy-50",
     pages: ["AIToolsCenter"],
   },
   {

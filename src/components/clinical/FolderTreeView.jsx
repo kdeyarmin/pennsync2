@@ -47,7 +47,7 @@ export default function FolderTreeView({
     { value: 'gray', class: 'text-slate-600', bg: 'bg-slate-100' },
     { value: 'blue', class: 'text-blue-600', bg: 'bg-blue-100' },
     { value: 'green', class: 'text-green-600', bg: 'bg-green-100' },
-    { value: 'purple', class: 'text-purple-600', bg: 'bg-purple-100' },
+    { value: 'purple', class: 'text-navy-600', bg: 'bg-navy-100' },
     { value: 'yellow', class: 'text-yellow-600', bg: 'bg-yellow-100' },
     { value: 'red', class: 'text-red-600', bg: 'bg-red-100' },
     { value: 'indigo', class: 'text-indigo-600', bg: 'bg-indigo-100' },

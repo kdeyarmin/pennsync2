@@ -322,9 +322,9 @@ Your Care Team
             )}
 
             {/* Encouragement */}
-            <Alert className="bg-purple-50 border-purple-200">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <AlertDescription className="text-purple-900 italic">
+            <Alert className="bg-navy-50 border-navy-200">
+              <Sparkles className="w-4 h-4 text-navy-600" />
+              <AlertDescription className="text-navy-900 italic">
                 {summary.encouragement}
               </AlertDescription>
             </Alert>

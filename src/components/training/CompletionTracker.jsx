@@ -90,12 +90,12 @@ export default function CompletionTracker({ moduleId, moduleTitle }) {
             <p className="text-2xl font-bold text-yellow-900">{stats.inProgress}</p>
           </div>
 
-          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+          <div className="bg-navy-50 p-3 rounded-lg border border-navy-200">
             <div className="flex items-center gap-2 mb-1">
-              <Award className="w-4 h-4 text-purple-600" />
-              <span className="text-xs text-purple-600">Avg Score</span>
+              <Award className="w-4 h-4 text-navy-600" />
+              <span className="text-xs text-navy-600">Avg Score</span>
             </div>
-            <p className="text-2xl font-bold text-purple-900">{stats.avgScore}%</p>
+            <p className="text-2xl font-bold text-navy-900">{stats.avgScore}%</p>
           </div>
         </div>
 

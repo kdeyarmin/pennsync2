@@ -157,10 +157,10 @@ ${data.orders_treatments?.physician_orders?.join('\n') || 'To be clarified with 
         </Link>
       </div>
 
-      <Card className="mb-6 border-2 border-purple-300 bg-purple-50">
+      <Card className="mb-6 border-2 border-navy-300 bg-navy-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             Admission Note from Referral
           </CardTitle>
         </CardHeader>

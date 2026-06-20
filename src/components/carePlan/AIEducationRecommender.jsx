@@ -248,9 +248,9 @@ Return JSON:`,
                           <p className="text-sm text-slate-700">{rec.content}</p>
 
                           {rec.learning_objectives?.length > 0 && (
-                            <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                              <p className="text-xs font-medium text-purple-800 mb-1">Learning Objectives:</p>
-                              <ul className="text-xs text-purple-900 space-y-0.5">
+                            <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                              <p className="text-xs font-medium text-navy-800 mb-1">Learning Objectives:</p>
+                              <ul className="text-xs text-navy-900 space-y-0.5">
                                 {rec.learning_objectives.map((obj, i) => (
                                   <li key={i}>• {obj}</li>
                                 ))}

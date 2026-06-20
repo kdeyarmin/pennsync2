@@ -338,14 +338,14 @@ export default function UserActivityReport() {
             </CardContent>
           </Card>
 
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
+          <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-navy-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Total Logins</p>
-                  <p className="text-3xl font-bold text-purple-900 mt-1">{overallStats.total_logins}</p>
+                  <p className="text-sm text-navy-600 font-medium">Total Logins</p>
+                  <p className="text-3xl font-bold text-navy-900 mt-1">{overallStats.total_logins}</p>
                 </div>
-                <LogIn className="w-12 h-12 text-purple-500 opacity-50" />
+                <LogIn className="w-12 h-12 text-navy-500 opacity-50" />
               </div>
             </CardContent>
           </Card>
@@ -449,9 +449,9 @@ export default function UserActivityReport() {
                           <p className="text-xs text-green-600 font-medium">Total Actions</p>
                           <p className="text-2xl font-bold text-green-900">{stat.total_actions}</p>
                         </div>
-                        <div className="p-3 bg-purple-50 rounded-lg">
-                          <p className="text-xs text-purple-600 font-medium">Logins</p>
-                          <p className="text-2xl font-bold text-purple-900">{stat.logins}</p>
+                        <div className="p-3 bg-navy-50 rounded-lg">
+                          <p className="text-xs text-navy-600 font-medium">Logins</p>
+                          <p className="text-2xl font-bold text-navy-900">{stat.logins}</p>
                         </div>
                         <div className="p-3 bg-blue-50 rounded-lg">
                           <p className="text-xs text-blue-600 font-medium">Pages</p>

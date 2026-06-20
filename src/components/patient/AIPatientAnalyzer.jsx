@@ -164,17 +164,17 @@ Format as JSON with clear, actionable clinical insights.`;
   };
 
   return (
-    <Card className="border-purple-200 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
+    <Card className="border-navy-200 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50 border-b border-navy-100">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-6 h-6 text-purple-600" />
+            <Brain className="w-6 h-6 text-navy-600" />
             AI Clinical Analysis
           </CardTitle>
           <Button
             onClick={runAnalysis}
             disabled={isAnalyzing}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-navy-600 hover:bg-navy-700"
           >
             {isAnalyzing ? (
               <>
@@ -196,7 +196,7 @@ Format as JSON with clear, actionable clinical insights.`;
       <CardContent className="p-6">
         {!analysis && !isAnalyzing && (
           <div className="text-center py-12">
-            <Brain className="w-16 h-16 text-purple-200 mx-auto mb-4" />
+            <Brain className="w-16 h-16 text-navy-200 mx-auto mb-4" />
             <p className="text-slate-600 mb-2">Click "Run Analysis" to generate AI-powered clinical insights</p>
             <p className="text-sm text-slate-500">Analysis includes potential diagnoses, risk factors, and care recommendations</p>
           </div>
@@ -209,10 +209,10 @@ Format as JSON with clear, actionable clinical insights.`;
               <div>
                 <button
                   onClick={() => toggleSection('diagnoses')}
-                  className="w-full flex items-center justify-between p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                  className="w-full flex items-center justify-between p-3 bg-navy-50 rounded-lg hover:bg-navy-100 transition-colors"
                 >
                   <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                    <Target className="w-5 h-5 text-purple-600" />
+                    <Target className="w-5 h-5 text-navy-600" />
                     Potential Additional Diagnoses ({analysis.potential_diagnoses.length})
                   </h3>
                   {expandedSections.diagnoses ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -220,7 +220,7 @@ Format as JSON with clear, actionable clinical insights.`;
                 {expandedSections.diagnoses && (
                   <div className="mt-3 space-y-3">
                     {analysis.potential_diagnoses.map((dx, idx) => (
-                      <Card key={idx} className="border-l-4 border-l-purple-500">
+                      <Card key={idx} className="border-l-4 border-l-navy-500">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <h4 className="font-semibold text-slate-900">{dx.diagnosis}</h4>

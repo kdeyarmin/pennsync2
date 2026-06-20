@@ -209,10 +209,10 @@ export default function NurseTrainingHub() {
 
           {/* AI-Generated Training Section */}
           {skillGaps.length > 0 && (
-            <Card className="border-purple-200">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+            <Card className="border-navy-200">
+              <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
                 <CardTitle className="flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-purple-600" />
+                  <Brain className="w-5 h-5 text-navy-600" />
                   Generate Custom Training
                 </CardTitle>
               </CardHeader>
@@ -222,7 +222,7 @@ export default function NurseTrainingHub() {
                 </p>
                 <div className="space-y-2">
                   {skillGaps.map((gap, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div key={idx} className="flex items-center justify-between p-4 bg-navy-50 rounded-lg border border-navy-200">
                       <div className="flex-1">
                         <p className="font-semibold text-slate-900">{gap.skill}</p>
                         <p className="text-sm text-slate-600">{gap.recommendation}</p>
@@ -231,7 +231,7 @@ export default function NurseTrainingHub() {
                       <Button
                         onClick={() => generateTrainingMutation.mutate(gap.skill)}
                         disabled={generateTrainingMutation.isPending}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-navy-600 hover:bg-navy-700"
                       >
                         {generateTrainingMutation.isPending ? (
                           <>

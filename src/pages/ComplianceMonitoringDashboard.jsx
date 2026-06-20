@@ -378,13 +378,13 @@ Compliance Management System`;
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none">
+        <Card className="bg-gradient-to-br from-navy-500 to-navy-600 text-white border-none">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <Users className="w-8 h-8 text-purple-200" />
+              <Users className="w-8 h-8 text-navy-200" />
             </div>
             <p className="text-2xl font-bold">{affectedUsers}</p>
-            <p className="text-xs text-purple-100">Affected Staff</p>
+            <p className="text-xs text-navy-100">Affected Staff</p>
           </CardContent>
         </Card>
 

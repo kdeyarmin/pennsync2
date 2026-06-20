@@ -77,7 +77,7 @@ export default function ReferralVolumeReport({ dateRange }) {
             {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}
           </p>
         </div>
-        <Button onClick={handleExport} className="bg-purple-600 hover:bg-purple-700">
+        <Button onClick={handleExport} className="bg-navy-600 hover:bg-navy-700">
           <Download className="w-4 h-4 mr-2" />
           Export PDF
         </Button>

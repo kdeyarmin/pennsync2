@@ -150,14 +150,14 @@ export default function OASISReview() {
         </Card>
 
         {isAdmin && (
-          <Card className="border-2 border-purple-200 bg-purple-50">
+          <Card className="border-2 border-navy-200 bg-navy-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Needs Approval</p>
-                  <p className="text-3xl font-bold text-purple-700">{needsApproval.length}</p>
+                  <p className="text-sm text-navy-600 font-medium">Needs Approval</p>
+                  <p className="text-3xl font-bold text-navy-700">{needsApproval.length}</p>
                 </div>
-                <AlertTriangle className="w-10 h-10 text-purple-400" />
+                <AlertTriangle className="w-10 h-10 text-navy-400" />
               </div>
             </CardContent>
           </Card>

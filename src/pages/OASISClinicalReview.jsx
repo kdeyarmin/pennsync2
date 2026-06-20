@@ -96,7 +96,7 @@ export default function OASISClinicalReview() {
 
       {/* Clinical Data Summary */}
       <Card className="border-2 border-blue-200">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-navy-50">
           <CardTitle className="flex items-center gap-2">
             <Stethoscope className="w-5 h-5 text-blue-600" />
             Clinical Data Summary
@@ -116,7 +116,7 @@ export default function OASISClinicalReview() {
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-700 mb-2">Functional Level</p>
-              <Badge className="bg-purple-100 text-purple-800">
+              <Badge className="bg-navy-100 text-navy-800">
                 {pdgmData?.functional_level || 'Not determined'}
               </Badge>
             </div>

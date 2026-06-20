@@ -113,7 +113,7 @@ export default function OASISAuditDashboard() {
       pending_review: 'bg-yellow-100 text-yellow-800',
       in_review: 'bg-blue-100 text-blue-800',
       reviewed: 'bg-green-100 text-green-800',
-      corrected: 'bg-purple-100 text-purple-800',
+      corrected: 'bg-navy-100 text-navy-800',
       dismissed: 'bg-slate-100 text-slate-800'
     };
     return styles[status] || 'bg-slate-100 text-slate-800';
@@ -412,7 +412,7 @@ export default function OASISAuditDashboard() {
                         <div key={idx} className="p-2 bg-slate-50 rounded border text-sm">
                           <div className="flex items-center gap-2 mb-1">
                             <Badge variant="outline" className="text-xs">{issue.category}</Badge>
-                            {issue.item && <Badge className="text-xs bg-purple-100 text-purple-800">{issue.item}</Badge>}
+                            {issue.item && <Badge className="text-xs bg-navy-100 text-navy-800">{issue.item}</Badge>}
                             <Badge className={`text-xs ${
                               issue.severity === 'high' ? 'bg-red-100 text-red-800' : 
                               issue.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 

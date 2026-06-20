@@ -193,7 +193,7 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
                         </Button>
                       )}
                       {log.ocr_processed && onSelectFaxForAI && (
-                        <Button variant="outline" size="sm" onClick={() => onSelectFaxForAI(log.id)} className="text-purple-600 hover:text-purple-700">
+                        <Button variant="outline" size="sm" onClick={() => onSelectFaxForAI(log.id)} className="text-navy-600 hover:text-navy-700">
                           <Brain className="w-3 h-3 mr-1" /> AI Analyze
                         </Button>
                       )}

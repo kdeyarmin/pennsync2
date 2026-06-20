@@ -146,7 +146,7 @@ export default function StaffEducationComplianceReport() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-navy-50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -226,14 +226,14 @@ export default function StaffEducationComplianceReport() {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-200">
+        <Card className="border-2 border-navy-200">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Active Staff</p>
-                <p className="text-3xl font-bold text-purple-600">{complianceData.totalStaff}</p>
+                <p className="text-3xl font-bold text-navy-600">{complianceData.totalStaff}</p>
               </div>
-              <Users className="w-10 h-10 text-purple-600" />
+              <Users className="w-10 h-10 text-navy-600" />
             </div>
             <p className="text-xs text-slate-600 mt-2">
               Enrolled in training
