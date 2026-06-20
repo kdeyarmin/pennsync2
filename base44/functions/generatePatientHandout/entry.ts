@@ -4,7 +4,7 @@ import { jsPDF } from 'npm:jspdf@2.5.1';
 // Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
 // production by default. console.error/warn remain ungated for visibility.
 const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
-const debugLog = (...args) => { if (DEBUG) debugLog(...args); };
+const debugLog = (...args) => { if (DEBUG) console.log(...args); };
 
 const LOGO_URL = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/c39653ba3_PennHomeHealthInc.png';
 
