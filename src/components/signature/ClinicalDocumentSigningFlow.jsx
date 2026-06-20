@@ -290,6 +290,9 @@ export default function ClinicalDocumentSigningFlow({
             documentType={documentType}
             documentId={documentState?.id}
             documentTitle={documentState?.title || "Clinical Document"}
+            patientId={documentState?.patient_id}
+            documentContent={documentState?.content}
+            documentUrl={documentState?.file_url}
             signatureRole={signingRole}
             onSignatureComplete={handleSignatureComplete}
           />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,10 @@ export default function ProactiveCareGapIdentifier({
   compact = false 
 }) {
   const queryClient = useQueryClient();
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [identifiedGaps, setIdentifiedGaps] = useState(null);
   const [_selectedPatients, _setSelectedPatients] = useState([]);
@@ -173,7 +177,8 @@ Return structured JSON with prioritized gaps.`,
         description: `${gap.gap_description}\n\nClinical Rationale:\n${gap.clinical_rationale}\n\nRecommended Actions:\n${gap.recommended_interventions.join('\n- ')}`,
         type: 'followup',
         priority: gap.risk_level === 'critical' ? 'high' : gap.risk_level === 'high' ? 'high' : 'medium',
-        due_timeframe: gap.suggested_timeline === 'urgent' ? 'today' : 
+        assigned_to: currentUser?.email,
+        due_timeframe: gap.suggested_timeline === 'urgent' ? 'today' :
                        gap.suggested_timeline === 'this_week' ? 'this_week' : 
                        gap.suggested_timeline === 'next_week' ? 'next_visit' : 'this_week',
         source: 'ai_generated',

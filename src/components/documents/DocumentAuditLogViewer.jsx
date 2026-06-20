@@ -81,16 +81,29 @@ export default function DocumentAuditLogViewer() {
 
       // Document signature events
       signatures.forEach((sig) => {
-        if (sig.status === 'signed' && sig.signed_at) {
+        // 'completed' is the current status; tolerate legacy 'signed'.
+        if (sig.status === 'completed' || sig.status === 'signed') {
+          const completedSigners = (sig.signers || []).filter(
+            (s) => s.status === 'completed' || s.signed_date
+          );
+          // Most recent signer signed_date as a fallback for completion time.
+          const latestSignedDate = completedSigners
+            .map((s) => s.signed_date)
+            .filter(Boolean)
+            .sort((a, b) => new Date(b) - new Date(a))[0];
+          const primarySigner = completedSigners[completedSigners.length - 1];
+          const documentTitle = sig.document_title || 'Document';
+          const signerName = primarySigner?.name || 'Unknown signer';
+
           auditEvents.push({
             id: `sig-${sig.id}`,
-            timestamp: sig.signed_at,
+            timestamp: sig.completed_date || latestSignedDate,
             type: 'signed',
-            title: `Document signed: ${sig.document_name}`,
-            packageId: sig.package_id,
-            signer: sig.signer_name,
-            signerEmail: sig.signer_email,
-            details: `${sig.document_name} signed by ${sig.signer_name}`,
+            title: `Document signed: ${documentTitle}`,
+            packageId: sig.id,
+            signer: signerName,
+            signerEmail: primarySigner?.email,
+            details: `${documentTitle} signed by ${signerName}`,
             icon: FileCheck,
             color: 'green',
           });

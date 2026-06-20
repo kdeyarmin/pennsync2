@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
           type: 'expiration_warning',
           title: `Training Renewal Due Soon: ${assignment.course_title}`,
           message: `Your ${assignment.course_title} certification expires in ${daysUntilExpiration} days. Please complete the renewal training.`,
-          link: '/MyTraining',
+          action_url: '/MyTraining',
           priority: daysUntilExpiration <= 7 ? 'high' : 'medium',
           is_read: false,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
           type: 'credential_expiration',
           title: `Credential Expiring Soon: ${credential.title}`,
           message: `Your ${credential.title} expires in ${daysUntilExpiration} days. Please upload a renewed document.`,
-          link: '/PersonnelFile',
+          action_url: '/PersonnelFile',
           priority: daysUntilExpiration <= 7 ? 'high' : 'medium',
           is_read: false,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
           type: 'admin_expiration_summary',
           title: `${adminNotifications.length} Upcoming Expirations`,
           message: `There are ${adminNotifications.length} training certifications or credentials expiring soon.`,
-          link: '/AdminDashboard',
+          action_url: '/AdminDashboard',
           priority: 'medium',
           is_read: false,
           metadata: { expirations: adminNotifications },

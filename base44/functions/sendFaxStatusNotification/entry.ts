@@ -135,11 +135,10 @@ Please log in to your dashboard to view more details.
       // saw it. Shape mirrors the working pollFaxStatuses notification.
       await base44.asServiceRole.entities.Notification.create({
         user_email: user.email,
-        type: status === 'failed' ? 'error' : 'success',
+        type: status === 'failed' ? 'fax_failed' : 'fax_delivered',
         title: subject,
         message: `Fax to ${recipientFax} has been ${status}`,
-        related_entity: 'FaxLog',
-        related_entity_id: data?.id,
+        metadata: { related_entity: 'FaxLog', related_entity_id: data?.id },
         is_read: false,
       });
     } catch (logError) {

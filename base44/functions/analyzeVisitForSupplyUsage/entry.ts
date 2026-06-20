@@ -132,11 +132,9 @@ Return ONLY valid JSON array, no other text.`;
               title: `Reorder ${matchedSupply.name}`,
               description: `${matchedSupply.name} is ${severity === 'out_of_stock' ? 'out of stock' : 'running low'}. Current: ${newQuantity} ${matchedSupply.unit}, recommend reordering ${matchedSupply.reorder_quantity} units.`,
               status: 'pending',
-              priority: severity === 'critical' ? 'high' : severity === 'out_of_stock' ? 'urgent' : 'normal',
+              priority: severity === 'critical' ? 'high' : severity === 'out_of_stock' ? 'high' : 'medium',
               assigned_to: user.email,
-              due_date: new Date().toISOString().split('T')[0],
-              entity_type: 'SupplyItem',
-              entity_id: matchedSupply.id
+              due_date: new Date().toISOString().split('T')[0]
             });
 
             // Link task to alert

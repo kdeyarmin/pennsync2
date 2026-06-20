@@ -163,7 +163,22 @@ Return comprehensive risk assessment:`,
             items: {
               type: "object",
               properties: {
-                alert_type: { type: "string" },
+                alert_type: {
+                  type: "string",
+                  enum: [
+                    "vital_deterioration",
+                    "medication_risk",
+                    "fall_risk",
+                    "readmission_risk",
+                    "infection_risk",
+                    "symptom_escalation",
+                    "care_gap",
+                    "urgent_intervention",
+                    "hospice_transition",
+                    "caregiver_burnout",
+                    "documentation_risk"
+                  ]
+                },
                 severity: { type: "string" },
                 risk_score: { type: "number" },
                 title: { type: "string" },
@@ -190,18 +205,38 @@ Return comprehensive risk assessment:`,
       }
     });
 
+    // Allowed PatientAlert alert_type values; anything the AI returns outside
+    // this set is coerced to a safe default so PatientAlert.create won't reject.
+    const ALLOWED_ALERT_TYPES = new Set([
+      'vital_deterioration',
+      'medication_risk',
+      'fall_risk',
+      'readmission_risk',
+      'infection_risk',
+      'symptom_escalation',
+      'care_gap',
+      'urgent_intervention',
+      'hospice_transition',
+      'caregiver_burnout',
+      'documentation_risk'
+    ]);
+
     // Create or update patient alerts for high-risk findings
     const createdAlerts = [];
     for (const alert of riskAnalysis.high_risk_alerts || []) {
+      const alertType = ALLOWED_ALERT_TYPES.has(alert.alert_type)
+        ? alert.alert_type
+        : 'urgent_intervention';
+
       // Check if similar alert already exists
-      const existingSimilar = existingAlerts.find(ea => 
-        ea.alert_type === alert.alert_type && ea.status === 'active'
+      const existingSimilar = existingAlerts.find(ea =>
+        ea.alert_type === alertType && ea.status === 'active'
       );
 
       if (!existingSimilar) {
         const newAlert = await base44.asServiceRole.entities.PatientAlert.create({
           patient_id,
-          alert_type: alert.alert_type,
+          alert_type: alertType,
           severity: alert.severity,
           title: alert.title,
           message: alert.message,

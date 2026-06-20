@@ -147,7 +147,7 @@ Return 5-12 tasks ordered by priority and due date.`,
                             title: { type: "string" },
                             description: { type: "string" },
                             type: { type: "string", enum: ["call", "notify", "schedule", "order", "coordinate", "document", "safety", "followup", "other"] },
-                            priority: { type: "string", enum: ["urgent", "high", "normal", "low"] },
+                            priority: { type: "string", enum: ["high", "medium", "low"] },
                             assigned_role: { type: "string", enum: ["intake_coordinator", "nurse_manager", "field_nurse", "billing", "admin", "other"] },
                             due_date: { type: "string" },
                             ai_reason: { type: "string" }

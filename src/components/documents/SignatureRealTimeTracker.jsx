@@ -18,15 +18,26 @@ export default function SignatureRealTimeTracker({ packageId, onSignatureUpdate 
           if (event.type === 'update' && event.data) {
             const sig = event.data;
 
-            // Check if this signature is in our package
-            if (sig.package_id === packageId && sig.status === 'signed') {
+            // Check if this is the signature record we're tracking.
+            // 'completed' is the current status; tolerate legacy 'signed'.
+            if (
+              sig.id === packageId &&
+              (sig.status === 'completed' || sig.status === 'signed')
+            ) {
+              // Derive the most recently completed signer from signers[].
+              const completedSigners = (sig.signers || []).filter(
+                (s) => s.status === 'completed' || s.signed_date
+              );
+              const primarySigner = completedSigners[completedSigners.length - 1];
+              const signerName = primarySigner?.name || 'A signer';
+
               // Notify admin
               toast.success(
                 <div className="flex gap-2 items-start">
                   <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Document Signed</p>
-                    <p className="text-sm text-slate-600">{sig.signer_name} signed the document</p>
+                    <p className="text-sm text-slate-600">{signerName} signed the document</p>
                   </div>
                 </div>,
                 { duration: 4000 }

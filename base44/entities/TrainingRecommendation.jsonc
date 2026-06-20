@@ -35,7 +35,8 @@
         "grammar_corrector",
         "ai_documentation_suggester",
         "risk_detector",
-        "clinical_decision_support"
+        "clinical_decision_support",
+        "ai_scribe"
       ],
       "description": "Where the recommendation came from"
     },

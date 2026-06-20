@@ -98,11 +98,10 @@ Deno.serve(async (req) => {
           if (['sent', 'delivered', 'failed'].includes(newStatus) && fax.sent_by) {
             await base44.asServiceRole.entities.Notification.create({
               user_email: fax.sent_by,
-              type: newStatus === 'failed' ? 'error' : 'success',
+              type: newStatus === 'failed' ? 'fax_failed' : 'fax_delivered',
               title: newStatus === 'failed' ? 'Fax Failed' : 'Fax Status Update',
               message: getNotificationMessage(newStatus, fax),
-              related_entity: 'FaxLog',
-              related_entity_id: fax.id,
+              metadata: { related_entity: 'FaxLog', related_entity_id: fax.id },
               is_read: false
             }).catch(err => console.error(`Failed to create notification for fax ${fax.id}:`, err.message));
           }

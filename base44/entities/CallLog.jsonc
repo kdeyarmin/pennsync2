@@ -91,6 +91,21 @@
     "sent_by": {
       "type": "string",
       "description": "User who initiated the call"
+    },
+    "note": {
+      "type": "string",
+      "description": "Free-text note the nurse adds to the call after the fact"
+    },
+    "disposition": {
+      "type": "string",
+      "enum": [
+        "resolved",
+        "follow_up_needed",
+        "callback_requested",
+        "left_voicemail",
+        "no_action"
+      ],
+      "description": "Post-call disposition the nurse tags the call with"
     }
   },
   "required": [

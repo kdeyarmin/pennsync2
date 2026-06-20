@@ -34,7 +34,11 @@
         "fax_delivered",
         "fax_failed",
         "voicemail",
-        "info"
+        "info",
+        "expiration_warning",
+        "credential_expiration",
+        "admin_expiration_summary",
+        "care_plan_proposal"
       ],
       "description": "Type of notification"
     },

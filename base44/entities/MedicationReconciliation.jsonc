@@ -95,7 +95,8 @@
               "frequency_change",
               "missing_from_discharge",
               "duplicate",
-              "potential_interaction"
+              "potential_interaction",
+              "age_condition_risk"
             ]
           },
           "severity": {
