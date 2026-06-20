@@ -980,9 +980,9 @@ export default function UserManagement() {
                 </>
               ) : resetPasswordResult.success ? (
                 <div className="space-y-3">
-                  <Alert className="bg-green-50 border-green-300">
-                    <AlertDescription className="text-green-900">
-                      ✅ Password reset successfully! An email with the temporary password has been sent to the user.
+                  <Alert className="bg-emerald-50 border-emerald-300">
+                    <AlertDescription className="text-emerald-900">
+                      Password reset successfully! An email with the temporary password has been sent to the user.
                     </AlertDescription>
                   </Alert>
                   <div className="p-4 bg-slate-50 rounded-lg border">
@@ -991,14 +991,14 @@ export default function UserManagement() {
                       {resetPasswordResult.tempPassword}
                     </p>
                     <p className="text-xs text-slate-500 mt-2">
-                      💡 You can share this with the user if they didn't receive the email
+                      You can share this with the user if they didn't receive the email
                     </p>
                   </div>
                 </div>
               ) : (
                 <Alert className="bg-red-50 border-red-300">
                   <AlertDescription className="text-red-900">
-                    ❌ Failed to reset password: {resetPasswordResult?.error || 'Unknown error'}
+                    Failed to reset password: {resetPasswordResult?.error || 'Unknown error'}
                   </AlertDescription>
                 </Alert>
               )}

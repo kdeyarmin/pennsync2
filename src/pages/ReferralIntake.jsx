@@ -1122,8 +1122,8 @@ Actions available:
                         )}
                         {referral.requires_manual_review && (
                           <div className="flex flex-col gap-1 mt-1">
-                            <Badge className="bg-yellow-600 text-xs">
-                              ⚠️ Review Match
+                            <Badge variant="warning" className="text-xs">
+                              Review Match
                             </Badge>
                             {referral.match_confidence && (
                               <span className="text-xs text-yellow-700">

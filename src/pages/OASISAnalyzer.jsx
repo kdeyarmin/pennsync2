@@ -2053,15 +2053,17 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
                              <FinancialGate>
                                {mismatch.revenue_impact && (
-                                 <div className="bg-green-50 p-2 rounded text-xs text-green-800 mb-1">
-                                   💰 Revenue Impact: {mismatch.revenue_impact}
+                                 <div className="bg-emerald-50 p-2 rounded text-xs text-emerald-800 mb-1 flex items-start gap-1.5">
+                                   <DollarSign className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                   <span>Revenue Impact: {mismatch.revenue_impact}</span>
                                  </div>
                                )}
                              </FinancialGate>
 
                              {mismatch.compliance_risk && (
-                               <div className="bg-red-50 p-2 rounded text-xs text-red-800 mb-2">
-                                 ⚠️ Compliance Risk: {mismatch.compliance_risk}
+                               <div className="bg-red-50 p-2 rounded text-xs text-red-800 mb-2 flex items-start gap-1.5">
+                                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                 <span>Compliance Risk: {mismatch.compliance_risk}</span>
                                </div>
                              )}
 
@@ -2690,7 +2692,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                        </div>
                        {imp.exact_text_to_add && (
                          <div className="mt-2 p-2 bg-white rounded border border-blue-300">
-                           <p className="text-xs text-blue-600 mb-1 font-medium">📝 Exact Text to Add:</p>
+                           <p className="text-xs text-blue-600 mb-1 font-medium flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Exact Text to Add:</p>
                            <p className="text-sm text-blue-900 italic">"{imp.exact_text_to_add}"</p>
                          </div>
                        )}
@@ -2714,7 +2716,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-green-600" />
                     <span className="text-green-800">Rescore Opportunities ({analysisResults.specific_rescore_opportunities.length})</span>
-                    <FinancialGate><Badge className="bg-green-600 text-white ml-2">💰 Revenue Impact</Badge></FinancialGate>
+                    <FinancialGate><Badge className="bg-emerald-600 text-white ml-2"><DollarSign className="w-3 h-3 mr-1" />Revenue Impact</Badge></FinancialGate>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -2744,7 +2746,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                          <p className="text-sm text-slate-800">{opp.clinical_evidence}</p>
                        </div>
                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                         <p className="text-xs text-blue-600 mb-1 font-medium">✅ Action Required:</p>
+                         <p className="text-xs text-blue-600 mb-1 font-medium flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Action Required:</p>
                          <p className="text-sm text-blue-900">{opp.action_required}</p>
                        </div>
                        <InlineDocumentationAssistant 
@@ -2781,7 +2783,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                        <p className="text-sm text-slate-700 mb-2">{doc.why_it_matters}</p>
                        {doc.suggested_text && (
                          <div className="bg-white p-2 rounded border border-amber-200">
-                           <p className="text-xs text-amber-600 mb-1 font-medium">📝 Suggested Documentation:</p>
+                           <p className="text-xs text-amber-600 mb-1 font-medium flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Suggested Documentation:</p>
                            <p className="text-sm text-slate-800 italic">"{doc.suggested_text}"</p>
                          </div>
                        )}
@@ -2819,7 +2821,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                             </Badge>
                           </div>
                         </div>
-                        <p className="text-sm text-green-700 mb-2">💰 Impact: {win.impact}</p>
+                        <p className="text-sm text-emerald-700 mb-2 flex items-center gap-1.5"><DollarSign className="w-4 h-4" /> Impact: {win.impact}</p>
                         {win.how_to && (
                           <div className="bg-white p-2 rounded border">
                             <p className="text-xs text-navy-600 mb-1 font-medium">How to do it:</p>

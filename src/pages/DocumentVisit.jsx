@@ -1782,7 +1782,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                           </ul>
                         </div>
                       </div>
-                      <p className="mt-3 text-xs italic">💡 Your spoken dictation will be intelligently merged into your note.</p>
+                      <p className="mt-3 text-xs italic">Your spoken dictation will be intelligently merged into your note.</p>
                     </AlertDescription>
                   </Alert>
 
