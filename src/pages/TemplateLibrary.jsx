@@ -122,7 +122,7 @@ export default function TemplateLibrary() {
               />
               
               {/* Action Buttons */}
-              <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+              <Card>
                 <CardContent className="p-4">
                   <div className="flex flex-wrap gap-3">
                     <Button
@@ -171,7 +171,7 @@ export default function TemplateLibrary() {
       </div>
 
       {/* Features Info */}
-      <Card className="mt-8 bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
+      <Card className="mt-8 border-l-4 border-l-gold-400">
         <CardContent className="p-6">
           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-navy-600" />

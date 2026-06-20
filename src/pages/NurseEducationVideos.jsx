@@ -124,19 +124,17 @@ export default function NurseEducationVideos() {
         favoritePage="NurseEducationVideos"
       />
 
-      <Card className="mb-6 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-navy-50">
+      <Card className="mb-6">
         <CardContent className="p-6">
-          <div className="bg-white rounded-lg p-4 border border-indigo-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-slate-700">Your Progress</span>
-              <span className="text-sm font-bold text-indigo-600">{completedVideos.length} / {totalVideos} videos</span>
-            </div>
-            <div className="w-full bg-slate-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-indigo-500 to-navy-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${completionPercentage}%` }}
-              />
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-slate-700">Your Progress</span>
+            <span className="text-sm font-bold text-navy-700">{completedVideos.length} / {totalVideos} videos</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-3">
+            <div
+              className="bg-navy-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: `${completionPercentage}%` }}
+            />
           </div>
         </CardContent>
       </Card>
@@ -211,7 +209,7 @@ export default function NurseEducationVideos() {
 
       {/* Completion Message */}
       {completedVideos.length === totalVideos && (
-        <Card className="border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-emerald-100">
+        <Card className="border-emerald-200 bg-emerald-50">
           <CardContent className="p-6 text-center">
             <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-white" />

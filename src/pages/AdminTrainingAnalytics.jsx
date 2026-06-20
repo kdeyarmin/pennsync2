@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/stat-card";
+import AccessDeniedState from "@/components/ui/AccessDeniedState";
 
 export default function AdminTrainingAnalytics() {
   const [_selectedModule, _setSelectedModule] = useState('all');
@@ -65,13 +67,9 @@ export default function AdminTrainingAnalytics() {
 
   if (currentUser?.role !== 'admin') {
     return (
-      <div className="p-8">
-        <Card>
-          <CardContent className="p-12 text-center text-red-600">
-            Access Denied: Admin privileges required
-          </CardContent>
-        </Card>
-      </div>
+      <PageContainer>
+        <AccessDeniedState description="Training analytics are available to administrators only." />
+      </PageContainer>
     );
   }
 
@@ -151,53 +149,10 @@ export default function AdminTrainingAnalytics() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-700 font-medium">Total Completions</p>
-                <p className="text-3xl font-bold text-blue-900">{totalCompletions}</p>
-              </div>
-              <CheckCircle2 className="w-10 h-10 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-green-700 font-medium">Avg Score</p>
-                <p className="text-3xl font-bold text-green-900">{avgScore.toFixed(0)}%</p>
-              </div>
-              <Award className="w-10 h-10 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-orange-700 font-medium">In Progress</p>
-                <p className="text-3xl font-bold text-orange-900">{inProgress}</p>
-              </div>
-              <Clock className="w-10 h-10 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-navy-50 to-navy-100 border-navy-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-navy-700 font-medium">Pending Recs</p>
-                <p className="text-3xl font-bold text-navy-900">{unaddressedRecs}</p>
-              </div>
-              <AlertCircle className="w-10 h-10 text-navy-600" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard label="Total Completions" value={totalCompletions} icon={CheckCircle2} tone="navy" />
+        <StatCard label="Avg Score" value={`${avgScore.toFixed(0)}%`} icon={Award} tone="emerald" />
+        <StatCard label="In Progress" value={inProgress} icon={Clock} tone="amber" />
+        <StatCard label="Pending Recs" value={unaddressedRecs} icon={AlertCircle} tone="rose" />
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">

@@ -136,10 +136,10 @@ export default function ReferralTriage() {
 
       {/* Post-Analysis Actions */}
       {lastAnalysis && showCreatePatient && (
-        <Card className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+        <Card className="mt-8 border-l-4 border-l-emerald-500">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="w-6 h-6 text-indigo-600" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
               Next Steps
             </CardTitle>
           </CardHeader>

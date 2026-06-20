@@ -220,7 +220,7 @@ export default function NursePerformanceDashboard() {
       ) : (
         <>
           {/* Performance Grade & Summary */}
-          <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <Card className="mb-6 border-l-4 border-l-navy-500">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
@@ -722,10 +722,10 @@ export default function NursePerformanceDashboard() {
               </div>
 
               {/* Training Recommendations */}
-              <Card className="border-blue-200">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardTitle className="flex items-center gap-2 text-blue-900">
-                    <BookOpen className="w-5 h-5" />
+              <Card>
+                <CardHeader className="border-b border-slate-100">
+                  <CardTitle className="flex items-center gap-2 text-navy-900">
+                    <BookOpen className="w-5 h-5 text-navy-600" />
                     Personalized Training Recommendations
                   </CardTitle>
                 </CardHeader>
@@ -1009,7 +1009,7 @@ export default function NursePerformanceDashboard() {
                   ) : (
                     <div className="space-y-4">
                       {skillGaps.map((gap, idx) => (
-                        <div key={idx} className="border rounded-lg p-4 bg-gradient-to-r from-red-50 to-orange-50">
+                        <div key={idx} className="rounded-lg border border-rose-200 bg-rose-50/60 p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">

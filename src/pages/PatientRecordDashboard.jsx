@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/stat-card";
 import PatientSearchBar from "../components/dashboard/PatientSearchBar";
 import PatientQuickActions from "../components/dashboard/PatientQuickActions";
 import PatientOverviewCard from "../components/dashboard/PatientOverviewCard";
@@ -161,53 +162,10 @@ export default function PatientRecordDashboard() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">Total Patients</p>
-                  <p className="text-3xl font-bold text-blue-900 mt-1">{stats.totalPatients}</p>
-                </div>
-                <Users className="w-12 h-12 text-blue-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Active Patients</p>
-                  <p className="text-3xl font-bold text-green-900 mt-1">{stats.activePatients}</p>
-                </div>
-                <Activity className="w-12 h-12 text-green-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">Critical Alerts</p>
-                  <p className="text-3xl font-bold text-orange-900 mt-1">{stats.criticalAlerts}</p>
-                </div>
-                <AlertCircle className="w-12 h-12 text-orange-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-navy-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-navy-600 font-medium">Visits (7 days)</p>
-                  <p className="text-3xl font-bold text-navy-900 mt-1">{stats.recentVisits}</p>
-                </div>
-                <Calendar className="w-12 h-12 text-navy-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard label="Total Patients" value={stats.totalPatients} icon={Users} tone="navy" />
+          <StatCard label="Active Patients" value={stats.activePatients} icon={Activity} tone="emerald" />
+          <StatCard label="Critical Alerts" value={stats.criticalAlerts} icon={AlertCircle} tone="rose" />
+          <StatCard label="Visits (7 days)" value={stats.recentVisits} icon={Calendar} tone="sky" />
         </div>
 
         {/* Search and Filters */}
