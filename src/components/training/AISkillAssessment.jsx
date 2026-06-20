@@ -247,7 +247,7 @@ Return JSON:
   const skillLevelColors = {
     beginner: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' },
     intermediate: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' },
-    advanced: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300' },
+    advanced: { bg: 'bg-navy-100', text: 'text-navy-800', border: 'border-navy-300' },
     expert: { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300' }
   };
 
@@ -261,7 +261,7 @@ Return JSON:
     return (
       <Card className="border-2 border-indigo-300">
         <CardContent className="p-8 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-navy-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Brain className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-xl font-bold text-slate-900 mb-2">AI Skills Assessment</h3>
@@ -422,30 +422,30 @@ Return JSON:
 
       {/* Learning Style */}
       {assessment.learning_style && (
-        <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
+        <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-900">
+            <CardTitle className="flex items-center gap-2 text-navy-900">
               <Brain className="w-5 h-5" />
               Your Learning Profile
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
-              <Card className="bg-white border-purple-200">
+              <Card className="bg-white border-navy-200">
                 <CardContent className="p-4">
                   <p className="text-xs text-slate-600 mb-1">Primary Learning Style</p>
-                  <p className="font-semibold text-purple-900 capitalize">
+                  <p className="font-semibold text-navy-900 capitalize">
                     {assessment.learning_style.primary_style}
                   </p>
                 </CardContent>
               </Card>
-              <Card className="bg-white border-purple-200">
+              <Card className="bg-white border-navy-200">
                 <CardContent className="p-4">
                   <p className="text-xs text-slate-600 mb-1">Engagement Pattern</p>
                   <p className="text-sm text-slate-900">{assessment.learning_style.engagement_pattern}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white border-purple-200">
+              <Card className="bg-white border-navy-200">
                 <CardContent className="p-4">
                   <p className="text-xs text-slate-600 mb-1">Optimal Learning Time</p>
                   <p className="text-sm text-slate-900">{assessment.learning_style.optimal_learning_time}</p>
@@ -522,7 +522,7 @@ Return JSON:
 
       {/* Performance Trends */}
       {assessment.performance_trends && (
-        <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50">
+        <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-navy-50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-900">
               <TrendingUp className="w-5 h-5" />

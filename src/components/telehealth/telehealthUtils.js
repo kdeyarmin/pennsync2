@@ -4,7 +4,7 @@
 // invite URL carries a high-entropy, per-session token (?t=...). Possession of
 // that link is what authorizes the patient to join the room's audio/video — no
 // patient account or staff login required. The backend (createTelehealthToken)
-// validates the token and only mints a Twilio grant scoped to that one room.
+// validates the token and only mints a Telnyx Video token scoped to that one room.
 
 /**
  * Generate a high-entropy (192-bit) token used to gate patient access to a

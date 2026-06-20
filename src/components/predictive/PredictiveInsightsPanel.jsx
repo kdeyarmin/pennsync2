@@ -160,14 +160,14 @@ Provide comprehensive predictive insights including:
   return (
     <div className="space-y-6">
       {/* Generate Button */}
-      <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-indigo-50 border-navy-200">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Brain className="w-8 h-8 text-purple-600" />
+              <Brain className="w-8 h-8 text-navy-600" />
               <div>
-                <h3 className="font-semibold text-purple-900">AI Predictive Insights Engine</h3>
-                <p className="text-sm text-purple-700">
+                <h3 className="font-semibold text-navy-900">AI Predictive Insights Engine</h3>
+                <p className="text-sm text-navy-700">
                   Analyze {patients.length} patients, {oasisData.length} OASIS records, {visits.length} visits
                 </p>
               </div>
@@ -175,7 +175,7 @@ Provide comprehensive predictive insights including:
             <Button
               onClick={generateInsights}
               disabled={isGenerating}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isGenerating ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Insights...</>
@@ -301,16 +301,16 @@ Provide comprehensive predictive insights including:
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-600" />
+                <Sparkles className="w-4 h-4 text-navy-600" />
                 30-Day Predictions
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {insights.predictions_30day?.map((prediction, idx) => (
-                  <div key={idx} className="flex items-start gap-2 p-2 bg-purple-50 rounded">
-                    <CheckCircle2 className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-purple-800">{prediction}</p>
+                  <div key={idx} className="flex items-start gap-2 p-2 bg-navy-50 rounded">
+                    <CheckCircle2 className="w-4 h-4 text-navy-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-navy-800">{prediction}</p>
                   </div>
                 ))}
               </div>

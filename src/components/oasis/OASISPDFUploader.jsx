@@ -349,7 +349,7 @@ export default function OASISPDFUploader({
     switch (status) {
       case 'pending': return <FileText className="w-4 h-4 text-slate-400" />;
       case 'uploading': return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'extracting': return <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />;
+      case 'extracting': return <Loader2 className="w-4 h-4 text-navy-500 animate-spin" />;
       case 'retrying': return <RefreshCw className="w-4 h-4 text-orange-500 animate-spin" />;
       case 'success': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
       case 'error': return <XCircle className="w-4 h-4 text-red-500" />;
@@ -361,7 +361,7 @@ export default function OASISPDFUploader({
     const variants = {
       pending: "bg-slate-100 text-slate-700",
       uploading: "bg-blue-100 text-blue-700",
-      extracting: "bg-purple-100 text-purple-700",
+      extracting: "bg-navy-100 text-navy-700",
       retrying: "bg-orange-100 text-orange-700",
       success: "bg-green-100 text-green-700",
       error: "bg-red-100 text-red-700"

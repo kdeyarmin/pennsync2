@@ -130,7 +130,7 @@ Focus on:
   };
 
   return (
-    <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50">
+    <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-navy-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-blue-600" />

@@ -295,8 +295,8 @@ Return JSON:`,
                             </div>
 
                             {/* Care Plan Reference */}
-                            <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                              <p className="text-xs text-purple-800">
+                            <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                              <p className="text-xs text-navy-800">
                                 <strong>Care Plan:</strong> {task.care_plan_problem}
                               </p>
                             </div>

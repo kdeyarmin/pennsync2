@@ -100,7 +100,7 @@ export default function NurseEducationVideos() {
 
   const categoryColors = {
     "OASIS": "bg-green-100 text-green-800",
-    "Documentation": "bg-purple-100 text-purple-800",
+    "Documentation": "bg-navy-100 text-navy-800",
     "Safety": "bg-red-100 text-red-800",
     "Clinical": "bg-indigo-100 text-indigo-800"
   };
@@ -124,7 +124,7 @@ export default function NurseEducationVideos() {
         favoritePage="NurseEducationVideos"
       />
 
-      <Card className="mb-6 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <Card className="mb-6 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardContent className="p-6">
           <div className="bg-white rounded-lg p-4 border border-indigo-200">
             <div className="flex items-center justify-between mb-2">
@@ -133,7 +133,7 @@ export default function NurseEducationVideos() {
             </div>
             <div className="w-full bg-slate-200 rounded-full h-3">
               <div 
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-indigo-500 to-navy-600 h-3 rounded-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>

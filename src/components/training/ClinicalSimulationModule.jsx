@@ -255,13 +255,13 @@ Be constructive and educational.`,
           {simulationScenarios.map((scenario) => (
             <Card
               key={scenario.id}
-              className="cursor-pointer hover:shadow-lg transition-all hover:border-purple-300"
+              className="cursor-pointer hover:shadow-lg transition-all hover:border-navy-300"
               onClick={() => generateSimulation(scenario)}
             >
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Play className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Play className="w-5 h-5 text-navy-600" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -289,11 +289,11 @@ Be constructive and educational.`,
   // Loading
   if (isGenerating) {
     return (
-      <Card className="border-2 border-purple-200 bg-purple-50">
+      <Card className="border-2 border-navy-200 bg-navy-50">
         <CardContent className="p-12 text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-lg font-medium text-purple-900">Creating Simulation...</p>
-          <p className="text-sm text-purple-700 mt-2">Building a realistic {selectedScenario.title} scenario</p>
+          <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
+          <p className="text-lg font-medium text-navy-900">Creating Simulation...</p>
+          <p className="text-sm text-navy-700 mt-2">Building a realistic {selectedScenario.title} scenario</p>
         </CardContent>
       </Card>
     );
@@ -366,11 +366,11 @@ Be constructive and educational.`,
       </Card>
 
       {/* Current Step */}
-      <Card className="border-2 border-purple-200">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-200">
+        <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-purple-600" />
+              <MessageSquare className="w-4 h-4 text-navy-600" />
               Step {currentStep + 1} of {simulation?.steps.length}
             </CardTitle>
             <Badge variant="outline">{step?.response_type}</Badge>
@@ -384,9 +384,9 @@ Be constructive and educational.`,
           </div>
 
           {/* Prompt */}
-          <Alert className="bg-purple-50 border-purple-200">
-            <FileText className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-900 font-medium">
+          <Alert className="bg-navy-50 border-navy-200">
+            <FileText className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-navy-900 font-medium">
               {step?.prompt}
             </AlertDescription>
           </Alert>
@@ -416,7 +416,7 @@ Be constructive and educational.`,
               <Button
                 onClick={evaluateResponse}
                 disabled={!currentResponse.trim() || isEvaluating}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-navy-600 hover:bg-navy-700"
               >
                 {isEvaluating ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Evaluating...</>

@@ -90,6 +90,74 @@ export const REDIRECTS = [
   // SystemMonitoring was an Activity + Jobs wrapper; Activity now lives in the
   // Admin Console "User Activity" tab and the job monitor is its own page.
   { from: '/SystemMonitoring', to: '/SystemJobMonitor' },
+
+  // Medication Reconciliation was retired along with the rest of the medication
+  // entry/checking UI; send old links and bookmarks to the patient list.
+  { from: '/MedicationReconciliation', to: '/Patients' },
+
+  // ─── OASIS Center consolidation ──────────────────────────────────────────────
+  // The standalone OASIS analysis/review pages are now tabs of /OASISCenter.
+  // (RedirectTo preserves incoming ?query and router state onto the tab.)
+  { from: '/OASISAnalyzer', to: '/OASISCenter' },
+  { from: '/OASISReview', to: '/OASISCenter?tab=review' },
+  { from: '/OASISClinicalReview', to: '/OASISCenter?tab=clinical' },
+  { from: '/OASISComplianceReview', to: '/OASISCenter?tab=quality' },
+  { from: '/OASISDocumentationReview', to: '/OASISCenter?tab=quality' },
+  { from: '/OASISRevenueAnalysis', to: '/OASISCenter?tab=revenue' },
+  { from: '/OASISAnalyticsDashboard', to: '/OASISCenter?tab=analytics' },
+  { from: '/OASISAuditDashboard', to: '/OASISCenter?tab=audit' },
+
+  // ─── Document Hub consolidation ──────────────────────────────────────────────
+  // Signature, storage/intake, discharge and audit pages are now Document Hub tabs.
+  { from: '/DocumentSignatures', to: '/DocumentHub?tab=signatures' },
+  { from: '/CreateSignatureRequest', to: '/DocumentHub?tab=signatures&view=create' },
+  { from: '/BulkSignatureRequests', to: '/DocumentHub?tab=signatures&view=bulk' },
+  { from: '/DocumentManagement', to: '/DocumentHub?tab=documents' },
+  { from: '/DocumentIngestion', to: '/DocumentHub?tab=documents&view=intake' },
+  { from: '/DischargeSummaries', to: '/DocumentHub?tab=discharge' },
+  { from: '/DocumentAuditLogs', to: '/DocumentHub?tab=audit' },
+
+  // ─── Patient Education Hub consolidation ─────────────────────────────────────
+  { from: '/PatientEducation', to: '/PatientEducationHub?tab=teachback' },
+  { from: '/PatientEducationPortal', to: '/PatientEducationHub?tab=tracking' },
+
+  // ─── Referral Intake consolidation ───────────────────────────────────────────
+  // Processor and Admission Note are now steps (tabs) of the intake workflow.
+  { from: '/ReferralProcessor', to: '/ReferralIntake?tab=process' },
+  { from: '/ReferralAdmissionNote', to: '/ReferralIntake?tab=admission' },
+
+  // ─── Fax Center consolidation ────────────────────────────────────────────────
+  // Contacts, logs and analytics are now tabs of the Fax sender (/SendFax).
+  { from: '/FaxDashboard', to: '/SendFax' },
+  { from: '/FaxLogsDashboard', to: '/SendFax?tab=logs' },
+  { from: '/FaxContacts', to: '/SendFax?tab=contacts' },
+  { from: '/FaxAddressBook', to: '/SendFax?tab=contacts' },
+  { from: '/FaxAnalytics', to: '/SendFax?tab=analytics' },
+
+  // ─── Compliance Center consolidation ─────────────────────────────────────────
+  // Monitoring, regulatory and security pages are now Compliance Center tabs.
+  { from: '/ComplianceMonitoringDashboard', to: '/ComplianceCenter?tab=dashboard&view=monitoring' },
+  { from: '/RealTimeComplianceDashboard', to: '/ComplianceCenter?tab=dashboard&view=realtime' },
+  { from: '/RegulatoryCompliance', to: '/ComplianceCenter?tab=regulatory' },
+  { from: '/SecurityCompliance', to: '/ComplianceCenter?tab=security' },
+  { from: '/SecurityPolicy', to: '/ComplianceCenter?tab=security&view=policies' },
+
+  // ─── Learning consolidation ──────────────────────────────────────────────────
+  // The personal-training wrapper pages are now tabs of My Learning; NurseTraining
+  // is a tab of the Nurse Training Hub.
+  { from: '/MyTraining', to: '/MyLearning?tab=inservices' },
+  { from: '/MyAnnualEducation', to: '/MyLearning?tab=annual' },
+  { from: '/AnnualMandatoryEducation', to: '/MyLearning?tab=annual' },
+  { from: '/AnnualEducationTranscript', to: '/MyLearning?tab=transcripts' },
+  { from: '/EmployeeTranscript', to: '/MyLearning?tab=transcripts' },
+  { from: '/NurseTraining', to: '/NurseTrainingHub?tab=documentation' },
+
+  // ─── Misc hub consolidations ─────────────────────────────────────────────────
+  { from: '/AdminReportsCenter', to: '/ReportsAnalytics?tab=reports-center' },
+  { from: '/OfflineVisitDocumentation', to: '/OfflineMode?tab=visit' },
+  { from: '/OfflineDocumentation', to: '/OfflineMode?tab=pending' },
+  { from: '/UserActivityLog', to: '/UserActivityReport?tab=log' },
+  { from: '/PDFTemplateLibrary', to: '/TemplateManagement?tab=pdf' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';

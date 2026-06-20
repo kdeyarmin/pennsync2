@@ -9,7 +9,7 @@ const CONFIG = {
   hospice: {
     label: "Hospice",
     icon: Heart,
-    className: "bg-purple-100 text-purple-800 border border-purple-200",
+    className: "bg-navy-100 text-navy-800 border border-navy-200",
   },
   both: {
     label: "Home Health & Hospice",

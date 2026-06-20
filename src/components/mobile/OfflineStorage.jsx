@@ -331,10 +331,11 @@ class OfflineStorage {
     let success = 0;
     let failed = 0;
     const errors = [];
-    const remaining = [];
+    const resolvedIds = new Set();   // changes sent (or already synced) → drop
+    const retryById = new Map();     // id → incremented retry metadata for failures
 
     for (const change of all) {
-      if (change.status === 'synced') continue;
+      if (change.status === 'synced') { resolvedIds.add(change.id); continue; }
       try {
         const { entityName, action } = this.parseChangeType(change.type);
         const Entity = base44.entities[entityName];
@@ -351,20 +352,26 @@ class OfflineStorage {
           await Entity.create(payload);
         }
         success++;
+        resolvedIds.add(change.id);
       } catch (error) {
         console.error('Error syncing pending change:', error);
         this.logSyncError(change, error, 'change');
         failed++;
         errors.push({ id: change.id, error: error.message });
-        remaining.push({
-          ...change,
-          retryCount: (change.retryCount || 0) + 1,
-          lastError: error.message
-        });
+        retryById.set(change.id, { retryCount: (change.retryCount || 0) + 1, lastError: error.message });
       }
     }
 
-    localStorage.setItem(OFFLINE_KEYS.PENDING, JSON.stringify(remaining));
+    // Re-read the queue immediately before writing so a change appended DURING
+    // this async drain (a nurse saving a note while the 30s background sync runs)
+    // isn't clobbered by the stale pre-sync snapshot — that was silent loss of
+    // documented care. Drop only the ids we resolved, apply incremented retry
+    // metadata to failures, and keep everything else (incl. new entries) intact.
+    const current = this.getPendingChanges();
+    const next = current
+      .filter((c) => !resolvedIds.has(c.id))
+      .map((c) => (retryById.has(c.id) ? { ...c, ...retryById.get(c.id) } : c));
+    localStorage.setItem(OFFLINE_KEYS.PENDING, JSON.stringify(next));
     return { success, failed, errors };
   }
 

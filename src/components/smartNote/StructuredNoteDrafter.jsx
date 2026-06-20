@@ -94,13 +94,13 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
       <button
-        className="w-full px-4 py-3 bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100 flex items-center justify-between"
+        className="w-full px-4 py-3 bg-gradient-to-r from-navy-50 to-navy-100 border-b border-navy-100 flex items-center justify-between"
         onClick={() => setCollapsed(v => !v)}
       >
         <div className="flex items-center gap-2">
-          <ClipboardList className="w-4 h-4 text-violet-600" />
-          <span className="text-sm font-bold text-violet-800">Structured Note Drafter</span>
-          <Badge className="bg-violet-100 text-violet-700 text-xs">Structured</Badge>
+          <ClipboardList className="w-4 h-4 text-navy-600" />
+          <span className="text-sm font-bold text-navy-800">Structured Note Drafter</span>
+          <Badge className="bg-navy-100 text-navy-700 text-xs">Structured</Badge>
         </div>
         {collapsed ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
       </button>
@@ -169,7 +169,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
                 value={f.val}
                 onChange={e => f.set(e.target.value)}
                 placeholder={f.placeholder}
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-violet-300 focus:border-violet-400 outline-none resize-none min-h-[70px] leading-relaxed"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-navy-300 focus:border-navy-400 outline-none resize-none min-h-[70px] leading-relaxed"
               />
             </div>
           ))}
@@ -177,7 +177,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
           <Button
             onClick={generate}
             disabled={!hasContent}
-            className="w-full bg-violet-600 hover:bg-violet-700 h-10 gap-2 font-semibold"
+            className="w-full bg-navy-600 hover:bg-navy-700 h-10 gap-2 font-semibold"
           >
             <Sparkles className="w-4 h-4" /> Build Draft from Fields
           </Button>
@@ -204,7 +204,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
               <textarea
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
-                className="w-full min-h-[200px] text-sm font-mono border border-slate-200 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-violet-300 outline-none resize-none"
+                className="w-full min-h-[200px] text-sm font-mono border border-slate-200 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-navy-300 outline-none resize-none"
               />
               <p className="text-xs text-slate-400 italic">Review and edit before using. Click "Use in Note Builder" to run full compliance check.</p>
             </div>

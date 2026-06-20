@@ -66,10 +66,10 @@ export default function OCRDocumentExtractor({ onDataExtracted }) {
   const isProcessing = uploading || extracting;
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-indigo-50">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Document Scanner
         </CardTitle>
       </CardHeader>
@@ -88,7 +88,7 @@ export default function OCRDocumentExtractor({ onDataExtracted }) {
             <label className="cursor-pointer">
               {isProcessing ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent mr-2" />
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-navy-600 border-t-transparent mr-2" />
                   {uploading ? 'Uploading...' : 'Extracting...'}
                 </>
               ) : (

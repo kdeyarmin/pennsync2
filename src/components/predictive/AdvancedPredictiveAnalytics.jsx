@@ -362,18 +362,18 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
+              <Brain className="w-5 h-5 text-navy-600" />
               Advanced Predictive Analytics
             </CardTitle>
             <Button
               onClick={performPredictiveAnalysis}
               disabled={isAnalyzing || !patient}
               size="sm"
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isAnalyzing ? (
                 <>
@@ -391,9 +391,9 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
         </CardHeader>
         <CardContent>
           {isAnalyzing && (
-            <Alert className="bg-purple-50 border-purple-200">
-              <Brain className="w-4 h-4 text-purple-600 animate-pulse" />
-              <AlertDescription className="text-purple-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <Brain className="w-4 h-4 text-navy-600 animate-pulse" />
+              <AlertDescription className="text-navy-900">
                 AI is analyzing patient data using advanced predictive models... This may take 30-60 seconds.
               </AlertDescription>
             </Alert>

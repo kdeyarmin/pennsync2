@@ -280,7 +280,7 @@ export default function SupplyManagementDashboard() {
                           {supply.category.replace(/_/g, " ")} • {supply.unit}
                         </p>
                       </div>
-                      <Badge className={statusColor}>{supply.status.replace("_", " ")}</Badge>
+                      <Badge className={statusColor}>{(supply.status || "unknown").replace("_", " ")}</Badge>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-4 mb-3">
@@ -419,7 +419,7 @@ export default function SupplyManagementDashboard() {
                         {log.quantity_used} {log.unit} • {log.usage_date}
                       </p>
                       {log.extracted_from_note && (
-                        <Badge className="text-xs mt-1 bg-purple-100 text-purple-800">
+                        <Badge className="text-xs mt-1 bg-navy-100 text-navy-800">
                           Extracted from note ({log.extraction_confidence}%)
                         </Badge>
                       )}

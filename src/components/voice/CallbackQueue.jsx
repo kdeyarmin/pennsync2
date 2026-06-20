@@ -13,7 +13,7 @@ import ContactAvatar from "@/components/phone/ContactAvatar";
 import { PhoneEmptyState } from "@/components/phone/PhoneFrame";
 
 const REASON_STYLES = {
-  "Callback requested": "bg-purple-100 text-purple-800",
+  "Callback requested": "bg-navy-100 text-navy-800",
   "Voicemail": "bg-indigo-100 text-indigo-800",
   "Follow-up needed": "bg-amber-100 text-amber-800",
   "Missed call": "bg-red-100 text-red-800",
@@ -21,7 +21,7 @@ const REASON_STYLES = {
 
 const ReasonIcon = ({ reason }) => {
   if (reason === "Voicemail") return <Voicemail className="h-4 w-4 text-indigo-600" />;
-  if (reason === "Callback requested") return <ArrowRightCircle className="h-4 w-4 text-purple-600" />;
+  if (reason === "Callback requested") return <ArrowRightCircle className="h-4 w-4 text-navy-600" />;
   return <PhoneMissed className="h-4 w-4 text-red-600" />;
 };
 

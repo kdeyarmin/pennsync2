@@ -165,13 +165,13 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
     alert('Copied to clipboard!');
   };
 
-  const isProcessing = uploadAudioMutation.isLoading || transcribeMutation.isLoading;
+  const isProcessing = uploadAudioMutation.isPending || transcribeMutation.isPending;
 
   return (
-    <Card className="border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="flex items-center gap-2">
-          <Stethoscope className="w-5 h-5 text-purple-600" />
+          <Stethoscope className="w-5 h-5 text-navy-600" />
           AI Medical Scribe
         </CardTitle>
       </CardHeader>
@@ -222,13 +222,13 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                     </>
                   ) : (
                     <>
-                      <div className="w-16 h-16 bg-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <div className="w-16 h-16 bg-navy-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                         <Mic className="w-8 h-8 text-white" />
                       </div>
                       <p className="text-sm font-medium text-slate-900 mb-2">
                         {audioFile ? 'Recording captured' : 'Ready to record'}
                       </p>
-                      <Button onClick={startRecording} className="bg-purple-600 hover:bg-purple-700">
+                      <Button onClick={startRecording} className="bg-navy-600 hover:bg-navy-700">
                         Start Recording
                       </Button>
                     </>
@@ -238,10 +238,10 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
             </Tabs>
 
             {audioFile && (
-              <Alert className="border-purple-200 bg-purple-50">
-                <FileAudio className="w-4 h-4 text-purple-600" />
+              <Alert className="border-navy-200 bg-navy-50">
+                <FileAudio className="w-4 h-4 text-navy-600" />
                 <AlertDescription className="flex items-center justify-between">
-                  <span className="text-purple-900">Audio file ready: {audioFile.name}</span>
+                  <span className="text-navy-900">Audio file ready: {audioFile.name}</span>
                 </AlertDescription>
               </Alert>
             )}
@@ -249,7 +249,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
             <Button
               onClick={handleTranscribe}
               disabled={!audioFile || isProcessing}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-navy-600 hover:bg-navy-700"
             >
               {isProcessing ? (
                 <>
@@ -302,14 +302,14 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
                   <div className="space-y-4">
                     {transcriptionResult.structured_data?.chief_complaint && (
                       <div>
-                        <Label className="text-purple-700">Chief Complaint</Label>
+                        <Label className="text-navy-700">Chief Complaint</Label>
                         <p className="text-sm mt-1">{transcriptionResult.structured_data.chief_complaint}</p>
                       </div>
                     )}
 
                     {transcriptionResult.structured_data?.vital_signs && (
                       <div>
-                        <Label className="text-purple-700">Vital Signs</Label>
+                        <Label className="text-navy-700">Vital Signs</Label>
                         <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
                           {Object.entries(transcriptionResult.structured_data.vital_signs).map(([key, value]) => (
                             value && (
@@ -324,7 +324,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
 
                     {transcriptionResult.structured_data?.assessment?.length > 0 && (
                       <div>
-                        <Label className="text-purple-700">Assessment</Label>
+                        <Label className="text-navy-700">Assessment</Label>
                         <ul className="list-disc ml-5 mt-1 text-sm space-y-1">
                           {transcriptionResult.structured_data.assessment.map((item, idx) => (
                             <li key={idx}>{item}</li>
@@ -335,10 +335,10 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
 
                     {transcriptionResult.structured_data?.new_medications?.length > 0 && (
                       <div>
-                        <Label className="text-purple-700">New Medications</Label>
+                        <Label className="text-navy-700">New Medications</Label>
                         <div className="space-y-2 mt-1">
                           {transcriptionResult.structured_data.new_medications.map((med, idx) => (
-                            <div key={idx} className="text-sm border-l-2 border-purple-300 pl-2">
+                            <div key={idx} className="text-sm border-l-2 border-navy-300 pl-2">
                               <p className="font-medium">{med.name}</p>
                               <p className="text-slate-600">{med.dosage} - {med.frequency}</p>
                               {med.instructions && <p className="text-xs text-slate-500">{med.instructions}</p>}
@@ -350,7 +350,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
 
                     {transcriptionResult.structured_data?.action_items?.length > 0 && (
                       <div>
-                        <Label className="text-purple-700">Action Items</Label>
+                        <Label className="text-navy-700">Action Items</Label>
                         <ul className="list-disc ml-5 mt-1 text-sm space-y-1">
                           {transcriptionResult.structured_data.action_items.map((item, idx) => (
                             <li key={idx}>{item}</li>
@@ -361,7 +361,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
 
                     {transcriptionResult.structured_data?.plan && (
                       <div>
-                        <Label className="text-purple-700">Plan</Label>
+                        <Label className="text-navy-700">Plan</Label>
                         <p className="text-sm mt-1">{transcriptionResult.structured_data.plan}</p>
                       </div>
                     )}

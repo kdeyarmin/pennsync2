@@ -258,9 +258,9 @@ Return JSON:
   if (!patient) return null;
 
   return (
-    <Card className={`border-2 ${prominent ? 'border-indigo-300 shadow-lg' : 'border-slate-200'} ${summary ? 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50' : ''}`}>
+    <Card className={`border-2 ${prominent ? 'border-indigo-300 shadow-lg' : 'border-slate-200'} ${summary ? 'bg-gradient-to-br from-indigo-50 via-navy-50 to-pink-50' : ''}`}>
       <CardHeader 
-        className={`py-3 cursor-pointer ${prominent ? 'bg-gradient-to-r from-indigo-100 to-purple-100' : 'bg-slate-50'}`}
+        className={`py-3 cursor-pointer ${prominent ? 'bg-gradient-to-r from-indigo-100 to-navy-100' : 'bg-slate-50'}`}
         onClick={() => summary && setIsExpanded(!isExpanded)}
       >
         <CardTitle className="flex items-center justify-between">
@@ -337,7 +337,7 @@ Return JSON:
                 <p className="text-xs text-slate-500">Days</p>
               </div>
               <div className="bg-white p-2 rounded-lg border text-center">
-                <Target className="w-4 h-4 mx-auto mb-1 text-purple-500" />
+                <Target className="w-4 h-4 mx-auto mb-1 text-navy-500" />
                 <p className="text-lg font-bold text-slate-900">{summary.stats?.active_care_plans || carePlans.filter(cp => cp.status === 'active').length}</p>
                 <p className="text-xs text-slate-500">Goals</p>
               </div>
@@ -397,14 +397,14 @@ Return JSON:
 
             {/* Today's Focus Areas */}
             {summary.focus_areas?.length > 0 && (
-              <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
-                <p className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+              <div className="bg-navy-50 p-3 rounded-lg border border-navy-200">
+                <p className="font-semibold text-navy-800 mb-2 flex items-center gap-2">
                   <Target className="w-4 h-4" />
                   Today's Focus Areas
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {summary.focus_areas.map((focus, idx) => (
-                    <Badge key={idx} className="bg-purple-100 text-purple-800 border-purple-300">
+                    <Badge key={idx} className="bg-navy-100 text-navy-800 border-navy-300">
                       {idx + 1}. {focus}
                     </Badge>
                   ))}

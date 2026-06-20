@@ -119,7 +119,7 @@ Return JSON:
     const colors = {
       compliance: "bg-blue-100 text-blue-800",
       clinical: "bg-green-100 text-green-800",
-      efficiency: "bg-purple-100 text-purple-800",
+      efficiency: "bg-navy-100 text-navy-800",
       communication: "bg-orange-100 text-orange-800"
     };
     return colors[category] || "bg-slate-100 text-slate-800";
@@ -131,14 +131,14 @@ Return JSON:
   const totalModules = skillAnalysis?.recommended_modules?.length || 0;
 
   return (
-    <Card className="border-purple-200">
+    <Card className="border-navy-200">
       <CardHeader 
-        className="py-3 bg-gradient-to-r from-purple-50 to-indigo-50 cursor-pointer"
+        className="py-3 bg-gradient-to-r from-navy-50 to-indigo-50 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-purple-600" />
+            <GraduationCap className="w-4 h-4 text-navy-600" />
             Skill Builder
           </div>
           <div className="flex items-center gap-2">
@@ -162,7 +162,7 @@ Return JSON:
               <Button
                 onClick={analyzeDocumentationPatterns}
                 disabled={isLoading}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-navy-600 hover:bg-navy-700"
               >
                 {isLoading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
@@ -250,7 +250,7 @@ Return JSON:
                           ))}
                         </ul>
                         {module.practice_tip && (
-                          <div className="mt-2 p-2 bg-purple-50 rounded text-xs text-purple-800">
+                          <div className="mt-2 p-2 bg-navy-50 rounded text-xs text-navy-800">
                             💡 <strong>Practice:</strong> {module.practice_tip}
                           </div>
                         )}

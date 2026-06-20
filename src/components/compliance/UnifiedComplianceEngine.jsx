@@ -388,7 +388,7 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
               <span>Guidelines</span>
             </div>
             <div className="flex items-center gap-1 justify-center">
-              <Activity className="w-3 h-3 text-purple-600" />
+              <Activity className="w-3 h-3 text-navy-600" />
               <span>Visit Type</span>
             </div>
             <div className="flex items-center gap-1 justify-center">
@@ -577,9 +577,9 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
                           )}
 
                           {violation.latest_cms_guidance && (
-                            <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                              <p className="text-xs font-semibold text-purple-900 mb-1">🌐 2025 CMS Guidance:</p>
-                              <p className="text-xs text-purple-800">{violation.latest_cms_guidance}</p>
+                            <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                              <p className="text-xs font-semibold text-navy-900 mb-1">🌐 2025 CMS Guidance:</p>
+                              <p className="text-xs text-navy-800">{violation.latest_cms_guidance}</p>
                             </div>
                           )}
 

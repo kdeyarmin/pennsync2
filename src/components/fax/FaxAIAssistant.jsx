@@ -104,10 +104,10 @@ export default function FaxAIAssistant({ faxLogId }) {
   return (
     <div className="space-y-4">
       {/* AI Assistant Header */}
-      <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
+      <Card className="bg-gradient-to-br from-navy-50 to-indigo-50 border-navy-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-navy-600" />
             AI Fax Assistant
           </CardTitle>
         </CardHeader>
@@ -119,7 +119,7 @@ export default function FaxAIAssistant({ faxLogId }) {
             <Button
               onClick={() => analyzeContent('full')}
               disabled={isAnalyzing || !faxLog.ocr_processed}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {isAnalyzing ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

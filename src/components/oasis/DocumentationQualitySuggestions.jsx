@@ -146,7 +146,7 @@ export default function DocumentationQualitySuggestions({ analysisResults }) {
   const getColorClasses = (color) => {
     const colors = {
       blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-600' },
-      purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-600' },
+      purple: { bg: 'bg-navy-50', border: 'border-navy-200', text: 'text-navy-700', icon: 'text-navy-600' },
       green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-600' },
       orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-600' }
     };

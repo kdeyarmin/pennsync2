@@ -171,7 +171,7 @@ Return JSON:
   return (
     <Card className="border-blue-200">
       <CardHeader 
-        className="py-3 bg-gradient-to-r from-blue-50 to-cyan-50 cursor-pointer"
+        className="py-3 bg-gradient-to-r from-blue-50 to-navy-50 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center justify-between">

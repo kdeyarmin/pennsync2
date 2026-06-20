@@ -1,16 +1,15 @@
-import { Sparkles, Pill, ClipboardList, FileText, TrendingUp } from "lucide-react";
+import { Sparkles, ClipboardList, FileText, TrendingUp } from "lucide-react";
 
 export const SMART_NOTE_TABS = [
   { id: "builder", label: "Note Builder", icon: Sparkles, color: "indigo" },
-  { id: "medications", label: "Medications", icon: Pill, color: "emerald" },
   { id: "drafter", label: "Draft from Vitals", icon: ClipboardList, color: "violet" },
   { id: "summary", label: "Visit Summary", icon: FileText, color: "purple" },
   { id: "trends", label: "Vital Trends", icon: TrendingUp, color: "cyan" },
 ];
 
 export default function SmartNoteTabs({ activeTab, setActiveTab }) {
-  const tabColorMap = { indigo: "bg-indigo-600", violet: "bg-violet-600", purple: "bg-purple-600", emerald: "bg-emerald-600", cyan: "bg-cyan-600" };
-  const tabHoverMap = { indigo: "hover:bg-indigo-50 hover:text-indigo-700", violet: "hover:bg-violet-50 hover:text-violet-700", purple: "hover:bg-purple-50 hover:text-purple-700", emerald: "hover:bg-emerald-50 hover:text-emerald-700", cyan: "hover:bg-cyan-50 hover:text-cyan-700" };
+  const tabColorMap = { indigo: "bg-indigo-600", violet: "bg-navy-600", purple: "bg-navy-600", emerald: "bg-emerald-600", cyan: "bg-navy-600" };
+  const tabHoverMap = { indigo: "hover:bg-indigo-50 hover:text-indigo-700", violet: "hover:bg-navy-50 hover:text-navy-700", purple: "hover:bg-navy-50 hover:text-navy-700", emerald: "hover:bg-emerald-50 hover:text-emerald-700", cyan: "hover:bg-navy-50 hover:text-navy-700" };
 
   return (
     <div className="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm gap-1 overflow-x-auto">

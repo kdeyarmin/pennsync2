@@ -196,7 +196,7 @@ export default function OASISTaskGenerator({
       compliance: 'bg-red-100 text-red-800 border-red-300',
       revenue: 'bg-green-100 text-green-800 border-green-300',
       audit: 'bg-orange-100 text-orange-800 border-orange-300',
-      validation: 'bg-purple-100 text-purple-800 border-purple-300',
+      validation: 'bg-navy-100 text-navy-800 border-navy-300',
       quality: 'bg-blue-100 text-blue-800 border-blue-300'
     };
     return colors[category] || 'bg-slate-100 text-slate-800';

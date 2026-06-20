@@ -866,11 +866,11 @@ PREDICT:
   }
 
   return (
-    <Card className="border-2 border-cyan-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-blue-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-blue-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Navigation className="w-5 h-5 text-cyan-600" />
+            <Navigation className="w-5 h-5 text-navy-600" />
             Automated PDGM Navigator
           </div>
           <div className="flex items-center gap-2">
@@ -939,14 +939,14 @@ PREDICT:
       <CardContent className="space-y-4 pt-4">
         {isAnalyzing ? (
           <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-cyan-600 mx-auto mb-3" />
+            <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing PDGM grouping and calculating payment...</p>
             <p className="text-xs text-slate-400 mt-1">Evaluating clinical group, functional level, comorbidities, and timing</p>
           </div>
         ) : !navigation ? (
           <Button
             onClick={runPDGMNavigation}
-            className="w-full bg-cyan-600 hover:bg-cyan-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             <Navigation className="w-4 h-4 mr-2" /> Analyze PDGM Grouping
           </Button>
@@ -976,15 +976,15 @@ PREDICT:
               </div>
 
               {/* Functional Level */}
-              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="p-3 bg-navy-50 rounded-lg border border-navy-200">
                 <div className="flex items-center gap-1 mb-1">
-                  <Activity className="w-3 h-3 text-purple-600" />
-                  <span className="text-xs text-purple-600 font-medium">Functional Level</span>
+                  <Activity className="w-3 h-3 text-navy-600" />
+                  <span className="text-xs text-navy-600 font-medium">Functional Level</span>
                 </div>
-                <p className="text-sm font-bold text-purple-900 capitalize">
+                <p className="text-sm font-bold text-navy-900 capitalize">
                   {navigation.functional_level?.level || 'Unknown'}
                 </p>
-                <p className="text-xs text-purple-600">
+                <p className="text-xs text-navy-600">
                   {navigation.functional_level?.total_points || 0} points
                 </p>
               </div>
@@ -1020,7 +1020,7 @@ PREDICT:
 
             {/* Case-Mix Calculation Breakdown */}
             {navigation.case_mix_calculation && (
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200">
+              <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-4 rounded-lg border border-indigo-200">
                 <h3 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
                   <Calculator className="w-4 h-4" />
                   Case-Mix Payment Calculation
@@ -1040,7 +1040,7 @@ PREDICT:
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                   <div className="bg-white p-2 rounded border min-w-[80px]">
                     <p className="text-xs text-slate-500">Functional</p>
-                    <p className="font-bold text-purple-600">×{navigation.case_mix_calculation.functional_multiplier?.toFixed(2)}</p>
+                    <p className="font-bold text-navy-600">×{navigation.case_mix_calculation.functional_multiplier?.toFixed(2)}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                   <div className="bg-white p-2 rounded border min-w-[80px]">
@@ -1140,10 +1140,10 @@ PREDICT:
 
               {/* Functional Level Details */}
               <AccordionItem value="functional" className="border rounded-lg">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline bg-purple-50 rounded-t-lg">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline bg-navy-50 rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-purple-600" />
-                    <span className="font-medium text-purple-800">Functional Impairment Breakdown</span>
+                    <Activity className="w-4 h-4 text-navy-600" />
+                    <span className="font-medium text-navy-800">Functional Impairment Breakdown</span>
                     <Badge className={`ml-2 ${getLevelColor(navigation.functional_level?.level)}`}>
                       {navigation.functional_level?.total_points} pts = {navigation.functional_level?.level}
                     </Badge>
@@ -1154,7 +1154,7 @@ PREDICT:
                     {/* Point Breakdown Table */}
                     <div className="border rounded overflow-hidden">
                       <table className="w-full text-xs">
-                        <thead className="bg-purple-100">
+                        <thead className="bg-navy-100">
                           <tr>
                             <th className="text-left p-2">M-Item</th>
                             <th className="text-center p-2">Score</th>
@@ -1166,7 +1166,7 @@ PREDICT:
                           {navigation.functional_level?.point_breakdown && 
                             Object.entries(navigation.functional_level.point_breakdown).map(([key, data]) => (
                               <tr key={key} className="hover:bg-slate-50">
-                                <td className="p-2 font-mono text-purple-700">{key.toUpperCase().replace('_', ' ')}</td>
+                                <td className="p-2 font-mono text-navy-700">{key.toUpperCase().replace('_', ' ')}</td>
                                 <td className="p-2 text-center font-bold">{data.score}</td>
                                 <td className="p-2 text-center text-slate-500">{data.max}</td>
                                 <td className="p-2 text-slate-600">{data.contribution}</td>
@@ -1174,10 +1174,10 @@ PREDICT:
                             ))
                           }
                         </tbody>
-                        <tfoot className="bg-purple-50">
+                        <tfoot className="bg-navy-50">
                           <tr>
                             <td className="p-2 font-semibold">Total</td>
-                            <td className="p-2 text-center font-bold text-purple-700">
+                            <td className="p-2 text-center font-bold text-navy-700">
                               {navigation.functional_level?.total_points}
                             </td>
                             <td className="p-2 text-center text-slate-500">30</td>
@@ -1192,9 +1192,9 @@ PREDICT:
                       <p className="text-slate-600">{navigation.functional_level?.threshold_used}</p>
                     </div>
 
-                    <div className="bg-purple-50 p-3 rounded border border-purple-200 text-xs">
-                      <p className="font-medium text-purple-700 mb-1">Level Driver</p>
-                      <p className="text-purple-800">{navigation.functional_level?.level_driver}</p>
+                    <div className="bg-navy-50 p-3 rounded border border-navy-200 text-xs">
+                      <p className="font-medium text-navy-700 mb-1">Level Driver</p>
+                      <p className="text-navy-800">{navigation.functional_level?.level_driver}</p>
                     </div>
 
                     {navigation.functional_level?.optimization_opportunities?.length > 0 && (
@@ -1461,12 +1461,12 @@ PREDICT:
                               <TrendingUp className="w-3 h-3" /> 1-Year Projection
                             </p>
                             <div className="space-y-2">
-                              <div className="bg-gradient-to-r from-purple-100 to-indigo-100 p-3 rounded border-2 border-purple-300">
-                                <p className="text-xs text-purple-700 mb-1">💎 Total Annual Opportunity</p>
-                                <p className="text-3xl font-bold text-purple-800">
+                              <div className="bg-gradient-to-r from-navy-100 to-indigo-100 p-3 rounded border-2 border-navy-300">
+                                <p className="text-xs text-navy-700 mb-1">💎 Total Annual Opportunity</p>
+                                <p className="text-3xl font-bold text-navy-800">
                                   {formatCurrency(financialPredictions[idx].annual_projection?.total_opportunity)}
                                 </p>
-                                <p className="text-xs text-purple-600 mt-1">
+                                <p className="text-xs text-navy-600 mt-1">
                                   Based on {financialPredictions[idx].annual_projection?.similar_episodes_per_year} similar episodes per year
                                 </p>
                               </div>
@@ -1545,9 +1545,9 @@ PREDICT:
                                   {financialPredictions[idx].prioritization?.ease_of_correction}/10
                                 </p>
                               </div>
-                              <div className="bg-purple-50 p-2 rounded">
-                                <p className="text-purple-600 mb-1">ROI Potential</p>
-                                <p className="text-2xl font-bold text-purple-800 uppercase">
+                              <div className="bg-navy-50 p-2 rounded">
+                                <p className="text-navy-600 mb-1">ROI Potential</p>
+                                <p className="text-2xl font-bold text-navy-800 uppercase">
                                   {financialPredictions[idx].prioritization?.roi_potential}
                                 </p>
                               </div>
@@ -1825,9 +1825,9 @@ PREDICT:
                                   {financialPredictions[oppIndex].prioritization?.recommended_timeline}
                                 </p>
                               </div>
-                              <div className="bg-purple-50 p-2 rounded text-center">
-                                <p className="text-purple-600">ROI</p>
-                                <p className="font-bold text-purple-800">
+                              <div className="bg-navy-50 p-2 rounded text-center">
+                                <p className="text-navy-600">ROI</p>
+                                <p className="font-bold text-navy-800">
                                   {financialPredictions[oppIndex].breakeven?.roi_percentage}%
                                 </p>
                               </div>
@@ -1843,7 +1843,7 @@ PREDICT:
 
             {/* Patient Outcome Forecasts */}
             {patientForecasts && (
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-2 border-blue-300">
+              <div className="bg-gradient-to-r from-blue-50 to-navy-50 p-4 rounded-lg border-2 border-blue-300">
                 <h3 className="font-semibold text-blue-900 mb-4 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
                   Predictive Patient Outcome Forecasts
@@ -1960,7 +1960,7 @@ PREDICT:
                   </Card>
 
                   {/* Functional Outcomes */}
-                  <Card className="border-2 border-purple-400 bg-purple-50">
+                  <Card className="border-2 border-navy-400 bg-navy-50">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-semibold flex items-center gap-2">
@@ -1969,12 +1969,12 @@ PREDICT:
                         </h4>
                       </div>
 
-                      <div className="text-center p-3 bg-white rounded border-2 border-purple-300 mb-3">
+                      <div className="text-center p-3 bg-white rounded border-2 border-navy-300 mb-3">
                         <p className="text-xs text-slate-600">Expected Improvement</p>
-                        <p className="text-4xl font-bold text-purple-700">
+                        <p className="text-4xl font-bold text-navy-700">
                           {patientForecasts.functional_outcomes?.expected_improvement_percentage}%
                         </p>
-                        <p className="text-xs text-purple-600 mt-1">
+                        <p className="text-xs text-navy-600 mt-1">
                           Success Probability: {patientForecasts.functional_outcomes?.success_probability}%
                         </p>
                       </div>
@@ -2105,14 +2105,14 @@ PREDICT:
 
                 {/* Key Milestones */}
                 {patientForecasts.care_planning_insights?.key_milestones?.length > 0 && (
-                  <div className="bg-white p-4 rounded-lg border-2 border-purple-300">
-                    <h4 className="font-semibold text-purple-900 mb-3">📅 Care Plan Milestones</h4>
+                  <div className="bg-white p-4 rounded-lg border-2 border-navy-300">
+                    <h4 className="font-semibold text-navy-900 mb-3">📅 Care Plan Milestones</h4>
                     <div className="space-y-2">
                       {patientForecasts.care_planning_insights.key_milestones.map((milestone, idx) => (
-                        <div key={idx} className="flex items-start gap-3 bg-purple-50 p-2 rounded border border-purple-200">
-                          <CheckCircle2 className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+                        <div key={idx} className="flex items-start gap-3 bg-navy-50 p-2 rounded border border-navy-200">
+                          <CheckCircle2 className="w-4 h-4 text-navy-600 flex-shrink-0 mt-0.5" />
                           <div className="flex-1 text-xs">
-                            <p className="font-semibold text-purple-900">{milestone.milestone}</p>
+                            <p className="font-semibold text-navy-900">{milestone.milestone}</p>
                             <p className="text-slate-600">Target: {milestone.target_date}</p>
                             <p className="text-slate-700">Success Criteria: {milestone.success_criteria}</p>
                           </div>
@@ -2143,12 +2143,12 @@ PREDICT:
                       </p>
                       <p className="text-xs text-blue-600">likely to improve</p>
                     </div>
-                    <div className="text-center p-2 bg-purple-50 rounded border border-purple-200">
+                    <div className="text-center p-2 bg-navy-50 rounded border border-navy-200">
                       <p className="text-xs text-slate-600">Transferring</p>
-                      <p className="text-xl font-bold text-purple-700">
+                      <p className="text-xl font-bold text-navy-700">
                         {patientForecasts.quality_measures_forecast?.improvement_in_transferring_likelihood}%
                       </p>
-                      <p className="text-xs text-purple-600">likely to improve</p>
+                      <p className="text-xs text-navy-600">likely to improve</p>
                     </div>
                   </div>
 
@@ -2168,7 +2168,7 @@ PREDICT:
                 </div>
 
                 {/* Overall Prognosis */}
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg border border-indigo-300">
+                <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-3 rounded-lg border border-indigo-300">
                   <p className="text-xs font-semibold text-indigo-800 mb-1">📊 Overall Prognosis</p>
                   <p className="text-sm text-indigo-900">{patientForecasts.overall_prognosis}</p>
                 </div>

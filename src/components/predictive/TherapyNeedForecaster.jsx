@@ -287,9 +287,9 @@ Provide therapy need forecast including:
                     <p className="text-lg font-bold text-green-700">{patient.indicators.ot.need}%</p>
                     <p className="text-xs text-green-600">OT</p>
                   </div>
-                  <div className="text-center p-2 bg-purple-50 rounded">
-                    <p className="text-lg font-bold text-purple-700">{patient.indicators.slp.need}%</p>
-                    <p className="text-xs text-purple-600">SLP</p>
+                  <div className="text-center p-2 bg-navy-50 rounded">
+                    <p className="text-lg font-bold text-navy-700">{patient.indicators.slp.need}%</p>
+                    <p className="text-xs text-navy-600">SLP</p>
                   </div>
                 </div>
 
@@ -315,7 +315,7 @@ Provide therapy need forecast including:
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-purple-600" />
+              <TrendingUp className="w-4 h-4 text-navy-600" />
               AI Therapy Forecast
             </CardTitle>
           </CardHeader>

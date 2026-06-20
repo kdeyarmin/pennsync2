@@ -110,7 +110,7 @@ export default function SmartNoteDataImport({
   return (
     <Card className="border-2 border-teal-200">
       <CardHeader 
-        className="pb-2 bg-gradient-to-r from-teal-50 to-cyan-50 cursor-pointer"
+        className="pb-2 bg-gradient-to-r from-teal-50 to-navy-50 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
@@ -191,7 +191,7 @@ export default function SmartNoteDataImport({
                 {selectedVisit.nurse_notes && (
                   <div>
                     <p className="text-xs font-medium text-slate-700 mb-1 flex items-center gap-1">
-                      <Activity className="w-3 h-3 text-purple-500" /> Extracted Observations:
+                      <Activity className="w-3 h-3 text-navy-500" /> Extracted Observations:
                     </p>
                     {(() => {
                       const obs = extractFunctionalData(selectedVisit.nurse_notes);

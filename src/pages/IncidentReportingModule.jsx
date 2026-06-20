@@ -521,11 +521,11 @@ Please review this incident in the Incident Reporting Dashboard.`
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createIncidentMutation.isLoading}
+                    disabled={createIncidentMutation.isPending}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    {createIncidentMutation.isLoading ? "Submitting..." : "Submit Report"}
+                    {createIncidentMutation.isPending ? "Submitting..." : "Submit Report"}
                   </Button>
                 </div>
               </form>

@@ -257,7 +257,7 @@ Evaluate the response and provide feedback:
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             Select Training Scenario
           </CardTitle>
         </CardHeader>
@@ -266,13 +266,13 @@ Evaluate the response and provide feedback:
             {SCENARIO_TYPES.map((type) => (
               <Card 
                 key={type.id} 
-                className="cursor-pointer hover:shadow-lg transition-all hover:border-purple-300"
+                className="cursor-pointer hover:shadow-lg transition-all hover:border-navy-300"
                 onClick={() => generateScenario(type)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <type.icon className="w-5 h-5 text-purple-600" />
+                    <div className="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
+                      <type.icon className="w-5 h-5 text-navy-600" />
                     </div>
                     <div>
                       <h3 className="font-semibold">{type.name}</h3>
@@ -295,7 +295,7 @@ Evaluate the response and provide feedback:
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <RefreshCw className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
+          <RefreshCw className="w-12 h-12 text-navy-600 mx-auto mb-4 animate-spin" />
           <h3 className="text-xl font-semibold mb-2">Generating Training Scenario</h3>
           <p className="text-slate-500">Creating a realistic clinical situation...</p>
         </CardContent>
@@ -306,7 +306,7 @@ Evaluate the response and provide feedback:
   // Final Score
   if (finalScore) {
     return (
-      <Card className="bg-gradient-to-br from-purple-50 to-indigo-50">
+      <Card className="bg-gradient-to-br from-navy-50 to-indigo-50">
         <CardContent className="p-8 text-center">
           <Award className={`w-16 h-16 mx-auto mb-4 ${
             finalScore.score >= 80 ? 'text-green-500' : 
@@ -376,9 +376,9 @@ Evaluate the response and provide feedback:
         <CardContent>
           <p className="text-slate-700 mb-4">{step.situation}</p>
           
-          <Alert className="bg-purple-50 border-purple-200 mb-4">
-            <Lightbulb className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-900 font-medium">
+          <Alert className="bg-navy-50 border-navy-200 mb-4">
+            <Lightbulb className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-navy-900 font-medium">
               {step.question}
             </AlertDescription>
           </Alert>
@@ -412,7 +412,7 @@ Evaluate the response and provide feedback:
 
       {/* Feedback */}
       {feedback && (
-        <Card className="border-2 border-purple-300">
+        <Card className="border-2 border-navy-300">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>AI Feedback</span>
@@ -456,9 +456,9 @@ Evaluate the response and provide feedback:
               </div>
             )}
 
-            <Alert className="bg-purple-50 border-purple-200">
-              <Lightbulb className="w-4 h-4 text-purple-600" />
-              <AlertDescription className="text-purple-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <Lightbulb className="w-4 h-4 text-navy-600" />
+              <AlertDescription className="text-navy-900">
                 <strong>Teaching Point:</strong> {feedback.teaching_point}
               </AlertDescription>
             </Alert>

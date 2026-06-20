@@ -275,15 +275,15 @@ Return JSON:
   }
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-purple-600" />
+            <Target className="w-5 h-5 text-navy-600" />
             AI Clinical Pathway Recommender
           </div>
           {recommendations?.recommended_pathways?.length > 0 && (
-            <Badge className="bg-purple-600 text-white">
+            <Badge className="bg-navy-600 text-white">
               {recommendations.recommended_pathways.length} pathways
             </Badge>
           )}
@@ -292,14 +292,14 @@ Return JSON:
       <CardContent className="space-y-4 pt-4">
         {isAnalyzing ? (
           <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
+            <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing clinical pathways and interventions...</p>
             <p className="text-xs text-slate-400 mt-1">Evaluating diagnosis, functional status, and PDGM optimization</p>
           </div>
         ) : !recommendations ? (
           <Button
             onClick={analyzePathways}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             <Sparkles className="w-4 h-4 mr-2" /> Generate Pathway Recommendations
           </Button>
@@ -310,7 +310,7 @@ Return JSON:
         ) : (
           <>
             {/* Overall Strategy */}
-            <Alert className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-300">
+            <Alert className="bg-gradient-to-r from-indigo-50 to-navy-50 border-indigo-300">
               <Sparkles className="w-4 h-4 text-indigo-600" />
               <AlertDescription className="text-indigo-900">
                 <strong>Recommended Strategy:</strong> {recommendations.overall_strategy}
@@ -383,11 +383,11 @@ Return JSON:
                   <div 
                     key={idx}
                     className={`rounded-lg border-2 overflow-hidden ${
-                      isSelected ? 'border-purple-400 ring-2 ring-purple-200' : 'border-slate-200'
+                      isSelected ? 'border-navy-400 ring-2 ring-navy-200' : 'border-slate-200'
                     }`}
                   >
                     {/* Pathway Header */}
-                    <div className={`p-3 ${isSelected ? 'bg-purple-50' : 'bg-slate-50'}`}>
+                    <div className={`p-3 ${isSelected ? 'bg-navy-50' : 'bg-slate-50'}`}>
                       <div className="flex items-start gap-3">
                         <Checkbox
                           checked={isSelected}
@@ -509,7 +509,7 @@ Return JSON:
                                   <Badge variant="outline" className="text-xs">{req.frequency}</Badge>
                                 </div>
                                 {req.m_items_affected?.length > 0 && (
-                                  <p className="text-xs text-purple-700 mb-1">
+                                  <p className="text-xs text-navy-700 mb-1">
                                     M-items: {req.m_items_affected.join(', ')}
                                   </p>
                                 )}
@@ -546,8 +546,8 @@ Return JSON:
 
                         {/* Detailed PDGM Impact */}
                         {pathway.pdgm_impact && (
-                          <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                            <p className="text-xs font-semibold text-purple-800 mb-2">📊 Detailed PDGM Impact:</p>
+                          <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                            <p className="text-xs font-semibold text-navy-800 mb-2">📊 Detailed PDGM Impact:</p>
                             <div className="space-y-2 text-xs">
                               {pathway.pdgm_impact.clinical_group_change && (
                                 <div className="bg-white p-2 rounded">
@@ -596,13 +596,13 @@ Return JSON:
 
             {/* Activate Button */}
             {selectedPathways.length > 0 && (
-              <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg border-2 border-purple-300">
+              <div className="bg-gradient-to-r from-navy-100 to-pink-100 p-4 rounded-lg border-2 border-navy-300">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-purple-900">
+                    <p className="text-sm font-semibold text-navy-900">
                       Activate {selectedPathways.length} selected pathway{selectedPathways.length > 1 ? 's' : ''}
                     </p>
-                    <p className="text-xs text-purple-700">
+                    <p className="text-xs text-navy-700">
                       This will generate {selectedPathways.reduce((sum, idx) => 
                         sum + (recommendations.recommended_pathways[idx]?.tasks_to_generate?.length || 0), 0
                       )} tasks
@@ -610,7 +610,7 @@ Return JSON:
                   </div>
                   <Button
                     onClick={handleActivatePathways}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-navy-600 hover:bg-navy-700"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Activate Pathways

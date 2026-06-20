@@ -257,10 +257,10 @@ Return JSON with:
                   <p className="text-3xl font-bold text-green-900">{Math.round(feedback.compliance_score)}%</p>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-navy-200">
                 <CardContent className="p-4 text-center">
-                  <p className="text-sm text-purple-600 mb-1">Clinical Detail</p>
-                  <p className="text-3xl font-bold text-purple-900">{Math.round(feedback.clinical_detail_score)}%</p>
+                  <p className="text-sm text-navy-600 mb-1">Clinical Detail</p>
+                  <p className="text-3xl font-bold text-navy-900">{Math.round(feedback.clinical_detail_score)}%</p>
                 </CardContent>
               </Card>
             </div>

@@ -97,9 +97,20 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
-    const attempt = payload?.data || payload;
+    const posted = payload?.data || payload;
+    if (!posted?.id) {
+      return Response.json({ success: true, skipped: true, reason: 'No attempt id in payload' });
+    }
 
-    if (!attempt?.id || !attempt?.assignment_id || attempt?.pass_fail_result !== 'failed') {
+    // Entity-trigger hardening: re-fetch the canonical TrainingAttempt by id and
+    // derive ALL privileged state (user_id, answers, pass/fail) from it — never
+    // the posted body, which a forged trigger could use to assign mandatory
+    // remediation and spam notifications to an arbitrary victim.
+    const [attempt] = await base44.asServiceRole.entities.TrainingAttempt.filter({ id: posted.id }, '-created_date', 1);
+    if (!attempt) {
+      return Response.json({ success: false, error: 'Attempt not found' }, { status: 404 });
+    }
+    if (!attempt.assignment_id || attempt.pass_fail_result !== 'failed') {
       return Response.json({ success: true, skipped: true, reason: 'No failed attempt to process' });
     }
 

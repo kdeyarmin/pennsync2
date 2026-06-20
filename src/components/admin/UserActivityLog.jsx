@@ -60,7 +60,7 @@ export default function UserActivityLog() {
       'create': 'bg-green-100 text-green-800',
       'update': 'bg-yellow-100 text-yellow-800',
       'delete': 'bg-red-100 text-red-800',
-      'login': 'bg-purple-100 text-purple-800',
+      'login': 'bg-navy-100 text-navy-800',
       'page_visit': 'bg-slate-100 text-slate-800'
     };
     return colors[action] || 'bg-slate-100 text-slate-800';

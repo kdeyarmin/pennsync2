@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +16,7 @@ import { toast } from "sonner";
 export default function SupplyForecastDashboard() {
   const [searchPatient, setSearchPatient] = useState("");
   const [selectedPatientId, setSelectedPatientId] = useState(null);
+  const queryClient = useQueryClient();
 
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
@@ -33,11 +33,14 @@ export default function SupplyForecastDashboard() {
   });
 
   const generatePredictionsMutation = useMutation({
+    // Call the real backend function, which authorizes the patient, analyzes
+    // 6 months of usage logs and persists SupplyPrediction records. (Previously
+    // this fired a freeform invokeLLM prompt and discarded the result, so the
+    // button toasted "generated" without ever creating or refreshing anything.)
     mutationFn: (patientId) =>
-      invokeLLM({
-        prompt: `Generate supply predictions for patient ${patientId}`,
-      }),
-    onSuccess: () => {
+      base44.functions.invoke('predictSupplyNeeds', { patientId }),
+    onSuccess: (_data, patientId) => {
+      queryClient.invalidateQueries({ queryKey: ["supply-predictions", patientId] });
       toast.success("Predictions generated");
     },
     onError: () => {

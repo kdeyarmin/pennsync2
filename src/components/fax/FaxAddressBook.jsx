@@ -34,7 +34,7 @@ export default function FaxAddressBook({ onSelectContact }) {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.FaxContact.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       setIsAddDialogOpen(false);
       resetForm();
       toast.success("Contact added successfully");
@@ -44,7 +44,7 @@ export default function FaxAddressBook({ onSelectContact }) {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.FaxContact.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       setEditingContact(null);
       resetForm();
       toast.success("Contact updated successfully");
@@ -54,7 +54,7 @@ export default function FaxAddressBook({ onSelectContact }) {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.FaxContact.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       toast.success("Contact deleted successfully");
     }
   });
@@ -114,7 +114,7 @@ export default function FaxAddressBook({ onSelectContact }) {
       }
 
       await base44.entities.FaxContact.bulkCreate(contactsToAdd);
-      queryClient.invalidateQueries(['fax-contacts']);
+      queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
       toast.success(`Added ${contactsToAdd.length} contacts`);
     } catch (error) {
       toast.error("Failed to upload CSV: " + error.message);
@@ -147,7 +147,7 @@ export default function FaxAddressBook({ onSelectContact }) {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm hover:from-indigo-700 hover:to-violet-700">
+            <Button className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-navy-600 text-white shadow-sm hover:from-indigo-700 hover:to-navy-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Contact
             </Button>
@@ -202,7 +202,7 @@ export default function FaxAddressBook({ onSelectContact }) {
           </DialogContent>
         </Dialog>
         <ProviderCsvImport onImported={() => {
-          queryClient.invalidateQueries(['fax-contacts']);
+          queryClient.invalidateQueries({ queryKey: ['fax-contacts'] });
           queryClient.invalidateQueries({ queryKey: ['physicians'] });
         }} />
         <Button variant="outline" asChild className="h-11 rounded-xl border-slate-300 bg-white">

@@ -102,7 +102,7 @@ export default function NurseTrainingSuggestions({ nurseEmail, compact = false }
 
   const getCategoryColor = (category) => {
     const colors = {
-      documentation: 'bg-purple-100 text-purple-800',
+      documentation: 'bg-navy-100 text-navy-800',
       compliance: 'bg-orange-100 text-orange-800',
       clinical: 'bg-blue-100 text-blue-800',
       safety: 'bg-red-100 text-red-800',
@@ -135,7 +135,7 @@ export default function NurseTrainingSuggestions({ nurseEmail, compact = false }
 
   if (compact) {
     return (
-      <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-navy-50">
         <CardHeader className="py-3">
           <CardTitle className="text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -198,8 +198,8 @@ export default function NurseTrainingSuggestions({ nurseEmail, compact = false }
             <p className="text-2xl font-bold text-orange-700">{unaddressedRecs}</p>
             <p className="text-xs text-slate-600">Unaddressed</p>
           </div>
-          <div className="bg-purple-50 p-3 rounded-lg text-center">
-            <p className="text-lg font-bold text-purple-700 capitalize">{topCategory?.[0] || '—'}</p>
+          <div className="bg-navy-50 p-3 rounded-lg text-center">
+            <p className="text-lg font-bold text-navy-700 capitalize">{topCategory?.[0] || '—'}</p>
             <p className="text-xs text-slate-600">Top Area</p>
           </div>
         </div>

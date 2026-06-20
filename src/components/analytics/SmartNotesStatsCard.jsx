@@ -67,15 +67,15 @@ export default function SmartNotesStatsCard() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-navy-600" />
           AI-Enhanced Smart Notes
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center p-3 bg-purple-50 rounded-lg">
-            <Sparkles className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-purple-600">{totalEnhanced}</p>
+          <div className="text-center p-3 bg-navy-50 rounded-lg">
+            <Sparkles className="w-5 h-5 text-navy-600 mx-auto mb-1" />
+            <p className="text-2xl font-bold text-navy-600">{totalEnhanced}</p>
             <p className="text-xs text-slate-600">Total Enhanced</p>
           </div>
           <div className="text-center p-3 bg-blue-50 rounded-lg">
@@ -98,7 +98,7 @@ export default function SmartNotesStatsCard() {
                 className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  <div className="w-8 h-8 bg-gradient-to-br from-navy-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                     {idx + 1}
                   </div>
                   <div>
@@ -109,7 +109,7 @@ export default function SmartNotesStatsCard() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-purple-100 text-purple-700">
+                  <Badge className="bg-navy-100 text-navy-700">
                     {stat.totalEnhanced}
                   </Badge>
                   <Badge className={getQualityColor(stat.avgQuality)}>

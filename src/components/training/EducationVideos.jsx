@@ -98,7 +98,7 @@ export default function EducationVideos() {
 
   const categoryColors = {
     "OASIS": "bg-green-100 text-green-800",
-    "Documentation": "bg-purple-100 text-purple-800",
+    "Documentation": "bg-navy-100 text-navy-800",
     "Safety": "bg-red-100 text-red-800",
     "Clinical": "bg-indigo-100 text-indigo-800"
   };
@@ -115,7 +115,7 @@ export default function EducationVideos() {
   return (
     <div className="space-y-6">
       {/* Header with Progress */}
-      <Card className="border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <Card className="border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-navy-50">
         <CardContent className="p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -135,7 +135,7 @@ export default function EducationVideos() {
             </div>
             <div className="w-full bg-slate-200 rounded-full h-3">
               <div 
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-indigo-500 to-navy-600 h-3 rounded-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>

@@ -147,7 +147,7 @@ Return ONLY valid JSON.`;
   };
 
   return (
-    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
+    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-navy-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-blue-900">
           <RefreshCw className="w-5 h-5" />
@@ -203,17 +203,17 @@ Return ONLY valid JSON.`;
             {recommendations.guideline_updates?.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-purple-600" />
+                  <BookOpen className="w-4 h-4 text-navy-600" />
                   Recent Guideline Updates
                 </h4>
                 <ScrollArea className="h-32">
                   <div className="space-y-2">
                     {recommendations.guideline_updates.map((update, idx) => (
-                      <div key={idx} className="p-2 bg-purple-50 rounded border border-purple-200">
-                        <p className="text-sm font-medium text-purple-900">{update.guideline}</p>
-                        <p className="text-xs text-purple-700 mt-1">{update.change}</p>
+                      <div key={idx} className="p-2 bg-navy-50 rounded border border-navy-200">
+                        <p className="text-sm font-medium text-navy-900">{update.guideline}</p>
+                        <p className="text-xs text-navy-700 mt-1">{update.change}</p>
                         {update.effective_date && (
-                          <p className="text-xs text-purple-600 mt-1">Effective: {update.effective_date}</p>
+                          <p className="text-xs text-navy-600 mt-1">Effective: {update.effective_date}</p>
                         )}
                       </div>
                     ))}
@@ -277,13 +277,13 @@ Return ONLY valid JSON.`;
             {recommendations.performance_insights?.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-cyan-600" />
+                  <TrendingUp className="w-4 h-4 text-navy-600" />
                   Performance Insights
                 </h4>
-                <div className="p-3 bg-cyan-50 rounded border border-cyan-200">
+                <div className="p-3 bg-navy-50 rounded border border-navy-200">
                   <ul className="space-y-1">
                     {recommendations.performance_insights.map((insight, idx) => (
-                      <li key={idx} className="text-sm text-cyan-900">• {insight}</li>
+                      <li key={idx} className="text-sm text-navy-900">• {insight}</li>
                     ))}
                   </ul>
                 </div>

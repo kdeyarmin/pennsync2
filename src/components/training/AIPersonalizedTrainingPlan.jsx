@@ -130,7 +130,7 @@ Make the content specific to Medicare home health compliance requirements.`,
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 py-4">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50 py-4">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-indigo-600" />

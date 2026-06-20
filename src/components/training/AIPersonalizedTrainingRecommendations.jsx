@@ -432,9 +432,9 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
 
       {/* Recommended Training Modules */}
       {recommendations.recommended_modules?.length > 0 && (
-        <Card className="border-2 border-purple-300">
+        <Card className="border-2 border-navy-300">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-900">
+            <CardTitle className="flex items-center gap-2 text-navy-900">
               <BookOpen className="w-5 h-5" />
               Recommended Training Modules
             </CardTitle>
@@ -445,7 +445,7 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
                 <AccordionItem key={index} value={`module-${index}`} className="border rounded-lg">
                   <AccordionTrigger className="px-3 hover:no-underline">
                     <div className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-purple-600" />
+                      <GraduationCap className="w-4 h-4 text-navy-600" />
                       <span className="font-medium text-left">{module.module_title}</span>
                       <Badge variant="outline" className="ml-auto">
                         <Clock className="w-3 h-3 mr-1" />
@@ -466,7 +466,7 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
                       <Button 
                         size="sm" 
                         onClick={() => handleEnrollModule(module.module_id)}
-                        className="bg-purple-600 hover:bg-purple-700 w-full"
+                        className="bg-navy-600 hover:bg-navy-700 w-full"
                       >
                         <GraduationCap className="w-4 h-4 mr-2" />
                         Enroll in This Module

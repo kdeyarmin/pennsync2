@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  GraduationCap,
   Target,
   Award,
   TrendingUp,
@@ -17,8 +16,6 @@ import {
   RefreshCw,
   Zap
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
 import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
 import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
@@ -101,15 +98,7 @@ export default function NurseTraining() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={GraduationCap}
-        eyebrow="My Learning"
-        title="Nurse Training Hub"
-        description="Improve your documentation skills with AI-powered training and practice scenarios"
-        favoritePage="NurseTraining"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
@@ -150,14 +139,14 @@ export default function NurseTraining() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-navy-100 border-navy-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-700 font-medium">Recommendations</p>
-                <p className="text-3xl font-bold text-purple-900">{recommendations?.length || 0}</p>
+                <p className="text-sm text-navy-700 font-medium">Recommendations</p>
+                <p className="text-3xl font-bold text-navy-900">{recommendations?.length || 0}</p>
               </div>
-              <Target className="w-10 h-10 text-purple-600" />
+              <Target className="w-10 h-10 text-navy-600" />
             </div>
           </CardContent>
         </Card>
@@ -290,6 +279,6 @@ export default function NurseTraining() {
           />
         </TabsContent>
       </Tabs>
-    </PageContainer>
+    </div>
   );
 }

@@ -144,10 +144,10 @@ Generate the suggestions now:`;
 
   if (isAnalyzing) {
     return (
-      <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-blue-50 border-navy-200">
         <CardContent className="p-6">
           <div className="flex items-center gap-3">
-            <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+            <Loader2 className="w-5 h-5 text-navy-600 animate-spin" />
             <div>
               <p className="font-semibold text-slate-900">Analyzing your documentation...</p>
               <p className="text-sm text-slate-600">AI is identifying missing assessments</p>
@@ -163,10 +163,10 @@ Generate the suggestions now:`;
   }
 
   return (
-    <Card className="border-purple-200">
+    <Card className="border-navy-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-purple-600" />
+          <Lightbulb className="w-5 h-5 text-navy-600" />
           Smart Assessment Suggestions ({suggestions.length})
         </CardTitle>
         <p className="text-sm text-slate-600">
@@ -195,7 +195,7 @@ Generate the suggestions now:`;
                   <Button
                     size="sm"
                     onClick={() => handleAddSuggestion(suggestion)}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-navy-600 hover:bg-navy-700"
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Add to Note

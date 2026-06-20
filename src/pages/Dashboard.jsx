@@ -229,19 +229,19 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-violet-600 to-violet-500 border-violet-500 shadow-md">
+        <Card className="bg-gradient-to-br from-navy-600 to-navy-500 border-navy-500 shadow-md">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] sm:text-xs text-violet-100 font-semibold mb-1 uppercase tracking-wide">Active Care Plans</p>
+                <p className="text-[10px] sm:text-xs text-navy-100 font-semibold mb-1 uppercase tracking-wide">Active Care Plans</p>
                 <p className="text-2xl sm:text-3xl font-bold text-white">
                   {carePlans.length}
                 </p>
-                <p className="text-[10px] sm:text-xs text-violet-200 mt-0.5">
+                <p className="text-[10px] sm:text-xs text-navy-200 mt-0.5">
                   {patients.length} patients
                 </p>
               </div>
-              <Target className="w-9 h-9 sm:w-11 sm:h-11 text-violet-300 flex-shrink-0 opacity-70" />
+              <Target className="w-9 h-9 sm:w-11 sm:h-11 text-navy-300 flex-shrink-0 opacity-70" />
             </div>
           </CardContent>
         </Card>
@@ -258,14 +258,14 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-700 to-blue-600 border-blue-600 shadow-md">
+        <Card className="bg-gradient-to-br from-gold-500 to-gold-400 border-gold-400 shadow-md">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] sm:text-xs text-blue-200 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.timeSavedDisplay}</p>
+                <p className="text-[10px] sm:text-xs text-navy-900/70 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
+                <p className="text-2xl sm:text-3xl font-bold text-navy-900">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-blue-300 flex-shrink-0 opacity-70" />
+              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-navy-900/40 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -277,7 +277,7 @@ export default function Dashboard() {
           { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      iconClass: "text-slate-600 group-hover:text-blue-600"   },
           { page: "SendFax",            label: "Send Fax",          Icon: Send,          iconClass: "text-slate-600 group-hover:text-indigo-600" },
           { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  iconClass: "text-slate-600 group-hover:text-emerald-600"  },
-          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          iconClass: "text-slate-600 group-hover:text-purple-600" },
+          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          iconClass: "text-slate-600 group-hover:text-navy-600" },
           { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           iconClass: "text-slate-600 group-hover:text-orange-600" },
           { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, iconClass: "text-slate-600 group-hover:text-red-600"    },
         ].map((item) => {

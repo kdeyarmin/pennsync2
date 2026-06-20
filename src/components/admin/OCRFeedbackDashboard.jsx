@@ -27,7 +27,7 @@ export default function OCRFeedbackDashboard() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-navy-600" />
           OCR Quality & Feedback Analytics
         </CardTitle>
       </CardHeader>
@@ -51,13 +51,13 @@ export default function OCRFeedbackDashboard() {
           </div>
         </div>
 
-        <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 mb-6">
+        <div className="p-4 bg-gradient-to-r from-navy-50 to-indigo-50 rounded-lg border border-navy-200 mb-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 mb-1">Estimated Accuracy Rate</p>
-              <p className="text-3xl font-bold text-purple-600">{accuracyRate}%</p>
+              <p className="text-3xl font-bold text-navy-600">{accuracyRate}%</p>
             </div>
-            <TrendingUp className="w-8 h-8 text-purple-600" />
+            <TrendingUp className="w-8 h-8 text-navy-600" />
           </div>
         </div>
 

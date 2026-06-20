@@ -31,7 +31,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const TYPE_DOT = {
   vacation: "bg-blue-500",
   sick: "bg-amber-500",
-  personal: "bg-violet-500",
+  personal: "bg-navy-500",
   bereavement: "bg-slate-500",
   jury_duty: "bg-slate-500",
   parental: "bg-pink-500",
@@ -147,7 +147,7 @@ export default function TeamTimeOffCalendar({ requests = [] }) {
           {[
             ["Vacation", "bg-blue-500"],
             ["Sick", "bg-amber-500"],
-            ["Personal", "bg-violet-500"],
+            ["Personal", "bg-navy-500"],
             ["Parental", "bg-pink-500"],
             ["Other", "bg-slate-400"],
           ].map(([label, dot]) => (

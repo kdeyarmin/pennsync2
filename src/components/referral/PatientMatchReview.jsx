@@ -72,6 +72,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
         </Button>
       </div>
 
+      {matchAnalysis && (
       <Card className="border-2 border-blue-300">
         <CardHeader className="bg-blue-50">
           <CardTitle className="flex items-center gap-2">
@@ -128,6 +129,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
           </div>
         </CardContent>
       </Card>
+      )}
 
       {viewMode === 'list' && referral.match_suggestions && referral.match_suggestions.length > 0 && (
         <div className="space-y-3">
@@ -235,8 +237,8 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
           
           <div className="grid md:grid-cols-2 gap-4">
             {/* Referral Data */}
-            <Card className="border-2 border-purple-300">
-              <CardHeader className="bg-purple-50">
+            <Card className="border-2 border-navy-300">
+              <CardHeader className="bg-navy-50">
                 <CardTitle className="text-base flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   New Referral Data
@@ -363,7 +365,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
         </div>
       )}
 
-      {matchAnalysis.discrepancies && matchAnalysis.discrepancies.length > 0 && (
+      {matchAnalysis?.discrepancies && matchAnalysis.discrepancies.length > 0 && (
         <Alert className="bg-red-50 border-red-300">
           <AlertCircle className="w-4 h-4 text-red-600" />
           <AlertDescription>

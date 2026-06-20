@@ -661,10 +661,10 @@ Return JSON:
                         const isCompleted = completedActions.includes(id);
                         
                         return (
-                          <div key={idx} className="p-2 bg-purple-50 rounded-lg border border-purple-200">
+                          <div key={idx} className="p-2 bg-navy-50 rounded-lg border border-navy-200">
                             <div className="flex items-start justify-between">
                               <div>
-                                <p className="text-sm font-medium text-purple-900">{edu.topic}</p>
+                                <p className="text-sm font-medium text-navy-900">{edu.topic}</p>
                                 <div className="flex flex-wrap gap-1 mt-1">
                                   {edu.key_points?.slice(0, 2).map((point, i) => (
                                     <Badge key={i} variant="outline" className="text-xs">

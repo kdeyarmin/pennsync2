@@ -16,7 +16,6 @@ import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
 import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
-import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
@@ -380,20 +379,6 @@ export default function SmartNoteAssistant() {
 
       <SmartNoteTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* ── TAB: MEDICATIONS ── */}
-      {activeTab === "medications" && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <MedicationManagementTab
-            patient={patient}
-            patientId={patientId}
-            onAddToNote={(medNote) => {
-              setNote(prev => prev + "\n\n" + medNote);
-              setActiveTab("builder");
-            }}
-          />
-        </div>
-      )}
-
       {/* ── TAB: DRAFT FROM VITALS ── */}
       {activeTab === "drafter" && (
         <StructuredNoteDrafter
@@ -506,9 +491,9 @@ export default function SmartNoteAssistant() {
               <ComplianceChecklist isHospice={isHospice} />
 
               <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+                <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-navy-50 border-b border-indigo-100">
                   <span className="text-xs font-semibold text-indigo-700">Your Rough Notes / Bullet Points</span>
-                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-violet-600 hover:text-violet-800"
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-navy-600 hover:text-navy-800"
                     onClick={() => { setActiveTab("drafter"); }}>
                     <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
                   </Button>

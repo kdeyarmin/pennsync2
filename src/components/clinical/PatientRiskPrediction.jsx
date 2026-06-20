@@ -294,18 +294,18 @@ Return JSON:
   if (!patient) return null;
 
   return (
-    <Card className={`border-purple-200 ${riskAnalysis?.overall_risk_level === 'critical' ? 'ring-2 ring-red-400' : ''}`}>
+    <Card className={`border-navy-200 ${riskAnalysis?.overall_risk_level === 'critical' ? 'ring-2 ring-red-400' : ''}`}>
       <CardHeader 
         className={`py-3 cursor-pointer ${
           riskAnalysis?.overall_risk_level === 'critical' ? 'bg-gradient-to-r from-red-50 to-orange-50' :
           riskAnalysis?.overall_risk_level === 'high' ? 'bg-gradient-to-r from-orange-50 to-yellow-50' :
-          'bg-gradient-to-r from-purple-50 to-indigo-50'
+          'bg-gradient-to-r from-navy-50 to-indigo-50'
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Brain className="w-4 h-4 text-purple-600" />
+            <Brain className="w-4 h-4 text-navy-600" />
             Patient Risk Prediction
             {riskAnalysis && (
               <Badge className={getRiskBadgeStyle(riskAnalysis.overall_risk_level)}>
@@ -326,7 +326,7 @@ Return JSON:
         <CardContent className="p-3 space-y-4">
           {isAnalyzing ? (
             <div className="flex items-center justify-center py-8 gap-2">
-              <RefreshCw className="w-5 h-5 animate-spin text-purple-600" />
+              <RefreshCw className="w-5 h-5 animate-spin text-navy-600" />
               <span className="text-sm text-slate-600">Analyzing patient risk factors...</span>
             </div>
           ) : riskAnalysis ? (
@@ -372,7 +372,7 @@ Return JSON:
                   <div 
                     key={idx}
                     className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      selectedRisk === idx ? 'ring-2 ring-purple-400' : ''
+                      selectedRisk === idx ? 'ring-2 ring-navy-400' : ''
                     } ${getRiskBadgeStyle(risk.level)}`}
                     onClick={() => setSelectedRisk(selectedRisk === idx ? null : idx)}
                   >
@@ -532,13 +532,13 @@ Return JSON:
             </>
           ) : (
             <div className="text-center py-6">
-              <Brain className="w-12 h-12 text-purple-300 mx-auto mb-3" />
+              <Brain className="w-12 h-12 text-navy-300 mx-auto mb-3" />
               <p className="text-sm text-slate-600 mb-3">
                 Analyze patient data to predict risks and get proactive recommendations
               </p>
               <Button
                 onClick={analyzePatientRisk}
-                className="bg-purple-600 hover:bg-purple-700 gap-2"
+                className="bg-navy-600 hover:bg-navy-700 gap-2"
                 disabled={isAnalyzing}
               >
                 <Brain className="w-4 h-4" />

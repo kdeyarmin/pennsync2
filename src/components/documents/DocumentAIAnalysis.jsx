@@ -16,8 +16,8 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
   const analyzeMutation = useMutation({
     mutationFn: () => analyzeDocument({ document_id: document.id }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['patient-documents']);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-documents'] });
       toast.success("Document analyzed successfully");
     },
     onError: (error) => {
@@ -29,18 +29,18 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
 
   if (!analysis?.analyzed) {
     return (
-      <Card className="border-purple-200 bg-purple-50">
+      <Card className="border-navy-200 bg-navy-50">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
-              <span className="text-sm font-medium text-purple-900">AI Analysis Available</span>
+              <Brain className="w-5 h-5 text-navy-600" />
+              <span className="text-sm font-medium text-navy-900">AI Analysis Available</span>
             </div>
             <Button
               size="sm"
               onClick={() => analyzeMutation.mutate()}
               disabled={analyzeMutation.isPending}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               {analyzeMutation.isPending ? (
                 <>
@@ -74,7 +74,7 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
           </Alert>
         )}
         <div className="flex items-center gap-2 text-sm text-slate-600">
-          <Brain className="w-4 h-4 text-purple-600" />
+          <Brain className="w-4 h-4 text-navy-600" />
           <span>AI analyzed • Confidence: {analysis.confidence_score}%</span>
         </div>
       </div>
@@ -82,14 +82,14 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
   }
 
   return (
-    <Card className="border-purple-200">
+    <Card className="border-navy-200">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI Analysis
           </CardTitle>
-          <Badge className="bg-purple-100 text-purple-800">
+          <Badge className="bg-navy-100 text-navy-800">
             Confidence: {analysis.confidence_score}%
           </Badge>
         </div>
@@ -176,9 +176,9 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
 
         {/* Suggested Category */}
         {analysis.suggested_category && analysis.suggested_category !== document.category && (
-          <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            <span className="text-sm text-purple-900">
+          <div className="flex items-center gap-2 p-3 bg-navy-50 rounded-lg border border-navy-200">
+            <Sparkles className="w-4 h-4 text-navy-600" />
+            <span className="text-sm text-navy-900">
               Suggested category: <strong>{analysis.suggested_category.replace(/_/g, ' ')}</strong>
             </span>
           </div>

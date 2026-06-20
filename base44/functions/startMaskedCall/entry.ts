@@ -1,15 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * startMaskedCall — outbound click-to-call masking (nurse -> patient).
+ * startMaskedCall — outbound click-to-call masking (via Telnyx) (nurse -> patient) via the
+ * Telnyx Call Control API. Mirrors startMaskedCall (the Twilio path).
  *
- * Uses the Twilio Calls API to ring the nurse's personal cell first; when the
- * nurse answers, Twilio bridges to the patient and presents the nurse's WORK
- * number as the caller ID. The patient never sees the cell.
+ * Flow: ring the nurse's personal cell first (`to` = cell, caller id = work
+ * number). The patient leg is bridged when the nurse answers: the answered-leg
+ * `call.answered` webhook (handleTelnyxStatusWebhook) reads the encoded
+ * `client_state` and issues a Call Control `transfer` to the patient presenting
+ * the WORK number as caller id, so the patient never sees the cell.
  *
- * Origination is NON-idempotent: a thrown network error is NOT retried (the
- * call may already be in flight). Only explicit retryable HTTP statuses (where
- * Twilio told us the request failed) are retried.
+ * Origination is NON-idempotent: a thrown network error is NOT retried (the call
+ * may already be in flight). Only explicit retryable HTTP statuses are retried.
  */
 
 function normalizeE164(raw: string | null | undefined): string | null {
@@ -30,35 +32,60 @@ function phoneVariants(value: string): string[] {
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
-/**
- * Resolve Twilio credentials: prefer env vars, then fall back to the
- * IntegrationSecret row saved by the super admin in-app.
- */
-async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
-  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-  let sid = envSid && envSid.trim() ? envSid.trim() : null;
-  let token = envToken && envToken.trim() ? envToken.trim() : null;
-  if (!sid || !token) {
-    try {
-      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
-      const rec = rows?.[0] || {};
-      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
-      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
-    } catch { /* ignore */ }
+// ---- cost controls (mirrors src/components/voice/costControls.js) ----
+const PREMIUM_AREA_CODES = new Set(['900', '976']);
+function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+  const s = settings || {};
+  const e = String(e164 || '').trim();
+  if (/^\+1\d{10}$/.test(e)) {
+    const areaCode = e.slice(2, 5);
+    if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
+    return { allowed: true, reason: 'allowed' };
   }
-  return { accountSid: sid, authToken: token };
+  if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: 'invalid_destination' };
+  if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
+  return { allowed: false, reason: 'international_blocked' };
+}
+function blockedReasonMessage(reason: string): string {
+  switch (reason) {
+    case 'premium_number_blocked': return 'Premium-rate numbers (900/976) are blocked.';
+    case 'blocked_area_code': return "That area code is blocked by your agency's policy.";
+    case 'international_blocked': return 'International destinations are blocked. Ask an admin to enable international sending.';
+    case 'invalid_destination': return "That doesn't look like a valid phone number.";
+    default: return "That destination isn't allowed.";
+  }
 }
 
-// ---- transient-failure retry policy ----
-// Call origination is NOT idempotent, so a thrown network error is NOT retried
-// (the call might already be placed — a blind retry could double-dial the
-// patient). Only explicit retryable HTTP statuses (408/425/429/5xx), where
-// Twilio told us the request failed, are retried.
-const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
-function isRetryableStatus(status: number): boolean {
-  return RETRYABLE_STATUSES.has(Number(status));
+async function resolveTelnyxCreds(base44: any): Promise<{
+  apiKey: string | null;
+  publicKey: string | null;
+  messagingProfileId: string | null;
+  voiceConnectionId: string | null;
+  faxConnectionId: string | null;
+}> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
+  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
+  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
+  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+    const rec = rows?.[0] || {};
+    if (!apiKey) apiKey = pick(rec.api_key);
+    if (!publicKey) publicKey = pick(rec.public_key);
+    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
+    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
+    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
+  } catch { /* ignore */ }
+  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
+
+// ---- transient-failure retry policy (origination is NOT idempotent) ----
+const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+function isRetryableStatus(status: number): boolean { return RETRYABLE_STATUSES.has(Number(status)); }
 function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
   if (headerValue == null) return null;
   const raw = String(headerValue).trim();
@@ -78,8 +105,6 @@ async function originateWithRetry(
   attemptFn: (attempt: number) => Promise<{ ok: boolean; status: number; data: any; retryAfter?: string | null }>,
   maxAttempts = 3,
 ) {
-  // Note: thrown errors are intentionally NOT caught here — they propagate to
-  // the caller after a single attempt (non-idempotent origination).
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const result = await attemptFn(attempt);
     if (result.ok || !isRetryableStatus(result.status) || attempt === maxAttempts) {
@@ -88,17 +113,17 @@ async function originateWithRetry(
     const fromHeader = parseRetryAfter(result.retryAfter ?? null);
     await sleep(fromHeader != null ? Math.min(fromHeader, 4000) : backoffDelayMs(attempt));
   }
-  // Unreachable (loop returns on the last attempt).
   throw new Error('originateWithRetry exhausted attempts');
 }
 
-function escapeXml(s: string): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+// Telnyx echoes `client_state` (base64) back on every webhook for the call, so we
+// stash the bridge target + presented caller id there for handleTelnyxStatusWebhook.
+function encodeClientState(obj: Record<string, unknown>): string {
+  const json = JSON.stringify(obj);
+  const bytes = new TextEncoder().encode(json);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
 }
 
 Deno.serve(async (req) => {
@@ -115,7 +140,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Your account needs both a work number and a personal cell on file. Ask an admin to provision them.' }, { status: 400 });
     }
 
-    // Resolve the patient number.
     let destination = normalizeE164(to_number);
     let resolvedPatientId = patient_id || null;
     if (!destination && patient_id) {
@@ -132,9 +156,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { accountSid, authToken } = await resolveTwilioCreds(base44);
-    if (!accountSid || !authToken) {
-      return Response.json({ error: 'Twilio Voice credentials not configured' }, { status: 500 });
+    const { apiKey, voiceConnectionId } = await resolveTelnyxCreds(base44);
+    if (!apiKey || !voiceConnectionId) {
+      return Response.json({ error: 'Telnyx Voice credentials not configured' }, { status: 500 });
+    }
+
+    // Cost control: block premium/blocked/international destinations by default.
+    const settingsRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+    const destAllowed = isAllowedDestination(destination, settingsRows[0] || {});
+    if (!destAllowed.allowed) {
+      return Response.json({ error: blockedReasonMessage(destAllowed.reason), reason: destAllowed.reason }, { status: 403 });
     }
 
     const callLog = await base44.entities.CallLog.create({
@@ -149,14 +180,17 @@ Deno.serve(async (req) => {
       sent_by: user.email,
     });
 
-    // Build TwiML: ring nurse's cell first, then bridge to the patient with the
-    // work number as the presented caller ID.
-    const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="${escapeXml(workNumber)}" timeout="20"><Number>${escapeXml(destination)}</Number></Dial></Response>`;
+    // Bridge instructions for the answered-leg webhook: dial the patient,
+    // presenting the work number as caller id. Tagged so the webhook only acts on
+    // calls it originated.
+    const clientState = encodeClientState({
+      t: 'masked_bridge',
+      bridge_to: destination,
+      caller_id: workNumber,
+      call_log_id: callLog.id,
+    });
 
-    // Originate via Twilio Calls API. Each attempt is bounded by an AbortController
-    // timeout; explicit transient 5xx/408/425/429 are retried with backoff (a
-    // thrown network error is not, since the call may already be in flight).
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`;
+    const telnyxUrl = 'https://api.telnyx.com/v2/calls';
     const ORIGINATE_TIMEOUT_MS = 15000;
     const functionsBase = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
 
@@ -166,25 +200,18 @@ Deno.serve(async (req) => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), ORIGINATE_TIMEOUT_MS);
         try {
-          const body = new URLSearchParams({
-            To: nurseCell,
-            From: workNumber,
-            Twiml: twiml,
-          });
-          if (functionsBase) {
-            body.set('StatusCallback', `${functionsBase}/handleTwilioCallStatus`);
-            body.append('StatusCallbackEvent', 'initiated');
-            body.append('StatusCallbackEvent', 'ringing');
-            body.append('StatusCallbackEvent', 'answered');
-            body.append('StatusCallbackEvent', 'completed');
-          }
-          const resp = await fetch(twilioUrl, {
+          const payload: Record<string, unknown> = {
+            connection_id: voiceConnectionId,
+            to: nurseCell,
+            from: workNumber,
+            client_state: clientState,
+            timeout_secs: 30,
+          };
+          if (functionsBase) payload.webhook_url = `${functionsBase}/handleTelnyxStatusWebhook`;
+          const resp = await fetch(telnyxUrl, {
             method: 'POST',
-            headers: {
-              'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: body.toString(),
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
             signal: controller.signal,
           });
           const data = await resp.json().catch(() => ({}));
@@ -194,31 +221,30 @@ Deno.serve(async (req) => {
         }
       });
     } catch (netErr) {
-      // Network/DNS failure or timeout: don't leave the CallLog stuck in 'initiated'.
       const aborted = netErr?.name === 'AbortError';
       const reason = aborted
-        ? `Timed out after ${ORIGINATE_TIMEOUT_MS} ms reaching Twilio`
-        : `Network error reaching Twilio: ${netErr.message}`;
-      await base44.entities.CallLog.update(callLog.id, {
-        status: 'failed',
-        failure_reason: reason,
-      }).catch(() => {});
+        ? `Timed out after ${ORIGINATE_TIMEOUT_MS} ms reaching Telnyx`
+        : `Network error reaching Telnyx: ${netErr.message}`;
+      await base44.entities.CallLog.update(callLog.id, { status: 'failed', failure_reason: reason }).catch(() => {});
       return Response.json(
-        { error: aborted ? 'Twilio Voice API timed out' : 'Failed to reach Twilio Voice API', details: netErr.message },
+        { error: aborted ? 'Telnyx Voice API timed out' : 'Failed to reach Telnyx Voice API', details: netErr.message },
         { status: aborted ? 504 : 502 },
       );
     }
 
     const data = result.data || {};
     if (!result.ok) {
+      const firstErr = Array.isArray(data?.errors) ? data.errors[0] : null;
       await base44.entities.CallLog.update(callLog.id, {
         status: 'failed',
-        failure_reason: data?.message || data?.error || `Twilio Voice API error (${result.status})`,
+        failure_reason: firstErr?.detail || firstErr?.title || `Telnyx Voice API error (${result.status})`,
       });
-      return Response.json({ error: 'Twilio Voice API error', details: data }, { status: result.status });
+      return Response.json({ error: 'Telnyx Voice API error', details: data }, { status: result.status });
     }
 
-    const providerCallId = data?.sid || null;
+    // Call Control returns call_control_id + call_leg_id; persist the leg id as
+    // the provider call id so status webhooks can find this row.
+    const providerCallId = data?.data?.call_control_id || data?.data?.call_leg_id || null;
     await base44.entities.CallLog.update(callLog.id, { provider_call_id: providerCallId });
 
     await base44.entities.UserActivity.create({
@@ -228,6 +254,7 @@ Deno.serve(async (req) => {
       entity_type: 'CallLog',
       entity_id: callLog.id,
       details: {
+        provider: 'telnyx',
         to_number: destination,
         displayed_number: workNumber,
         patient_id: resolvedPatientId,
@@ -239,7 +266,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, call_id: callLog.id, provider_call_id: providerCallId });
   } catch (error) {
-    console.error('startMaskedCall error:', error);
+    console.error('startTelnyxCall error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -4,15 +4,21 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Get pending scheduled faxes
-    const scheduledFaxes = await base44.asServiceRole.entities.ScheduledFax.filter({
-      status: 'pending'
-    }, '-scheduled_time', 200);
-
     const now = new Date();
-    
+
+    // Get pending faxes that are actually DUE, earliest-scheduled first. The old
+    // query fetched the newest 200 by '-scheduled_time' (furthest-future first)
+    // and filtered due in code, so under a >200 backlog the most-overdue faxes
+    // fell off the end and were never sent. Mirror processScheduledFaxes: filter
+    // server-side on scheduled_time and sort ASCENDING so the page is the
+    // most-overdue rows. (Belt-and-suspenders: still filter due in code.)
+    const scheduledFaxes = await base44.asServiceRole.entities.ScheduledFax.filter({
+      status: 'pending',
+      scheduled_time: { "$lte": now.toISOString() }
+    }, 'scheduled_time', 200);
+
     // Separate into due and priority groups
-    const dueFaxes = scheduledFaxes.filter(fax => 
+    const dueFaxes = scheduledFaxes.filter(fax =>
       new Date(fax.scheduled_time) <= now
     );
 

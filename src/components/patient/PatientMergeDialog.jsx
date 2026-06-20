@@ -169,7 +169,7 @@ export default function PatientMergeDialog({
           <div className="text-center">
             <p className="text-xs text-slate-500">Created</p>
             <p className="text-xs font-medium text-slate-700">
-              {format(new Date(patient.created_date), 'MM/dd/yyyy')}
+              {Number.isNaN(new Date(patient.created_date).getTime()) ? '—' : format(new Date(patient.created_date), 'MM/dd/yyyy')}
             </p>
           </div>
         </div>
@@ -332,10 +332,10 @@ export default function PatientMergeDialog({
             ) : (
               <Button
                 onClick={() => mergeMutation.mutate()}
-                disabled={mergeMutation.isLoading}
+                disabled={mergeMutation.isPending}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {mergeMutation.isLoading ? 'Merging...' : 'Merge Patients'}
+                {mergeMutation.isPending ? 'Merging...' : 'Merge Patients'}
               </Button>
             )}
           </div>

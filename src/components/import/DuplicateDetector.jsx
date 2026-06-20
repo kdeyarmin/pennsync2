@@ -251,7 +251,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
   const getConfidenceBadgeColor = (level) => {
     switch (level) {
       case 'definitive':
-        return 'bg-purple-100 text-purple-900 border-purple-400';
+        return 'bg-navy-100 text-navy-900 border-navy-400';
       case 'very_high':
         return 'bg-red-100 text-red-800 border-red-300';
       case 'high':
@@ -350,8 +350,8 @@ export default function DuplicateDetector({ patients, onResolve }) {
               </p>
             </div>
 
-            <Alert className="bg-purple-50 border-purple-300">
-              <AlertDescription className="text-xs text-purple-900">
+            <Alert className="bg-navy-50 border-navy-300">
+              <AlertDescription className="text-xs text-navy-900">
                 <strong>MRN-Only Matching:</strong> Duplicates are identified exclusively by Medical Record Number (MRN). 
                 When an MRN match is found, the existing patient record will be automatically updated with any new information from the upload file.
               </AlertDescription>
@@ -502,7 +502,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                       }`}>
                                         Match Score: {Math.round(dup.score)}%
                                       </Badge>
-                                      <Badge className="bg-purple-100 text-purple-800 border-purple-300 text-xs">
+                                      <Badge className="bg-navy-100 text-navy-800 border-navy-300 text-xs">
                                         {dup.criteriaMet} of 6 criteria met
                                       </Badge>
                                       {dup.differences.length > 0 && (
@@ -597,9 +597,9 @@ export default function DuplicateDetector({ patients, onResolve }) {
                           </div>
 
                           {resolution[index] && (
-                            <Alert className={resolution[index].auto ? 'bg-purple-50 border-purple-300' : 'bg-blue-50 border-blue-200'}>
-                              <CheckCircle2 className={`w-4 h-4 ${resolution[index].auto ? 'text-purple-600' : 'text-blue-600'}`} />
-                              <AlertDescription className={`text-sm ${resolution[index].auto ? 'text-purple-900' : 'text-blue-900'}`}>
+                            <Alert className={resolution[index].auto ? 'bg-navy-50 border-navy-300' : 'bg-blue-50 border-blue-200'}>
+                              <CheckCircle2 className={`w-4 h-4 ${resolution[index].auto ? 'text-navy-600' : 'text-blue-600'}`} />
+                              <AlertDescription className={`text-sm ${resolution[index].auto ? 'text-navy-900' : 'text-blue-900'}`}>
                                 <strong>{resolution[index].auto ? 'Auto-selected (MRN Match):' : 'Action selected:'}</strong>{' '}
                                 {resolution[index].action === 'add' && 'Add as new patient'}
                                 {resolution[index].action === 'update' && 'Update existing patient with new information'}

@@ -241,10 +241,10 @@ Format as JSON with clear sections`;
   };
 
   return (
-    <Card className="ai-card border-2 border-purple-300">
-      <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+    <Card className="ai-card border-2 border-navy-300">
+      <CardHeader className="pb-3 bg-gradient-to-r from-navy-50 to-indigo-50">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           Smart Documentation Assistant
           <Badge className="ai-badge ml-auto">{getDocumentTypeLabel()}</Badge>
         </CardTitle>
@@ -263,7 +263,7 @@ Format as JSON with clear sections`;
         {!isGenerating && !generatedData && (
           <Button 
             onClick={generateSmartDocumentation}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             <Zap className="w-4 h-4 mr-2" />
             Generate Smart Pre-Fill
@@ -339,7 +339,7 @@ Format as JSON with clear sections`;
                     <div className="flex items-start gap-3">
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-purple-600" />
+                          <FileText className="w-4 h-4 text-navy-600" />
                           <span className="font-semibold text-sm">{section.section_name}</span>
                           <Badge 
                             className={
@@ -373,7 +373,7 @@ Format as JSON with clear sections`;
                                   <ul className="ml-4 mt-1 space-y-1">
                                     {value.map((item, idx) => (
                                       <li key={idx} className="text-slate-600 flex items-start gap-2">
-                                        <span className="text-purple-500 mt-1">•</span>
+                                        <span className="text-navy-500 mt-1">•</span>
                                         <span>{item}</span>
                                       </li>
                                     ))}

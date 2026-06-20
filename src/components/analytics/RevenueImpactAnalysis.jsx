@@ -138,9 +138,9 @@ export default function RevenueImpactAnalysis({ data = [], compact = false }) {
               </div>
               {!compact && (
                 <>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <p className="text-xl font-bold text-purple-900">{metrics.totalEpisodes}</p>
-                    <p className="text-xs text-purple-700">Episodes</p>
+                  <div className="text-center p-3 bg-navy-50 rounded-lg border border-navy-200">
+                    <p className="text-xl font-bold text-navy-900">{metrics.totalEpisodes}</p>
+                    <p className="text-xs text-navy-700">Episodes</p>
                   </div>
                   <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
                     <p className="text-xl font-bold text-slate-900">${metrics.avgPerEpisode.toFixed(0)}</p>

@@ -323,11 +323,11 @@ Provide comprehensive final feedback with specific recommendations for continued
           </div>
 
           {/* Recommended Training */}
-          <div className="bg-purple-50 p-3 rounded-lg">
-            <p className="text-xs font-semibold text-purple-800 mb-2">Recommended Training:</p>
+          <div className="bg-navy-50 p-3 rounded-lg">
+            <p className="text-xs font-semibold text-navy-800 mb-2">Recommended Training:</p>
             <div className="flex flex-wrap gap-1">
               {overallFeedback.recommended_training?.map((t, i) => (
-                <Badge key={i} variant="outline" className="text-xs text-purple-700">
+                <Badge key={i} variant="outline" className="text-xs text-navy-700">
                   {t}
                 </Badge>
               ))}
@@ -405,9 +405,9 @@ Provide comprehensive final feedback with specific recommendations for continued
 
         {/* Observation */}
         {step.observation && (
-          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
-            <p className="text-xs font-semibold text-purple-800 mb-1">Your Observation:</p>
-            <p className="text-sm text-purple-900">{step.observation}</p>
+          <div className="bg-navy-50 p-3 rounded-lg border border-navy-200">
+            <p className="text-xs font-semibold text-navy-800 mb-1">Your Observation:</p>
+            <p className="text-sm text-navy-900">{step.observation}</p>
           </div>
         )}
 

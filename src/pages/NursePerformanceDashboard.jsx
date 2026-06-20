@@ -269,11 +269,11 @@ export default function NursePerformanceDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600 mb-1">AI Adoption</p>
-                    <p className="text-3xl font-bold text-purple-600">
+                    <p className="text-3xl font-bold text-navy-600">
                       {metrics?.suggestion_acceptance_rate || 0}%
                     </p>
                   </div>
-                  <Brain className="w-8 h-8 text-purple-400" />
+                  <Brain className="w-8 h-8 text-navy-400" />
                 </div>
               </CardContent>
             </Card>
@@ -326,7 +326,7 @@ export default function NursePerformanceDashboard() {
                 <Card>
                   <CardContent className="p-6">
                     <p className="text-sm text-slate-600 mb-2">Completeness</p>
-                    <p className="text-3xl font-bold text-purple-600">
+                    <p className="text-3xl font-bold text-navy-600">
                       {docQuality?.total_notes > 0 
                         ? Math.round((docQuality.notes_with_vitals / docQuality.total_notes) * 100)
                         : 0}%
@@ -392,7 +392,7 @@ export default function NursePerformanceDashboard() {
                 <Card>
                   <CardContent className="p-6">
                     <p className="text-sm text-slate-600 mb-2">Goals Met</p>
-                    <p className="text-3xl font-bold text-purple-600">{patientOutcomes?.goals_met || 0}</p>
+                    <p className="text-3xl font-bold text-navy-600">{patientOutcomes?.goals_met || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -469,7 +469,7 @@ export default function NursePerformanceDashboard() {
                 <Card>
                   <CardContent className="p-6">
                     <p className="text-sm text-slate-600 mb-2">Productive Hours</p>
-                    <p className="text-3xl font-bold text-purple-600">{utilization?.productive_hours || 0}</p>
+                    <p className="text-3xl font-bold text-navy-600">{utilization?.productive_hours || 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -929,9 +929,9 @@ export default function NursePerformanceDashboard() {
                       <span className="text-slate-700">Suggestions Applied</span>
                       <span className="text-2xl font-bold text-green-600">{metrics?.suggestions_applied}</span>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-navy-50 rounded-lg">
                       <span className="text-slate-700">Acceptance Rate</span>
-                      <span className="text-2xl font-bold text-purple-600">{metrics?.suggestion_acceptance_rate}%</span>
+                      <span className="text-2xl font-bold text-navy-600">{metrics?.suggestion_acceptance_rate}%</span>
                     </div>
                   </CardContent>
                 </Card>

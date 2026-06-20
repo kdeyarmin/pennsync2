@@ -255,9 +255,9 @@ Return detailed JSON analysis suitable for executive dashboard.`,
 
   if (isAnalyzing) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-navy-600 mx-auto mb-4" />
           <p className="text-lg font-medium text-slate-900 mb-2">AI Risk Analysis in Progress</p>
           <p className="text-sm text-slate-600">
             Analyzing {audits.length} audits, {alerts.length} alerts, and compliance patterns...
@@ -269,10 +269,10 @@ Return detailed JSON analysis suitable for executive dashboard.`,
 
   if (!riskAnalysis && !autoAnalyze) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             Advanced Compliance Risk Scoring
           </CardTitle>
         </CardHeader>
@@ -280,7 +280,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
           <p className="text-sm text-slate-600 mb-4">
             AI-powered predictive risk analysis with mitigation strategies and resource allocation recommendations.
           </p>
-          <Button onClick={analyzeRisk} className="w-full bg-purple-600 hover:bg-purple-700">
+          <Button onClick={analyzeRisk} className="w-full bg-navy-600 hover:bg-navy-700">
             <Brain className="w-4 h-4 mr-2" />
             Analyze Risk & Generate Predictions
           </Button>
@@ -301,11 +301,11 @@ Return detailed JSON analysis suitable for executive dashboard.`,
   return (
     <div className="space-y-6">
       {/* Overall Risk Score */}
-      <Card className={`border-4 ${riskColors.border} bg-gradient-to-r from-purple-50 to-pink-50`}>
+      <Card className={`border-4 ${riskColors.border} bg-gradient-to-r from-navy-50 to-pink-50`}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Shield className="w-6 h-6 text-purple-600" />
+              <Shield className="w-6 h-6 text-navy-600" />
               Agency Compliance Risk Score
             </span>
             <Badge className={`${riskColors.bg} text-white text-xl px-4 py-2`}>
@@ -482,10 +482,10 @@ Return detailed JSON analysis suitable for executive dashboard.`,
       </div>
 
       {/* Resource Allocation */}
-      <Card className="border-2 border-purple-300 bg-purple-50">
+      <Card className="border-2 border-navy-300 bg-navy-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
+            <Users className="w-5 h-5 text-navy-600" />
             Resource Allocation & Targeted Support
           </CardTitle>
         </CardHeader>
@@ -496,7 +496,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
               <ul className="space-y-1">
                 {riskAnalysis.resource_allocation?.qa_audit_focus?.map((focus, idx) => (
                   <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
-                    <span className="text-purple-600">•</span>
+                    <span className="text-navy-600">•</span>
                     {focus}
                   </li>
                 ))}

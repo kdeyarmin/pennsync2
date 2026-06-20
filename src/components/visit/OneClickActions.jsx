@@ -10,7 +10,7 @@ export default function OneClickActions({
   onRequestSupplies
 }) {
   return (
-    <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+    <Card className="bg-gradient-to-r from-blue-50 to-navy-50 border-blue-200">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Quick Actions</CardTitle>
       </CardHeader>
@@ -45,10 +45,10 @@ export default function OneClickActions({
 
           <Button
             variant="outline"
-            className="flex flex-col items-center gap-2 h-auto py-3 hover:bg-purple-50 hover:border-purple-300"
+            className="flex flex-col items-center gap-2 h-auto py-3 hover:bg-navy-50 hover:border-navy-300"
             onClick={() => window.print()}
           >
-            <FileText className="w-5 h-5 text-purple-600" />
+            <FileText className="w-5 h-5 text-navy-600" />
             <span className="text-xs font-medium">Print Summary</span>
           </Button>
         </div>

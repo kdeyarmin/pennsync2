@@ -4,7 +4,7 @@
  * A send that fails for a TRANSIENT reason (timeout / network / 429 / 5xx) is
  * worth retrying later; a PERMANENT failure (opt-out, invalid number, auth,
  * kill switch) must never be retried. The `redriveFailedSms` cron re-sends
- * eligible rows that Twilio reported as failed, with an attempt cap, an
+ * eligible rows that Telnyx reported as failed, with an attempt cap, an
  * escalating gap between attempts, and an age ceiling so a stuck message
  * eventually lands in a terminal failed state instead of looping.
  *

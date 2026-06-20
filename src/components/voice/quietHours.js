@@ -152,6 +152,14 @@ export function isWithinQuietHours(toNumber, now = new Date(), { enabled = true,
   if (!timeZone) return { allowed: true, reason: "unknown_timezone", timeZone: null, localHour: null };
   const localHour = hourInZone(now, timeZone);
   if (localHour == null) return { allowed: true, reason: "unknown_timezone", timeZone, localHour: null };
-  const allowed = localHour >= startHour && localHour < endHour;
+  // startHour/endHour define the ALLOWED contact window. Support a window that
+  // wraps past midnight (start > end, e.g. allowed 22:00–06:00): then the allowed
+  // span is [start, 24) ∪ [0, end). For the normal daytime window (start < end)
+  // this is the usual half-open interval. start === end means "all day".
+  const allowed = startHour === endHour
+    ? true
+    : startHour < endHour
+      ? (localHour >= startHour && localHour < endHour)
+      : (localHour >= startHour || localHour < endHour);
   return { allowed, reason: allowed ? "within_hours" : "quiet_hours", timeZone, localHour };
 }

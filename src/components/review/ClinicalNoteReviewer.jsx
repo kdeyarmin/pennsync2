@@ -217,9 +217,9 @@ Return detailed analysis with:
 
   if (isReviewing) {
     return (
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-navy-600 mx-auto mb-4" />
           <p className="text-lg font-medium text-slate-900 mb-2">Reviewing Clinical Note...</p>
           <p className="text-sm text-slate-600">Analyzing completeness, accuracy, compliance & billing optimization</p>
         </CardContent>
@@ -229,12 +229,12 @@ Return detailed analysis with:
 
   if (!reviewResults) {
     return (
-      <Card className={`${prominent ? 'border-4 border-purple-400 shadow-2xl bg-gradient-to-r from-purple-50 to-pink-50' : 'border-2 border-blue-300'}`}>
+      <Card className={`${prominent ? 'border-4 border-navy-400 shadow-2xl bg-gradient-to-r from-navy-50 to-pink-50' : 'border-2 border-blue-300'}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-blue-600" />
             AI Document Reviewer
-            {prominent && <Badge className="bg-purple-600 text-white ml-2">Automatic Quality Check</Badge>}
+            {prominent && <Badge className="bg-navy-600 text-white ml-2">Automatic Quality Check</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -259,7 +259,7 @@ Return detailed analysis with:
               <span>Quality</span>
             </div>
           </div>
-          <Button onClick={reviewNote} className={`w-full ${prominent ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6' : 'bg-blue-600 hover:bg-blue-700'}`}>
+          <Button onClick={reviewNote} className={`w-full ${prominent ? 'bg-gradient-to-r from-navy-600 to-pink-600 hover:from-navy-700 hover:to-pink-700 text-lg py-6' : 'bg-blue-600 hover:bg-blue-700'}`}>
             <FileText className="w-4 h-4 mr-2" />
             {prominent ? 'Run Quality & Compliance Review' : 'Review Note'}
           </Button>
@@ -271,11 +271,11 @@ Return detailed analysis with:
   return (
     <div className="space-y-4">
       {/* Overall Scores */}
-      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-purple-600" />
+              <FileText className="w-5 h-5 text-navy-600" />
               Clinical Note Review Results
             </span>
             <Badge className={`${getScoreColor(reviewResults.overall_score)} bg-white text-2xl px-4 py-2`}>
@@ -478,9 +478,9 @@ Return detailed analysis with:
                         )}
                       </div>
                       {opp.icd10_suggestion && (
-                        <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                          <p className="text-xs font-semibold text-purple-900 mb-1">ICD-10 Suggestion:</p>
-                          <p className="text-sm text-purple-800 font-mono">{opp.icd10_suggestion}</p>
+                        <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                          <p className="text-xs font-semibold text-navy-900 mb-1">ICD-10 Suggestion:</p>
+                          <p className="text-sm text-navy-800 font-mono">{opp.icd10_suggestion}</p>
                         </div>
                       )}
                     </div>

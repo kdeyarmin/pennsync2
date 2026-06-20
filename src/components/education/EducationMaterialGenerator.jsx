@@ -515,9 +515,9 @@ Return JSON:
             </div>
 
             {/* Summary */}
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <h4 className="font-semibold text-purple-900 mb-2">📝 Remember</h4>
-              <p className="text-sm text-purple-800">{generatedContent.summary}</p>
+            <div className="bg-navy-50 p-4 rounded-lg border border-navy-200">
+              <h4 className="font-semibold text-navy-900 mb-2">📝 Remember</h4>
+              <p className="text-sm text-navy-800">{generatedContent.summary}</p>
             </div>
           </div>
         )}

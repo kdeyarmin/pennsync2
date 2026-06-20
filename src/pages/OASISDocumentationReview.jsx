@@ -2,9 +2,7 @@ import { useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { ArrowLeft } from "lucide-react";
 import OASISDocumentationQualityScorer from "../components/oasis/OASISDocumentationQualityScorer";
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";
@@ -13,7 +11,7 @@ import InlineDocumentationAssistant from "../components/oasis/InlineDocumentatio
 
 export default function OASISDocumentationReview() {
   const location = useLocation();
-  const { analysisResults, pdgmData, patientName, navigationData } = location.state || {};
+  const { analysisResults, pdgmData, navigationData } = location.state || {};
 
   if (!analysisResults) {
     return (
@@ -34,23 +32,7 @@ export default function OASISDocumentationReview() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={FileText}
-        eyebrow="Patient Care"
-        title="OASIS Documentation Review"
-        description={patientName ? `Patient: ${patientName}` : undefined}
-        favoritePage="OASISDocumentationReview"
-        actions={
-          <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Analyzer
-            </Button>
-          </Link>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Documentation Quality Score */}
       <OASISDocumentationQualityScorer
         analysisResults={analysisResults}
@@ -81,6 +63,6 @@ export default function OASISDocumentationReview() {
         analysisResults={analysisResults}
         pdgmData={pdgmData}
       />
-    </PageContainer>
+    </div>
   );
 }

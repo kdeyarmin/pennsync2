@@ -17,6 +17,42 @@ export const VALIDATION_ERRORS = {
   INVALID_AGE: 'Patient appears to be over 125 years old'
 };
 
+// Levenshtein edit distance (iterative, two-row) — helper for fuzzyMatch.
+const levenshtein = (a, b) => {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  let curr = new Array(n + 1);
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
+};
+
+// Fuzzy string match. Returns { match, type } where type is 'exact' (identical
+// after normalization), 'close' (similarity >= threshold but not identical), or
+// 'none'. Consumed by RealTimeValidator to surface "did you mean an existing
+// value?" warnings — it only warns on type === 'close', so an exact match
+// deliberately produces no warning.
+export const fuzzyMatch = (value, target, threshold = 0.8) => {
+  if (!value || !target) return { match: false, type: 'none' };
+  const a = String(value).trim().toLowerCase();
+  const b = String(target).trim().toLowerCase();
+  if (!a || !b) return { match: false, type: 'none' };
+  if (a === b) return { match: true, type: 'exact' };
+  const similarity = 1 - levenshtein(a, b) / Math.max(a.length, b.length);
+  return similarity >= threshold
+    ? { match: true, type: 'close' }
+    : { match: false, type: 'none' };
+};
+
 // Email validation
 export const validateEmail = (email) => {
   if (!email) return null;

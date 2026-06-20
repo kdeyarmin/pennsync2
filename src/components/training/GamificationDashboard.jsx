@@ -37,7 +37,7 @@ export default function GamificationDashboard({ userId }) {
     common: 'bg-slate-400',
     uncommon: 'bg-green-500',
     rare: 'bg-blue-500',
-    epic: 'bg-purple-500',
+    epic: 'bg-navy-500',
     legendary: 'bg-yellow-500'
   };
 
@@ -84,14 +84,14 @@ export default function GamificationDashboard({ userId }) {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-l-4 border-l-navy-500">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Rank</p>
-                <p className="text-2xl font-bold text-purple-600">#{userRank || 'N/A'}</p>
+                <p className="text-2xl font-bold text-navy-600">#{userRank || 'N/A'}</p>
               </div>
-              <Crown className="w-8 h-8 text-purple-500" />
+              <Crown className="w-8 h-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
@@ -173,26 +173,26 @@ export default function GamificationDashboard({ userId }) {
       </Card>
 
       {/* Next Milestone */}
-      <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200">
+      <Card className="bg-gradient-to-br from-navy-50 to-indigo-50 border-2 border-navy-200">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <Target className="w-6 h-6 text-purple-600" />
-            <h3 className="text-lg font-semibold text-purple-900">Next Milestone</h3>
+            <Target className="w-6 h-6 text-navy-600" />
+            <h3 className="text-lg font-semibold text-navy-900">Next Milestone</h3>
           </div>
           <div className="space-y-3">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-purple-900">Streak Goal: 10 Courses</span>
-                <span className="text-sm font-semibold text-purple-600">
+                <span className="text-sm font-medium text-navy-900">Streak Goal: 10 Courses</span>
+                <span className="text-sm font-semibold text-navy-600">
                   {leaderboard?.current_streak || 0} / 10
                 </span>
               </div>
               <Progress 
                 value={((leaderboard?.current_streak || 0) / 10) * 100} 
-                className="h-2 bg-purple-200"
+                className="h-2 bg-navy-200"
               />
             </div>
-            <p className="text-sm text-purple-700">
+            <p className="text-sm text-navy-700">
               Complete {10 - (leaderboard?.current_streak || 0)} more courses to earn the "Dedicated Learner" badge!
             </p>
           </div>

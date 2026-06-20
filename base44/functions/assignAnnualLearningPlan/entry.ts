@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     }
 
     const planItems = await base44.asServiceRole.entities.LearningPlanCourse.filter({ plan_id: planId }, 'order_index', 300);
-    const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+    const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000);
     let candidates = allUsers.filter((candidate) => candidate.email && candidate.role !== 'admin');
 
     if (user.account_type === 'agency_admin' && user.agency_name) {

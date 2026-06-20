@@ -76,7 +76,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
   return (
     <Card className="border-indigo-200">
       <CardHeader 
-        className="py-3 bg-gradient-to-r from-indigo-50 to-purple-50 cursor-pointer"
+        className="py-3 bg-gradient-to-r from-indigo-50 to-navy-50 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center justify-between">
@@ -139,14 +139,14 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
                     {/* Required Training */}
                     {update.suggested_training?.length > 0 && (
                       <div className="flex items-center gap-2 flex-wrap">
-                        <GraduationCap className="w-3 h-3 text-purple-600" />
-                        <span className="text-xs text-purple-700">Training:</span>
+                        <GraduationCap className="w-3 h-3 text-navy-600" />
+                        <span className="text-xs text-navy-700">Training:</span>
                         {update.suggested_training.slice(0, 2).map((t, i) => (
                           <Link 
                             key={i} 
                             to={`${createPageUrl("NurseTraining")}?topic=${encodeURIComponent(t)}`}
                           >
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-purple-100">
+                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-navy-100">
                               {t}
                             </Badge>
                           </Link>

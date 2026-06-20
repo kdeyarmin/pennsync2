@@ -63,7 +63,7 @@ export default function PatientEducationPanel({ patientId }) {
 
   const getCategoryColor = (category) => {
     switch (category) {
-      case 'medication': return 'bg-purple-600';
+      case 'medication': return 'bg-navy-600';
       case 'warning_signs': return 'bg-red-600';
       case 'self_care': return 'bg-green-600';
       case 'care_plan': return 'bg-blue-600';

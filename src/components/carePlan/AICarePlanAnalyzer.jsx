@@ -208,10 +208,10 @@ Return JSON:
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 pb-4">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-blue-50 pb-4">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-navy-600" />
           AI Care Plan Analyzer
         </CardTitle>
         <p className="text-sm text-slate-600 mt-2">
@@ -225,7 +225,7 @@ Return JSON:
             <Button
               onClick={generateAnalysis}
               disabled={isAnalyzing || !diagnosis || !assessmentData}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-navy-600 hover:bg-navy-700"
               size="lg"
             >
               {isAnalyzing ? (
@@ -405,7 +405,7 @@ Return JSON:
             <Button
               onClick={handleSaveAnalysis}
               disabled={isSaving || Object.values(selectedInterventions).every(v => !v)}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-navy-600 hover:bg-navy-700"
             >
               {isSaving ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>

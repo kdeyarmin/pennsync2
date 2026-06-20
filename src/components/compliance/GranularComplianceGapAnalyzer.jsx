@@ -277,12 +277,12 @@ Provide detailed analysis with:
 
       {/* AI-Driven Recommendations */}
       {aiRecommendations && (
-        <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-white">
+        <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Brain className="w-6 h-6 text-purple-600" />
+              <Brain className="w-6 h-6 text-navy-600" />
               AI-Driven Recommendations
-              <Badge className="ml-2 bg-purple-600 text-white">
+              <Badge className="ml-2 bg-navy-600 text-white">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Powered by AI
               </Badge>
@@ -360,7 +360,7 @@ Provide detailed analysis with:
                 <h3 className="font-semibold text-slate-900 mb-3">Recommended Training</h3>
                 <div className="grid md:grid-cols-2 gap-3">
                   {aiRecommendations.training_recommendations.map((training, idx) => (
-                    <div key={idx} className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                    <div key={idx} className="bg-navy-50 p-3 rounded-lg border border-navy-200">
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-semibold text-slate-900">{training.topic}</p>
                         <Badge className={getSeverityColor(training.priority)}>{training.priority}</Badge>

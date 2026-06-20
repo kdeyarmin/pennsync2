@@ -74,7 +74,7 @@ export default function AITrainingRecommendations({ _userId, userEmail }) {
 
 NURSE PERFORMANCE DATA:
 - Recent Compliance Audits: ${complianceAudits.length}
-- Average Compliance Score: ${(complianceAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / complianceAudits.length).toFixed(1)}%
+- Average Compliance Score: ${complianceAudits.length > 0 ? (complianceAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / complianceAudits.length).toFixed(1) : 'N/A'}%
 - Total Flagged Issues: ${recentIssues.length}
 
 COMMON ISSUE CATEGORIES:
@@ -242,13 +242,13 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
   };
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+    <Card className="border-2 border-navy-200 bg-gradient-to-br from-navy-50 to-white">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI Training Recommendations
-            <Badge className="bg-purple-600 text-white">Personalized</Badge>
+            <Badge className="bg-navy-600 text-white">Personalized</Badge>
           </CardTitle>
           <Button
             size="sm"
@@ -258,7 +258,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
             className="gap-2"
           >
             {analyzing ? (
-              <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600" /> Analyzing...</>
+              <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600" /> Analyzing...</>
             ) : (
               <><Sparkles className="w-4 h-4" /> Re-analyze</>
             )}
@@ -267,10 +267,10 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Completion Progress */}
-        <div className="bg-white p-4 rounded-lg border border-purple-200">
+        <div className="bg-white p-4 rounded-lg border border-navy-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-slate-700">Training Progress</span>
-            <span className="text-sm font-bold text-purple-600">{completedCount} / {totalAssigned}</span>
+            <span className="text-sm font-bold text-navy-600">{completedCount} / {totalAssigned}</span>
           </div>
           <Progress value={completionRate} className="h-2" />
           <p className="text-xs text-slate-500 mt-1">{completionRate}% completed</p>
@@ -278,9 +278,9 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
 
         {/* AI Analysis */}
         {recommendations && (
-          <Alert className="bg-purple-50 border-purple-200">
-            <Brain className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-900 text-sm">
+          <Alert className="bg-navy-50 border-navy-200">
+            <Brain className="w-4 h-4 text-navy-600" />
+            <AlertDescription className="text-navy-900 text-sm">
               <strong>AI Assessment:</strong> {recommendations.overall_assessment}
             </AlertDescription>
           </Alert>
@@ -290,7 +290,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {pendingTraining.length > 0 && (
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <Target className="w-4 h-4 text-purple-600" />
+              <Target className="w-4 h-4 text-navy-600" />
               Assigned Training ({pendingTraining.length})
             </h4>
             {pendingTraining.slice(0, 3).map((training) => {
@@ -298,7 +298,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
               if (!module) return null;
 
               return (
-                <div key={training.id} className="bg-white p-3 rounded-lg border border-purple-200">
+                <div key={training.id} className="bg-white p-3 rounded-lg border border-navy-200">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <h5 className="font-medium text-slate-900 text-sm">{module.title}</h5>
@@ -327,7 +327,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
                         startTrainingMutation.mutate(training.id);
                         window.location.href = '/staff-training-hub';
                       }}
-                      className="bg-purple-600 hover:bg-purple-700 gap-1"
+                      className="bg-navy-600 hover:bg-navy-700 gap-1"
                     >
                       {training.status === 'in_progress' ? (
                         <><Play className="w-3 h-3" /> Continue</>
@@ -344,7 +344,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
                 variant="ghost"
                 size="sm"
                 onClick={() => window.location.href = '/staff-training-hub'}
-                className="w-full text-purple-600"
+                className="w-full text-navy-600"
               >
                 View All Training ({pendingTraining.length})
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -357,7 +357,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {recommendations?.recommendations && recommendations.recommendations.length > 0 && (
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <Sparkles className="w-4 h-4 text-navy-600" />
               Recommended for You
             </h4>
             {recommendations.recommendations.slice(0, 2).map((rec, idx) => (
@@ -398,7 +398,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         {/* Loading State */}
         {analyzing && !recommendations && (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-3" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing your performance...</p>
           </div>
         )}

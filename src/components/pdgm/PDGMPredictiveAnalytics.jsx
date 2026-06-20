@@ -391,7 +391,7 @@ Return JSON:
 
   return (
     <Card className="border-2 border-indigo-200">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-indigo-600" />

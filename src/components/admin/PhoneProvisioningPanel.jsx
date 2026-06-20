@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Phone, Save, ShieldCheck, Info, CheckCircle2, AlertTriangle, XCircle,
-  Loader2, Copy, Check, Activity, Webhook, Send,
+  Loader2, Copy, Check, Activity, Webhook, Send, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { maskPhone, formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils";
@@ -64,7 +64,7 @@ function CopyButton({ value, label }) {
 }
 
 /**
- * PhoneProvisioningPanel — admin-only. Assigns Twilio work numbers + private
+ * PhoneProvisioningPanel — admin-only. Assigns Telnyx work numbers + private
  * cell bridge targets to nurses and configures agency-wide phone settings.
  */
 export default function PhoneProvisioningPanel() {
@@ -93,12 +93,15 @@ export default function PhoneProvisioningPanel() {
 
   const [agency, setAgency] = useState({
     main_office_number_e164: "",
+    office_fax_number_e164: "",
     default_off_duty_template: "",
     sms_messaging_enabled: true,
     sms_quick_replies: [],
     sms_templates: [],
     voicemail_enabled: false,
     voicemail_greeting: "",
+    allow_international: false,
+    monthly_sms_cap: "",
   });
   const [inputs, setInputs] = useState({}); // email -> { work, cell }
 
@@ -106,21 +109,31 @@ export default function PhoneProvisioningPanel() {
     if (settings) {
       setAgency({
         main_office_number_e164: settings.main_office_number_e164 || "",
+        office_fax_number_e164: settings.office_fax_number_e164 || "",
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
         sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
         sms_templates: Array.isArray(settings.sms_templates) ? settings.sms_templates : [],
         voicemail_enabled: settings.voicemail_enabled === true,
         voicemail_greeting: settings.voicemail_greeting || "",
+        allow_international: settings.allow_international === true,
+        monthly_sms_cap: settings.monthly_sms_cap ?? "",
       });
     }
   }, [settings]);
 
   const saveAgency = useMutation({
-    mutationFn: () =>
-      settings?.id
-        ? base44.entities.AgencySettings.update(settings.id, agency)
-        : base44.entities.AgencySettings.create(agency),
+    mutationFn: () => {
+      // Coerce the monthly cap to a positive number or null ("no cap").
+      const capNum = Number(agency.monthly_sms_cap);
+      const payload = {
+        ...agency,
+        monthly_sms_cap: Number.isFinite(capNum) && capNum > 0 ? capNum : null,
+      };
+      return settings?.id
+        ? base44.entities.AgencySettings.update(settings.id, payload)
+        : base44.entities.AgencySettings.create(payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
       toast.success("Agency phone settings saved");
@@ -138,17 +151,29 @@ export default function PhoneProvisioningPanel() {
     onError: (err) => toast.error(err?.message || "Failed to provision number"),
   });
 
-  // Live Twilio connection test (backend probe of secrets + SMS API + provisioning).
+  // One-click: hand every user without a work number the next available pool
+  // number. Fax is shared (the office number), so there's nothing per-user there.
+  const autoAssign = useMutation({
+    mutationFn: () => base44.functions.invoke("autoAssignWorkNumbers", {}),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["phone-users"] });
+      const d = res?.data || res;
+      toast.success(d?.message || `Assigned ${d?.assigned_count ?? 0} work number(s)`);
+    },
+    onError: (err) => toast.error(err?.message || "Auto-assign failed"),
+  });
+
+  // Live Telnyx connection test (backend probe of secrets + SMS API + provisioning).
   const [liveResult, setLiveResult] = useState(null);
   const testConnection = useMutation({
-    mutationFn: () => base44.functions.invoke("testTwilioConnection", {}),
+    mutationFn: () => base44.functions.invoke("testTelnyxConnection", {}),
     onSuccess: (res) => {
       const data = res?.data || res;
       setLiveResult(data);
       const sev = summarize(data?.checks || []).severity;
       if (sev === "fail") toast.error("Connection test found problems — see the checklist.");
       else if (sev === "warn") toast("Connection test passed with warnings.");
-      else toast.success("Twilio connection looks healthy.");
+      else toast.success("Telnyx connection looks healthy.");
     },
     onError: (err) => toast.error(err?.message || "Connection test failed"),
   });
@@ -195,7 +220,7 @@ export default function PhoneProvisioningPanel() {
           <CardTitle className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-indigo-600" />
-              Twilio Setup &amp; Health
+              Telnyx Setup &amp; Health
             </span>
             <Badge className={sevMeta.badge}>
               {configSummary.ready
@@ -206,8 +231,8 @@ export default function PhoneProvisioningPanel() {
             </Badge>
           </CardTitle>
           <CardDescription>
-            A quick readiness check of your Twilio configuration. Edit values below and save, then run
-            the live test to confirm your Account SID and Auth Token actually work.
+            A quick readiness check of your Telnyx configuration. Edit values below and save, then run
+            the live test to confirm your Telnyx API key actually works.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -236,7 +261,7 @@ export default function PhoneProvisioningPanel() {
               </div>
               {liveChecks.length === 0 ? (
                 <p className="text-sm text-slate-500 py-3">
-                  Run the test to probe backend secrets, reach the Twilio API, and check nurse provisioning.
+                  Run the test to probe backend secrets, reach the Telnyx API, and check nurse provisioning.
                   Nothing is sent — it's a read-only health check.
                 </p>
               ) : (
@@ -296,13 +321,13 @@ export default function PhoneProvisioningPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Webhook className="w-5 h-5 text-indigo-600" />
-            Twilio Webhook Endpoints
+            Telnyx Webhook Endpoints
           </CardTitle>
           <CardDescription>
-            In the Twilio Console, open each phone number and set its Voice and Messaging webhooks
-            (and the StatusCallback for each) to the matching deployed function URL. All handlers
-            verify the X-Twilio-Signature and fail closed. Copy each function name (and confirm its
-            exact deployed URL in the Base44 dashboard) when configuring the Twilio number.
+            In the Telnyx Portal, set the webhook URL on your messaging/fax profile and your voice
+            (Call Control) connection to the matching deployed function URL. The handlers verify the
+            Telnyx webhook signature (Ed25519 public key) and fail closed. Copy each function name (and
+            confirm its exact deployed URL in the Base44 dashboard) when configuring Telnyx.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -330,8 +355,8 @@ export default function PhoneProvisioningPanel() {
             <Info className="w-4 h-4 text-slate-600" />
             <AlertDescription className="text-slate-700 text-xs">
               <strong>Webhooks failing signature checks?</strong> Set the function secret{" "}
-              <code className="bg-white border border-slate-200 rounded px-1">TWILIO_WEBHOOK_DEBUG=1</code>{" "}
-              in the Base44 dashboard to log which signature header names Twilio sends and whether each verifies
+              <code className="bg-white border border-slate-200 rounded px-1">TELNYX_WEBHOOK_DEBUG=1</code>{" "}
+              in the Base44 dashboard to log which signature header names Telnyx sends and whether each verifies
               (header <em>names</em> only — never secret values). Check the function logs, then turn it off.
             </AlertDescription>
           </Alert>
@@ -342,12 +367,12 @@ export default function PhoneProvisioningPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />
-            Twilio Phone — Agency Settings
+            Telnyx Phone — Agency Settings
           </CardTitle>
           <CardDescription>
-            Main office number, off-duty defaults, templates, and voicemail. The Twilio credentials are
-            set in the Twilio Credentials card above (or via TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN in
-            the dashboard env) — not here.
+            Main office number, off-duty defaults, templates, and voicemail. The Telnyx API key is
+            set in the Telnyx Credentials card above (or via TELNYX_API_KEY in the dashboard env) —
+            not here.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -355,12 +380,49 @@ export default function PhoneProvisioningPanel() {
             <div>
               <Label className="text-sm font-medium">Main office number (E.164)</Label>
               <Input
-                placeholder="+12155550100"
+                placeholder="+17244650440"
                 value={agency.main_office_number_e164}
                 onChange={(e) => setAgency((a) => ({ ...a, main_office_number_e164: e.target.value }))}
                 className="mt-1"
               />
-              <p className="text-xs text-slate-500 mt-1">Off-duty calls transfer here; texts reference it.</p>
+              <p className="text-xs text-slate-500 mt-1">Off-duty / unanswered calls roll here; texts reference it.</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Shared office fax number (E.164)</Label>
+              <Input
+                placeholder="+17244650441"
+                value={agency.office_fax_number_e164}
+                onChange={(e) => setAgency((a) => ({ ...a, office_fax_number_e164: e.target.value }))}
+                className="mt-1"
+              />
+              <p className="text-xs text-slate-500 mt-1">Every user faxes from this one number, so replies go to the office.</p>
+            </div>
+          </div>
+
+          {/* Cost controls */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
+            <p className="text-sm font-semibold text-slate-800">Cost controls</p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="text-sm font-medium">Allow international destinations</Label>
+                <p className="text-xs text-slate-500">Off by default — only US/Canada (+1) numbers can be texted/called. Premium 900/976 are always blocked.</p>
+              </div>
+              <Switch
+                checked={agency.allow_international}
+                onCheckedChange={(v) => setAgency((a) => ({ ...a, allow_international: v }))}
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Monthly outbound SMS cap</Label>
+              <Input
+                type="number"
+                min="0"
+                placeholder="No limit"
+                value={agency.monthly_sms_cap}
+                onChange={(e) => setAgency((a) => ({ ...a, monthly_sms_cap: e.target.value }))}
+                className="mt-1 max-w-[200px]"
+              />
+              <p className="text-xs text-slate-500 mt-1">Blocks new outbound texts once reached this calendar month. Blank / 0 = no cap.</p>
             </div>
           </div>
           <div>
@@ -443,7 +505,7 @@ export default function PhoneProvisioningPanel() {
                 <Label className="text-sm font-semibold">Voicemail capture</Label>
                 <p className="text-xs text-slate-600">
                   Record a voicemail when a patient's masked call to an on-duty nurse goes unanswered.
-                  Requires your Twilio number's voice webhook to be configured and the voicemail webhook.
+                  Requires your Telnyx voice connection webhook to be configured and the voicemail webhook.
                 </p>
               </div>
               <Switch
@@ -482,13 +544,31 @@ export default function PhoneProvisioningPanel() {
 
       <Card id="twilio-nurses" className="scroll-mt-24">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Phone className="w-5 h-5 text-indigo-600" />
-            Nurse Work Numbers
+          <CardTitle className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="flex items-center gap-2">
+              <Phone className="w-5 h-5 text-indigo-600" />
+              Nurse Work Numbers
+            </span>
+            {(() => {
+              const missing = users.filter((u) => !u.work_phone_number).length;
+              return (
+                <Button
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  disabled={autoAssign.isPending || missing === 0}
+                  onClick={() => autoAssign.mutate()}
+                  title="Give every user without a work number the next available pool number"
+                >
+                  {autoAssign.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                  {missing > 0 ? `Auto-assign ${missing} number${missing === 1 ? "" : "s"}` : "All assigned"}
+                </Button>
+              );
+            })()}
           </CardTitle>
           <CardDescription>
-            Assign each nurse a dedicated Twilio work number and the private cell it bridges to. The
-            number must already be purchased in Twilio and its webhooks pointed at this app.
+            Each user gets their own number for voice + SMS. Click <strong>Auto-assign</strong> to hand
+            every user without one the next available number from the pool — or set them individually
+            below. (Fax is shared: everyone sends from the single office fax number.)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

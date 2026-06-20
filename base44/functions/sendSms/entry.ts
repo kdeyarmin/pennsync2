@@ -1,15 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * sendSms — outbound SMS from a nurse's dedicated Twilio work number to a patient.
- *
- * The patient only ever sees the nurse's work number (`From`); the nurse's
- * personal cell is never exposed. Refuses to send to numbers that have opted
- * out (TCPA). PHI minimization: the message body is never written to the audit
- * log — only its length and the thread id are recorded.
+ * sendSms — outbound SMS (via Telnyx) from a nurse's dedicated work number to a patient,
+ * sent via the Telnyx Messaging API. Behaviorally identical to sendSms (the
+ * Twilio path): the patient only ever sees the nurse's work number (`from`); the
+ * nurse's personal cell is never exposed; refuses to send to numbers that have
+ * opted out (TCPA) or during the recipient's TCPA quiet hours; the message body
+ * is never written to the audit log (PHI minimization) — only its length and the
+ * thread id are recorded. Logs to the same SmsMessage entity so Telnyx and Twilio
+ * messages thread together.
  */
 
-// ---- inline helpers (functions deploy as single files; do not rely on imports) ----
+// ---- inline helpers (single-file Deno deploy; do not rely on imports) ----
 function normalizeE164(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
@@ -37,31 +39,37 @@ function phoneVariants(value: string): string[] {
 async function getAgencyConfig(base44: any) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
-  return {
-    settings: s,
-    smsEnabled: s.sms_messaging_enabled ?? true,
-  };
+  return { settings: s, smsEnabled: s.sms_messaging_enabled ?? true };
 }
 
 /**
- * Resolve Twilio credentials: prefer env vars, then the in-app IntegrationSecret
- * row with provider 'twilio'. Either path configures the integration, so the
- * Base44 dashboard env is optional.
+ * Resolve Telnyx credentials + resource ids env-first, then the in-app
+ * IntegrationSecret row (provider 'telnyx'). Inlined identically across the
+ * Telnyx functions; drift guarded by telnyxCredsInlineParity.test.js.
  */
-async function resolveTwilioCreds(base44: any): Promise<{ accountSid: string | null; authToken: string | null }> {
-  const envSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-  const envToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-  let sid = envSid && envSid.trim() ? envSid.trim() : null;
-  let token = envToken && envToken.trim() ? envToken.trim() : null;
-  if (!sid || !token) {
-    try {
-      const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'twilio' });
-      const rec = rows?.[0] || {};
-      if (!sid && rec.account_sid && String(rec.account_sid).trim()) sid = String(rec.account_sid).trim();
-      if (!token && rec.auth_token && String(rec.auth_token).trim()) token = String(rec.auth_token).trim();
-    } catch { /* ignore */ }
-  }
-  return { accountSid: sid, authToken: token };
+async function resolveTelnyxCreds(base44: any): Promise<{
+  apiKey: string | null;
+  publicKey: string | null;
+  messagingProfileId: string | null;
+  voiceConnectionId: string | null;
+  faxConnectionId: string | null;
+}> {
+  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
+  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
+  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
+  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
+  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  try {
+    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
+    const rec = rows?.[0] || {};
+    if (!apiKey) apiKey = pick(rec.api_key);
+    if (!publicKey) publicKey = pick(rec.public_key);
+    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
+    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
+    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
+  } catch { /* ignore */ }
+  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
 
 async function resolvePatientId(base44: any, e164: string): Promise<string | null> {
@@ -73,15 +81,10 @@ async function resolvePatientId(base44: any, e164: string): Promise<string | nul
 }
 
 // ---- transient-failure retry policy (mirrors src/components/voice/twilioRetry.js) ----
-// Twilio has no client idempotency key. Therefore
-// we only retry on explicit retryable HTTP statuses (408/425/429/500/502/503/504).
-// We do NOT retry a THROWN network error for a send — a blind retry could
-// double-text. Keep the AbortController timeout. We no longer rely on provider
-// dedupe; we avoid double-send by not retrying ambiguous network failures.
+// We only retry on explicit retryable HTTP statuses and never on a THROWN network
+// error for a send — a blind retry could double-text the patient.
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
-function isRetryableStatus(status: number): boolean {
-  return RETRYABLE_STATUSES.has(Number(status));
-}
+function isRetryableStatus(status: number): boolean { return RETRYABLE_STATUSES.has(Number(status)); }
 function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
   if (headerValue == null) return null;
   const raw = String(headerValue).trim();
@@ -106,8 +109,7 @@ async function sendWithRetry(
     try {
       result = await attemptFn(attempt);
     } catch (err) {
-      // Do NOT retry thrown network errors — a blind retry could double-text.
-      throw err;
+      throw err; // never retry a thrown network error — could double-text.
     }
     if (result.ok || !isRetryableStatus(result.status) || attempt === maxAttempts) {
       return { ...result, attempts: attempt };
@@ -120,7 +122,6 @@ async function sendWithRetry(
 
 // ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
 const AREA_CODE_TIMEZONE: Record<number, string> = {
-  // Eastern
   201: "America/New_York", 202: "America/New_York", 203: "America/New_York", 207: "America/New_York",
   212: "America/New_York", 215: "America/New_York", 216: "America/New_York", 220: "America/New_York",
   223: "America/New_York", 234: "America/New_York", 239: "America/New_York", 240: "America/New_York",
@@ -150,7 +151,6 @@ const AREA_CODE_TIMEZONE: Record<number, string> = {
   929: "America/New_York", 934: "America/New_York", 937: "America/New_York", 941: "America/New_York",
   947: "America/New_York", 954: "America/New_York", 959: "America/New_York", 980: "America/New_York",
   984: "America/New_York", 989: "America/New_York",
-  // Central
   205: "America/Chicago", 210: "America/Chicago", 214: "America/Chicago", 217: "America/Chicago",
   218: "America/Chicago", 224: "America/Chicago", 225: "America/Chicago", 228: "America/Chicago",
   251: "America/Chicago", 254: "America/Chicago", 256: "America/Chicago", 262: "America/Chicago",
@@ -173,13 +173,10 @@ const AREA_CODE_TIMEZONE: Record<number, string> = {
   913: "America/Chicago", 915: "America/Chicago", 918: "America/Chicago", 920: "America/Chicago",
   936: "America/Chicago", 940: "America/Chicago", 952: "America/Chicago",
   956: "America/Chicago", 972: "America/Chicago", 979: "America/Chicago",
-  // Mountain
   208: "America/Denver", 303: "America/Denver", 307: "America/Denver", 385: "America/Denver",
   406: "America/Denver", 435: "America/Denver", 505: "America/Denver", 575: "America/Denver",
   719: "America/Denver", 720: "America/Denver", 801: "America/Denver", 970: "America/Denver",
-  // Arizona (no DST)
   480: "America/Phoenix", 520: "America/Phoenix", 602: "America/Phoenix", 623: "America/Phoenix", 928: "America/Phoenix",
-  // Pacific
   206: "America/Los_Angeles", 209: "America/Los_Angeles", 213: "America/Los_Angeles", 253: "America/Los_Angeles",
   279: "America/Los_Angeles", 310: "America/Los_Angeles", 323: "America/Los_Angeles", 341: "America/Los_Angeles",
   360: "America/Los_Angeles", 408: "America/Los_Angeles", 415: "America/Los_Angeles", 424: "America/Los_Angeles",
@@ -191,7 +188,6 @@ const AREA_CODE_TIMEZONE: Record<number, string> = {
   775: "America/Los_Angeles", 805: "America/Los_Angeles", 818: "America/Los_Angeles", 820: "America/Los_Angeles",
   831: "America/Los_Angeles", 858: "America/Los_Angeles", 909: "America/Los_Angeles", 916: "America/Los_Angeles",
   925: "America/Los_Angeles", 949: "America/Los_Angeles", 951: "America/Los_Angeles", 971: "America/Los_Angeles",
-  // Alaska / Hawaii
   907: "America/Anchorage", 808: "Pacific/Honolulu",
 };
 function tzForNumber(raw: string): string | null {
@@ -206,11 +202,8 @@ function hourInZone(date: Date, timeZone: string): number | null {
     let n = parseInt(h, 10);
     if (n === 24) n = 0;
     return Number.isNaN(n) ? null : n;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
-/** TCPA quiet-hours check in the RECIPIENT's timezone. Fails open when unknown. */
 function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed: boolean; reason: string } {
   const startHour = Number(settings?.tcpa_quiet_start_hour ?? 8);
   const endHour = Number(settings?.tcpa_quiet_end_hour ?? 21);
@@ -218,8 +211,41 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
   if (!tz) return { allowed: true, reason: 'unknown_timezone' };
   const h = hourInZone(now, tz);
   if (h == null) return { allowed: true, reason: 'unknown_timezone' };
-  const allowed = h >= startHour && h < endHour;
+  // Allowed contact window; supports a window that wraps past midnight
+  // (start > end). Mirrors isWithinQuietHours in src/components/voice/quietHours.js.
+  const allowed = startHour === endHour ? true
+    : startHour < endHour ? (h >= startHour && h < endHour)
+      : (h >= startHour || h < endHour);
   return { allowed, reason: allowed ? 'within_hours' : 'quiet_hours' };
+}
+
+// ---- cost controls (mirrors src/components/voice/costControls.js) ----
+const PREMIUM_AREA_CODES = new Set(['900', '976']);
+function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+  const s = settings || {};
+  const e = String(e164 || '').trim();
+  if (/^\+1\d{10}$/.test(e)) {
+    const areaCode = e.slice(2, 5);
+    if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
+    return { allowed: true, reason: 'allowed' };
+  }
+  if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: 'invalid_destination' };
+  if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
+  return { allowed: false, reason: 'international_blocked' };
+}
+function blockedReasonMessage(reason: string): string {
+  switch (reason) {
+    case 'premium_number_blocked': return 'Premium-rate numbers (900/976) are blocked.';
+    case 'blocked_area_code': return "That area code is blocked by your agency's policy.";
+    case 'international_blocked': return 'International destinations are blocked. Ask an admin to enable international sending.';
+    case 'invalid_destination': return "That doesn't look like a valid phone number.";
+    default: return "That destination isn't allowed.";
+  }
+}
+function monthStartISO(now = new Date()): string {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
 Deno.serve(async (req) => {
@@ -228,16 +254,24 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { to_number, body, patient_id } = await req.json();
+    const { to_number, body, patient_id, media_urls } = await req.json();
     if (!to_number || !body) {
       return Response.json({ error: 'Missing required fields: to_number, body' }, { status: 400 });
     }
-    // Validate body type/length before it reaches the provider (cost/abuse).
     if (typeof body !== 'string') {
       return Response.json({ error: 'Message body must be a string' }, { status: 400 });
     }
     if (body.length > 1600) {
       return Response.json({ error: 'Message is too long (max 1600 characters).' }, { status: 400 });
+    }
+    // Optional MMS attachments (Telnyx sends an MMS when media_urls is set). Cap
+    // the count and require https URLs so a bad payload can't fan out or SSRF.
+    let mediaUrls: string[] | null = null;
+    if (media_urls != null) {
+      if (!Array.isArray(media_urls) || media_urls.length > 10 || !media_urls.every((u) => typeof u === 'string' && /^https:\/\//i.test(u))) {
+        return Response.json({ error: 'media_urls must be an array of up to 10 https URLs.' }, { status: 400 });
+      }
+      mediaUrls = media_urls;
     }
 
     const fromNumber = user.work_phone_number;
@@ -250,13 +284,36 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid destination phone number' }, { status: 400 });
     }
 
-    const { accountSid, authToken } = await resolveTwilioCreds(base44);
+    const { apiKey, messagingProfileId } = await resolveTelnyxCreds(base44);
     const { settings, smsEnabled } = await getAgencyConfig(base44);
-    if (!accountSid || !authToken) {
-      return Response.json({ error: 'Twilio SMS credentials not configured' }, { status: 500 });
+    if (!apiKey) {
+      return Response.json({ error: 'Telnyx SMS credentials not configured' }, { status: 500 });
     }
     if (!smsEnabled) {
       return Response.json({ error: 'SMS messaging is disabled for this agency' }, { status: 403 });
+    }
+
+    // Cost control: block premium/blocked/international destinations by default.
+    const destAllowed = isAllowedDestination(destination, settings);
+    if (!destAllowed.allowed) {
+      return Response.json({ error: blockedReasonMessage(destAllowed.reason), reason: destAllowed.reason }, { status: 403 });
+    }
+
+    // Cost control: enforce an optional monthly outbound-SMS cap. We pull the
+    // newest `cap` outbound rows (equality filter only — Base44 has no range
+    // query) and count how many fall in the current month; if that already meets
+    // the cap, we're at the limit.
+    const monthlyCap = Number(settings?.monthly_sms_cap);
+    if (Number.isFinite(monthlyCap) && monthlyCap > 0) {
+      const since = monthStartISO();
+      const recentOutbound = await base44.asServiceRole.entities.SmsMessage
+        .filter({ direction: 'outbound' }, '-created_date', monthlyCap)
+        .catch(() => []);
+      const sentThisMonth = (Array.isArray(recentOutbound) ? recentOutbound : [])
+        .filter((m: any) => m.created_date && m.created_date >= since).length;
+      if (sentThisMonth >= monthlyCap) {
+        return Response.json({ error: 'This agency has reached its monthly text-message limit. Ask an admin to raise the cap.', reason: 'monthly_cap_reached' }, { status: 429 });
+      }
     }
 
     // TCPA: refuse to text a number that has opted out.
@@ -267,8 +324,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'This patient has opted out of text messages (replied STOP).' }, { status: 403 });
     }
 
-    // TCPA quiet hours (recipient timezone). Hard block when enabled — the nurse
-    // can schedule the text for daytime instead. Fails open for unknown zones.
+    // TCPA quiet hours (recipient timezone). Hard block when enabled.
     if (settings?.tcpa_quiet_hours_enabled === true) {
       const q = quietHoursCheck(destination, new Date(), settings);
       if (!q.allowed) {
@@ -298,30 +354,28 @@ Deno.serve(async (req) => {
       consent_checked: consentStatus === 'opted_in',
     });
 
-    // Send via Twilio Messages API. Each attempt is bounded by an AbortController
-    // timeout so a slow/blackholed host can't hang the function. Only retries on
-    // explicit retryable HTTP statuses — we do NOT retry thrown network errors
-    // because Twilio has no client idempotency key and a blind retry could
-    // double-text the patient.
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+    // Send via the Telnyx Messages API. Bounded by an AbortController timeout.
+    // Only retries on explicit retryable HTTP statuses — never on a thrown
+    // network error (Telnyx has no client idempotency key for messages, so a
+    // blind retry could double-text).
+    const telnyxUrl = 'https://api.telnyx.com/v2/messages';
     const SEND_TIMEOUT_MS = 15000;
     const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
-    const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTwilioSmsStatus` : undefined;
+    const webhookUrl = functionsBaseUrl ? `${functionsBaseUrl}/handleTelnyxStatusWebhook` : undefined;
     let result: { ok: boolean; status: number; data: any };
     try {
       result = await sendWithRetry(async () => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
         try {
-          const params = new URLSearchParams({ To: destination, From: fromNumber, Body: body });
-          if (statusCallback) params.set('StatusCallback', statusCallback);
-          const resp = await fetch(twilioUrl, {
+          const payload: Record<string, unknown> = { from: fromNumber, to: destination, text: body };
+          if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+          if (mediaUrls) payload.media_urls = mediaUrls; // MMS
+          if (webhookUrl) payload.webhook_url = webhookUrl;
+          const resp = await fetch(telnyxUrl, {
             method: 'POST',
-            headers: {
-              'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: params.toString(),
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
             signal: controller.signal,
           });
           const data = await resp.json().catch(() => ({}));
@@ -331,19 +385,13 @@ Deno.serve(async (req) => {
         }
       });
     } catch (netErr) {
-      // Network/DNS failure or timeout: don't leave the row stuck in 'queued'.
-      // We do not retry thrown network errors (Twilio has no idempotency key;
-      // a blind retry could double-text).
       const aborted = netErr?.name === 'AbortError';
       const reason = aborted
-        ? `Timed out after ${SEND_TIMEOUT_MS} ms reaching Twilio`
-        : `Network error reaching Twilio: ${netErr.message}`;
-      await base44.entities.SmsMessage.update(smsRow.id, {
-        status: 'failed',
-        failure_reason: reason,
-      }).catch(() => {});
+        ? `Timed out after ${SEND_TIMEOUT_MS} ms reaching Telnyx`
+        : `Network error reaching Telnyx: ${netErr.message}`;
+      await base44.entities.SmsMessage.update(smsRow.id, { status: 'failed', failure_reason: reason }).catch(() => {});
       return Response.json(
-        { error: aborted ? 'Twilio SMS API timed out' : 'Failed to reach Twilio SMS API', details: netErr.message },
+        { error: aborted ? 'Telnyx SMS API timed out' : 'Failed to reach Telnyx SMS API', details: netErr.message },
         { status: aborted ? 504 : 502 },
       );
     }
@@ -351,18 +399,21 @@ Deno.serve(async (req) => {
     const data = result.data || {};
 
     if (!result.ok) {
+      // Telnyx error envelope: { errors: [{ detail, title, code }] }.
+      const firstErr = Array.isArray(data?.errors) ? data.errors[0] : null;
       await base44.entities.SmsMessage.update(smsRow.id, {
         status: 'failed',
-        failure_reason: data?.message || data?.error || `Twilio API error (${result.status})`,
+        failure_reason: firstErr?.detail || firstErr?.title || `Telnyx API error (${result.status})`,
       });
-      return Response.json({ error: 'Twilio SMS API error', details: data }, { status: result.status });
+      return Response.json({ error: 'Telnyx SMS API error', details: data }, { status: result.status });
     }
 
-    // Map Twilio status: 'queued'/'accepted' → 'queued', otherwise 'sent'.
-    const providerStatus = (data?.status || '').toLowerCase();
+    // Telnyx success envelope: { data: { id, to: [{ status }], ... } }.
+    const messageId = data?.data?.id || null;
+    const recipientStatus = (data?.data?.to?.[0]?.status || '').toLowerCase();
     await base44.entities.SmsMessage.update(smsRow.id, {
-      provider_message_id: data?.sid || null,
-      status: providerStatus === 'queued' || providerStatus === 'accepted' ? 'queued' : 'sent',
+      provider_message_id: messageId,
+      status: recipientStatus === 'queued' || recipientStatus === 'sending' || recipientStatus === '' ? 'queued' : 'sent',
     });
 
     // Audit — never log the message body (HIPAA). Length + thread only.
@@ -373,25 +424,21 @@ Deno.serve(async (req) => {
       entity_type: 'SmsMessage',
       entity_id: smsRow.id,
       details: {
+        provider: 'telnyx',
         to_number: destination,
         from_number: fromNumber,
         patient_id: resolvedPatientId || null,
         thread_id: smsRow.thread_id,
         body_length: String(body).length,
-        provider_message_id: data?.sid || null,
+        provider_message_id: messageId,
         timestamp: new Date().toISOString(),
       },
       status: 'success',
     }).catch((err) => console.error('Failed to log activity:', err));
 
-    return Response.json({
-      success: true,
-      message_id: smsRow.id,
-      provider_message_id: data?.sid || null,
-      status: 'sent',
-    });
+    return Response.json({ success: true, message_id: smsRow.id, provider_message_id: messageId, status: 'sent' });
   } catch (error) {
-    console.error('sendSms error:', error);
+    console.error('sendTelnyxSms error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

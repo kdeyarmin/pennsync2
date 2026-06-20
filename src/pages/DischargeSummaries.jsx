@@ -10,8 +10,6 @@ import {
   FileText, Search, Eye, Download, CheckCircle,
   Clock, Send
 } from 'lucide-react';
-import PageContainer from '@/components/ui/PageContainer';
-import PageHeader from '@/components/ui/PageHeader';
 
 import DischargeSummaryWorkflow from '../components/discharge/DischargeSummaryWorkflow';
 
@@ -69,19 +67,11 @@ export default function DischargeSummaries() {
     pending_review: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending Review', icon: Clock },
     reviewed: { color: 'bg-blue-100 text-blue-800', label: 'Reviewed', icon: Eye },
     signed: { color: 'bg-green-100 text-green-800', label: 'Signed', icon: CheckCircle },
-    sent: { color: 'bg-purple-100 text-purple-800', label: 'Sent', icon: Send }
+    sent: { color: 'bg-navy-100 text-navy-800', label: 'Sent', icon: Send }
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={FileText}
-        eyebrow="Documentation"
-        title="Discharge Summaries"
-        description="Review, sign, and manage patient discharge documentation"
-        favoritePage="DischargeSummaries"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -248,6 +238,6 @@ export default function DischargeSummaries() {
           }}
         />
       )}
-    </PageContainer>
+    </div>
   );
 }

@@ -22,9 +22,11 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
       ...vars
     }),
     onSuccess: (data) => {
-      setCoverPageData(data.cover_page_data);
-      setFormData(data.cover_page_data);
-      onCoverPageGenerated(data.cover_page_data);
+      // functions.invoke returns the full axios response; body is under .data.
+      const body = data?.data || data;
+      setCoverPageData(body.cover_page_data);
+      setFormData(body.cover_page_data);
+      onCoverPageGenerated(body.cover_page_data);
       toast.success("AI cover page generated!");
     },
     onError: (error) => {
@@ -55,11 +57,11 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
 
   if (generateMutation.isPending) {
     return (
-      <Card className="border-purple-200 bg-purple-50">
+      <Card className="border-navy-200 bg-navy-50">
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin mr-2 text-purple-600" />
-            <span className="text-purple-700">Generating AI cover page...</span>
+            <Loader2 className="w-6 h-6 animate-spin mr-2 text-navy-600" />
+            <span className="text-navy-700">Generating AI cover page...</span>
           </div>
         </CardContent>
       </Card>
@@ -71,10 +73,10 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
   }
 
   return (
-    <Card className="border-purple-200 bg-purple-50">
+    <Card className="border-navy-200 bg-navy-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-navy-600" />
           AI-Generated Cover Page
         </CardTitle>
       </CardHeader>
@@ -118,8 +120,8 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
         </div>
 
         {formData.patient_info?.name && (
-          <div className="p-2 bg-white rounded border border-purple-200">
-            <p className="text-xs font-semibold text-purple-900 mb-1">Patient Info</p>
+          <div className="p-2 bg-white rounded border border-navy-200">
+            <p className="text-xs font-semibold text-navy-900 mb-1">Patient Info</p>
             <p className="text-xs text-slate-700">{formData.patient_info.name}</p>
             {formData.patient_info.dob && <p className="text-xs text-slate-600">DOB: {formData.patient_info.dob}</p>}
             {formData.patient_info.mrn && <p className="text-xs text-slate-600">MRN: {formData.patient_info.mrn}</p>}

@@ -223,11 +223,11 @@ Return as JSON with the following structure:
   if (!patient) return null;
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
+    <Card className="border-2 border-navy-200 bg-gradient-to-br from-navy-50 to-indigo-50">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI Patient History Analysis
           </CardTitle>
           {analysis && (
@@ -240,14 +240,14 @@ Return as JSON with the following structure:
       <CardContent className="space-y-4">
         {isAnalyzing ? (
           <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
+            <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing {visits.length} visits, {carePlans.length} care plans, and {oasisData.length} assessments...</p>
           </div>
         ) : !analysis ? (
           <div className="text-center py-6">
             <Button 
               onClick={analyzePatientHistory}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Brain className="w-4 h-4 mr-2" />
               Analyze Patient History
@@ -256,17 +256,17 @@ Return as JSON with the following structure:
         ) : (
           <>
             {/* Executive Summary */}
-            <Alert className="bg-purple-100 border-purple-300">
-              <FileText className="w-4 h-4 text-purple-600" />
-              <AlertDescription className="text-purple-900">
+            <Alert className="bg-navy-100 border-navy-300">
+              <FileText className="w-4 h-4 text-navy-600" />
+              <AlertDescription className="text-navy-900">
                 <strong>Executive Summary:</strong> {analysis.executive_summary}
               </AlertDescription>
             </Alert>
 
             {/* Clinical Trajectory */}
-            <div className="bg-white rounded-lg p-4 border border-purple-200">
+            <div className="bg-white rounded-lg p-4 border border-navy-200">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-purple-600" />
+                <TrendingUp className="w-4 h-4 text-navy-600" />
                 <h3 className="font-semibold text-slate-900">Clinical Trajectory</h3>
               </div>
               <p className="text-sm text-slate-700">{analysis.clinical_trajectory}</p>
@@ -274,7 +274,7 @@ Return as JSON with the following structure:
 
             {/* Key Findings */}
             {analysis.key_findings?.length > 0 && (
-              <div className="bg-white rounded-lg p-4 border border-purple-200">
+              <div className="bg-white rounded-lg p-4 border border-navy-200">
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
                   <h3 className="font-semibold text-slate-900">Key Findings</h3>
@@ -282,7 +282,7 @@ Return as JSON with the following structure:
                 <ul className="space-y-2">
                   {analysis.key_findings.map((finding, idx) => (
                     <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
-                      <span className="text-purple-600 font-bold">•</span>
+                      <span className="text-navy-600 font-bold">•</span>
                       {finding}
                     </li>
                   ))}
@@ -349,11 +349,11 @@ Return as JSON with the following structure:
             )}
 
             {/* Expandable Details Section */}
-            <div className="border-t border-purple-200 pt-4">
+            <div className="border-t border-navy-200 pt-4">
               <Button
                 variant="ghost"
                 onClick={() => setShowDetails(!showDetails)}
-                className="w-full justify-between text-purple-700 hover:text-purple-900"
+                className="w-full justify-between text-navy-700 hover:text-navy-900"
               >
                 <span className="flex items-center gap-2">
                   {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -365,9 +365,9 @@ Return as JSON with the following structure:
                 <div className="mt-4 space-y-4">
                   {/* Care Plan Effectiveness */}
                   {analysis.care_plan_effectiveness && (
-                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                    <div className="bg-white rounded-lg p-4 border border-navy-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <Target className="w-4 h-4 text-purple-600" />
+                        <Target className="w-4 h-4 text-navy-600" />
                         <h3 className="font-semibold text-slate-900">Care Plan Effectiveness</h3>
                       </div>
                       <p className="text-sm text-slate-700 mb-3">{analysis.care_plan_effectiveness.overall_assessment}</p>
@@ -386,9 +386,9 @@ Return as JSON with the following structure:
 
                   {/* Recommendations */}
                   {analysis.recommendations?.length > 0 && (
-                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                    <div className="bg-white rounded-lg p-4 border border-navy-200">
                       <div className="flex items-center gap-2 mb-3">
-                        <Calendar className="w-4 h-4 text-purple-600" />
+                        <Calendar className="w-4 h-4 text-navy-600" />
                         <h3 className="font-semibold text-slate-900">Clinical Recommendations</h3>
                       </div>
                       <div className="space-y-3">
@@ -422,7 +422,7 @@ Return as JSON with the following structure:
                 size="sm"
                 onClick={analyzePatientHistory}
                 disabled={isAnalyzing}
-                className="text-purple-600 border-purple-300 hover:bg-purple-50"
+                className="text-navy-600 border-navy-300 hover:bg-navy-50"
               >
                 {isAnalyzing ? (
                   <>

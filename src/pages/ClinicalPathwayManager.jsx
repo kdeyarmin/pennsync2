@@ -502,20 +502,20 @@ export default function ClinicalPathwayManager() {
                       <p className="font-bold text-blue-700">{pathway.trigger_conditions?.length || 0}</p>
                       <p className="text-blue-600">Triggers</p>
                     </div>
-                    <div className="bg-purple-50 p-2 rounded">
-                      <FileText className="w-3 h-3 text-purple-600 mx-auto mb-1" />
-                      <p className="font-bold text-purple-700">{pathway.documentation_prompts?.length || 0}</p>
-                      <p className="text-purple-600">Doc Prompts</p>
+                    <div className="bg-navy-50 p-2 rounded">
+                      <FileText className="w-3 h-3 text-navy-600 mx-auto mb-1" />
+                      <p className="font-bold text-navy-700">{pathway.documentation_prompts?.length || 0}</p>
+                      <p className="text-navy-600">Doc Prompts</p>
                     </div>
                     <div className="bg-green-50 p-2 rounded">
                       <DollarSign className="w-3 h-3 text-green-600 mx-auto mb-1" />
                       <p className="font-bold text-green-700">{pathway.rescore_opportunities?.length || 0}</p>
                       <p className="text-green-600">Rescores</p>
                     </div>
-                    <div className="bg-cyan-50 p-2 rounded">
-                      <ClipboardList className="w-3 h-3 text-cyan-600 mx-auto mb-1" />
-                      <p className="font-bold text-cyan-700">{pathway.recommended_tasks?.length || 0}</p>
-                      <p className="text-cyan-600">Tasks</p>
+                    <div className="bg-navy-50 p-2 rounded">
+                      <ClipboardList className="w-3 h-3 text-navy-600 mx-auto mb-1" />
+                      <p className="font-bold text-navy-700">{pathway.recommended_tasks?.length || 0}</p>
+                      <p className="text-navy-600">Tasks</p>
                     </div>
                   </div>
 
@@ -631,7 +631,7 @@ export default function ClinicalPathwayManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Clinical Pathway</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{pathwayToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{pathwayToDelete?.pathway_name}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

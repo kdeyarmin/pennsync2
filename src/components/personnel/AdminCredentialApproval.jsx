@@ -219,7 +219,7 @@ Credential Management System`
                   <Button
                     size="sm"
                     onClick={() => handleApprove(cred)}
-                    disabled={approveMutation.isLoading}
+                    disabled={approveMutation.isPending}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -271,7 +271,7 @@ Credential Management System`
                           </Button>
                           <Button
                             type="submit"
-                            disabled={rejectMutation.isLoading}
+                            disabled={rejectMutation.isPending}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Submit Rejection

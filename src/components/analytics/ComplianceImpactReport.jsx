@@ -84,10 +84,10 @@ export default function ComplianceImpactReport({ noteConversions }) {
     }));
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
-      <CardHeader className="bg-gradient-to-r from-purple-100 to-pink-100">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
+      <CardHeader className="bg-gradient-to-r from-navy-100 to-pink-100">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-purple-600" />
+          <Sparkles className="w-6 h-6 text-navy-600" />
           AI Enhancement Impact Report
         </CardTitle>
       </CardHeader>
@@ -104,12 +104,12 @@ export default function ComplianceImpactReport({ noteConversions }) {
             <p className="text-4xl font-bold text-green-600">{avgEnhancedCompliance.toFixed(1)}%</p>
             <p className="text-xs text-slate-500 mt-1">Avg enhanced compliance</p>
           </div>
-          <div className="p-4 bg-white rounded-lg border-2 border-purple-200">
+          <div className="p-4 bg-white rounded-lg border-2 border-navy-200">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-5 h-5 text-purple-600" />
+              <TrendingUp className="w-5 h-5 text-navy-600" />
               <p className="text-sm text-slate-600">AI Impact</p>
             </div>
-            <p className="text-4xl font-bold text-purple-600">+{avgImprovement.toFixed(1)}%</p>
+            <p className="text-4xl font-bold text-navy-600">+{avgImprovement.toFixed(1)}%</p>
             <p className="text-xs text-slate-500 mt-1">Avg improvement</p>
           </div>
           <div className="p-4 bg-white rounded-lg border-2 border-blue-200">
@@ -152,7 +152,7 @@ export default function ComplianceImpactReport({ noteConversions }) {
                   <div key={idx} className="p-3 bg-white rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-slate-900">{stat.nurse}</span>
-                      <Badge className="bg-purple-100 text-purple-800">
+                      <Badge className="bg-navy-100 text-navy-800">
                         {stat.count} note{stat.count > 1 ? 's' : ''}
                       </Badge>
                     </div>
@@ -162,7 +162,7 @@ export default function ComplianceImpactReport({ noteConversions }) {
                         <p className="text-slate-600">Before</p>
                       </div>
                       <div className="flex items-center justify-center">
-                        <ArrowRight className="w-4 h-4 text-purple-600" />
+                        <ArrowRight className="w-4 h-4 text-navy-600" />
                       </div>
                       <div className="text-center p-2 bg-green-50 rounded">
                         <p className="text-green-600 font-bold">{stat.avgEnhanced}%</p>
@@ -171,7 +171,7 @@ export default function ComplianceImpactReport({ noteConversions }) {
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       <Progress value={parseFloat(stat.improvement) * 2} className="flex-1" />
-                      <span className="text-sm font-semibold text-purple-600">+{stat.improvement}%</span>
+                      <span className="text-sm font-semibold text-navy-600">+{stat.improvement}%</span>
                     </div>
                   </div>
                 ))}

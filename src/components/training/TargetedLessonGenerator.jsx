@@ -199,17 +199,17 @@ Provide constructive feedback:`,
   // Initial state - start button
   if (!lessonContent && !isGenerating) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="w-8 h-8 text-purple-600" />
+          <div className="w-16 h-16 bg-navy-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8 text-navy-600" />
           </div>
           <h2 className="text-xl font-bold text-slate-900 mb-2">{module.title}</h2>
           <p className="text-sm text-slate-600 mb-4">{module.description}</p>
           <Badge variant="outline" className="mb-6">{module.duration} minutes</Badge>
           <div className="flex justify-center gap-3">
             <Button variant="outline" onClick={onExit}>Cancel</Button>
-            <Button onClick={generateLesson} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={generateLesson} className="bg-navy-600 hover:bg-navy-700">
               <Sparkles className="w-4 h-4 mr-2" /> Generate Lesson
             </Button>
           </div>
@@ -221,11 +221,11 @@ Provide constructive feedback:`,
   // Loading
   if (isGenerating) {
     return (
-      <Card className="border-2 border-purple-200">
+      <Card className="border-2 border-navy-200">
         <CardContent className="p-12 text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-lg font-medium text-purple-900">Creating Your Personalized Lesson...</p>
-          <p className="text-sm text-purple-700 mt-2">Tailored for: {module.category}</p>
+          <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
+          <p className="text-lg font-medium text-navy-900">Creating Your Personalized Lesson...</p>
+          <p className="text-sm text-navy-700 mt-2">Tailored for: {module.category}</p>
         </CardContent>
       </Card>
     );
@@ -315,11 +315,11 @@ Provide constructive feedback:`,
           </div>
 
           {section.sample_phrases?.length > 0 && (
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <p className="text-xs font-semibold text-purple-800 mb-2">Sample Documentation Phrases:</p>
+            <div className="bg-navy-50 p-4 rounded-lg">
+              <p className="text-xs font-semibold text-navy-800 mb-2">Sample Documentation Phrases:</p>
               <ul className="space-y-1">
                 {section.sample_phrases.map((p, i) => (
-                  <li key={i} className="text-xs text-purple-700 italic">"{p}"</li>
+                  <li key={i} className="text-xs text-navy-700 italic">"{p}"</li>
                 ))}
               </ul>
             </div>
@@ -341,9 +341,9 @@ Provide constructive feedback:`,
             <p className="text-sm text-blue-800">{lessonContent.practice_scenario.situation}</p>
           </div>
 
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <p className="text-sm font-medium text-purple-900">Your Task:</p>
-            <p className="text-sm text-purple-800">{lessonContent.practice_scenario.task}</p>
+          <div className="bg-navy-50 p-4 rounded-lg">
+            <p className="text-sm font-medium text-navy-900">Your Task:</p>
+            <p className="text-sm text-navy-800">{lessonContent.practice_scenario.task}</p>
           </div>
 
           <Textarea
@@ -407,7 +407,7 @@ Provide constructive feedback:`,
       return (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <Target className="w-5 h-5 text-purple-600" /> Knowledge Check
+            <Target className="w-5 h-5 text-navy-600" /> Knowledge Check
           </h3>
 
           {!quizResults ? (
@@ -431,16 +431,16 @@ Provide constructive feedback:`,
               <Button 
                 onClick={submitQuiz} 
                 disabled={Object.keys(quizAnswers).length < lessonContent.quiz.length}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-navy-600 hover:bg-navy-700"
               >
                 Submit Quiz
               </Button>
             </>
           ) : (
             <>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <p className="text-2xl font-bold text-purple-900">{quizResults.score}%</p>
-                <p className="text-sm text-purple-700">
+              <div className="text-center p-4 bg-navy-50 rounded-lg">
+                <p className="text-2xl font-bold text-navy-900">{quizResults.score}%</p>
+                <p className="text-sm text-navy-700">
                   {quizResults.results.filter(r => r.correct).length} of {quizResults.results.length} correct
                 </p>
               </div>
@@ -498,8 +498,8 @@ Provide constructive feedback:`,
   };
 
   return (
-    <Card className="border-2 border-purple-200">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="border-2 border-navy-200">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">{module.title}</CardTitle>
           <Badge variant="outline">
@@ -524,7 +524,7 @@ Provide constructive feedback:`,
           {currentSection < totalSections - 1 && (
             <Button
               onClick={() => setCurrentSection(prev => prev + 1)}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               Next <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

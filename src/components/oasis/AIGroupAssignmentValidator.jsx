@@ -262,7 +262,7 @@ PROVIDE:
 
   return (
     <Card className="border-2 border-indigo-400 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-indigo-50 to-navy-50">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Brain className="w-6 h-6 text-indigo-600" />
@@ -389,11 +389,11 @@ PROVIDE:
             </Card>
 
             {/* Functional Level Assignment */}
-            <Card className="border-2 border-purple-400">
-              <CardHeader className="bg-purple-50 pb-3">
+            <Card className="border-2 border-navy-400">
+              <CardHeader className="bg-navy-50 pb-3">
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-purple-600" />
+                    <TrendingUp className="w-5 h-5 text-navy-600" />
                     Functional Impairment Level
                   </span>
                   <Badge className={getConfidenceColor(assignment.functional_level_assignment?.confidence_level)}>
@@ -409,13 +409,13 @@ PROVIDE:
                       {pdgmData?.functional_level || 'Not Set'}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border-2 border-purple-400">
+                  <div className="flex items-center justify-between p-4 bg-navy-50 rounded-lg border-2 border-navy-400">
                     <div>
-                      <p className="text-sm text-purple-700 mb-1">AI Recommended:</p>
-                      <p className="text-2xl font-bold text-purple-900 uppercase">
+                      <p className="text-sm text-navy-700 mb-1">AI Recommended:</p>
+                      <p className="text-2xl font-bold text-navy-900 uppercase">
                         {assignment.functional_level_assignment?.assigned_level}
                       </p>
-                      <p className="text-xs text-purple-700 mt-1">
+                      <p className="text-xs text-navy-700 mt-1">
                         Total Points: {assignment.functional_level_assignment?.total_points}
                       </p>
                     </div>
@@ -429,8 +429,8 @@ PROVIDE:
 
                 {/* Functional Item Breakdown */}
                 {assignment.functional_level_assignment?.key_functional_items?.length > 0 && (
-                  <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 mb-3">
-                    <p className="text-xs text-purple-700 font-semibold mb-2">Functional Score Breakdown:</p>
+                  <div className="bg-navy-50 p-3 rounded-lg border border-navy-200 mb-3">
+                    <p className="text-xs text-navy-700 font-semibold mb-2">Functional Score Breakdown:</p>
                     <div className="space-y-2">
                       {assignment.functional_level_assignment.key_functional_items.map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border">
@@ -438,7 +438,7 @@ PROVIDE:
                             <Badge variant="outline" className="font-mono text-xs">{item.m_item}</Badge>
                             <span className="text-sm text-slate-800">{item.contribution}</span>
                           </div>
-                          <Badge className="bg-purple-600 text-white">{item.score} pts</Badge>
+                          <Badge className="bg-navy-600 text-white">{item.score} pts</Badge>
                         </div>
                       ))}
                     </div>

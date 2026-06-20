@@ -45,11 +45,12 @@ export default function PendingPatientUpdates() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async ({ updateId, updates }) => {
-      const update = pendingUpdates.find(u => u.id === updateId);
-      
-      // Apply the changes to the patient
-      await base44.entities.Patient.update(update.patient_id, updates);
+    mutationFn: async ({ updateId, patientId, updates }) => {
+      // patientId is passed by the caller (it has the row) instead of re-finding
+      // it in pendingUpdates — the list invalidates on every approve/reject and on
+      // ['patients'] changes, so find() could return undefined between render and
+      // click and crash on update.patient_id.
+      await base44.entities.Patient.update(patientId, updates);
       
       // Mark as approved
       await base44.entities.PendingPatientUpdate.update(updateId, {
@@ -110,6 +111,7 @@ export default function PendingPatientUpdates() {
   const handleApprove = (update) => {
     approveMutation.mutate({
       updateId: update.id,
+      patientId: update.patient_id,
       updates: update.proposed_updates
     });
   };

@@ -11,7 +11,6 @@ import {
   computeSummaryStats,
 } from "@/components/oasis/oasisAnalytics";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,9 +84,7 @@ import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentRev
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import OASISDataEntryAssistant from "../components/oasis/OASISDataEntryAssistant";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { BarChart3, Search } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
+import { BarChart3 } from "lucide-react";
 import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
 import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
 import PDGMTrendDashboard from "../components/oasis/PDGMTrendDashboard";
@@ -156,14 +153,14 @@ function OASISAnalyticsDashboard({ savedOASISUploads }) {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-200 bg-purple-50">
+        <Card className="border-2 border-navy-200 bg-navy-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-600 font-medium">Avg Payment</p>
-                <p className="text-3xl font-bold text-purple-700">${summaryStats.avgPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                <p className="text-sm text-navy-600 font-medium">Avg Payment</p>
+                <p className="text-3xl font-bold text-navy-700">${summaryStats.avgPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
               </div>
-              <DollarSign className="w-10 h-10 text-purple-400" />
+              <DollarSign className="w-10 h-10 text-navy-400" />
             </div>
           </CardContent>
         </Card>
@@ -238,7 +235,7 @@ function OASISAnalyticsDashboard({ savedOASISUploads }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-purple-600" />
+            <ClipboardCheck className="w-5 h-5 text-navy-600" />
             Top 10 Primary Diagnoses
           </CardTitle>
         </CardHeader>
@@ -1414,15 +1411,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Search}
-        eyebrow="Patient Care"
-        title="OASIS Analyzer"
-        description="Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips"
-        favoritePage="OASISAnalyzer"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 sm:mb-6">
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
           <TabsList className="inline-flex md:grid md:w-full md:max-w-3xl md:grid-cols-5 gap-1 min-w-max h-auto">
@@ -1590,7 +1579,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 <Button
                   variant={useDataEntryAssistant ? "default" : "outline"}
                   onClick={() => setUseDataEntryAssistant(true)}
-                  className={`min-h-[44px] w-full sm:w-auto ${useDataEntryAssistant ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                  className={`min-h-[44px] w-full sm:w-auto ${useDataEntryAssistant ? "bg-navy-600 hover:bg-navy-700" : ""}`}
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">AI Data Entry Assistant</span>
@@ -1892,7 +1881,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           </Card>
 
           {/* Navigation to Detailed Review Pages */}
-          <Card className="border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+          <Card className="border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-navy-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Workflow className="w-5 h-5 text-indigo-600" />
@@ -1901,7 +1890,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link to={createPageUrl("OASISRevenueAnalysis")} state={{ analysisResults, pdgmData, patientName, uploadId: analysisId }}>
+                <Link to="/OASISCenter?tab=revenue" state={{ analysisResults, pdgmData, patientName, uploadId: analysisId }}>
                   <Button className="w-full bg-green-600 hover:bg-green-700 h-auto py-4 flex flex-col items-center gap-2">
                     <DollarSign className="w-8 h-8" />
                     <div className="text-center">
@@ -1910,7 +1899,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </div>
                   </Button>
                 </Link>
-                <Link to={createPageUrl("OASISComplianceReview")} state={{ analysisResults, pdgmData, patientName, patientId: selectedPatientId }}>
+                <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, patientId: selectedPatientId }}>
                   <Button className="w-full bg-red-600 hover:bg-red-700 h-auto py-4 flex flex-col items-center gap-2">
                     <Shield className="w-8 h-8" />
                     <div className="text-center">
@@ -1919,8 +1908,8 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </div>
                   </Button>
                 </Link>
-                <Link to={createPageUrl("OASISDocumentationReview")} state={{ analysisResults, pdgmData, patientName, navigationData }}>
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700 h-auto py-4 flex flex-col items-center gap-2">
+                <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, navigationData }}>
+                  <Button className="w-full bg-navy-600 hover:bg-navy-700 h-auto py-4 flex flex-col items-center gap-2">
                     <FileText className="w-8 h-8" />
                     <div className="text-center">
                       <div className="font-bold">Documentation</div>
@@ -1969,17 +1958,17 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
           {/* Narrative-Question Match Analysis */}
           {analysisResults.narrative_match_analysis && (
-           <Card className="border-2 border-purple-300">
+           <Card className="border-2 border-navy-300">
              <CardHeader>
                <CardTitle className="text-lg flex items-center gap-2">
-                 <ClipboardCheck className="w-5 h-5 text-purple-600" />
+                 <ClipboardCheck className="w-5 h-5 text-navy-600" />
                  Narrative-Question Consistency Analysis
                </CardTitle>
              </CardHeader>
              <CardContent>
                <div className="grid grid-cols-3 gap-4 mb-4">
-                 <div className="text-center p-3 bg-purple-50 rounded-lg border">
-                   <p className="text-sm text-purple-600">Consistency Score</p>
+                 <div className="text-center p-3 bg-navy-50 rounded-lg border">
+                   <p className="text-sm text-navy-600">Consistency Score</p>
                    <p className={`text-3xl font-bold ${analysisResults.narrative_match_analysis.consistency_analysis?.overall_consistency_score >= 80 ? 'text-green-600' : analysisResults.narrative_match_analysis.consistency_analysis?.overall_consistency_score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
                      {analysisResults.narrative_match_analysis.consistency_analysis?.overall_consistency_score || 0}%
                    </p>
@@ -2059,9 +2048,9 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                              </div>
 
                              {mismatch.exact_narrative_needed && (
-                               <div className="bg-purple-50 p-2 rounded border border-purple-200 mt-2">
-                                 <p className="text-xs text-purple-600 font-medium mb-1">Add This Narrative:</p>
-                                 <p className="text-sm text-purple-900 italic">"{mismatch.exact_narrative_needed}"</p>
+                               <div className="bg-navy-50 p-2 rounded border border-navy-200 mt-2">
+                                 <p className="text-xs text-navy-600 font-medium mb-1">Add This Narrative:</p>
+                                 <p className="text-sm text-navy-900 italic">"{mismatch.exact_narrative_needed}"</p>
                                </div>
                              )}
                            </div>
@@ -2239,7 +2228,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                           </div>
                           <p className="text-slate-700">{issue.description}</p>
                           {issue.pdgm_impact && (
-                            <p className="text-purple-700 text-xs mt-1">
+                            <p className="text-navy-700 text-xs mt-1">
                               <span className="font-medium">PDGM Impact:</span> {issue.pdgm_impact}
                             </p>
                           )}
@@ -2257,7 +2246,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
               {/* Key Recommendations */}
               {analysisResults.key_recommendations?.length > 0 && (
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 mb-4">
+                <div className="bg-gradient-to-r from-indigo-50 to-navy-50 p-4 rounded-lg border border-indigo-200 mb-4">
                   <h3 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
                     <Target className="w-4 h-4" />
                     Key Recommendations
@@ -2647,7 +2636,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                        <div className="flex items-center justify-between mb-2">
                          <p className="font-semibold text-blue-900">{imp.item}</p>
                          {imp.m_item_impact && (
-                           <Badge className="bg-purple-100 text-purple-800 text-xs">
+                           <Badge className="bg-navy-100 text-navy-800 text-xs">
                              Affects: {imp.m_item_impact}
                            </Badge>
                          )}
@@ -2771,20 +2760,20 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
             {/* Quick Wins */}
             {analysisResults.quick_wins?.length > 0 && (
-              <AccordionItem value="quick-wins" className="border rounded-lg border-purple-300">
-                <AccordionTrigger className="px-4 hover:no-underline bg-purple-50 rounded-t-lg">
+              <AccordionItem value="quick-wins" className="border rounded-lg border-navy-300">
+                <AccordionTrigger className="px-4 hover:no-underline bg-navy-50 rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-purple-600" />
-                    <span className="text-purple-800">Quick Wins ({analysisResults.quick_wins.length})</span>
-                    <Badge className="bg-purple-600 text-white ml-2">Easy Improvements</Badge>
+                    <Target className="w-4 h-4 text-navy-600" />
+                    <span className="text-navy-800">Quick Wins ({analysisResults.quick_wins.length})</span>
+                    <Badge className="bg-navy-600 text-white ml-2">Easy Improvements</Badge>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     {analysisResults.quick_wins.map((win, idx) => (
-                      <div key={idx} className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                      <div key={idx} className="p-3 bg-navy-50 rounded-lg border border-navy-200">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-purple-900">{win.action}</p>
+                          <p className="font-semibold text-navy-900">{win.action}</p>
                           <div className="flex gap-2">
                             <Badge className={win.effort === 'low' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
                               {win.effort} effort
@@ -2794,7 +2783,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                         <p className="text-sm text-green-700 mb-2">💰 Impact: {win.impact}</p>
                         {win.how_to && (
                           <div className="bg-white p-2 rounded border">
-                            <p className="text-xs text-purple-600 mb-1 font-medium">How to do it:</p>
+                            <p className="text-xs text-navy-600 mb-1 font-medium">How to do it:</p>
                             <p className="text-sm text-slate-800">{win.how_to}</p>
                           </div>
                         )}
@@ -2836,6 +2825,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       )}
         </TabsContent>
       </Tabs>
-    </PageContainer>
+    </div>
   );
 }

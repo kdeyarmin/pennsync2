@@ -167,7 +167,7 @@ Provide:
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-purple-600" />
+            <Activity className="w-5 h-5 text-navy-600" />
             Disease Progression Monitoring
           </CardTitle>
         </CardHeader>
@@ -214,7 +214,7 @@ Provide:
                     onClick={() => generateProgressionPrediction(data)}
                     disabled={analyzing}
                     size="sm"
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-navy-600 hover:bg-navy-700"
                   >
                     {analyzing && selectedPatient?.patient.id === data.patient.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -231,10 +231,10 @@ Provide:
 
       {/* AI Prediction Results */}
       {progressionData && selectedPatient && (
-        <Card className="border-purple-300">
+        <Card className="border-navy-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
+              <Brain className="w-5 h-5 text-navy-600" />
               30-Day Progression Prediction
             </CardTitle>
             <p className="text-sm text-slate-600">
@@ -287,7 +287,7 @@ Provide:
               <h4 className="font-semibold mb-2">Care Plan Adjustments:</h4>
               <div className="space-y-2">
                 {progressionData.care_plan_adjustments?.map((adjustment, i) => (
-                  <div key={i} className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <div key={i} className="p-3 bg-navy-50 rounded-lg border border-navy-200">
                     <p className="text-sm text-slate-700">{adjustment}</p>
                   </div>
                 ))}

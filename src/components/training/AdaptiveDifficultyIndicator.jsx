@@ -43,7 +43,7 @@ export default function AdaptiveDifficultyIndicator({ performanceData }) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h4 className="font-bold text-slate-900">Adaptive Learning Active</h4>
-              <Badge className="bg-purple-500">
+              <Badge className="bg-navy-500">
                 <Brain className="w-3 h-3 mr-1" />
                 AI-Powered
               </Badge>

@@ -34,7 +34,7 @@ export default function FaxPriorityRuleManager() {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.FaxPriorityRule.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-priority-rules']);
+      queryClient.invalidateQueries({ queryKey: ['fax-priority-rules'] });
       toast.success("Rule created");
       resetForm();
     }
@@ -43,7 +43,7 @@ export default function FaxPriorityRuleManager() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.FaxPriorityRule.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-priority-rules']);
+      queryClient.invalidateQueries({ queryKey: ['fax-priority-rules'] });
       toast.success("Rule updated");
       setEditingId(null);
     }
@@ -52,7 +52,7 @@ export default function FaxPriorityRuleManager() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.FaxPriorityRule.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-priority-rules']);
+      queryClient.invalidateQueries({ queryKey: ['fax-priority-rules'] });
       toast.success("Rule deleted");
     }
   });
@@ -128,7 +128,7 @@ export default function FaxPriorityRuleManager() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI Priority Rules
           </h3>
           <p className="text-sm text-slate-600">Define rules to automatically prioritize faxes</p>
@@ -140,7 +140,7 @@ export default function FaxPriorityRuleManager() {
       </div>
 
       {isCreating && (
-        <Card className="border-purple-200 bg-purple-50">
+        <Card className="border-navy-200 bg-navy-50">
           <CardContent className="p-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">

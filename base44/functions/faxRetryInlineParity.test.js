@@ -9,8 +9,8 @@ import ts from "typescript";
 import * as faxRetry from "../../src/components/fax/faxRetry.js";
 
 /**
- * Drift guard for the fax retry policy mirrored into handleTwilioFaxWebhook and
- * autoRetryFailedFaxes. Transpiles each inline copy and asserts it behaves
+ * Drift guard for the fax retry policy mirrored into handleTelnyxStatusWebhook
+ * and autoRetryFailedFaxes. Transpiles each inline copy and asserts it behaves
  * identically to src/components/fax/faxRetry.js (the unit-tested source).
  */
 globalThis.Deno = globalThis.Deno || { serve() {}, env: { get: () => undefined } };
@@ -35,7 +35,7 @@ const CONFIGS = [undefined, {}, { auto_retry_enabled: false }, { max_retries: 5,
 const FAILURES = [["7211", "not a fax machine"], [null, "busy"], ["", ""], [null, "Invalid To number"], ["x", "temporary network error"]];
 
 test("inline classifyFaxFailure matches faxRetry across both functions", async () => {
-  for (const f of ["./handleTwilioFaxWebhook/entry.ts", "./autoRetryFailedFaxes/entry.ts", "./handleTelnyxWebhook/entry.ts"]) {
+  for (const f of ["./handleTelnyxStatusWebhook/entry.ts", "./autoRetryFailedFaxes/entry.ts"]) {
     const { mod } = await loadInline(f, ["classifyFaxFailure"]);
     for (const [code, msg] of FAILURES) {
       assert.equal(mod.classifyFaxFailure(code, msg), faxRetry.classifyFaxFailure(code, msg), `classifyFaxFailure drift in ${f}`);
@@ -44,7 +44,7 @@ test("inline classifyFaxFailure matches faxRetry across both functions", async (
 });
 
 test("inline faxRetryConfig matches faxRetry across both functions", async () => {
-  for (const f of ["./handleTwilioFaxWebhook/entry.ts", "./autoRetryFailedFaxes/entry.ts", "./handleTelnyxWebhook/entry.ts"]) {
+  for (const f of ["./handleTelnyxStatusWebhook/entry.ts", "./autoRetryFailedFaxes/entry.ts"]) {
     const { mod } = await loadInline(f, ["faxRetryConfig"]);
     for (const cfg of CONFIGS) {
       assert.deepEqual(mod.faxRetryConfig(cfg), faxRetry.faxRetryConfig(cfg), `faxRetryConfig drift in ${f}`);
@@ -53,7 +53,7 @@ test("inline faxRetryConfig matches faxRetry across both functions", async () =>
 });
 
 test("inline nextRetryDelayMinutes matches across both functions", async () => {
-  for (const f of ["./handleTwilioFaxWebhook/entry.ts", "./autoRetryFailedFaxes/entry.ts", "./handleTelnyxWebhook/entry.ts"]) {
+  for (const f of ["./handleTelnyxStatusWebhook/entry.ts", "./autoRetryFailedFaxes/entry.ts"]) {
     const { mod } = await loadInline(f, ["nextRetryDelayMinutes"]);
     for (const cfg of CONFIGS) {
       for (const attempt of [0, 1, 2, 5]) {
@@ -71,7 +71,7 @@ test("inline nextRetryDelayMinutes matches across both functions", async () => {
 
 test("inline planFaxRetry matches (webhook + telnyx mirror)", async () => {
   const now = Date.parse("2026-06-04T12:00:00Z");
-  for (const f of ["./handleTwilioFaxWebhook/entry.ts", "./handleTelnyxWebhook/entry.ts"]) {
+  for (const f of ["./handleTelnyxStatusWebhook/entry.ts"]) {
     const { mod } = await loadInline(f, ["planFaxRetry"]);
     for (const [code, msg] of FAILURES) {
       for (const retryCount of [0, 2, 3]) {

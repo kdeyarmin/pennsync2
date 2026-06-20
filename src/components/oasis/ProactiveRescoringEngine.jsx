@@ -145,7 +145,7 @@ For each opportunity, calculate:
     const colors = {
       functional: 'bg-blue-100 text-blue-800 border-blue-300',
       comorbidity: 'bg-green-100 text-green-800 border-green-300',
-      clinical: 'bg-purple-100 text-purple-800 border-purple-300',
+      clinical: 'bg-navy-100 text-navy-800 border-navy-300',
       episode_timing: 'bg-orange-100 text-orange-800 border-orange-300',
       therapy: 'bg-pink-100 text-pink-800 border-pink-300'
     };
@@ -268,9 +268,9 @@ For each opportunity, calculate:
                         <p className="text-blue-800">{opp.clinical_justification}</p>
                       </div>
 
-                      <div className="bg-purple-50 p-3 rounded mb-2 text-sm">
-                        <p className="font-medium text-purple-900 mb-1">Supporting Evidence:</p>
-                        <p className="text-purple-800 italic">"{opp.supporting_evidence}"</p>
+                      <div className="bg-navy-50 p-3 rounded mb-2 text-sm">
+                        <p className="font-medium text-navy-900 mb-1">Supporting Evidence:</p>
+                        <p className="text-navy-800 italic">"{opp.supporting_evidence}"</p>
                       </div>
 
                       <div className="bg-yellow-50 p-3 rounded mb-2 text-sm border border-yellow-200">

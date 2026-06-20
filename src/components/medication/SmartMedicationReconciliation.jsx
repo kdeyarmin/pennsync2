@@ -119,7 +119,7 @@ export default function SmartMedicationReconciliation({ patient }) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-navy-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <Brain className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -132,7 +132,7 @@ export default function SmartMedicationReconciliation({ patient }) {
             <Button
               onClick={analyzeMedications}
               disabled={analyzing || currentMedications.length === 0}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600"
+              className="bg-gradient-to-r from-navy-600 to-indigo-600"
             >
               {analyzing ? (
                 <>
@@ -302,11 +302,11 @@ export default function SmartMedicationReconciliation({ patient }) {
                   </div>
                 ) : (
                   analysisResults.age_condition_risks?.map((risk, idx) => (
-                    <Card key={idx} className="border-l-4 border-l-purple-500">
+                    <Card key={idx} className="border-l-4 border-l-navy-500">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-purple-100">
-                            <Shield className="w-5 h-5 text-purple-600" />
+                          <div className="p-2 rounded-lg bg-navy-100">
+                            <Shield className="w-5 h-5 text-navy-600" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -316,9 +316,9 @@ export default function SmartMedicationReconciliation({ patient }) {
                               </Badge>
                             </div>
                             <p className="text-sm text-slate-700 mb-2">{risk.description}</p>
-                            <div className="bg-purple-50 border border-purple-200 rounded-md p-3">
-                              <p className="text-xs font-semibold text-purple-900 mb-1">Recommendation:</p>
-                              <p className="text-sm text-purple-800">{risk.recommendation}</p>
+                            <div className="bg-navy-50 border border-navy-200 rounded-md p-3">
+                              <p className="text-xs font-semibold text-navy-900 mb-1">Recommendation:</p>
+                              <p className="text-sm text-navy-800">{risk.recommendation}</p>
                             </div>
                           </div>
                         </div>
@@ -329,7 +329,7 @@ export default function SmartMedicationReconciliation({ patient }) {
               </TabsContent>
 
               <TabsContent value="recommendations" className="space-y-3 mt-4">
-                <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+                <Card className="bg-gradient-to-br from-indigo-50 to-navy-50 border-indigo-200">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-indigo-600" />

@@ -34,7 +34,7 @@ const ACTION_META = {
   logout:              { icon: LogOut,       color: "text-slate-500",   bg: "bg-slate-50",   label: "Logout" },
   page_visit:          { icon: Eye,          color: "text-blue-500",   bg: "bg-blue-50",   label: "Page View" },
   note_enhanced:       { icon: Brain,        color: "text-indigo-600", bg: "bg-indigo-50", label: "Note Enhanced" },
-  note_ai_generated:   { icon: Brain,        color: "text-purple-600", bg: "bg-purple-50", label: "AI Note" },
+  note_ai_generated:   { icon: Brain,        color: "text-navy-600", bg: "bg-navy-50", label: "AI Note" },
   note_compliance_check:{ icon: Shield,      color: "text-orange-600", bg: "bg-orange-50", label: "Compliance Check" },
   visit_complete:      { icon: CheckSquare,  color: "text-green-600",  bg: "bg-green-50",  label: "Visit Completed" },
   visit_start:         { icon: Activity,     color: "text-blue-600",   bg: "bg-blue-50",   label: "Visit Started" },
@@ -48,13 +48,13 @@ const ACTION_META = {
   invitation_sent:     { icon: Send,         color: "text-blue-600",   bg: "bg-blue-50",   label: "Invite Sent" },
   invitation_resent:   { icon: Send,         color: "text-orange-600", bg: "bg-orange-50", label: "Invite Resent" },
   user_created:        { icon: Users,        color: "text-green-600",  bg: "bg-green-50",  label: "User Created" },
-  user_role_changed:   { icon: Shield,       color: "text-purple-600", bg: "bg-purple-50", label: "Role Changed" },
+  user_role_changed:   { icon: Shield,       color: "text-navy-600", bg: "bg-navy-50", label: "Role Changed" },
   user_enabled:        { icon: Users,        color: "text-green-600",  bg: "bg-green-50",  label: "User Enabled" },
   user_disabled:       { icon: Users,        color: "text-red-600",    bg: "bg-red-50",    label: "User Disabled" },
   user_deleted:        { icon: Users,        color: "text-red-600",    bg: "bg-red-50",    label: "User Deleted" },
   user_password_reset: { icon: Settings,     color: "text-orange-600", bg: "bg-orange-50", label: "Password Reset" },
   settings_updated:    { icon: Settings,     color: "text-slate-600",   bg: "bg-slate-50",   label: "Settings Updated" },
-  ai_feature_used:     { icon: Star,         color: "text-purple-600", bg: "bg-purple-50", label: "AI Feature" },
+  ai_feature_used:     { icon: Star,         color: "text-navy-600", bg: "bg-navy-50", label: "AI Feature" },
   error:               { icon: AlertTriangle,color: "text-red-600",    bg: "bg-red-50",    label: "Error" },
 };
 
@@ -142,7 +142,7 @@ export default function UserActivityPanel({ userEmail, _userName }) {
           { label: "Logins", value: stats.logins, icon: LogIn, color: "text-green-600" },
           { label: "Notes", value: stats.notes, icon: Brain, color: "text-indigo-600" },
           { label: "Visits Done", value: stats.visits, icon: CheckSquare, color: "text-teal-600" },
-          { label: "AI Uses", value: stats.aiUses, icon: Star, color: "text-purple-600" },
+          { label: "AI Uses", value: stats.aiUses, icon: Star, color: "text-navy-600" },
         ].map(s => {
           const SIcon = s.icon;
           return (

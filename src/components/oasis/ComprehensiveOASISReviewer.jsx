@@ -439,11 +439,11 @@ Return detailed JSON with all findings.`;
               </AccordionItem>
 
               {/* Quality Measure Opportunities */}
-              <AccordionItem value="quality" className="border-2 border-purple-400 rounded-lg bg-purple-50">
+              <AccordionItem value="quality" className="border-2 border-navy-400 rounded-lg bg-navy-50">
                 <AccordionTrigger className="px-4 hover:no-underline">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-purple-600" />
-                    <span className="font-semibold text-purple-900">
+                    <TrendingUp className="w-5 h-5 text-navy-600" />
+                    <span className="font-semibold text-navy-900">
                       Quality Measure Opportunities ({reviewResults.quality_measure_opportunities?.length || 0})
                     </span>
                   </div>
@@ -457,10 +457,10 @@ Return detailed JSON with all findings.`;
                   ) : (
                     <div className="space-y-4">
                       {reviewResults.quality_measure_opportunities?.map((measure, idx) => (
-                        <div key={idx} className="bg-white rounded-lg border-2 border-purple-300 p-4">
+                        <div key={idx} className="bg-white rounded-lg border-2 border-navy-300 p-4">
                           <div className="flex items-start justify-between mb-3">
                             <div>
-                              <h4 className="font-semibold text-purple-900">{measure.measure_name}</h4>
+                              <h4 className="font-semibold text-navy-900">{measure.measure_name}</h4>
                               {measure.nqf_number && (
                                 <Badge variant="outline" className="text-xs mt-1">
                                   {measure.nqf_number}
@@ -536,7 +536,7 @@ Return detailed JSON with all findings.`;
                               </Badge>
                             )}
                             {measure.discharge_data_needed && (
-                              <Badge className="bg-purple-600 text-white text-xs">
+                              <Badge className="bg-navy-600 text-white text-xs">
                                 Discharge Data Required
                               </Badge>
                             )}
@@ -625,9 +625,9 @@ Return detailed JSON with all findings.`;
                                 </div>
                               )}
                               {inconsistency.impact_on_quality && (
-                                <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                                  <p className="text-xs text-purple-700 font-semibold mb-1">⭐ Quality</p>
-                                  <p className="text-xs text-purple-800">{inconsistency.impact_on_quality}</p>
+                                <div className="bg-navy-50 p-2 rounded border border-navy-200">
+                                  <p className="text-xs text-navy-700 font-semibold mb-1">⭐ Quality</p>
+                                  <p className="text-xs text-navy-800">{inconsistency.impact_on_quality}</p>
                                 </div>
                               )}
                               {inconsistency.impact_on_audit && (

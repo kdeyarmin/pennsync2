@@ -93,12 +93,26 @@ export default function DuplicatePatientManager() {
       const primaryPatient = selectedGroup.patients.find(p => p.patient.id === primaryPatientId)?.patient;
       if (!primaryPatient) return;
 
-      // Delete all other patients in the group
+      // Reassign each duplicate's clinical records to the primary BEFORE deleting,
+      // then delete. The previous code deleted the duplicates outright, orphaning
+      // their Visits/CarePlans (lost clinical history). Mirrors PatientMergeDialog.
       const otherPatients = selectedGroup.patients.filter(p => p.patient.id !== primaryPatientId);
       for (const { patient } of otherPatients) {
+        const [visits, carePlans] = await Promise.all([
+          base44.entities.Visit.filter({ patient_id: patient.id }),
+          base44.entities.CarePlan.filter({ patient_id: patient.id }),
+        ]);
+        for (const visit of visits) {
+          await base44.entities.Visit.update(visit.id, { patient_id: primaryPatientId });
+        }
+        for (const carePlan of carePlans) {
+          await base44.entities.CarePlan.update(carePlan.id, { patient_id: primaryPatientId });
+        }
         await deleteMutation.mutateAsync(patient.id);
       }
 
+      queryClient.invalidateQueries({ queryKey: ['patientVisits'] });
+      queryClient.invalidateQueries({ queryKey: ['patientCarePlans'] });
       setMergeDialogOpen(false);
       setSelectedGroup(null);
       setPrimaryPatientId(null);

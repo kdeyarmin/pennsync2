@@ -158,7 +158,7 @@ export default function ProactiveClinicalTaskGenerator({
   const visibleTasks = suggestedTasks.filter(task => !dismissedTasks.has(task));
 
   return (
-    <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50">
+    <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-navy-50">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">

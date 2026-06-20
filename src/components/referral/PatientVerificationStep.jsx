@@ -141,8 +141,8 @@ export default function PatientVerificationStep({
 
           {/* Match Analysis Summary */}
           {matchAnalysis && (
-            <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
-              <p className="text-sm font-semibold text-purple-900 mb-2">AI Match Analysis</p>
+            <div className="mt-4 p-3 bg-navy-50 rounded-lg border border-navy-200">
+              <p className="text-sm font-semibold text-navy-900 mb-2">AI Match Analysis</p>
               <div className="flex items-center gap-2 mb-2">
                 <Badge className={getConfidenceColor(matchAnalysis.confidence_score)}>
                   {Math.round(matchAnalysis.confidence_score)}% Confidence
@@ -150,7 +150,7 @@ export default function PatientVerificationStep({
                 <Badge variant="outline">{matchAnalysis.confidence_level} Match</Badge>
               </div>
               {matchAnalysis.match_factors?.length > 0 && (
-                <div className="text-xs text-purple-800">
+                <div className="text-xs text-navy-800">
                   <strong>Match Factors:</strong> {matchAnalysis.match_factors.join(', ')}
                 </div>
               )}

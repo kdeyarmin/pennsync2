@@ -262,10 +262,10 @@ Return structured JSON training module.`,
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-purple-300">
+      <Card className="border-2 border-navy-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-navy-600" />
             AI Training Module Generator
           </CardTitle>
         </CardHeader>
@@ -380,7 +380,7 @@ Return structured JSON training module.`,
           <Button
             onClick={generateTrainingModule}
             disabled={isGenerating || (selectedRecommendations.size === 0 && selectedExemplars.size === 0)}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-navy-600 hover:bg-navy-700"
           >
             {isGenerating ? (
               <>
@@ -443,11 +443,11 @@ Return structured JSON training module.`,
                 <AccordionContent className="px-4 pb-4">
                   <p className="text-sm text-slate-700 mb-3">{generatedModule.content?.introduction}</p>
                   {generatedModule.content?.medicare_requirements?.length > 0 && (
-                    <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                      <p className="font-semibold text-purple-900 text-sm mb-2">42 CFR 484 Requirements:</p>
+                    <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                      <p className="font-semibold text-navy-900 text-sm mb-2">42 CFR 484 Requirements:</p>
                       <ul className="space-y-1">
                         {generatedModule.content.medicare_requirements.map((req, i) => (
-                          <li key={i} className="text-xs text-purple-800">• {req}</li>
+                          <li key={i} className="text-xs text-navy-800">• {req}</li>
                         ))}
                       </ul>
                     </div>
@@ -529,7 +529,7 @@ Return structured JSON training module.`,
                           {idx + 1}. {q.question}
                         </p>
                         <div className="space-y-1 mb-2">
-                          {q.options.map((opt, optIdx) => (
+                          {q.options?.map((opt, optIdx) => (
                             <div
                               key={optIdx}
                               className={`p-2 rounded text-sm ${
@@ -601,7 +601,7 @@ Return structured JSON training module.`,
               )}
 
               {/* Key Takeaways */}
-              <AccordionItem value="takeaways" className="border rounded-lg bg-purple-50">
+              <AccordionItem value="takeaways" className="border rounded-lg bg-navy-50">
                 <AccordionTrigger className="px-4 py-3">
                   <span className="font-medium">Key Takeaways & Quick Reference</span>
                 </AccordionTrigger>
@@ -618,11 +618,11 @@ Return structured JSON training module.`,
                     </ul>
                   </div>
                   {generatedModule.content?.quick_reference_phrases?.length > 0 && (
-                    <div className="bg-purple-50 p-3 rounded border border-purple-200">
-                      <p className="font-semibold text-purple-900 mb-2">Quick Reference Phrases:</p>
+                    <div className="bg-navy-50 p-3 rounded border border-navy-200">
+                      <p className="font-semibold text-navy-900 mb-2">Quick Reference Phrases:</p>
                       <div className="flex flex-wrap gap-2">
                         {generatedModule.content.quick_reference_phrases.map((phrase, idx) => (
-                          <Badge key={idx} className="bg-purple-100 text-purple-900">
+                          <Badge key={idx} className="bg-navy-100 text-navy-900">
                             {phrase}
                           </Badge>
                         ))}

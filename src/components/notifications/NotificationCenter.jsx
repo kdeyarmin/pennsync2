@@ -101,7 +101,10 @@ export default function NotificationCenter({ currentUser, onClose }) {
       message: a.message || a.description,
       created_date: a.created_date,
       is_read: false,
-      priority: a.severity || 'high'
+      priority: a.severity || 'high',
+      // Surfaced from a PatientAlert/Task, not a Notification row — its id is NOT
+      // a Notification id, so it must be excluded from Notification.update calls.
+      _synthetic: true
     })),
     ...pendingTasks.map(t => ({
       id: t.id,
@@ -110,7 +113,8 @@ export default function NotificationCenter({ currentUser, onClose }) {
       message: t.description,
       created_date: t.created_date,
       is_read: false,
-      priority: 'medium'
+      priority: 'medium',
+      _synthetic: true
     }))
   ].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
 
@@ -128,8 +132,11 @@ export default function NotificationCenter({ currentUser, onClose }) {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
-      await Promise.all(unreadIds.map(id => 
+      // Only real Notification rows can be marked read (synthetic alert/task
+      // items carry a non-Notification id). allSettled so one failure doesn't
+      // short-circuit the rest.
+      const unreadIds = notifications.filter(n => !n.is_read && !n._synthetic).map(n => n.id);
+      await Promise.allSettled(unreadIds.map(id =>
         base44.entities.Notification.update(id, {
           is_read: true,
           read_at: new Date().toISOString()
@@ -161,7 +168,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
       case 'critical_alert':
         return <AlertCircle className="w-5 h-5 text-red-600" />;
       case 'patient_alert':
-        return <AlertCircle className="w-5 h-5 text-purple-600" />;
+        return <AlertCircle className="w-5 h-5 text-navy-600" />;
       case 'task_assigned':
         return <Check className="w-5 h-5 text-green-600" />;
       case 'training_due':
@@ -185,7 +192,10 @@ export default function NotificationCenter({ currentUser, onClose }) {
   };
 
   const handleNotificationClick = (notification) => {
-    if (!notification.is_read) {
+    // Synthetic items (open PatientAlerts/Tasks surfaced here) carry an
+    // alert/task id, not a Notification id — calling Notification.update with it
+    // is a no-op error, so only mark real notifications read.
+    if (!notification.is_read && !notification._synthetic) {
       markAsReadMutation.mutate(notification.id);
     }
     setSelectedNotification(notification);
@@ -249,7 +259,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
                   variant="ghost"
                   size="sm"
                   onClick={() => markAllAsReadMutation.mutate()}
-                  disabled={markAllAsReadMutation.isLoading}
+                  disabled={markAllAsReadMutation.isPending}
                 >
                   <CheckCheck className="w-4 h-4 mr-1" />
                   Mark all read

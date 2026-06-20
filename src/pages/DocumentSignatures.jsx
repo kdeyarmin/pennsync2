@@ -15,8 +15,6 @@ import {
   Eye,
   Search
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -89,27 +87,7 @@ export default function DocumentSignatures() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Pen}
-        eyebrow="Documentation"
-        title="Document Signatures"
-        description="Track and manage electronic signatures"
-        favoritePage="DocumentSignatures"
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Badge className="bg-yellow-100 text-yellow-800">
-              {stats.pending} Pending
-            </Badge>
-            {stats.overdue > 0 && (
-              <Badge className="bg-red-100 text-red-800">
-                {stats.overdue} Overdue
-              </Badge>
-            )}
-          </div>
-        }
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card>
@@ -303,6 +281,6 @@ export default function DocumentSignatures() {
           </CardContent>
         </Card>
       )}
-    </PageContainer>
+    </div>
   );
 }

@@ -83,7 +83,7 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
   const getCategoryColor = (category) => {
     const lower = category?.toLowerCase() || '';
     if (lower.includes('primary')) return 'bg-blue-100 text-blue-800';
-    if (lower.includes('secondary') || lower.includes('comorbidity')) return 'bg-purple-100 text-purple-800';
+    if (lower.includes('secondary') || lower.includes('comorbidity')) return 'bg-navy-100 text-navy-800';
     if (lower.includes('complication')) return 'bg-orange-100 text-orange-800';
     return 'bg-slate-100 text-slate-800';
   };

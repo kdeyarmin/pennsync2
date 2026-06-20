@@ -86,7 +86,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         const merged = await base44.functions.invoke('mergePDFs', {
           pdf_urls: [coverSheetUrl, pdfUrl]
         });
-        pdfUrl = merged.data?.merged_url || pdfUrl;
+        pdfUrl = merged.data?.merged_pdf_url || pdfUrl;
       }
       await base44.functions.invoke('sendFax', {
         to_number: toNumber,
@@ -98,7 +98,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
       setToNumber("");
       setSignatureDataUrl(null);
       setCoverSheetUrl(null);
-      queryClient.invalidateQueries(['fax-logs']);
+      queryClient.invalidateQueries({ queryKey: ['fax-logs'] });
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
     } finally {
@@ -163,7 +163,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         <Button
           onClick={handleSendFax}
           disabled={uploadedImages.length === 0 || isSending || !toNumber.trim()}
-          className="w-full h-14 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-violet-700"
+          className="w-full h-14 rounded-2xl bg-gradient-to-r from-indigo-600 to-navy-600 text-white shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-navy-700"
           size="lg"
         >
           {isSending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
