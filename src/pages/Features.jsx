@@ -1469,8 +1469,7 @@ export default function FeaturesPage() {
       </div>
 
       {/* Impact Summary */}
-      <Card className="mt-6 sm:mt-8 md:mt-12 bg-navy-900 text-white border-none">
-        <CardContent className="p-4 sm:p-6 md:p-8">
+      <div className="mt-6 sm:mt-8 md:mt-12 rounded-xl bg-navy-900 text-white p-4 sm:p-6 md:p-8">
           <div className="text-center">
             <Sparkles className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-white opacity-90" />
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3">The Penn Sync Impact</h2>
@@ -1498,8 +1497,7 @@ export default function FeaturesPage() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </div>
     </PageContainer>
   );
 }

@@ -299,13 +299,12 @@ export default function Help() {
               ))}
             </div>
 
-            <Card className="bg-navy-900 text-white">
-              <CardContent className="p-6 sm:p-8">
+            <div className="rounded-xl bg-navy-900 text-white p-6 sm:p-8">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="text-xl sm:text-2xl font-bold mb-2">Complete User Manual</h3>
-                    <p className="text-blue-100 text-sm sm:text-base">
-                      Download the comprehensive 35+ page training guide with step-by-step instructions, 
+                    <p className="text-navy-100 text-sm sm:text-base">
+                      Download the comprehensive 35+ page training guide with step-by-step instructions,
                       screenshots, and best practices for every feature.
                     </p>
                   </div>
@@ -319,8 +318,7 @@ export default function Help() {
                     {downloading ? 'Generating PDF...' : 'Download Manual'}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </TabsContent>
 
           {/* FAQ Tab */}
