@@ -938,7 +938,7 @@ Actions available:
   const getStatusColor = (status) => {
     switch (status) {
       case 'new': return 'bg-blue-500';
-      case 'processing': return 'bg-yellow-500';
+      case 'processing': return 'bg-amber-500';
       case 'awaiting_info': return 'bg-orange-500';
       case 'ready_for_admission': return 'bg-green-500';
       case 'archived': return 'bg-slate-500';
@@ -1129,7 +1129,7 @@ Actions available:
                               Review Match
                             </Badge>
                             {referral.match_confidence && (
-                              <span className="text-xs text-yellow-700">
+                              <span className="text-xs text-amber-700">
                                 {Math.round(referral.match_confidence)}% confidence
                               </span>
                             )}
@@ -1190,7 +1190,7 @@ Actions available:
                          {referral.requires_manual_review ? (
                            <Button
                              size="sm"
-                             className="bg-yellow-500 hover:bg-yellow-600 text-white min-h-[36px] text-xs"
+                             className="bg-amber-500 hover:bg-amber-600 text-white min-h-[36px] text-xs"
                              onClick={() => setVerificationReferral(referral)}
                            >
                               <UserCheck className="w-4 h-4 mr-1" />
@@ -1576,7 +1576,7 @@ Actions available:
           <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <UserCheck className="w-6 h-6 text-yellow-600" />
+                <UserCheck className="w-6 h-6 text-amber-600" />
                 Patient Verification Required
               </DialogTitle>
             </DialogHeader>
@@ -1596,7 +1596,7 @@ Actions available:
           <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-yellow-600" />
+                <User className="w-5 h-5 text-amber-600" />
                 Patient Match Review
               </DialogTitle>
             </DialogHeader>

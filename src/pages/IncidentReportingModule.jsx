@@ -256,7 +256,7 @@ Please review this incident in the Incident Reporting Dashboard.`
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'reported': return 'bg-yellow-500';
+      case 'reported': return 'bg-amber-500';
       case 'under_review': return 'bg-blue-500';
       case 'resolved': return 'bg-green-500';
       default: return 'bg-slate-500';
@@ -267,7 +267,7 @@ Please review this incident in the Incident Reporting Dashboard.`
     switch (severity) {
       case 'high': return 'bg-red-600 text-white';
       case 'medium': return 'bg-orange-500 text-white';
-      case 'low': return 'bg-yellow-500 text-white';
+      case 'low': return 'bg-amber-500 text-white';
       default: return 'bg-slate-500 text-white';
     }
   };

@@ -91,7 +91,7 @@ export default function SystemJobMonitor() {
     const icons = {
       success: <CheckCircle2 className="w-5 h-5 text-green-600" />,
       error: <XCircle className="w-5 h-5 text-red-600" />,
-      warning: <AlertTriangle className="w-5 h-5 text-yellow-600" />,
+      warning: <AlertTriangle className="w-5 h-5 text-amber-600" />,
       running: <Clock className="w-5 h-5 text-blue-600 animate-spin" />
     };
     return icons[status] || <Activity className="w-5 h-5 text-slate-400" />;
@@ -101,7 +101,7 @@ export default function SystemJobMonitor() {
     const colors = {
       success: "bg-green-100 text-green-800 border-green-300",
       error: "bg-red-100 text-red-800 border-red-300",
-      warning: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      warning: "bg-amber-100 text-amber-800 border-amber-300",
       running: "bg-blue-100 text-blue-800 border-blue-300"
     };
     return (
@@ -211,9 +211,9 @@ export default function SystemJobMonitor() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Warnings</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.warnings}</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.warnings}</p>
               </div>
-              <AlertTriangle className="w-8 h-8 text-yellow-600" />
+              <AlertTriangle className="w-8 h-8 text-amber-600" />
             </div>
           </CardContent>
         </Card>

@@ -272,7 +272,7 @@ export default function DuplicatePatients() {
                               <Badge className={
                                 dup.confidenceLevel === 'high' ? 'bg-red-100 text-red-800' :
                                 dup.confidenceLevel === 'medium' ? 'bg-orange-100 text-orange-800' :
-                                'bg-yellow-100 text-yellow-800'
+                                'bg-amber-100 text-amber-800'
                               }>
                                 {dup.confidencePercent}% • {dup.confidenceLevel} confidence
                               </Badge>

@@ -234,9 +234,9 @@ export default function VisitScribePage() {
                 onNoteGenerated={handleNoteGenerated}
               />
             ) : (
-              <Alert className="bg-yellow-50 border-yellow-200">
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800">
+              <Alert className="bg-amber-50 border-amber-200">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
                   Please select a patient, visit type, and diagnosis to begin recording.
                 </AlertDescription>
               </Alert>

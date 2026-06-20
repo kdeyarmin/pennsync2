@@ -99,7 +99,7 @@ const educationTopics = [
     id: 'fall_prevention',
     title: 'Fall Prevention',
     icon: Shield,
-    color: 'from-yellow-500 to-orange-500',
+    color: 'from-amber-500 to-orange-500',
     description: 'Home safety tips and strategies to prevent falls at home.'
   },
   {

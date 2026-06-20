@@ -690,7 +690,7 @@ export default function PatientDetails() {
                       <Card key={plan.id} className={`border-l-4 ${
                         plan.status === 'met' ? 'border-l-green-500' :
                         plan.status === 'not_met' ? 'border-l-red-500' :
-                        plan.status === 'revised' ? 'border-l-yellow-500' :
+                        plan.status === 'revised' ? 'border-l-amber-500' :
                         'border-l-blue-500'
                       }`}>
                         <CardContent className="p-4">
@@ -699,7 +699,7 @@ export default function PatientDetails() {
                             <Badge className={
                               plan.status === 'met' ? 'bg-green-500' :
                               plan.status === 'not_met' ? 'bg-red-500' :
-                              plan.status === 'revised' ? 'bg-yellow-500' :
+                              plan.status === 'revised' ? 'bg-amber-500' :
                               'bg-blue-500'
                             }>
                               {(plan.status || '').replace('_', ' ')}

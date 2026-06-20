@@ -180,8 +180,8 @@ export default function EducationLibrary() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Star className="w-5 h-5 text-yellow-600" />
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Star className="w-5 h-5 text-amber-600" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-900 truncate">

@@ -146,7 +146,7 @@ export default function SignDocument() {
     if (signer.signed_date) {
       return { label: "Previously Signed", color: "bg-green-600" };
     }
-    return { label: "Pending", color: "bg-yellow-600" };
+    return { label: "Pending", color: "bg-amber-600" };
   };
 
   return (

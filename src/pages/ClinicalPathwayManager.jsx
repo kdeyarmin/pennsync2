@@ -826,7 +826,7 @@ const getPriorityColor = (priority) => {
   switch (priority) {
     case 'critical': return 'bg-red-600 text-white';
     case 'high': return 'bg-orange-500 text-white';
-    case 'medium': return 'bg-yellow-500 text-white';
+    case 'medium': return 'bg-amber-500 text-white';
     case 'low': return 'bg-blue-500 text-white';
     default: return 'bg-slate-500 text-white';
   }

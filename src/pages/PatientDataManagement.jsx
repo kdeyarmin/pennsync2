@@ -240,7 +240,7 @@ export default function PatientDataManagement() {
   const getRiskColor = (level) => {
     const colors = {
       high: "bg-red-100 text-red-800",
-      medium: "bg-yellow-100 text-yellow-800",
+      medium: "bg-amber-100 text-amber-800",
       low: "bg-green-100 text-green-800"
     };
     return colors[level] || colors.low;
@@ -348,9 +348,9 @@ export default function PatientDataManagement() {
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm text-slate-600 truncate">With Alerts</p>
-                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.withAlerts}</p>
+                <p className="text-xl sm:text-2xl font-bold text-amber-600">{stats.withAlerts}</p>
               </div>
-              <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500 flex-shrink-0" />
+              <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

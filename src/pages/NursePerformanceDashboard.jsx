@@ -131,20 +131,20 @@ export default function NursePerformanceDashboard() {
   const getScoreColor = (score) => {
     if (score >= 90) return 'text-green-600 bg-green-50';
     if (score >= 80) return 'text-blue-600 bg-blue-50';
-    if (score >= 70) return 'text-yellow-600 bg-yellow-50';
+    if (score >= 70) return 'text-amber-600 bg-amber-50';
     return 'text-red-600 bg-red-50';
   };
 
   const getGradeColor = (grade) => {
     if (grade === 'A' || grade === 'A+') return 'bg-green-500';
     if (grade === 'B' || grade === 'B+') return 'bg-blue-500';
-    if (grade === 'C') return 'bg-yellow-500';
+    if (grade === 'C') return 'bg-amber-500';
     return 'bg-red-500';
   };
 
   const getBurnoutColor = (level) => {
     if (level === 'low') return 'text-green-600 bg-green-50';
-    if (level === 'moderate') return 'text-yellow-600 bg-yellow-50';
+    if (level === 'moderate') return 'text-amber-600 bg-amber-50';
     if (level === 'high') return 'text-orange-600 bg-orange-50';
     return 'text-red-600 bg-red-50';
   };
@@ -366,9 +366,9 @@ export default function NursePerformanceDashboard() {
                       <span className="text-sm">Critical Issues</span>
                       <Badge variant="destructive">{docQuality?.critical_issues || 0}</Badge>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
                       <span className="text-sm">Flagged for Review</span>
-                      <Badge className="bg-yellow-500">{docQuality?.flagged_issues || 0}</Badge>
+                      <Badge className="bg-amber-500">{docQuality?.flagged_issues || 0}</Badge>
                     </div>
                   </CardContent>
                 </Card>
