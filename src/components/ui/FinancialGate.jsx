@@ -25,10 +25,16 @@ import { canViewFinancials } from "@/lib/permissions";
  * server (Base44 functions / RLS) remains the real boundary — see canViewFinancials.
  */
 export default function FinancialGate({ children, fallback = null }) {
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isPending } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
   });
+
+  // While the user is still resolving, render nothing — NOT the fallback — so an
+  // admin never briefly sees a "restricted" placeholder on first load/refetch.
+  // Still fail-closed: financial children never render before the user is known
+  // to be authorized.
+  if (isPending) return null;
 
   return canViewFinancials(currentUser) ? <>{children}</> : fallback;
 }

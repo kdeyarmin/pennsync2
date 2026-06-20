@@ -1540,7 +1540,10 @@ Return scores (0-100) and top 3-5 issues in each category.`,
         </TabsContent>
 
         <TabsContent value="batch" className="mt-4">
-          <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} onBatchComplete={handleBatchComplete} />
+          {/* Batch results/exports include estimated payment & revenue columns — admins only */}
+          <FinancialGate fallback={<p className="text-sm text-slate-500">Batch analysis includes payment/revenue data and is available to administrators.</p>}>
+            <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} onBatchComplete={handleBatchComplete} />
+          </FinancialGate>
         </TabsContent>
 
         <TabsContent value="single" className="mt-4">
@@ -1947,15 +1950,17 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             onTasksCreated={(count) => console.log(`${count} tasks created`)}
           />
 
-          {/* Export Manager */}
-          <OASISExportManager
-            analysisResults={analysisResults}
-            pdgmData={pdgmData}
-            revenueData={revenueData}
-            navigationData={navigationData}
-            qualityScore={qualityScore}
-            patientName={patientName}
-          />
+          {/* Export Manager — exports include revenue optimization fields; admins only */}
+          <FinancialGate>
+            <OASISExportManager
+              analysisResults={analysisResults}
+              pdgmData={pdgmData}
+              revenueData={revenueData}
+              navigationData={navigationData}
+              qualityScore={qualityScore}
+              patientName={patientName}
+            />
+          </FinancialGate>
 
           {/* Key Takeaways Summary (includes potential-revenue figures) — financial, admins only */}
           <FinancialGate>
@@ -2402,12 +2407,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             }}
           />
 
-          {/* Multi-Report Comparison */}
-          <EnhancedMultiReportComparison
-            savedReports={savedBatchResults}
-            currentReport={analysisResults}
-            currentPdgmData={pdgmData}
-          />
+          {/* Multi-Report Comparison — revenue summaries/chart/column; financial, admins only */}
+          <FinancialGate>
+            <EnhancedMultiReportComparison
+              savedReports={savedBatchResults}
+              currentReport={analysisResults}
+              currentPdgmData={pdgmData}
+            />
+          </FinancialGate>
 
           {/* AI Documentation Generator - Generate Draft Clinical Text */}
           <AIDocumentationGenerator

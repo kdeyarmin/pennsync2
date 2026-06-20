@@ -663,12 +663,16 @@ Deno.serve(async (req) => {
     // backs the client-side FinancialGate. Clinical/validation data is still
     // returned, and the revenue math is skipped entirely for non-financial users.
     if (!canViewFinancials(user)) {
+      // Strip the payment-impact strings the validation helpers attach to each
+      // discrepancy (revenueImpact: admission-source / episode-timing payment
+      // effects) so the clinical-only payload carries no financial information.
+      const clinicalDiscrepancies = allDiscrepancies.map(({ revenueImpact, ...rest }) => rest);
       return Response.json({
         financialsRestricted: true,
         rateBasis: { isOfficial, isEstimate: !isOfficial },
         dataValidation: {
-          discrepancies: allDiscrepancies,
-          hasDiscrepancies: allDiscrepancies.length > 0,
+          discrepancies: clinicalDiscrepancies,
+          hasDiscrepancies: clinicalDiscrepancies.length > 0,
           validatedAdmissionSource: sourceValidation.validatedSource,
           validatedEpisodeTiming: timingValidation.validatedTiming,
           m1000Value: sourceValidation.m1000Value,
