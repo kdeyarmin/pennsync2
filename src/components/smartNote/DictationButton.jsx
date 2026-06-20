@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 import { enhanceTranscription } from "@/components/utils/medicalDictionary";
+import { claimDictation, releaseDictation } from "./dictationController";
 
 /**
  * A small, self-contained push-to-dictate mic button. Uses the browser's
@@ -17,26 +18,31 @@ import { enhanceTranscription } from "@/components/utils/medicalDictionary";
 export default function DictationButton({ onText, disabled = false, title = "Dictate this answer" }) {
   const [listening, setListening] = useState(false);
   const recRef = useRef(null);
+  const stopRef = useRef(null);
 
   // Stop any in-flight recognition if the button unmounts mid-dictation.
   useEffect(() => () => { try { recRef.current?.stop(); } catch { /* already stopped */ } }, []);
 
   const toggle = () => {
-    if (listening) { recRef.current?.stop(); setListening(false); return; }
+    if (listening) { recRef.current?.stop(); setListening(false); releaseDictation(stopRef.current); return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { toast.error("Speech recognition isn't supported in this browser."); return; }
     const rec = new SR();
     rec.continuous = true;
     rec.interimResults = false;
     rec.lang = "en-US";
+    const stop = () => { try { rec.stop(); } catch { /* already stopped */ } };
+    stopRef.current = stop;
     rec.onresult = (e) => {
       const t = Array.from(e.results).slice(e.resultIndex).map((r) => r[0].transcript).join(" ");
       const enhanced = enhanceTranscription(t);
       if (enhanced?.trim()) onText?.(enhanced.trim());
     };
-    rec.onerror = () => setListening(false);
-    rec.onend = () => setListening(false);
+    rec.onerror = () => { setListening(false); releaseDictation(stop); };
+    rec.onend = () => { setListening(false); releaseDictation(stop); };
     recRef.current = rec;
+    // Stop any other recognizer first (browsers allow only one at a time).
+    claimDictation(stop);
     rec.start();
     setListening(true);
   };

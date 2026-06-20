@@ -26,12 +26,21 @@ export function extractPain(text) {
 /** Extract the comparable metric set from one note's text. */
 function extractMetrics(text) {
   const v = extractVitals(text);
+  let weight = v.weight ?? null;
+  // extractVitals captures the weight number but drops the unit; normalize a
+  // documented kg reading to lbs so a visit-to-visit unit switch (e.g. 80 kg ->
+  // 176 lbs) isn't reported as a huge swing, and a real change isn't masked.
+  // (Temperature needs no such handling: extractVitals already rejects sub-90
+  // values, so a Celsius reading is dropped rather than mis-compared.)
+  if (weight != null && /(?:\bwt|weight)\s*\d{2,3}(?:\.\d)?\s*kg\b/i.test(text)) {
+    weight = Math.round(weight * 2.20462 * 10) / 10;
+  }
   return {
     bp: v.bp_sys != null && v.bp_dia != null ? { sys: v.bp_sys, dia: v.bp_dia } : null,
     hr: v.hr ?? null,
     o2: v.o2 ?? null,
     temp: v.temp ?? null,
-    weight: v.weight ?? null,
+    weight,
     pain: extractPain(text),
   };
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Loader2, Copy, CheckCircle2, ChevronDown, ChevronUp, FileText, User } from "lucide-react";
+import { toast } from "sonner";
 
 const SECTIONS = [
   { key: "chief_concern", label: "Chief Concern" },
@@ -123,9 +124,13 @@ Return JSON with these keys:
   };
 
   const copySection = async (key, content) => {
-    await navigator.clipboard.writeText(content || "");
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
+    try {
+      await navigator.clipboard.writeText(content || "");
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {
+      toast.error("Couldn't copy to the clipboard. Select the text and copy manually.");
+    }
   };
 
   const copySelected = async () => {
@@ -133,7 +138,12 @@ Return JSON with these keys:
       .filter(s => selectedSections.has(s.key) && summary?.[s.key])
       .map(s => `${s.label}:\n${summary[s.key]}`)
       .join("\n\n");
-    await navigator.clipboard.writeText(text);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      toast.error("Couldn't copy to the clipboard. Select the text and copy manually.");
+      return;
+    }
     setCopiedAll(true);
     setTimeout(() => setCopiedAll(false), 2000);
   };
