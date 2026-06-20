@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -163,7 +164,7 @@ export default function AutomaticCarePlans() {
     e.preventDefault();
     
     if (formData.interventions.length === 0) {
-      alert("Please add at least one intervention");
+      toast.error("Please add at least one intervention");
       return;
     }
 

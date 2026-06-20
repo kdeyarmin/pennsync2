@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,14 @@ export default function PatientRecordDashboard() {
   });
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [view, setView] = useState("grid"); // grid or list
+  const queryClient = useQueryClient();
+
+  // Refresh the dashboard's data after a quick action without a full page reload.
+  const refreshDashboard = () => {
+    ['all-patients', 'all-visits', 'all-care-plans', 'active-alerts'].forEach(
+      (key) => queryClient.invalidateQueries({ queryKey: [key] })
+    );
+  };
 
   // Fetch all data in parallel
   const { data: patients = [], isLoading: loadingPatients } = useQuery({
@@ -151,10 +159,7 @@ export default function PatientRecordDashboard() {
         description="Comprehensive patient management and overview"
         favoritePage="PatientRecordDashboard"
         actions={
-          <PatientQuickActions onActionComplete={() => {
-            // Refresh data
-            window.location.reload();
-          }} />
+          <PatientQuickActions onActionComplete={refreshDashboard} />
         }
       />
 

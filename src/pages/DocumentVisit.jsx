@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { invokeLLM, invokeLLMWithFile } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -417,7 +418,7 @@ export default function DocumentVisit() {
 
   const handleExportPDF = async () => {
     if (!patient || !visit) {
-      alert("Patient or visit data not available for export.");
+      toast.error("Patient or visit data not available for export.");
       return;
     }
     try {
@@ -447,13 +448,13 @@ export default function DocumentVisit() {
       window.URL.revokeObjectURL(url);
       a.remove();
     } catch (error) {
-      await handleSecureError(error, 'visit_export', (msg) => alert(msg));
+      await handleSecureError(error, 'visit_export', (msg) => toast.error(msg));
     }
   };
 
   const handleEmailSummary = async () => {
     if (!patient || !visit) {
-      alert("Patient or visit data not available for email.");
+      toast.error("Patient or visit data not available for email.");
       return;
     }
     try {
@@ -476,7 +477,7 @@ For questions, please contact your care team.`;
 
       // Never send PHI to a placeholder address — require a real email on file.
       if (!patient.email) {
-        alert(`No email address on file for ${patient.first_name} ${patient.last_name}. Add an email to the patient record before sending a visit summary.`);
+        toast.error(`No email address on file for ${patient.first_name} ${patient.last_name}. Add an email to the patient record before sending a visit summary.`);
         return;
       }
       const recipientEmail = patient.email;
@@ -494,9 +495,9 @@ For questions, please contact your care team.`;
         patient_id: patient.id
       });
 
-      alert("Visit summary sent successfully!");
+      toast.success("Visit summary sent successfully!");
     } catch (error) {
-      await handleSecureError(error, 'visit_email', (msg) => alert(msg));
+      await handleSecureError(error, 'visit_email', (msg) => toast.error(msg));
     }
   };
 
@@ -738,7 +739,7 @@ Generate the complete template now:`;
 
     } catch (error) {
       console.error("Error generating template:", error);
-      alert("Error generating template. Please try again.");
+      toast.error("Error generating template. Please try again.");
       await logSecurityEvent('TEMPLATE_GENERATION_ERROR', { visit_id: visitId, error: error.message });
     }
     setIsGeneratingTemplate(false);
@@ -751,7 +752,7 @@ Generate the complete template now:`;
     });
     
     if (!validation.valid) {
-      alert(`File validation failed: ${validation.error}`);
+      toast.error(`File validation failed: ${validation.error}`);
       await logSecurityEvent('FILE_UPLOAD_VALIDATION_FAILED', { 
         visit_id: visitId,
         file_name: audioFile.name,
@@ -850,14 +851,14 @@ Generate the complete clinical narrative based on the audio and context:`;
 
     } catch (error) {
       if (error.message.includes('Rate limit')) {
-        alert("Too many AI requests. Please wait a moment and try again.");
+        toast.error("Too many AI requests. Please wait a moment and try again.");
         await logSecurityEvent('AI_RATE_LIMIT_HIT', { 
           visit_id: visitId,
           error: error.message 
         });
       } else {
         console.error("Error processing audio:", error);
-        alert("Error processing audio. Please try again.");
+        toast.error("Error processing audio. Please try again.");
         await logSecurityEvent('AUDIO_PROCESSING_ERROR', { 
           visit_id: visitId,
           error: error.message 
@@ -979,10 +980,10 @@ Generate the complete clinical narrative based on the audio and context:`;
         source: 'manual',
         related_visit_id: visit.id,
       });
-      alert('Follow-up task added to your task list.');
+      toast.success('Follow-up task added to your task list.');
     } catch (error) {
       console.error('Failed to create follow-up task:', error);
-      alert('Could not create the follow-up task. Please try again.');
+      toast.error('Could not create the follow-up task. Please try again.');
     }
   };
 
@@ -998,10 +999,10 @@ Generate the complete clinical narrative based on the audio and context:`;
         status: 'active',
         flagged_urgent: true,
       });
-      alert('Patient flagged as urgent — the office will see this in active alerts.');
+      toast.success('Patient flagged as urgent — the office will see this in active alerts.');
     } catch (error) {
       console.error('Failed to create urgent alert:', error);
-      alert('Could not flag this patient as urgent. Please try again.');
+      toast.error('Could not flag this patient as urgent. Please try again.');
     }
   };
 
@@ -1020,10 +1021,10 @@ Generate the complete clinical narrative based on the audio and context:`;
         source: 'manual',
         related_visit_id: visit.id,
       });
-      alert('Supply request logged as a task for the office.');
+      toast.success('Supply request logged as a task for the office.');
     } catch (error) {
       console.error('Failed to create supply request:', error);
-      alert('Could not create the supply request. Please try again.');
+      toast.error('Could not create the supply request. Please try again.');
     }
   };
 
@@ -1110,7 +1111,7 @@ Generate the complete clinical narrative based on the audio and context:`;
       // Save offline if no connection
       if (isOffline) {
         offlineStorage.saveUpdate(visitId, visitData);
-        alert("Visit saved offline. Will sync when connection is restored.");
+        toast.success("Visit saved offline. Will sync when connection is restored.");
         navigate(createPageUrl("Dashboard"));
         return;
       }
@@ -1195,10 +1196,10 @@ Generate the complete clinical narrative based on the audio and context:`;
         vital_signs_count: Object.keys(vitalSigns).length
       });
 
-      alert("Visit documentation saved successfully!");
+      toast.success("Visit documentation saved successfully!");
       navigate(createPageUrl("Dashboard"));
     } catch (error) {
-      await handleSecureError(error, 'visit_save', (msg) => alert(msg));
+      await handleSecureError(error, 'visit_save', (msg) => toast.error(msg));
     } finally {
       setIsSaving(false);
     }
@@ -1553,7 +1554,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                 documentType="visit_document"
                 onScanComplete={(doc) => {
                   setScannedDocuments(prev => [...prev, doc]);
-                  alert("Document scanned and attached to visit!");
+                  toast.success("Document scanned and attached to visit!");
                 }}
               />
 
