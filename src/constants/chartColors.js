@@ -7,14 +7,14 @@
  * so appending new colors is safe but reordering changes existing chart output.
  */
 export const CHART_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#14b8a6', // teal
-  '#f97316', // orange
+  '#264491', // navy — brand primary
+  '#0e9f6e', // emerald
+  '#dcab35', // gold — brand accent
+  '#7c3aed', // violet
+  '#0891b2', // cyan
+  '#dc2626', // red
+  '#db2777', // pink
+  '#ea580c', // orange
 ];
 
 /**
