@@ -89,11 +89,12 @@ const GROUPS = [
   },
   {
     title: "System & Configuration",
-    description: "Agency settings, feature flags, and system health monitors.",
+    description: "Agency settings, PDGM rates, integrations, communications, and system health.",
     icon: Settings,
     color: "text-slate-600 bg-slate-100",
     pages: [
-      "AgencySettings", "SystemJobMonitor",
+      "AgencySettings", "PDGMRateSettings", "CommsDashboard",
+      "SuperAdminConfig", "SystemJobMonitor",
     ],
   },
 ];

@@ -180,9 +180,9 @@ export default function Layout({ children, currentPageName }) {
 
   const adminItems = useMemo(() => {
     const cats = buildAdminItems(NAV_MANIFEST);
-    // Append the special Alerts action item to the Analytics category
+    // Append the special Alerts action item to the (single) Administration section
     const withAlerts = cats.map(cat => {
-      if (cat.category !== "Analytics") {
+      if (cat.category !== "Administration") {
         return {
           ...cat,
           items: cat.items.map(({ _badgeKey, _actionKey, ...item }) => ({
