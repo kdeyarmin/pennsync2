@@ -10,6 +10,7 @@ import OfflinePatientSelector from "../components/mobile/OfflinePatientSelector"
 import OfflineSyncManager from "../components/mobile/OfflineSyncManager";
 import OfflineTaskManager from "../components/mobile/OfflineTaskManager";
 import PageContainer from "@/components/ui/PageContainer";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 
 const OfflineVisitDocumentation = lazy(() => import("@/pages/OfflineVisitDocumentation"));
@@ -79,6 +80,7 @@ export default function OfflineMode() {
         favoritePage="OfflineMode"
       />
 
+      <EmbeddedPage>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -237,6 +239,7 @@ export default function OfflineMode() {
           </Suspense>
         </TabsContent>
       </Tabs>
+      </EmbeddedPage>
     </PageContainer>
   );
 }

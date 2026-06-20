@@ -74,31 +74,13 @@ export default function DesktopSidebar({
         )}
 
         {/* Favorites */}
-        {(currentUser?.favorited_pages?.length > 0 || currentUser?.favorited_patients?.length > 0) && (
+        {currentUser?.favorited_patients?.length > 0 && (
           <>
             {!collapsed && (
               <p className="px-3 py-1 text-xs font-semibold text-gold-600 uppercase flex items-center gap-1 mt-2">
                 <Sparkles className="w-3 h-3" /> Favorites
               </p>
             )}
-            {currentUser?.favorited_pages?.map((pageName) => {
-              const allItems = navCategories.flatMap(cat => cat.items).concat(adminItems.flatMap(a => a.items));
-              const pageItem = allItems.find(item => item.page === pageName);
-              if (!pageItem) return null;
-              const active = isActive(pageName);
-              return (
-                <Link
-                  key={`fav-${pageName}`}
-                  to={createPageUrl(pageName)}
-                  className={navItemClasses(active)}
-                  title={collapsed ? pageItem.name : undefined}
-                >
-                  {active && <GoldIndicator />}
-                  <pageItem.icon className="w-4 h-4 flex-shrink-0" />
-                  {!collapsed && <span className="truncate">{pageItem.name}</span>}
-                </Link>
-              );
-            })}
             {currentUser?.favorited_patients?.map((patient) => (
               <Link
                 key={`fav-patient-${patient.id}`}

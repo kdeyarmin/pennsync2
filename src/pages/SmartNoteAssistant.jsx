@@ -54,6 +54,7 @@ const getVisitTypes = (careScope) => {
 import StepIndicator from "../components/smartNote/StepIndicator";
 import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
 import PageContainer from "@/components/ui/PageContainer";
+import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
 export default function SmartNoteAssistant() {
   const [patientId, setPatientId] = useState("");
@@ -375,7 +376,9 @@ export default function SmartNoteAssistant() {
   return (
     <PageContainer>
 
-      <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
+      <HideWhenEmbedded>
+        <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
+      </HideWhenEmbedded>
 
       <SmartNoteTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 

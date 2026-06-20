@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import LoadingState from "@/components/ui/LoadingState";
+import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -53,10 +54,12 @@ export default function EmployeeTranscriptCenter() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-indigo-700 text-white p-6 shadow-xl">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Employee Transcript</h1>
-        <p className="text-indigo-100">Chronological certificate and completion history for assigned in-services.</p>
-      </div>
+      <HideWhenEmbedded>
+        <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-indigo-700 text-white p-6 shadow-xl">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Employee Transcript</h1>
+          <p className="text-indigo-100">Chronological certificate and completion history for assigned in-services.</p>
+        </div>
+      </HideWhenEmbedded>
 
       <Card>
         <CardHeader className="pb-3">

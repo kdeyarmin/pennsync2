@@ -45,13 +45,6 @@
       "default": false,
       "description": "Whether user has been approved by admin"
     },
-    "favorited_pages": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "List of favorited page names"
-    },
     "favorited_patients": {
       "type": "array",
       "items": {
