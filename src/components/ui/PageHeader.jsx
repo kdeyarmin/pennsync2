@@ -26,7 +26,7 @@ export default function PageHeader({
   if (embedded) {
     if (!actions && !children) return null;
     return (
-      <div className="flex flex-col gap-4">
+      <div className={cn("flex flex-col gap-4", className)}>
         {actions && (
           <div className="flex flex-shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             {actions}
