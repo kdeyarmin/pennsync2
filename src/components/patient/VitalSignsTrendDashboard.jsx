@@ -148,7 +148,7 @@ export default function VitalSignsTrendDashboard({ patientId }) {
                   formatter={(value) => (value ? `${value.toFixed(1)}%` : "—")}
                   labelFormatter={(label) => `Visit ${label}`}
                 />
-                <Line type="monotone" dataKey="o2" stroke="#2563eb" strokeWidth={2.5} name="O₂ Sat" isAnimationActive={false} />
+                <Line type="monotone" dataKey="o2" stroke="#264491" strokeWidth={2.5} name="O₂ Sat" isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

@@ -727,7 +727,7 @@ export default function RealTimeComplianceDashboard() {
               <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="score" stroke="#6366F1" strokeWidth={3} name="Compliance Score" />
+              <Line type="monotone" dataKey="score" stroke="#264491" strokeWidth={3} name="Compliance Score" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

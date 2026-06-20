@@ -690,20 +690,20 @@ export default function ReferralPDFSummarizer({
               extractedData.diagnoses?.surgical_history?.length > 0 || 
               extractedData.diagnoses?.family_medical_history) && (
               <AccordionItem value="medical-history">
-                <AccordionTrigger className="bg-rose-50 px-4 py-3 rounded-t-lg">
+                <AccordionTrigger className="bg-red-50 px-4 py-3 rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-rose-600" />
+                    <FileText className="w-4 h-4 text-red-600" />
                     <span className="font-semibold">Detailed Medical History</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
                   <div className="space-y-3">
                     {extractedData.diagnoses?.past_medical_history?.length > 0 && (
-                      <div className="bg-rose-50 p-3 rounded">
-                        <p className="text-xs font-semibold text-rose-900 mb-2">Past Medical History</p>
+                      <div className="bg-red-50 p-3 rounded">
+                        <p className="text-xs font-semibold text-red-900 mb-2">Past Medical History</p>
                         <div className="space-y-2">
                           {extractedData.diagnoses.past_medical_history.map((item, i) => (
-                            <div key={i} className="bg-white p-2 rounded border border-rose-200">
+                            <div key={i} className="bg-white p-2 rounded border border-red-200">
                               <p className="text-sm font-semibold text-slate-900">{item.condition || item}</p>
                               {item.onset_date && <p className="text-xs text-slate-600">Onset: {item.onset_date}</p>}
                               {item.current_status && <p className="text-xs text-slate-600">Status: {item.current_status}</p>}

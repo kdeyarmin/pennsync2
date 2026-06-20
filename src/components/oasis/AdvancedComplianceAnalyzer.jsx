@@ -400,7 +400,7 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
           {/* Regulatory Compliance Report */}
           {complianceReport.regulatory_compliance_report?.length > 0 && (
             <Card className="border-2 border-red-400">
-              <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50">
+              <CardHeader className="bg-gradient-to-r from-red-50 to-red-50">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-red-600" />
                   Regulatory Compliance Report ({complianceReport.regulatory_compliance_report.length})

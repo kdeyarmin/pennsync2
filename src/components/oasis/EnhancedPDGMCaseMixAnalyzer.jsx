@@ -217,7 +217,7 @@ Return detailed JSON with exact dollar amounts:`,
     percentage: comp.percentage_of_total
   })) || [];
 
-  const COLORS = ['#6366F1', '#8B5CF6', '#0d9488', '#F59E0B', '#10B981'];
+  const COLORS = ['#264491', '#8B5CF6', '#0d9488', '#F59E0B', '#10B981'];
 
   return (
     <Card className="border-2 border-indigo-200">

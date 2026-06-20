@@ -23,7 +23,7 @@ const TEXT_FORMATTING_OPTIONS = [
 ];
 
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px"];
-const COLORS = ["#000000", "#333333", "#666666", "#1f2937", "#dc2626", "#2563eb"];
+const COLORS = ["#000000", "#333333", "#666666", "#1f2937", "#dc2626", "#264491"];
 
 export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
   const canvasRef = useRef(null);

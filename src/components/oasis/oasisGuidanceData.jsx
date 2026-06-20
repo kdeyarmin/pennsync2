@@ -53,19 +53,19 @@ export const OASIS_GUIDANCE = {
         title: "Post-Surgical Hip Replacement",
         description: "Patient admitted after total hip replacement. Also has diabetes and hypertension managed with medications.",
         recommendedAnswer: "6 — Orthopedic (Hip/Knee) as this is the reason for admission",
-        color: "#6366f1"
+        color: "#264491"
       },
       {
         title: "CHF Exacerbation with Comorbidities",
         description: "Patient admitted due to acute CHF exacerbation requiring IV diuretics. Has history of COPD and diabetes.",
         recommendedAnswer: "2 — Heart Failure / CHF as primary reason for admission",
-        color: "#6366f1"
+        color: "#264491"
       },
       {
         title: "Diabetic Foot Ulcer",
         description: "Patient with poorly controlled diabetes admitted primarily for wound care of stage 3 diabetic foot ulcer.",
         recommendedAnswer: "5 — Wound / Pressure Ulcer (ulcer is primary focus of care)",
-        color: "#6366f1"
+        color: "#264491"
       }
     ],
     howToAnswer: [

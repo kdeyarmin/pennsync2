@@ -138,7 +138,7 @@ const CONDITION_TEMPLATES = [
     name: 'Hypertension',
     icon: Activity,
     description: 'Blood pressure management',
-    color: 'bg-rose-500',
+    color: 'bg-red-500',
     focusAreas: ['bp_monitoring', 'medication_compliance', 'diet_sodium', 'lifestyle_modifications', 'symptom_recognition']
   }
 ];

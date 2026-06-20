@@ -132,7 +132,7 @@ const educationTopics = [
     id: 'anticoagulation',
     title: 'Blood Thinner Management',
     icon: Droplet,
-    color: 'from-rose-500 to-red-500',
+    color: 'from-red-500 to-red-500',
     description: 'Safe use of blood thinners, diet considerations, and recognizing bleeding risks.'
   },
   {
@@ -181,7 +181,7 @@ const educationTopics = [
     id: 'hospice_comfort',
     title: 'Hospice & Comfort Care',
     icon: Heart,
-    color: 'from-gold-500 to-rose-500',
+    color: 'from-gold-500 to-red-500',
     description: 'Comfort measures, symptom management, and supporting loved ones in hospice.'
   }
 ];

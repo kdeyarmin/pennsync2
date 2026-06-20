@@ -149,7 +149,7 @@ export default function OASISComplianceReport({ dateRange }) {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2} name="Completed" />
+                <Line type="monotone" dataKey="completed" stroke="#264491" strokeWidth={2} name="Completed" />
                 <Line type="monotone" dataKey="total" stroke="#94a3b8" strokeWidth={2} name="Total" />
               </LineChart>
             </ResponsiveContainer>
@@ -167,7 +167,7 @@ export default function OASISComplianceReport({ dateRange }) {
                 <XAxis dataKey="type" angle={-15} textAnchor="end" height={80} />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="count" fill="#6366f1" />
+                <Bar dataKey="count" fill="#264491" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

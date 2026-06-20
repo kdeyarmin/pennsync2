@@ -230,7 +230,7 @@ Provide a comprehensive rehospitalization risk assessment with:
               <XAxis dataKey="level" tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" name="Patients" fill="#6366f1" />
+              <Bar dataKey="count" name="Patients" fill="#264491" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

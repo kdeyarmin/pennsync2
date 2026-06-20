@@ -28,7 +28,7 @@ export default function StatCard({
       icon: "text-amber-600"
     },
     critical: {
-      gradient: "from-red-500 to-rose-600",
+      gradient: "from-red-500 to-red-600",
       bg: "bg-red-50",
       icon: "text-red-600"
     },

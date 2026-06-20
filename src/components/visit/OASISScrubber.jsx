@@ -1454,7 +1454,7 @@ Return JSON:
                         purple: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600', label: 'text-navy-900', badge: 'bg-navy-500' },
                         pink: { bg: 'bg-gold-50 border-gold-200', text: 'text-gold-600', label: 'text-gold-900', badge: 'bg-gold-500' },
                         amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600', label: 'text-amber-900', badge: 'bg-amber-500' },
-                        rose: { bg: 'bg-rose-50 border-rose-200', text: 'text-rose-600', label: 'text-rose-900', badge: 'bg-rose-500' },
+                        rose: { bg: 'bg-red-50 border-red-200', text: 'text-red-600', label: 'text-red-900', badge: 'bg-red-500' },
                         teal: { bg: 'bg-teal-50 border-teal-200', text: 'text-teal-600', label: 'text-teal-900', badge: 'bg-teal-500' },
                         indigo: { bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-600', label: 'text-indigo-900', badge: 'bg-indigo-500' },
                         green: { bg: 'bg-green-50 border-green-200', text: 'text-green-600', label: 'text-green-900', badge: 'bg-green-500' },
@@ -1899,7 +1899,7 @@ Return JSON:
                                 purple: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600' },
                                 pink: { bg: 'bg-gold-50 border-gold-200', text: 'text-gold-600' },
                                 amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600' },
-                                rose: { bg: 'bg-rose-50 border-rose-200', text: 'text-rose-600' },
+                                rose: { bg: 'bg-red-50 border-red-200', text: 'text-red-600' },
                                 indigo: { bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-600' },
                                 green: { bg: 'bg-green-50 border-green-200', text: 'text-green-600' },
                               };
@@ -2521,56 +2521,56 @@ Return JSON:
                         )}
 
                         {/* Documentation Gaps */}
-                        <div className="bg-white p-3 rounded border border-rose-200">
+                        <div className="bg-white p-3 rounded border border-red-200">
                           <div className="flex items-start gap-2">
-                            <Badge className="bg-rose-500 text-white text-xs flex-shrink-0">Documentation Gaps</Badge>
+                            <Badge className="bg-red-500 text-white text-xs flex-shrink-0">Documentation Gaps</Badge>
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-rose-900">Key Documentation Gaps Identified</p>
+                              <p className="text-sm font-medium text-red-900">Key Documentation Gaps Identified</p>
                               <div className="mt-2 space-y-2 text-xs">
                                 {/* Check for specific gaps based on analysis */}
                                 {(!extractedIndicators?.clinical?.assistDevices?.detected && oasisResults.functional_score_analysis?.m1860_ambulation?.documented_value > 0) && (
-                                  <div className="bg-rose-50 p-2 rounded">
-                                    <p className="text-rose-800">
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">
                                       <strong>🦯 Assistive Device Gap:</strong> Ambulation limitations documented but no assistive device mentioned. 
                                       Document specific devices (walker, cane, wheelchair) if used.
                                     </p>
                                   </div>
                                 )}
                                 {(!extractedIndicators?.clinical?.fallRisk?.detected) && (
-                                  <div className="bg-rose-50 p-2 rounded">
-                                    <p className="text-rose-800">
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">
                                       <strong>⚠️ Fall Risk Gap:</strong> No fall risk documentation found. 
                                       Document fall history, risk factors, environmental hazards, and interventions implemented.
                                     </p>
                                   </div>
                                 )}
                                 {(!extractedIndicators?.clinical?.painMentioned?.detected) && (
-                                  <div className="bg-rose-50 p-2 rounded">
-                                    <p className="text-rose-800">
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">
                                       <strong>💊 Pain Assessment Gap:</strong> No pain documentation found. 
                                       Document pain level (0-10), location, quality, frequency, and management plan.
                                     </p>
                                   </div>
                                 )}
                                 {(!extractedIndicators?.clinical?.cognitiveIssues?.detected && patient?.primary_diagnosis?.toLowerCase().includes('dementia')) && (
-                                  <div className="bg-rose-50 p-2 rounded">
-                                    <p className="text-rose-800">
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">
                                       <strong>🧠 Cognitive Assessment Gap:</strong> Dementia diagnosis but limited cognitive documentation. 
                                       Document orientation status, BIMS score, memory deficits, and safety concerns.
                                     </p>
                                   </div>
                                 )}
                                 {oasisResults.vague_documentation?.length > 0 && (
-                                  <div className="bg-rose-50 p-2 rounded">
-                                    <p className="text-rose-800">
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">
                                       <strong>📝 Vague Language:</strong> {oasisResults.vague_documentation.length} items have vague documentation 
                                       that could support multiple scores. See "Vague Documentation" section for specific improvements.
                                     </p>
                                   </div>
                                 )}
                                 {oasisResults.cross_validation_failures?.length > 0 && (
-                                  <div className="bg-rose-50 p-2 rounded">
-                                    <p className="text-rose-800">
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">
                                       <strong>🔗 Cross-Validation:</strong> {oasisResults.cross_validation_failures.length} item relationships 
                                       don't align per CMS rules. Fix these to avoid audit flags.
                                     </p>

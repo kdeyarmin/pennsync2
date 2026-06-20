@@ -131,7 +131,7 @@ export default function DocumentAnalytics() {
                     <XAxis type="number" allowDecimals={false} />
                     <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
                     <Tooltip formatter={(value) => [`${value} Signatures`, 'Completed']} />
-                    <Bar dataKey="count" fill="#4f46e5" radius={[0, 4, 4, 0]} barSize={30} />
+                    <Bar dataKey="count" fill="#264491" radius={[0, 4, 4, 0]} barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

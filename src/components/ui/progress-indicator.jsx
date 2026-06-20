@@ -8,7 +8,7 @@ export function ProgressBar({ value = 0, max = 100, label, variant = "default", 
     default: "from-blue-500 to-indigo-600",
     success: "from-green-500 to-emerald-600",
     warning: "from-amber-500 to-orange-600",
-    critical: "from-red-500 to-rose-600",
+    critical: "from-red-500 to-red-600",
     ai: "from-navy-500 to-indigo-600"
   };
 

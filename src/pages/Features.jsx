@@ -547,17 +547,17 @@ export default function FeaturesPage() {
   <title>Penn Sync Features Guide</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-    h1 { color: #4F46E5; text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 10px; }
+    h1 { color: #264491; text-align: center; border-bottom: 3px solid #264491; padding-bottom: 10px; }
     .logo-header { text-align: center; margin-bottom: 20px; }
     .logo-header img { width: 100px; height: 100px; margin-bottom: 10px; }
-    h2 { color: #6366F1; margin-top: 30px; border-left: 4px solid #6366F1; padding-left: 10px; }
+    h2 { color: #264491; margin-top: 30px; border-left: 4px solid #264491; padding-left: 10px; }
     h3 { color: #1F2937; margin-top: 20px; }
     .feature { background: #F9FAFB; border-radius: 8px; padding: 15px; margin: 15px 0; border: 1px solid #E5E7EB; page-break-inside: avoid; }
     .feature-name { font-weight: bold; font-size: 16px; color: #1F2937; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 8px; }
     .critical { background: #FEE2E2; color: #DC2626; }
     .high { background: #FED7AA; color: #EA580C; }
-    .medium { background: #DBEAFE; color: #2563EB; }
+    .medium { background: #DBEAFE; color: #264491; }
     .time-saved { color: #059669; font-weight: bold; }
     .how-to { background: #EFF6FF; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
     .section { page-break-inside: avoid; }
@@ -654,10 +654,10 @@ export default function FeaturesPage() {
   <title>Penn Sync User Manual</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-    h1 { color: #4F46E5; text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 10px; page-break-after: avoid; }
+    h1 { color: #264491; text-align: center; border-bottom: 3px solid #264491; padding-bottom: 10px; page-break-after: avoid; }
     .logo-header { text-align: center; margin-bottom: 20px; page-break-inside: avoid; }
     .logo-header img { width: 100px; height: 100px; margin-bottom: 10px; }
-    h2 { color: #6366F1; margin-top: 30px; border-left: 4px solid #6366F1; padding-left: 10px; page-break-after: avoid; }
+    h2 { color: #264491; margin-top: 30px; border-left: 4px solid #264491; padding-left: 10px; page-break-after: avoid; }
     h3 { color: #1F2937; margin-top: 20px; page-break-after: avoid; }
     h4 { color: #4B5563; margin-top: 15px; }
     .section { page-break-inside: avoid; margin-bottom: 30px; }

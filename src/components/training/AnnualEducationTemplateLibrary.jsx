@@ -386,8 +386,8 @@ const REGULATORY_CATEGORIES = [
     id: "pa_child_abuse",
     name: "PA Child Abuse Recognition (Act 31)",
     icon: Baby,
-    color: "bg-rose-100 text-rose-800 border-rose-200",
-    iconColor: "text-rose-600",
+    color: "bg-red-100 text-red-800 border-red-200",
+    iconColor: "text-red-600",
     templates: [
       {
         name: "PA Act 31 — Child Abuse Recognition & Reporting",

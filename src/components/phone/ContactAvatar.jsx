@@ -7,7 +7,7 @@ const COLORS = [
   "bg-blue-500",
   "bg-emerald-500",
   "bg-navy-500",
-  "bg-rose-500",
+  "bg-red-500",
   "bg-amber-500",
   "bg-navy-600",
   "bg-indigo-500",

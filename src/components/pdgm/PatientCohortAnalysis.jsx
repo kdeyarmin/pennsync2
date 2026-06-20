@@ -137,7 +137,7 @@ export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
                 <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                 <Tooltip formatter={(value) => formatCurrency(value)} />
                 <Legend />
-                <Bar dataKey="predicted_revenue" name="Predicted" fill="#6366f1" />
+                <Bar dataKey="predicted_revenue" name="Predicted" fill="#264491" />
                 <Bar dataKey="actual_revenue" name="Actual" fill="#22c55e" />
               </BarChart>
             </ResponsiveContainer>

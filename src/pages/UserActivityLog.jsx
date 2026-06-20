@@ -157,7 +157,7 @@ export default function UserActivityLog() {
       'care_plan_update': 'bg-lime-100 text-lime-800',
       'task_create': 'bg-amber-100 text-amber-800',
       'task_complete': 'bg-green-100 text-green-800',
-      'incident_report': 'bg-rose-100 text-rose-800',
+      'incident_report': 'bg-red-100 text-red-800',
       'training_complete': 'bg-navy-100 text-navy-800',
       'note_enhanced': 'bg-indigo-100 text-indigo-800',
       'note_compliance_check': 'bg-blue-100 text-blue-800',
