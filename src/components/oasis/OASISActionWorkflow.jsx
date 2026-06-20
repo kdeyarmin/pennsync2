@@ -246,7 +246,7 @@ export default function OASISActionWorkflow({
   const parseRevenueImpact = (text) => {
     if (!text) return 0;
     const match = text.match(/\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-    return match ? parseFloat(match[1].replace(',', '')) : 0;
+    return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
   };
 
   const handleReview = (action, decision) => {

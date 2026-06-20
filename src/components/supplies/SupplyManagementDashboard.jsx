@@ -280,7 +280,7 @@ export default function SupplyManagementDashboard() {
                           {supply.category.replace(/_/g, " ")} • {supply.unit}
                         </p>
                       </div>
-                      <Badge className={statusColor}>{supply.status.replace("_", " ")}</Badge>
+                      <Badge className={statusColor}>{(supply.status || "unknown").replace("_", " ")}</Badge>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-4 mb-3">

@@ -26,8 +26,10 @@ Deno.serve(async (req) => {
     if (patient_id) {
       if (!isAdmin) {
         const [patient] = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
-        const assigned = Array.isArray(patient?.assigned_nurses) && patient.assigned_nurses.includes(user.email);
-        if (!assigned) return Response.json({ error: 'Forbidden' }, { status: 403 });
+        // Mirror the Patient RLS: assigned nurse OR creator OR admin.
+        const allowed = patient?.created_by === user.email
+          || (Array.isArray(patient?.assigned_nurses) && patient.assigned_nurses.includes(user.email));
+        if (!allowed) return Response.json({ error: 'Forbidden' }, { status: 403 });
       }
       const alerts = await base44.asServiceRole.entities.PatientAlert.filter({ patient_id }, '-created_date', cap);
       return Response.json({ alerts });
@@ -39,12 +41,17 @@ Deno.serve(async (req) => {
       return Response.json({ alerts });
     }
 
-    // Non-admin: restrict to the caller's assigned patients. Query the alerts
-    // BY those patient ids (not a global window then filter) so a busy tenant's
+    // Non-admin: restrict to the caller's accessible patients — those assigned to
+    // them OR created by them (the Patient RLS grants both). Query the alerts BY
+    // those patient ids (not a global window then filter) so a busy tenant's
     // other-patient alerts can't truncate an authorized patient's older alert.
-    const myPatients = await base44.asServiceRole.entities.Patient
-      .filter({ assigned_nurses: user.email }, '-created_date', 1000).catch(() => []);
-    const allowedIds = (myPatients || []).map((p: any) => p.id).filter(Boolean);
+    const [assignedPatients, createdPatients] = await Promise.all([
+      base44.asServiceRole.entities.Patient.filter({ assigned_nurses: user.email }, '-created_date', 1000).catch(() => []),
+      base44.asServiceRole.entities.Patient.filter({ created_by: user.email }, '-created_date', 1000).catch(() => []),
+    ]);
+    const allowedIds = [...new Set(
+      [...(assignedPatients || []), ...(createdPatients || [])].map((p: any) => p.id).filter(Boolean)
+    )];
     if (allowedIds.length === 0) return Response.json({ alerts: [] });
 
     const alerts = await base44.asServiceRole.entities.PatientAlert

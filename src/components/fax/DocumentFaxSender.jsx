@@ -66,7 +66,7 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
         const merged = await base44.functions.invoke('mergePDFs', {
           pdf_urls: [coverSheetUrl, fileUrl]
         });
-        fileUrl = merged.data?.merged_url || fileUrl;
+        fileUrl = merged.data?.merged_pdf_url || fileUrl;
       }
       await sendFax({
         file_url: fileUrl,

@@ -41,12 +41,20 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
-    // Check if all signatures in the package are now signed
-    const allSignatures = await base44.asServiceRole.entities.DocumentSignature.filter({
-      package_id: signature.package_id,
-    });
-
-    const allSigned = allSignatures.every((sig) => sig.status === 'signed');
+    // Determine completion from the package's declared membership
+    // (pkg.document_signatures = array of signature ids), the authoritative
+    // source. The creators don't always back-fill package_id onto each
+    // DocumentSignature, so filter({ package_id }) could return an EMPTY set and
+    // [].every() === true would mark a package "completed" with NOTHING signed.
+    // Mirror checkPendingSignatureRequests.
+    const memberIds = Array.isArray(pkg.document_signatures) ? pkg.document_signatures : [];
+    const members = await Promise.all(
+      memberIds.map((id) => base44.asServiceRole.entities.DocumentSignature.get(id).catch(() => null))
+    );
+    const present = members.filter(Boolean);
+    const allSigned = memberIds.length > 0 &&
+      present.length === memberIds.length &&
+      present.every((sig) => sig.status === 'signed');
 
     // Update package status if all documents are signed
     if (allSigned) {

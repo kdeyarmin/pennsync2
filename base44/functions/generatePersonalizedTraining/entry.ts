@@ -10,6 +10,13 @@ Deno.serve(async (req) => {
     }
 
     const { skill_gap, nurse_email } = await req.json();
+    // Only admins may build training from another nurse's PHI/performance data.
+    // Mirrors the guard in generatePersonalizedLearningPath; without it any
+    // authenticated user could read another nurse's ComplianceAudit /
+    // TrainingRecommendation / UserActivity via the service-role reads below.
+    if (nurse_email && nurse_email !== user.email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const targetEmail = nurse_email || user.email;
 
     // Fetch nurse performance data

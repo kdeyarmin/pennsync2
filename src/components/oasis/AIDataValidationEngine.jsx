@@ -203,7 +203,7 @@ For each issue found, provide:
     setIsValidating(false);
   };
 
-  const applyCorrection = (correction) => {
+  const applyCorrection = (correction, key) => {
     if (onCorrection) {
       onCorrection({
         m_item_code: correction.m_item_code,
@@ -212,7 +212,9 @@ For each issue found, provide:
         justification: correction.clinical_evidence || correction.justification
       });
     }
-    setAppliedCorrections(prev => new Set([...prev, correction.m_item_code]));
+    // Key on a stable per-row id so issues that share a missing/duplicate
+    // m_item_code don't ALL flip to "Applied" when one of them is applied.
+    setAppliedCorrections(prev => new Set([...prev, key ?? correction.m_item_code]));
   };
 
   const getSeverityColor = (severity) => {
@@ -313,7 +315,7 @@ For each issue found, provide:
                               </Badge>
                             </div>
                             <Badge variant="outline" className="text-xs">
-                              {issue.inconsistency_type.replace(/_/g, ' ')}
+                              {issue.inconsistency_type?.replace(/_/g, ' ')}
                             </Badge>
                           </div>
                         </div>
@@ -405,17 +407,17 @@ For each issue found, provide:
                           </div>
                         )}
 
-                        {!appliedCorrections.has(issue.m_item_code) && (
+                        {!appliedCorrections.has(issue.m_item_code || `inc-${idx}`) && (
                           <Button
                             size="sm"
-                            onClick={() => applyCorrection(issue)}
+                            onClick={() => applyCorrection(issue, issue.m_item_code || `inc-${idx}`)}
                             className="bg-green-600 hover:bg-green-700 text-white"
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             Apply Correction
                           </Button>
                         )}
-                        {appliedCorrections.has(issue.m_item_code) && (
+                        {appliedCorrections.has(issue.m_item_code || `inc-${idx}`) && (
                           <Badge className="bg-green-600 text-white">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             Applied
@@ -482,10 +484,10 @@ For each issue found, provide:
                         </Alert>
                       )}
 
-                      {!appliedCorrections.has(opt.m_item_code) && (
+                      {!appliedCorrections.has(opt.m_item_code || `opt-${idx}`) && (
                         <Button
                           size="sm"
-                          onClick={() => applyCorrection(opt)}
+                          onClick={() => applyCorrection(opt, opt.m_item_code || `opt-${idx}`)}
                           className="bg-green-600 hover:bg-green-700 text-white mt-2"
                         >
                           Apply Optimization

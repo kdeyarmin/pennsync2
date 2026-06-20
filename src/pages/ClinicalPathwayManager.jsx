@@ -631,7 +631,7 @@ export default function ClinicalPathwayManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Clinical Pathway</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{pathwayToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{pathwayToDelete?.pathway_name}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -96,8 +96,8 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     new Date(b.created_date || b.timestamp) - new Date(a.created_date || a.timestamp)
   );
 
-  const uniqueUsers = [...new Set(sortedLogs.map(log => log.user_email))];
-  const uniqueActions = [...new Set(sortedLogs.map(log => log.action))];
+  const uniqueUsers = [...new Set(sortedLogs.map(log => log.user_email).filter(Boolean))];
+  const uniqueActions = [...new Set(sortedLogs.map(log => log.action).filter(Boolean))];
   const uniqueEntities = [...new Set(sortedLogs.map(log => log.entity_type).filter(Boolean))];
 
   const filteredLogs = sortedLogs.filter(log => {

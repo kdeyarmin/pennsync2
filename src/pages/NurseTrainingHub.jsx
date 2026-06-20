@@ -87,7 +87,7 @@ export default function NurseTrainingHub() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['myTrainingCompletions']);
+      queryClient.invalidateQueries({ queryKey: ['myTrainingCompletions'] });
       setActiveTraining(null);
       setSelectedModule(null);
     }
@@ -204,7 +204,7 @@ export default function NurseTrainingHub() {
           <PersonalizedTrainingRecommender
             skillGaps={skillGaps}
             onStartTraining={(gap) => generateTrainingMutation.mutate(gap)}
-            isGenerating={generateTrainingMutation.isLoading}
+            isGenerating={generateTrainingMutation.isPending}
           />
 
           {/* AI-Generated Training Section */}
@@ -230,10 +230,10 @@ export default function NurseTrainingHub() {
                       </div>
                       <Button
                         onClick={() => generateTrainingMutation.mutate(gap.skill)}
-                        disabled={generateTrainingMutation.isLoading}
+                        disabled={generateTrainingMutation.isPending}
                         className="bg-purple-600 hover:bg-purple-700"
                       >
-                        {generateTrainingMutation.isLoading ? (
+                        {generateTrainingMutation.isPending ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Generating...

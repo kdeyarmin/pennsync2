@@ -34,7 +34,7 @@ export default function FaxPriorityRuleManager() {
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.FaxPriorityRule.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-priority-rules']);
+      queryClient.invalidateQueries({ queryKey: ['fax-priority-rules'] });
       toast.success("Rule created");
       resetForm();
     }
@@ -43,7 +43,7 @@ export default function FaxPriorityRuleManager() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.FaxPriorityRule.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-priority-rules']);
+      queryClient.invalidateQueries({ queryKey: ['fax-priority-rules'] });
       toast.success("Rule updated");
       setEditingId(null);
     }
@@ -52,7 +52,7 @@ export default function FaxPriorityRuleManager() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.FaxPriorityRule.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-priority-rules']);
+      queryClient.invalidateQueries({ queryKey: ['fax-priority-rules'] });
       toast.success("Rule deleted");
     }
   });

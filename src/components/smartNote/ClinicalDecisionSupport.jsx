@@ -846,20 +846,30 @@ Return JSON:
 
   const hasCriticalAlerts = immediateAlerts.some(a => a.severity === 'critical');
 
+  // These must match the keys the AI actually returns (and that the panel below
+  // renders): immediate_actions / vital_concerns / assessments_needed_now /
+  // patient_education_now / evidence_based_interventions / next_visit_planning /
+  // physician_notification. The previous keys (required_assessments,
+  // potentially_missed, education_points, safety_checks, suggested_interventions)
+  // were never in the schema, so the whole panel stayed hidden and the badge
+  // count was wrong whenever there were no vital_concerns.
   const hasProactiveAlerts = proactiveAlerts && (
+    proactiveAlerts.immediate_actions?.length > 0 ||
     proactiveAlerts.vital_concerns?.length > 0 ||
-    proactiveAlerts.required_assessments?.length > 0 ||
-    proactiveAlerts.potentially_missed?.length > 0 ||
-    proactiveAlerts.education_points?.length > 0 ||
-    proactiveAlerts.safety_checks?.length > 0 ||
-    proactiveAlerts.suggested_interventions?.length > 0
+    proactiveAlerts.assessments_needed_now?.length > 0 ||
+    proactiveAlerts.patient_education_now?.length > 0 ||
+    proactiveAlerts.evidence_based_interventions?.length > 0 ||
+    proactiveAlerts.next_visit_planning?.length > 0 ||
+    proactiveAlerts.physician_notification?.needed === true
   );
 
   const totalProactiveItems = proactiveAlerts ? (
+    (proactiveAlerts.immediate_actions?.length || 0) +
     (proactiveAlerts.vital_concerns?.length || 0) +
-    (proactiveAlerts.required_assessments?.length || 0) +
-    (proactiveAlerts.potentially_missed?.length || 0) +
-    (proactiveAlerts.education_points?.length || 0)
+    (proactiveAlerts.assessments_needed_now?.length || 0) +
+    (proactiveAlerts.patient_education_now?.length || 0) +
+    (proactiveAlerts.evidence_based_interventions?.length || 0) +
+    (proactiveAlerts.next_visit_planning?.length || 0)
   ) : 0;
 
   const getPriorityColor = (priority) => {

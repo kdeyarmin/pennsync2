@@ -48,19 +48,33 @@ export default function ModuleViewer({ module, userEmail, onComplete }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myTrainingCompletions'] });
       queryClient.invalidateQueries({ queryKey: ['trainingCompletions'] });
+      // Also refresh the sibling dashboards that read completion data under
+      // different keys, otherwise they show stale progress after completion.
+      queryClient.invalidateQueries({ queryKey: ['nurseCompletions'] });
+      queryClient.invalidateQueries({ queryKey: ['certifications'] });
+      queryClient.invalidateQueries({ queryKey: ['moduleCompletions'] });
       onComplete?.();
     },
   });
 
-  const handleMarkComplete = () => {
+  const handleMarkComplete = async () => {
+    // Bracket the actual async write so the disabled/spinner UI engages during it.
+    // The old code set completing true then false in the same tick (mutate() is
+    // non-blocking), so the guard never showed and a rapid double-click could
+    // race the dedupe check into a duplicate completion.
     setCompleting(true);
-    markCompleteMutation.mutate({
-      status: 'completed',
-      completion_date: new Date().toISOString().split('T')[0],
-      feedback,
-      effectiveness_rating: rating,
-    });
-    setCompleting(false);
+    try {
+      await markCompleteMutation.mutateAsync({
+        status: 'completed',
+        completion_date: new Date().toISOString().split('T')[0],
+        feedback,
+        effectiveness_rating: rating,
+      });
+    } catch (e) {
+      console.error('Failed to mark module complete:', e);
+    } finally {
+      setCompleting(false);
+    }
   };
 
   const handleQuizComplete = (result) => {

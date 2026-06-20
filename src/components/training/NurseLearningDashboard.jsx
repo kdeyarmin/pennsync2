@@ -154,7 +154,7 @@ export default function NurseLearningDashboard({
                           </Button>
                         ))}
                       {deficitAnalysis.recommendations
-                        .find(r => r.category === deficit.category)
+                        ?.find(r => r.category === deficit.category)
                         ?.suggestedQuizzes?.slice(0, 1).map((quizId, i) => (
                           <Button
                             key={i}

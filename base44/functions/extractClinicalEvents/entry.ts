@@ -15,6 +15,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Authorize: only an assigned nurse (or admin) may write ClinicalEvent / Task
+    // / PatientAlert rows to this patient's chart. RLS-independent code check.
+    const [evPatient] = await base44.asServiceRole.entities.Patient.filter({ id: patient_id }, '', 1);
+    if (!evPatient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+    if (user.role !== 'admin' && evPatient.created_by !== user.email && !(Array.isArray(evPatient.assigned_nurses) && evPatient.assigned_nurses.includes(user.email))) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Use AI to extract clinical events from the note
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `Extract ALL significant clinical events from this nursing note. Be thorough and capture everything that should be tracked.

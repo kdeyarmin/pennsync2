@@ -66,12 +66,12 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
         
         const updatedInterventions = [
           ...(carePlan.interventions || []),
-          ...proposal.proposed_interventions
+          ...(proposal.proposed_interventions || [])
         ];
 
         const updatedGoals = [
           ...(carePlan.goals || []),
-          ...proposal.proposed_goals
+          ...(proposal.proposed_goals || [])
         ];
 
         await base44.entities.CarePlan.update(proposal.care_plan_id, {

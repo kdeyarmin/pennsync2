@@ -191,21 +191,21 @@ Referral Data: ${JSON.stringify(referralData)}`,
   return (
     <div className="space-y-4">
       {/* Urgency Header */}
-      <Alert className={`border-2 ${analysis.urgency_analysis.priority_level === 'STAT' || analysis.urgency_analysis.priority_level === 'High' ? 'bg-red-50 border-red-300' : 'bg-blue-50 border-blue-300'}`}>
+      <Alert className={`border-2 ${analysis.urgency_analysis?.priority_level === 'STAT' || analysis.urgency_analysis?.priority_level === 'High' ? 'bg-red-50 border-red-300' : 'bg-blue-50 border-blue-300'}`}>
         <TrendingUp className="w-5 h-5" />
         <AlertDescription>
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold text-lg mb-1">
-                Referral Priority: <Badge className={getPriorityColor(analysis.urgency_analysis.priority_level)}>
-                  {analysis.urgency_analysis.priority_level}
+                Referral Priority: <Badge className={getPriorityColor(analysis.urgency_analysis?.priority_level)}>
+                  {analysis.urgency_analysis?.priority_level}
                 </Badge>
               </p>
-              <p className="text-sm">Urgency Score: {analysis.urgency_analysis.overall_urgency_score}/100</p>
+              <p className="text-sm">Urgency Score: {analysis.urgency_analysis?.overall_urgency_score}/100</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-slate-600">Clinical: {analysis.urgency_analysis.clinical_urgency_score}</p>
-              <p className="text-xs text-slate-600">Administrative: {analysis.urgency_analysis.administrative_urgency_score}</p>
+              <p className="text-xs text-slate-600">Clinical: {analysis.urgency_analysis?.clinical_urgency_score}</p>
+              <p className="text-xs text-slate-600">Administrative: {analysis.urgency_analysis?.administrative_urgency_score}</p>
             </div>
           </div>
         </AlertDescription>
@@ -223,15 +223,15 @@ Referral Data: ${JSON.stringify(referralData)}`,
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-medium">Data Completeness</p>
-              <Badge className="bg-blue-600">{analysis.missing_information.data_completeness_score}%</Badge>
+              <Badge className="bg-blue-600">{analysis.missing_information?.data_completeness_score}%</Badge>
             </div>
 
-            {analysis.missing_information.critical_missing?.length > 0 && (
+            {analysis.missing_information?.critical_missing?.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-red-900 flex items-center gap-1">
-                  <XCircle className="w-4 h-4" /> Critical Missing ({analysis.missing_information.critical_missing.length})
+                  <XCircle className="w-4 h-4" /> Critical Missing ({analysis.missing_information?.critical_missing.length})
                 </p>
-                {analysis.missing_information.critical_missing.map((item, idx) => (
+                {analysis.missing_information?.critical_missing.map((item, idx) => (
                   <div key={idx} className="bg-red-50 p-2 rounded border border-red-200 text-xs">
                     <p className="font-semibold text-red-900">{item.field_name}</p>
                     <p className="text-slate-700">{item.why_critical}</p>
@@ -241,12 +241,12 @@ Referral Data: ${JSON.stringify(referralData)}`,
               </div>
             )}
 
-            {analysis.missing_information.recommended_missing?.length > 0 && (
+            {analysis.missing_information?.recommended_missing?.length > 0 && (
               <div className="space-y-2 mt-3">
                 <p className="text-xs font-semibold text-yellow-900 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" /> Recommended ({analysis.missing_information.recommended_missing.length})
+                  <AlertCircle className="w-4 h-4" /> Recommended ({analysis.missing_information?.recommended_missing.length})
                 </p>
-                {analysis.missing_information.recommended_missing.map((item, idx) => (
+                {analysis.missing_information?.recommended_missing.map((item, idx) => (
                   <div key={idx} className="bg-yellow-50 p-2 rounded border border-yellow-200 text-xs">
                     <p className="font-semibold text-yellow-900">{item.field_name}</p>
                     <p className="text-slate-700">{item.why_helpful}</p>
@@ -268,40 +268,40 @@ Referral Data: ${JSON.stringify(referralData)}`,
           <CardContent className="space-y-3">
             <div className="bg-green-50 p-3 rounded border border-green-200">
               <p className="text-xs font-semibold text-green-900 mb-2">⏰ First Visit Timeframe</p>
-              <p className="text-sm font-bold text-slate-900">{analysis.scheduling_recommendations.ideal_first_visit_timeframe}</p>
+              <p className="text-sm font-bold text-slate-900">{analysis.scheduling_recommendations?.ideal_first_visit_timeframe}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-blue-50 p-2 rounded border border-blue-200">
                 <p className="font-semibold text-blue-900">Frequency</p>
-                <p className="text-slate-900">{analysis.scheduling_recommendations.recommended_visit_frequency}</p>
+                <p className="text-slate-900">{analysis.scheduling_recommendations?.recommended_visit_frequency}</p>
               </div>
               <div className="bg-purple-50 p-2 rounded border border-purple-200">
                 <p className="font-semibold text-purple-900">Duration</p>
-                <p className="text-slate-900">{analysis.scheduling_recommendations.estimated_visit_duration_minutes} min</p>
+                <p className="text-slate-900">{analysis.scheduling_recommendations?.estimated_visit_duration_minutes} min</p>
               </div>
             </div>
 
-            {analysis.scheduling_recommendations.preferred_time_of_day && (
+            {analysis.scheduling_recommendations?.preferred_time_of_day && (
               <div className="bg-indigo-50 p-2 rounded border border-indigo-200 text-xs">
                 <p className="font-semibold text-indigo-900">Preferred Time</p>
-                <p className="text-slate-900">{analysis.scheduling_recommendations.preferred_time_of_day}</p>
+                <p className="text-slate-900">{analysis.scheduling_recommendations?.preferred_time_of_day}</p>
               </div>
             )}
 
-            {analysis.scheduling_recommendations.location_notes && (
+            {analysis.scheduling_recommendations?.location_notes && (
               <div className="bg-slate-50 p-2 rounded border border-slate-200 text-xs">
                 <p className="font-semibold text-slate-900 flex items-center gap-1">
                   <MapPin className="w-3 h-3" /> Location Notes
                 </p>
-                <p className="text-slate-700">{analysis.scheduling_recommendations.location_notes}</p>
+                <p className="text-slate-700">{analysis.scheduling_recommendations?.location_notes}</p>
               </div>
             )}
 
-            {analysis.scheduling_recommendations.special_considerations?.length > 0 && (
+            {analysis.scheduling_recommendations?.special_considerations?.length > 0 && (
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-slate-900">Special Considerations:</p>
-                {analysis.scheduling_recommendations.special_considerations.map((item, idx) => (
+                {analysis.scheduling_recommendations?.special_considerations.map((item, idx) => (
                   <p key={idx} className="text-xs text-slate-700">• {item}</p>
                 ))}
               </div>
@@ -316,12 +316,12 @@ Referral Data: ${JSON.stringify(referralData)}`,
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="w-5 h-5 text-red-600" />
-              Risk Flags ({analysis.risk_flags.length})
+              Risk Flags ({analysis.risk_flags?.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-3">
-              {analysis.risk_flags.map((risk, idx) => (
+              {analysis.risk_flags?.map((risk, idx) => (
                 <div key={idx} className={`p-3 rounded-lg border-2 ${getSeverityColor(risk.severity)}`}>
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-semibold text-sm">{risk.risk_type}</p>
@@ -353,36 +353,36 @@ Referral Data: ${JSON.stringify(referralData)}`,
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-semibold text-slate-900 mb-2">Experience Level Required:</p>
-              <Badge className="bg-purple-600 text-white">{analysis.nurse_requirements.experience_level}</Badge>
+              <Badge className="bg-purple-600 text-white">{analysis.nurse_requirements?.experience_level}</Badge>
             </div>
 
-            {analysis.nurse_requirements.required_certifications?.length > 0 && (
+            {analysis.nurse_requirements?.required_certifications?.length > 0 && (
               <div>
                 <p className="text-sm font-semibold text-slate-900 mb-2">Required Certifications:</p>
                 <div className="flex flex-wrap gap-1">
-                  {analysis.nurse_requirements.required_certifications.map((cert, idx) => (
+                  {analysis.nurse_requirements?.required_certifications.map((cert, idx) => (
                     <Badge key={idx} variant="outline">{cert}</Badge>
                   ))}
                 </div>
               </div>
             )}
 
-            {analysis.nurse_requirements.special_skills?.length > 0 && (
+            {analysis.nurse_requirements?.special_skills?.length > 0 && (
               <div className="md:col-span-2">
                 <p className="text-sm font-semibold text-slate-900 mb-2">Special Skills:</p>
                 <div className="flex flex-wrap gap-1">
-                  {analysis.nurse_requirements.special_skills.map((skill, idx) => (
+                  {analysis.nurse_requirements?.special_skills.map((skill, idx) => (
                     <Badge key={idx} className="bg-blue-100 text-blue-800">{skill}</Badge>
                   ))}
                 </div>
               </div>
             )}
 
-            {analysis.nurse_requirements.language_requirements?.length > 0 && (
+            {analysis.nurse_requirements?.language_requirements?.length > 0 && (
               <div>
                 <p className="text-sm font-semibold text-slate-900 mb-2">Language Requirements:</p>
                 <div className="flex flex-wrap gap-1">
-                  {analysis.nurse_requirements.language_requirements.map((lang, idx) => (
+                  {analysis.nurse_requirements?.language_requirements.map((lang, idx) => (
                     <Badge key={idx} className="bg-green-100 text-green-800">{lang}</Badge>
                   ))}
                 </div>
@@ -402,14 +402,14 @@ Referral Data: ${JSON.stringify(referralData)}`,
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="bg-blue-50 p-3 rounded border border-blue-200">
-            <p className="text-sm text-slate-900">{analysis.urgency_analysis.reasoning}</p>
+            <p className="text-sm text-slate-900">{analysis.urgency_analysis?.reasoning}</p>
           </div>
 
-          {analysis.urgency_analysis.urgency_factors?.length > 0 && (
+          {analysis.urgency_analysis?.urgency_factors?.length > 0 && (
             <div>
               <p className="text-sm font-semibold text-slate-900 mb-2">Key Urgency Factors:</p>
               <ul className="space-y-1">
-                {analysis.urgency_analysis.urgency_factors.map((factor, idx) => (
+                {analysis.urgency_analysis?.urgency_factors.map((factor, idx) => (
                   <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5">•</span>
                     <span>{factor}</span>

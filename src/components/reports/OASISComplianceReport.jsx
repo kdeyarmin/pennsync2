@@ -22,12 +22,12 @@ export default function OASISComplianceReport({ dateRange }) {
 
   const filteredOASIS = oasisAssessments.filter(o => {
     const date = new Date(o.assessment_date);
-    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end);
+    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end + 'T23:59:59.999');
   });
 
   const filteredAudits = complianceAudits.filter(a => {
     const date = new Date(a.audit_date);
-    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end);
+    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end + 'T23:59:59.999');
   });
 
   // Calculate metrics
@@ -77,7 +77,7 @@ export default function OASISComplianceReport({ dateRange }) {
     exportToPDF({
       filename: `oasis-compliance-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
       title: 'OASIS Compliance Report',
-      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end), 'MMM d, yyyy')}`,
+      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}`,
       content: [
         { type: 'heading', text: 'Compliance Summary' },
         { type: 'text', text: `Total OASIS Assessments: ${totalOASIS}` },
@@ -99,7 +99,7 @@ export default function OASISComplianceReport({ dateRange }) {
         <div>
           <h3 className="text-xl font-semibold text-slate-900">OASIS Compliance Analysis</h3>
           <p className="text-sm text-slate-600">
-            {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end), 'MMM d, yyyy')}
+            {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}
           </p>
         </div>
         <Button onClick={handleExport} className="bg-indigo-600 hover:bg-indigo-700">

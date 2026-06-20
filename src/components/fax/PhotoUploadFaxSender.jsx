@@ -86,7 +86,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         const merged = await base44.functions.invoke('mergePDFs', {
           pdf_urls: [coverSheetUrl, pdfUrl]
         });
-        pdfUrl = merged.data?.merged_url || pdfUrl;
+        pdfUrl = merged.data?.merged_pdf_url || pdfUrl;
       }
       await base44.functions.invoke('sendFax', {
         to_number: toNumber,
@@ -98,7 +98,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
       setToNumber("");
       setSignatureDataUrl(null);
       setCoverSheetUrl(null);
-      queryClient.invalidateQueries(['fax-logs']);
+      queryClient.invalidateQueries({ queryKey: ['fax-logs'] });
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
     } finally {

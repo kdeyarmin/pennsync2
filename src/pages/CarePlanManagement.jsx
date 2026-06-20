@@ -895,7 +895,7 @@ export default function CarePlanManagement() {
         </TabsContent>
 
         <TabsContent value="builder">
-          <BuilderTab />
+          {BuilderTab()}
         </TabsContent>
       </Tabs>
 

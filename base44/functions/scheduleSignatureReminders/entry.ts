@@ -28,15 +28,22 @@ Deno.serve(async (req) => {
 
     // Create reminder records for tracking
     for (const email of signer_emails) {
-      await base44.entities.Notification.create({
+      // The previous create used the user-scoped client (Notification write-RLS
+      // is admin-only) AND a `subject` field, an invalid `type`, and non-existent
+      // `related_*`/`scheduled_for` fields — so every call threw on the first
+      // signer and NO reminder was ever created (the loop 500'd for all callers).
+      // Use the service-role client and the real schema (required
+      // user_email/title/message/type + a valid enum type).
+      await base44.asServiceRole.entities.Notification.create({
         user_email: email,
-        subject: `[REMINDER] Signature Pending - Document Due Soon`,
-        message: `This is a reminder that you have a document pending signature. Please review and sign by ${new Date(deadline_date).toLocaleDateString()}.`,
-        type: "signature_reminder",
-        related_entity: "DocumentSignature",
-        related_id: document_id,
+        title: 'Signature Pending — Document Due Soon',
+        message: `You have a document pending signature. Please review and sign by ${new Date(deadline_date).toLocaleDateString()}.`,
+        type: 'task_due_soon',
+        priority: 'high',
         is_read: false,
-        scheduled_for: reminderIso
+        // No action_url: the signer portal is reached via a per-signer tokenized
+        // link (/signer?token=...) which this cron doesn't have, and a bare
+        // /SignerPortal?document= path doesn't exist — a dead link is worse than none.
       });
     }
 

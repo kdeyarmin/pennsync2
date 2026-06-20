@@ -2,13 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Plus } from "lucide-react";
-import { formatEastern } from "../utils/timezone";
+import { formatEastern, todayEastern } from "../utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 export default function UpcomingAppointments({ visits, _patientId }) {
   const upcomingVisits = visits
-    .filter(v => v.status === 'scheduled' && new Date(v.visit_date) >= new Date())
+    .filter(v => v.status === 'scheduled' && v.visit_date >= todayEastern())
     .sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date))
     .slice(0, 5);
 

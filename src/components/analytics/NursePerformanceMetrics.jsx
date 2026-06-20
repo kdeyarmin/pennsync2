@@ -106,11 +106,17 @@ export default function NursePerformanceMetrics({
         avgAudit: m.auditCount > 0 ? Math.round(m.auditScoreSum / m.auditCount) : null,
         passRate: m.auditCount > 0 ? Math.round(m.passedAudits / m.auditCount * 100) : null,
         totalActivity: m.oasisCount + m.noteCount,
-        overall: Math.round(
-          ((m.oasisCount > 0 ? m.oasisScoreSum / m.oasisCount : 0) +
-           (m.noteCount > 0 ? m.noteQualitySum / m.noteCount : 0) +
-           (m.auditCount > 0 ? m.auditScoreSum / m.auditCount : 0)) / 3
-        ) || 0
+        // Average only the categories that actually have data — dividing by a
+        // fixed 3 made a specialist with one strong category (e.g. 95 OASIS only)
+        // score 32, ranking them below mediocre all-rounders and skewing the
+        // default sort + "top performer".
+        overall: (() => {
+          const parts = [];
+          if (m.oasisCount > 0) parts.push(m.oasisScoreSum / m.oasisCount);
+          if (m.noteCount > 0) parts.push(m.noteQualitySum / m.noteCount);
+          if (m.auditCount > 0) parts.push(m.auditScoreSum / m.auditCount);
+          return parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : 0;
+        })()
       }))
       .filter(m => m.totalActivity > 0)
       .sort((a, b) => {

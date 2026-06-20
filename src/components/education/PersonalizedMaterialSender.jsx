@@ -188,9 +188,12 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={() => sendMutation.mutate()}
-              disabled={!selectedPatientId || sendMutation.isPending}
+              // Also require selectedPatient (a separate async query): sending
+              // while it's still loading throws on selectedPatient.first_name AFTER
+              // the usage_count was already bumped — a partial write + generic error.
+              disabled={!selectedPatientId || !selectedPatient || sendMutation.isPending}
             >
               {sendMutation.isPending ? (
                 <>

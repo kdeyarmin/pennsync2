@@ -81,7 +81,7 @@ export default function UserActivityDashboard() {
 
     if (searchTerm) {
       filtered = filtered.filter(a =>
-        a.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.page?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.entity_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -22,9 +22,11 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
       ...vars
     }),
     onSuccess: (data) => {
-      setCoverPageData(data.cover_page_data);
-      setFormData(data.cover_page_data);
-      onCoverPageGenerated(data.cover_page_data);
+      // functions.invoke returns the full axios response; body is under .data.
+      const body = data?.data || data;
+      setCoverPageData(body.cover_page_data);
+      setFormData(body.cover_page_data);
+      onCoverPageGenerated(body.cover_page_data);
       toast.success("AI cover page generated!");
     },
     onError: (error) => {

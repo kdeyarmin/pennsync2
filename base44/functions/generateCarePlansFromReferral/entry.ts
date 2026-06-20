@@ -15,6 +15,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Verify the caller can actually see this patient (user-scoped read enforces
+    // RLS/tenant scoping) BEFORE writing active CarePlans via the service-role
+    // client below. Without this, any authenticated user could attach care plans
+    // to an arbitrary patient_id outside their scope.
+    const patientRows = await base44.entities.Patient.filter({ id: patient_id });
+    if (!patientRows || patientRows.length === 0) {
+      return Response.json({ error: 'Patient not found' }, { status: 404 });
+    }
+
     // Generate comprehensive care plans using AI
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `Generate comprehensive, Medicare-compliant care plans for this home health patient based on their referral and diagnoses.

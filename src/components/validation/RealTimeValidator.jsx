@@ -55,35 +55,27 @@ export default function RealTimeValidator({
     if (value?.trim()) {
       switch (type) {
         case 'email':
+          // validateEmail/Phone/Date return a bare message string (or null), not
+          // an object — so `.severity` was always undefined and an invalid value
+          // fell through to a warning (form reported valid:true) with a blank
+          // message. Treat a returned message as an ERROR with a real message.
           const emailError = validateEmail(value);
           if (emailError) {
-            if (emailError.severity === SEVERITY.ERROR) {
-              newErrors.push(emailError);
-            } else {
-              newWarnings.push(emailError);
-            }
+            newErrors.push({ severity: SEVERITY.ERROR, message: emailError });
           }
           break;
 
         case 'phone':
           const phoneError = validatePhone(value);
           if (phoneError) {
-            if (phoneError.severity === SEVERITY.ERROR) {
-              newErrors.push(phoneError);
-            } else {
-              newWarnings.push(phoneError);
-            }
+            newErrors.push({ severity: SEVERITY.ERROR, message: phoneError });
           }
           break;
 
         case 'date':
           const dateError = validateDate(value, fieldName);
           if (dateError) {
-            if (dateError.severity === SEVERITY.ERROR) {
-              newErrors.push(dateError);
-            } else {
-              newWarnings.push(dateError);
-            }
+            newErrors.push({ severity: SEVERITY.ERROR, message: dateError });
           }
           break;
       }

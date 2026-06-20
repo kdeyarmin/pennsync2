@@ -184,7 +184,7 @@ export default function MedicationManagementSection({ patient }) {
                             <Calendar className="w-4 h-4 text-slate-400" />
                             <span className="text-slate-600">Started:</span>
                             <span className="font-medium text-slate-900">
-                              {format(new Date(med.start_date), 'MMM d, yyyy')}
+                              {Number.isNaN(new Date(med.start_date).getTime()) ? med.start_date : format(new Date(med.start_date), 'MMM d, yyyy')}
                             </span>
                           </div>
                         )}

@@ -43,7 +43,21 @@ Deno.serve(async (req) => {
   
   try {
     const base44 = createClientFromRequest(req);
-    
+
+    // Authorization: privileged scheduled job (service-role SystemLog/
+    // MedicareGuideline writes + LLM/website fetches, no end user). Opt-in
+    // lockdown like checkExpiredInvitations (see §4); mirrors syncCMSRegulations.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     // Create initial log entry
     const logEntry = await base44.asServiceRole.entities.SystemLog.create({
       job_name: 'Medicare Guidelines Weekly Sync',

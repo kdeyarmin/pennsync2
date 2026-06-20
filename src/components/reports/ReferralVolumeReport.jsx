@@ -17,7 +17,7 @@ export default function ReferralVolumeReport({ dateRange }) {
 
   const filteredReferrals = referrals.filter(r => {
     const date = new Date(r.referral_date);
-    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end);
+    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end + 'T23:59:59.999');
   });
 
   // Analyze by source
@@ -46,7 +46,7 @@ export default function ReferralVolumeReport({ dateRange }) {
     exportToPDF({
       filename: `referral-volume-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
       title: 'Referral Volume Report',
-      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end), 'MMM d, yyyy')}`,
+      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}`,
       content: [
         { type: 'heading', text: 'Summary Statistics' },
         { type: 'text', text: `Total Referrals: ${filteredReferrals.length}` },
@@ -74,7 +74,7 @@ export default function ReferralVolumeReport({ dateRange }) {
         <div>
           <h3 className="text-xl font-semibold text-slate-900">Referral Volume Analysis</h3>
           <p className="text-sm text-slate-600">
-            {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end), 'MMM d, yyyy')}
+            {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}
           </p>
         </div>
         <Button onClick={handleExport} className="bg-purple-600 hover:bg-purple-700">

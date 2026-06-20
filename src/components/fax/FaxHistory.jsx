@@ -22,7 +22,7 @@ export default function FaxHistory({ patientId }) {
   });
 
   const filteredLogs = faxLogs.filter(log =>
-    log.to_number.includes(searchTerm) ||
+    log.to_number?.includes(searchTerm) ||
     log.to_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     log.document_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );

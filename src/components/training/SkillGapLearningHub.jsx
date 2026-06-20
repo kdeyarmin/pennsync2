@@ -61,7 +61,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
   const handleModuleComplete = (result) => {
     setShowModule(false);
     setActiveSkillGap(null);
-    queryClient.invalidateQueries(['microLearningProgress']);
+    queryClient.invalidateQueries({ queryKey: ['microLearningProgress'] });
     
     // Update stored gaps
     const updatedGaps = storedGaps.filter(g => g.area !== result.skill_area);

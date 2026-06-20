@@ -137,16 +137,19 @@ export default function QualityMetricsDashboard() {
     
     let avgDocTime = 0;
     if (visitsWithTime.length > 0) {
+      // `new Date("2000-01-01 <bad>")` yields an Invalid Date and
+      // differenceInMinutes then returns NaN WITHOUT throwing (so the old
+      // try/catch never caught it) — one bad row turned the whole average into
+      // "NaN min". Skip non-finite diffs and divide by the count that was valid.
+      let validCount = 0;
       const totalMinutes = visitsWithTime.reduce((sum, visit) => {
-        try {
-          const start = new Date(`2000-01-01 ${visit.start_time}`);
-          const end = new Date(`2000-01-01 ${visit.end_time}`);
-          return sum + differenceInMinutes(end, start);
-        } catch {
-          return sum;
-        }
+        const start = new Date(`2000-01-01 ${visit.start_time}`);
+        const end = new Date(`2000-01-01 ${visit.end_time}`);
+        const mins = differenceInMinutes(end, start);
+        if (Number.isFinite(mins)) { validCount++; return sum + mins; }
+        return sum;
       }, 0);
-      avgDocTime = Math.round(totalMinutes / visitsWithTime.length);
+      avgDocTime = validCount > 0 ? Math.round(totalMinutes / validCount) : 0;
     }
 
     // Incidents
@@ -197,16 +200,18 @@ export default function QualityMetricsDashboard() {
       // Calculate avg doc time for this nurse
       const nurseVisitsWithTime = nurseVisits.filter(v => v.start_time && v.end_time);
       if (nurseVisitsWithTime.length > 0) {
+        // Same NaN guard as the agency-wide avg: differenceInMinutes returns NaN
+        // (without throwing) on a malformed time, so skip non-finite diffs and
+        // divide by the valid count — otherwise one bad row showed "NaN min".
+        let validCount = 0;
         const totalMins = nurseVisitsWithTime.reduce((sum, v) => {
-          try {
-            const start = new Date(`2000-01-01 ${v.start_time}`);
-            const end = new Date(`2000-01-01 ${v.end_time}`);
-            return sum + differenceInMinutes(end, start);
-          } catch {
-            return sum;
-          }
+          const start = new Date(`2000-01-01 ${v.start_time}`);
+          const end = new Date(`2000-01-01 ${v.end_time}`);
+          const mins = differenceInMinutes(end, start);
+          if (Number.isFinite(mins)) { validCount++; return sum + mins; }
+          return sum;
         }, 0);
-        nurseStats[nurse.email].avgDocTime = Math.round(totalMins / nurseVisitsWithTime.length);
+        nurseStats[nurse.email].avgDocTime = validCount > 0 ? Math.round(totalMins / validCount) : 0;
       }
     });
 
@@ -505,8 +510,10 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
               </div>
               <p className="font-semibold text-slate-900">Patient Falls</p>
               <p className="text-sm text-slate-600 mt-1">
-                {metrics.falls > 0 
-                  ? `Rate: ${Math.round((metrics.falls / metrics.totalVisits) * 1000)} per 1000 visits`
+                {metrics.falls > 0
+                  ? (metrics.totalVisits > 0
+                      ? `Rate: ${Math.round((metrics.falls / metrics.totalVisits) * 1000)} per 1000 visits`
+                      : `${metrics.falls} reported`)
                   : 'No falls reported'}
               </p>
             </div>
@@ -531,8 +538,10 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
               </div>
               <p className="font-semibold text-slate-900">Medication Errors</p>
               <p className="text-sm text-slate-600 mt-1">
-                {metrics.medErrors > 0 
-                  ? `Rate: ${Math.round((metrics.medErrors / metrics.totalVisits) * 1000)} per 1000 visits`
+                {metrics.medErrors > 0
+                  ? (metrics.totalVisits > 0
+                      ? `Rate: ${Math.round((metrics.medErrors / metrics.totalVisits) * 1000)} per 1000 visits`
+                      : `${metrics.medErrors} reported`)
                   : 'No med errors reported'}
               </p>
             </div>

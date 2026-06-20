@@ -16,7 +16,7 @@ export default function AIConfigurationManager() {
   const queryClient = useQueryClient();
   const [saved, setSaved] = useState(false);
 
-  const { data: configs = [] } = useQuery({
+  const { data: configs = [], isLoading } = useQuery({
     queryKey: ['aiConfigurations'],
     queryFn: () => base44.entities.AIConfiguration.list(),
   });
@@ -68,6 +68,9 @@ export default function AIConfigurationManager() {
           </AlertDescription>
         </Alert>
 
+        {isLoading ? (
+          <div className="py-12 text-center text-slate-500">Loading configuration…</div>
+        ) : (
         <Tabs defaultValue="compliance" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
@@ -104,6 +107,7 @@ export default function AIConfigurationManager() {
             />
           </TabsContent>
         </Tabs>
+        )}
       </CardContent>
     </Card>
   );

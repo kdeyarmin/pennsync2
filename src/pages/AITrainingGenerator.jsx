@@ -81,8 +81,9 @@ export default function AITrainingGenerator() {
     setLoading(true);
 
     try {
-      const result = await generateTrainingCourse(formData);
-      setGeneratedCourse(result);
+      const response = await generateTrainingCourse(formData);
+      // functions.invoke returns the full axios response; body is under .data.
+      setGeneratedCourse(response?.data || response);
       toast.success('Training course generated successfully!');
     } catch (error) {
       const friendly = configNotReadyMessage(error);

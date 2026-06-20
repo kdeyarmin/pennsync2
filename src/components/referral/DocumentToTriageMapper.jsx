@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -8,6 +8,7 @@ import DocumentIngestionUploader from "../documents/DocumentIngestionUploader";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 
 export default function DocumentToTriageMapper({ onTriageCreated }) {
+  const queryClient = useQueryClient();
   const { data: patients = [] } = useQuery({
     queryKey: ['patients-for-triage-mapper'],
     queryFn: () => base44.entities.Patient.list('-created_date', 1000),
@@ -91,6 +92,12 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
         };
 
         const referral = await base44.entities.Referral.create(referralData);
+
+        // Refresh the lists this just changed so a newly created patient appears
+        // in the "Update Existing Patient" dropdown and app-wide patient/referral lists.
+        queryClient.invalidateQueries({ queryKey: ['patients-for-triage-mapper'] });
+        queryClient.invalidateQueries({ queryKey: ['patients'] });
+        queryClient.invalidateQueries({ queryKey: ['referrals'] });
 
         setResult({
           success: true,

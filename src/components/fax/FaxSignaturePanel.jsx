@@ -44,7 +44,7 @@ export default function FaxSignaturePanel({ onSignatureReady }) {
   const saveToProfile = async (dataUrl) => {
     try {
       await base44.auth.updateMe({ saved_signature: dataUrl });
-      queryClient.invalidateQueries(["currentUser"]);
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       toast.success("Signature saved to your profile");
     } catch {
       toast.error("Failed to save signature");

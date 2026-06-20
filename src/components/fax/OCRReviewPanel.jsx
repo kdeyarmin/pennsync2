@@ -39,7 +39,7 @@ export default function OCRReviewPanel({ faxLog, onClose }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['fax-logs']);
+      queryClient.invalidateQueries({ queryKey: ['fax-logs'] });
       toast.success("OCR correction saved and will improve future extractions");
       onClose?.();
     },

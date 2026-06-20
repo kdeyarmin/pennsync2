@@ -104,7 +104,10 @@ export default function UserManagement() {
   });
 
   const { data: invitations = [] } = useQuery({
-    queryKey: ['userInvitations'],
+    // Include the user count in the key so the "already signed up" filter below
+    // recomputes when a new user registers — otherwise a static key left a ghost
+    // "pending" invitation showing for someone who had just signed up.
+    queryKey: ['userInvitations', allUsers.length],
     queryFn: async () => {
       const allInvitations = await base44.entities.UserInvitation.list('-created_date');
       // Filter out invitations where user has already signed up

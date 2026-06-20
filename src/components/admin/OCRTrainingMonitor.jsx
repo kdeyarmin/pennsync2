@@ -28,8 +28,8 @@ export default function OCRTrainingMonitor() {
   const retrainMutation = useMutation({
     mutationFn: () => base44.functions.invoke('retrainOCRModel', { min_feedback_count: 5 }),
     onSuccess: (result) => {
-      queryClient.invalidateQueries(['ocr-training-sessions']);
-      queryClient.invalidateQueries(['unapplied-feedback']);
+      queryClient.invalidateQueries({ queryKey: ['ocr-training-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['unapplied-feedback'] });
       if (result.data.success) {
         toast.success(`Training completed! Improvement: ${result.data.improvement}%`);
       } else {

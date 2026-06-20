@@ -57,12 +57,12 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
     return (
       <Button
         onClick={() => analyzeMutation.mutate()}
-        disabled={analyzeMutation.isLoading}
+        disabled={analyzeMutation.isPending}
         size="sm"
         variant="outline"
         className="w-full"
       >
-        {analyzeMutation.isLoading ? (
+        {analyzeMutation.isPending ? (
           <>
             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
             Analyzing...
@@ -88,7 +88,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
           {!compact && riskData && (
             <Button
               onClick={() => analyzeMutation.mutate()}
-              disabled={analyzeMutation.isLoading}
+              disabled={analyzeMutation.isPending}
               size="sm"
               variant="outline"
             >
@@ -104,10 +104,10 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
             <p className="text-slate-600 mb-4">Run AI analysis to predict patient risks</p>
             <Button
               onClick={() => analyzeMutation.mutate()}
-              disabled={analyzeMutation.isLoading}
+              disabled={analyzeMutation.isPending}
               className="bg-purple-600 hover:bg-purple-700"
             >
-              {analyzeMutation.isLoading ? (
+              {analyzeMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...
@@ -138,7 +138,7 @@ export default function PatientRiskPredictor({ patient, compact = false }) {
                 riskData.overall_risk_level === 'medium' ? 'text-yellow-900' :
                 'text-green-900'
               }>
-                <strong>Overall Risk Level: {riskData.overall_risk_level.toUpperCase()}</strong>
+                <strong>Overall Risk Level: {(riskData.overall_risk_level || 'unknown').toUpperCase()}</strong>
                 {riskData.alerts_created > 0 && (
                   <p className="text-sm mt-1">
                     {riskData.alerts_created} new alert{riskData.alerts_created > 1 ? 's' : ''} created

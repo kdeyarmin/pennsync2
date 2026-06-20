@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 import { buildNavCategories, buildAdminItems, NAV_MANIFEST } from "@/lib/nav.manifest";
+import { isSuperAdmin } from "@/lib/superAdmin";
 
 import DesktopSidebar from "@/components/layout/DesktopSidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -59,7 +60,11 @@ export default function Layout({ children, currentPageName }) {
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
   }, [currentPageName]);
 
-  const isAdmin = currentUser?.role === 'admin';
+  // Match App.jsx's route guard (role === 'admin' OR the platform super admin by
+  // owner-email / super_admin account_type). Without this, an unpromoted super
+  // admin reaches admin routes by URL but gets NO admin nav — including the only
+  // link to SuperAdminConfig, defeating the ensureSuperAdmin self-bootstrap.
+  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
   const isApproved = currentUser?.is_approved === true || isAdmin;
   const isTimeOffApprover = isAdmin || currentUser?.is_manager === true;
 

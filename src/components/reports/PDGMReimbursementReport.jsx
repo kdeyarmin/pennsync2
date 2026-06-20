@@ -16,7 +16,7 @@ export default function PDGMReimbursementReport({ dateRange }) {
 
   const filteredOASIS = oasisAssessments.filter(o => {
     const date = new Date(o.assessment_date);
-    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end);
+    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end + 'T23:59:59.999');
   });
 
   // Simulate PDGM case mix groups
@@ -37,7 +37,7 @@ export default function PDGMReimbursementReport({ dateRange }) {
     exportToPDF({
       filename: `pdgm-reimbursement-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
       title: 'PDGM Reimbursement Report',
-      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end), 'MMM d, yyyy')}`,
+      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}`,
       content: [
         { type: 'heading', text: 'Reimbursement Summary' },
         { type: 'text', text: `Total Estimated Revenue: $${totalReimbursement.toLocaleString()}` },

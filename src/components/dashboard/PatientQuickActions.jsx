@@ -47,8 +47,8 @@ export default function PatientQuickActions({ onActionComplete }) {
         care_type: 'home_health',
         status: 'active'
       });
-      queryClient.invalidateQueries(['all-patients']);
-      queryClient.invalidateQueries(['patients-quick-action']);
+      queryClient.invalidateQueries({ queryKey: ['all-patients'] });
+      queryClient.invalidateQueries({ queryKey: ['patients-quick-action'] });
       if (onActionComplete) onActionComplete();
     },
     onError: (error) => {
@@ -75,7 +75,7 @@ export default function PatientQuickActions({ onActionComplete }) {
         visit_type: 'routine_visit',
         status: 'scheduled'
       });
-      queryClient.invalidateQueries(['all-visits']);
+      queryClient.invalidateQueries({ queryKey: ['all-visits'] });
       if (onActionComplete) onActionComplete();
     },
     onError: (error) => {
@@ -100,7 +100,7 @@ export default function PatientQuickActions({ onActionComplete }) {
         diagnosis: '',
         notes: ''
       });
-      queryClient.invalidateQueries(['all-patients']);
+      queryClient.invalidateQueries({ queryKey: ['all-patients'] });
       if (onActionComplete) onActionComplete();
     },
     onError: (error) => {

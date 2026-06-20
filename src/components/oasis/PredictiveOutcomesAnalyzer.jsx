@@ -650,7 +650,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                      <Tooltip formatter={(value) => `$${(value ?? 0).toLocaleString()}`} />
                       <Line type="monotone" dataKey="predicted_payment" stroke="#10b981" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
