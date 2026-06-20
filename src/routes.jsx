@@ -94,7 +94,6 @@ export const REDIRECTS = [
   // Medication Reconciliation was retired along with the rest of the medication
   // entry/checking UI; send old links and bookmarks to the patient list.
   { from: '/MedicationReconciliation', to: '/Patients' },
-
   // ─── OASIS Center consolidation ──────────────────────────────────────────────
   // The standalone OASIS analysis/review pages are now tabs of /OASISCenter.
   // (RedirectTo preserves incoming ?query and router state onto the tab.)
