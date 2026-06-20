@@ -18,6 +18,7 @@ import NoteDiffView from "./NoteDiffView";
 import DictationButton from "./DictationButton";
 import { annotateProvenance } from "./compliance/provenance";
 import { detectNoteCriticalVitals } from "./compliance/noteEscalation";
+import { withTimeout } from "./compliance/withTimeout";
 
 /**
  * The canonical "constrained scribe" review flow, reusable across pages:
@@ -172,7 +173,14 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     const vg = valueGuard(text, allowed);
     if (!vg.ok) return { ok: false, fix: { values: vg.unverified, sentences: [], offlinePending: false } };
     if (navigator.onLine) {
-      const g = await groundNote(text, allowed, { userKey: currentUser?.email || "anon" });
+      let g;
+      try {
+        // Bound the grounding call so a hung request can't leave the note stuck
+        // mid-verification — surface it as a re-checkable error instead.
+        g = await withTimeout(groundNote(text, allowed, { userKey: currentUser?.email || "anon" }), 30000, "Verification timed out — check your connection and re-check.");
+      } catch (timeoutErr) {
+        return { ok: false, fix: { values: [], sentences: [], groundingError: timeoutErr.message, offlinePending: false } };
+      }
       if (!g.ok) return { ok: false, fix: { values: [], sentences: g.unsupported || [], groundingError: g.error, offlinePending: false } };
       return { ok: true, offline: false };
     }
@@ -201,11 +209,15 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       const negPhrases = required.filter(e => confirmedNegatives.has(e.id) && e.standardNegative).map(e => e.standardNegative.phrase);
       let generated;
       try {
-        const res = await generateConstrainedNote({ draftSentences, answers: answersPayload, confirmedNegatives: negPhrases }, { userKey: currentUser?.email || "anon" });
+        const res = await withTimeout(
+          generateConstrainedNote({ draftSentences, answers: answersPayload, confirmedNegatives: negPhrases }, { userKey: currentUser?.email || "anon" }),
+          45000,
+          "Note generation timed out. Please try again.",
+        );
         generated = res.note.trim();
       } catch (genErr) {
         const credits = genErr?.status === 402 || genErr?.data?.extra_data?.reason === "integration_credits_limit_reached";
-        toast.error(credits ? "Monthly integration limit reached. Please upgrade your plan to continue." : "Note generation failed. Please try again.");
+        toast.error(credits ? "Monthly integration limit reached. Please upgrade your plan to continue." : (genErr?.message?.includes("timed out") ? genErr.message : "Note generation failed. Please try again."));
         setBuilding(false);
         return;
       }
@@ -259,7 +271,15 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     return () => window.removeEventListener("online", onReconnect);
   }, [finalNote, fixRequired]);
 
-  const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(finalNote);
+      setCopied(true); setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopied(false);
+      toast.error("Couldn't copy to the clipboard. Select the note text and copy manually.");
+    }
+  };
 
   // derived
   const gaps = analysis?.gaps || [];

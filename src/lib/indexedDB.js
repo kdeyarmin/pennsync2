@@ -73,6 +73,18 @@ export const getDraftNotesLocally = async () => {
   });
 };
 
+/** Fetch a single draft by its (string) id, or null when absent. */
+export const getDraftNoteLocally = async (id) => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.DRAFT_NOTES, 'readonly');
+    const store = tx.objectStore(STORES.DRAFT_NOTES);
+    const request = store.get(id);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+};
+
 export const deleteDraftNoteLocally = async (id) => {
   const db = await openDB();
   return new Promise((resolve, reject) => {

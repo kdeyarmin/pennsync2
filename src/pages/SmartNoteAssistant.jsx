@@ -24,6 +24,7 @@ import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import { toNoteConversionFields, deriveStructuredVisitFields } from "../components/smartNote/compliance/coverageScore";
 import { buildVisitReportingFields, buildAuditFields } from "../components/smartNote/compliance/reportingFields";
+import { claimDictation, releaseDictation } from "@/components/smartNote/dictationController";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
@@ -80,14 +81,43 @@ export default function SmartNoteAssistant() {
   const [followUpTasks, setFollowUpTasks] = useState([]);
   const [generatingTasks, setGeneratingTasks] = useState(false);
   const recRef = useRef(null);
+  const recStopRef = useRef(null);
   const textareaRef = useRef(null);
   const SAVED_PATIENT_KEY = "smart_note_patient_v1";
   // Mirror the latest patient so the autosave effect can write under the active
   // patient without re-subscribing on patientId (which would clobber drafts on
-  // switch). prevPatientRef drives the on-switch draft swap.
+  // switch). prevPatientRef drives the on-switch draft swap. noteRef guards the
+  // async durable-draft restore from clobbering text the nurse has started typing.
   const patientIdRef = useRef(patientId);
   const prevPatientRef = useRef(patientId);
+  const noteRef = useRef(note);
   patientIdRef.current = patientId;
+  noteRef.current = note;
+
+  // Durable cross-session restore: a draft persisted to IndexedDB survives a full
+  // browser restart (sessionStorage does not). Apply it only if we're still on
+  // the same bucket and the nurse hasn't already started typing.
+  const tryRestoreDurableDraft = (pid) => {
+    import('@/lib/indexedDB')
+      .then(({ getDraftNoteLocally }) => getDraftNoteLocally(`draft_${pid || 'unassigned'}`))
+      .then((d) => {
+        if (patientIdRef.current !== pid || noteRef.current?.trim()) return;
+        if (!d?.note || d.note.trim().length <= 20) return;
+        setNote(d.note);
+        if (d.visitType) setVisitType(d.visitType);
+        setDraftRestored(true);
+      })
+      .catch(() => {});
+  };
+
+  // Clear a patient's draft from both stores once the note is saved or reset, so
+  // drafts don't accumulate (one PHI-bearing row per patient) indefinitely.
+  const clearDraft = (pid) => {
+    sessionStorage.removeItem(draftKeyFor(pid));
+    import('@/lib/indexedDB')
+      .then(({ deleteDraftNoteLocally }) => deleteDraftNoteLocally(`draft_${pid || 'unassigned'}`))
+      .catch(() => {});
+  };
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const careScope = currentUser?.care_scope || "home_health";
@@ -149,7 +179,7 @@ export default function SmartNoteAssistant() {
   // patient, or the unassigned bucket) so an in-progress note survives a reload.
   useEffect(() => {
     const saved = sessionStorage.getItem(draftKeyFor(patientIdRef.current));
-    if (!saved) return;
+    if (!saved) { tryRestoreDurableDraft(patientIdRef.current); return; }
     try {
       const parsed = JSON.parse(saved);
       if (parsed.note?.trim().length > 20) {
@@ -182,9 +212,12 @@ export default function SmartNoteAssistant() {
       setNote(incoming);
       setDraftRestored(incoming.trim().length > 20);
     } else if (prev) {
-      // Switching between two real patients and the incoming one has no draft.
+      // Switching between two real patients and the incoming one has no session
+      // draft — clear, then check the durable store (covers a post-restart switch
+      // where the only copy of their draft is in IndexedDB).
       setNote("");
       setDraftRestored(false);
+      tryRestoreDurableDraft(patientId);
     }
     // else: came from the unassigned bucket with nothing saved — keep the typed
     // note so it isn't lost; it will autosave under the newly-selected patient.
@@ -205,9 +238,8 @@ export default function SmartNoteAssistant() {
 
   useEffect(() => {
     return () => {
-      if (recRef.current) {
-        recRef.current.stop();
-      }
+      try { recRef.current?.stop(); } catch { /* already stopped */ }
+      releaseDictation(recStopRef.current);
     };
   }, []);
 
@@ -223,13 +255,17 @@ export default function SmartNoteAssistant() {
       const enhanced = enhanceTranscription(t);
       setNote(prev => prev ? prev + " " + enhanced : enhanced);
     };
-    rec.onerror = () => setListening(false);
-    rec.onend = () => setListening(false);
+    const stop = () => { try { rec.stop(); } catch { /* already stopped */ } };
+    recStopRef.current = stop;
+    rec.onerror = () => { setListening(false); releaseDictation(stop); };
+    rec.onend = () => { setListening(false); releaseDictation(stop); };
     recRef.current = rec;
+    // Stop any per-question dictation mic first — only one recognizer at a time.
+    claimDictation(stop);
     rec.start();
     setListening(true);
   };
-  const stopDictation = () => { recRef.current?.stop(); setListening(false); };
+  const stopDictation = () => { recRef.current?.stop(); setListening(false); releaseDictation(recStopRef.current); };
 
   // Step 1 → 2. The deterministic scan + questions + generation + fact-check all
   // live in <ConstrainedNoteReviewer>, which scans `note` on mount.
@@ -262,6 +298,9 @@ export default function SmartNoteAssistant() {
       }
       await persistNote(result);
       setSaved(true);
+      // The work is now persisted (online) or queued (offline) — drop the local
+      // draft so it doesn't linger as stale PHI for this patient.
+      clearDraft(patientId);
     } catch (err) {
       console.error("Save to chart error:", err);
       toast.error("Saving to the chart failed.");
@@ -399,32 +438,69 @@ export default function SmartNoteAssistant() {
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
-    sessionStorage.removeItem(draftKeyFor(patientIdRef.current));
+    clearDraft(patientIdRef.current);
   };
 
   // Turn critical chart conflicts / vitals flagged in the reviewer into high-
-  // priority provider follow-up tasks (persisted to Task Management and shown in
-  // the panel). Best-effort: a failure (e.g. offline) is surfaced, not fatal.
+  // priority provider follow-up tasks. A critical follow-up must never be lost,
+  // so offline (or on a failed create) it is queued to the offline sync drain
+  // instead of being dropped.
   const escalateToTasks = async (items) => {
     if (!items?.length || !currentUser?.email) return;
-    try {
-      const created = await Promise.all(items.map((it) => base44.entities.Task.create({
-        patient_id: patientId || undefined,
-        title: it.title,
-        description: it.description || "",
-        type: "notify",
-        priority: "high",
-        status: "pending",
-        source: "manual",
-        assigned_to: currentUser.email,
-        ai_reason: it.reason || "",
-        related_visit_id: savedVisitId || undefined,
-      })));
-      setFollowUpTasks((prev) => [...created, ...prev]);
+    const payloads = items.map((it) => ({
+      patient_id: patientId || undefined,
+      title: it.title,
+      description: it.description || "",
+      type: "notify",
+      priority: "high",
+      status: "pending",
+      source: "manual",
+      assigned_to: currentUser.email,
+      ai_reason: it.reason || "",
+      related_visit_id: savedVisitId || undefined,
+    }));
+    const queueForSync = async (toQueue) => {
+      const { addToSyncQueue } = await import('@/lib/indexedDB');
+      await Promise.all(toQueue.map((p) => addToSyncQueue('CREATE_TASK', p)));
+    };
+
+    // Offline: queue everything; the OfflineManager drain creates them on reconnect.
+    if (!navigator.onLine) {
+      try {
+        await queueForSync(payloads);
+        setFollowUpTasks((prev) => [...payloads, ...prev]);
+        toast.success(`Saved ${payloads.length} follow-up task${payloads.length !== 1 ? "s" : ""} offline — will sync when reconnected.`);
+      } catch (err) {
+        console.error("Failed to queue escalation task(s):", err);
+        toast.error("Couldn't save the follow-up task offline.");
+      }
+      return;
+    }
+
+    // Online: create each individually so a partial failure can't re-create the
+    // ones that already succeeded (Promise.all would reject the whole batch and
+    // the retry would duplicate the successes).
+    const results = await Promise.allSettled(payloads.map((p) => base44.entities.Task.create(p)));
+    const created = [];
+    const failed = [];
+    results.forEach((r, i) => (r.status === "fulfilled" ? created.push(r.value) : failed.push(payloads[i])));
+    if (created.length) setFollowUpTasks((prev) => [...created, ...prev]);
+    if (!failed.length) {
       toast.success(`Created ${created.length} provider follow-up task${created.length !== 1 ? "s" : ""}.`);
+      return;
+    }
+    // Queue ONLY the failures (a transient 5xx, not necessarily a disconnect),
+    // then kick the sync drain so they retry now — not just on the next
+    // offline→online transition, which may never come while we stay online.
+    console.error("Some escalation task creates failed; queuing for retry:", results.find((r) => r.status === "rejected")?.reason);
+    try {
+      await queueForSync(failed);
+      setFollowUpTasks((prev) => [...failed, ...prev]);
+      window.dispatchEvent(new Event('online'));
+      toast.message(`Couldn't reach the server for ${failed.length} follow-up task${failed.length !== 1 ? "s" : ""} — saved and retrying.`);
     } catch (err) {
-      console.error("Failed to create escalation task(s):", err);
-      toast.error("Couldn't create the follow-up task. Try again when online.");
+      console.error("Failed to queue failed escalation task(s):", err);
+      toast.error("Couldn't save the follow-up task. Try again.");
     }
   };
 
@@ -630,7 +706,15 @@ export default function SmartNoteAssistant() {
                   <FinalNoteDisplay
                     finalNote={api.finalNote}
                     setFinalNote={api.setFinalNote}
-                    onCopy={async () => { await navigator.clipboard.writeText(api.finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); }}
+                    onCopy={async () => {
+                      try {
+                        await navigator.clipboard.writeText(api.finalNote);
+                        setCopied(true); setTimeout(() => setCopied(false), 2500);
+                      } catch {
+                        setCopied(false);
+                        toast.error("Couldn't copy to the clipboard. Select the note text and copy manually.");
+                      }
+                    }}
                     copied={copied}
                     patient={patient}
                     visitType={visitType}

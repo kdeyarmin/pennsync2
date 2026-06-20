@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Copy, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 import VoiceNoteIntegration from "./VoiceNoteIntegration";
 
 const VISIT_TYPES = [
@@ -67,9 +68,14 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
   };
 
   const copy = async () => {
-    await navigator.clipboard.writeText(draft);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(draft);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+      toast.error("Couldn't copy to the clipboard. Select the text and copy manually.");
+    }
   };
 
   const useInNoteBuilder = () => {
