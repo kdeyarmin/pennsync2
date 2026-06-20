@@ -93,7 +93,7 @@ const GROUPS = [
     icon: Settings,
     color: "text-slate-600 bg-slate-100",
     pages: [
-      "AgencySettings", "ManageNewFeatures", "SystemJobMonitor",
+      "AgencySettings", "SystemJobMonitor",
     ],
   },
 ];

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart3, TrendingUp, Activity, Brain, RefreshCw, Building2, Loader2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 import ReferralVolumeReport from "@/components/reports/ReferralVolumeReport";
 import PatientOutcomesReport from "@/components/reports/PatientOutcomesReport";
 import NursePerformanceReport from "@/components/reports/NursePerformanceReport";
@@ -125,6 +126,7 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
         favoritePage="ReportsAnalytics"
       />
 
+      <EmbeddedPage>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -276,6 +278,7 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
           </Suspense>
         </TabsContent>
       </Tabs>
+      </EmbeddedPage>
     </PageContainer>
   );
 }

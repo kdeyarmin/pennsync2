@@ -8,6 +8,7 @@ import SmartNoteAssistant from "@/pages/SmartNoteAssistant";
 import RealTimeDictationScribe from "@/components/visit/RealTimeDictationScribe";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 
 export default function ClinicalDocumentation() {
   const [activeMethod, setActiveMethod] = useState("smart-notes");
@@ -26,6 +27,7 @@ export default function ClinicalDocumentation() {
         description="AI-powered note generation, voice dictation, and compliance checking"
         favoritePage="ClinicalDocumentation"
       />
+        <EmbeddedPage>
         <Tabs value={activeMethod} onValueChange={setActiveMethod} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 gap-2">
             <TabsTrigger value="smart-notes" className="min-h-[44px] font-semibold">Smart Notes</TabsTrigger>
@@ -85,6 +87,7 @@ export default function ClinicalDocumentation() {
             </Card>
           </TabsContent>
         </Tabs>
+        </EmbeddedPage>
     </PageContainer>
   );
 }

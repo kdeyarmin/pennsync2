@@ -2,7 +2,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Users } from "lucide-react";
-import FavoriteButton from "@/components/navigation/FavoriteButton";
 
 export default function PatientsPageHeader({ patientCount, activeCount, onAdd }) {
   return (
@@ -29,7 +28,6 @@ export default function PatientsPageHeader({ patientCount, activeCount, onAdd })
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            <FavoriteButton type="page" id="Patients" name="Patients" />
             <Button onClick={onAdd} className="bg-blue-600 hover:bg-blue-700 min-h-[46px] px-5">
               <Plus className="w-4 h-4 mr-2" />
               Add Patient

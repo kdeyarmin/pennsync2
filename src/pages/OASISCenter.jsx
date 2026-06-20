@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 import { isSuperAdmin } from "@/lib/superAdmin";
 
 const OASISAnalyzer = lazy(() => import("@/pages/OASISAnalyzer"));
@@ -93,6 +94,7 @@ export default function OASISCenter() {
         favoritePage="OASISCenter"
       />
 
+      <EmbeddedPage>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -188,6 +190,7 @@ export default function OASISCenter() {
           </>
         )}
       </Tabs>
+      </EmbeddedPage>
     </PageContainer>
   );
 }

@@ -746,15 +746,6 @@ export const NAV_MANIFEST = [
     keywords: ["pdgm", "case mix", "case-mix", "weights", "rates", "reimbursement", "billing", "cms"],
   },
   {
-    page: "ManageNewFeatures",
-    label: "Manage Features",
-    icon: Zap,
-    category: "Configuration",
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["features", "manage", "flags"],
-  },
-  {
     page: "AIToolsCenter",
     label: "AI Tools",
     icon: Brain,

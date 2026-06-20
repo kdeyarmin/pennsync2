@@ -24,7 +24,6 @@ export default function Example() {
         eyebrow="Patient Care"
         title="Patients"
         description="Search, filter, and manage your patient roster."
-        favoritePage="Example"
         actions={<Button>…</Button>}   // optional header buttons
       />
       {/* page sections */}

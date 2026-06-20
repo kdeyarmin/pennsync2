@@ -14,7 +14,6 @@ import PullToRefresh from "@/components/mobile/PullToRefresh";
 // Critical above-the-fold — eager loaded
 import SmartRouteOptimizer from "@/components/scheduling/SmartRouteOptimizer";
 import ProactiveClinicalSupport from "@/components/clinical/ProactiveClinicalSupport";
-import NewFeaturesBanner from "@/components/dashboard/NewFeaturesBanner";
 import AnnouncementsWidget from "@/components/dashboard/AnnouncementsWidget";
 import DashboardSkeleton from "@/components/loading/DashboardSkeleton";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
@@ -204,9 +203,6 @@ export default function Dashboard() {
           Press <kbd className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono">Ctrl+K</kbd> to quickly navigate anywhere
         </button>
       </div>
-
-      {/* New Features Banner */}
-      <NewFeaturesBanner />
 
       {/* Admin Announcements */}
       <AnnouncementsWidget />

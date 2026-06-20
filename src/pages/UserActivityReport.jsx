@@ -22,6 +22,7 @@ import {
   Loader2
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 import { formatDistanceToNow } from "date-fns";
 import { formatEastern } from "../components/utils/timezone";
@@ -324,6 +325,7 @@ export default function UserActivityReport() {
         favoritePage="UserActivityReport"
       />
 
+      <EmbeddedPage>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -585,6 +587,7 @@ export default function UserActivityReport() {
           </Suspense>
         </TabsContent>
       </Tabs>
+      </EmbeddedPage>
     </PageContainer>
   );
 }

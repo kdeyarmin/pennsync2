@@ -20,6 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
+import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
 import DocumentFaxSender from "../components/fax/DocumentFaxSender";
@@ -117,6 +118,7 @@ export default function SendFax() {
         favoritePage="SendFax"
       />
 
+        <EmbeddedPage>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-1 scrollbar-hide">
             <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -195,6 +197,7 @@ export default function SendFax() {
             </TabsContent>
           )}
         </Tabs>
+        </EmbeddedPage>
     </PageContainer>
   );
 }
