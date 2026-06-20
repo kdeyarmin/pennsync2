@@ -38,8 +38,8 @@ const ACTION_META = {
   note_compliance_check:{ icon: Shield,      color: "text-orange-600", bg: "bg-orange-50", label: "Compliance Check" },
   visit_complete:      { icon: CheckSquare,  color: "text-green-600",  bg: "bg-green-50",  label: "Visit Completed" },
   visit_start:         { icon: Activity,     color: "text-blue-600",   bg: "bg-blue-50",   label: "Visit Started" },
-  care_plan_create:    { icon: FileText,     color: "text-teal-600",   bg: "bg-teal-50",   label: "Care Plan Created" },
-  care_plan_update:    { icon: FileText,     color: "text-teal-600",   bg: "bg-teal-50",   label: "Care Plan Updated" },
+  care_plan_create:    { icon: FileText,     color: "text-navy-600",   bg: "bg-navy-50",   label: "Care Plan Created" },
+  care_plan_update:    { icon: FileText,     color: "text-navy-600",   bg: "bg-navy-50",   label: "Care Plan Updated" },
   incident_report:     { icon: AlertTriangle,color: "text-red-600",    bg: "bg-red-50",    label: "Incident Reported" },
   training_complete:   { icon: BookOpen,     color: "text-blue-600",   bg: "bg-blue-50",   label: "Training Completed" },
   document_uploaded:   { icon: FileText,     color: "text-slate-600",   bg: "bg-slate-50",   label: "Document Uploaded" },
@@ -141,7 +141,7 @@ export default function UserActivityPanel({ userEmail, _userName }) {
         {[
           { label: "Logins", value: stats.logins, icon: LogIn, color: "text-green-600" },
           { label: "Notes", value: stats.notes, icon: Brain, color: "text-indigo-600" },
-          { label: "Visits Done", value: stats.visits, icon: CheckSquare, color: "text-teal-600" },
+          { label: "Visits Done", value: stats.visits, icon: CheckSquare, color: "text-navy-600" },
           { label: "AI Uses", value: stats.aiUses, icon: Star, color: "text-navy-600" },
         ].map(s => {
           const SIcon = s.icon;

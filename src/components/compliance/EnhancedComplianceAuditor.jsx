@@ -358,7 +358,7 @@ Return JSON:
       state_regulation: 'bg-green-100 text-green-800',
       agency_policy: 'bg-orange-100 text-orange-800',
       hipaa: 'bg-red-100 text-red-800',
-      quality_measure: 'bg-teal-100 text-teal-800'
+      quality_measure: 'bg-navy-100 text-navy-800'
     };
     return colors[category] || 'bg-slate-100 text-slate-800';
   };

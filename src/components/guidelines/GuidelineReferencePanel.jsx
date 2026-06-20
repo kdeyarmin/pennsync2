@@ -90,7 +90,7 @@ export default function GuidelineReferencePanel({
       home_health_regulations: "bg-indigo-100 text-indigo-800",
       quality_measures: "bg-yellow-100 text-yellow-800",
       compliance_audit: "bg-orange-100 text-orange-800",
-      pdgm: "bg-teal-100 text-teal-800"
+      pdgm: "bg-navy-100 text-navy-800"
     };
     return colors[category] || "bg-slate-100 text-slate-800";
   };

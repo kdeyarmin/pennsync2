@@ -46,7 +46,7 @@ const GROUPS = [
     title: "Clinical Oversight",
     description: "Pathways, clinical insights, and OASIS audit & analytics.",
     icon: Stethoscope,
-    color: "text-teal-600 bg-teal-50",
+    color: "text-navy-600 bg-navy-50",
     pages: [
       "ClinicalPathwayManager", "ClinicalInsightsDashboard", "OASISCenter",
     ],

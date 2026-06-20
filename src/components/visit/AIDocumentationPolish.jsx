@@ -64,7 +64,7 @@ Generate the polished version now:`;
   };
 
   return (
-    <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+    <Card className="bg-gradient-to-r from-emerald-50 to-navy-50 border-emerald-200">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2 text-lg">

@@ -108,14 +108,14 @@ export default function SmartNoteDataImport({
   }
 
   return (
-    <Card className="border-2 border-teal-200">
+    <Card className="border-2 border-navy-200">
       <CardHeader 
-        className="pb-2 bg-gradient-to-r from-teal-50 to-navy-50 cursor-pointer"
+        className="pb-2 bg-gradient-to-r from-navy-50 to-navy-50 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Download className="w-4 h-4 text-teal-600" />
+            <Download className="w-4 h-4 text-navy-600" />
             Import from Smart Notes
             <Badge variant="outline" className="text-xs">{recentVisits.length} visits</Badge>
           </div>
@@ -240,7 +240,7 @@ export default function SmartNoteDataImport({
               {/* Import Button */}
               <Button
                 onClick={handleImportFromVisit}
-                className="w-full bg-teal-600 hover:bg-teal-700"
+                className="w-full bg-navy-600 hover:bg-navy-700"
                 size="sm"
               >
                 <Zap className="w-4 h-4 mr-2" />

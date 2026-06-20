@@ -965,9 +965,9 @@ export default function ReferralPDFSummarizer({
             {/* Social Determinants & Mental Health */}
             {extractedData.psychosocial && (
               <AccordionItem value="psychosocial">
-                <AccordionTrigger className="bg-teal-50 px-4 py-3 rounded-t-lg">
+                <AccordionTrigger className="bg-navy-50 px-4 py-3 rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-teal-600" />
+                    <User className="w-4 h-4 text-navy-600" />
                     <span className="font-semibold">Psychosocial & Social Determinants of Health</span>
                     <AIFieldIndicator confidence={getConfidence('psychosocial', 85)} source="AI" showValue />
                   </div>
@@ -1018,62 +1018,62 @@ export default function ReferralPDFSummarizer({
                     
                     {/* Social Determinants */}
                     {extractedData.psychosocial.social_determinants && (
-                      <div className="bg-teal-50 p-3 rounded border-l-4 border-teal-500">
-                        <p className="text-xs font-semibold text-teal-900 mb-2">Social Determinants of Health</p>
+                      <div className="bg-navy-50 p-3 rounded border-l-4 border-navy-500">
+                        <p className="text-xs font-semibold text-navy-900 mb-2">Social Determinants of Health</p>
                         
                         <div className="grid md:grid-cols-2 gap-2">
                           {extractedData.psychosocial.social_determinants.living_situation && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Living Situation</p>
+                              <p className="text-xs font-semibold text-navy-900">Living Situation</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.living_situation}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.caregiver_availability && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Caregiver Availability</p>
+                              <p className="text-xs font-semibold text-navy-900">Caregiver Availability</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.caregiver_availability}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.financial_concerns && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Financial Concerns</p>
+                              <p className="text-xs font-semibold text-navy-900">Financial Concerns</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.financial_concerns}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.transportation_barriers && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Transportation Barriers</p>
+                              <p className="text-xs font-semibold text-navy-900">Transportation Barriers</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.transportation_barriers}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.food_insecurity && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Food Insecurity</p>
+                              <p className="text-xs font-semibold text-navy-900">Food Insecurity</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.food_insecurity}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.social_isolation && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Social Isolation</p>
+                              <p className="text-xs font-semibold text-navy-900">Social Isolation</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.social_isolation}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.housing_stability && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Housing Stability</p>
+                              <p className="text-xs font-semibold text-navy-900">Housing Stability</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.housing_stability}</p>
                             </div>
                           )}
                           
                           {extractedData.psychosocial.social_determinants.health_literacy && (
                             <div className="bg-white p-2 rounded">
-                              <p className="text-xs font-semibold text-teal-900">Health Literacy</p>
+                              <p className="text-xs font-semibold text-navy-900">Health Literacy</p>
                               <p className="text-sm text-slate-900">{extractedData.psychosocial.social_determinants.health_literacy}</p>
                             </div>
                           )}

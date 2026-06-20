@@ -223,7 +223,7 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
       referral: "bg-gold-100 text-gold-800",
       progress_notes: "bg-indigo-100 text-indigo-800",
       discharge_summary: "bg-orange-100 text-orange-800",
-      medication_list: "bg-teal-100 text-teal-800",
+      medication_list: "bg-navy-100 text-navy-800",
       orders: "bg-red-100 text-red-800",
       other: "bg-slate-100 text-slate-800"
     };

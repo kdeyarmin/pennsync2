@@ -170,7 +170,7 @@ export default function NurseTrainingNeedsAnalyzer() {
       compliance: "bg-navy-100 text-navy-800",
       safety: "bg-red-100 text-red-800",
       communication: "bg-indigo-100 text-indigo-800",
-      technology: "bg-teal-100 text-teal-800"
+      technology: "bg-navy-100 text-navy-800"
     };
     return colors[type] || "bg-slate-100 text-slate-800";
   };
@@ -524,7 +524,7 @@ function _getTypeColor(type) {
     compliance: "bg-navy-100 text-navy-800",
     safety: "bg-red-100 text-red-800",
     communication: "bg-indigo-100 text-indigo-800",
-    technology: "bg-teal-100 text-teal-800"
+    technology: "bg-navy-100 text-navy-800"
   };
   return colors[type] || "bg-slate-100 text-slate-800";
 }

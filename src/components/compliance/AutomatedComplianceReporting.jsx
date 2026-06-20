@@ -252,7 +252,7 @@ ${report.next_steps?.map((s, i) => `${i + 1}. ${s}`).join('\n')}
   return (
     <Card className="border-emerald-200">
       <CardHeader 
-        className="py-3 bg-gradient-to-r from-emerald-50 to-teal-50 cursor-pointer"
+        className="py-3 bg-gradient-to-r from-emerald-50 to-navy-50 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center justify-between">

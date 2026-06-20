@@ -88,21 +88,21 @@ function RateTable({ title, help, table, onCell }) {
         <p className="text-xs text-slate-500">{help}</p>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <table className="w-full text-sm border-separate border-spacing-1">
+        <table className="w-full text-sm border-collapse">
           <thead>
-            <tr>
-              <th className="text-left text-xs font-medium text-slate-500 px-2"> </th>
+            <tr className="border-b border-slate-200">
+              <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 px-2 py-2"> </th>
               {cols.map((c) => (
-                <th key={c} className="text-left text-xs font-medium text-slate-500 px-2">{prettify(c)}</th>
+                <th key={c} className="text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 px-2 py-2">{prettify(c)}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row}>
-                <td className="text-xs font-medium text-slate-700 px-2 whitespace-nowrap">{prettify(row)}</td>
+              <tr key={row} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60">
+                <td className="text-xs font-semibold text-slate-700 px-2 py-1.5 whitespace-nowrap">{prettify(row)}</td>
                 {cols.map((col) => (
-                  <td key={col}>
+                  <td key={col} className="px-1 py-1.5">
                     <Input
                       type="number"
                       step="any"
@@ -110,7 +110,7 @@ function RateTable({ title, help, table, onCell }) {
                       aria-label={`${prettify(row)} ${prettify(col)}`}
                       value={table[row][col]}
                       onChange={(e) => onCell(row, col, e.target.value)}
-                      className="h-8 w-28 text-sm"
+                      className="h-9 w-28 text-sm"
                     />
                   </td>
                 ))}

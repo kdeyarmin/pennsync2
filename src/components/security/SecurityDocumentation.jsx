@@ -139,12 +139,12 @@ export default function SecurityDocumentation() {
           {/* Input Sanitization */}
           <div>
             <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-teal-600" />
+              <CheckCircle2 className="w-5 h-5 text-navy-600" />
               Input Validation & Sanitization
-              <Badge className="bg-teal-500">Active</Badge>
+              <Badge className="bg-navy-500">Active</Badge>
             </h3>
-            <Alert className="bg-teal-50 border-teal-200">
-              <AlertDescription className="text-teal-900">
+            <Alert className="bg-navy-50 border-navy-200">
+              <AlertDescription className="text-navy-900">
                 <p className="font-semibold mb-2">✓ XSS Protection</p>
                 <p className="mb-2">All user input is sanitized before storage:</p>
                 <ul className="list-disc ml-5 space-y-1">

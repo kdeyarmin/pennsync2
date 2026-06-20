@@ -421,7 +421,7 @@ Return JSON:
   if (!patient) return null;
 
   return (
-    <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50">
+    <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-navy-50">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-emerald-900">
