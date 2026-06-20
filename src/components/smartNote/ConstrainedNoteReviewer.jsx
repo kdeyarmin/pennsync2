@@ -11,7 +11,9 @@ import { generateConstrainedNote, groundNote } from "./compliance/generation";
 import { valueGuard } from "./compliance/valueGuard";
 import { computeCoverageScore, computeDraftPresenceScore } from "./compliance/coverageScore";
 import { compareVisits, buildTrendSummary } from "./compliance/visitComparison";
+import { crossCheckChart } from "./compliance/chartCrossCheck";
 import VisitComparisonPanel from "./VisitComparisonPanel";
+import ChartCrossCheckPanel from "./ChartCrossCheckPanel";
 import NoteDiffView from "./NoteDiffView";
 
 /**
@@ -26,6 +28,7 @@ import NoteDiffView from "./NoteDiffView";
  *   serviceLine    — "home_health" | "hospice"
  *   visitType      — routine_visit | admission | recertification | discharge | prn
  *   priorNote      — (optional) the patient's last note, for carry-forward pre-fill
+ *   patient        — (optional) the full chart record, for the chart cross-check
  *   currentUser    — (optional) for the grounding call's rate-limit key
  *   onFinalNote    — (optional) called with the verified note text
  *   onBack         — (optional) renders a Back button next to Generate
@@ -37,7 +40,7 @@ import NoteDiffView from "./NoteDiffView";
  *                     the reviewer renders the fact-check banner but defers the
  *                     note display + actions (e.g. Save-to-chart, PDF) to the host.
  */
-export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", priorNote = "", currentUser, onFinalNote, onBack, renderFinalNote }) {
+export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", priorNote = "", patient = null, currentUser, onFinalNote, onBack, renderFinalNote }) {
   const [answers, setAnswers] = useState({});
   const [prefilledIds, setPrefilledIds] = useState(new Set());
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
@@ -64,6 +67,10 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   // extraction the value-guard uses, so the trend summary is itself value-grounded.
   const comparisons = useMemo(() => compareVisits(roughNote, priorNote), [roughNote, priorNote]);
   const trendSummary = useMemo(() => buildTrendSummary(comparisons), [comparisons]);
+
+  // Deterministic chart cross-check: how the note lines up against the standing
+  // chart (allergies, med list, fall risk). Advisory only — never edits the note.
+  const chartFindings = useMemo(() => crossCheckChart(roughNote, patient), [roughNote, patient]);
 
   // Reset + pre-fill carry-forward answers whenever the SCAN changes. Keyed on
   // `analysis` only (not priorNote) and reads priorNote via a ref, so a late-
@@ -265,6 +272,8 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
               <p className="text-sm text-red-800"><strong>Required before generating:</strong> {criticalUnanswered.map(e => e.label).join(", ")}. Medicare can deny the visit without these.</p>
             </div>
           )}
+
+          <ChartCrossCheckPanel findings={chartFindings} />
 
           {gaps.length > 0 && (
             <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-sm">

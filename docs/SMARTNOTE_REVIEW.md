@@ -308,4 +308,31 @@ is real chart data, not an LLM invention), and it is appended verbatim rather
 than re-voiced. Opt-out leaves the note untouched. Gracefully renders nothing
 when there is no prior note or no comparable change.
 
+## Update — chart cross-check (2026-06-20)
+
+Closes the broader "check the note against other info in that patient's chart"
+half of the intent: comparing the note not just to the prior visit's vitals but
+to the standing chart.
+
+**New deterministic engine** — `compliance/chartCrossCheck.js` (pure, offline,
+8 unit tests): `crossCheckChart(noteText, patient)` compares what the nurse
+documented this visit against the chart and surfaces advisory findings:
+
+- **Allergy conflict** (critical) — a medication named in the note that also
+  appears in the patient's documented allergies.
+- **Medication reconciliation** (info) — a note medication not on the chart's
+  `current_medications` list (new order vs. unreconciled chart).
+- **Fall-safety gap** (warning) — chart flags HIGH `functional_status.fall_risk`
+  but the note never mentions fall precautions / safety.
+
+It reuses the dictionary-backed `extractMedications` and the shared safety
+pattern, so it never invents a discrepancy.
+
+**Wiring** — `ConstrainedNoteReviewer` now takes a `patient` prop and renders a
+**Chart Cross-Check** panel (`ChartCrossCheckPanel`) at the top of the review
+step for callers that supply the chart record (`SmartNoteAssistant`,
+`UnifiedDocumentReview`). It is **purely advisory** — it never edits the note or
+feeds the value-guard — and renders nothing when the note is consistent with the
+chart.
+
 </content>

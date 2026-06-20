@@ -47,6 +47,7 @@ export default function UnifiedDocumentReview({ roughNote, visitType, patientDat
         serviceLine={serviceLine}
         visitType={vt}
         priorNote={priorNoteOf(patientData)}
+        patient={patientData}
         currentUser={currentUser}
         onFinalNote={(note) => onEnhancedNoteReady?.({ enhancedNote: note })}
       />

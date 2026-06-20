@@ -545,6 +545,7 @@ export default function SmartNoteAssistant() {
               serviceLine={serviceLine}
               visitType={visitType}
               priorNote={getPriorNote(patientDetail || patient)}
+              patient={patientDetail || patient}
               currentUser={currentUser}
               onBack={() => setStep(1)}
               renderFinalNote={(api) => (
