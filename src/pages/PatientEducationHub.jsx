@@ -25,7 +25,8 @@ import {
   CheckCircle2,
   Settings,
   MessageSquare,
-  Send
+  Send,
+  FileText
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
@@ -690,7 +691,7 @@ export default function PatientEducationHub() {
                   </div>
 
                   <div className="pt-4 border-t text-xs text-slate-500">
-                    <p>📄 Generated handouts include the Penn Home Health logo and are printer-friendly.</p>
+                    <p className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Generated handouts include the Penn Home Health logo and are printer-friendly.</p>
                   </div>
                 </>
               )}

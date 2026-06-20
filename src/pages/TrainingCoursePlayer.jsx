@@ -278,7 +278,7 @@ export default function TrainingCoursePlayer() {
             </div>
           </div>
           {!previewMode && assignment?.pass_fail_result === "passed" && (
-            <Badge className="bg-emerald-500 text-white flex-shrink-0">✓ Passed</Badge>
+            <Badge variant="success" className="gap-1 flex-shrink-0"><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Passed</Badge>
           )}
         </div>
 
@@ -645,7 +645,7 @@ export default function TrainingCoursePlayer() {
               ) : (
                 <RotateCcw className="w-16 h-16 mx-auto opacity-90" />
               )}
-              <h2 className="text-3xl font-extrabold">{result.passed ? "You Passed! 🎉" : "Not Quite Yet"}</h2>
+              <h2 className="text-3xl font-extrabold">{result.passed ? "You Passed!" : "Not Quite Yet"}</h2>
               <p className="text-lg opacity-90">
                 Score: <strong>{result.score}%</strong> &nbsp;•&nbsp; Passing: {result.passing_score}%
               </p>

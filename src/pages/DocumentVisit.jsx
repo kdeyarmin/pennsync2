@@ -1508,8 +1508,9 @@ Generate the complete clinical narrative based on the audio and context:`;
                       <span className="truncate">Clinical Narrative</span>
                     </div>
                     {recognizedCommand && (
-                      <Badge className="bg-green-500 text-white animate-pulse">
-                        ✓ {recognizedCommand}
+                      <Badge variant="success" className="gap-1 animate-pulse">
+                        <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                        {recognizedCommand}
                       </Badge>
                     )}
                   </CardTitle>
@@ -1666,9 +1667,10 @@ Generate the complete clinical narrative based on the audio and context:`;
                     onChange={setVitalSigns}
                   />
                   {Object.keys(vitalSigns).length > 0 && (
-                    <Alert className="mt-4 bg-green-50 border-green-200">
-                      <AlertDescription className="text-green-900">
-                        ✓ Vital signs entered. These will be automatically incorporated into your note.
+                    <Alert className="mt-4 bg-emerald-50 border-emerald-200">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <AlertDescription className="text-emerald-900">
+                        Vital signs entered. These will be automatically incorporated into your note.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -1700,9 +1702,10 @@ Generate the complete clinical narrative based on the audio and context:`;
                   />
 
                   {hasGeneratedTemplate && (
-                    <Alert className="bg-green-50 border-green-200">
-                      <AlertDescription className="text-green-900">
-                        ✓ Template generated! Review it in the Documentation tab or proceed to add your observations.
+                    <Alert className="bg-emerald-50 border-emerald-200">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <AlertDescription className="text-emerald-900">
+                        Template generated! Review it in the Documentation tab or proceed to add your observations.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -1754,7 +1757,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                   <Alert className="bg-navy-50 border-navy-100">
                     <Sparkles className="w-4 h-4 text-navy-600" />
                     <AlertDescription className="text-navy-900">
-                      <strong>🎤 Global Voice Commands are now active!</strong>
+                      <strong className="inline-flex items-center gap-1.5"><Mic className="w-4 h-4" aria-hidden="true" /> Global Voice Commands are now active!</strong>
                       <p className="mt-2 mb-3">Speak commands like "insert cardiovascular" or "save documentation" anytime in the app to trigger actions.</p>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, BookOpen, Users, Stethoscope, Star, Loader2 } from "lucide-react";
+import { FileText, Download, BookOpen, Users, Stethoscope, Star, Loader2, CheckCircle2, AlertTriangle, ListChecks, Lightbulb } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
@@ -426,36 +426,36 @@ export default function UserGuides() {
           })}
         </div>
 
-        <Card className="mt-8 border-2 border-yellow-300 bg-yellow-50">
+        <Card className="mt-8 border-l-4 border-l-gold-400">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-900">
-              <BookOpen className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-900">
+              <BookOpen className="w-5 h-5 text-gold-600" />
               About These Guides
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 text-sm text-yellow-900">
-              <p>
-                <strong>📖 Comprehensive Instructions:</strong> Each guide includes detailed step-by-step 
-                instructions with specific button names, field labels, and navigation paths.
-              </p>
-              <p>
-                <strong>✅ Best Practices:</strong> Learn the recommended workflows and tips for using 
-                AI features effectively while maintaining clinical accuracy.
-              </p>
-              <p>
-                <strong>⚠️ Common Pitfalls:</strong> Understand what to avoid and troubleshooting 
-                steps for common issues.
-              </p>
-              <p>
-                <strong>📋 Checklists:</strong> Medicare compliance checklists and quality assurance 
-                checkpoints included for clinical documentation.
-              </p>
-              <p className="mt-4 pt-3 border-t border-yellow-300">
-                <strong>💡 Tip:</strong> Print these guides and keep them available at workstations
-                for quick reference during daily workflows.
-              </p>
-            </div>
+            <ul className="space-y-3 text-sm text-slate-700">
+              <li className="flex items-start gap-3">
+                <BookOpen className="w-4 h-4 mt-0.5 flex-shrink-0 text-navy-600" aria-hidden="true" />
+                <span><strong className="text-slate-900">Comprehensive Instructions:</strong> Each guide includes detailed step-by-step instructions with specific button names, field labels, and navigation paths.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-600" aria-hidden="true" />
+                <span><strong className="text-slate-900">Best Practices:</strong> Learn the recommended workflows and tips for using AI features effectively while maintaining clinical accuracy.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600" aria-hidden="true" />
+                <span><strong className="text-slate-900">Common Pitfalls:</strong> Understand what to avoid and troubleshooting steps for common issues.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <ListChecks className="w-4 h-4 mt-0.5 flex-shrink-0 text-navy-600" aria-hidden="true" />
+                <span><strong className="text-slate-900">Checklists:</strong> Medicare compliance checklists and quality assurance checkpoints included for clinical documentation.</span>
+              </li>
+              <li className="flex items-start gap-3 mt-4 pt-3 border-t border-slate-100">
+                <Lightbulb className="w-4 h-4 mt-0.5 flex-shrink-0 text-gold-600" aria-hidden="true" />
+                <span><strong className="text-slate-900">Tip:</strong> Print these guides and keep them available at workstations for quick reference during daily workflows.</span>
+              </li>
+            </ul>
           </CardContent>
         </Card>
     </PageContainer>

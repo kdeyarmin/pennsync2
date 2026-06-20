@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, Sparkles, FileText, Copy, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, Sparkles, FileText, Copy, CheckCircle2, Bot } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { useNavigate } from "react-router-dom";
@@ -193,7 +193,7 @@ export default function TemplateLibrary() {
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-slate-900 mb-2">🤖 AI-Intelligent</h4>
+              <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2"><Bot className="w-4 h-4 text-navy-600" /> AI-Intelligent</h4>
               <p className="text-sm text-slate-600">
                 Templates include clinical prompts, dropdown options for structured data, 
                 and AI enhancement to complete documentation professionally.

@@ -1108,12 +1108,15 @@ Actions available:
                           </p>
                         )}
                         {referral.patient_id && !referral.requires_manual_review && referral.match_confidence && (
-                          <Badge className={
-                            referral.match_confidence >= 90 ? "bg-green-600 text-xs mt-1" :
-                            referral.match_confidence >= 75 ? "bg-blue-600 text-xs mt-1" :
-                            "bg-slate-600 text-xs mt-1"
-                          }>
-                            {referral.match_confidence >= 90 ? "✓ " : ""}
+                          <Badge
+                            variant={
+                              referral.match_confidence >= 90 ? "success" :
+                              referral.match_confidence >= 75 ? "info" :
+                              "secondary"
+                            }
+                            className="gap-1 text-xs mt-1"
+                          >
+                            {referral.match_confidence >= 90 && <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />}
                             Matched ({Math.round(referral.match_confidence)}%)
                           </Badge>
                         )}

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
-  Mic, Square
+  Mic, Square, AlertTriangle
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -473,7 +473,7 @@ export default function SmartNoteAssistant() {
                     <strong>{patient.first_name} {patient.last_name}</strong>
                     {patient.primary_diagnosis ? ` · ${patient.primary_diagnosis}` : ""}
                     {patient.current_medications?.length > 0 ? ` · ${patient.current_medications.length} meds` : ""}
-                    {patient.functional_status?.fall_risk === "high" && <span className="ml-2 text-red-600 font-bold">⚠ High Fall Risk</span>}
+                    {patient.functional_status?.fall_risk === "high" && <span className="ml-2 inline-flex items-center gap-1 text-rose-600 font-bold"><AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" /> High Fall Risk</span>}
                   </span>
                 </div>
               )}
