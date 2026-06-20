@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -254,10 +255,7 @@ export default function PatientRecordDashboard() {
               <CardContent>
                 <ScrollArea className="h-[600px] pr-4">
                   {filteredPatients.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-500">No patients found matching your criteria</p>
-                    </div>
+                    <EmptyState icon={Users} title="No patients found" description="No patients match your current criteria." />
                   ) : (
                     <div className={view === "grid" ? "grid grid-cols-1 gap-4" : "space-y-2"}>
                       {filteredPatients.map(patient => (
