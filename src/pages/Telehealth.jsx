@@ -357,7 +357,7 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
         />
       </div>
 
-      <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 h-11 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all mt-2" disabled={loading || !form.patient_id}>
+      <Button type="submit" className="w-full gap-2 h-11 rounded-lg font-semibold mt-2" disabled={loading || !form.patient_id}>
         <Video className="w-4 h-4" />
         {loading ? "Creating..." : "Create Session"}
       </Button>

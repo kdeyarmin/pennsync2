@@ -243,7 +243,7 @@ export default function AITrainingGenerator() {
           <Button
             onClick={handleGenerate}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-navy-600 to-indigo-600 hover:from-navy-700 hover:to-indigo-700"
+            className="w-full"
             size="lg"
           >
             {loading ? (

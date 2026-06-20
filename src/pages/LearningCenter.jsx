@@ -518,7 +518,7 @@ export default function LearningCenter() {
 
       {/* Continue Learning */}
       {resumeAssignment && (
-        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="border-l-4 border-l-navy-500">
           <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0">
               <div className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -655,7 +655,7 @@ export default function LearningCenter() {
       {/* Achievements highlight */}
       {leaderboardEntry && (
         (leaderboardEntry.total_points > 0 || leaderboardEntry.badges_earned > 0 || leaderboardEntry.current_streak > 0) && (
-          <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
+          <Card className="border-l-4 border-l-gold-400">
             <CardContent className="p-4 sm:p-5">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <h3 className="font-bold text-slate-900 flex items-center gap-2">
@@ -1139,8 +1139,8 @@ export default function LearningCenter() {
                   }`}>
                     <CardContent className="p-5">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Award className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-gold-100 ring-1 ring-inset ring-gold-200 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Award className="w-5 h-5 text-gold-700" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-slate-900 truncate">{cert.course_title}</h3>

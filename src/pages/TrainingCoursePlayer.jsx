@@ -254,7 +254,7 @@ export default function TrainingCoursePlayer() {
       )}
 
       {/* Course header card */}
-      <div className="rounded-2xl bg-gradient-to-r from-slate-800 to-blue-900 text-white p-4 sm:p-6 shadow-xl">
+      <div className="rounded-2xl bg-navy-900 text-white p-4 sm:p-6 shadow-lg">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
             <p className="text-blue-300 text-xs font-semibold uppercase tracking-wider mb-1">
@@ -638,7 +638,7 @@ export default function TrainingCoursePlayer() {
       {step === "result" && result && (
         <div className="space-y-4">
           {/* Pass/Fail hero */}
-          <Card className={`border-0 shadow-lg ${result.passed ? "bg-gradient-to-r from-emerald-600 to-emerald-700" : "bg-gradient-to-r from-red-700 to-red-700"} text-white`}>
+          <Card className={`border-0 shadow-lg ${result.passed ? "bg-emerald-600" : "bg-red-700"} text-white`}>
             <CardContent className="p-8 text-center space-y-3">
               {result.passed ? (
                 <CheckCircle2 className="w-16 h-16 mx-auto opacity-90" />

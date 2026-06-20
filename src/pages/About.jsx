@@ -117,7 +117,7 @@ export default function About() {
 
       {/* CTA Section */}
       <div className="mb-12">
-        <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+        <Card className="bg-navy-50 border-navy-100">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to Transform Your Agency?</h2>
             <p className="text-slate-600 mb-6 max-w-2xl mx-auto">

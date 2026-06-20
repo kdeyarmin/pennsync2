@@ -567,7 +567,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div
-                      className="bg-gradient-to-r from-red-500 to-amber-500 h-2 rounded-full"
+                      className="bg-amber-500 h-2 rounded-full"
                       style={{ width: `${(count / incidents.length) * 100}%` }}
                     />
                   </div>

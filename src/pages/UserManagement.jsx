@@ -678,7 +678,7 @@ export default function UserManagement() {
                       <TableRow className={!isActive ? 'opacity-50' : ''}>
                         <TableCell className="text-xs sm:text-sm">
                           <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium flex-shrink-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-navy-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium flex-shrink-0">
                               {user.full_name?.charAt(0) || 'U'}
                             </div>
                             <div className="min-w-0">

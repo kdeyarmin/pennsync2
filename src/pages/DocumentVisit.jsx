@@ -1609,8 +1609,8 @@ Generate the complete clinical narrative based on the audio and context:`;
             </TabsContent>
 
             <TabsContent value="workflow" className="space-y-4 sm:space-y-6">
-              <Alert className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <Sparkles className="w-5 h-5 text-blue-600" />
+              <Alert className="bg-navy-50 border-navy-100">
+                <Sparkles className="w-5 h-5 text-navy-600" />
                 <AlertDescription className="text-blue-900">
                   <strong>Recommended AI Workflow:</strong>
                   <ol className="list-decimal ml-5 mt-2 space-y-1">
@@ -1751,7 +1751,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Alert className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
+                  <Alert className="bg-navy-50 border-navy-100">
                     <Sparkles className="w-4 h-4 text-navy-600" />
                     <AlertDescription className="text-navy-900">
                       <strong>🎤 Global Voice Commands are now active!</strong>
