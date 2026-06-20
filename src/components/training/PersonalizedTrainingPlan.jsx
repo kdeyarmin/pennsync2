@@ -318,7 +318,7 @@ export default function PersonalizedTrainingPlan({
 
   return (
     <Card className="border-2 border-navy-200">
-      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-navy-600" />

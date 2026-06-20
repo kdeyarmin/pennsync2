@@ -48,7 +48,7 @@ const educationTopics = [
     id: 'chf',
     title: 'Congestive Heart Failure (CHF)',
     icon: Heart,
-    color: 'from-red-500 to-pink-500',
+    color: 'from-red-500 to-gold-500',
     description: 'Learn about managing heart failure, recognizing symptoms, and preventing complications.'
   },
   {
@@ -104,7 +104,7 @@ const educationTopics = [
     id: 'pain_management',
     title: 'Pain Management',
     icon: AlertCircle,
-    color: 'from-pink-500 to-navy-500',
+    color: 'from-gold-500 to-navy-500',
     description: 'Managing pain safely with medications and non-drug approaches.'
   },
   {
@@ -160,7 +160,7 @@ const educationTopics = [
     id: 'parkinsons',
     title: 'Parkinson\'s Disease',
     icon: Brain,
-    color: 'from-navy-500 to-pink-500',
+    color: 'from-navy-500 to-gold-500',
     description: 'Living with Parkinson\'s, medication management, and daily living strategies.'
   },
   {
@@ -181,7 +181,7 @@ const educationTopics = [
     id: 'hospice_comfort',
     title: 'Hospice & Comfort Care',
     icon: Heart,
-    color: 'from-pink-500 to-rose-500',
+    color: 'from-gold-500 to-rose-500',
     description: 'Comfort measures, symptom management, and supporting loved ones in hospice.'
   }
 ];

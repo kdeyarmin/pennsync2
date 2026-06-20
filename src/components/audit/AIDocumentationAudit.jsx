@@ -219,7 +219,7 @@ Return JSON:
   };
 
   return (
-    <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-pink-50">
+    <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-gold-50">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-navy-900">

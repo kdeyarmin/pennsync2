@@ -81,7 +81,7 @@ export default function NurseLearningDashboard({
     <div className="space-y-6">
       {/* AI-Identified Deficits with Auto-Recommendations */}
       {deficitAnalysis?.deficits && deficitAnalysis.deficits.length > 0 && (
-        <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+        <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-navy-600" />

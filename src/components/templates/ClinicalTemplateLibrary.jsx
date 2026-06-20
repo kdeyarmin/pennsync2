@@ -106,7 +106,7 @@ const CONDITION_TEMPLATES = [
     name: 'Wound Care',
     icon: Scissors,
     description: 'Wound assessment and treatment',
-    color: 'bg-pink-500',
+    color: 'bg-gold-500',
     focusAreas: ['wound_measurements', 'wound_bed', 'drainage', 'periwound', 'dressing_change', 'infection_signs']
   },
   {

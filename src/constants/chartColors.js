@@ -13,7 +13,7 @@ export const CHART_COLORS = [
   '#7c3aed', // violet
   '#0891b2', // cyan
   '#dc2626', // red
-  '#db2777', // pink
+  '#0d9488', // teal
   '#ea580c', // orange
 ];
 

@@ -88,8 +88,8 @@ export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAler
   };
 
   return (
-    <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
-      <CardHeader className="py-4 bg-gradient-to-r from-navy-100 to-pink-100">
+    <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
+      <CardHeader className="py-4 bg-gradient-to-r from-navy-100 to-gold-100">
         <CardTitle className="text-base flex items-center gap-2">
           <Brain className="w-5 h-5 text-navy-600" />
           AI Predictive Risk Analysis

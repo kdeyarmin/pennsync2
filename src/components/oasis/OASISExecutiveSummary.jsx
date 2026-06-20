@@ -102,7 +102,7 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
 
   if (isGenerating) {
     return (
-      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
         <CardContent className="p-6 text-center">
           <Loader2 className="w-8 h-8 text-navy-600 mx-auto mb-3 animate-spin" />
           <p className="text-sm text-navy-900">Generating executive summary...</p>
@@ -113,7 +113,7 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
 
   if (!summary) {
     return (
-      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
   }
 
   return (
-    <Card className="border-2 border-navy-400 bg-gradient-to-r from-navy-50 to-pink-50">
+    <Card className="border-2 border-navy-400 bg-gradient-to-r from-navy-50 to-gold-50">
       <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">

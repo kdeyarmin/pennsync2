@@ -348,7 +348,7 @@ Return detailed JSON analysis.`,
       )}
 
       {/* Overall Summary */}
-      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">

@@ -115,7 +115,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-2 border-navy-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-gold-50 border-2 border-navy-200">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>

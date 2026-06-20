@@ -11,7 +11,7 @@ const COLORS = [
   "bg-amber-500",
   "bg-navy-600",
   "bg-indigo-500",
-  "bg-pink-500",
+  "bg-gold-500",
   "bg-teal-500",
   "bg-orange-500",
 ];

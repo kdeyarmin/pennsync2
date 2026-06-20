@@ -94,7 +94,7 @@ export default function StateSurveyVideos() {
       </Card>
 
       {/* Bag Technique Checklist */}
-      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div>

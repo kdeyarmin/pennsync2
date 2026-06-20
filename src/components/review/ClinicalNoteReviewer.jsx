@@ -229,7 +229,7 @@ Return detailed analysis with:
 
   if (!reviewResults) {
     return (
-      <Card className={`${prominent ? 'border-4 border-navy-400 shadow-2xl bg-gradient-to-r from-navy-50 to-pink-50' : 'border-2 border-blue-300'}`}>
+      <Card className={`${prominent ? 'border-4 border-navy-400 shadow-2xl bg-gradient-to-r from-navy-50 to-gold-50' : 'border-2 border-blue-300'}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-blue-600" />
@@ -259,7 +259,7 @@ Return detailed analysis with:
               <span>Quality</span>
             </div>
           </div>
-          <Button onClick={reviewNote} className={`w-full ${prominent ? 'bg-gradient-to-r from-navy-600 to-pink-600 hover:from-navy-700 hover:to-pink-700 text-lg py-6' : 'bg-blue-600 hover:bg-blue-700'}`}>
+          <Button onClick={reviewNote} className={`w-full ${prominent ? 'bg-gradient-to-r from-navy-600 to-gold-600 hover:from-navy-700 hover:to-gold-700 text-lg py-6' : 'bg-blue-600 hover:bg-blue-700'}`}>
             <FileText className="w-4 h-4 mr-2" />
             {prominent ? 'Run Quality & Compliance Review' : 'Review Note'}
           </Button>
@@ -271,7 +271,7 @@ Return detailed analysis with:
   return (
     <div className="space-y-4">
       {/* Overall Scores */}
-      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+      <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">

@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toCsvRows } from "@/components/admin/csvExport";
 
-const COLORS = ['#3557b0', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const COLORS = ['#3557b0', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0d9488', '#06b6d4', '#84cc16'];
 
 export default function PDGMTrendDashboard() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -779,7 +779,7 @@ Provide optimistic, realistic, and conservative scenarios.`,
 
       {/* AI Predictions */}
       {predictions && (
-        <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+        <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-navy-600" />

@@ -173,7 +173,7 @@ Return JSON:
     return <Minus className="w-4 h-4 text-slate-500" />;
   };
 
-  const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#0d9488'];
 
   if (compact) {
     return (

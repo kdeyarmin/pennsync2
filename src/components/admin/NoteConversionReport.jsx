@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { format, subDays } from "date-fns";
 
-const COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+const COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#0d9488'];
 
 export default function NoteEnhancementReport() {
   const [timeRange, setTimeRange] = useState("7");

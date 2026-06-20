@@ -23,7 +23,7 @@ export default function OASISDataDisplay({ oasisData, compact = false }) {
   const primaryDx = extractedData.primary_diagnosis || pdgmData.primary_diagnosis || 'Not specified';
 
   return (
-    <Card className="border-navy-200 bg-gradient-to-r from-navy-50 to-pink-50">
+    <Card className="border-navy-200 bg-gradient-to-r from-navy-50 to-gold-50">
       <CardHeader className="py-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">

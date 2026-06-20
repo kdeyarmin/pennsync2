@@ -258,7 +258,7 @@ Return JSON:
   if (!patient) return null;
 
   return (
-    <Card className={`border-2 ${prominent ? 'border-indigo-300 shadow-lg' : 'border-slate-200'} ${summary ? 'bg-gradient-to-br from-indigo-50 via-navy-50 to-pink-50' : ''}`}>
+    <Card className={`border-2 ${prominent ? 'border-indigo-300 shadow-lg' : 'border-slate-200'} ${summary ? 'bg-gradient-to-br from-indigo-50 via-navy-50 to-gold-50' : ''}`}>
       <CardHeader 
         className={`py-3 cursor-pointer ${prominent ? 'bg-gradient-to-r from-indigo-100 to-navy-100' : 'bg-slate-50'}`}
         onClick={() => summary && setIsExpanded(!isExpanded)}

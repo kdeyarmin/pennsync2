@@ -495,7 +495,7 @@ export default function RealTimeComplianceDashboard() {
   const getScoreBg = (score) => {
     if (score >= 85) return 'from-green-500 to-emerald-500';
     if (score >= 75) return 'from-yellow-500 to-orange-500';
-    return 'from-red-500 to-pink-500';
+    return 'from-red-500 to-gold-500';
   };
 
   const getSeverityColor = (severity) => {
@@ -1021,7 +1021,7 @@ export default function RealTimeComplianceDashboard() {
       </div>
 
       {/* Training Resources */}
-      <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="w-5 h-5 text-navy-600" />

@@ -1288,14 +1288,14 @@ export default function FeaturesPage() {
 
   const getCategoryColor = (color) => {
     const colors = {
-      purple: "from-navy-500 to-pink-500",
+      purple: "from-navy-500 to-gold-500",
       blue: "from-blue-500 to-navy-500",
       indigo: "from-indigo-500 to-navy-500",
       green: "from-green-500 to-emerald-500",
       cyan: "from-navy-500 to-blue-500",
       orange: "from-orange-500 to-red-500",
-      red: "from-red-500 to-pink-500",
-      pink: "from-pink-500 to-rose-500",
+      red: "from-red-500 to-red-600",
+      pink: "from-gold-500 to-gold-600",
       gray: "from-slate-500 to-slate-600"
     };
     return colors[color] || "from-slate-500 to-slate-600";
@@ -1366,7 +1366,7 @@ export default function FeaturesPage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-navy-200">
+          <Card className="bg-gradient-to-br from-navy-50 to-gold-50 border-navy-200">
             <CardContent className="p-3 sm:p-4 md:p-6 text-center">
               <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-navy-600 mx-auto mb-1 sm:mb-2" />
               <p className="text-2xl sm:text-3xl font-bold text-slate-900">{Math.round(totalTimeSavedPerMonth / 60)}</p>
@@ -1477,7 +1477,7 @@ export default function FeaturesPage() {
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 max-w-3xl mx-auto">
               <div className="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
-                <Heart className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-pink-200" />
+                <Heart className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-gold-200" />
                 <p className="font-semibold text-sm sm:text-base md:text-lg">More Patient Time</p>
                 <p className="text-xs sm:text-sm text-blue-100">Less paperwork, more care</p>
               </div>

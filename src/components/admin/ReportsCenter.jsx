@@ -1181,7 +1181,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                       <p className="text-3xl font-bold text-blue-600">${Math.round(reportPreview.costSavings).toLocaleString()}</p>
                     </CardContent>
                   </Card>
-                  <Card className="bg-gradient-to-br from-navy-50 to-pink-50">
+                  <Card className="bg-gradient-to-br from-navy-50 to-gold-50">
                     <CardContent className="p-6">
                       <p className="text-sm text-slate-600 mb-1">ROI</p>
                       <p className="text-3xl font-bold text-navy-600">{reportPreview.roi}%</p>

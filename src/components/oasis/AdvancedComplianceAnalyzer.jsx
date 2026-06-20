@@ -263,7 +263,7 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
 
   return (
     <Card className="border-2 border-red-300 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-red-50 to-pink-50">
+      <CardHeader className="bg-gradient-to-r from-red-50 to-gold-50">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-red-600" />
@@ -593,7 +593,7 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
           {/* Trend Analysis */}
           {complianceReport.trend_analysis && (
             <Card className="border-2 border-navy-300">
-              <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50">
+              <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-navy-600" />
                   Compliance Trend Analysis

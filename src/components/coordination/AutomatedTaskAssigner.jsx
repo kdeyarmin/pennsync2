@@ -151,7 +151,7 @@ Focus on tasks that require specialized expertise or coordination.`,
 
   return (
     <Card className="border-2 border-navy-300">
-      <CardHeader className="bg-gradient-to-r from-navy-50 to-pink-50 pb-3">
+      <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50 pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <UserCog className="w-5 h-5 text-navy-600" />
           AI Task Assignment Generator

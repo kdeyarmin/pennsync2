@@ -133,7 +133,7 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
   };
 
   return (
-    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-gold-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-navy-900">
           <Scan className="w-6 h-6" />

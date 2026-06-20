@@ -215,7 +215,7 @@ For EACH gap found, provide:
   };
 
   return (
-    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-gold-50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">

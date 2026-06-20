@@ -31,7 +31,7 @@ import {
   Pie
 } from "recharts";
 
-const COLORS = ['#3557b0', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
+const COLORS = ['#3557b0', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#0d9488', '#14b8a6'];
 
 export default function PatientCohortAnalysis({ cohortData, formatCurrency }) {
   const [segmentBy, setSegmentBy] = useState("clinical_group");

@@ -267,7 +267,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
     setIsGeneratingInsights(false);
   };
 
-  const _COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  const _COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#0d9488'];
 
   return (
     <PageContainer>
@@ -374,7 +374,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
 
       {/* AI Insights */}
       {aiInsights && (
-        <Card className="mb-4 sm:mb-6 md:mb-8 border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+        <Card className="mb-4 sm:mb-6 md:mb-8 border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
           <CardHeader className="p-3 sm:p-4 md:p-6">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <BarChart3 className="w-5 h-5 text-navy-600" />

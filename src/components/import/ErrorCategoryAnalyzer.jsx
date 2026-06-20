@@ -49,7 +49,7 @@ const ERROR_CATEGORIES = {
   DUPLICATE: {
     label: "Duplicate Records",
     icon: User,
-    color: "bg-pink-100 text-pink-800 border-pink-300",
+    color: "bg-gold-100 text-gold-800 border-gold-300",
     keywords: ["duplicate", "already exists", "unique"]
   }
 };

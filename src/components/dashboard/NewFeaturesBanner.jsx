@@ -24,7 +24,7 @@ export default function NewFeaturesBanner() {
   if (features.length === 0) return null;
 
   return (
-    <Card className="bg-gradient-to-r from-indigo-500 via-navy-500 to-pink-500 text-white border-none shadow-xl mb-6">
+    <Card className="bg-gradient-to-r from-indigo-500 via-navy-500 to-gold-500 text-white border-none shadow-xl mb-6">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-white">
           <Sparkles className="w-5 h-5 text-white" />
