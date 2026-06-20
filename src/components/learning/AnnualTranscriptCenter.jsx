@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import LoadingState from "@/components/ui/LoadingState";
+import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -56,10 +57,12 @@ export default function AnnualTranscriptCenter() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-indigo-700 text-white p-6 shadow-xl">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Annual Education Transcript</h1>
-        <p className="text-indigo-100">All completed annual mandatory education and certificates for {currentYear}.</p>
-      </div>
+      <HideWhenEmbedded>
+        <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-indigo-700 text-white p-6 shadow-xl">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Annual Education Transcript</h1>
+          <p className="text-indigo-100">All completed annual mandatory education and certificates for {currentYear}.</p>
+        </div>
+      </HideWhenEmbedded>
 
       <Card>
         <CardHeader className="pb-3">

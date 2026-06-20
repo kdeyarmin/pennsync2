@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import LoadingState from "@/components/ui/LoadingState";
 import LearningPathProgress from "./LearningPathProgress";
+import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -89,10 +90,12 @@ export default function MyAnnualEducationDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-700 text-white p-6 shadow-xl">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Annual Education — {currentYear}</h1>
-        <p className="text-blue-100">Track required yearly education, annual bundles, scores, certificates, and renewal dates.</p>
-      </div>
+      <HideWhenEmbedded>
+        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-700 text-white p-6 shadow-xl">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Annual Education — {currentYear}</h1>
+          <p className="text-blue-100">Track required yearly education, annual bundles, scores, certificates, and renewal dates.</p>
+        </div>
+      </HideWhenEmbedded>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[

@@ -22,6 +22,7 @@ import AnnualEducationTemplateLibrary from "@/components/training/AnnualEducatio
 import AnnualLearningPlanPanel from "@/components/training/AnnualLearningPlanPanel";
 import TrainingAttachmentManager from "@/components/training/TrainingAttachmentManager";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
+import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -200,10 +201,12 @@ export default function AnnualMandatoryEducationHub() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">Penn Annual Education & Competencies</h1>
-        <p className="text-indigo-100">Build yearly required education bundles for Penn Hospice, Penn Home Health, office staff, and leadership while tracking competency, certificates, and renewal compliance.</p>
-      </div>
+      <HideWhenEmbedded>
+        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 text-white p-6 shadow-xl">
+          <h1 className="text-3xl font-bold mb-2">Penn Annual Education & Competencies</h1>
+          <p className="text-indigo-100">Build yearly required education bundles for Penn Hospice, Penn Home Health, office staff, and leadership while tracking competency, certificates, and renewal compliance.</p>
+        </div>
+      </HideWhenEmbedded>
 
       <Card className="border-indigo-200 bg-indigo-50/40">
         <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
