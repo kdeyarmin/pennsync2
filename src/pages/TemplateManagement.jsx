@@ -1,13 +1,27 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Loader2, Plus, Edit2, Trash2, FileText } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Plus, Edit2, Trash2, FileText, FileType } from 'lucide-react';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
+
+const PDFTemplateLibrary = lazy(() => import('@/pages/PDFTemplateLibrary'));
+
+// Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
+// ?tab= deep-link so the retired PDF Template Library page redirects to its tab.
+const TAB_KEYS = ['templates', 'pdf'];
+
+const tabLoader = (
+  <div className="flex justify-center py-12">
+    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+  </div>
+);
 
 export default function TemplateManagement() {
   const queryClient = useQueryClient();
@@ -19,6 +33,25 @@ export default function TemplateManagement() {
     category: 'consent',
     content: '',
   });
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : 'templates';
+  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
+  // retired PDF Template Library page deep-links correctly. "templates" is the
+  // default, so it stays a clean /TemplateManagement with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === 'templates' ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /TemplateManagement. Only fires when the param resolved
+  // to the default tab, so a valid deep-link like ?tab=pdf is left untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === 'templates') {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
 
   // Fetch templates
   const { data: templates = [], isLoading } = useQuery({
@@ -83,14 +116,6 @@ export default function TemplateManagement() {
     setFormData({ name: '', description: '', category: 'consent', content: '' });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <PageContainer>
       <PageHeader
@@ -99,12 +124,34 @@ export default function TemplateManagement() {
         title="Template Management"
         description="Create and manage document templates for patient records"
         favoritePage="TemplateManagement"
-        actions={
-          <Button onClick={() => setShowForm(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> New Template
-          </Button>
-        }
       />
+
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="templates" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <FileText className="h-4 w-4 mr-2" />
+              Document Templates
+            </TabsTrigger>
+            <TabsTrigger value="pdf" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <FileType className="h-4 w-4 mr-2" />
+              PDF Templates
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="templates" className="space-y-4 sm:space-y-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : (
+            <>
+      <div className="flex justify-end">
+        <Button onClick={() => setShowForm(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> New Template
+        </Button>
+      </div>
 
       {showForm && (
         <Card className="p-6 space-y-4">
@@ -205,6 +252,16 @@ export default function TemplateManagement() {
           No templates yet. Create one to get started.
         </Card>
       )}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="pdf">
+          <Suspense fallback={tabLoader}>
+            <PDFTemplateLibrary />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

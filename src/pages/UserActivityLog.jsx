@@ -34,12 +34,9 @@ import {
   UserX,
   Key,
   Mail,
-  Send,
-  Archive
+  Send
 } from "lucide-react";
 import { formatEastern } from "../components/utils/timezone";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 
 export default function UserActivityLog() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -186,15 +183,7 @@ export default function UserActivityLog() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Archive}
-        eyebrow="Admin"
-        title="User Activity Log"
-        description="Monitor all user actions across the system"
-        favoritePage="UserActivityLog"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
         <Card>
@@ -518,6 +507,6 @@ export default function UserActivityLog() {
           )}
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

@@ -27,7 +27,7 @@ import {
   Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2,
   Phone, Send, Heart, Activity, Database, Lock, Award,
   Clipboard, Filter, Globe,
-  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Archive, Mic, Pen, CalendarDays
+  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Mic, Pen, CalendarDays
 } from "lucide-react";
 
 import { PAGE_NAMES, REDIRECTS } from "@/routes";
@@ -256,24 +256,6 @@ export const NAV_MANIFEST = [
     keywords: ["scribe", "medical", "ai scribe"],
   },
   {
-    page: "OfflineVisitDocumentation",
-    label: "Offline Visit Documentation",
-    icon: WifiOff,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "OfflineMode",
-    keywords: ["offline", "visit", "documentation"],
-  },
-  {
-    page: "OfflineDocumentation",
-    label: "Offline Documentation",
-    icon: WifiOff,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "OfflineMode",
-    keywords: ["offline", "documentation"],
-  },
-  {
     page: "ReferralTriage",
     label: "Referral Triage",
     icon: Filter,
@@ -341,51 +323,6 @@ export const NAV_MANIFEST = [
     breadcrumbParent: null,
     keywords: ["telehealth", "video", "call", "virtual visit"],
   },
-  {
-    page: "FaxDashboard",
-    label: "Fax Dashboard",
-    icon: Send,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "SendFax",
-    keywords: ["fax", "dashboard"],
-  },
-  {
-    page: "FaxLogsDashboard",
-    label: "Fax Logs",
-    icon: Archive,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "SendFax",
-    keywords: ["fax", "logs", "history"],
-  },
-  {
-    page: "FaxContacts",
-    label: "Fax Contacts",
-    icon: BookUser,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "SendFax",
-    keywords: ["fax", "contacts", "address book"],
-  },
-  {
-    page: "FaxAddressBook",
-    label: "Fax Address Book",
-    icon: BookUser,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "SendFax",
-    keywords: ["fax", "address book"],
-  },
-  {
-    page: "FaxAnalytics",
-    label: "Fax Analytics",
-    icon: BarChart3,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "SendFax",
-    keywords: ["fax", "analytics", "metrics"],
-  },
 
   // ─── PDF / Templates ─────────────────────────────────────────────────────────
   {
@@ -405,15 +342,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "DocumentHub",
     keywords: ["pdf", "search"],
-  },
-  {
-    page: "PDFTemplateLibrary",
-    label: "PDF Template Library",
-    icon: FileText,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "DocumentHub",
-    keywords: ["pdf", "template", "library"],
   },
   {
     page: "TemplateLibrary",
@@ -510,51 +438,6 @@ export const NAV_MANIFEST = [
     keywords: ["course", "player", "training", "video"],
   },
   {
-    page: "MyTraining",
-    label: "My Training",
-    icon: GraduationCap,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["training", "my training", "assigned"],
-  },
-  {
-    page: "MyAnnualEducation",
-    label: "Annual Education",
-    icon: GraduationCap,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["annual education", "mandatory", "compliance training"],
-  },
-  {
-    page: "AnnualMandatoryEducation",
-    label: "Mandatory Education",
-    icon: GraduationCap,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["annual", "mandatory", "education"],
-  },
-  {
-    page: "AnnualEducationTranscript",
-    label: "Education Transcript",
-    icon: Award,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["transcript", "education", "completion"],
-  },
-  {
-    page: "EmployeeTranscript",
-    label: "Employee Transcript",
-    icon: Award,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["transcript", "employee", "training history"],
-  },
-  {
     page: "LearningReports",
     label: "Learning Reports",
     icon: BarChart3,
@@ -591,15 +474,6 @@ export const NAV_MANIFEST = [
     keywords: ["documentation", "training"],
   },
   {
-    page: "NurseTraining",
-    label: "Nurse Training",
-    icon: GraduationCap,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["nurse", "training"],
-  },
-  {
     page: "NurseTrainingHub",
     label: "Nurse Training Hub",
     icon: GraduationCap,
@@ -631,51 +505,6 @@ export const NAV_MANIFEST = [
   // NOTE: MedicareComplianceDashboard is intentionally absent — its audit metrics
   // duplicate the Compliance Center, so /MedicareComplianceDashboard redirects
   // there (see REDIRECTS in src/routes.jsx).
-  {
-    page: "RegulatoryCompliance",
-    label: "Regulatory Compliance",
-    icon: ClipboardList,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["regulatory", "cms", "state requirements", "compliance"],
-  },
-  {
-    page: "SecurityCompliance",
-    label: "Security & Compliance",
-    icon: Lock,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["security", "hipaa", "compliance"],
-  },
-  {
-    page: "SecurityPolicy",
-    label: "Security Policy",
-    icon: Lock,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "SecurityCompliance",
-    keywords: ["security", "policy"],
-  },
-  {
-    page: "ComplianceMonitoringDashboard",
-    label: "Compliance Monitoring",
-    icon: Monitor,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["compliance", "monitoring", "dashboard"],
-  },
-  {
-    page: "RealTimeComplianceDashboard",
-    label: "Real-Time Compliance",
-    icon: Radio,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ComplianceCenter",
-    keywords: ["compliance", "real time", "live"],
-  },
   // NOTE: ComplianceRegulatory was a thin wrapper that merely composed
   // RealTimeComplianceDashboard + RegulatoryCompliance (both reachable from the
   // Compliance Center). Its name also collided with RegulatoryCompliance, so it
@@ -822,15 +651,6 @@ export const NAV_MANIFEST = [
     keywords: ["discharge", "import", "bulk", "upload", "batch"],
   },
   {
-    page: "UserActivityLog",
-    label: "User Activity Log",
-    icon: Archive,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["activity", "log", "audit", "users"],
-  },
-  {
     page: "UserActivityReport",
     label: "User Activity Report",
     icon: BarChart3,
@@ -857,15 +677,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: null,
     keywords: ["reports", "analytics", "metrics", "export", "data"],
-  },
-  {
-    page: "AdminReportsCenter",
-    label: "Reports Center",
-    icon: BarChart3,
-    category: "Analytics",
-    adminOnly: true,
-    breadcrumbParent: "ReportsAnalytics",
-    keywords: ["reports", "center", "quality metrics", "kpi", "note conversion", "export"],
   },
   {
     page: "AgencyAnalytics",

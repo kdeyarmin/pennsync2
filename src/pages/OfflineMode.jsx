@@ -1,19 +1,53 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { WifiOff, Wifi, Users, FileText, Database } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WifiOff, Wifi, Users, FileText, Database, Activity, Upload, Loader2 } from "lucide-react";
 import OfflinePatientSelector from "../components/mobile/OfflinePatientSelector";
 import OfflineSyncManager from "../components/mobile/OfflineSyncManager";
 import OfflineTaskManager from "../components/mobile/OfflineTaskManager";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
+const OfflineVisitDocumentation = lazy(() => import("@/pages/OfflineVisitDocumentation"));
+const OfflineDocumentation = lazy(() => import("@/pages/OfflineDocumentation"));
+
+// Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
+// ?tab= deep-link so the retired offline pages redirect to the right tab.
+const TAB_KEYS = ["status", "visit", "pending"];
+
+const tabLoader = (
+  <div className="flex justify-center py-12">
+    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+  </div>
+);
+
 export default function OfflineMode() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [selectedPatient, setSelectedPatient] = useState(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "status";
+  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
+  // retired offline pages deep-link correctly. "status" is the default, so it
+  // stays a clean /OfflineMode with no query string.
+  const handleTabChange = (value) => {
+    setSearchParams(value === "status" ? {} : { tab: value });
+  };
+
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /OfflineMode. Only fires when the param resolved to the
+  // default tab, so a valid deep-link like ?tab=visit is left untouched.
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === "status") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -45,6 +79,25 @@ export default function OfflineMode() {
         favoritePage="OfflineMode"
       />
 
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="status" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Activity className="h-4 w-4 mr-2" />
+              Status &amp; Sync
+            </TabsTrigger>
+            <TabsTrigger value="visit" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <FileText className="h-4 w-4 mr-2" />
+              Document Visit
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Upload className="h-4 w-4 mr-2" />
+              Pending Sync
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="status" className="space-y-4 sm:space-y-6">
       <Alert className={isOnline ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'}>
         <AlertDescription className="text-sm flex items-center gap-2">
           {isOnline ? (
@@ -170,6 +223,20 @@ export default function OfflineMode() {
           )}
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="visit">
+          <Suspense fallback={tabLoader}>
+            <OfflineVisitDocumentation />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="pending">
+          <Suspense fallback={tabLoader}>
+            <OfflineDocumentation />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

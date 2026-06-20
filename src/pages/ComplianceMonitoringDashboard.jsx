@@ -16,10 +16,7 @@ import {
   Users,
   CheckCircle2,
   RefreshCw,
-  Monitor
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import {
   Select,
   SelectContent,
@@ -337,24 +334,18 @@ Compliance Management System`;
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Monitor}
-        eyebrow="Analytics"
-        title="Compliance Monitoring"
-        description="Real-time compliance tracking and alerts"
-        favoritePage="ComplianceMonitoringDashboard"
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefreshAll}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-        }
-      />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-slate-600">Real-time compliance tracking and alerts</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefreshAll}
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
@@ -562,6 +553,6 @@ Compliance Management System`;
           })}
         </div>
       )}
-    </PageContainer>
+    </div>
   );
 }

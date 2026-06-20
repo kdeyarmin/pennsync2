@@ -26,10 +26,7 @@ import {
   Activity,
   Zap,
   Download,
-  Radio
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import GranularComplianceGapAnalyzer from "../components/compliance/GranularComplianceGapAnalyzer";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
@@ -584,20 +581,14 @@ export default function RealTimeComplianceDashboard() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Radio}
-        eyebrow="Analytics"
-        title="Real-Time Compliance"
-        description="Aggregated insights across all features"
-        favoritePage="RealTimeComplianceDashboard"
-        actions={
-          <Button onClick={exportComplianceData} variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
-            <Download className="w-4 h-4" />
-            <span>Export</span>
-          </Button>
-        }
-      />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-slate-600">Aggregated insights across all features</p>
+        <Button onClick={exportComplianceData} variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
+          <Download className="w-4 h-4" />
+          <span>Export</span>
+        </Button>
+      </div>
 
       {/* Filters */}
       <Card className="mb-4 sm:mb-6">
@@ -1089,6 +1080,6 @@ export default function RealTimeComplianceDashboard() {
           </div>
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

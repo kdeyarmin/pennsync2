@@ -7,10 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import {
   FileText, AlertCircle, CheckCircle2, Clock,
-  RefreshCw, TrendingUp, Brain, Zap, Download, Search, Archive
+  RefreshCw, TrendingUp, Brain, Zap, Download, Search
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -159,24 +157,17 @@ Provide actionable insights in a structured format with clear sections.`,
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={Archive}
-        eyebrow="Communication"
-        title="Fax Logs"
-        description="AI-powered fax transmission analytics and insights"
-        favoritePage="FaxLogsDashboard"
-        actions={
-          <Button
-            onClick={generateAIInsights}
-            disabled={aiInsightsLoading || failedLogs.length === 0}
-            className="bg-gradient-to-r from-navy-600 to-indigo-600"
-          >
-            <Brain className="w-4 h-4 mr-2" />
-            {aiInsightsLoading ? "Analyzing..." : "Generate AI Insights"}
-          </Button>
-        }
-      />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex justify-end">
+        <Button
+          onClick={generateAIInsights}
+          disabled={aiInsightsLoading || failedLogs.length === 0}
+          className="bg-gradient-to-r from-navy-600 to-indigo-600"
+        >
+          <Brain className="w-4 h-4 mr-2" />
+          {aiInsightsLoading ? "Analyzing..." : "Generate AI Insights"}
+        </Button>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -459,6 +450,6 @@ Provide actionable insights in a structured format with clear sections.`,
           </div>
         </CardContent>
       </Card>
-    </PageContainer>
+    </div>
   );
 }

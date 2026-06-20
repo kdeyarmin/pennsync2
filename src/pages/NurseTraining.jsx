@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  GraduationCap,
   Target,
   Award,
   TrendingUp,
@@ -17,8 +16,6 @@ import {
   RefreshCw,
   Zap
 } from "lucide-react";
-import PageContainer from "@/components/ui/PageContainer";
-import PageHeader from "@/components/ui/PageHeader";
 import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
 import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
 import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
@@ -101,15 +98,7 @@ export default function NurseTraining() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        icon={GraduationCap}
-        eyebrow="My Learning"
-        title="Nurse Training Hub"
-        description="Improve your documentation skills with AI-powered training and practice scenarios"
-        favoritePage="NurseTraining"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
@@ -290,6 +279,6 @@ export default function NurseTraining() {
           />
         </TabsContent>
       </Tabs>
-    </PageContainer>
+    </div>
   );
 }

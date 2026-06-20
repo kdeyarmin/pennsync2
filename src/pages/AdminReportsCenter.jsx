@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Gauge, Brain, FileText } from "lucide-react";
-import PageHeader from "@/components/ui/PageHeader";
 import ReportsCenter from "@/components/admin/ReportsCenter";
 import QualityMetricsDashboard from "@/components/admin/QualityMetricsDashboard";
 import AIKPIReportGenerator from "@/components/admin/AIKPIReportGenerator";
@@ -39,16 +38,7 @@ export default function AdminReportsCenterPage() {
   });
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <PageHeader
-        icon={BarChart3}
-        iconColor="bg-blue-600"
-        eyebrow="Administration"
-        title="Reports Center"
-        description="Build and export agency reports, quality metrics, AI-generated KPI summaries, and documentation analytics — all in one place."
-        favoritePage="AdminReportsCenter"
-      />
-
+    <div className="space-y-4 sm:space-y-6">
       <Tabs defaultValue="reports" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">

@@ -29,7 +29,7 @@ const GROUPS = [
     pages: [
       "UserManagement", "AdminUserSetup", "PersonnelFile", "CredentialCompliance",
       "NursePerformanceDashboard", "ManagerSkillGapDashboard",
-      "UserActivityLog", "UserActivityReport",
+      "UserActivityReport",
     ],
   },
   {
@@ -48,8 +48,7 @@ const GROUPS = [
     icon: Stethoscope,
     color: "text-teal-600 bg-teal-50",
     pages: [
-      "ClinicalPathwayManager", "ClinicalInsightsDashboard", "OASISAuditDashboard",
-      "OASISComplianceReview", "OASISAnalyticsDashboard", "OASISRevenueAnalysis",
+      "ClinicalPathwayManager", "ClinicalInsightsDashboard", "OASISCenter",
     ],
   },
   {
@@ -58,8 +57,7 @@ const GROUPS = [
     icon: ShieldCheck,
     color: "text-emerald-600 bg-emerald-50",
     pages: [
-      "ComplianceCenter", "RealTimeComplianceDashboard", "ComplianceMonitoringDashboard",
-      "RegulatoryCompliance", "SecurityCompliance", "SecurityPolicy", "DocumentAuditLogs",
+      "ComplianceCenter", "DocumentHub",
     ],
   },
   {
@@ -68,8 +66,8 @@ const GROUPS = [
     icon: BarChart3,
     color: "text-navy-600 bg-navy-50",
     pages: [
-      "ReportsAnalytics", "AdminReportsCenter", "AgencyAnalytics",
-      "AnalyticsDashboard", "PredictiveAnalytics", "FaxAnalytics",
+      "ReportsAnalytics", "AgencyAnalytics",
+      "AnalyticsDashboard", "PredictiveAnalytics",
     ],
   },
   {

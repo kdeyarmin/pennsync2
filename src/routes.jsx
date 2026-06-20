@@ -125,6 +125,39 @@ export const REDIRECTS = [
   // Processor and Admission Note are now steps (tabs) of the intake workflow.
   { from: '/ReferralProcessor', to: '/ReferralIntake?tab=process' },
   { from: '/ReferralAdmissionNote', to: '/ReferralIntake?tab=admission' },
+
+  // ─── Fax Center consolidation ────────────────────────────────────────────────
+  // Contacts, logs and analytics are now tabs of the Fax sender (/SendFax).
+  { from: '/FaxDashboard', to: '/SendFax' },
+  { from: '/FaxLogsDashboard', to: '/SendFax?tab=logs' },
+  { from: '/FaxContacts', to: '/SendFax?tab=contacts' },
+  { from: '/FaxAddressBook', to: '/SendFax?tab=contacts' },
+  { from: '/FaxAnalytics', to: '/SendFax?tab=analytics' },
+
+  // ─── Compliance Center consolidation ─────────────────────────────────────────
+  // Monitoring, regulatory and security pages are now Compliance Center tabs.
+  { from: '/ComplianceMonitoringDashboard', to: '/ComplianceCenter?tab=dashboard' },
+  { from: '/RealTimeComplianceDashboard', to: '/ComplianceCenter?tab=dashboard' },
+  { from: '/RegulatoryCompliance', to: '/ComplianceCenter?tab=regulatory' },
+  { from: '/SecurityCompliance', to: '/ComplianceCenter?tab=security' },
+  { from: '/SecurityPolicy', to: '/ComplianceCenter?tab=security' },
+
+  // ─── Learning consolidation ──────────────────────────────────────────────────
+  // The personal-training wrapper pages are now tabs of My Learning; NurseTraining
+  // is a tab of the Nurse Training Hub.
+  { from: '/MyTraining', to: '/MyLearning?tab=inservices' },
+  { from: '/MyAnnualEducation', to: '/MyLearning?tab=annual' },
+  { from: '/AnnualMandatoryEducation', to: '/MyLearning?tab=annual' },
+  { from: '/AnnualEducationTranscript', to: '/MyLearning?tab=transcripts' },
+  { from: '/EmployeeTranscript', to: '/MyLearning?tab=transcripts' },
+  { from: '/NurseTraining', to: '/NurseTrainingHub?tab=documentation' },
+
+  // ─── Misc hub consolidations ─────────────────────────────────────────────────
+  { from: '/AdminReportsCenter', to: '/ReportsAnalytics?tab=reports-center' },
+  { from: '/OfflineVisitDocumentation', to: '/OfflineMode?tab=visit' },
+  { from: '/OfflineDocumentation', to: '/OfflineMode?tab=pending' },
+  { from: '/UserActivityLog', to: '/UserActivityReport?tab=log' },
+  { from: '/PDFTemplateLibrary', to: '/TemplateManagement?tab=pdf' },
 ];
 
 export const MAIN_PAGE = 'Dashboard';
