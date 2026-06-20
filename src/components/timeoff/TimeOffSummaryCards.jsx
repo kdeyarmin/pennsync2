@@ -55,7 +55,7 @@ export default function TimeOffSummaryCards({ requests = [] }) {
         label="Upcoming time off"
         value={stats.upcomingCount}
         sub={`${stats.upcomingDays} day${stats.upcomingDays === 1 ? "" : "s"} scheduled`}
-        accent="#2563eb"
+        accent="#264491"
       />
       <StatCard
         icon={CalendarCheck}

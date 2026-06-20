@@ -51,7 +51,7 @@ export default function FolderTreeView({
     { value: 'yellow', class: 'text-yellow-600', bg: 'bg-yellow-100' },
     { value: 'red', class: 'text-red-600', bg: 'bg-red-100' },
     { value: 'indigo', class: 'text-indigo-600', bg: 'bg-indigo-100' },
-    { value: 'pink', class: 'text-pink-600', bg: 'bg-pink-100' }
+    { value: 'pink', class: 'text-gold-600', bg: 'bg-gold-100' }
   ];
 
   const colorClasses = Object.fromEntries(colorOptions.map(c => [c.value, c.class]));

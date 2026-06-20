@@ -232,17 +232,28 @@ export default function Layout({ children, currentPageName }) {
 
   if (currentUser && !isApproved) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-navy-50 to-navy-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-navy-50 via-white to-navy-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <Card className="border-gold-300 shadow-xl">
+          <div className="mb-6 flex items-center justify-center gap-2">
+            <img
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png"
+              alt="PennSync"
+              className="h-9 w-9 rounded-lg"
+            />
+            <span className="text-xl font-bold tracking-tight text-navy-900">
+              Penn<span className="text-gold-600">Sync</span>
+            </span>
+          </div>
+          <Card className="relative overflow-hidden border-slate-200 shadow-xl">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-navy-600 via-navy-500 to-gold-400" />
             <CardContent className="p-8 text-center">
-              <div className="w-20 h-20 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Clock className="w-10 h-10 text-gold-600" />
+              <div className="w-16 h-16 bg-gradient-to-br from-gold-100 to-gold-200 rounded-2xl flex items-center justify-center mx-auto mb-6 ring-1 ring-inset ring-gold-300/60">
+                <Clock className="w-8 h-8 text-gold-600" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 mb-3">Account Pending Approval</h1>
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">Account Pending Approval</h1>
               <p className="text-slate-600 mb-6">Your account has been created successfully. Please wait for an administrator to approve your access.</p>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-900"><strong>Account Details:</strong><br />{currentUser.full_name}<br />{currentUser.email}</p>
+              <div className="bg-navy-50 border border-navy-200 rounded-xl p-4 mb-6 text-left">
+                <p className="text-sm text-navy-900"><strong>Account Details:</strong><br />{currentUser.full_name}<br />{currentUser.email}</p>
               </div>
               <p className="text-sm text-slate-500 mb-6">You will receive an email notification once your account is approved.</p>
               <Button onClick={handleLogout} variant="outline" className="w-full">
@@ -250,6 +261,9 @@ export default function Layout({ children, currentPageName }) {
               </Button>
             </CardContent>
           </Card>
+          <p className="mt-6 text-center text-xs text-slate-400">
+            Secure clinical platform · HIPAA compliant
+          </p>
         </div>
       </div>
     );
@@ -257,7 +271,19 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <>
-      <Toaster position="top-right" richColors closeButton theme="light" />
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        theme="light"
+        toastOptions={{
+          classNames: {
+            toast: "rounded-xl border shadow-lg",
+            title: "font-semibold",
+            description: "text-slate-600",
+          },
+        }}
+      />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>

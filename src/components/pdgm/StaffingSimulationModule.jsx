@@ -36,7 +36,7 @@ import {
 
 const SERVICE_LINES = [
   { id: 'wound_care', name: 'Wound Care', icon: Heart, avgRevenue: 2800, color: '#ef4444' },
-  { id: 'cardiac', name: 'Cardiac Care', icon: Activity, avgRevenue: 2400, color: '#3b82f6' },
+  { id: 'cardiac', name: 'Cardiac Care', icon: Activity, avgRevenue: 2400, color: '#3557b0' },
   { id: 'orthopedic', name: 'Orthopedic/Post-Surgical', icon: Stethoscope, avgRevenue: 2200, color: '#22c55e' },
   { id: 'neuro_rehab', name: 'Neuro/Stroke Rehab', icon: Activity, avgRevenue: 2600, color: '#8b5cf6' },
   { id: 'diabetes', name: 'Diabetes Management', icon: Heart, avgRevenue: 2100, color: '#f59e0b' },
@@ -366,7 +366,7 @@ Return JSON:
                         <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                         <Tooltip formatter={(value) => formatCurrency(value)} />
                         <Legend />
-                        <Area type="monotone" dataKey="revenue" stackId="1" stroke="#3b82f6" fill="#93c5fd" name="Revenue" />
+                        <Area type="monotone" dataKey="revenue" stackId="1" stroke="#3557b0" fill="#93c5fd" name="Revenue" />
                         <Area type="monotone" dataKey="margin" stackId="2" stroke="#22c55e" fill="#86efac" name="Margin" />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -515,7 +515,7 @@ Return JSON:
                         <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                         <Tooltip formatter={(value) => formatCurrency(value)} />
                         <Legend />
-                        <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} name="Revenue" />
+                        <Line type="monotone" dataKey="revenue" stroke="#3557b0" strokeWidth={2} name="Revenue" />
                         <Line type="monotone" dataKey="profit" stroke="#22c55e" strokeWidth={2} name="Profit" />
                       </LineChart>
                     </ResponsiveContainer>

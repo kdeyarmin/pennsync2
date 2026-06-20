@@ -174,7 +174,7 @@ export default function EnrollmentSummaryDashboard() {
                   labelLine={false}
                   label={({ name, value }) => `${name}: ${value}`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {statusData.map((entry, index) => (

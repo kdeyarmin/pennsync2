@@ -362,7 +362,7 @@ export default function ComplianceCenter() {
     );
   }
 
-  const _COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+  const _COLORS = ['#3557b0', '#10B981', '#F59E0B', '#EF4444'];
 
   return (
     <PageContainer>
@@ -536,7 +536,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </div>
 
           {aiInsights && (
-            <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-pink-50">
+            <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-navy-600" />
@@ -582,7 +582,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="score" stroke="#3B82F6" strokeWidth={3} name="Compliance Score (%)" />
+                  <Line type="monotone" dataKey="score" stroke="#3557b0" strokeWidth={3} name="Compliance Score (%)" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

@@ -192,7 +192,7 @@ export default function NursePerformanceMetrics({
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                     <Tooltip contentStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="OASIS" fill="#3b82f6" />
+                    <Bar dataKey="OASIS" fill="#3557b0" />
                     <Bar dataKey="Notes" fill="#22c55e" />
                     <Bar dataKey="Compliance" fill="#8b5cf6" />
                   </BarChart>

@@ -34,7 +34,7 @@ const TYPE_DOT = {
   personal: "bg-navy-500",
   bereavement: "bg-slate-500",
   jury_duty: "bg-slate-500",
-  parental: "bg-pink-500",
+  parental: "bg-gold-500",
   unpaid: "bg-slate-400",
   other: "bg-slate-400",
 };
@@ -148,7 +148,7 @@ export default function TeamTimeOffCalendar({ requests = [] }) {
             ["Vacation", "bg-blue-500"],
             ["Sick", "bg-amber-500"],
             ["Personal", "bg-navy-500"],
-            ["Parental", "bg-pink-500"],
+            ["Parental", "bg-gold-500"],
             ["Other", "bg-slate-400"],
           ].map(([label, dot]) => (
             <span key={label} className="inline-flex items-center gap-1">

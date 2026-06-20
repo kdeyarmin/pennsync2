@@ -301,7 +301,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
   return (
     <div className="space-y-6">
       {/* Overall Risk Score */}
-      <Card className={`border-4 ${riskColors.border} bg-gradient-to-r from-navy-50 to-pink-50`}>
+      <Card className={`border-4 ${riskColors.border} bg-gradient-to-r from-navy-50 to-gold-50`}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">

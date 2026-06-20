@@ -6,8 +6,8 @@ export const INTERVENTIONS_LIBRARY = [
   {
     id: "wound-care",
     category: "Wound Care",
-    dotColor: "bg-rose-400",
-    cardClass: "bg-rose-50 border-rose-200 text-rose-800",
+    dotColor: "bg-red-400",
+    cardClass: "bg-red-50 border-red-200 text-red-800",
     items: [
       { id: "wc-1", name: "Wound Assessment", description: "Assess wound bed, size, depth, drainage and periwound skin", frequency: "Each visit", complianceTag: "OASIS M1340" },
       { id: "wc-2", name: "Dressing Change", description: "Perform sterile dressing change per physician order", frequency: "Per order", complianceTag: "Skilled nursing documentation" },

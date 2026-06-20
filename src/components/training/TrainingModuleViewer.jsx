@@ -196,7 +196,7 @@ export default function TrainingModuleViewer({ module }) {
     video: "bg-navy-100 text-navy-800",
     policy: "bg-orange-100 text-orange-800",
     checklist: "bg-teal-100 text-teal-800",
-    attestation: "bg-pink-100 text-pink-800",
+    attestation: "bg-gold-100 text-gold-800",
     simulation: "bg-indigo-100 text-indigo-800",
   };
 

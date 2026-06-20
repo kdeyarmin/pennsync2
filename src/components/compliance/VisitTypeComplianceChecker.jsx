@@ -298,7 +298,7 @@ Return detailed compliance analysis in JSON format.`;
   if (!visitType) return null;
 
   return (
-    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-gold-50">
       <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">

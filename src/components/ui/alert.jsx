@@ -10,6 +10,9 @@ const Alert = React.forwardRef((props, ref) => {
   const variants = {
     default: "bg-white border-slate-200 shadow-sm",
     destructive: "bg-red-50 border-red-300 text-red-900 shadow-sm",
+    success: "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-sm",
+    warning: "bg-amber-50 border-amber-300 text-amber-900 shadow-sm",
+    info: "bg-navy-50 border-navy-200 text-navy-900 shadow-sm",
   }
   
   return (

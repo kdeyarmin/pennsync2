@@ -9,7 +9,7 @@ import {
 import { format, subMonths, startOfMonth, endOfMonth, differenceInMinutes } from 'date-fns';
 import { FileText, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
 
-const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
+const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3557b0', '#8b5cf6'];
 
 export default function FaxAnalytics() {
     const { data: faxes = [], isLoading } = useQuery({
@@ -190,7 +190,7 @@ export default function FaxAnalytics() {
                                         cursor={{ fill: '#f8fafc' }}
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     />
-                                    <Bar dataKey="pages" name="Pages Sent" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                                    <Bar dataKey="pages" name="Pages Sent" fill="#3557b0" radius={[4, 4, 0, 0]} maxBarSize={50} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>

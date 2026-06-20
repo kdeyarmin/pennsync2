@@ -123,7 +123,7 @@ export default function TrainingProgressChart({
                 <XAxis dataKey="module" fontSize={12} angle={-45} textAnchor="end" height={80} />
                 <YAxis fontSize={12} label={{ value: '%', angle: -90, position: 'insideLeft' }} />
                 <Tooltip />
-                <Bar dataKey="completionRate" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="completionRate" fill="#3557b0" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

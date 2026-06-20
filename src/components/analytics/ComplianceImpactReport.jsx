@@ -84,8 +84,8 @@ export default function ComplianceImpactReport({ noteConversions }) {
     }));
 
   return (
-    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-pink-50">
-      <CardHeader className="bg-gradient-to-r from-navy-100 to-pink-100">
+    <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-gold-50">
+      <CardHeader className="bg-gradient-to-r from-navy-100 to-gold-100">
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-navy-600" />
           AI Enhancement Impact Report

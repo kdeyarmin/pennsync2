@@ -568,7 +568,7 @@ export default function TrainingCoursePlayer() {
                     <circle cx="18" cy="18" r="15.9" fill="none" stroke="#dbeafe" strokeWidth="3" />
                     <circle
                       cx="18" cy="18" r="15.9" fill="none"
-                      stroke="#2563eb" strokeWidth="3"
+                      stroke="#264491" strokeWidth="3"
                       strokeDasharray={`${totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0} 100`}
                       strokeLinecap="round"
                     />
@@ -638,7 +638,7 @@ export default function TrainingCoursePlayer() {
       {step === "result" && result && (
         <div className="space-y-4">
           {/* Pass/Fail hero */}
-          <Card className={`border-0 shadow-lg ${result.passed ? "bg-gradient-to-r from-emerald-600 to-green-600" : "bg-gradient-to-r from-red-700 to-rose-700"} text-white`}>
+          <Card className={`border-0 shadow-lg ${result.passed ? "bg-gradient-to-r from-emerald-600 to-green-600" : "bg-gradient-to-r from-red-700 to-red-700"} text-white`}>
             <CardContent className="p-8 text-center space-y-3">
               {result.passed ? (
                 <CheckCircle2 className="w-16 h-16 mx-auto opacity-90" />

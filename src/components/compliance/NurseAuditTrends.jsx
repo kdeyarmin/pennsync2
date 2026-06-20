@@ -224,9 +224,9 @@ export default function NurseAuditTrends({ audits = [], nurseEmail }) {
                 <Line 
                   type="monotone" 
                   dataKey="avgScore" 
-                  stroke="#3b82f6" 
+                  stroke="#3557b0" 
                   strokeWidth={2}
-                  dot={{ fill: '#3b82f6' }}
+                  dot={{ fill: '#3557b0' }}
                   name="Avg Score"
                   connectNulls
                 />

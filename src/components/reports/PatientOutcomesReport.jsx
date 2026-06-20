@@ -29,7 +29,7 @@ export default function PatientOutcomesReport({ dateRange }) {
     { name: 'Other', value: patients.filter(p => p.discharge_disposition === 'other').length }
   ];
 
-  const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#6b7280'];
+  const COLORS = ['#10b981', '#3557b0', '#f59e0b', '#6b7280'];
 
   const handleExport = () => {
     exportToPDF({
@@ -90,7 +90,7 @@ export default function PatientOutcomesReport({ dateRange }) {
                 labelLine={false}
                 label={entry => `${entry.name}: ${entry.value}`}
                 outerRadius={100}
-                fill="#8884d8"
+                fill="#264491"
                 dataKey="value"
               >
                 {dispositionData.map((entry, index) => (

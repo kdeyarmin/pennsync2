@@ -48,7 +48,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
 
           <TabsContent value="scenarios" className="mt-4 space-y-3">
             {guidance.scenarios.map((scenario, idx) => (
-              <Card key={idx} className="border-l-4 bg-white" style={{ borderLeftColor: scenario.color || '#6366f1' }}>
+              <Card key={idx} className="border-l-4 bg-white" style={{ borderLeftColor: scenario.color || '#264491' }}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">

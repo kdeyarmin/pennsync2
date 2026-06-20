@@ -10,7 +10,13 @@ const Skeleton = React.forwardRef((props, ref) => {
   return (
     <div
       ref={ref}
-      className={cn("animate-pulse rounded-md bg-slate-200", className)}
+      className={cn(
+        // A soft base tint with a light "sheen" band sweeping across — reads as
+        // a more premium loading state than a flat pulse. (Reduced-motion users
+        // get a static block via the global prefers-reduced-motion guard.)
+        "relative isolate overflow-hidden rounded-md bg-slate-200/70 after:absolute after:inset-0 after:-translate-x-full after:animate-sheen after:bg-gradient-to-r after:from-transparent after:via-white/70 after:to-transparent",
+        className
+      )}
       {...otherProps}
     />
   )

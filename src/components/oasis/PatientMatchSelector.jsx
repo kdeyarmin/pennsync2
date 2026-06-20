@@ -252,7 +252,7 @@ export default function PatientMatchSelector({
 
         {/* Alternative Matches - More Prominent */}
         {hasAlternatives && (
-          <div className="bg-gradient-to-r from-navy-50 to-pink-50 p-4 rounded-lg border-2 border-navy-300">
+          <div className="bg-gradient-to-r from-navy-50 to-gold-50 p-4 rounded-lg border-2 border-navy-300">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-semibold text-navy-900">Alternative Matches</p>
               <Button

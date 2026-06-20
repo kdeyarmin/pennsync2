@@ -99,8 +99,8 @@ export default function ComplianceTrendChart({
               <AreaChart data={auditTrendData}>
                 <defs>
                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#3557b0" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3557b0" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -110,7 +110,7 @@ export default function ComplianceTrendChart({
                 <Area 
                   type="monotone" 
                   dataKey="avgScore" 
-                  stroke="#3b82f6" 
+                  stroke="#3557b0" 
                   strokeWidth={2}
                   fill="url(#colorScore)" 
                 />

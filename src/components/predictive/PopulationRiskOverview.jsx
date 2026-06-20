@@ -172,7 +172,7 @@ export default function PopulationRiskOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-navy-50 to-pink-50 border-navy-200">
+        <Card className="bg-gradient-to-br from-navy-50 to-gold-50 border-navy-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <Activity className="w-5 h-5 text-navy-600" />

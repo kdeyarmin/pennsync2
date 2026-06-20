@@ -495,7 +495,7 @@ export default function RealTimeComplianceDashboard() {
   const getScoreBg = (score) => {
     if (score >= 85) return 'from-green-500 to-emerald-500';
     if (score >= 75) return 'from-yellow-500 to-orange-500';
-    return 'from-red-500 to-pink-500';
+    return 'from-red-500 to-gold-500';
   };
 
   const getSeverityColor = (severity) => {
@@ -508,7 +508,7 @@ export default function RealTimeComplianceDashboard() {
     return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
-  const COLORS_PIE = ['#EF4444', '#F97316', '#EAB308', '#3B82F6', '#10B981'];
+  const COLORS_PIE = ['#EF4444', '#F97316', '#EAB308', '#3557b0', '#10B981'];
 
   const featureDistribution = featureCompliance.map((f, _idx) => ({
     name: f.name,
@@ -727,7 +727,7 @@ export default function RealTimeComplianceDashboard() {
               <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="score" stroke="#6366F1" strokeWidth={3} name="Compliance Score" />
+              <Line type="monotone" dataKey="score" stroke="#264491" strokeWidth={3} name="Compliance Score" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -985,7 +985,7 @@ export default function RealTimeComplianceDashboard() {
                   labelLine={false}
                   label={({ name, value }) => `${name}: ${value}`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#264491"
                   dataKey="value"
                 >
                   {featureDistribution.map((entry, index) => (
@@ -1012,7 +1012,7 @@ export default function RealTimeComplianceDashboard() {
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="audits" fill="#8B5CF6" name="Audits" />
-                <Bar dataKey="oasis" fill="#3B82F6" name="OASIS" />
+                <Bar dataKey="oasis" fill="#3557b0" name="OASIS" />
                 <Bar dataKey="notes" fill="#10B981" name="Notes" />
               </BarChart>
             </ResponsiveContainer>
@@ -1021,7 +1021,7 @@ export default function RealTimeComplianceDashboard() {
       </div>
 
       {/* Training Resources */}
-      <Card className="bg-gradient-to-r from-navy-50 to-pink-50 border-navy-200">
+      <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="w-5 h-5 text-navy-600" />

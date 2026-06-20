@@ -242,13 +242,15 @@ export default function NotificationCenter({ currentUser, onClose }) {
   return (
     <>
       <Card className="w-full max-w-2xl h-[80vh] flex flex-col border-slate-200 bg-white">
-        <CardHeader className="border-b border-slate-200 flex-shrink-0">
+        <CardHeader className="border-b border-slate-200 bg-slate-50/70 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-100 text-navy-600">
+                <Bell className="w-4 h-4" />
+              </span>
               Notifications
               {unreadNotifications.length > 0 && (
-                <Badge className="bg-blue-600 text-white">
+                <Badge variant="info">
                   {unreadNotifications.length} new
                 </Badge>
               )}
@@ -276,11 +278,11 @@ export default function NotificationCenter({ currentUser, onClose }) {
 
         <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs defaultValue="unread" className="h-full flex flex-col">
-            <TabsList className="grid grid-cols-2 rounded-none border-b border-slate-200 flex-shrink-0">
-              <TabsTrigger value="unread">
+            <TabsList className="grid w-full grid-cols-2 h-auto rounded-none border-0 border-b border-slate-200 bg-white p-0 shadow-none flex-shrink-0">
+              <TabsTrigger value="unread" className="rounded-none border-b-2 border-transparent bg-transparent py-3 text-slate-600 shadow-none ring-0 data-[state=active]:border-navy-600 data-[state=active]:bg-transparent data-[state=active]:text-navy-700 data-[state=active]:shadow-none data-[state=active]:ring-0">
                 Unread ({unreadNotifications.length})
               </TabsTrigger>
-              <TabsTrigger value="all">
+              <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent bg-transparent py-3 text-slate-600 shadow-none ring-0 data-[state=active]:border-navy-600 data-[state=active]:bg-transparent data-[state=active]:text-navy-700 data-[state=active]:shadow-none data-[state=active]:ring-0">
                 All ({notifications.length})
               </TabsTrigger>
             </TabsList>

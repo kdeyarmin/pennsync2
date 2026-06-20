@@ -216,7 +216,7 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
                     <PolarGrid />
                     <PolarAngleAxis dataKey="category" tick={{ fontSize: 10 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 8 }} />
-                    <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.5} />
+                    <Radar name="Score" dataKey="score" stroke="#264491" fill="#264491" fillOpacity={0.5} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>

@@ -48,7 +48,7 @@ import {
   ComposedChart
 } from "recharts";
 
-const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = ['#3557b0', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function PDGMPredictiveAnalytics({ compact = false }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -370,7 +370,7 @@ Return JSON:
               <div className="h-24">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={predictions.revenue_forecast?.projected_monthly?.slice(0, 4) || []}>
-                    <Area type="monotone" dataKey="projected" stroke="#6366f1" fill="#c7d2fe" />
+                    <Area type="monotone" dataKey="projected" stroke="#264491" fill="#b6c9ee" />
                     <Area type="monotone" dataKey="optimized" stroke="#22c55e" fill="#bbf7d0" fillOpacity={0.5} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -489,7 +489,7 @@ Return JSON:
                       <Tooltip formatter={(value) => formatCurrency(value)} />
                       <Legend />
                       <Area type="monotone" dataKey="baseline" fill="#e5e7eb" stroke="#9ca3af" name="Baseline" />
-                      <Line type="monotone" dataKey="projected" stroke="#6366f1" strokeWidth={2} name="Projected" dot={{ fill: '#6366f1' }} />
+                      <Line type="monotone" dataKey="projected" stroke="#264491" strokeWidth={2} name="Projected" dot={{ fill: '#264491' }} />
                       <Line type="monotone" dataKey="optimized" stroke="#22c55e" strokeWidth={2} strokeDasharray="5 5" name="Optimized" dot={{ fill: '#22c55e' }} />
                     </ComposedChart>
                   </ResponsiveContainer>
@@ -562,7 +562,7 @@ Return JSON:
                       <YAxis domain={[0.8, 1.2]} tick={{ fontSize: 11 }} />
                       <Tooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="weight" stroke="#6366f1" strokeWidth={2} name="Total Weight" />
+                      <Line type="monotone" dataKey="weight" stroke="#264491" strokeWidth={2} name="Total Weight" />
                       <Line type="monotone" dataKey="functional" stroke="#22c55e" strokeWidth={2} name="Functional" />
                       <Line type="monotone" dataKey="clinical" stroke="#f59e0b" strokeWidth={2} name="Clinical" />
                     </LineChart>

@@ -222,7 +222,7 @@ export default function TrainingProgressTracker({ _userEmail, trainingProgress, 
       )}
 
       {/* Skill Level Badge */}
-      <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-pink-50">
+      <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-gold-50">
         <CardContent className="p-6 text-center">
           <Target className="w-12 h-12 text-navy-600 mx-auto mb-3" />
           <h3 className="text-2xl font-bold text-navy-900 mb-1">

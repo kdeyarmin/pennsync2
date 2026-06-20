@@ -45,9 +45,9 @@ export default function InteractiveChart({
     }
 
     return (
-      <Card className="shadow-lg border-2 border-indigo-200">
+      <Card className="shadow-lg border border-slate-200">
         <CardContent className="p-3">
-          <p className="font-semibold text-sm mb-2">{label}</p>
+          <p className="font-semibold text-sm mb-2 text-slate-900">{label}</p>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center justify-between gap-4 text-xs">
               <span className="flex items-center gap-2">
@@ -158,7 +158,7 @@ export default function InteractiveChart({
                 labelLine={false}
                 label={(entry) => `${entry[xAxisKey]}: ${entry[yAxisKey]}`}
                 outerRadius={containerHeight / 3}
-                fill="#8884d8"
+                fill="#264491"
                 dataKey={dataKey || yAxisKey}
                 onClick={handleBarClick}
                 cursor={onDrillDown ? "pointer" : "default"}
