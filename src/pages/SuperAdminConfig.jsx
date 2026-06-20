@@ -142,7 +142,7 @@ export default function SuperAdminConfig() {
         <TelnyxSetupProgress />
 
         {/* Telnyx API key */}
-        <div id="twilio-secret" className="scroll-mt-24">
+        <div id="telnyx-secret" className="scroll-mt-24">
           <TelnyxSecretPanel />
         </div>
 
