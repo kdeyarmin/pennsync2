@@ -29,7 +29,9 @@
         "sending",
         "sent",
         "delivered",
-        "failed"
+        "failed",
+        "retrying",
+        "retried"
       ],
       "default": "queued",
       "description": "Fax status"
@@ -104,6 +106,15 @@
     "ocr_confidence": {
       "type": "number",
       "description": "OCR confidence score 0-100"
+    },
+    "retry_claimed_by": {
+      "type": "string",
+      "description": "Per-run token claiming this fax for a retry send (concurrency guard)"
+    },
+    "retry_claimed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this fax was claimed for a retry send"
     }
   },
   "required": [

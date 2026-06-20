@@ -115,9 +115,14 @@ Return only the enhanced clinical narrative, no explanations.`,
     }
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard");
+    } catch (err) {
+      console.error("Clipboard write failed:", err);
+      toast.error("Failed to copy to clipboard");
+    }
   };
 
   const formatTime = (seconds) => {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,13 +88,24 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
         }
       });
 
-      setQuestions(result.questions || []);
+      const generated = Array.isArray(result.questions) ? result.questions : [];
+      // Guard: an empty question set would make scoring divide by zero (NaN).
+      if (generated.length === 0) {
+        toast.error('The quiz failed to generate. Please try again.');
+        setSelectedCategory(null);
+        setIsGenerating(false);
+        return;
+      }
+
+      setQuestions(generated);
       setCurrentQuestion(0);
       setScore(0);
       setAnswers([]);
       setQuizCompleted(false);
     } catch (error) {
       console.error("Error generating quiz:", error);
+      toast.error('The quiz failed to generate. Please try again.');
+      setSelectedCategory(null);
     }
     setIsGenerating(false);
   };
@@ -123,12 +135,16 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
       setQuizCompleted(true);
       const endTime = new Date();
       const duration = Math.round((endTime - startTime) / 1000 / 60);
-      
+
+      const percentage = questions.length > 0
+        ? Math.round((score / questions.length) * 100)
+        : 0;
+
       onQuizCompleted?.({
         category: selectedCategory.label,
         score,
         total: questions.length,
-        percentage: Math.round((score / questions.length) * 100),
+        percentage,
         duration,
         answers
       });
@@ -191,7 +207,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
 
   // Quiz Completed
   if (quizCompleted) {
-    const percentage = Math.round((score / questions.length) * 100);
+    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
     const passed = percentage >= 80;
 
     return (

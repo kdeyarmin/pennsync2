@@ -763,11 +763,13 @@ Actions available:
         }
       }
 
-      // Create all tasks and track success
+      // Create all tasks and track success. Default assigned_to to the intake
+      // coordinator (current user) so tasks aren't orphaned — assigned_to is
+      // required on the Task entity and drives RLS visibility.
       let createdTasksCount = 0;
       if (allSuggestedTasks.length > 0) {
-        const _taskResults = await Promise.all(allSuggestedTasks.map(task => 
-          base44.entities.Task.create(task)
+        const _taskResults = await Promise.all(allSuggestedTasks.map(task =>
+          base44.entities.Task.create({ assigned_to: currentUser?.email, ...task })
             .then(() => { createdTasksCount++; return true; })
             .catch(err => { console.error('Failed to create task:', err); return false; })
         ));

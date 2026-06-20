@@ -41,6 +41,7 @@ import {
   Monitor
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import LoadingState from "@/components/ui/LoadingState";
@@ -75,6 +76,13 @@ export default function SystemJobMonitor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['systemLogs'] });
+      toast.success('Guideline sync started');
+    },
+    onError: (error) => {
+      // Previously the failure was swallowed with console.error only, leaving the
+      // admin with no feedback that the manual sync never ran.
+      console.error('Sync failed:', error);
+      toast.error(`Guideline sync failed: ${error?.message || 'Unknown error'}`);
     }
   });
 
@@ -82,8 +90,8 @@ export default function SystemJobMonitor() {
     setIsRunning(true);
     try {
       await runGuidelineSyncMutation.mutateAsync();
-    } catch (error) {
-      console.error('Sync failed:', error);
+    } catch {
+      // Error surfaced to the user via the mutation's onError toast above.
     }
     setIsRunning(false);
   };

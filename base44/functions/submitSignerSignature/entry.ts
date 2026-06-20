@@ -46,48 +46,120 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'This document is not part of the signer\'s package' }, { status: 403 });
     }
 
-    // 3) Fetch the signature; reject if already signed (single-use per document).
+    // 3) Fetch the signature; reject if already completed (single-use per document).
     const signature = await base44.asServiceRole.entities.DocumentSignature.get(document_id).catch(() => null);
     if (!signature) {
       return Response.json({ error: 'Document not found' }, { status: 404 });
     }
-    if (signature.status === 'signed') {
+    if (signature.status === 'completed') {
       return Response.json({ error: 'This document has already been signed', already_signed: true }, { status: 409 });
     }
 
-    // 4) Optional per-signer binding: if the signature was pre-assigned to a
-    //    specific signer email, it must match the token's signer.
-    if (signature.signer_email && tokenRecord.signer_email &&
-        String(signature.signer_email).toLowerCase() !== String(tokenRecord.signer_email).toLowerCase()) {
+    // 4) Identify the signer ROW inside the signers[] array from the token's
+    //    server-derived email. If the document declares specific signers, the
+    //    token's signer must match one of them; otherwise it's assigned to a
+    //    different signer.
+    const signerEmail = String(tokenRecord.signer_email || '').toLowerCase();
+    const existingSigners = Array.isArray(signature.signers) ? signature.signers : [];
+    const matchIndex = signerEmail
+      ? existingSigners.findIndex((s) => String(s?.email || '').toLowerCase() === signerEmail)
+      : -1;
+
+    if (existingSigners.length > 0 && signerEmail && matchIndex === -1) {
       return Response.json({ error: 'This document is assigned to a different signer' }, { status: 403 });
     }
 
-    // 5) Write the signature with the SERVER-derived identity (from the token) —
-    //    never a client-supplied signer name. Back-fill package_id so the
-    //    completion/notification paths that filter by it agree.
-    await base44.asServiceRole.entities.DocumentSignature.update(document_id, {
-      status: 'signed',
-      signed_at: new Date().toISOString(),
-      signer_name: tokenRecord.signer_name || typed_name || signature.signer_name || '',
-      signer_email: tokenRecord.signer_email || signature.signer_email || '',
-      signature_image_url: signature_image_url || null,
-      package_id: tokenRecord.package_id,
-    });
+    // 5) Record the signature INSIDE the signers[] array (schema shape) with the
+    //    SERVER-derived identity (from the token) — never a client-supplied
+    //    signer name. There are no flat signer_* fields on the schema.
+    const signedAt = new Date().toISOString();
+    let updatedSigners;
+    if (matchIndex >= 0) {
+      updatedSigners = existingSigners.map((s, i) =>
+        i === matchIndex
+          ? {
+              ...s,
+              status: 'completed',
+              signed_date: signedAt,
+              signature: signature_image_url || s.signature || null,
+            }
+          : s
+      );
+    } else {
+      // No declared signer row to update — append the token's signer so the
+      // signature is still recorded in the schema-defined array.
+      updatedSigners = [
+        ...existingSigners,
+        {
+          name: tokenRecord.signer_name || typed_name || '',
+          email: tokenRecord.signer_email || '',
+          role: 'patient',
+          required: true,
+          status: 'completed',
+          signed_date: signedAt,
+          signature: signature_image_url || null,
+          signature_method: signature_image_url ? 'signature_image' : 'digital_signature',
+        },
+      ];
+    }
 
-    // 6) Single-use on completion: once every document in the package is signed,
-    //    deactivate the token so the link can't be replayed to keep reading PHI.
-    //    (The onDocumentSigned entity-trigger handles marking the package complete
-    //    and notifying admins.)
+    // Completion = every REQUIRED signer in the array is completed. The row only
+    // becomes 'completed' when all required signatures are in; otherwise it is
+    // 'in_progress'.
+    const requiredSigners = updatedSigners.filter((s) => s?.required !== false);
+    const allSigned = requiredSigners.length > 0 &&
+      requiredSigners.every((s) => s?.status === 'completed' || s?.signed_date);
+    const rowStatus = allSigned ? 'completed' : 'in_progress';
+
+    const updatePayload: Record<string, unknown> = {
+      status: rowStatus,
+      signers: updatedSigners,
+    };
+    if (allSigned) {
+      updatePayload.completed_date = signedAt;
+    }
+    await base44.asServiceRole.entities.DocumentSignature.update(document_id, updatePayload);
+
+    // 5b) Once the document is fully signed, produce a stamped/archived PDF
+    //     artifact best-effort. Never fail the submit if embedding fails — log
+    //     and leave the row without signed_pdf_url so it can be retried.
+    if (allSigned) {
+      try {
+        const sourcePdf = signature.document_url || signature_image_url || null;
+        const stampImage = signature_image_url ||
+          updatedSigners.find((s) => s?.signature)?.signature || null;
+        if (sourcePdf && stampImage) {
+          const embedResult = await base44.asServiceRole.functions.invoke('stampSignatureOnPDF', {
+            pdf_url: sourcePdf,
+            signature_data_url: stampImage,
+          });
+          const signedUrl = embedResult?.data?.file_url;
+          if (signedUrl) {
+            await base44.asServiceRole.entities.DocumentSignature.update(document_id, {
+              signed_pdf_url: signedUrl,
+            }).catch(() => {});
+          }
+        }
+      } catch (embedError) {
+        console.error('submitSignerSignature: PDF stamp step failed (non-fatal):', embedError);
+      }
+    }
+
+    // 6) Single-use on completion: once every document in the package is fully
+    //    signed, deactivate the token so the link can't be replayed to keep
+    //    reading PHI. (The onDocumentSigned entity-trigger handles marking the
+    //    package complete and notifying admins.)
     const members = await Promise.all(
       memberIds.map((id) => base44.asServiceRole.entities.DocumentSignature.get(id).catch(() => null))
     );
     const present = members.filter(Boolean);
-    const allSigned = present.length === memberIds.length && present.every((s) => s.status === 'signed');
-    if (allSigned) {
+    const packageComplete = present.length === memberIds.length &&
+      present.every((s) => s.status === 'completed');
+    if (packageComplete) {
       await base44.asServiceRole.entities.DocumentPackageToken.update(tokenRecord.id, { is_active: false }).catch(() => {});
     }
 
-    return Response.json({ success: true, document_id, all_signed: allSigned });
+    return Response.json({ success: true, document_id, document_completed: allSigned, all_signed: packageComplete });
   } catch (error) {
     console.error('submitSignerSignature error:', error);
     return Response.json({ error: 'Unable to record signature' }, { status: 500 });

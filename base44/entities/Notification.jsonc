@@ -28,6 +28,12 @@
         "training_due",
         "system_update",
         "message_received",
+        "sms_failed",
+        "sms_urgent",
+        "sms_received",
+        "fax_delivered",
+        "fax_failed",
+        "voicemail",
         "info"
       ],
       "description": "Type of notification"

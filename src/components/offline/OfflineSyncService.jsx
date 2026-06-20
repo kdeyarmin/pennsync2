@@ -326,7 +326,12 @@ export function useOfflineSync() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-sync when coming online
+  // Auto-sync when coming online OR when items are queued while already online.
+  // pendingCount must be a dep so newly-queued items trigger a sync (the prior
+  // [isOnline]-only deps left this a stale closure that only fired on
+  // offline->online transitions). syncNow is a stable useCallback whose identity
+  // already tracks isOnline/pendingCount, so depending on it here is safe and
+  // the 2s debounce + cleanup prevents a tight re-render loop.
   useEffect(() => {
     if (isOnline && pendingCount > 0) {
       const timer = setTimeout(() => {
@@ -334,7 +339,7 @@ export function useOfflineSync() {
       }, 2000); // Wait 2 seconds to ensure stable connection
       return () => clearTimeout(timer);
     }
-  }, [isOnline]);
+  }, [isOnline, pendingCount, syncNow]);
 
   const saveOffline = useCallback((type, data) => {
     const id = OfflineStorageManager.saveToQueue(type, data);

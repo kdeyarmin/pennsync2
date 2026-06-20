@@ -34,10 +34,11 @@ export default function DocumentAnalytics() {
       value: statusCount[key]
     }));
 
-    // 2. Most frequently signed documents (by document name in signatures)
+    // 2. Most frequently signed documents (by document title in signatures)
     const docCounts = signatures.reduce((acc, sig) => {
-      if (sig.status === 'signed' && sig.document_name) {
-        acc[sig.document_name] = (acc[sig.document_name] || 0) + 1;
+      const title = sig.document_title || sig.document_name;
+      if (sig.status === 'completed' && title) {
+        acc[title] = (acc[title] || 0) + 1;
       }
       return acc;
     }, {});

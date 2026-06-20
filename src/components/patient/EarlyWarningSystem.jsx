@@ -96,9 +96,9 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
 
     } catch (error) {
       console.error("Error analyzing patient data:", error);
+    } finally {
+      setIsAnalyzing(false);
     }
-    
-    setIsAnalyzing(false);
   };
 
   // Analyze vital signs trends

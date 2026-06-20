@@ -67,6 +67,16 @@
             "default": true,
             "description": "Whether this signature is required"
           },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "rejected"
+            ],
+            "default": "pending",
+            "description": "Per-signer signature status"
+          },
           "signed_date": {
             "type": "string",
             "format": "date-time",
@@ -120,6 +130,20 @@
       "type": "boolean",
       "default": false,
       "description": "Whether a reminder email has been sent"
+    },
+    "last_reminder_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the most recent reminder email (used as a cron idempotency guard)"
+    },
+    "archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this signed document has been archived/retired"
+    },
+    "signed_pdf_url": {
+      "type": "string",
+      "description": "URL to the stamped/signed PDF artifact produced once all signatures are completed"
     },
     "audit_trail": {
       "type": "array",

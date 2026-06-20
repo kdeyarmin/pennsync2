@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
           base44.entities.DocumentSignature.get(id).catch(() => null)
         )
       );
-      const signedCount = allSignatures.filter(s => s?.status === 'signed').length;
+      const signedCount = allSignatures.filter(s => s?.status === 'completed').length;
 
       // Send follow-up email
       const daysOverdue = Math.floor((now - new Date(pkg.due_date)) / (24 * 60 * 60 * 1000));

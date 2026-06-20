@@ -148,9 +148,14 @@ export default function WhisperTranscriber({ onTranscribe, disabled = false }) {
     }
   };
 
-  const handleCopyTranscript = () => {
-    navigator.clipboard.writeText(transcript);
-    toast.success('Copied to clipboard');
+  const handleCopyTranscript = async () => {
+    try {
+      await navigator.clipboard.writeText(transcript);
+      toast.success('Copied to clipboard');
+    } catch (err) {
+      console.error('Clipboard write failed:', err);
+      toast.error('Failed to copy to clipboard');
+    }
   };
 
   const handleClearTranscript = () => {

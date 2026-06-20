@@ -24,10 +24,11 @@ export default function AdminTrainingAssignment() {
     queryFn: () => base44.entities.User.list(),
   });
 
-  // Fetch training modules
+  // Fetch training modules (TrainingModule has no is_active field; required
+  // modules are flagged via is_required).
   const { data: modules = [] } = useQuery({
     queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
+    queryFn: () => base44.entities.TrainingModule.list('order_index', 500),
   });
 
   // Fetch compliance audits to identify low performers
@@ -92,23 +93,35 @@ export default function AdminTrainingAssignment() {
 
   const handleAutoAssignByPerformance = () => {
     const lowPerformers = nursePerformance.filter(n => n.needsTraining);
-    
+
+    // Pick a compliance-focused module: prefer a required module whose title
+    // references compliance, then any compliance-titled module, then any
+    // required module. (TrainingModule has no "category"; it has type/is_required.)
+    const complianceModule =
+      modules.find(m => m.is_required && m.title?.toLowerCase().includes('compliance')) ||
+      modules.find(m => m.title?.toLowerCase().includes('compliance')) ||
+      modules.find(m => m.is_required);
+
+    if (!complianceModule) {
+      toast.error('No compliance training module is available to assign');
+      return;
+    }
+
+    let assignedCount = 0;
     lowPerformers.forEach(nurse => {
-      // Assign compliance-focused module
-      const complianceModule = modules.find(m => 
-        m.category === 'compliance' || m.title.toLowerCase().includes('compliance')
-      );
-      
-      if (complianceModule) {
-        assignTrainingMutation.mutate({
-          nurse_email: nurse.email,
-          module_id: complianceModule.id,
-          due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        });
-      }
+      assignTrainingMutation.mutate({
+        nurse_email: nurse.email,
+        module_id: complianceModule.id,
+        due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      });
+      assignedCount++;
     });
 
-    toast.success(`Assigned training to ${lowPerformers.length} nurses with compliance scores below 85%`);
+    if (assignedCount > 0) {
+      toast.success(`Assigned training to ${assignedCount} nurse(s) with compliance scores below 85%`);
+    } else {
+      toast.info('No nurses currently require auto-assigned training');
+    }
   };
 
   return (
@@ -190,7 +203,11 @@ export default function AdminTrainingAssignment() {
                   <SelectItem key={module.id} value={module.id}>
                     <div>
                       <p className="font-medium">{module.title}</p>
-                      <p className="text-xs text-slate-500">{module.category} • {module.duration_minutes}min</p>
+                      <p className="text-xs text-slate-500 capitalize">
+                        {module.type}
+                        {module.estimated_minutes ? ` • ${module.estimated_minutes}min` : ''}
+                        {module.is_required ? ' • Required' : ''}
+                      </p>
                     </div>
                   </SelectItem>
                 ))}

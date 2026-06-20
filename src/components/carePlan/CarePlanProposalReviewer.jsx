@@ -10,6 +10,7 @@ import {
   TrendingUp, FileText, Activity, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 
 export default function CarePlanProposalReviewer({ patientId = null, compact = false }) {
@@ -98,6 +99,11 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
       setReviewingProposal(null);
       setNurseNotes("");
     },
+    onError: (error) => {
+      console.error('Error approving care plan proposal:', error);
+      toast.error("Failed to approve proposal. Please try again.");
+      setReviewingProposal(null);
+    },
   });
 
   const rejectProposalMutation = useMutation({
@@ -116,6 +122,11 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
       setReviewingProposal(null);
       setNurseNotes("");
       setRejectionReason("");
+    },
+    onError: (error) => {
+      console.error('Error rejecting care plan proposal:', error);
+      toast.error("Failed to reject proposal. Please try again.");
+      setReviewingProposal(null);
     },
   });
 

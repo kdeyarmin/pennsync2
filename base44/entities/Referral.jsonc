@@ -182,6 +182,28 @@
         }
       },
       "description": "AI-generated tasks based on referral analysis"
+    },
+    "page_range": {
+      "type": "string",
+      "description": "Page range within a multi-document PDF this referral was extracted from"
+    },
+    "detection_confidence": {
+      "type": "number",
+      "description": "Confidence score for multi-document detection/extraction"
+    },
+    "manually_confirmed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a patient match was manually confirmed by staff"
+    },
+    "rejection_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the referral was rejected/declined"
+    },
+    "rejected_by": {
+      "type": "string",
+      "description": "Email of the user who rejected the referral"
     }
   },
   "required": [

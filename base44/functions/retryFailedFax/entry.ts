@@ -73,7 +73,11 @@ Deno.serve(async (req) => {
 
     // Get Telnyx credentials (env, then in-app IntegrationSecret)
     const { apiKey, faxConnectionId } = await resolveTelnyxCreds(base44);
-    const fromNumber = Deno.env.get('TELNYX_FAX_NUMBER');
+    // Resolve the office fax from-number the same way sendFax does: prefer the
+    // in-app AgencySettings.office_fax_number_e164, else the TELNYX_FAX_NUMBER env.
+    const settingsRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+    const officeFax = (settingsRows[0]?.office_fax_number_e164 || '').toString().trim();
+    const fromNumber = officeFax || Deno.env.get('TELNYX_FAX_NUMBER');
 
     if (!apiKey || !faxConnectionId || !fromNumber) {
       return Response.json({
@@ -110,6 +114,16 @@ Deno.serve(async (req) => {
     }).catch(() => {});
 
     const telnyxUrl = `https://api.telnyx.com/v2/faxes`;
+    // Include the same DLR webhook sendFax uses so the retried fax reports status.
+    const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
+    const retryPayload: Record<string, unknown> = {
+      connection_id: faxConnectionId,
+      from: fromNumber,
+      to: originalFax.to_number,
+      media_url: originalFax.document_url,
+      quality: 'high',
+    };
+    if (functionsBaseUrl) retryPayload.webhook_url = `${functionsBaseUrl}/handleTelnyxStatusWebhook`;
 
     // Re-send the fax
     let telnyxResponse: Response;
@@ -120,13 +134,7 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          connection_id: faxConnectionId,
-          from: fromNumber,
-          to: originalFax.to_number,
-          media_url: originalFax.document_url,
-          quality: 'high'
-        })
+        body: JSON.stringify(retryPayload)
       });
     } catch (sendErr) {
       await releaseClaim();

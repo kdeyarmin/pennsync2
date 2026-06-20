@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
 
         const validSignatures = signatures.filter((s) => s !== null);
         const signedCount = validSignatures.filter(
-          (s) => s.status === 'signed'
+          (s) => s.status === 'completed'
         ).length;
         const pendingCount = validSignatures.length - signedCount;
 

@@ -100,11 +100,9 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
       const docRecord = await base44.entities.DocumentSignature.create({
         patient_id: patient?.id,
         document_type: documentType,
-        document_name: normalizedDocumentName,
         document_title: normalizedDocumentName,
         document_content: typeof document === 'string' ? document : document?.content || document?.document_content || '',
         document_url: document?.document_url || document?.original_pdf_url || null,
-        original_pdf_url: document?.original_pdf_url || document?.document_url || null,
         status: "pending",
         signers: normalizedSigners,
         required_signatures: normalizedSigners.map((signer) => ({
@@ -120,8 +118,6 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
         due_date: new Date(deadlineDate).toISOString(),
         expires_at: new Date(deadlineDate).toISOString(),
         reminder_sent: false,
-        signed_at: null,
-        signed_date: null,
         audit_trail: [{
           action: "sent",
           timestamp: createdAt,

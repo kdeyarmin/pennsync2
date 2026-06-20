@@ -19,9 +19,9 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: 'signature not found' });
     }
 
-    // Only notify if status is 'signed'
-    if (signature.status !== 'signed') {
-      return Response.json({ success: true, skipped: 'Not a signed status' });
+    // Only notify once the row is fully 'completed'
+    if (signature.status !== 'completed') {
+      return Response.json({ success: true, skipped: 'Not a completed status' });
     }
 
     // Fetch package info
@@ -51,16 +51,30 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: 'No admins found' });
     }
 
-    const subject = `Document Signed: ${signature.document_name}`;
+    // Signer identity lives in the signers[] array; the document name is
+    // document_title. There are no flat document_name/signer_* fields.
+    const documentTitle = signature.document_title || 'Document';
+    const completedSigners = (Array.isArray(signature.signers) ? signature.signers : [])
+      .filter((s) => s?.status === 'completed' || s?.signed_date);
+    const signedByText = completedSigners.length > 0
+      ? completedSigners.map((s) => `${s.name || 'Signer'}${s.email ? ` (${s.email})` : ''}`).join(', ')
+      : 'A signer';
+    const lastSignedAt = completedSigners
+      .map((s) => s.signed_date)
+      .filter(Boolean)
+      .sort()
+      .slice(-1)[0] || signature.completed_date;
+
+    const subject = `Document Signed: ${documentTitle}`;
     const documentLink = `/DocumentHub`;
     const body = `
 A document has been successfully signed.
 
 Patient: ${patientName}
-Document: ${signature.document_name}
+Document: ${documentTitle}
 Type: ${signature.document_type}
-Signed By: ${signature.signer_name} (${signature.signer_email})
-Signed At: ${new Date().toLocaleString()}
+Signed By: ${signedByText}
+Signed At: ${lastSignedAt ? new Date(lastSignedAt).toLocaleString() : new Date().toLocaleString()}
 ${pkg ? `Package: ${pkg.package_name}` : ''}
 
 View details in the Document Hub for more information.
