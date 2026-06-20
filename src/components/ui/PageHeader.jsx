@@ -30,7 +30,7 @@ export default function PageHeader({
   );
 
   return (
-    <Card className={cn("border border-slate-200/70 bg-gradient-to-r from-white via-slate-50 to-navy-50/70 shadow-[0_20px_60px_rgba(15,23,42,0.08)]", className)}>
+    <Card className={cn("relative overflow-hidden border border-slate-200/80 bg-gradient-to-br from-white via-white to-navy-50/60 shadow-sm before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-navy-600 before:via-navy-500 before:to-gold-400", className)}>
       <CardContent className="p-5 sm:p-6 md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
