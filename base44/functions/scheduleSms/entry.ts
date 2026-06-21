@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * scheduleSms — a nurse queues a text to be sent later (e.g. an appointment
@@ -11,7 +11,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 const MIN_LEAD_MS = 60 * 1000;
 const MAX_SCHEDULE_MS = 365 * 24 * 60 * 60 * 1000;
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -20,7 +20,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return null;
 }
 
-function getThreadId(a: string, b: string): string {
+function getThreadId(a, b) {
   const na = normalizeE164(a) || a;
   const nb = normalizeE164(b) || b;
   return [na, nb].sort().join('|');
@@ -103,6 +103,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, scheduled_id: row.id, send_at: sendAtIso });
   } catch (error) {
     console.error('scheduleSms error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

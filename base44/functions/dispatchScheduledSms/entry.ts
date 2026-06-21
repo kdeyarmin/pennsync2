@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * dispatchScheduledSms — cron job that sends due ScheduledSms rows. Configure a
@@ -18,7 +18,7 @@ const BATCH_LIMIT = 100;
 // reminder is worse than none. Mirrors redriveFailedSms' 24h ceiling.
 const MAX_SCHEDULE_AGE_MS = 24 * 60 * 60 * 1000;
 
-async function getAgencyConfig(base44: any) {
+async function getAgencyConfig(base44) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return {
@@ -35,10 +35,10 @@ async function getAgencyConfig(base44: any) {
 // a row that still fails is retried on the next cron tick only if re-queued.
 const MAX_SEND_ATTEMPTS = 2;
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
-function isRetryableStatus(status: number): boolean {
+function isRetryableStatus(status) {
   return RETRYABLE_STATUSES.has(Number(status));
 }
-function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
+function parseRetryAfter(headerValue, nowMs = Date.now()) {
   if (headerValue == null) return null;
   const raw = String(headerValue).trim();
   if (raw === '') return null;
@@ -47,19 +47,19 @@ function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number
   if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - nowMs);
   return null;
 }
-function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
+function backoffDelayMs(attempt, baseMs = 300, maxMs = 4000) {
   const n = Math.max(1, Number(attempt) || 1);
   const exp = Math.min(maxMs, baseMs * 2 ** (n - 1));
   return Math.round(exp / 2 + Math.random() * (exp / 2));
 }
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function sendOnce(apiKey: string, messagingProfileId: string | null, from: string, to: string, body: string, webhookUrl?: string) {
+async function sendOnce(apiKey, messagingProfileId, from, to, body, webhookUrl) {
   const url = `https://api.telnyx.com/v2/messages`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
-    const payload: Record<string, unknown> = { from, to, text: body };
+    const payload = { from, to, text: body };
     if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
     if (webhookUrl) payload.webhook_url = webhookUrl;
     const resp = await fetch(url, {
@@ -78,7 +78,7 @@ async function sendOnce(apiKey: string, messagingProfileId: string | null, from:
   }
 }
 
-async function sendTelnyx(apiKey: string, messagingProfileId: string | null, from: string, to: string, body: string, webhookUrl?: string) {
+async function sendTelnyx(apiKey, messagingProfileId, from, to, body, webhookUrl) {
   for (let attempt = 1; attempt <= MAX_SEND_ATTEMPTS; attempt++) {
     let result;
     try {
@@ -101,14 +101,8 @@ async function sendTelnyx(apiKey: string, messagingProfileId: string | null, fro
  * row with provider 'telnyx'. Either path configures the integration, so the
  * Base44 dashboard env is optional.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -127,7 +121,7 @@ async function resolveTelnyxCreds(base44: any): Promise<{
 }
 
 // ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
-const AREA_CODE_TIMEZONE: Record<number, string> = {
+const AREA_CODE_TIMEZONE = {
   // Eastern
   201: "America/New_York", 202: "America/New_York", 203: "America/New_York", 207: "America/New_York",
   212: "America/New_York", 215: "America/New_York", 216: "America/New_York", 220: "America/New_York",
@@ -202,13 +196,13 @@ const AREA_CODE_TIMEZONE: Record<number, string> = {
   // Alaska / Hawaii
   907: "America/Anchorage", 808: "Pacific/Honolulu",
 };
-function tzForNumber(raw: string): string | null {
+function tzForNumber(raw) {
   const d = String(raw || '').replace(/[^\d]/g, '');
   const ten = d.length === 11 && d.startsWith('1') ? d.slice(1) : d;
   if (ten.length !== 10) return null;
   return AREA_CODE_TIMEZONE[Number(ten.slice(0, 3))] || null;
 }
-function hourInZone(date: Date, timeZone: string): number | null {
+function hourInZone(date, timeZone) {
   try {
     const h = new Intl.DateTimeFormat('en-US', { timeZone, hour12: false, hour: '2-digit' }).format(date);
     let n = parseInt(h, 10);
@@ -219,7 +213,7 @@ function hourInZone(date: Date, timeZone: string): number | null {
   }
 }
 /** TCPA quiet-hours check in the RECIPIENT's timezone. Fails open when unknown. */
-function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed: boolean; reason: string } {
+function quietHoursCheck(toNumber, now, settings) {
   const startHour = Number(settings?.tcpa_quiet_start_hour ?? 8);
   const endHour = Number(settings?.tcpa_quiet_end_hour ?? 21);
   const tz = tzForNumber(toNumber);
@@ -236,13 +230,13 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
 
 // ---- cost controls (mirrors sendSms / src/components/voice/costControls.js) ----
 const PREMIUM_AREA_CODES = new Set(['900', '976']);
-function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+function isAllowedDestination(e164, settings = {}) {
   const s = settings || {};
   const e = String(e164 || '').trim();
   if (/^\+1\d{10}$/.test(e)) {
     const areaCode = e.slice(2, 5);
     if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
-    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a) => String(a).replace(/[^\d]/g, '')) : [];
     if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
     return { allowed: true, reason: 'allowed' };
   }
@@ -250,7 +244,7 @@ function isAllowedDestination(e164: string, settings: any = {}): { allowed: bool
   if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
   return { allowed: false, reason: 'international_blocked' };
 }
-function monthStartISO(now = new Date()): string {
+function monthStartISO(now = new Date()) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
@@ -271,7 +265,7 @@ Deno.serve(async (req) => {
     // batch of pending rows and filter by time in code to stay portable.)
     const pending = await base44.asServiceRole.entities.ScheduledSms
       .filter({ status: 'pending' }, 'send_at', BATCH_LIMIT).catch(() => []);
-    const due = pending.filter((r: any) => r.send_at && r.send_at <= nowIso);
+    const due = pending.filter((r) => r.send_at && r.send_at <= nowIso);
 
     const result = { processed: 0, sent: 0, failed: 0, skipped: 0 };
 
@@ -297,7 +291,7 @@ Deno.serve(async (req) => {
       }
       result.processed++;
 
-      const fail = async (reason: string) => {
+      const fail = async (reason) => {
         result.failed++;
         await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
           status: 'failed', failure_reason: reason, attempts: (row.attempts || 0) + 1,
@@ -331,7 +325,7 @@ Deno.serve(async (req) => {
           .filter({ direction: 'outbound' }, '-created_date', monthlyCap)
           .catch(() => []);
         const sentThisMonth = (Array.isArray(recentOutbound) ? recentOutbound : [])
-          .filter((m: any) => m.created_date && m.created_date >= since).length;
+          .filter((m) => m.created_date && m.created_date >= since).length;
         if (sentThisMonth >= monthlyCap) {
           await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
             status: 'pending', claimed_by: '', claimed_at: null,
@@ -372,10 +366,10 @@ Deno.serve(async (req) => {
       const clientMessageId = `sched-${row.id}`;
       let resp;
       try {
-        resp = await sendTelnyx(apiKey!, messagingProfileId, row.from_number, row.to_number, row.body, statusCallback);
+        resp = await sendTelnyx(apiKey, messagingProfileId, row.from_number, row.to_number, row.body, statusCallback);
       } catch (netErr) {
-        const aborted = (netErr as Error)?.name === 'AbortError';
-        await fail(aborted ? 'Timed out reaching Telnyx' : `Network error reaching Telnyx: ${(netErr as Error).message}`);
+        const aborted = netErr?.name === 'AbortError';
+        await fail(aborted ? 'Timed out reaching Telnyx' : `Network error reaching Telnyx: ${netErr.message}`);
         continue;
       }
 
@@ -427,6 +421,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, ...result, checked_at: nowIso });
   } catch (error) {
     console.error('dispatchScheduledSms error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
