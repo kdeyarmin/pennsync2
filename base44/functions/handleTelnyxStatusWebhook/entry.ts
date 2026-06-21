@@ -329,7 +329,7 @@ function decodeClientState(b64: any): Record<string, any> | null {
 // silently stranding a live (billed) call leg.
 // TODO(verify): confirm Call Control action paths/field names against the live
 // Telnyx v2 API for your account (answer/transfer/speak/hangup/record_start).
-async function callCommand(apiKey: string, callControlId: string, command: string, payload: Record<string, unknown> = {}): Promise<{ ok: boolean; status: number }> {
+async function callCommand(apiKey, callControlId, command, payload = {}) {
   try {
     const resp = await fetch(`https://api.telnyx.com/v2/calls/${encodeURIComponent(callControlId)}/actions/${command}`, {
       method: 'POST',
@@ -340,18 +340,18 @@ async function callCommand(apiKey: string, callControlId: string, command: strin
     await resp.body?.cancel?.().catch(() => {});
     return { ok: resp.ok, status: resp.status };
   } catch (err) {
-    console.error(`Call Control ${command} failed:`, (err as Error)?.message);
+    console.error(`Call Control ${command} failed:`, err?.message);
     return { ok: false, status: 0 };
   }
 }
 const SPEAK_DEFAULTS = { voice: 'female', language: 'en-US' };
 
 // ---- Telnyx outbound SMS (auto-reply) ----
-async function sendAutoReply(apiKey: string, messagingProfileId: string | null, from: string, to: string, text: string) {
+async function sendAutoReply(apiKey, messagingProfileId, from, to, text) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const payload: Record<string, unknown> = { from, to, text };
+    const payload = { from, to, text };
     if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
     return await fetch('https://api.telnyx.com/v2/messages', {
       method: 'POST',
@@ -360,14 +360,14 @@ async function sendAutoReply(apiKey: string, messagingProfileId: string | null, 
       signal: controller.signal,
     });
   } catch (err) {
-    console.error('auto-reply send failed:', (err as Error)?.message);
+    console.error('auto-reply send failed:', err?.message);
     return null;
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function getAgencyConfig(base44: any) {
+async function getAgencyConfig(base44) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return {
@@ -395,9 +395,9 @@ const HELP_WORDS = ['HELP', 'INFO'];
 // Monotonic rank so a late/out-of-order delivery webhook can't downgrade a
 // terminal state (e.g. a re-delivered 'sending' arriving after 'sent'). Mirrors
 // the SMS_RANK guard the former handleTwilioSmsStatus enforced.
-const SMS_RANK: Record<string, number> = { queued: 1, sent: 2, delivered: 3, failed: 3 };
+const SMS_RANK = { queued: 1, sent: 2, delivered: 3, failed: 3 };
 
-async function handleOutboundMessageStatus(base44: any, payload: any): Promise<Response> {
+async function handleOutboundMessageStatus(base44, payload) {
   const providerId = payload?.id;
   const recipientStatus = payload?.to?.[0]?.status || payload?.status;
   const mapped = mapMessageStatus(recipientStatus);
@@ -411,7 +411,7 @@ async function handleOutboundMessageStatus(base44: any, payload: any): Promise<R
   if ((SMS_RANK[mapped] || 0) <= (SMS_RANK[row.status] || 0)) {
     return Response.json({ success: true, status: row.status, deduped: true });
   }
-  const update: Record<string, unknown> = { status: mapped };
+  const update = { status: mapped };
   if (mapped === 'failed') {
     const err = Array.isArray(payload?.errors) ? payload.errors[0] : null;
     update.failure_reason = err?.detail || err?.title || 'Delivery failed';
@@ -432,7 +432,7 @@ async function handleOutboundMessageStatus(base44: any, payload: any): Promise<R
   return Response.json({ success: true, status: mapped });
 }
 
-async function handleInboundMessage(base44: any, apiKey: string | null, messagingProfileId: string | null, payload: any): Promise<Response> {
+async function handleInboundMessage(base44, apiKey, messagingProfileId, payload) {
   const source = payload?.from?.phone_number || payload?.from;
   const destination = Array.isArray(payload?.to) ? payload.to[0]?.phone_number : payload?.to;
   const text = String(payload?.text || '');
@@ -465,16 +465,16 @@ async function handleInboundMessage(base44: any, apiKey: string | null, messagin
   }
 
   // Resolve patient (best effort).
-  let patientId: string | null = null;
+  let patientId = null;
   for (const variant of phoneVariants(patientNum)) {
     const m = await base44.asServiceRole.entities.Patient.filter({ phone: variant }).catch(() => []);
     if (m.length > 0) { patientId = m[0].id; break; }
   }
 
   const keyword = text.trim().toUpperCase();
-  const sendReply = (msg: string) =>
+  const sendReply = (msg) =>
     apiKey ? sendAutoReply(apiKey, messagingProfileId, workNum, patientNum, msg) : Promise.resolve(null);
-  const recordConsent = (status: string, sourceTag: string) =>
+  const recordConsent = (status, sourceTag) =>
     base44.asServiceRole.entities.SmsConsent.create({
       patient_id: patientId, phone_e164: patientNum, consent_status: status,
       consent_source: sourceTag, captured_by: null, captured_at: new Date().toISOString(),
@@ -565,7 +565,7 @@ async function handleInboundMessage(base44: any, apiKey: string | null, messagin
 }
 
 // ============================ FAX ============================
-async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
+async function handleFaxEvent(base44, payload) {
   const providerId = payload?.id;
   const mapped = mapFaxStatus(payload?.status);
   if (!providerId) return Response.json({ success: true, skipped: 'no fax id' });
@@ -578,7 +578,7 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
   // without re-running side effects (critically, without re-bumping retry_count).
   if (mapped === faxLog.status) return Response.json({ success: true, status: mapped, deduped: true });
 
-  const update: Record<string, unknown> = {
+  const update = {
     status: mapped,
     // Don't let a legitimate 0-page report fall through to the old value.
     pages: Number.isFinite(payload?.page_count) ? payload.page_count : faxLog.pages,
@@ -642,11 +642,11 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
 // ============================ VOICE ============================
 // ---- find-me-follow-me ringdown (mirrors src/components/voice/onCall.js) ----
 const RING_TIMEOUT_SECS_DEFAULT = 20;
-function buildRingdown(opts: any) {
+function buildRingdown(opts) {
   const { primary = null, others = [], office = null, maxTargets = 4 } = opts || {};
-  const seen = new Set<string>();
-  const out: Array<{ to: string; kind: string }> = [];
-  const push = (num: any, kind: string) => {
+  const seen = new Set();
+  const out = [];
+  const push = (num, kind) => {
     const n = String(num || '').trim();
     if (!n || seen.has(n)) return;
     seen.add(n);
@@ -662,16 +662,16 @@ const UNANSWERED_CAUSES = new Set([
   'no_answer', 'no_user_response', 'user_busy', 'call_rejected', 'timeout',
   'normal_temporary_failure', 'unallocated_number', 'recovery_on_timer_expire', 'originator_cancel',
 ]);
-function isUnansweredHangup(cause: any): boolean {
+function isUnansweredHangup(cause) {
   return UNANSWERED_CAUSES.has(String(cause || '').toLowerCase());
 }
 
 // Other on-duty nurses' cells (for the ringdown backup list), excluding the
 // primary nurse and anyone without a cell.
-async function otherOnDutyCells(base44: any, config: any, primaryEmail: string): Promise<string[]> {
+async function otherOnDutyCells(base44, config, primaryEmail) {
   const users = await base44.asServiceRole.entities.User.list('full_name', 500).catch(() => []);
   const now = new Date();
-  const cells: string[] = [];
+  const cells = [];
   for (const u of Array.isArray(users) ? users : []) {
     if (!u || u.email === primaryEmail) continue;
     if (!u.personal_cell_e164) continue;
@@ -684,7 +684,7 @@ async function otherOnDutyCells(base44: any, config: any, primaryEmail: string):
 // Decide how an inbound call to a work number should be routed. Mirrors the
 // routing in the former handleTwilioVoiceCall (agency hours > off-duty > masked
 // bridge), returning a provider-neutral action the Call Control flow executes.
-async function decideInboundRouting(base44: any, config: any, workNum: string) {
+async function decideInboundRouting(base44, config, workNum) {
   const agencyClosed = !isAgencyOpen(config.settings);
 
   let nurse = null;
@@ -737,7 +737,7 @@ async function decideInboundRouting(base44: any, config: any, workNum: string) {
   return { action: 'hangup', greeting: 'We are unable to connect your call at this time. Please try again later.', nurse };
 }
 
-async function logInboundCall(base44: any, callControlId: string, callerNum: string, workNum: string, route: any) {
+async function logInboundCall(base44, callControlId, callerNum, workNum, route) {
   if (!callControlId) return;
   const existing = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => []);
   if (existing.length > 0) return;
@@ -757,7 +757,7 @@ async function logInboundCall(base44: any, callControlId: string, callerNum: str
   }).catch(() => {});
 }
 
-async function handleCallEvent(base44: any, apiKey: string | null, eventType: string, payload: any): Promise<Response> {
+async function handleCallEvent(base44, apiKey, eventType, payload) {
   const callControlId = payload?.call_control_id;
   const state = decodeClientState(payload?.client_state);
   const direction = String(payload?.direction || '').toLowerCase(); // 'incoming' | 'outgoing'
@@ -880,7 +880,7 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
     }
     if (rows.length) {
       const cur = rows[0];
-      const patch: Record<string, unknown> = {};
+      const patch = {};
       // Forward-only so an out-of-order event can't regress a terminal call.
       if ((CALL_RANK[mapped] || 0) > (CALL_RANK[cur.status] || 0)) patch.status = mapped;
       // Capture the call duration on hangup (from the Call Control timestamps)
@@ -899,7 +899,7 @@ async function handleCallEvent(base44: any, apiKey: string | null, eventType: st
 
 // Ring the next find-me-follow-me target on the original caller leg. The dialed
 // leg carries the ringdown client_state so an unanswered hangup can advance.
-async function startRingdown(apiKey: string, aLegId: string, targets: any, callerId: string | null, idx = 0) {
+async function startRingdown(apiKey, aLegId, targets, callerId, idx = 0) {
   const list = Array.isArray(targets) ? targets : [];
   const target = list[idx];
   if (!target) { await callCommand(apiKey, aLegId, 'hangup', {}); return; }
@@ -911,7 +911,7 @@ async function startRingdown(apiKey: string, aLegId: string, targets: any, calle
   });
 }
 
-async function continueAfterGreeting(base44: any, apiKey: string, callControlId: string, action: string, to: string | null, callerId: string | null, targets: any = null) {
+async function continueAfterGreeting(base44, apiKey, callControlId, action, to, callerId, targets = null) {
   // Find-me-follow-me: ring the targets in order on the caller leg.
   if (action === 'ringdown') {
     await startRingdown(apiKey, callControlId, targets || (to ? [{ to, kind: 'primary' }] : []), callerId, 0);
@@ -943,7 +943,7 @@ async function continueAfterGreeting(base44: any, apiKey: string, callControlId:
   }
 }
 
-async function appendVoicemailTranscript(base44: any, callControlId: string, text: string) {
+async function appendVoicemailTranscript(base44, callControlId, text) {
   if (!callControlId) return;
   const rows = await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => []);
   if (!rows.length) return;
@@ -954,7 +954,7 @@ async function appendVoicemailTranscript(base44: any, callControlId: string, tex
   }).catch(() => {});
 }
 
-async function saveVoicemail(base44: any, payload: any) {
+async function saveVoicemail(base44, payload) {
   const callControlId = payload?.call_control_id;
   const recordingUrl = payload?.recording_urls?.mp3 || payload?.recording_urls?.wav || payload?.public_recording_urls?.mp3 || null;
   const durationSecs = Number.isFinite(payload?.recording_duration_secs) ? payload.recording_duration_secs : null;
@@ -995,7 +995,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    let body: any = {};
+    let body = {};
     try { body = JSON.parse(rawBody); } catch { /* leave empty */ }
     const { eventType, payload } = extractTelnyxEvent(body);
 
@@ -1009,7 +1009,7 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, skipped: 'unhandled event', event: eventType });
   } catch (error) {
     // Don't echo raw error text (may contain PHI such as numbers/URLs).
-    console.error('handleTelnyxStatusWebhook error:', (error as Error)?.message);
+    console.error('handleTelnyxStatusWebhook error:', error?.message);
     return Response.json({ error: 'Failed to process webhook' }, { status: 500 });
   }
 });

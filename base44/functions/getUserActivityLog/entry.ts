@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * getUserActivityLog — admin/super-admin read of ONE user's phone activity:
@@ -14,11 +14,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  */
 
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
-const sameEmail = (a: unknown, b: unknown) =>
+const sameEmail = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
 /** Mirrors maskPhone() in src/components/voice/phoneUtils.js — last-4 only. */
-function maskLast4(raw: any): string {
+function maskLast4(raw) {
   if (!raw) return '';
   const d = String(raw).replace(/[^\d]/g, '');
   if (d.length < 4) return '••••';
@@ -26,9 +26,9 @@ function maskLast4(raw: any): string {
 }
 
 /** Mask any number-ish fields inside an audit `details` object (shallow). */
-function maskDetails(details: any): any {
+function maskDetails(details) {
   if (!details || typeof details !== 'object') return details;
-  const out: Record<string, unknown> = {};
+  const out = {};
   for (const [k, v] of Object.entries(details)) {
     if (typeof v === 'string' && /number|phone|cell|msisdn|displayed/i.test(k) && /\d/.test(v)) {
       out[k] = maskLast4(v);
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail }, '-created_date', limit).catch(() => []),
     ]);
 
-    const calls = callRows.map((c: any) => ({
+    const calls = callRows.map((c) => ({
       id: c.id,
       created_date: c.created_date,
       direction: c.direction,
@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       patient_id: c.patient_id || null,
     }));
 
-    const texts = smsRows.map((m: any) => ({
+    const texts = smsRows.map((m) => ({
       id: m.id,
       created_date: m.created_date,
       direction: m.direction,
@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       patient_id: m.patient_id || null,
     }));
 
-    const activity = activityRows.map((a: any) => ({
+    const activity = activityRows.map((a) => ({
       id: a.id,
       created_date: a.created_date,
       action: a.action,
@@ -124,6 +124,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('getUserActivityLog error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

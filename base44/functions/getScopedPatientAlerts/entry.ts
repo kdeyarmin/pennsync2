@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * getScopedPatientAlerts — returns PatientAlert rows the caller is authorized to
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.Patient.filter({ created_by: user.email }, '-created_date', 1000).catch(() => []),
     ]);
     const allowedIds = [...new Set(
-      [...(assignedPatients || []), ...(createdPatients || [])].map((p: any) => p.id).filter(Boolean)
+      [...(assignedPatients || []), ...(createdPatients || [])].map((p) => p.id).filter(Boolean)
     )];
     if (allowedIds.length === 0) return Response.json({ alerts: [] });
 

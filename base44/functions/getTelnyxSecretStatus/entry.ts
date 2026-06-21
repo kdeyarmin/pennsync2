@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * getTelnyxSecretStatus — admin/super-admin read of whether the Telnyx API key
@@ -16,10 +16,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
 
-const sameEmail = (a: unknown, b: unknown) =>
+const sameEmail = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
-const isSet = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+const isSet = (v) => typeof v === 'string' && v.trim() !== '';
 
 Deno.serve(async (req) => {
   try {
@@ -46,10 +46,10 @@ Deno.serve(async (req) => {
       .catch(() => []);
     const rec = rows[0] || {};
 
-    const resolvedApiKey = (isSet(envApiKey) ? envApiKey : isSet(rec.api_key) ? rec.api_key : null) as string | null;
+    const resolvedApiKey = isSet(envApiKey) ? envApiKey : isSet(rec.api_key) ? rec.api_key : null;
     const configured = Boolean(resolvedApiKey);
 
-    let source: 'env' | 'config' | 'none';
+    let source;
     if (!configured) source = 'none';
     else if (isSet(envApiKey)) source = 'env';
     else source = 'config';
@@ -76,6 +76,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('getTelnyxSecretStatus error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

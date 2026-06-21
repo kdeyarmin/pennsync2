@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Returns org-wide required-training readiness for educators and admins. Runs
 // with the service role and computes the rollups server-side so that non-admin
