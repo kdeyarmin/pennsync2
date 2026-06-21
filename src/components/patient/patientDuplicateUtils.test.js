@@ -16,6 +16,7 @@ import {
   confidencePercent,
   effectiveThreshold,
   findDuplicateGroups,
+  findDuplicatesForCandidate,
   REASON,
 } from './patientDuplicateUtils.js';
 
@@ -322,6 +323,89 @@ test('a name-only match never clears a high (destructive) minScore floor', () =>
     { id: '2', first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-01' },
   ];
   assert.equal(findDuplicateGroups(corroborated, { minScore: 70 }).length, 1);
+});
+
+test('findDuplicateGroups clusters transitively-linked duplicates into one group', () => {
+  // A↔B share a phone, B↔C share an address, but A and C share nothing — the old
+  // greedy pass dropped C entirely. Transitive (union-find) grouping keeps all
+  // three together so the bridged duplicate is not missed.
+  const patients = [
+    { id: 'A', first_name: 'Mary', last_name: 'Johnson', phone: '215-555-7777' },
+    { id: 'B', first_name: 'Mary', last_name: 'Johnson', phone: '215-555-7777', address: '88 Oak Lane, Philadelphia 19103' },
+    { id: 'C', first_name: 'Mary', last_name: 'Johnson', address: '88 Oak Lane, Philadelphia 19103' },
+  ];
+  const groups = findDuplicateGroups(patients);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].primary.id, 'A');
+  const ids = groups[0].duplicates.map((d) => d.patient.id).sort();
+  assert.deepEqual(ids, ['B', 'C']);
+  // C is reported with its strongest link (to B), not its (sub-threshold) link to A.
+  const c = groups[0].duplicates.find((d) => d.patient.id === 'C');
+  assert.ok(c.score > 0);
+  assert.ok(c.matches.length > 0);
+});
+
+test('findDuplicateGroups keeps unrelated clusters separate', () => {
+  const patients = [
+    { id: '1', first_name: 'John', last_name: 'Smith', medical_record_number: 'A1' },
+    { id: '2', first_name: 'John', last_name: 'Smith', medical_record_number: 'A1' },
+    { id: '3', first_name: 'Jane', last_name: 'Doe', medical_record_number: 'B2' },
+    { id: '4', first_name: 'Jane', last_name: 'Doe', medical_record_number: 'B2' },
+  ];
+  const groups = findDuplicateGroups(patients);
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].primary.id, '1'); // primary-index order preserved
+  assert.equal(groups[1].primary.id, '3');
+});
+
+test('findDuplicatesForCandidate flags a matching existing record', () => {
+  const candidate = {
+    first_name: 'John',
+    last_name: 'Smith',
+    date_of_birth: '1950-01-15',
+    medical_record_number: 'MRN-100',
+  };
+  const roster = [
+    { id: 'p1', first_name: 'Jane', last_name: 'Doe', date_of_birth: '1944-02-02' },
+    { id: 'p2', first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-15', medical_record_number: 'MRN-100' },
+  ];
+  const matches = findDuplicatesForCandidate(candidate, roster);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].patient.id, 'p2');
+  assert.ok(matches[0].matches.includes(REASON.EXACT_NAME));
+  assert.ok(matches[0].matches.includes(REASON.DOB));
+});
+
+test('findDuplicatesForCandidate returns nothing for a genuinely new patient', () => {
+  const candidate = { first_name: 'Zelda', last_name: 'Nightingale', date_of_birth: '1991-11-11' };
+  const roster = [
+    { id: 'p1', first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-15' },
+  ];
+  assert.deepEqual(findDuplicatesForCandidate(candidate, roster), []);
+});
+
+test('findDuplicatesForCandidate can exclude the record being edited', () => {
+  const candidate = { id: 'self', first_name: 'John', last_name: 'Smith', medical_record_number: 'MRN-100' };
+  const roster = [
+    { id: 'self', first_name: 'John', last_name: 'Smith', medical_record_number: 'MRN-100' },
+    { id: 'other', first_name: 'John', last_name: 'Smith', medical_record_number: 'MRN-100' },
+  ];
+  const matches = findDuplicatesForCandidate(candidate, roster, { excludeId: 'self' });
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].patient.id, 'other');
+});
+
+test('findDuplicatesForCandidate sorts strongest match first and respects limit', () => {
+  const candidate = { first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-15', medical_record_number: 'MRN-100' };
+  const roster = [
+    { id: 'weak', first_name: 'Jon', last_name: 'Smith' }, // name-ish only
+    { id: 'strong', first_name: 'John', last_name: 'Smith', date_of_birth: '1950-01-15', medical_record_number: 'MRN-100' },
+  ];
+  const all = findDuplicatesForCandidate(candidate, roster);
+  assert.equal(all[0].patient.id, 'strong');
+  const limited = findDuplicatesForCandidate(candidate, roster, { limit: 1 });
+  assert.equal(limited.length, 1);
+  assert.equal(limited[0].patient.id, 'strong');
 });
 
 test('findDuplicateGroups attaches capped confidence percentages', () => {

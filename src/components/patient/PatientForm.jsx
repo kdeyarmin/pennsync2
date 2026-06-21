@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { X, Save, AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { sanitizeObject, handleSecureError, logSecurityEvent } from "../utils/security";
 import { validatePatient, formatPhoneNumber, SEVERITY } from "../utils/patientValidation";
+import { findDuplicatesForCandidate } from "./patientDuplicateUtils";
 import ValidationOverrideDialog from "./ValidationOverrideDialog";
+import PotentialDuplicateDialog from "./PotentialDuplicateDialog";
 import OCRDocumentExtractor from "./OCRDocumentExtractor";
 
 export default function PatientForm({ patient, onSuccess, onCancel }) {
@@ -47,6 +50,21 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [currentWarning, setCurrentWarning] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [duplicateMatches, setDuplicateMatches] = useState([]);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+
+  // Existing roster, used to catch duplicates at entry time. Reuses the same
+  // ['patients'] cache the Patients page populates, so this is usually instant
+  // and adds no extra round-trip. Only needed when adding a brand-new patient.
+  const { data: existingPatients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: async () => {
+      const all = await base44.entities.Patient.list('-created_date', 2000);
+      return all.filter((p) => !p.is_archived);
+    },
+    enabled: !patient,
+    staleTime: 60000,
+  });
 
   const handleOCRDataExtracted = (extractedData) => {
     setFormData(prev => ({
@@ -119,33 +137,11 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Prevent double-submit: a second click before the create resolves would
-    // create a duplicate patient record.
+  // Actually create/update the patient. Split out from handleSubmit so the
+  // duplicate-warning dialog's "Add as new anyway" can persist directly,
+  // bypassing the duplicate check it just dismissed.
+  const persistPatient = async () => {
     if (isSubmitting) return;
-
-    // Enhanced validation
-    const errors = validatePatient(formData);
-    const blockingErrors = errors.filter(e => 
-      e.severity === SEVERITY.ERROR || 
-      (e.severity === SEVERITY.WARNING && e.canOverride && !overriddenWarnings[e.field])
-    );
-    
-    if (blockingErrors.length > 0) {
-      setValidationErrors(errors);
-      
-      const unovverriddenWarnings = blockingErrors.filter(e => e.severity === SEVERITY.WARNING && e.canOverride);
-      if (unovverriddenWarnings.length > 0) {
-        alert(`Please review and override the following warnings:\n${unovverriddenWarnings.map(w => `• ${w.message}`).join('\n')}`);
-        return;
-      }
-      
-      alert('Please fix validation errors before saving');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       // Include override justifications in form data
@@ -183,6 +179,48 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Prevent double-submit: a second click before the create resolves would
+    // create a duplicate patient record.
+    if (isSubmitting) return;
+
+    // Enhanced validation
+    const errors = validatePatient(formData);
+    const blockingErrors = errors.filter(e =>
+      e.severity === SEVERITY.ERROR ||
+      (e.severity === SEVERITY.WARNING && e.canOverride && !overriddenWarnings[e.field])
+    );
+
+    if (blockingErrors.length > 0) {
+      setValidationErrors(errors);
+
+      const unovverriddenWarnings = blockingErrors.filter(e => e.severity === SEVERITY.WARNING && e.canOverride);
+      if (unovverriddenWarnings.length > 0) {
+        alert(`Please review and override the following warnings:\n${unovverriddenWarnings.map(w => `• ${w.message}`).join('\n')}`);
+        return;
+      }
+
+      alert('Please fix validation errors before saving');
+      return;
+    }
+
+    // Duplicate guard — only when adding a new patient. If the entered record
+    // looks like one already in the system, warn and offer to open that chart
+    // instead of silently creating another duplicate.
+    if (!patient) {
+      const matches = findDuplicatesForCandidate(formData, existingPatients, { limit: 5 });
+      if (matches.length > 0) {
+        setDuplicateMatches(matches);
+        setShowDuplicateDialog(true);
+        return;
+      }
+    }
+
+    await persistPatient();
   };
 
   // Filter and group validation messages
@@ -464,6 +502,13 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
       onClose={() => setShowOverrideDialog(false)}
       warning={currentWarning}
       onOverride={handleOverrideWarning}
+    />
+
+    <PotentialDuplicateDialog
+      open={showDuplicateDialog}
+      onOpenChange={setShowDuplicateDialog}
+      matches={duplicateMatches}
+      onProceedAnyway={persistPatient}
     />
     </>
   );
