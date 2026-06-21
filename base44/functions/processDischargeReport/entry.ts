@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
 // production by default. console.error/warn remain ungated for visibility.

@@ -1,11 +1,11 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ---- Deterministic interaction safety net ----
 // Mirror of src/components/medication/drugInteractions.js (keep in sync). A
 // small, NON-EXHAUSTIVE set of well-established high-severity interactions used
 // to augment (never replace) the LLM analysis. Not a substitute for a full
 // interaction database or clinical judgment.
-const DDI_GROUPS: Record<string, string[]> = {
+const DDI_GROUPS = {
   warfarin: ['warfarin', 'coumadin', 'jantoven'],
   nsaid: ['ibuprofen', 'naproxen', 'ketorolac', 'diclofenac', 'meloxicam', 'indomethacin', 'celecoxib', 'nsaid'],
   antiplatelet: ['aspirin', 'asa', 'acetylsalicylic', 'clopidogrel', 'plavix', 'prasugrel', 'effient', 'ticagrelor', 'brilinta', 'dipyridamole', 'aggrenox'],
@@ -60,13 +60,13 @@ const DDI_RULES = [
   { a: 'maoi', b: 'triptan', severity: 'major', type: 'pharmacodynamic', description: 'Serotonin syndrome risk.', recommendation: 'Avoid the combination.' },
   { a: 'clopidogrel', b: 'cyp2c19_inhibitor', severity: 'moderate', type: 'pharmacokinetic', description: 'Reduced activation of clopidogrel -> decreased antiplatelet effect.', recommendation: 'Avoid CYP2C19 inhibitors with clopidogrel where possible (e.g., use pantoprazole instead of omeprazole/esomeprazole; reassess concurrent fluconazole).' },
 ];
-function ddiGroupsFor(name: string): string[] {
+function ddiGroupsFor(name) {
   const n = String(name || '').toLowerCase();
   // Token/whole-phrase match so a fragment matches only as a whole word (or whole
   // multi-word phrase), not an arbitrary substring (e.g. 'nitrate' in 'mononitrate').
   const tokens = n.split(/[^a-z0-9]+/).filter(Boolean);
   const tokenSet = new Set(tokens);
-  const matchesFragment = (f: string): boolean => {
+  const matchesFragment = (f) => {
     if (f.includes(' ')) {
       const words = f.split(/\s+/).filter(Boolean);
       for (let i = 0; i + words.length <= tokens.length; i++) {
@@ -76,17 +76,17 @@ function ddiGroupsFor(name: string): string[] {
     }
     return tokenSet.has(f);
   };
-  const out: string[] = [];
+  const out = [];
   for (const [group, fragments] of Object.entries(DDI_GROUPS)) {
     if (fragments.some(matchesFragment)) out.push(group);
   }
   return out;
 }
-function findDeterministicInteractions(medications: any[]): any[] {
+function findDeterministicInteractions(medications) {
   const meds = (medications || []).map((m) => ({ name: m?.medication_name || m?.name || '' })).filter((m) => m.name);
   const memberGroups = meds.map((m) => new Set(ddiGroupsFor(m.name)));
-  const results: any[] = [];
-  const seen = new Set<string>();
+  const results = [];
+  const seen = new Set();
   for (let i = 0; i < meds.length; i++) {
     for (let j = i + 1; j < meds.length; j++) {
       for (const rule of DDI_RULES) {
@@ -108,13 +108,13 @@ function findDeterministicInteractions(medications: any[]): any[] {
   }
   return results;
 }
-function mergeInteractions(aiInteractions: any[], deterministic: any[]): any[] {
-  const norm = (s: any) => String(s || '').toLowerCase().trim();
-  const pairKey = (x: any) => [norm(x.drug_a), norm(x.drug_b)].sort().join('|');
+function mergeInteractions(aiInteractions, deterministic) {
+  const norm = (s) => String(s || '').toLowerCase().trim();
+  const pairKey = (x) => [norm(x.drug_a), norm(x.drug_b)].sort().join('|');
   const detKeys = new Set(deterministic.map(pairKey));
   const aiTagged = (aiInteractions || [])
-    .filter((x: any) => !detKeys.has(pairKey(x)))
-    .map((x: any) => ({ ...x, source: x.source || 'ai_suggested', verified: false }));
+    .filter((x) => !detKeys.has(pairKey(x)))
+    .map((x) => ({ ...x, source: x.source || 'ai_suggested', verified: false }));
   return [...deterministic, ...aiTagged];
 }
 

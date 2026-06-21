@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * savePDGMRateConfig — the ONLY write path for the admin-editable PDGM rate set.
@@ -18,10 +18,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
 
-const sameEmail = (a: unknown, b: unknown) =>
+const sameEmail = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
-const isAdminLike = (u: { role?: string; account_type?: string; email?: string } | null) =>
+const isAdminLike = (u) =>
   !!u && (
     u.role === 'admin' ||
     u.account_type === 'agency_admin' ||
@@ -29,7 +29,7 @@ const isAdminLike = (u: { role?: string; account_type?: string; email?: string }
     sameEmail(u.email, SUPER_ADMIN_EMAIL)
   );
 
-const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+const isPlainObject = (v) =>
   !!v && typeof v === 'object' && !Array.isArray(v);
 
 Deno.serve(async (req) => {
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     // effectiveIcdGroups overlay them on the built-in defaults at calc time, so a
     // partial or empty object is safe); reject non-objects so a malformed payload
     // can't poison the merge.
-    const payload: Record<string, unknown> = {
+    const payload = {
       label: typeof label === 'string' ? label : '',
       effective_year: typeof effective_year === 'string' ? effective_year : '',
       is_official: is_official === true,
@@ -75,6 +75,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, id: saved?.id || current?.id || null });
   } catch (error) {
     console.error('Error saving PDGM rate config:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

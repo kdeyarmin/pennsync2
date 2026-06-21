@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // CMS PDGM base payment rate
 const BASE_PAYMENT_RATE_2026 = 2038.22; // CY2026 national standardized 30-day period payment, quality submitters (CMS-1828-F, eff. 2026-01-01)
@@ -105,8 +105,8 @@ const DEFAULT_RATES = {
 // value the override omits or sets to a non-number — so a partial/malformed
 // saved override can never blank out a rate. Mirrors deepMergeNumbers in
 // src/components/pdgm/pdgmRates.js.
-function deepMergeNumbers(base: any, over: any): any {
-  const out: any = { ...(base || {}) };
+function deepMergeNumbers(base, over) {
+  const out = { ...(base || {}) };
   if (!over || typeof over !== 'object') return out;
   for (const key of Object.keys(over)) {
     const ov = over[key];

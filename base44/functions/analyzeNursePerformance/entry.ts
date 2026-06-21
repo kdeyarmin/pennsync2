@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -337,7 +337,7 @@ Provide actionable, specific insights. Be constructive and focus on growth oppor
     const utilizationMetrics = {
       visits_last_30_days: recentVisits.length,
       avg_visits_per_day: Math.round(avgVisitsPerDay * 10) / 10,
-      productive_hours: Math.round((visitsWithTime.length * metrics.avg_visit_duration) / 60),
+      productive_hours: Math.round((visitsWithDuration.length * metrics.avg_visit_duration) / 60),
       patients_managed: nursePatientIds.length,
       utilization_rate: Math.min(Math.round((avgVisitsPerDay / 6) * 100), 100) // Assuming 6 visits/day is 100%
     };

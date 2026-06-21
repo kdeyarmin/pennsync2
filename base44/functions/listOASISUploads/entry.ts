@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Financial visibility gate. MIRRORS src/lib/permissions.canViewFinancials
 // (isAdminLike) — backend Deno modules can't import src/lib, so the literal
