@@ -25,9 +25,9 @@ import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, BookOpen, WifiOff,
   Mail, BookUser, Video, HelpCircle, AlertTriangle,
-  Phone, Send, Heart, Activity, Database, Lock, Award,
+  Phone, Send, Heart, Database, Lock, Award,
   Clipboard, Filter, Globe,
-  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Mic, Pen, CalendarDays
+  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays
 } from "lucide-react";
 
 import { PAGE_NAMES, REDIRECTS } from "@/routes";
@@ -66,15 +66,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "Patients",
     keywords: ["record", "chart", "profile"],
-  },
-  {
-    page: "ClinicalChart",
-    label: "Clinical Chart",
-    icon: Activity,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Patients",
-    keywords: ["chart", "clinical", "patient chart"],
   },
   {
     page: "PatientAlerts",
@@ -236,15 +227,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "Incidents",
     keywords: ["event", "report", "incident report"],
-  },
-  {
-    page: "MedicalScribe",
-    label: "Medical Scribe",
-    icon: Mic,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "ClinicalDocumentation",
-    keywords: ["scribe", "medical", "ai scribe"],
   },
   {
     page: "ReferralTriage",
@@ -441,24 +423,6 @@ export const NAV_MANIFEST = [
     keywords: ["education", "library", "courses"],
   },
   {
-    page: "NurseEducationVideos",
-    label: "Nurse Education Videos",
-    icon: Video,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["nurse", "education", "video", "training"],
-  },
-  {
-    page: "DocumentationTraining",
-    label: "Documentation Training",
-    icon: FileText,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["documentation", "training"],
-  },
-  {
     page: "NurseTrainingHub",
     label: "Nurse Training Hub",
     icon: GraduationCap,
@@ -613,15 +577,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["sms", "calls", "fax", "telnyx", "phone", "delivery"],
-  },
-  {
-    page: "ClinicalInsightsDashboard",
-    label: "Clinical Insights",
-    icon: Brain,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["clinical insights", "analytics", "ai"],
   },
   {
     page: "PatientDataManagement",

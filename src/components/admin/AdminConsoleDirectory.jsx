@@ -48,7 +48,7 @@ const GROUPS = [
     icon: Stethoscope,
     color: "text-navy-600 bg-navy-50",
     pages: [
-      "ClinicalPathwayManager", "ClinicalInsightsDashboard", "OASISCenter",
+      "ClinicalPathwayManager", "OASISCenter",
     ],
   },
   {

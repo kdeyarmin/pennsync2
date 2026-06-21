@@ -159,6 +159,24 @@ export const REDIRECTS = [
 
   // ─── Misc hub consolidations ─────────────────────────────────────────────────
   { from: '/AdminReportsCenter', to: '/ReportsAnalytics?tab=reports-center' },
+
+  // ─── Feature-audit consolidation ─────────────────────────────────────────────
+  // Redundant standalone pages folded into their canonical homes — see
+  // docs/feature-audit.md. The page files remain on disk (reachable via the
+  // targets below or as embedded components) so each redirect is reversible.
+  //   ClinicalChart       → its vitals / care-plan / OASIS tabs already live in
+  //                          PatientDetails; sent to the patient list (no id ctx).
+  //   MedicalScribe       → same record→transcribe→review pipeline as the Clinical
+  //                          Notes "Record / Upload" tab (a strict superset).
+  //   ClinicalInsights    → population/risk views duplicated by Predictive Analytics.
+  //   DocumentationTraining / NurseEducationVideos → consolidated under the Nurse
+  //                          Training Hub. (See doc for the unique-content caveat.)
+  { from: '/ClinicalChart', to: '/Patients' },
+  { from: '/MedicalScribe', to: '/ClinicalDocumentation?tab=record' },
+  { from: '/ClinicalInsightsDashboard', to: '/PredictiveAnalytics' },
+  { from: '/DocumentationTraining', to: '/NurseTrainingHub?tab=documentation' },
+  { from: '/NurseEducationVideos', to: '/NurseTrainingHub' },
+
   { from: '/OfflineVisitDocumentation', to: '/OfflineMode?tab=visit' },
   { from: '/OfflineDocumentation', to: '/OfflineMode?tab=pending' },
   { from: '/UserActivityLog', to: '/UserActivityReport?tab=log' },
