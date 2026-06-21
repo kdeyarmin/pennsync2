@@ -12,7 +12,6 @@ import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters
 import BulkPatientActions from "../components/patient/BulkPatientActions";
 import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import PaginatedPatientList from "../components/patient/PaginatedPatientList";
-import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import StatCard from "@/components/ui/stat-card";
@@ -304,12 +303,11 @@ export default function Patients() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Roster tools</h2>
-            <p className="text-sm text-slate-500">Import census files, review duplicates, and refine the active patient list.</p>
+            <p className="text-sm text-slate-500">Review duplicates and refine the active patient list.</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.9fr)] gap-4 mb-4">
-          <PatientFileUpdateUploader />
+        <div className="mb-4">
           <DuplicatePatientManager />
         </div>
 
