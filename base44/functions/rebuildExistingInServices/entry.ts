@@ -1,7 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import OpenAI from 'npm:openai@4.56.0';
-
-const openai = new OpenAI({ apiKey: Deno.env.get('OPENAI_API_KEY') });
 
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
@@ -92,24 +89,23 @@ Deno.serve(async (req) => {
 
     for (const course of targets) {
      try {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-5.4-mini',
-        max_completion_tokens: 7000,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: 'You create practical healthcare in-service training as valid JSON only.' },
-          { role: 'user', content: buildPrompt(course) }
-        ]
-      });
-
-      // Guard the LLM JSON parse BEFORE any destructive writes: a malformed
-      // response must skip this course, not throw after its existing
-      // modules/questions were already deleted (which left a corrupted course).
+      // Route AI generation through Base44's InvokeLLM (handles auth + model
+      // resolution) instead of the OpenAI SDK with a hard-coded model id that is
+      // not a valid OpenAI model and threw on every rebuild.
       let generated;
       try {
-        generated = JSON.parse(completion.choices[0].message.content || '{}');
+        generated = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: `You create practical healthcare in-service training as valid JSON only.\n\n${buildPrompt(course)}`,
+          response_json_schema: { type: 'object', additionalProperties: true }
+        });
       } catch {
-        results.push({ course_id: course.id, title: course.title, error: 'AI returned invalid JSON; left unchanged' });
+        generated = null;
+      }
+      // Guard the AI response BEFORE any destructive writes: a malformed/empty
+      // response must skip this course, not delete its existing modules/questions
+      // and leave a corrupted course behind.
+      if (!generated || typeof generated !== 'object') {
+        results.push({ course_id: course.id, title: course.title, error: 'AI returned invalid content; left unchanged' });
         continue;
       }
 

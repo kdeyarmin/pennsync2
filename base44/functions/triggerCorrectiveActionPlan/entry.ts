@@ -1,7 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import OpenAI from 'npm:openai@4.56.0';
-
-const openai = new OpenAI({ apiKey: Deno.env.get('OPENAI_API_KEY') });
 
 const normalizeTag = (value) => String(value || '')
   .toLowerCase()
@@ -17,7 +14,7 @@ const deriveTopicLabel = (question) => {
   return prompt.length > 80 ? `${prompt.slice(0, 77)}...` : prompt;
 };
 
-const buildMicroLearning = async ({ topicLabel, audience, category, businessLine }) => {
+const buildMicroLearning = async (base44, { topicLabel, audience, category, businessLine }) => {
   const prompt = `Create a short corrective-action micro-learning lesson for a frontline healthcare employee.
 
 Topic missed: ${topicLabel}
@@ -25,63 +22,77 @@ Audience: ${audience}
 Category: ${category}
 Business line: ${businessLine}
 
-Return strict JSON with this shape:
-{
-  "course": {
-    "title": "",
-    "short_description": "",
-    "description": "",
-    "learning_objectives": [""],
-    "passing_score": 80
-  },
-  "module": {
-    "title": "",
-    "content": {
-      "intro": "",
-      "sections": [
-        {
-          "heading": "",
-          "body": "",
-          "bullets": [""],
-          "example": ""
-        }
-      ],
-      "key_takeaways": [""]
-    }
-  },
-  "questions": [
-    {
-      "type": "mcq|true_false|multi_select",
-      "prompt": "",
-      "options": [{"value":"A","label":""}],
-      "correct_answer": {},
-      "rationale": ""
-    }
-  ]
-}
-
 Rules:
 - Write in plain, practical language.
 - Keep it short and directly useful in daily work.
 - Make it appropriate for busy frontline staff.
 - Include a realistic example and 3 short questions.`;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-5.4-mini',
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: 'You create clear, practical micro-learning JSON only.' },
-      { role: 'user', content: prompt }
-    ]
-  });
-
-  let parsed;
+  // Use Base44's InvokeLLM (handles auth/model resolution) instead of the OpenAI
+  // SDK with a hard-coded, invalid model id that threw and failed every plan.
+  let parsed = {};
   try {
-    parsed = JSON.parse(completion.choices[0].message.content || '{}');
+    parsed = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          course: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              short_description: { type: 'string' },
+              description: { type: 'string' },
+              learning_objectives: { type: 'array', items: { type: 'string' } },
+              passing_score: { type: 'number' }
+            }
+          },
+          module: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              content: {
+                type: 'object',
+                properties: {
+                  intro: { type: 'string' },
+                  sections: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        heading: { type: 'string' },
+                        body: { type: 'string' },
+                        bullets: { type: 'array', items: { type: 'string' } },
+                        example: { type: 'string' }
+                      }
+                    }
+                  },
+                  key_takeaways: { type: 'array', items: { type: 'string' } }
+                }
+              }
+            }
+          },
+          questions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                type: { type: 'string' },
+                prompt: { type: 'string' },
+                options: { type: 'array', items: { type: 'object', properties: { value: { type: 'string' }, label: { type: 'string' } } } },
+                correct_answer: { type: 'object' },
+                rationale: { type: 'string' }
+              }
+            }
+          }
+        }
+      }
+    });
   } catch (e) {
-    console.error('Failed to parse AI response for corrective action plan:', e);
+    console.error('Failed to generate micro-learning for corrective action plan:', e?.message || e);
     parsed = {};
   }
+  parsed = parsed || {};
   return {
     title: parsed.course?.title || `Micro-Learning: ${topicLabel}`,
     short_description: parsed.course?.short_description || `Supplemental training for ${topicLabel}`,
@@ -106,7 +117,8 @@ Deno.serve(async (req) => {
     // derive ALL privileged state (user_id, answers, pass/fail) from it — never
     // the posted body, which a forged trigger could use to assign mandatory
     // remediation and spam notifications to an arbitrary victim.
-    const [attempt] = await base44.asServiceRole.entities.TrainingAttempt.filter({ id: posted.id }, '-created_date', 1);
+    const [attempt] = await base44.asServiceRole.entities.TrainingAttempt
+      .filter({ id: posted.id }, '-created_date', 1).catch(() => []);
     if (!attempt) {
       return Response.json({ success: false, error: 'Attempt not found' }, { status: 404 });
     }
@@ -152,7 +164,7 @@ Deno.serve(async (req) => {
       );
 
       if (!microCourse) {
-        const microContent = await buildMicroLearning({
+        const microContent = await buildMicroLearning(base44, {
           topicLabel,
           audience: employee?.job_title || employee?.discipline || sourceCourse.employee_audience || 'frontline healthcare staff',
           category: sourceCourse.category || 'compliance',

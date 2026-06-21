@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
           type: 'admin_expiration_summary',
           title: `${adminNotifications.length} Upcoming Expirations`,
           message: `There are ${adminNotifications.length} training certifications or credentials expiring soon.`,
-          action_url: '/AdminDashboard',
+          action_url: '/AdminOperations',
           priority: 'medium',
           is_read: false,
           metadata: { expirations: adminNotifications },

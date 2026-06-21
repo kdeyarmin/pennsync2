@@ -184,8 +184,8 @@ Deno.serve(async (req) => {
         message: `Congratulations! You earned the "${badge.badge_name}" badge and ${badge.points_awarded} points!`,
         type: 'info',
         priority: 'low',
-        action_url: '/MyProfile',
-        action_label: 'View Profile',
+        action_url: '/LearningCenter',
+        action_label: 'View Learning',
         metadata: {
           badge_id: badge.badge_id,
           badge_name: badge.badge_name,

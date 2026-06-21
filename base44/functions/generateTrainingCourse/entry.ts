@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import OpenAI from 'npm:openai@4.56.0';
 
 const normalizeCategory = (value) => {
   const allowed = ['compliance', 'clinical', 'safety', 'documentation', 'hospice', 'home_health', 'dme', 'onboarding', 'leadership'];
@@ -20,15 +19,6 @@ Deno.serve(async (req) => {
     if (!isAdmin) {
       return Response.json({ error: 'Unauthorized - admin access required' }, { status: 403 });
     }
-
-    // Guard before constructing the client so a missing key returns a clear,
-    // canonical "not configured" message (the frontend maps this to an
-    // admin-facing notice) instead of an opaque SDK crash at module load.
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
-    }
-    const openai = new OpenAI({ apiKey: openaiApiKey });
 
     const {
       topic,
@@ -111,20 +101,19 @@ Design principles:
 - Distribute difficulty: 30% easy, 40% medium, 30% hard
 - Make the "real_world_relevance" compelling — connect to actual incidents, regulatory changes, or common audit findings in ${business_line === 'all' ? 'home health and hospice' : business_line}`;
 
-    const outlineCompletion = await openai.chat.completions.create({
-      model: 'gpt-5.5',
-      max_completion_tokens: 4000,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: 'You are a senior healthcare instructional designer with expertise in ADDIE methodology, Bloom\'s Taxonomy, and CMS regulatory compliance for home health and hospice. Return valid JSON only.' },
-        { role: 'user', content: outlinePrompt }
-      ]
-    });
-
+    // Route AI generation through Base44's InvokeLLM (handles auth + model
+    // resolution) instead of the OpenAI SDK with a hard-coded model id that is
+    // not a valid OpenAI model and threw on every call.
     let outline;
     try {
-      outline = JSON.parse(outlineCompletion.choices[0].message.content || '{}');
+      outline = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `You are a senior healthcare instructional designer with expertise in ADDIE methodology, Bloom's Taxonomy, and CMS regulatory compliance for home health and hospice. Return valid JSON only.\n\n${outlinePrompt}`,
+        response_json_schema: { type: 'object', additionalProperties: true }
+      });
     } catch {
+      outline = null;
+    }
+    if (!outline || typeof outline !== 'object') {
       outline = { title: topic, learning_objectives: [], modules: [{ title: topic, focus: topic, key_topics: [topic], estimated_minutes: lesson_length }], assessment_blueprint: [] };
     }
 
@@ -324,20 +313,16 @@ CONTENT CREATION RULES:
    - Avoid: jargon without definition, passive constructions, filler phrases, academic tone
    - Every section must pass the "So what?" test — the learner should understand why this matters to THEM`;
 
-    const contentCompletion = await openai.chat.completions.create({
-      model: 'gpt-5.5',
-      max_completion_tokens: 16000,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: 'You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. You have deep expertise in CMS Conditions of Participation, OSHA standards, and state healthcare regulations. Return valid JSON only.' },
-        { role: 'user', content: contentPrompt }
-      ]
-    });
-
     let generated;
     try {
-      generated = JSON.parse(contentCompletion.choices[0].message.content || '{}');
+      generated = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. You have deep expertise in CMS Conditions of Participation, OSHA standards, and state healthcare regulations. Return valid JSON only.\n\n${contentPrompt}`,
+        response_json_schema: { type: 'object', additionalProperties: true }
+      });
     } catch {
+      generated = null;
+    }
+    if (!generated || typeof generated !== 'object') {
       generated = {};
     }
 
