@@ -5,8 +5,9 @@ import { Progress } from "@/components/ui/progress";
 import {
   ChevronDown, ChevronUp, Lightbulb, BookOpenCheck, MessageSquare, Eye,
   AlertTriangle, Zap, ListChecks, ThumbsUp, ThumbsDown, Brain, Stethoscope,
-  HelpCircle, ClipboardList, Video
+  HelpCircle, ClipboardList
 } from "lucide-react";
+import ModuleVideoPlayer from "./ModuleVideoPlayer";
 
 function ReadingTime({ content }) {
   const text = JSON.stringify(content || "");
@@ -226,29 +227,9 @@ export default function TrainingModuleViewer({ module }) {
       </CardHeader>
 
       <CardContent className="p-4 sm:p-5 space-y-5">
-        {/* AI Presenter Video */}
-        {module.video_url && (
-          <div className="rounded-xl overflow-hidden border border-navy-200 bg-black">
-            <video
-              controls
-              preload="metadata"
-              poster={module.video_thumbnail_url || undefined}
-              className="w-full aspect-video"
-            >
-              <source src={module.video_url} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            <div className="bg-navy-50 px-4 py-2 flex items-center gap-2 text-xs text-navy-700">
-              <Video className="w-3.5 h-3.5" />
-              <span>AI Presenter Video</span>
-              {module.video_duration_seconds && (
-                <span className="ml-auto text-navy-500">
-                  {Math.floor(module.video_duration_seconds / 60)}:{String(Math.round(module.video_duration_seconds % 60)).padStart(2, '0')}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Video-first lesson: plays the produced video if present, otherwise a
+            narrated slideshow built from this module's content. */}
+        <ModuleVideoPlayer module={module} />
 
         {content.intro && (
           <p className="text-slate-700 leading-7 text-sm sm:text-base border-l-4 border-blue-200 pl-4 bg-blue-50/50 py-2 rounded-r-xl">

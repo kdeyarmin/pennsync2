@@ -62,7 +62,6 @@ export default function TrainingCoursePlayer() {
   const [attestationAccepted, setAttestationAccepted] = useState(false);
   const [signedName, setSignedName] = useState("");
   const [result, setResult] = useState(null);
-  const [proofFiles, setProofFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [startTime] = useState(() => Date.now());
   const [elapsed, setElapsed] = useState(0);
@@ -167,19 +166,6 @@ export default function TrainingCoursePlayer() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      if (proofFiles.length > 0) {
-        const uploaded = await Promise.all(
-          proofFiles.map(async (file) => ({
-            name: file.name,
-            url: (await base44.integrations.Core.UploadFile({ file })).file_url,
-          }))
-        );
-        await base44.entities.TrainingAssignment.update(assignmentId, {
-          external_proof_urls: uploaded.map((i) => i.url),
-          external_proof_names: uploaded.map((i) => i.name),
-          external_proof_submitted_at: new Date().toISOString(),
-        });
-      }
       const timeSpentMinutes = Math.round((Date.now() - startTime) / 60000);
       const response = await gradeTrainingAttempt({
         assignmentId,
@@ -516,15 +502,6 @@ export default function TrainingCoursePlayer() {
               <p className="text-xs text-slate-500">By typing your name above, you are providing an electronic signature.</p>
             </div>
 
-            <div className="space-y-2">
-              <Label className="font-semibold">Upload proof of external certification (optional)</Label>
-              <input
-                type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp"
-                onChange={(e) => setProofFiles(Array.from(e.target.files || []))}
-                className="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-              />
-            </div>
-
             <Button
               size="lg"
               disabled={!attestationAccepted || !signedName.trim()}
@@ -717,7 +694,6 @@ export default function TrainingCoursePlayer() {
                   setActiveModuleIndex(0);
                   setAttestationAccepted(false);
                   setSignedName("");
-                  setProofFiles([]);
                 }}
               >
                 <RefreshCw className="w-4 h-4 mr-2" /> Review Content & Retake
