@@ -207,7 +207,13 @@ function quietHoursCheck(toNumber, now, settings) {
   if (!tz) return { allowed: true, reason: 'unknown_timezone' };
   const h = hourInZone(now, tz);
   if (h == null) return { allowed: true, reason: 'unknown_timezone' };
-  const allowed = h >= startHour && h < endHour;
+  // Allowed contact window; supports a window that wraps past midnight
+  // (start > end), e.g. quiet hours 21:00–08:00. Mirrors dispatchScheduledSms /
+  // sendSms — without this, a wrap-around config makes the allowed window
+  // evaluate as empty and NO failed text is ever redriven.
+  const allowed = startHour === endHour ? true
+    : startHour < endHour ? (h >= startHour && h < endHour)
+      : (h >= startHour || h < endHour);
   return { allowed, reason: allowed ? 'within_hours' : 'quiet_hours' };
 }
 
