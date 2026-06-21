@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,25 +27,25 @@ export default function DetailedDeficitReport({
   const [isLoading, setIsLoading] = useState(false);
   const [daysPeriod, setDaysPeriod] = useState(30);
 
-  useEffect(() => {
-    if (nurseEmail) {
-      loadAnalysis();
-    }
-  }, [nurseEmail, daysPeriod]);
-
-  const loadAnalysis = async () => {
+  const loadAnalysis = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await analyzeNurseDeficitsBackend({ 
-        nurseEmail, 
-        daysPeriod 
+      const response = await analyzeNurseDeficitsBackend({
+        nurseEmail,
+        daysPeriod
       });
       setAnalysis(response.data);
     } catch (error) {
       console.error("Error loading deficit analysis:", error);
     }
     setIsLoading(false);
-  };
+  }, [nurseEmail, daysPeriod]);
+
+  useEffect(() => {
+    if (nurseEmail) {
+      loadAnalysis();
+    }
+  }, [nurseEmail, daysPeriod, loadAnalysis]);
 
   if (isLoading) {
     return (

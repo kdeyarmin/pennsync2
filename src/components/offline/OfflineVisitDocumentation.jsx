@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useOfflineSync } from './OfflineSyncService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +34,16 @@ export default function OfflineVisitDocumentation({ patientId, visitId, existing
   const [savedOffline, setSavedOffline] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
 
+  const handleAutoSave = useCallback(() => {
+    if (!isOnline && formData.nurse_notes) {
+      try { localStorage.setItem(`visit_draft_${formData.visit_id}`, JSON.stringify({
+        ...formData,
+        lastSaved: new Date().toISOString()
+      })); } catch {}
+      setLastSaved(new Date());
+    }
+  }, [isOnline, formData]);
+
   // Auto-save every 30 seconds when offline
   useEffect(() => {
     if (!isOnline) {
@@ -42,17 +52,7 @@ export default function OfflineVisitDocumentation({ patientId, visitId, existing
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [isOnline, formData]);
-
-  const handleAutoSave = () => {
-    if (!isOnline && formData.nurse_notes) {
-      try { localStorage.setItem(`visit_draft_${formData.visit_id}`, JSON.stringify({
-        ...formData,
-        lastSaved: new Date().toISOString()
-      })); } catch {}
-      setLastSaved(new Date());
-    }
-  };
+  }, [isOnline, formData, handleAutoSave]);
 
   const handleSave = () => {
     if (!formData.patient_id) {

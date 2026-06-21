@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -90,13 +90,7 @@ export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRang
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoAnalyze && audits.length > 0 && !performanceData) {
-      analyzePerformance();
-    }
-  }, [autoAnalyze, audits]);
-
-  const analyzePerformance = async () => {
+  const analyzePerformance = useCallback(async () => {
     setIsAnalyzing(true);
     try {
       const cutoffDate = subDays(new Date(), timeRange);
@@ -349,7 +343,13 @@ Return detailed analysis suitable for management dashboard.`,
       alert('Failed to analyze performance. Please try again.');
     }
     setIsAnalyzing(false);
-  };
+  }, [audits, recommendations, selectedNurse, timeRange, trainingCompletions, visits]);
+
+  useEffect(() => {
+    if (autoAnalyze && audits.length > 0 && !performanceData) {
+      analyzePerformance();
+    }
+  }, [autoAnalyze, audits, performanceData, analyzePerformance]);
 
   const _getPerformanceColor = (score) => {
     if (score >= 85) return 'bg-green-500';

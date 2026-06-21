@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,14 +54,7 @@ export default function AIDocumentationAutomation({
   const [customQuery, setCustomQuery] = useState("");
   const [copiedResponses, setCopiedResponses] = useState([]);
 
-  // Auto-generate assessments on mount if diagnosis present
-  useEffect(() => {
-    if (patient?.primary_diagnosis && !assessments && !isGeneratingAssessments) {
-      generateAssessments();
-    }
-  }, [patient?.id]);
-
-  const generateAssessments = async () => {
+  const generateAssessments = useCallback(async () => {
     if (!patient) return;
     
     setIsGeneratingAssessments(true);
@@ -166,7 +159,14 @@ Return JSON:
       console.error('Error generating assessments:', error);
     }
     setIsGeneratingAssessments(false);
-  };
+  }, [patient, previousVisits, vitalSigns]);
+
+  // Auto-generate assessments on mount if diagnosis present
+  useEffect(() => {
+    if (patient?.primary_diagnosis && !assessments && !isGeneratingAssessments) {
+      generateAssessments();
+    }
+  }, [patient?.primary_diagnosis, assessments, isGeneratingAssessments, generateAssessments]);
 
   const generateFollowUpActions = async () => {
     if (!patient) return;

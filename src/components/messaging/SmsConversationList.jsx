@@ -103,7 +103,7 @@ export default function SmsConversationList() {
     )
       .then(() => queryClient.invalidateQueries({ queryKey: ["sms-messages", user?.email] }))
       .catch((e) => console.warn("Failed to mark SMS read:", e?.message));
-  }, [selectedUnreadKey, user?.email]);
+  }, [selectedUnreadKey, user?.email, queryClient]);
 
   if (!user?.work_phone_number) {
     return (

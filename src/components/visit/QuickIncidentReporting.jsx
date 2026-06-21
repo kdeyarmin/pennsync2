@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
   // Ref to track if speech recognition is currently active
   const isListeningRef = useRef(false);
 
-  const incidentTypes = [
+  const incidentTypes = useMemo(() => [
     {
       id: 'fall',
       name: 'Patient Fall',
@@ -179,7 +179,7 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
         { name: 'transport', label: 'How transported?', type: 'select', options: ['Ambulance - 911', 'Family', 'Other'] },
       ]
     },
-  ];
+  ], []);
 
   // Using useCallback to ensure handleIncidentSelect is stable and doesn't cause unnecessary re-renders in useEffect
   const handleIncidentSelect = useCallback((incident) => {
@@ -301,7 +301,7 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
         isListeningRef.current = false;
       }
     };
-  }, [showDialog, isSubmitting, handleIncidentSelect]); // Dependencies for useEffect. `incidentTypes` is a constant.
+  }, [showDialog, isSubmitting, handleIncidentSelect, incidentTypes, voiceCommandStatus]); // Dependencies for useEffect. `incidentTypes` is memoized for a stable identity.
 
 
   const generateIncidentReport = () => {

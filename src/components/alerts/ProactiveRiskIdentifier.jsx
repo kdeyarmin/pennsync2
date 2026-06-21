@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,19 +49,9 @@ export default function ProactiveRiskIdentifier({
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 
-  // Auto-analyze on mount and when key data changes
-  useEffect(() => {
-    if (patient?.id) {
-      const timer = setTimeout(() => {
-        analyzeRisks();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [patient?.id, recentVisits?.length, vitalSigns]);
-
-  const analyzeRisks = async () => {
+  const analyzeRisks = useCallback(async () => {
     if (!patient) return;
-    
+
     setIsAnalyzing(true);
     try {
       // Compile comprehensive patient data for analysis
@@ -167,7 +157,17 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
       console.error("Error analyzing risks:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, recentVisits, carePlans, vitalSigns, incidents, onAlertCreated]);
+
+  // Auto-analyze on mount and when key data changes
+  useEffect(() => {
+    if (patient?.id) {
+      const timer = setTimeout(() => {
+        analyzeRisks();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [patient?.id, recentVisits?.length, vitalSigns, analyzeRisks]);
 
   const calculateAge = (dob) => {
     const today = new Date();

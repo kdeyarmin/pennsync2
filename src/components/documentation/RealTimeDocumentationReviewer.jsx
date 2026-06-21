@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,16 +30,7 @@ export default function RealTimeDocumentationReviewer({
   const [analysis, setAnalysis] = useState(null);
   const [_complianceScore, setComplianceScore] = useState(0);
 
-  useEffect(() => {
-    if (autoAnalyze && noteContent && noteContent.length > 50) {
-      const debounceTimer = setTimeout(() => {
-        analyzeDocumentation();
-      }, 2000);
-      return () => clearTimeout(debounceTimer);
-    }
-  }, [noteContent, autoAnalyze]);
-
-  const analyzeDocumentation = async () => {
+  const analyzeDocumentation = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) {
       alert("Please provide sufficient note content for analysis");
       return;
@@ -250,7 +241,16 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
     } finally {
       setAnalyzing(false);
     }
-  };
+  }, [noteContent, noteType, patientData]);
+
+  useEffect(() => {
+    if (autoAnalyze && noteContent && noteContent.length > 50) {
+      const debounceTimer = setTimeout(() => {
+        analyzeDocumentation();
+      }, 2000);
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [noteContent, autoAnalyze, analyzeDocumentation]);
 
   const getSeverityColor = (severity) => {
     const colors = {

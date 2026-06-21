@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,14 +46,8 @@ export default function ClinicalDecisionSupport({
   const [lastProactiveContext, setLastProactiveContext] = useState("");
   const [immediateAlerts, setImmediateAlerts] = useState([]);
 
-  // Rule-based immediate alerts that don't require AI
-  useEffect(() => {
-    const alerts = generateImmediateAlerts();
-    setImmediateAlerts(alerts);
-  }, [vitalSigns, diagnosis, roughNote]);
-
   // Generate immediate rule-based alerts
-  const generateImmediateAlerts = () => {
+  const generateImmediateAlerts = useCallback(() => {
     const alerts = [];
     const diagnosisUpper = (diagnosis || '').toUpperCase();
     const noteText = ((roughNote || '') + ' ' + (enhancedNote || '')).toLowerCase();
@@ -402,32 +396,15 @@ export default function ClinicalDecisionSupport({
     }
 
     return alerts;
-  };
+  }, [diagnosis, enhancedNote, roughNote, vitalSigns]);
 
-  // Proactive analysis based on vitals, diagnosis, and rough note (before enhancement)
+  // Rule-based immediate alerts that don't require AI
   useEffect(() => {
-    const contextKey = `${diagnosis}-${JSON.stringify(vitalSigns)}-${roughNote?.slice(0, 100)}`;
-    if (contextKey !== lastProactiveContext && (diagnosis || vitalSigns?.bp || vitalSigns?.hr || (roughNote && roughNote.length > 30))) {
-      const timer = setTimeout(() => {
-        runProactiveAnalysis();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [diagnosis, vitalSigns, roughNote]);
+    const alerts = generateImmediateAlerts();
+    setImmediateAlerts(alerts);
+  }, [vitalSigns, diagnosis, roughNote, generateImmediateAlerts]);
 
-  // Auto-analyze when enhanced note changes significantly
-  useEffect(() => {
-    if (enhancedNote && enhancedNote.length > 100 && enhancedNote !== lastAnalyzedText) {
-      const timer = setTimeout(() => {
-        if (enhancedNote.length > lastAnalyzedText.length + 50) {
-          analyzeForCDS();
-        }
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [enhancedNote]);
-
-  const runProactiveAnalysis = async () => {
+  const runProactiveAnalysis = useCallback(async () => {
     if (!diagnosis && !vitalSigns?.bp && !vitalSigns?.hr && (!roughNote || roughNote.length < 30)) return;
     
     setIsProactiveAnalyzing(true);
@@ -646,9 +623,9 @@ Return JSON with SPECIFIC, ACTIONABLE guidance:
       console.error("Error in proactive CDS analysis:", error);
     }
     setIsProactiveAnalyzing(false);
-  };
+  }, [careType, diagnosis, roughNote, vitalSigns]);
 
-  const analyzeForCDS = async () => {
+  const analyzeForCDS = useCallback(async () => {
     if (!enhancedNote || enhancedNote.length < 50) return;
 
     setIsAnalyzing(true);
@@ -810,7 +787,30 @@ Return JSON:
       console.error("Error in CDS analysis:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [careType, diagnosis, enhancedNote, extractedData, vitalSigns]);
+
+  // Proactive analysis based on vitals, diagnosis, and rough note (before enhancement)
+  useEffect(() => {
+    const contextKey = `${diagnosis}-${JSON.stringify(vitalSigns)}-${roughNote?.slice(0, 100)}`;
+    if (contextKey !== lastProactiveContext && (diagnosis || vitalSigns?.bp || vitalSigns?.hr || (roughNote && roughNote.length > 30))) {
+      const timer = setTimeout(() => {
+        runProactiveAnalysis();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [diagnosis, vitalSigns, roughNote, lastProactiveContext, runProactiveAnalysis]);
+
+  // Auto-analyze when enhanced note changes significantly
+  useEffect(() => {
+    if (enhancedNote && enhancedNote.length > 100 && enhancedNote !== lastAnalyzedText) {
+      const timer = setTimeout(() => {
+        if (enhancedNote.length > lastAnalyzedText.length + 50) {
+          analyzeForCDS();
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [enhancedNote, analyzeForCDS, lastAnalyzedText]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
@@ -36,7 +36,7 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
     initialData: [],
   });
 
-  const analyzeHospitalizationRisk = async () => {
+  const analyzeHospitalizationRisk = useCallback(async () => {
     setAnalyzing(true);
     try {
       const analysisPromises = patients.map(async (patient) => {
@@ -209,13 +209,13 @@ Return detailed risk assessment:`,
     } finally {
       setAnalyzing(false);
     }
-  };
+  }, [patients, recentVisits, medications]);
 
   React.useEffect(() => {
     if (autoAnalyze && patients.length > 0 && !riskScores) {
       analyzeHospitalizationRisk();
     }
-  }, [autoAnalyze, patients.length, riskScores]);
+  }, [autoAnalyze, patients.length, riskScores, analyzeHospitalizationRisk]);
 
   const getRiskColor = (level) => {
     switch(level) {

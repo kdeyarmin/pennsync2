@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -39,7 +39,7 @@ export default function AIAuditRiskPredictor({ analysisResults, patientId }) {
     enabled: !!patientId
   });
 
-  const runPrediction = async () => {
+  const runPrediction = useCallback(async () => {
     if (!analysisResults) return;
     setIsLoading(true);
 
@@ -140,13 +140,13 @@ Return JSON:
       console.error("Error predicting audit risk:", error);
     }
     setIsLoading(false);
-  };
+  }, [analysisResults, historicalAudits, patientOASIS]);
 
   useEffect(() => {
     if (analysisResults && !prediction) {
       runPrediction();
     }
-  }, [analysisResults]);
+  }, [analysisResults, prediction, runPrediction]);
 
   const getRiskColor = (level) => {
     switch (level) {

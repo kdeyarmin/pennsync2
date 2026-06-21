@@ -118,15 +118,17 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
     }
   });
 
+  const { mutate: markAsRead } = markAsReadMutation;
+
   useEffect(() => {
     if (selectedThread) {
       selectedThread.messages.forEach(msg => {
         if (!msg.read_by?.includes(user?.email)) {
-          markAsReadMutation.mutate(msg.id);
+          markAsRead(msg.id);
         }
       });
     }
-  }, [selectedThread, user?.email]);
+  }, [selectedThread, user?.email, markAsRead]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;

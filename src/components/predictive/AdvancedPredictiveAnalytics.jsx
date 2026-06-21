@@ -61,13 +61,7 @@ export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = f
     }
   });
 
-  React.useEffect(() => {
-    if (autoAnalyze && patient && !predictions && !isAnalyzing) {
-      performPredictiveAnalysis();
-    }
-  }, [autoAnalyze, patient, predictions, isAnalyzing]);
-
-  const performPredictiveAnalysis = async () => {
+  const performPredictiveAnalysis = React.useCallback(async () => {
     if (!patient) return;
 
     setIsAnalyzing(true);
@@ -297,7 +291,13 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
       alert('Failed to perform predictive analysis. Please try again.');
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, visits, incidents, carePlans]);
+
+  React.useEffect(() => {
+    if (autoAnalyze && patient && !predictions && !isAnalyzing) {
+      performPredictiveAnalysis();
+    }
+  }, [autoAnalyze, patient, predictions, isAnalyzing, performPredictiveAnalysis]);
 
   const checkAbnormalVitals = (vitalsHistory) => {
     if (!vitalsHistory || vitalsHistory.length < 2) return false;

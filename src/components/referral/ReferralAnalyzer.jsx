@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ export default function ReferralAnalyzer({ referralData, onAnalysisComplete }) {
   const [analysis, setAnalysis] = useState(null);
   const [_isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const analyzeReferral = async () => {
+  const analyzeReferral = useCallback(async () => {
     if (!referralData) return;
 
     setIsAnalyzing(true);
@@ -150,13 +150,13 @@ Referral Data: ${JSON.stringify(referralData)}`,
       alert('Failed to analyze referral. Please try again.');
     }
     setIsAnalyzing(false);
-  };
+  }, [referralData, onAnalysisComplete]);
 
   useEffect(() => {
     if (referralData) {
       analyzeReferral();
     }
-  }, [referralData]);
+  }, [referralData, analyzeReferral]);
 
   if (!analysis) {
     return (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,13 +21,7 @@ export default function InlineGuidelineSuggester({
   const [relevantGuidelines, setRelevantGuidelines] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (selectedText && selectedText.length > 10) {
-      loadContextualGuidelines();
-    }
-  }, [selectedText]);
-
-  const loadContextualGuidelines = async () => {
+  const loadContextualGuidelines = useCallback(async () => {
     setIsLoading(true);
     try {
       const guidelines = await retrieveRelevantGuidelines({
@@ -44,7 +38,13 @@ export default function InlineGuidelineSuggester({
       console.error('Error loading guidelines:', error);
     }
     setIsLoading(false);
-  };
+  }, [diagnosis, visitType, selectedText]);
+
+  useEffect(() => {
+    if (selectedText && selectedText.length > 10) {
+      loadContextualGuidelines();
+    }
+  }, [selectedText, loadContextualGuidelines]);
 
   if (!selectedText || selectedText.length < 10) return null;
 

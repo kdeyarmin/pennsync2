@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -46,13 +46,7 @@ export default function AIPathwayRecommender({
     }
   });
 
-  useEffect(() => {
-    if (pdgmData && analysisResults && !recommendations && !isAnalyzing) {
-      analyzePathways();
-    }
-  }, [pdgmData, analysisResults]);
-
-  const analyzePathways = async () => {
+  const analyzePathways = useCallback(async () => {
     setIsAnalyzing(true);
 
     try {
@@ -216,7 +210,13 @@ Return JSON:
     }
 
     setIsAnalyzing(false);
-  };
+  }, [analysisResults, availablePathways, navigationData, patientId, pdgmData]);
+
+  useEffect(() => {
+    if (pdgmData && analysisResults && !recommendations && !isAnalyzing) {
+      analyzePathways();
+    }
+  }, [pdgmData, analysisResults, analyzePathways, isAnalyzing, recommendations]);
 
   const handleActivatePathways = async () => {
     if (!recommendations || selectedPathways.length === 0) return;

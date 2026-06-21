@@ -92,7 +92,7 @@ export default function EnhancedClinicalDecisionSupport({
     if (autoAnalyze && currentNoteText?.length > 50) {
       debouncedAnalyze();
     }
-  }, [currentNoteText, vitalSigns, autoAnalyze]);
+  }, [currentNoteText, vitalSigns, autoAnalyze, debouncedAnalyze]);
 
   const analyzeClinicalData = async () => {
     // Build comprehensive patient context

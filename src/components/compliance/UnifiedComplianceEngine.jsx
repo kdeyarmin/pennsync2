@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -56,16 +56,7 @@ export default function UnifiedComplianceEngine({
     initialData: [],
   });
 
-  // Debounce auto-check so a full compliance pass (5 LLM calls) fires only once
-  // the nurse pauses typing — not on every keystroke. Pending checks are cancelled
-  // on each change, which avoids hammering the LLM API and flagging mid-sentence text.
-  useEffect(() => {
-    if (!autoCheck || !noteContent || noteContent.length <= 100) return;
-    const timer = setTimeout(() => { analyzeCompliance(); }, 1500);
-    return () => clearTimeout(timer);
-  }, [noteContent, autoCheck]);
-
-  const analyzeCompliance = async () => {
+  const analyzeCompliance = useCallback(async () => {
     if (!noteContent || noteContent.length < 100) return;
 
     setIsAnalyzing(true);
@@ -328,7 +319,16 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
       console.error('Unified compliance check error:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [noteContent, visitType, diagnosis, patientData, nurseType, careType, regulatoryUpdates]);
+
+  // Debounce auto-check so a full compliance pass (5 LLM calls) fires only once
+  // the nurse pauses typing — not on every keystroke. Pending checks are cancelled
+  // on each change, which avoids hammering the LLM API and flagging mid-sentence text.
+  useEffect(() => {
+    if (!autoCheck || !noteContent || noteContent.length <= 100) return;
+    const timer = setTimeout(() => { analyzeCompliance(); }, 1500);
+    return () => clearTimeout(timer);
+  }, [noteContent, autoCheck, analyzeCompliance]);
 
   const handleApplyFix = (violation) => {
     onApplyFix?.(violation.compliant_example, violation.rule_name, false);

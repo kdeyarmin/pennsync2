@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,13 +30,7 @@ export default function InterdisciplinaryTeamCoordinator({
   const [recommendation, setRecommendation] = useState(null);
   const [isCreatingAlert, setIsCreatingAlert] = useState(false);
 
-  useEffect(() => {
-    if (autoAnalyze && patientData) {
-      analyzeTeamMeetingNeed();
-    }
-  }, [autoAnalyze, patientId]);
-
-  const analyzeTeamMeetingNeed = async () => {
+  const analyzeTeamMeetingNeed = useCallback(async () => {
     if (!patientData) return;
 
     setIsAnalyzing(true);
@@ -130,7 +124,13 @@ Return recommendation with:
       setRecommendation({ error: error.message });
     }
     setIsAnalyzing(false);
-  };
+  }, [patientData, carePlans, incidents, alerts, recentVisits]);
+
+  useEffect(() => {
+    if (autoAnalyze && patientData) {
+      analyzeTeamMeetingNeed();
+    }
+  }, [autoAnalyze, patientId, patientData, analyzeTeamMeetingNeed]);
 
   const handleCreateCoordinationAlert = async () => {
     if (!recommendation?.meeting_recommended) return;

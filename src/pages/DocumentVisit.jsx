@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { invokeLLM, invokeLLMWithFile } from "@/lib/invokeLLM";
@@ -199,24 +199,6 @@ export default function DocumentVisit() {
     enabled: !!visit?.patient_id && hasAccess === true, 
   });
 
-  useEffect(() => {
-    if (visit) {
-      setNarrativeText(visit.nurse_notes || "");
-      setVitalSigns(visit.vital_signs || {});
-      setStartTime(visit.start_time || "");
-      setEndTime(visit.end_time || "");
-      
-      if (!visit.start_time && visit.status === 'scheduled') {
-        const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-        setStartTime(now);
-        updateVisitMutation.mutate({ 
-          status: 'in_progress', 
-          start_time: now 
-        });
-      }
-    }
-  }, [visit]);
-
   const updateVisitMutation = useMutation({
     mutationFn: (updates) => base44.entities.Visit.update(visitId, updates),
     onSuccess: () => {
@@ -224,14 +206,35 @@ export default function DocumentVisit() {
       queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
     },
   });
+  // A useMutation() result gets a new identity every render; depend on its
+  // stable mutate/mutateAsync functions instead so effects don't re-run each render.
+  const { mutate: mutateVisit, mutateAsync: mutateVisitAsync } = updateVisitMutation;
 
-  const autoSave = async () => {
+  useEffect(() => {
+    if (visit) {
+      setNarrativeText(visit.nurse_notes || "");
+      setVitalSigns(visit.vital_signs || {});
+      setStartTime(visit.start_time || "");
+      setEndTime(visit.end_time || "");
+
+      if (!visit.start_time && visit.status === 'scheduled') {
+        const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        setStartTime(now);
+        mutateVisit({
+          status: 'in_progress',
+          start_time: now
+        });
+      }
+    }
+  }, [visit, mutateVisit]);
+
+  const autoSave = useCallback(async () => {
     if (!hasUnsavedChanges || isSaving) return;
-    
+
     setIsSaving(true);
     try {
       const sanitizedNarrative = sanitizeInput(narrativeText);
-      
+
       await secureUpdate(
         base44.entities.Visit,
         visitId,
@@ -243,23 +246,23 @@ export default function DocumentVisit() {
         },
         'Visit'
       );
-      
+
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
     } catch (error) {
       await handleSecureError(error, 'visit_auto_save', null);
     }
     setIsSaving(false);
-  };
+  }, [hasUnsavedChanges, isSaving, narrativeText, vitalSigns, visitId, startTime, endTime]);
 
   useEffect(() => {
     if (visit && (narrativeText !== (visit.nurse_notes || "") || JSON.stringify(vitalSigns) !== JSON.stringify(visit.vital_signs || {}))) {
       setHasUnsavedChanges(true);
-      
+
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
       }
-      
+
       autoSaveTimerRef.current = setTimeout(() => {
         autoSave();
       }, 30000);
@@ -270,7 +273,7 @@ export default function DocumentVisit() {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [narrativeText, vitalSigns, startTime, endTime, visit]);
+  }, [narrativeText, vitalSigns, startTime, endTime, visit, autoSave]);
 
   // Critical-vital escalation (non-blocking): when an entered vital crosses a
   // life-threatening threshold, raise a PatientAlert so a supervisor/physician
@@ -768,7 +771,7 @@ Generate the complete template now:`;
       const processAudioWrapper = async () => {
         const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
         
-        await updateVisitMutation.mutateAsync({ audio_url: file_url });
+        await mutateVisitAsync({ audio_url: file_url });
 
         let prompt = `You are a skilled home health and hospice nursing documentation specialist. Your task is to accurately transcribe the provided audio and intelligently integrate the spoken observations into the clinical narrative.
 

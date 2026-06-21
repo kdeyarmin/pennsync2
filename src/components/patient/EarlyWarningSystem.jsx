@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -49,60 +49,9 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
     initialData: [],
   });
 
-  useEffect(() => {
-    if (patient && allVisits && allVisits.length > 0) {
-      analyzePatientData();
-    }
-  }, [patient, allVisits, incidents]);
-
-  const analyzePatientData = async () => {
-    setIsAnalyzing(true);
-    
-    try {
-      const recentVisits = allVisits.slice(0, 10);
-      const detectedAlerts = [];
-
-      // === VITAL SIGNS TREND ANALYSIS ===
-      const vitalsAlerts = analyzeVitalsTrends(recentVisits);
-      detectedAlerts.push(...vitalsAlerts);
-
-      // === VISIT PATTERN ANALYSIS ===
-      const visitAlerts = analyzeVisitPatterns(recentVisits);
-      detectedAlerts.push(...visitAlerts);
-
-      // === INCIDENT PATTERN ANALYSIS ===
-      const incidentAlerts = analyzeIncidents(incidents);
-      detectedAlerts.push(...incidentAlerts);
-
-      // === DIAGNOSIS-SPECIFIC WARNINGS ===
-      const diagnosisAlerts = analyzeDiagnosisSpecific(patient, recentVisits);
-      detectedAlerts.push(...diagnosisAlerts);
-
-      // === AI-POWERED COMPREHENSIVE ANALYSIS ===
-      if (recentVisits.length >= 3) {
-        const aiAlerts = await performAIAnalysis(patient, recentVisits, incidents);
-        detectedAlerts.push(...aiAlerts);
-      }
-
-      // Filter out dismissed alerts and sort by severity
-      const activeAlerts = detectedAlerts
-        .filter(alert => !dismissedAlerts.includes(alert.id))
-        .sort((a, b) => {
-          const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-          return severityOrder[a.severity] - severityOrder[b.severity];
-        });
-
-      setAlerts(activeAlerts);
-
-    } catch (error) {
-      console.error("Error analyzing patient data:", error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
 
   // Analyze vital signs trends
-  const analyzeVitalsTrends = (visits) => {
+  const analyzeVitalsTrends = useCallback((visits) => {
     const alerts = [];
     const visitsWithVitals = visits.filter(v => v.vital_signs && Object.keys(v.vital_signs).length > 0);
     
@@ -401,10 +350,10 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
     }
 
     return alerts;
-  };
+  }, [patient]);
 
   // Analyze visit patterns
-  const analyzeVisitPatterns = (visits) => {
+  const analyzeVisitPatterns = useCallback((visits) => {
     const alerts = [];
 
     if (visits.length < 2) return alerts;
@@ -477,10 +426,10 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
       }
 
       return alerts;
-    };
+    }, [patient]);
 
     // Analyze incident patterns
-    const analyzeIncidents = (incidents) => {
+    const analyzeIncidents = useCallback((incidents) => {
       const alerts = [];
 
       if (incidents.length === 0) return alerts;
@@ -557,10 +506,10 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
       }
 
       return alerts;
-    };
+    }, []);
 
     // Diagnosis-specific analysis
-    const analyzeDiagnosisSpecific = (patient, visits) => {
+    const analyzeDiagnosisSpecific = useCallback((patient, visits) => {
       const alerts = [];
       const diagnosis = patient.primary_diagnosis?.toLowerCase() || '';
 
@@ -667,10 +616,10 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
       }
 
       return alerts;
-    };
+    }, []);
 
     // AI-powered comprehensive analysis
-    const performAIAnalysis = async (patient, visits, incidents) => {
+    const performAIAnalysis = useCallback(async (patient, visits, incidents) => {
       try {
         const prompt = `You are an expert clinical AI specializing in early detection of patient deterioration in home health/hospice settings. Analyze this patient's data and identify subtle patterns or concerning trends that may not be obvious.
 
@@ -755,7 +704,59 @@ Return empty array if no significant AI-detected patterns found.`;
         console.error("Error in AI analysis:", error);
         return [];
       }
-    };
+    }, []);
+
+  const analyzePatientData = useCallback(async () => {
+    setIsAnalyzing(true);
+
+    try {
+      const recentVisits = allVisits.slice(0, 10);
+      const detectedAlerts = [];
+
+      // === VITAL SIGNS TREND ANALYSIS ===
+      const vitalsAlerts = analyzeVitalsTrends(recentVisits);
+      detectedAlerts.push(...vitalsAlerts);
+
+      // === VISIT PATTERN ANALYSIS ===
+      const visitAlerts = analyzeVisitPatterns(recentVisits);
+      detectedAlerts.push(...visitAlerts);
+
+      // === INCIDENT PATTERN ANALYSIS ===
+      const incidentAlerts = analyzeIncidents(incidents);
+      detectedAlerts.push(...incidentAlerts);
+
+      // === DIAGNOSIS-SPECIFIC WARNINGS ===
+      const diagnosisAlerts = analyzeDiagnosisSpecific(patient, recentVisits);
+      detectedAlerts.push(...diagnosisAlerts);
+
+      // === AI-POWERED COMPREHENSIVE ANALYSIS ===
+      if (recentVisits.length >= 3) {
+        const aiAlerts = await performAIAnalysis(patient, recentVisits, incidents);
+        detectedAlerts.push(...aiAlerts);
+      }
+
+      // Filter out dismissed alerts and sort by severity
+      const activeAlerts = detectedAlerts
+        .filter(alert => !dismissedAlerts.includes(alert.id))
+        .sort((a, b) => {
+          const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+          return severityOrder[a.severity] - severityOrder[b.severity];
+        });
+
+      setAlerts(activeAlerts);
+
+    } catch (error) {
+      console.error("Error analyzing patient data:", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [allVisits, incidents, patient, dismissedAlerts, analyzeVitalsTrends, analyzeVisitPatterns, analyzeIncidents, analyzeDiagnosisSpecific, performAIAnalysis]);
+
+  useEffect(() => {
+    if (patient && allVisits && allVisits.length > 0) {
+      analyzePatientData();
+    }
+  }, [patient, allVisits, incidents, analyzePatientData]);
 
     const handleViewDetails = (alert) => {
       setSelectedAlert(alert);

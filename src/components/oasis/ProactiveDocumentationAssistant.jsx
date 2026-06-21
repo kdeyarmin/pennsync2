@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,13 +34,7 @@ export default function ProactiveDocumentationAssistant({
   const [editingNarrative, setEditingNarrative] = useState({});
   const [appliedSuggestions, setAppliedSuggestions] = useState(new Set());
 
-  useEffect(() => {
-    if (autoAnalyze && oasisData && clinicalNotes) {
-      analyzeDocumentation();
-    }
-  }, [oasisData?.id, autoAnalyze]);
-
-  const analyzeDocumentation = async () => {
+  const analyzeDocumentation = useCallback(async () => {
     if (!oasisData) return;
 
     setIsAnalyzing(true);
@@ -158,7 +152,13 @@ For EACH gap found, provide:
       console.error('Documentation analysis error:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [oasisData, clinicalNotes, patientData]);
+
+  useEffect(() => {
+    if (autoAnalyze && oasisData && clinicalNotes) {
+      analyzeDocumentation();
+    }
+  }, [oasisData, clinicalNotes, autoAnalyze, analyzeDocumentation]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -39,13 +39,7 @@ export default function ProactiveComplianceMonitor({
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoMonitor && recentAudits.length > 0) {
-      analyzePatterns();
-    }
-  }, [recentAudits, autoMonitor]);
-
-  const analyzePatterns = async () => {
+  const analyzePatterns = useCallback(async () => {
     if (recentAudits.length < 5) return;
 
     setIsAnalyzing(true);
@@ -181,7 +175,13 @@ Return JSON with: critical_patterns array (with pattern, frequency, cop_referenc
       console.error('Pattern analysis error:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [medicareRules, recentAudits]);
+
+  useEffect(() => {
+    if (autoMonitor && recentAudits.length > 0) {
+      analyzePatterns();
+    }
+  }, [recentAudits, autoMonitor, analyzePatterns]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

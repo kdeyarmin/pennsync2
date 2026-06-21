@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -66,7 +66,7 @@ export default function PDGMPredictiveAnalytics({ compact = false }) {
     queryFn: () => base44.entities.Visit.list('-visit_date', 100),
   });
 
-  const generatePredictions = async () => {
+  const generatePredictions = useCallback(async () => {
     setIsAnalyzing(true);
     setError(null);
 
@@ -319,13 +319,13 @@ Return JSON:
     }
 
     setIsAnalyzing(false);
-  };
+  }, [patients, visits, timeRange]);
 
   useEffect(() => {
     if (patients.length > 0 && !predictions && !isAnalyzing) {
       generatePredictions();
     }
-  }, [patients]);
+  }, [patients, predictions, isAnalyzing, generatePredictions]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {

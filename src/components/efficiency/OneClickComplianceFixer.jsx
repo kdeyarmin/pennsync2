@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export default function OneClickComplianceFixer({
   const [fixedContent, setFixedContent] = useState(null);
   const [appliedFixes, setAppliedFixes] = useState(new Set());
 
-  const checkCompliance = async () => {
+  const checkCompliance = useCallback(async () => {
     if (!documentContent) return;
 
     setIsChecking(true);
@@ -89,7 +89,7 @@ For each issue found, provide:
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [documentContent, documentType]);
 
   const applyFix = async (issue) => {
     if (!issue.one_click_fixable) return;
@@ -148,7 +148,7 @@ For each issue found, provide:
     if (documentContent && !isChecking && complianceIssues.length === 0) {
       checkCompliance();
     }
-  }, [documentContent]);
+  }, [documentContent, isChecking, complianceIssues.length, checkCompliance]);
 
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {

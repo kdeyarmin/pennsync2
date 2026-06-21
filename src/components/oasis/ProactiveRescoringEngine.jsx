@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,13 +24,7 @@ export default function ProactiveRescoringEngine({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [opportunities, setOpportunities] = useState(null);
 
-  useEffect(() => {
-    if (autoAnalyze && oasisData) {
-      analyzeRescoringOpportunities();
-    }
-  }, [autoAnalyze, oasisData]);
-
-  const analyzeRescoringOpportunities = async () => {
+  const analyzeRescoringOpportunities = useCallback(async () => {
     if (!oasisData) return;
 
     setIsAnalyzing(true);
@@ -128,7 +122,13 @@ For each opportunity, calculate:
       console.error('Rescoring analysis error:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [oasisData, patientData, clinicalContext, onOpportunitiesFound]);
+
+  useEffect(() => {
+    if (autoAnalyze && oasisData) {
+      analyzeRescoringOpportunities();
+    }
+  }, [autoAnalyze, oasisData, analyzeRescoringOpportunities]);
 
   const getCategoryIcon = (category) => {
     const icons = {

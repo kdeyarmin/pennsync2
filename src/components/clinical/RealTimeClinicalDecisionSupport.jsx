@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,20 +72,7 @@ export default function RealTimeClinicalDecisionSupport({
   // changed WHILE it was in flight and re-trigger once it finishes.
   latestHashRef.current = currentDataHash;
 
-  // Auto-analyze when significant data changes
-  useEffect(() => {
-    if (patient && currentDataHash !== lastAnalyzedHashRef.current && !isAnalyzingRef.current) {
-      const timer = setTimeout(() => {
-        if (!isAnalyzingRef.current &&
-            (Object.keys(vitalSigns || {}).length > 0 || (narrativeText || '').length > 50)) {
-          runAnalysis();
-        }
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [currentDataHash]);
-
-  const runAnalysis = async () => {
+  const runAnalysis = useCallback(async () => {
     if (!patient || isAnalyzingRef.current) return;
 
     isAnalyzingRef.current = true;
@@ -281,11 +268,24 @@ Return JSON:
         }, 2000);
       }
     }
-  };
+  }, [patient, carePlans, vitalSigns, narrativeText, currentDataHash]);
 
   // Keep the ref pointing at this render's runAnalysis so the in-flight
   // re-trigger above always runs the freshest closure.
   runAnalysisRef.current = runAnalysis;
+
+  // Auto-analyze when significant data changes
+  useEffect(() => {
+    if (patient && currentDataHash !== lastAnalyzedHashRef.current && !isAnalyzingRef.current) {
+      const timer = setTimeout(() => {
+        if (!isAnalyzingRef.current &&
+            (Object.keys(vitalSigns || {}).length > 0 || (narrativeText || '').length > 50)) {
+          runAnalysis();
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentDataHash, patient, vitalSigns, narrativeText, runAnalysis]);
 
   const handleInsert = (text, id) => {
     onInsertText("\n\n" + text);

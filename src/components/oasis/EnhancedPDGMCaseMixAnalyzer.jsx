@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +16,7 @@ export default function EnhancedPDGMCaseMixAnalyzer({ pdgmData, navigationData }
   const [caseMixAnalysis, setCaseMixAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    if (pdgmData && navigationData?.case_mix_calculation && !caseMixAnalysis) {
-      performCaseMixAnalysis();
-    }
-  }, [pdgmData, navigationData]);
-
-  const performCaseMixAnalysis = async () => {
+  const performCaseMixAnalysis = useCallback(async () => {
     if (!pdgmData || !navigationData?.case_mix_calculation) return;
 
     setIsAnalyzing(true);
@@ -173,7 +167,13 @@ Return detailed JSON with exact dollar amounts:`,
     }
 
     setIsAnalyzing(false);
-  };
+  }, [pdgmData, navigationData]);
+
+  useEffect(() => {
+    if (pdgmData && navigationData?.case_mix_calculation && !caseMixAnalysis) {
+      performCaseMixAnalysis();
+    }
+  }, [pdgmData, navigationData, caseMixAnalysis, performCaseMixAnalysis]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);

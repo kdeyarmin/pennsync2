@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +20,7 @@ export default function AIDocumentReviewer({ oasisData, autoReview = true }) {
   const [reviewResults, setReviewResults] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (autoReview && oasisData && !reviewResults) {
-      performAIReview();
-    }
-  }, [oasisData, autoReview]);
-
-  const performAIReview = async () => {
+  const performAIReview = useCallback(async () => {
     setIsReviewing(true);
     setError(null);
 
@@ -150,7 +144,13 @@ Provide actionable, specific feedback for each issue found.`;
     } finally {
       setIsReviewing(false);
     }
-  };
+  }, [oasisData]);
+
+  useEffect(() => {
+    if (autoReview && oasisData && !reviewResults) {
+      performAIReview();
+    }
+  }, [oasisData, autoReview, reviewResults, performAIReview]);
 
   const getSeverityColor = (severity) => {
     const colors = {

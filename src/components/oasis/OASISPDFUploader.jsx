@@ -129,7 +129,7 @@ export default function OASISPDFUploader({
         }
       }
     }
-  }, [visitId, initialData]);
+  }, [visitId, initialData, onDataExtracted]);
 
   // Save data to localStorage when it changes
   useEffect(() => {

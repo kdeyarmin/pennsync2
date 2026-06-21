@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,13 +22,7 @@ export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAler
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
 
-  React.useEffect(() => {
-    if (autoAnalyze && patientId && !analysis) {
-      runAnalysis();
-    }
-  }, [autoAnalyze, patientId]);
-
-  const runAnalysis = async () => {
+  const runAnalysis = useCallback(async () => {
     if (!patientId) return;
 
     setIsAnalyzing(true);
@@ -55,7 +49,13 @@ export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAler
     }
 
     setIsAnalyzing(false);
-  };
+  }, [patientId, onAlertsCreated]);
+
+  React.useEffect(() => {
+    if (autoAnalyze && patientId && !analysis) {
+      runAnalysis();
+    }
+  }, [autoAnalyze, patientId, analysis, runAnalysis]);
 
   const getRiskColor = (score) => {
     if (score >= 75) return 'bg-red-500';

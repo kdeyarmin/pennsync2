@@ -36,16 +36,6 @@ export default function AIDocumentationAssistant({
   const [_lastAnalyzedLength, setLastAnalyzedLength] = useState(0);
   const [insertedItems, setInsertedItems] = useState([]);
 
-  // Auto-analyze when significant content changes
-  useEffect(() => {
-    const currentLength = (narrativeText || '').length;
-    const shouldAutoAnalyze = !suggestions && patient && visit && currentLength < 100;
-    
-    if (shouldAutoAnalyze) {
-      analyzeDocs();
-    }
-  }, [patient?.id, visit?.id]);
-
   const analyzeDocs = useCallback(async () => {
     if (!patient || !visit) return;
     
@@ -177,6 +167,16 @@ Return JSON:
     }
     setIsAnalyzing(false);
   }, [patient, visit, vitalSigns, narrativeText, carePlans]);
+
+  // Auto-analyze when significant content changes
+  useEffect(() => {
+    const currentLength = (narrativeText || '').length;
+    const shouldAutoAnalyze = !suggestions && patient && visit && currentLength < 100;
+    
+    if (shouldAutoAnalyze) {
+      analyzeDocs();
+    }
+  }, [patient?.id, visit?.id, analyzeDocs, narrativeText, patient, suggestions, visit]);
 
   const handleInsert = (content, id) => {
     onInsertText(content);

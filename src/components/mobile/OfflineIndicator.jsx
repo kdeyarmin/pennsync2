@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +13,33 @@ export default function OfflineIndicator() {
   const [expanded, setExpanded] = useState(false);
   const [syncProgress, setSyncProgress] = useState(0);
   const [lastSyncResult, setLastSyncResult] = useState(null);
+
+  const performSync = useCallback(async () => {
+    setIsSyncing(true);
+    setSyncProgress(0);
+
+    const total = syncStatus.pending || 1;
+    let synced = 0;
+
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      synced = Math.min(synced + 1, total);
+      setSyncProgress((synced / total) * 100);
+    }, 500);
+
+    try {
+      const result = await offlineStorage.syncPendingData();
+      setSyncProgress(100);
+      setLastSyncResult(result);
+    } catch (error) {
+      console.error('Sync error:', error);
+    } finally {
+      clearInterval(progressInterval);
+    }
+
+    setIsSyncing(false);
+    setTimeout(() => setSyncProgress(0), 2000);
+  }, [syncStatus.pending]);
 
   useEffect(() => {
     const updateStatus = () => {
@@ -83,34 +110,7 @@ export default function OfflineIndicator() {
       clearInterval(interval);
       clearTimeout(syncResultTimer);
     };
-  }, []);
-
-  const performSync = async () => {
-    setIsSyncing(true);
-    setSyncProgress(0);
-    
-    const total = syncStatus.pending || 1;
-    let synced = 0;
-
-    // Simulate progress updates
-    const progressInterval = setInterval(() => {
-      synced = Math.min(synced + 1, total);
-      setSyncProgress((synced / total) * 100);
-    }, 500);
-
-    try {
-      const result = await offlineStorage.syncPendingData();
-      setSyncProgress(100);
-      setLastSyncResult(result);
-    } catch (error) {
-      console.error('Sync error:', error);
-    } finally {
-      clearInterval(progressInterval);
-    }
-
-    setIsSyncing(false);
-    setTimeout(() => setSyncProgress(0), 2000);
-  };
+  }, [performSync]);
 
   // Always show indicator with current status
   return (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -65,13 +65,7 @@ export default function CareCoordinationAnalyzer({
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoAnalyze && patientId && patient && !isAnalyzing && alerts.length === 0) {
-      analyzeCoordination();
-    }
-  }, [autoAnalyze, patientId, patient]);
-
-  const analyzeCoordination = async () => {
+  const analyzeCoordination = useCallback(async () => {
     if (!patient) return;
 
     setIsAnalyzing(true);
@@ -191,7 +185,13 @@ Return comprehensive analysis with actionable coordination alerts.`,
       alert('Failed to analyze care coordination. Please try again.');
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, incidents, visits, carePlans]);
+
+  useEffect(() => {
+    if (autoAnalyze && patientId && patient && !isAnalyzing && alerts.length === 0) {
+      analyzeCoordination();
+    }
+  }, [autoAnalyze, patientId, patient, isAnalyzing, alerts.length, analyzeCoordination]);
 
   const saveAlert = async (alertData) => {
     try {

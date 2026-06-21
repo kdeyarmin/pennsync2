@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,27 @@ export default function PredictiveHealthAnalytics({ patientId, patient, visits, 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    if (patientId && patient && visits.length > 0) {
-      analyzePredictiveRisks();
-    }
-  }, [patientId]);
+  const analyzeVitalTrends = useCallback((visits) => {
+    const validVisits = visits.filter(v => v.vital_signs);
+    if (validVisits.length === 0) return "No vital signs data available";
 
-  const analyzePredictiveRisks = async () => {
+    const metrics = ['blood_pressure_systolic', 'heart_rate', 'oxygen_saturation', 'weight'];
+    let trends = [];
+
+    metrics.forEach(metric => {
+      const values = validVisits.map(v => v.vital_signs?.[metric]).filter(v => v != null);
+      if (values.length >= 2) {
+        const recent = values.slice(0, 3).reduce((a, b) => a + b, 0) / Math.min(3, values.length);
+        const older = values.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, values.length);
+        const change = ((recent - older) / older * 100).toFixed(1);
+        trends.push(`${metric}: ${recent.toFixed(1)} (${change > 0 ? '+' : ''}${change}% vs baseline)`);
+      }
+    });
+
+    return trends.join('\n') || "Insufficient data for trend analysis";
+  }, []);
+
+  const analyzePredictiveRisks = useCallback(async () => {
     setIsAnalyzing(true);
     try {
       // Analyze vital trends
@@ -176,27 +190,13 @@ Return detailed clinical analysis with specific evidence from the data.`,
       console.error("Error analyzing predictive risks:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [visits, patient, carePlans, alerts, incidents, analyzeVitalTrends]);
 
-  const analyzeVitalTrends = (visits) => {
-    const validVisits = visits.filter(v => v.vital_signs);
-    if (validVisits.length === 0) return "No vital signs data available";
-
-    const metrics = ['blood_pressure_systolic', 'heart_rate', 'oxygen_saturation', 'weight'];
-    let trends = [];
-
-    metrics.forEach(metric => {
-      const values = validVisits.map(v => v.vital_signs?.[metric]).filter(v => v != null);
-      if (values.length >= 2) {
-        const recent = values.slice(0, 3).reduce((a, b) => a + b, 0) / Math.min(3, values.length);
-        const older = values.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, values.length);
-        const change = ((recent - older) / older * 100).toFixed(1);
-        trends.push(`${metric}: ${recent.toFixed(1)} (${change > 0 ? '+' : ''}${change}% vs baseline)`);
-      }
-    });
-
-    return trends.join('\n') || "Insufficient data for trend analysis";
-  };
+  useEffect(() => {
+    if (patientId && patient && visits.length > 0) {
+      analyzePredictiveRisks();
+    }
+  }, [patientId, patient, visits.length, analyzePredictiveRisks]);
 
   const getRiskColor = (level) => {
     switch(level) {

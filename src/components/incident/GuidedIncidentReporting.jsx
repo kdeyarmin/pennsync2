@@ -131,7 +131,7 @@ export default function GuidedIncidentReporting({
       });
       setNotifications(defaultNotifications);
     }
-  }, [incidentType]);
+  }, [incidentType, currentTypeConfig?.notifications]);
 
   const handleAnswerChange = (prompt, value) => {
     setAnswers(prev => ({ ...prev, [prompt]: value }));

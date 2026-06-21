@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -63,21 +63,21 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  const generateTypedSignature = () => {
+  const generateTypedSignature = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    
+
     clearCanvas();
-    
+
     const text = isInitials ? typedSignature.substring(0, 3) : typedSignature;
     const fontSize = isInitials ? 60 : 40;
-    
+
     ctx.font = `${fontSize}px ${selectedFont}`;
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-  };
+  }, [isInitials, typedSignature, selectedFont]);
 
   const handleSave = () => {
     const canvas = canvasRef.current;
@@ -113,7 +113,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
     if (signatureMethod === "type" && typedSignature) {
       generateTypedSignature();
     }
-  }, [typedSignature, selectedFont, signatureMethod]);
+  }, [typedSignature, selectedFont, signatureMethod, generateTypedSignature]);
 
   const fonts = [
     { value: "cursive", label: "Cursive", style: "font-['Brush_Script_MT',_cursive]" },

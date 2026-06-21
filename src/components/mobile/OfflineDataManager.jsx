@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,7 +131,7 @@ export default function OfflineDataManager() {
     setIsCaching(false);
   };
 
-  const syncOfflineData = async () => {
+  const syncOfflineData = useCallback(async () => {
     if (!isOnline || !currentUser?.email) return;
     if (isSyncingRef.current) return; // an overlapping run would duplicate visits
     isSyncingRef.current = true;
@@ -188,7 +188,7 @@ export default function OfflineDataManager() {
 
     isSyncingRef.current = false;
     setIsSyncing(false);
-  };
+  }, [isOnline, currentUser?.email, offlineCache, queryClient]);
 
   const clearCache = async () => {
     try {
@@ -208,7 +208,7 @@ export default function OfflineDataManager() {
     if (isOnline && offlineCache.length > 0 && !isSyncing) {
       syncOfflineData();
     }
-  }, [isOnline]);
+  }, [isOnline, offlineCache.length, isSyncing, syncOfflineData]);
 
   return (
     <Card className={`border-2 ${isOnline ? 'border-green-300' : 'border-orange-300'}`}>

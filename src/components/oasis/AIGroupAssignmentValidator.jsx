@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -56,13 +56,7 @@ export default function AIGroupAssignmentValidator({
 
   const isAdmin = currentUser?.role === 'admin';
 
-  useEffect(() => {
-    if (autoValidate && oasisData && pdgmData && !assignment) {
-      performValidation();
-    }
-  }, [oasisData?.id, autoValidate]);
-
-  const performValidation = async () => {
+  const performValidation = useCallback(async () => {
     if (!oasisData || !pdgmData) return;
 
     setIsValidating(true);
@@ -188,7 +182,13 @@ PROVIDE:
       setAssignment({ error: 'Failed to validate group assignment' });
     }
     setIsValidating(false);
-  };
+  }, [oasisData, pdgmData, analysisResults]);
+
+  useEffect(() => {
+    if (autoValidate && oasisData && pdgmData && !assignment) {
+      performValidation();
+    }
+  }, [oasisData, pdgmData, autoValidate, assignment, performValidation]);
 
   const saveOverrideMutation = useMutation({
     mutationFn: async (overrideData) => {

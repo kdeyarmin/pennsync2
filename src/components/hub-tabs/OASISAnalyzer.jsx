@@ -450,7 +450,7 @@ export default function OASISAnalyzer() {
         }
       }
     }
-  }, [analysisResults, patients, uploadedFileUrl]);
+  }, [analysisResults, patients, uploadedFileUrl, analysisId, pdgmData?.patient_info?.address, pdgmData?.patient_info?.name, pdgmData?.patient_info?.phone]);
 
   // Reset match results when starting new analysis
   useEffect(() => {

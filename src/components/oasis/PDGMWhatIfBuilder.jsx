@@ -61,14 +61,14 @@ export default function PDGMWhatIfBuilder({
         episode_timing: originalPdgmData.episode_timing || 'early'
       });
     }
-  }, [originalPdgmData]);
+  }, [originalPdgmData, scenarioData]);
 
   // Notify parent of changes
   useEffect(() => {
     if (scenarioData && onScenarioChange) {
       onScenarioChange(scenarioData);
     }
-  }, [scenarioData]);
+  }, [scenarioData, onScenarioChange]);
 
   const updateFunctionalScore = (key, value) => {
     setScenarioData(prev => ({

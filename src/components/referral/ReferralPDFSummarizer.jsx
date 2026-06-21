@@ -48,7 +48,16 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-export default function ReferralPDFSummarizer({ 
+const processingStages = [
+  "Analyzing document structure...",
+  "Extracting patient demographics...",
+  "Identifying diagnoses and medications...",
+  "Analyzing functional status...",
+  "Generating OASIS assessment...",
+  "Finalizing extraction..."
+];
+
+export default function ReferralPDFSummarizer({
   onDataExtracted,
   onUseForAdmission,
   patientId = null,
@@ -84,15 +93,6 @@ export default function ReferralPDFSummarizer({
   const previewIsImage =
     previewMime.startsWith("image/") || /\.(png|jpe?g|tiff?|gif|webp)(\?|$)/i.test(fileUrl || "");
 
-  const processingStages = [
-    "Analyzing document structure...",
-    "Extracting patient demographics...",
-    "Identifying diagnoses and medications...",
-    "Analyzing functional status...",
-    "Generating OASIS assessment...",
-    "Finalizing extraction..."
-  ];
-
   // Check if current user is admin
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -100,15 +100,6 @@ export default function ReferralPDFSummarizer({
   });
 
   const isAdmin = currentUser?.role === 'admin';
-
-  // Auto-process if fileUrl is provided externally
-  React.useEffect(() => {
-    if (externalFileUrl && !extractedData && !isProcessing) {
-      setFileUrl(externalFileUrl);
-      lastProcessedRef.current = { url: externalFileUrl, mime: "application/pdf" };
-      processReferral(externalFileUrl);
-    }
-  }, [externalFileUrl]);
 
   // Clear the progress interval if the component unmounts mid-processing.
   React.useEffect(() => () => {
@@ -176,7 +167,55 @@ export default function ReferralPDFSummarizer({
     }
   };
 
-  const processReferral = async (url, fileType = 'application/pdf') => {
+  /**
+   * Generate the admission packet PDF and upload it to obtain a permanent URL.
+   * The browser download is opt-in via `download` so embedded/auto flows don't
+   * spam the user with surprise downloads on every extraction.
+   */
+  const buildAdmissionPacket = React.useCallback(async (data = extractedData, { download = false } = {}) => {
+    if (!data) return null;
+
+    setGeneratingPDF(true);
+    try {
+      const response = await base44.functions.invoke('generateReferralOASISPacket', {
+        referralData: data
+      });
+
+      // Convert blob to file and upload to get permanent URL. Use a
+      // non-identifying filename — embedding the patient's name would leak PHI
+      // into browser download history and stored file metadata.
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const file = new File([blob], `admission_packet_${Date.now()}.pdf`, { type: 'application/pdf' });
+
+      // Upload to get permanent URL
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setGeneratedPdfUrl(file_url);
+
+      if (download) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        toast.success("Admission packet downloaded.");
+      }
+
+      return file_url;
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      if (download) {
+        toast.error('Failed to generate admission packet. Please try again.');
+      }
+      return null;
+    } finally {
+      setGeneratingPDF(false);
+    }
+  }, [extractedData]);
+
+  const processReferral = React.useCallback(async (url, fileType = 'application/pdf') => {
     setIsProcessing(true);
     setProcessingStage(0);
     // Drop any packet URL cached from a previously processed document so a
@@ -225,7 +264,16 @@ export default function ReferralPDFSummarizer({
       setIsProcessing(false);
       setProcessingStage(0);
     }
-  };
+  }, [onDataExtracted, onExtractionComplete, buildAdmissionPacket]);
+
+  // Auto-process if fileUrl is provided externally
+  React.useEffect(() => {
+    if (externalFileUrl && !extractedData && !isProcessing) {
+      setFileUrl(externalFileUrl);
+      lastProcessedRef.current = { url: externalFileUrl, mime: "application/pdf" };
+      processReferral(externalFileUrl);
+    }
+  }, [externalFileUrl, extractedData, isProcessing, processReferral]);
 
   const copySection = (text, label = "Section") => {
     navigator.clipboard.writeText(text)
@@ -236,54 +284,6 @@ export default function ReferralPDFSummarizer({
   const copyAll = () => {
     const allText = JSON.stringify(extractedData, null, 2);
     copySection(allText, "All referral data");
-  };
-
-  /**
-   * Generate the admission packet PDF and upload it to obtain a permanent URL.
-   * The browser download is opt-in via `download` so embedded/auto flows don't
-   * spam the user with surprise downloads on every extraction.
-   */
-  const buildAdmissionPacket = async (data = extractedData, { download = false } = {}) => {
-    if (!data) return null;
-
-    setGeneratingPDF(true);
-    try {
-      const response = await base44.functions.invoke('generateReferralOASISPacket', {
-        referralData: data
-      });
-
-      // Convert blob to file and upload to get permanent URL. Use a
-      // non-identifying filename — embedding the patient's name would leak PHI
-      // into browser download history and stored file metadata.
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const file = new File([blob], `admission_packet_${Date.now()}.pdf`, { type: 'application/pdf' });
-
-      // Upload to get permanent URL
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setGeneratedPdfUrl(file_url);
-
-      if (download) {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        toast.success("Admission packet downloaded.");
-      }
-
-      return file_url;
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      if (download) {
-        toast.error('Failed to generate admission packet. Please try again.');
-      }
-      return null;
-    } finally {
-      setGeneratingPDF(false);
-    }
   };
 
   // Explicit user-initiated download (button click).

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,13 +37,7 @@ export default function ProactiveCareGapIdentifier({
   const [identifiedGaps, setIdentifiedGaps] = useState(null);
   const [_selectedPatients, _setSelectedPatients] = useState([]);
 
-  useEffect(() => {
-    if (autoAnalyze && patients?.length > 0) {
-      analyzeForGaps();
-    }
-  }, [autoAnalyze, patients?.length]);
-
-  const analyzeForGaps = async () => {
+  const analyzeForGaps = useCallback(async () => {
     if (!patients || patients.length === 0) return;
 
     setIsAnalyzing(true);
@@ -159,7 +153,13 @@ Return structured JSON with prioritized gaps.`,
       console.error('Error analyzing care gaps:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [patients, visits, carePlans, alerts, maxGaps]);
+
+  useEffect(() => {
+    if (autoAnalyze && patients?.length > 0) {
+      analyzeForGaps();
+    }
+  }, [autoAnalyze, patients?.length, analyzeForGaps]);
 
   const createTaskMutation = useMutation({
     mutationFn: (taskData) => base44.entities.Task.create(taskData),

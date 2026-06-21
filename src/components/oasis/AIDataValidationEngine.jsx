@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,13 +31,7 @@ export default function AIDataValidationEngine({
   const [validationResults, setValidationResults] = useState(null);
   const [appliedCorrections, setAppliedCorrections] = useState(new Set());
 
-  useEffect(() => {
-    if (autoValidate && oasisData && patientData) {
-      performValidation();
-    }
-  }, [autoValidate, oasisData?.id]);
-
-  const performValidation = async () => {
+  const performValidation = useCallback(async () => {
     if (!oasisData || !patientData) return;
 
     setIsValidating(true);
@@ -201,7 +195,13 @@ For each issue found, provide:
       console.error('Validation error:', error);
     }
     setIsValidating(false);
-  };
+  }, [oasisData, patientData, clinicalNotes, patientHistory]);
+
+  useEffect(() => {
+    if (autoValidate && oasisData && patientData) {
+      performValidation();
+    }
+  }, [autoValidate, oasisData?.id, oasisData, patientData, performValidation]);
 
   const applyCorrection = (correction, key) => {
     if (onCorrection) {

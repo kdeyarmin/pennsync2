@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -55,13 +55,7 @@ export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
     initialData: []
   });
 
-  useEffect(() => {
-    if (nurseEmail && visits.length > 0 && existingRecommendations.length > 0) {
-      analyzeAndRecommend();
-    }
-  }, [nurseEmail, visits, existingRecommendations]);
-
-  const analyzeAndRecommend = async () => {
+  const analyzeAndRecommend = useCallback(async () => {
     setAnalyzing(true);
 
     try {
@@ -265,7 +259,13 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
     } finally {
       setAnalyzing(false);
     }
-  };
+  }, [existingRecommendations, nurseEmail, visits, completedTraining, allModules]);
+
+  useEffect(() => {
+    if (nurseEmail && visits.length > 0 && existingRecommendations.length > 0) {
+      analyzeAndRecommend();
+    }
+  }, [nurseEmail, visits, existingRecommendations, analyzeAndRecommend]);
 
   const handleEnrollModule = async (moduleId) => {
     try {

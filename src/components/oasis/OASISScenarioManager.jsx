@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,7 +79,7 @@ export default function OASISScenarioManager({
         functional_scores: { ...originalPdgmData.functional_scores }
       });
     }
-  }, [originalPdgmData]);
+  }, [originalPdgmData, currentScenario]);
 
   // Save scenario mutation
   const saveMutation = useMutation({
@@ -101,8 +101,8 @@ export default function OASISScenarioManager({
   });
 
   // Debounced calculation
-  const calculateScenarioPayment = useCallback(
-    debounce(async (scenarioData) => {
+  const calculateScenarioPayment = useMemo(
+    () => debounce(async (scenarioData) => {
       if (!scenarioData) return;
       setIsCalculating(true);
       try {
@@ -118,6 +118,9 @@ export default function OASISScenarioManager({
     }, 500),
     [originalPdgmData]
   );
+
+  // Cancel any pending debounced calculation on unmount
+  useEffect(() => () => calculateScenarioPayment.cancel(), [calculateScenarioPayment]);
 
   // Update scenario and recalculate
   const updateScenario = (field, value) => {

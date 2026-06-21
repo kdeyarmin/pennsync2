@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -48,14 +48,7 @@ export default function OASISAutomationEngine({
     },
   });
 
-  // Analyze results and generate actions
-  useEffect(() => {
-    if (analysisResults && automationRules.length > 0 && autoExecute) {
-      analyzeAndGenerateActions();
-    }
-  }, [analysisResults, automationRules, autoExecute]);
-
-  const analyzeAndGenerateActions = async () => {
+  const analyzeAndGenerateActions = useCallback(async () => {
     setIsAnalyzing(true);
     
     try {
@@ -124,9 +117,16 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
       console.error("Automation analysis error:", error);
       setSuggestedActions([]);
     }
-    
+
     setIsAnalyzing(false);
-  };
+  }, [analysisResults, automationRules]);
+
+  // Analyze results and generate actions
+  useEffect(() => {
+    if (analysisResults && automationRules.length > 0 && autoExecute) {
+      analyzeAndGenerateActions();
+    }
+  }, [analysisResults, automationRules, autoExecute, analyzeAndGenerateActions]);
 
   const handleToggleAction = (index) => {
     setSelectedActions(prev => 

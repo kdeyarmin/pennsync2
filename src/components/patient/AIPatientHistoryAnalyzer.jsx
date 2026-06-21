@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,15 +31,7 @@ export default function AIPatientHistoryAnalyzer({
   const [showDetails, setShowDetails] = useState(false);
   const [autoAnalyzed, setAutoAnalyzed] = useState(false);
 
-  // Auto-analyze on component mount
-  useEffect(() => {
-    if (patient && !autoAnalyzed && !analysis) {
-      analyzePatientHistory();
-      setAutoAnalyzed(true);
-    }
-  }, [patient]);
-
-  const analyzePatientHistory = async () => {
+  const analyzePatientHistory = useCallback(async () => {
     if (!patient) return;
     
     setIsAnalyzing(true);
@@ -200,7 +192,15 @@ Return as JSON with the following structure:
       console.error("Error analyzing patient history:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, visits, carePlans, oasisData, incidents]);
+
+  // Auto-analyze on component mount
+  useEffect(() => {
+    if (patient && !autoAnalyzed && !analysis) {
+      analyzePatientHistory();
+      setAutoAnalyzed(true);
+    }
+  }, [patient, autoAnalyzed, analysis, analyzePatientHistory]);
 
   const getSeverityColor = (severity) => {
     const colors = {

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,17 +38,7 @@ export default function PDFEditor({ pdfUrl, onSave }) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState([]);
 
-  useEffect(() => {
-    loadPDF();
-  }, [pdfUrl]);
-
-  useEffect(() => {
-    if (pdfDoc) {
-      renderPage();
-    }
-  }, [currentPage, scale, pdfDoc, annotations]);
-
-  const loadPDF = async () => {
+  const loadPDF = useCallback(async () => {
     setIsLoading(true);
     try {
       const loadingTask = pdfjsLib.getDocument(pdfUrl);
@@ -61,9 +51,9 @@ export default function PDFEditor({ pdfUrl, onSave }) {
       toast.error("Failed to load PDF");
       setIsLoading(false);
     }
-  };
+  }, [pdfUrl]);
 
-  const renderPage = async () => {
+  const renderPage = useCallback(async () => {
     if (!pdfDoc || !canvasRef.current) return;
 
     const page = await pdfDoc.getPage(currentPage);
@@ -101,7 +91,17 @@ export default function PDFEditor({ pdfUrl, onSave }) {
           context.stroke();
         }
       });
-  };
+  }, [pdfDoc, currentPage, scale, annotations]);
+
+  useEffect(() => {
+    loadPDF();
+  }, [loadPDF]);
+
+  useEffect(() => {
+    if (pdfDoc) {
+      renderPage();
+    }
+  }, [pdfDoc, renderPage]);
 
   const handleCanvasClick = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();

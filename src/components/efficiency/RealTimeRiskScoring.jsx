@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +44,7 @@ export default function RealTimeRiskScoring({ patientId, compact = false }) {
     initialData: []
   });
 
-  const calculateRiskScore = async () => {
+  const calculateRiskScore = useCallback(async () => {
     if (!patient) return;
 
     setIsCalculating(true);
@@ -111,13 +111,13 @@ For each risk, provide:
     } finally {
       setIsCalculating(false);
     }
-  };
+  }, [patient, incidents, clinicalEvents, recentVisits]);
 
   useEffect(() => {
     if (patient && recentVisits.length > 0 && !riskScore && !isCalculating) {
       calculateRiskScore();
     }
-  }, [patient, recentVisits]);
+  }, [patient, recentVisits, riskScore, isCalculating, calculateRiskScore]);
 
   const getRiskColor = (level) => {
     switch (level?.toLowerCase()) {

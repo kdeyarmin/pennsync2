@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,7 +55,7 @@ export default function SmartDocumentationAssistant({
     initialData: []
   });
 
-  const generateSmartDocumentation = async () => {
+  const generateSmartDocumentation = useCallback(async () => {
     if (!patient) return;
 
     setIsGenerating(true);
@@ -190,7 +190,7 @@ Format as JSON with clear sections`;
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [carePlans, clinicalEvents, documentType, identifiedProblems, onDataGenerated, patient, recentVisits, visitType]);
 
   const applySection = (sectionId) => {
     setAppliedSections(prev => new Set([...prev, sectionId]));
@@ -226,7 +226,7 @@ Format as JSON with clear sections`;
     if (autoFillEnabled && patient && !generatedData && !isGenerating) {
       generateSmartDocumentation();
     }
-  }, [patient, autoFillEnabled]);
+  }, [patient, autoFillEnabled, generateSmartDocumentation, generatedData, isGenerating]);
 
   if (!patient) return null;
 

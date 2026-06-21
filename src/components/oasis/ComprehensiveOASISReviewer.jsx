@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,13 +31,7 @@ export default function ComprehensiveOASISReviewer({
   const [reviewResults, setReviewResults] = useState(null);
   const [expandedSections, setExpandedSections] = useState(['compliance', 'quality', 'inconsistencies']);
 
-  useEffect(() => {
-    if (autoReview && oasisData && analysisResults) {
-      performComprehensiveReview();
-    }
-  }, [oasisData?.id, autoReview]);
-
-  const performComprehensiveReview = async () => {
+  const performComprehensiveReview = useCallback(async () => {
     if (!oasisData || !analysisResults) return;
 
     setIsReviewing(true);
@@ -211,7 +205,13 @@ Return detailed JSON with all findings.`;
       console.error('Comprehensive review error:', error);
     }
     setIsReviewing(false);
-  };
+  }, [analysisResults, oasisData, patientData]);
+
+  useEffect(() => {
+    if (autoReview && oasisData && analysisResults) {
+      performComprehensiveReview();
+    }
+  }, [oasisData?.id, autoReview, analysisResults, oasisData, performComprehensiveReview]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

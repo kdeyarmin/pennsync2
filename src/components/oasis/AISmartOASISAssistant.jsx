@@ -37,7 +37,7 @@ export default function AISmartOASISAssistant({
   const [appliedItems, setAppliedItems] = useState(new Set());
   const [feedbackGiven, setFeedbackGiven] = useState(new Set());
 
-  const analyzePatientData = async () => {
+  const analyzePatientData = React.useCallback(async () => {
     if (!patientData) return;
 
     setIsAnalyzing(true);
@@ -455,13 +455,13 @@ Patient Data: ${JSON.stringify(contextData)}`,
       alert('Failed to generate OASIS suggestions. Please try again.');
     }
     setIsAnalyzing(false);
-  };
+  }, [patientData, referralData, visitData]);
 
   React.useEffect(() => {
     if (autoAnalyze && patientData && !suggestions) {
       analyzePatientData();
     }
-  }, [autoAnalyze, patientData]);
+  }, [autoAnalyze, patientData, suggestions, analyzePatientData]);
 
   const handleApplySuggestion = (item) => {
     if (onApplySuggestion) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,7 @@ export default function AIHealthInsights({ patientId, patient, visits, carePlans
   const [insights, setInsights] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    if (patientId && visits.length > 0) {
-      generateInsights();
-    }
-  }, [patientId]);
-
-  const generateInsights = async () => {
+  const generateInsights = useCallback(async () => {
     setIsAnalyzing(true);
     try {
       const completedVisits = visits.filter(v => v.status === 'completed').slice(0, 10);
@@ -157,7 +151,13 @@ Provide comprehensive health trend analysis:
       console.error("Error generating health insights:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [visits, patient, carePlans, alerts, oasisData]);
+
+  useEffect(() => {
+    if (patientId && visits.length > 0) {
+      generateInsights();
+    }
+  }, [patientId, visits.length, generateInsights]);
 
   const getTrendIcon = (trend) => {
     switch (trend) {

@@ -10,10 +10,12 @@ export function useScrollPosition(key, containerRef) {
 
   // Save scroll position when unmounting
   useEffect(() => {
+    const positions = scrollPositions.current;
+    const container = containerRef?.current;
     return () => {
-      if (containerRef?.current) {
-        scrollPositions.current[key] = containerRef.current.scrollTop;
-        try { sessionStorage.setItem(`scroll_${key}`, containerRef.current.scrollTop.toString()); } catch {}
+      if (container) {
+        positions[key] = container.scrollTop;
+        try { sessionStorage.setItem(`scroll_${key}`, container.scrollTop.toString()); } catch {}
       }
     };
   }, [key, containerRef]);

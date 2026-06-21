@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -45,13 +45,7 @@ export default function AdvancedComplianceRiskScoring({
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoAnalyze && audits.length > 0 && !riskAnalysis) {
-      analyzeRisk();
-    }
-  }, [autoAnalyze, audits, riskAnalysis]);
-
-  const analyzeRisk = async () => {
+  const analyzeRisk = useCallback(async () => {
     setIsAnalyzing(true);
     try {
       // Aggregate data for analysis
@@ -238,7 +232,13 @@ Return detailed JSON analysis suitable for executive dashboard.`,
       alert('Failed to analyze compliance risk. Please try again.');
     }
     setIsAnalyzing(false);
-  };
+  }, [alerts, audits, medicareRules, timeRange, trainingRecommendations]);
+
+  useEffect(() => {
+    if (autoAnalyze && audits.length > 0 && !riskAnalysis) {
+      analyzeRisk();
+    }
+  }, [autoAnalyze, audits, riskAnalysis, analyzeRisk]);
 
   const getRiskColor = (score) => {
     if (score >= 80) return { bg: 'bg-green-500', text: 'text-green-600', border: 'border-green-500' };

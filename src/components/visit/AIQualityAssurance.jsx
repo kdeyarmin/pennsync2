@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +24,7 @@ export default function AIQualityAssurance({
   const [qaResults, setQaResults] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
 
-  const runQualityCheck = async () => {
+  const runQualityCheck = useCallback(async () => {
     setIsChecking(true);
     
     try {
@@ -106,9 +106,9 @@ Return a JSON object with this structure:
       console.error("Error running QA check:", error);
       toast.error("Error running quality check. Please try again.");
     }
-    
+
     setIsChecking(false);
-  };
+  }, [patient, visit, narrativeText, vitalSigns]);
 
   useEffect(() => {
     // Auto-run QA when documentation changes (debounced)
@@ -119,7 +119,7 @@ Return a JSON object with this structure:
 
       return () => clearTimeout(timer);
     }
-  }, [narrativeText]);
+  }, [narrativeText, runQualityCheck]);
 
   const getStatusColor = (status) => {
     switch (status) {

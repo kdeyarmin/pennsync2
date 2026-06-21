@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -53,13 +53,7 @@ export default function AutomaticDocumentReviewer({
     queryFn: () => base44.auth.me(),
   });
 
-  useEffect(() => {
-    if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {
-      performReview();
-    }
-  }, [autoReview, noteContent]);
-
-  const performReview = async () => {
+  const performReview = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) {
       alert('Note is too short for comprehensive review');
       return;
@@ -277,7 +271,13 @@ Return detailed JSON analysis.`,
       alert('Failed to review document. Please try again.');
     }
     setIsReviewing(false);
-  };
+  }, [currentUser?.email, diagnosis, medicareRules, noteContent, nurseEmail, onReviewComplete, patientData.date_of_birth, queryClient, visitId, visitType, vitalSigns]);
+
+  useEffect(() => {
+    if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {
+      performReview();
+    }
+  }, [autoReview, noteContent, reviewResults, performReview]);
 
   const getScoreColor = (score) => {
     if (score >= 90) return 'text-green-600';

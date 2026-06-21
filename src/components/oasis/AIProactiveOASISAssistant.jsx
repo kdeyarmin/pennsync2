@@ -60,13 +60,19 @@ export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = fal
     initialData: []
   });
 
-  React.useEffect(() => {
-    if (autoAnalyze && patient && !analysis && !isAnalyzing) {
-      performOASISAnalysis();
+  const calculateAge = React.useCallback((dob) => {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
     }
-  }, [autoAnalyze, patient]);
+    return age;
+  }, []);
 
-  const performOASISAnalysis = async () => {
+  const performOASISAnalysis = React.useCallback(async () => {
     if (!patient) return;
 
     setIsAnalyzing(true);
@@ -242,19 +248,13 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       alert('Failed to perform OASIS analysis. Please try again.');
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, visits, incidents, carePlans, existingOASIS, patientId, queryClient, calculateAge]);
 
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  React.useEffect(() => {
+    if (autoAnalyze && patient && !analysis && !isAnalyzing) {
+      performOASISAnalysis();
     }
-    return age;
-  };
+  }, [autoAnalyze, patient, analysis, isAnalyzing, performOASISAnalysis]);
 
   const getRiskColor = (level) => {
     switch (level) {

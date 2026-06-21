@@ -123,7 +123,7 @@ export default function InteractiveDocumentationScenarios({ nurseEmail, _recomme
         handleStartScenario(scenario);
       }
     }
-  }, [initialScenarioId]);
+  }, [initialScenarioId, selectedScenario]);
 
   const savePracticeMutation = useMutation({
     mutationFn: async (practiceData) => {

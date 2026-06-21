@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -33,15 +33,7 @@ export default function AdvancedComplianceAnalyzer({ analysisResults, pdgmData, 
     enabled: !!analysisResults
   });
 
-  // Auto-analyze when data is available
-  useEffect(() => {
-    if (analysisResults && !complianceReport && !isAnalyzing && !autoAnalyze && historicalOASIS.length >= 0) {
-      setAutoAnalyze(true);
-      analyzeCompliance();
-    }
-  }, [analysisResults, historicalOASIS]);
-
-  const analyzeCompliance = async () => {
+  const analyzeCompliance = useCallback(async () => {
     if (!analysisResults || !pdgmData) return;
 
     setIsAnalyzing(true);
@@ -235,7 +227,15 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
       setComplianceReport({ error: "Failed to generate advanced compliance analysis. Please try again." });
     }
     setIsAnalyzing(false);
-  };
+  }, [analysisResults, pdgmData, historicalOASIS, historicalAudits]);
+
+  // Auto-analyze when data is available
+  useEffect(() => {
+    if (analysisResults && !complianceReport && !isAnalyzing && !autoAnalyze && historicalOASIS.length >= 0) {
+      setAutoAnalyze(true);
+      analyzeCompliance();
+    }
+  }, [analysisResults, historicalOASIS, complianceReport, isAnalyzing, autoAnalyze, analyzeCompliance]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

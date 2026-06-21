@@ -77,13 +77,19 @@ export default function AIPatientRiskAssessor({ patientId, autoAnalyze = false }
     enabled: !!patientId
   });
 
-  React.useEffect(() => {
-    if (autoAnalyze && patient && !latestAssessment && !isAnalyzing) {
-      performRiskAssessment();
+  const calculateAge = React.useCallback((dob) => {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
     }
-  }, [autoAnalyze, patient, latestAssessment]);
+    return age;
+  }, []);
 
-  const performRiskAssessment = async () => {
+  const performRiskAssessment = React.useCallback(async () => {
     if (!patient) return;
 
     setIsAnalyzing(true);
@@ -229,19 +235,13 @@ Analyze the following risk domains and provide detailed scores and explanations:
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [patient, patientId, referral, visits, incidents, carePlans, queryClient, calculateAge]);
 
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  React.useEffect(() => {
+    if (autoAnalyze && patient && !latestAssessment && !isAnalyzing) {
+      performRiskAssessment();
     }
-    return age;
-  };
+  }, [autoAnalyze, patient, latestAssessment, isAnalyzing, performRiskAssessment]);
 
   const getRiskColor = (level) => {
     switch (level) {
