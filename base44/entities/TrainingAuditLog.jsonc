@@ -25,7 +25,8 @@
         "competency_signed_off",
         "user_role_changed",
         "content_approved",
-        "content_rejected"
+        "content_rejected",
+        "videos_generated"
       ],
       "description": "Action type"
     },

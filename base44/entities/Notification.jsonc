@@ -38,7 +38,8 @@
         "expiration_warning",
         "credential_expiration",
         "admin_expiration_summary",
-        "care_plan_proposal"
+        "care_plan_proposal",
+        "signature_request"
       ],
       "description": "Type of notification"
     },

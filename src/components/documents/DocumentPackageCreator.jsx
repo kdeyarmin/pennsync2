@@ -126,6 +126,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
               template_document_id: packetDocument.document_id || `${template.id}-${index + 1}`,
               document_type: template.template_category,
               document_title: documentName,
+              document_content: pdfUrl || '',
               document_url: pdfUrl,
               status: 'pending',
               signers: (packetDocument.signature_fields || template.signature_fields || []).map((signer, signerIndex) => ({
@@ -167,8 +168,22 @@ export default function DocumentPackageCreator({ open, onClose }) {
             patient_id: patientId,
             document_type: 'other',
             document_title: file.name,
+            document_content: file_url,
             document_url: file_url,
             status: 'pending',
+            signers: (signerName || signerEmail)
+              ? [{
+                  id: 1,
+                  name: signerName || patientDisplayName || 'Signer 1',
+                  email: signerEmail || '',
+                  role: 'patient',
+                  required: true,
+                  status: 'pending',
+                  signed_date: null,
+                  signature: null,
+                  signature_method: null,
+                }]
+              : [],
             required_signatures: [],
             field_mappings: [],
             carry_forward_fields: [],

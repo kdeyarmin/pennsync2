@@ -179,7 +179,10 @@ Return comprehensive risk assessment:`,
                     "documentation_risk"
                   ]
                 },
-                severity: { type: "string" },
+                severity: {
+                  type: "string",
+                  enum: ["critical", "high", "medium", "low"]
+                },
                 risk_score: { type: "number" },
                 title: { type: "string" },
                 message: { type: "string" },
@@ -221,12 +224,19 @@ Return comprehensive risk assessment:`,
       'documentation_risk'
     ]);
 
+    // Allowed PatientAlert severity values; anything the AI returns outside this
+    // set is coerced to a safe default so PatientAlert.create won't reject.
+    const ALLOWED_SEVERITIES = new Set(['critical', 'high', 'medium', 'low']);
+
     // Create or update patient alerts for high-risk findings
     const createdAlerts = [];
     for (const alert of riskAnalysis.high_risk_alerts || []) {
       const alertType = ALLOWED_ALERT_TYPES.has(alert.alert_type)
         ? alert.alert_type
         : 'urgent_intervention';
+      const severity = ALLOWED_SEVERITIES.has(alert.severity)
+        ? alert.severity
+        : 'medium';
 
       // Check if similar alert already exists
       const existingSimilar = existingAlerts.find(ea =>
@@ -237,7 +247,7 @@ Return comprehensive risk assessment:`,
         const newAlert = await base44.asServiceRole.entities.PatientAlert.create({
           patient_id,
           alert_type: alertType,
-          severity: alert.severity,
+          severity: severity,
           title: alert.title,
           message: alert.message,
           contributing_factors: alert.contributing_factors,
@@ -251,7 +261,7 @@ Return comprehensive risk assessment:`,
             incidents: incidents.length
           },
           status: 'active',
-          flagged_urgent: alert.severity === 'critical'
+          flagged_urgent: severity === 'critical'
         });
         createdAlerts.push(newAlert);
       }

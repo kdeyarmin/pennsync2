@@ -36,7 +36,8 @@
         "ai_documentation_suggester",
         "risk_detector",
         "clinical_decision_support",
-        "ai_scribe"
+        "ai_scribe",
+        "automatic_document_review"
       ],
       "description": "Where the recommendation came from"
     },

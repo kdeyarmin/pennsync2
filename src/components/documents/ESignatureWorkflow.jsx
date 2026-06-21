@@ -130,7 +130,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
       for (let signer of signers) {
         await base44.entities.Notification.create({
           user_email: signer.email,
-          subject: `Signature Requested: ${normalizedDocumentName}`,
+          title: `Signature Requested: ${normalizedDocumentName}`,
           message: `${patient?.first_name} ${patient?.last_name} requests your signature on the following document: ${normalizedDocumentName}\n\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}`,
           type: "signature_request",
           related_entity: "DocumentSignature",
