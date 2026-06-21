@@ -123,11 +123,15 @@ Goal: documenting a visit should be a single, clear choice between **Smart Note*
   offline `CREATE_VISIT` queue), so vitals reach the chart, vitals trends, and
   critical-vitals escalation just as Document Visit did. Vitals reset on patient switch
   and on reset, so one patient's readings never carry onto another's chart.
-  - Scope note: the **Visit Scribe (audio)** path enhances a transcribed note via
-    `UnifiedDocumentReview` and is not currently passed a patient/save target, so it has
-    no Visit to attach structured vitals to (spoken vitals flow into the narrative).
-    Adding structured vitals there would require giving that path its own patient
-    selection + save — a separate follow-up.
+  - **Visit Scribe (audio) now saves too** (follow-up done): `AudioVisitCapture` gained
+    its own patient selection, visit type, and `VitalSignsForm`, and now reviews the
+    transcribed note through `ConstrainedNoteReviewer` + `FinalNoteDisplay` and saves to
+    the chart — so an audio-documented visit lands the same Visit / NoteConversion /
+    ComplianceAudit records **and vitals** as a typed Smart Note.
+  - The shared chart-write path was extracted to
+    `src/components/smartNote/persistVisitNote.js` (used by both flows; covered by
+    `persistVisitNote.spec.js`), and the prior-note / note-section helpers to
+    `noteHelpers.js`. The now-orphaned `UnifiedDocumentReview` was deleted.
 
 ## Analytics AI-cost cleanup (done)
 
