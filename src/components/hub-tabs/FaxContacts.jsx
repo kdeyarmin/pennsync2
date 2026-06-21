@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import AIContactExtractor from "../components/fax/AIContactExtractor";
+import AIContactExtractor from "@/components/fax/AIContactExtractor";
 import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function FaxContactsPage() {

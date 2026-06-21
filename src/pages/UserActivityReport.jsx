@@ -32,7 +32,7 @@ import { formatEastern } from "../components/utils/timezone";
 import { jsPDF } from "jspdf";
 import { toCsvRows } from "@/components/admin/csvExport";
 
-const UserActivityLog = lazy(() => import("@/pages/UserActivityLog"));
+const UserActivityLog = lazy(() => import("@/components/hub-tabs/UserActivityLog"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired Activity Log page redirects to the right tab.

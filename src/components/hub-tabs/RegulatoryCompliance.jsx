@@ -1,8 +1,8 @@
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 
-import RegulatoryMonitor from "../components/compliance/RegulatoryMonitor";
-import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
+import RegulatoryMonitor from "@/components/compliance/RegulatoryMonitor";
+import NurseRegulatoryAlerts from "@/components/compliance/NurseRegulatoryAlerts";
 
 export default function RegulatoryCompliance() {
   const { data: currentUser } = useQuery({

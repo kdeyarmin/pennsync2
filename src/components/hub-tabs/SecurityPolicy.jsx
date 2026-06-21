@@ -3,12 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, FileText, Activity, AlertTriangle } from "lucide-react";
-import SecurityDocumentation from "../components/security/SecurityDocumentation";
-import AuditTrailViewer from "../components/security/AuditTrailViewer";
-import SecurityAnomalyDetector from "../components/security/SecurityAnomalyDetector";
-import PHIDeIdentifier from "../components/security/PHIDeIdentifier";
-import BreachDetectionSystem from "../components/security/BreachDetectionSystem";
-import EncryptionStatusIndicator from "../components/security/EncryptionStatusIndicator";
+import SecurityDocumentation from "@/components/security/SecurityDocumentation";
+import AuditTrailViewer from "@/components/security/AuditTrailViewer";
+import SecurityAnomalyDetector from "@/components/security/SecurityAnomalyDetector";
+import PHIDeIdentifier from "@/components/security/PHIDeIdentifier";
+import BreachDetectionSystem from "@/components/security/BreachDetectionSystem";
+import EncryptionStatusIndicator from "@/components/security/EncryptionStatusIndicator";
 
 export default function SecurityPolicy() {
   const { data: currentUser } = useQuery({

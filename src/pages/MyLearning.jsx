@@ -12,11 +12,11 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 
 // Lazy spokes — each former standalone page now renders inside a tab.
-const MyTraining = lazy(() => import("@/pages/MyTraining"));
-const MyAnnualEducation = lazy(() => import("@/pages/MyAnnualEducation"));
-const AnnualMandatoryEducation = lazy(() => import("@/pages/AnnualMandatoryEducation"));
-const AnnualEducationTranscript = lazy(() => import("@/pages/AnnualEducationTranscript"));
-const EmployeeTranscript = lazy(() => import("@/pages/EmployeeTranscript"));
+const MyTraining = lazy(() => import("@/components/hub-tabs/MyTraining"));
+const MyAnnualEducation = lazy(() => import("@/components/hub-tabs/MyAnnualEducation"));
+const AnnualMandatoryEducation = lazy(() => import("@/components/hub-tabs/AnnualMandatoryEducation"));
+const AnnualEducationTranscript = lazy(() => import("@/components/hub-tabs/AnnualEducationTranscript"));
+const EmployeeTranscript = lazy(() => import("@/components/hub-tabs/EmployeeTranscript"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired standalone pages (My Training / In-Services,

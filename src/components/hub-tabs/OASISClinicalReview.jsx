@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Stethoscope } from "lucide-react";
-import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
-import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
-import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
-import WorkflowExecutionEngine from "../components/oasis/WorkflowExecutionEngine";
-import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
+import AIPathwayRecommender from "@/components/oasis/AIPathwayRecommender";
+import ClinicalPathwayTrigger from "@/components/oasis/ClinicalPathwayTrigger";
+import OASISTaskGenerator from "@/components/oasis/OASISTaskGenerator";
+import WorkflowExecutionEngine from "@/components/oasis/WorkflowExecutionEngine";
+import PredictiveOutcomesAnalyzer from "@/components/oasis/PredictiveOutcomesAnalyzer";
 
 export default function OASISClinicalReview() {
   const location = useLocation();

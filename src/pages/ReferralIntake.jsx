@@ -74,8 +74,8 @@ import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
 
-const ReferralProcessor = lazy(() => import("./ReferralProcessor"));
-const ReferralAdmissionNote = lazy(() => import("./ReferralAdmissionNote"));
+const ReferralProcessor = lazy(() => import("@/components/hub-tabs/ReferralProcessor"));
+const ReferralAdmissionNote = lazy(() => import("@/components/hub-tabs/ReferralAdmissionNote"));
 
 // Tab keys for the referral intake workflow hub. Kept in sync with the
 // TabsTrigger values below and used to validate the ?tab= deep-link so the

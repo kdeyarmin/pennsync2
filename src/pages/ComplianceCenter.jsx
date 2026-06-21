@@ -23,11 +23,11 @@ import { toast } from "sonner";
 import ComplianceReportGenerator from "@/components/compliance/ComplianceReportGenerator";
 import AIComplianceAssistant from "@/components/compliance/AIComplianceAssistant";
 
-const RegulatoryCompliance = lazy(() => import("@/pages/RegulatoryCompliance"));
-const ComplianceMonitoringDashboard = lazy(() => import("@/pages/ComplianceMonitoringDashboard"));
-const RealTimeComplianceDashboard = lazy(() => import("@/pages/RealTimeComplianceDashboard"));
-const SecurityCompliance = lazy(() => import("@/pages/SecurityCompliance"));
-const SecurityPolicy = lazy(() => import("@/pages/SecurityPolicy"));
+const RegulatoryCompliance = lazy(() => import("@/components/hub-tabs/RegulatoryCompliance"));
+const ComplianceMonitoringDashboard = lazy(() => import("@/components/hub-tabs/ComplianceMonitoringDashboard"));
+const RealTimeComplianceDashboard = lazy(() => import("@/components/hub-tabs/RealTimeComplianceDashboard"));
+const SecurityCompliance = lazy(() => import("@/components/hub-tabs/SecurityCompliance"));
+const SecurityPolicy = lazy(() => import("@/components/hub-tabs/SecurityPolicy"));
 
 // Top-level tab keys, kept in sync with the TabsTrigger values below. Used to
 // validate the ?tab= deep-link so the retired standalone pages (Compliance

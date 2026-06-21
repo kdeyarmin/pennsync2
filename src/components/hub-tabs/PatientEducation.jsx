@@ -21,12 +21,12 @@ import {
   MessageSquare
 } from "lucide-react";
 
-import EducationMaterialGenerator from "../components/education/EducationMaterialGenerator";
-import TeachBackConfirmation from "../components/education/TeachBackConfirmation";
-import EducationLibrary from "../components/education/EducationLibrary";
-import SimplifiedExplanationGenerator from "../components/education/SimplifiedExplanationGenerator";
-import NextStepsSummaryGenerator from "../components/education/NextStepsSummaryGenerator";
-import TeachBackPromptsGenerator from "../components/education/TeachBackPromptsGenerator";
+import EducationMaterialGenerator from "@/components/education/EducationMaterialGenerator";
+import TeachBackConfirmation from "@/components/education/TeachBackConfirmation";
+import EducationLibrary from "@/components/education/EducationLibrary";
+import SimplifiedExplanationGenerator from "@/components/education/SimplifiedExplanationGenerator";
+import NextStepsSummaryGenerator from "@/components/education/NextStepsSummaryGenerator";
+import TeachBackPromptsGenerator from "@/components/education/TeachBackPromptsGenerator";
 
 export default function PatientEducation() {
   const [selectedPatientId, setSelectedPatientId] = useState("");

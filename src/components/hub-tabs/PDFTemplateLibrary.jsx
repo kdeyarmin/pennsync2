@@ -1,4 +1,4 @@
-import PDFTemplateManager from "../components/documents/PDFTemplateManager";
+import PDFTemplateManager from "@/components/documents/PDFTemplateManager";
 
 export default function PDFTemplateLibrary() {
   return (
