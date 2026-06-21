@@ -39,6 +39,23 @@
       "default": true,
       "description": "Whether module is required"
     },
+    "module_type": {
+      "type": "string",
+      "description": "Sub-type written by AI/quiz/lesson generators (e.g. quiz, micro_lesson, practice_exercise)"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "description": "Difficulty level used by the training library filters"
+    },
+    "category": {
+      "type": "string",
+      "description": "Library category used for grouping/filtering modules"
+    },
     "attachment_urls": {
       "type": "array",
       "items": {
