@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Admin tool to make / enhance AI presenter videos (HeyGen) for course modules.
@@ -15,10 +15,10 @@ const HEYGEN_BASE = 'https://api.heygen.com';
 const DEFAULT_AVATAR_ID = 'Daisy-inskirt-20220818';
 const DEFAULT_VOICE_ID = '55f8c0f546884f9cbdefa113f5e7b682'; // Elizabeth - Friendly English
 
-const isAdmin = (u: Record<string, unknown> | null) =>
+const isAdmin = (u) =>
   u?.role === 'admin' || u?.account_type === 'agency_admin' || u?.account_type === 'super_admin';
 
-async function heygen(path: string, method: string, body?: unknown) {
+async function heygen(path, method, body) {
   const res = await fetch(`${HEYGEN_BASE}${path}`, {
     method,
     headers: { 'x-api-key': HEYGEN_API_KEY, 'Content-Type': 'application/json' },
@@ -31,10 +31,10 @@ async function heygen(path: string, method: string, body?: unknown) {
   return res.json();
 }
 
-function buildNarrationScript(moduleTitle: string, content: Record<string, unknown>): string {
-  const parts: string[] = [`Welcome to this module: ${moduleTitle}.`];
+function buildNarrationScript(moduleTitle, content) {
+  const parts = [`Welcome to this module: ${moduleTitle}.`];
   if (content.intro) parts.push(String(content.intro));
-  const sections = (content.sections || []) as Array<Record<string, unknown>>;
+  const sections = content.sections || [];
   for (const section of sections) {
     if (section.heading) parts.push(`Let's talk about: ${section.heading}.`);
     if (section.body) parts.push(String(section.body));
@@ -48,7 +48,7 @@ function buildNarrationScript(moduleTitle: string, content: Record<string, unkno
   return script.length > 5000 ? script.slice(0, 4950) + '... That covers the key points for this module.' : script;
 }
 
-async function createVideo(script: string, title: string, avatarId?: string, voiceId?: string): Promise<string> {
+async function createVideo(script, title, avatarId, voiceId) {
   const result = await heygen('/v2/video/generate', 'POST', {
     video_inputs: [{
       character: { type: 'avatar', avatar_id: avatarId || DEFAULT_AVATAR_ID, avatar_style: 'normal' },
@@ -64,7 +64,7 @@ async function createVideo(script: string, title: string, avatarId?: string, voi
 
 // Run async work with bounded concurrency so starting/polling many jobs stays
 // fast and predictable without flooding the provider.
-async function runChunked<T>(items: T[], size: number, fn: (item: T) => Promise<void>) {
+async function runChunked(items, size, fn) {
   for (let i = 0; i < items.length; i += size) {
     await Promise.all(items.slice(i, i + size).map(fn));
   }
@@ -74,14 +74,14 @@ async function runChunked<T>(items: T[], size: number, fn: (item: T) => Promise<
 // produced (e.g. the older generateTrainingVideo path that didn't stamp
 // video_status, which schema-defaults to the truthy string "none"). An
 // in-flight job still reports "processing".
-function effectiveStatus(m: Record<string, unknown>): string {
+function effectiveStatus(m) {
   if (m.video_status === 'processing') return 'processing';
   if (m.video_url) return 'completed';
   if (m.video_status === 'failed') return 'failed';
   return 'none';
 }
 
-const view = (m: Record<string, unknown>) => ({
+const view = (m) => ({
   module_id: m.id,
   title: m.title,
   order_index: Number(m.order_index) || 0,
@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     const { action = 'status', course_id, module_id, avatar_id, voice_id } = await req.json();
     const svc = base44.asServiceRole.entities;
 
-    let modules: Array<Record<string, unknown>> = [];
+    let modules = [];
     if (module_id) {
       modules = await svc.TrainingModule.filter({ id: module_id });
     } else if (course_id) {
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         await runChunked(processing, 5, async (m) => {
           try {
             const r = await heygen(`/v1/video_status.get?video_id=${encodeURIComponent(String(m.video_job_id))}`, 'GET');
-            const d = (r.data || {}) as Record<string, unknown>;
+            const d = r.data || {};
             if (d.status === 'completed') {
               const patch = {
                 video_url: d.video_url, video_thumbnail_url: d.thumbnail_url,
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
       let started = 0;
       await runChunked(targets, 4, async (m) => {
         try {
-          const script = buildNarrationScript(String(m.title), (m.content_json || {}) as Record<string, unknown>);
+          const script = buildNarrationScript(String(m.title), m.content_json || {});
           const videoId = await createVideo(script, `${m.title} - Training Video`, avatar_id, voice_id);
           if (!videoId) throw new Error('HeyGen did not return a video id');
           const patch = {

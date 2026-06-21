@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Send a "you have overdue required training" reminder to every staff member
