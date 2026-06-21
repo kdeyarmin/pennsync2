@@ -190,9 +190,10 @@ export const NAV_MANIFEST = [
     category: "Documentation",
     adminOnly: false,
     breadcrumbParent: null,
-    // Includes the former Visit Scribe (now the "Record / Upload" tab) keywords so
-    // search still surfaces this hub for "scribe", "voice", "record audio", etc.
-    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation", "scribe", "voice", "visit", "record", "audio", "upload"],
+    // Documenting a visit is a two-choice flow here: Smart Note or Visit Scribe
+    // (record/upload or live dictation). Keep the audio/scribe keywords so search
+    // still surfaces this hub for "scribe", "voice", "record audio", etc.
+    keywords: ["clinical", "documentation", "notes", "charting", "smart note", "visit scribe", "dictation", "scribe", "voice", "visit", "record", "audio", "upload"],
   },
   {
     // Smart Notes is the default tab *inside* the Clinical Notes hub
@@ -206,10 +207,9 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "ClinicalDocumentation",
     keywords: ["smart note", "ai note", "documentation", "ai"],
   },
-  // NOTE: Visit Scribe was folded into the Clinical Notes hub. Its Record/Upload
-  // audio capture is now the "Record / Upload" tab (its "Live Dictation" tab was a
-  // duplicate of Clinical Notes' own), so /VisitScribe redirects to
-  // /ClinicalDocumentation?tab=record (see REDIRECTS in src/routes.jsx).
+  // NOTE: Visit Scribe was folded into the Clinical Notes hub as the "Visit Scribe"
+  // choice (Record / Upload + Live Dictation sub-modes), so /VisitScribe redirects
+  // to /ClinicalDocumentation?tab=visit-scribe (see REDIRECTS in src/routes.jsx).
   {
     page: "DocumentHub",
     label: "Documents",

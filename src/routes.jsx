@@ -109,8 +109,8 @@ export const REDIRECTS = [
   { from: '/OASISAuditDashboard', to: '/OASISCenter?tab=audit' },
 
   // ─── Clinical Notes consolidation ────────────────────────────────────────────
-  // Visit Scribe's audio capture is now the Clinical Notes "Record / Upload" tab.
-  { from: '/VisitScribe', to: '/ClinicalDocumentation?tab=record' },
+  // Visit Scribe is now the Clinical Notes "Visit Scribe" choice (record/dictation).
+  { from: '/VisitScribe', to: '/ClinicalDocumentation?tab=visit-scribe' },
 
   // ─── Document Hub consolidation ──────────────────────────────────────────────
   // Signature, storage/intake, discharge and audit pages are now Document Hub tabs.
@@ -171,12 +171,12 @@ export const REDIRECTS = [
   //   ClinicalChart       → its vitals / care-plan / OASIS tabs already live in
   //                          PatientDetails; sent to the patient list (no id ctx).
   //   MedicalScribe       → same record→transcribe→review pipeline as the Clinical
-  //                          Notes "Record / Upload" tab (a strict superset).
+  //                          Notes "Visit Scribe" choice (a strict superset).
   //   ClinicalInsights    → population/risk views duplicated by Predictive Analytics.
   //   DocumentationTraining / NurseEducationVideos → consolidated under the Nurse
   //                          Training Hub. (See doc for the unique-content caveat.)
   { from: '/ClinicalChart', to: '/Patients' },
-  { from: '/MedicalScribe', to: '/ClinicalDocumentation?tab=record' },
+  { from: '/MedicalScribe', to: '/ClinicalDocumentation?tab=visit-scribe' },
   { from: '/ClinicalInsightsDashboard', to: '/PredictiveAnalytics' },
   { from: '/DocumentationTraining', to: '/NurseTrainingHub?tab=documentation' },
   { from: '/NurseEducationVideos', to: '/NurseTrainingHub' },

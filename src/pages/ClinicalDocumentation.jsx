@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Mic, Brain } from "lucide-react";
+import { Sparkles, Mic, Brain, FileAudio } from "lucide-react";
 import SmartNoteAssistant from "@/pages/SmartNoteAssistant";
 import RealTimeDictationScribe from "@/components/visit/RealTimeDictationScribe";
 import AudioVisitCapture from "@/components/visit/AudioVisitCapture";
@@ -12,10 +12,16 @@ import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import EmbeddedPage from "@/components/ui/embeddedPage";
 
-// Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
-// ?tab= deep-link so the retired Visit Scribe page can redirect straight to the
-// "record" tab (see REDIRECTS in src/routes.jsx).
-const TAB_KEYS = ["smart-notes", "live-dictation", "record", "quick-guide"];
+// Documenting a visit is a choice between two methods: write a Smart Note (AI
+// compliance help) or use the Visit Scribe (record/upload audio or live dictate).
+const TAB_KEYS = ["smart-notes", "visit-scribe"];
+
+// Legacy ?tab values from before the Smart Note / Visit Scribe consolidation, so
+// old links and the Visit Scribe / Medical Scribe redirects keep working:
+//  - "record" / "live-dictation" → the Visit Scribe choice (record is the default
+//    sub-mode; "live-dictation" opens the Dictation sub-mode)
+//  - "quick-guide" → the default Smart Note choice
+const LEGACY_TAB = { record: "visit-scribe", "live-dictation": "visit-scribe", "quick-guide": "smart-notes" };
 
 export default function ClinicalDocumentation() {
   const { data: currentUser } = useQuery({
@@ -25,17 +31,22 @@ export default function ClinicalDocumentation() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
-  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "smart-notes";
-  // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
+  const normalizedTab = LEGACY_TAB[requestedTab] ?? requestedTab;
+  const activeTab = TAB_KEYS.includes(normalizedTab) ? normalizedTab : "smart-notes";
+  // Visit Scribe sub-mode: default to Record / Upload; a legacy ?tab=live-dictation
+  // link opens the Dictation sub-mode instead.
+  const initialScribeMode = requestedTab === "live-dictation" ? "dictation" : "record";
+
+  // Reflect the active choice in the URL so it's shareable/bookmarkable and the
   // Visit Scribe redirect deep-links correctly. "smart-notes" is the default, so
   // it stays a clean /ClinicalDocumentation with no query string.
   const handleTabChange = (value) => {
     setSearchParams(value === "smart-notes" ? {} : { tab: value });
   };
 
-  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
-  // default tab is plain /ClinicalDocumentation. Only fires when the param
-  // resolved to the default, so a valid deep-link like ?tab=record is untouched.
+  // Converge on the canonical URL: strip a redundant, legacy, or unknown ?tab=
+  // once it resolves to the default Smart Note choice (a valid deep-link like
+  // ?tab=visit-scribe is left untouched).
   useEffect(() => {
     if (requestedTab !== null && activeTab === "smart-notes") {
       setSearchParams({}, { replace: true });
@@ -48,83 +59,50 @@ export default function ClinicalDocumentation() {
         icon={Brain}
         eyebrow="Documentation"
         title="Clinical Notes"
-        description="AI-powered note generation, voice dictation, audio capture, and compliance checking"
+        description="Document a visit two ways: write a Smart Note with AI compliance help, or use the Visit Scribe to record/upload audio or dictate."
         favoritePage="ClinicalDocumentation"
       />
         <EmbeddedPage>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2">
-            <TabsTrigger value="smart-notes" className="min-h-[44px] font-semibold">Smart Notes</TabsTrigger>
-            <TabsTrigger value="live-dictation" className="min-h-[44px] font-semibold">Live Dictation</TabsTrigger>
-            <TabsTrigger value="record" className="min-h-[44px] font-semibold">Record / Upload</TabsTrigger>
-            <TabsTrigger value="quick-guide" className="min-h-[44px] font-semibold">Quick Guide</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 gap-2">
+            <TabsTrigger value="smart-notes" className="min-h-[44px] font-semibold gap-2">
+              <Sparkles className="w-4 h-4" /> Smart Note
+            </TabsTrigger>
+            <TabsTrigger value="visit-scribe" className="min-h-[44px] font-semibold gap-2">
+              <Mic className="w-4 h-4" /> Visit Scribe
+            </TabsTrigger>
           </TabsList>
 
+          {/* Smart Note — write rough notes; AI checks compliance and polishes. */}
           <TabsContent value="smart-notes">
             <SmartNoteAssistant />
           </TabsContent>
 
-          <TabsContent value="live-dictation">
-            <Card>
-              <CardContent className="p-6">
-                <RealTimeDictationScribe currentUser={currentUser} />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Visit Scribe — capture the visit by audio (record/upload) or by
+              speaking it (live dictation); both transcribe into a compliant note. */}
+          <TabsContent value="visit-scribe">
+            <Tabs defaultValue={initialScribeMode} className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2 gap-2 max-w-md">
+                <TabsTrigger value="record" className="min-h-[44px] gap-2">
+                  <FileAudio className="w-4 h-4" /> Record / Upload
+                </TabsTrigger>
+                <TabsTrigger value="dictation" className="min-h-[44px] gap-2">
+                  <Mic className="w-4 h-4" /> Live Dictation
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="record">
-            <AudioVisitCapture currentUser={currentUser} />
-          </TabsContent>
+              <TabsContent value="record">
+                <AudioVisitCapture currentUser={currentUser} />
+              </TabsContent>
 
-          <TabsContent value="quick-guide">
-            <Card>
-              <CardContent className="p-8">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-indigo-600" />
-                      Smart Notes
-                    </h3>
-                    <p className="text-slate-600">
-                      Write rough bullet points or free-text notes. AI analyzes for Medicare compliance,
-                      suggests additions, and generates a polished clinical narrative.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      <Mic className="w-5 h-5 text-navy-600" />
-                      Live Dictation
-                    </h3>
-                    <p className="text-slate-600">
-                      Dictate directly into a structured form with real-time transcription.
-                      Perfect for clinicians who prefer speaking their documentation.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      <Mic className="w-5 h-5 text-orange-600" />
-                      Record / Upload
-                    </h3>
-                    <p className="text-slate-600">
-                      Record the visit conversation or upload an audio file. AI transcribes it into a
-                      rough note, then enhances it into a compliant clinical note.
-                    </p>
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4" /> Pro Tips</h4>
-                    <ul className="space-y-1 text-sm text-blue-800">
-                      <li>• Always select the patient first for better compliance checking</li>
-                      <li>• Include vitals with clinical interpretation</li>
-                      <li>• Document homebound status and skilled need for home health</li>
-                      <li>• Use voice recording for faster documentation on mobile</li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              <TabsContent value="dictation">
+                <Card>
+                  <CardContent className="p-6">
+                    <RealTimeDictationScribe currentUser={currentUser} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
         </EmbeddedPage>
