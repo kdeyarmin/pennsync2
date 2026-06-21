@@ -86,12 +86,17 @@ export default function AudioVisitCapture({ currentUser }) {
     enabled: !!patientId,
   });
 
-  // A new patient must start a fresh visit — clear any prior save target so a
-  // re-save can't update the previous patient's visit under the new patient.
+  // A new patient must start a fresh visit — clear the prior save target (so a
+  // re-save can't update the previous patient's visit) and the per-visit vitals
+  // and signature (so one patient's readings/signature never land on another's
+  // chart). The transcribed note itself is intentionally kept: the audio is often
+  // captured before the patient is picked.
   useEffect(() => {
     setSavedVisitId(null);
     setSavedAuditId(null);
     setSaved(false);
+    setVitals({});
+    setSignatureImage(null);
   }, [patientId]);
 
   const careScope = patient?.care_type || currentUser?.care_scope;
@@ -325,7 +330,12 @@ export default function AudioVisitCapture({ currentUser }) {
           Keyed so a new transcription / patient / visit type re-initializes it. */}
       {hasRoughNote && (
         <ConstrainedNoteReviewer
-          key={`${patientId}|${visitType}|${noteSeq}`}
+          // Re-mount only on a genuinely new note (noteSeq) or a visit-type change
+          // that alters the required elements — NOT on patientId, so selecting the
+          // patient last (to enable saving) doesn't discard the generated note.
+          // The reviewer consumes patient/priorNote as live props for its chart
+          // cross-check, so it still reflects the chosen patient without remounting.
+          key={`${visitType}|${noteSeq}`}
           roughNote={roughNote}
           serviceLine={serviceLine}
           visitType={visitType}

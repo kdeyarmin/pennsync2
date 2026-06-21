@@ -682,7 +682,7 @@ export default function TrainingCoursePlayer() {
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" onClick={() => navigate(createPageUrl("LearningCenter") + "?tab=courses")}>
-              <Home className="w-4 h-4 mr-2" /> Back to My Learning
+              <Home className="w-4 h-4 mr-2" /> Back to My Courses
             </Button>
             {!result.passed && !result.locked && (
               <Button

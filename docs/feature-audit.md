@@ -19,14 +19,16 @@ This audit focuses on the four overlapping clusters. The redirect-based cuts bel
 
 Each retired page was removed from `src/lib/nav.manifest.js` (so it drops out of the
 sidebar, command palette, breadcrumbs and Admin Console directory automatically) and a
-redirect was added to `src/routes.jsx`. **The page files remain on disk, so every change
-is reversible** — restore the manifest entry and delete the redirect to bring one back.
+redirect was added to `src/routes.jsx`. Most retired page files **remain on disk** (kept
+where reachable via the redirect target or reused as an embedded component), so those
+cuts are reversible by restoring the manifest entry. Exceptions deleted outright are
+called out below (`DocumentationTraining`, and the orphaned `UnifiedDocumentReview`).
 
 | Cut page | Redirects to | Rationale |
 |---|---|---|
 | `ClinicalChart` | `/Patients` | Its Vitals / Care Plan / OASIS panes already exist as tabs in `PatientDetails`. No inbound links. |
-| `MedicalScribe` | `/ClinicalDocumentation?tab=record` | Identical record→transcribe (`generateNoteFromRecording`)→review (`ConstrainedNoteReviewer`) pipeline; the Record/Upload tab is a strict superset (defers patient binding). Mirrors the existing `/VisitScribe` redirect. |
-| `ClinicalInsightsDashboard` | `/PredictiveAnalytics` | Population-trend / disease-progression views duplicate Predictive Analytics + the Reports Population Health tab. Admin-only. |
+| `MedicalScribe` | `/ClinicalDocumentation?tab=visit-scribe` | Identical record→transcribe (`generateNoteFromRecording`)→review (`ConstrainedNoteReviewer`) pipeline; the Visit Scribe choice is a strict superset. Mirrors the existing `/VisitScribe` redirect. (Legacy `?tab=record` still normalizes to `visit-scribe`.) |
+| `ClinicalInsightsDashboard` | `/PredictiveAnalytics` | Population-trend / disease-progression views duplicate Predictive Analytics. Admin-only. |
 | `DocumentationTraining` | `/NurseTrainingHub?tab=documentation` | Standalone documentation-training page; **file deleted** (content confirmed not wanted). See note below. |
 | `NurseEducationVideos` | `/NurseTrainingHub` | 9 hard-coded YouTube links with client-side checkboxes; no DB backing. |
 
@@ -57,17 +59,17 @@ Direction chosen: fold **AnalyticsDashboard** into **ReportsAnalytics**.
 
 | Page | Decision | Notes |
 |---|---|---|
-| `ReportsAnalytics` | **Canonical** (single operational dashboard) | Now hosts a **"Performance Dashboard"** tab that lazy-embeds AnalyticsDashboard (via `EmbeddedPage`, so no duplicate header). Its **Population Health tab makes on-demand LLM calls** — biggest recurring AI cost in this cluster. |
+| `ReportsAnalytics` | **Canonical** (single operational dashboard) | Now hosts a **"Performance Dashboard"** tab that lazy-embeds AnalyticsDashboard (via `EmbeddedPage`, so no duplicate header). Its old **Population Health tab (on-demand `invokeLLM`) was removed** — see the AI-cost cleanup below. |
 | `AnalyticsDashboard` | **Folded in** ✅ | `/AnalyticsDashboard → /ReportsAnalytics?tab=perf-dashboard`. File kept (rendered as the embedded tab). |
 | `PredictiveAnalytics` | **Keep** (risk/forecast home) | |
 | `AgencyAnalytics` | **Keep** (business: financial + training) | Genuinely distinct; no LLM. |
 | `ClinicalInsightsDashboard` | **Cut** ✅ | Redirected to Predictive Analytics. |
 
 **AI-cost win:** population/risk analysis previously lived in three places
-(`ReportsAnalytics` Population Health, `PredictiveAnalytics`, `ClinicalInsightsDashboard`);
-cutting the third consolidates on Predictive Analytics. Still recommended: prefer
-batch/pre-computed scoring over the on-demand `invokeLLM()` call in ReportsAnalytics'
-Population Health tab.
+(`ReportsAnalytics` Population Health, `PredictiveAnalytics`, `ClinicalInsightsDashboard`).
+`ClinicalInsightsDashboard` was cut and **`ReportsAnalytics`' on-demand `invokeLLM`
+Population Health tab was removed**, consolidating population/risk insight on Predictive
+Analytics (the single largest recurring AI-cost reduction in this work).
 
 ### Training: 6 pages → 2 (+ EducationLibrary reclassified) ✅ done
 

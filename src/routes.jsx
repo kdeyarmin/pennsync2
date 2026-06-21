@@ -151,7 +151,7 @@ export const REDIRECTS = [
   // My Learning was merged into the Learning Center (the canonical learner hub):
   // its My Courses / In-Services / Annual Education / Transcripts views are now
   // tabs there. NurseTraining is a tab of the Nurse Training Hub.
-  { from: '/MyLearning', to: '/LearningCenter' },
+  { from: '/MyLearning', to: '/LearningCenter?tab=courses' },
   { from: '/MyTraining', to: '/LearningCenter?tab=inservices' },
   { from: '/MyAnnualEducation', to: '/LearningCenter?tab=annual' },
   { from: '/AnnualMandatoryEducation', to: '/LearningCenter?tab=annual' },
