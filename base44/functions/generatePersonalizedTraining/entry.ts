@@ -1,25 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Tolerant JSON extractor: the model is asked (in-prompt) to return strict JSON
-// but may wrap it in ```json fences or prose. Pull the outermost {...} and parse.
-const parseLLMJson = (raw) => {
-  if (!raw) return null;
-  if (typeof raw === 'object') return raw;
-  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
-  try {
-    return JSON.parse(text);
-  } catch {
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}');
-    if (start === -1 || end <= start) return null;
-    try {
-      return JSON.parse(text.slice(start, end + 1));
-    } catch {
-      return null;
-    }
-  }
-};
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -97,14 +77,85 @@ Generate a complete training module with the following components:
 
 Make content specific, practical, and immediately applicable to home health nursing.`;
 
-    // Ask for JSON in-prompt and parse the text result rather than passing
-    // response_json_schema: the provider's strict structured-output mode rejects
-    // deeply-nested free-form objects (it requires an explicit `required` array
-    // on every nested object), which this lesson/scenario/quiz shape can't meet.
-    const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `${trainingPrompt}\n\nReturn ONLY valid JSON, no prose or code fences, with this shape:\n{"title":"","learning_objectives":[""],"lesson_content":{"introduction":"","key_concepts":[{"concept":"","explanation":""}],"best_practices":[""],"common_mistakes":[""]},"scenario":{"title":"","patient_background":"","situation":"","decision_points":[{"question":"","options":[""],"correct_answer":0,"rationale":""}]},"quiz":[{"question":"","options":[""],"correct_answer":0,"explanation":""}],"key_takeaways":[""]}`
+    const trainingContent = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: trainingPrompt,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          learning_objectives: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          lesson_content: {
+            type: 'object',
+            properties: {
+              introduction: { type: 'string' },
+              key_concepts: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    concept: { type: 'string' },
+                    explanation: { type: 'string' }
+                  }
+                }
+              },
+              best_practices: {
+                type: 'array',
+                items: { type: 'string' }
+              },
+              common_mistakes: {
+                type: 'array',
+                items: { type: 'string' }
+              }
+            }
+          },
+          scenario: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              patient_background: { type: 'string' },
+              situation: { type: 'string' },
+              decision_points: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    question: { type: 'string' },
+                    options: {
+                      type: 'array',
+                      items: { type: 'string' }
+                    },
+                    correct_answer: { type: 'number' },
+                    rationale: { type: 'string' }
+                  }
+                }
+              }
+            }
+          },
+          quiz: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                question: { type: 'string' },
+                options: {
+                  type: 'array',
+                  items: { type: 'string' }
+                },
+                correct_answer: { type: 'number' },
+                explanation: { type: 'string' }
+              }
+            }
+          },
+          key_takeaways: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        }
+      }
     });
-    const trainingContent = parseLLMJson(raw) || {};
 
     return Response.json({
       success: true,
