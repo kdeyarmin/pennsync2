@@ -196,25 +196,6 @@
       "format": "date-time",
       "description": "Last time user accessed this course"
     },
-    "external_proof_urls": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Employee-uploaded proof of external certifications"
-    },
-    "external_proof_names": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Display names for uploaded proof files"
-    },
-    "external_proof_submitted_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When proof of external certification was uploaded"
-    },
     "archived_status": {
       "type": "boolean",
       "default": false,
