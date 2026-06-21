@@ -2804,7 +2804,10 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                             </Badge>
                           </div>
                         </div>
-                        <p className="text-sm text-emerald-700 mb-2 flex items-center gap-1.5"><DollarSign className="w-4 h-4" /> Impact: {win.impact}</p>
+                        {/* Financial/revenue impact — hidden from non-admins (clinicians still see the action + how-to). */}
+                        <FinancialGate>
+                          <p className="text-sm text-emerald-700 mb-2 flex items-center gap-1.5"><DollarSign className="w-4 h-4" /> Impact: {win.impact}</p>
+                        </FinancialGate>
                         {win.how_to && (
                           <div className="bg-white p-2 rounded border">
                             <p className="text-xs text-navy-600 mb-1 font-medium">How to do it:</p>
