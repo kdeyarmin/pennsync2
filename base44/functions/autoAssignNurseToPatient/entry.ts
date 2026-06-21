@@ -1,13 +1,9 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Best-effort HTTP status extraction from an SDK/axios-style error (the exact
 // shape isn't guaranteed, so check the common locations and tolerate absence).
-const httpStatusOf = (e: unknown): number | null => {
-  const x = e as {
-    status?: unknown; statusCode?: unknown;
-    response?: { status?: unknown; statusCode?: unknown };
-    cause?: { status?: unknown };
-  } | null;
+const httpStatusOf = (e) => {
+  const x = e || null;
   for (const c of [x?.status, x?.statusCode, x?.response?.status, x?.response?.statusCode, x?.cause?.status]) {
     if (typeof c === 'number') return c;
   }
@@ -77,8 +73,8 @@ Deno.serve(async (req) => {
           throw minimalErr;
         }
 
-        const updateData: Record<string, unknown> = { assigned_nurses: assignedNurses };
-        const backfilled: string[] = [];
+        const updateData = { assigned_nurses: assignedNurses };
+        const backfilled = [];
         if (!patient.address || typeof patient.address !== 'string') { updateData.address = patient.address ? String(patient.address) : 'Unknown'; backfilled.push('address'); }
         if (!patient.phone || typeof patient.phone !== 'string') { updateData.phone = patient.phone ? String(patient.phone) : '000-000-0000'; backfilled.push('phone'); }
         if (!patient.emergency_contact_name || typeof patient.emergency_contact_name !== 'string') { updateData.emergency_contact_name = patient.emergency_contact_name ? String(patient.emergency_contact_name) : 'Unknown'; backfilled.push('emergency_contact_name'); }
@@ -91,7 +87,7 @@ Deno.serve(async (req) => {
 
         console.warn(
           `autoAssignNurseToPatient: minimal assigned_nurses update failed for patient ${patient_id} ` +
-          `(${(minimalErr as Error)?.message}); backfilling missing required fields to complete the ` +
+          `(${minimalErr?.message}); backfilling missing required fields to complete the ` +
           `assignment: ${backfilled.join(', ')}. These are PLACEHOLDERS on an incomplete legacy record ` +
           `and should be corrected with the patient's real data.`
         );

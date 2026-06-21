@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // <<<BEGIN GENERATED ENGINE — DO NOT EDIT BY HAND.
 // Source: src/components/patient/patientDuplicateUtils.js
@@ -738,13 +738,13 @@ const BACKEND_MIN_SCORE = 70;
 // keep the MORE COMPLETE record rather than just the newest, so a sparse stub
 // can't win over a rich chart and lose identifiers/clinical data. Strong
 // identifiers (MRN, DOB) are weighted because losing those is the worst outcome.
-function isPopulated(v: any): boolean {
+function isPopulated(v) {
   if (v === undefined || v === null) return false;
   if (Array.isArray(v)) return v.length > 0;
   if (typeof v === 'object') return Object.keys(v).length > 0;
   return String(v).trim() !== '';
 }
-function completenessScore(p: any): number {
+function completenessScore(p) {
   if (!p) return 0;
   let score = 0;
   if (isPopulated(p.medical_record_number)) score += 3;
