@@ -79,6 +79,8 @@ export default function UserManagement() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resetPasswordResult, setResetPasswordResult] = useState(null);
   const [editedRole, setEditedRole] = useState("");
+  const [editForm, setEditForm] = useState({ full_name: '', phone: '', credential_type: '' });
+  const [isSavingUser, setIsSavingUser] = useState(false);
   const [showDeleteInvitationDialog, setShowDeleteInvitationDialog] = useState(false);
   const [selectedInvitation, setSelectedInvitation] = useState(null);
   const [showUserSetupDialog, setShowUserSetupDialog] = useState(false);
@@ -205,22 +207,44 @@ export default function UserManagement() {
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setEditedRole(user.role);
+    setEditForm({
+      full_name: user.full_name || '',
+      phone: user.phone || '',
+      credential_type: user.credential_type || '',
+    });
     setShowEditDialog(true);
   };
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!selectedUser) return;
-    logActivity(ActivityActions.USER_ROLE_CHANGED, {
-      user_email: selectedUser.email,
-      old_role: selectedUser.role,
-      new_role: editedRole,
-      entity_type: 'User',
-      entity_id: selectedUser.id
-    });
-    updateUserMutation.mutate({
-      userId: selectedUser.id,
-      data: { role: editedRole }
-    });
+    setIsSavingUser(true);
+    try {
+      // full_name is admin-managed and not writable via the standard SDK, so all
+      // edits go through the service-role userManagement function.
+      await base44.functions.invoke('userManagement', {
+        action: 'update_user',
+        user_id: selectedUser.id,
+        full_name: editForm.full_name,
+        phone: editForm.phone,
+        credential_type: editForm.credential_type,
+        role: editedRole,
+      });
+      logActivity(ActivityActions.USER_ROLE_CHANGED, {
+        user_email: selectedUser.email,
+        old_role: selectedUser.role,
+        new_role: editedRole,
+        entity_type: 'User',
+        entity_id: selectedUser.id
+      });
+      queryClient.invalidateQueries({ queryKey: ['allUsersManagement'] });
+      toast.success('User updated successfully');
+      setShowEditDialog(false);
+      setSelectedUser(null);
+    } catch (error) {
+      toast.error('Failed to update user: ' + error.message);
+    } finally {
+      setIsSavingUser(false);
+    }
   };
 
   const handleToggleActive = (user) => {
@@ -802,9 +826,54 @@ export default function UserManagement() {
           {selectedUser && (
             <div className="space-y-4">
               <div>
-                <Label className="text-sm text-slate-600">User</Label>
-                <p className="font-medium">{selectedUser.full_name}</p>
+                <Label className="text-sm text-slate-600">Email</Label>
                 <p className="text-sm text-slate-500">{selectedUser.email}</p>
+              </div>
+              <div>
+                <Label htmlFor="edit_full_name">Full Name</Label>
+                <Input
+                  id="edit_full_name"
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, full_name: e.target.value }))}
+                  className="mt-1"
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_phone">Phone Number</Label>
+                <Input
+                  id="edit_phone"
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                  className="mt-1"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_credential">Credential Type</Label>
+                <Select
+                  value={editForm.credential_type || "none"}
+                  onValueChange={(value) => setEditForm(prev => ({ ...prev, credential_type: value === "none" ? "" : value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select credential" />
+                  </SelectTrigger>
+                  <SelectContent style={{ zIndex: 9999 }}>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="RN">RN - Registered Nurse</SelectItem>
+                    <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
+                    <SelectItem value="LVN">LVN - Licensed Vocational Nurse</SelectItem>
+                    <SelectItem value="NP">NP - Nurse Practitioner</SelectItem>
+                    <SelectItem value="CNS">CNS - Clinical Nurse Specialist</SelectItem>
+                    <SelectItem value="PT">PT - Physical Therapist</SelectItem>
+                    <SelectItem value="OT">OT - Occupational Therapist</SelectItem>
+                    <SelectItem value="ST">ST - Speech Therapist</SelectItem>
+                    <SelectItem value="MSW">MSW - Medical Social Worker</SelectItem>
+                    <SelectItem value="HHA">HHA - Home Health Aide</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Role</Label>
@@ -833,8 +902,12 @@ export default function UserManagement() {
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveUser} className="bg-navy-600 hover:bg-navy-700">
-              Save Changes
+            <Button onClick={handleSaveUser} disabled={isSavingUser} className="bg-navy-600 hover:bg-navy-700">
+              {isSavingUser ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+              ) : (
+                'Save Changes'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

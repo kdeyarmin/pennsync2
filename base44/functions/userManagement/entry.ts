@@ -74,7 +74,10 @@ Deno.serve(async (req) => {
       
       case 'cancel_invitation':
         return await cancelInvitation(base44, currentUser, params, isAdmin);
-      
+
+      case 'update_user':
+        return await updateUser(base44, currentUser, params, isAdmin);
+
       default:
         return Response.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -321,6 +324,42 @@ async function checkExpiredInvitations(base44) {
     expired: expired.length,
     expiring_soon: expiringSoon.length
   });
+}
+
+async function updateUser(base44, currentUser, params, isAdmin) {
+  if (!isAdmin) {
+    return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
+  }
+
+  const { user_id, full_name, phone, credential_type, role } = params;
+  if (!user_id) {
+    return Response.json({ error: 'user_id is required' }, { status: 400 });
+  }
+
+  // Only include fields that were actually provided so we never wipe values.
+  const updates = {};
+  if (typeof full_name === 'string' && full_name.trim()) updates.full_name = full_name.trim();
+  if (typeof phone === 'string') updates.phone = phone;
+  if (typeof credential_type === 'string') updates.credential_type = credential_type;
+  if (typeof role === 'string' && role) updates.role = role;
+
+  if (Object.keys(updates).length === 0) {
+    return Response.json({ error: 'No fields to update' }, { status: 400 });
+  }
+
+  await base44.asServiceRole.entities.User.update(user_id, updates);
+
+  await base44.asServiceRole.entities.UserActivity.create({
+    user_email: currentUser.email,
+    user_name: currentUser.full_name,
+    action: 'user_updated',
+    details: { target_user_id: user_id, updated_fields: Object.keys(updates) },
+    page: 'UserManagement',
+    entity_type: 'User',
+    entity_id: user_id
+  });
+
+  return Response.json({ success: true, message: 'User updated successfully' });
 }
 
 async function cancelInvitation(base44, currentUser, params, isAdmin) {
