@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Target, X, Edit2, ShieldCheck, Loader2, Search, ArrowUp, ArrowDown,
-  Users, Send, CalendarClock, BookOpen, CheckCircle2, AlertTriangle,
+  Users, Send, CalendarClock, BookOpen, CheckCircle2, AlertTriangle, Bell,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import LearningPlanForm from "./LearningPlanForm";
 import AssignmentWizard from "./AssignmentWizard";
 import { seedYearlyRequiredInServices } from "@/functions/seedYearlyRequiredInServices";
 import { assignAnnualLearningPlan } from "@/functions/assignAnnualLearningPlan";
+import { remindPlanOverdueStaff } from "@/functions/remindPlanOverdueStaff";
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");
 
@@ -39,6 +40,7 @@ export default function LearningPlanManager() {
   const [assignDueDate, setAssignDueDate] = useState("");
   const [pendingAssignTarget, setPendingAssignTarget] = useState(null);
   const [assigning, setAssigning] = useState(false);
+  const [reminding, setReminding] = useState(false);
 
   const { data: plans = [] } = useQuery({
     queryKey: ["learning-plans"],
@@ -205,6 +207,25 @@ export default function LearningPlanManager() {
     if (!target || !current) return;
     updateCourseMutation.mutate({ id: current.id, patch: { order_index: target.order_index } });
     updateCourseMutation.mutate({ id: target.id, patch: { order_index: current.order_index } });
+  };
+
+  const remindOverdue = async () => {
+    if (!selectedPlan) return;
+    setReminding(true);
+    try {
+      const res = await remindPlanOverdueStaff({ planId: selectedPlan.id });
+      const data = res?.data || res;
+      if ((data?.reminded_users ?? 0) === 0) {
+        toast.success("No one is overdue on this plan — nothing to send.");
+      } else {
+        toast.success(`Reminder sent to ${data.reminded_users} overdue staff (${data.assignments_flagged} courses flagged).`);
+      }
+      queryClient.invalidateQueries({ queryKey: ["plan-enrollments-rollup", selectedPlan.id] });
+    } catch (e) {
+      toast.error(`Could not send reminders: ${e.message}`);
+    } finally {
+      setReminding(false);
+    }
   };
 
   const confirmAssignment = async () => {
@@ -532,9 +553,26 @@ export default function LearningPlanManager() {
               {/* Progress rollup — everyone's progress on this plan */}
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Users className="w-4 h-4 text-indigo-600" /> Staff progress on this plan
-                  </CardTitle>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Users className="w-4 h-4 text-indigo-600" /> Staff progress on this plan
+                    </CardTitle>
+                    {enrollmentStats.overdue > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={remindOverdue}
+                        disabled={reminding}
+                        className="border-red-200 text-red-700 hover:bg-red-50"
+                      >
+                        {reminding ? (
+                          <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" />Sending…</>
+                        ) : (
+                          <><Bell className="w-4 h-4 mr-1.5" />Remind {enrollmentStats.overdue} overdue</>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {planEnrollments.length === 0 ? (
