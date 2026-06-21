@@ -95,7 +95,8 @@
               "frequency_change",
               "missing_from_discharge",
               "duplicate",
-              "potential_interaction"
+              "potential_interaction",
+              "age_condition_risk"
             ]
           },
           "severity": {
@@ -221,6 +222,14 @@
     "ai_confidence_score": {
       "type": "number",
       "description": "AI extraction confidence 0-100"
+    },
+    "confidence_score": {
+      "type": "number",
+      "description": "Confidence score for the reconciliation analysis"
+    },
+    "certainty": {
+      "type": "string",
+      "description": "Qualitative certainty level of the reconciliation analysis"
     }
   },
   "required": [

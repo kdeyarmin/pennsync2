@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,10 @@ export default function ProactiveClinicalTaskGenerator({
   autoAnalyze = false
 }) {
   const queryClient = useQueryClient();
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
   const [analyzing, setAnalyzing] = useState(false);
   const [suggestedTasks, setSuggestedTasks] = useState([]);
   // Keyed by task OBJECT identity, not array index: the rendered list is a
@@ -73,6 +77,7 @@ export default function ProactiveClinicalTaskGenerator({
         description: task.description,
         type: task.type,
         priority: task.priority,
+        assigned_to: currentUser?.email,
         due_date: task.due_date,
         due_timeframe: task.due_timeframe,
         source: 'ai_generated',
@@ -106,6 +111,7 @@ export default function ProactiveClinicalTaskGenerator({
           description: task.description,
           type: task.type,
           priority: task.priority,
+          assigned_to: currentUser?.email,
           due_date: task.due_date,
           due_timeframe: task.due_timeframe,
           source: 'ai_generated',

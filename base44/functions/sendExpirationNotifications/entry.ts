@@ -27,21 +27,32 @@ Deno.serve(async (req) => {
     const notifications = [];
     const adminNotifications = [];
 
+    // Reminder tiers (days before expiration). Fire when the count is AT or
+    // BELOW a tier that hasn't been sent yet, rather than on an exact-day match.
+    // A missed cron run no longer skips the tier permanently; per-record
+    // `reminder_offsets_sent` tracking prevents re-sending a tier already fired.
+    const reminderOffsets = [30, 14, 7, 3];
+
     // Process training assignments with renewal dates
     for (const assignment of assignments) {
       if (!assignment.renewal_due_date) continue;
-      
+
       const renewalDate = new Date(assignment.renewal_due_date);
       const daysUntilExpiration = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
-      
-      if (daysUntilExpiration === 30 || daysUntilExpiration === 14 || daysUntilExpiration === 7 || daysUntilExpiration === 3) {
+
+      const remindersSent = assignment.reminder_offsets_sent || [];
+      const dueOffsets = reminderOffsets.filter(
+        (offset) => daysUntilExpiration <= offset && !remindersSent.includes(offset)
+      );
+
+      if (dueOffsets.length > 0) {
         // Create notification for employee
         notifications.push({
           user_email: assignment.assigned_to_user_id,
           type: 'expiration_warning',
           title: `Training Renewal Due Soon: ${assignment.course_title}`,
           message: `Your ${assignment.course_title} certification expires in ${daysUntilExpiration} days. Please complete the renewal training.`,
-          link: '/MyTraining',
+          action_url: '/MyTraining',
           priority: daysUntilExpiration <= 7 ? 'high' : 'medium',
           is_read: false,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -55,24 +66,34 @@ Deno.serve(async (req) => {
           days_until_expiration: daysUntilExpiration,
           renewal_due_date: assignment.renewal_due_date
         });
+
+        // Record every newly-crossed tier so it is never re-sent.
+        await base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
+          reminder_offsets_sent: [...remindersSent, ...dueOffsets]
+        });
       }
     }
 
     // Process personnel credentials
     for (const credential of credentials) {
       if (!credential.expiration_date) continue;
-      
+
       const expirationDate = new Date(credential.expiration_date);
       const daysUntilExpiration = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
-      
-      if (daysUntilExpiration === 30 || daysUntilExpiration === 14 || daysUntilExpiration === 7 || daysUntilExpiration === 3) {
+
+      const remindersSent = credential.reminder_offsets_sent || [];
+      const dueOffsets = reminderOffsets.filter(
+        (offset) => daysUntilExpiration <= offset && !remindersSent.includes(offset)
+      );
+
+      if (dueOffsets.length > 0) {
         // Create notification for employee
         notifications.push({
           user_email: credential.user_id,
           type: 'credential_expiration',
           title: `Credential Expiring Soon: ${credential.title}`,
           message: `Your ${credential.title} expires in ${daysUntilExpiration} days. Please upload a renewed document.`,
-          link: '/PersonnelFile',
+          action_url: '/PersonnelFile',
           priority: daysUntilExpiration <= 7 ? 'high' : 'medium',
           is_read: false,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -86,6 +107,11 @@ Deno.serve(async (req) => {
           credential_title: credential.title,
           days_until_expiration: daysUntilExpiration,
           expiration_date: credential.expiration_date
+        });
+
+        // Record every newly-crossed tier so it is never re-sent.
+        await base44.asServiceRole.entities.PersonnelCredential.update(credential.id, {
+          reminder_offsets_sent: [...remindersSent, ...dueOffsets]
         });
       }
     }
@@ -105,7 +131,7 @@ Deno.serve(async (req) => {
           type: 'admin_expiration_summary',
           title: `${adminNotifications.length} Upcoming Expirations`,
           message: `There are ${adminNotifications.length} training certifications or credentials expiring soon.`,
-          link: '/AdminDashboard',
+          action_url: '/AdminDashboard',
           priority: 'medium',
           is_read: false,
           metadata: { expirations: adminNotifications },

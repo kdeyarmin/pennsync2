@@ -51,10 +51,17 @@ export default function LearningPathProgress({ planId, userId }) {
         </div>
     );
 
-    const totalCourses = planCourses.length;
     const completedAssignments = assignments.filter(a => a.status === 'completed');
     const completedCount = completedAssignments.length;
-    const progressPercentage = totalCourses > 0 ? Math.round((completedCount / totalCourses) * 100) : 0;
+    // The denominator should reflect the work actually expected of this user.
+    // Prefer the plan's defined courses; fall back to the number of assignments
+    // when plan courses haven't loaded, and never let it understate the work the
+    // user has already been assigned. Clamp to <= 100 so completed-but-extra
+    // assignments can't push the bar past full.
+    const totalCourses = Math.max(planCourses.length, assignments.length);
+    const progressPercentage = totalCourses > 0
+        ? Math.min(100, Math.round((completedCount / totalCourses) * 100))
+        : 0;
 
     const now = new Date();
     const _upcomingDue = assignments

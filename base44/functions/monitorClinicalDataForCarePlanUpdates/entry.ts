@@ -245,8 +245,8 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
               type: 'care_plan_proposal',
               title: `Care Plan Update Proposed: ${pt.first_name} ${pt.last_name}`,
               message: `AI has detected ${finding.severity} priority clinical changes requiring care plan review.`,
-              priority: finding.severity === 'critical' ? 'urgent' : 'normal',
-              link: `/PatientDetails?id=${pt.id}`,
+              priority: finding.severity === 'critical' ? 'critical' : 'medium',
+              action_url: `/PatientDetails?id=${pt.id}`,
               is_read: false
             }).catch((err) => console.error('Failed to create notification:', err));
           }
@@ -255,13 +255,12 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
           if (finding.severity === 'critical' || finding.severity === 'high') {
             await base44.asServiceRole.entities.PatientAlert.create({
               patient_id: pt.id,
-              alert_type: 'care_plan_update_needed',
+              alert_type: 'care_gap',
               severity: finding.severity,
               title: `Care Plan Review Needed: ${finding.finding_type}`,
-              description: finding.description,
-              recommended_action: finding.proposed_intervention,
-              status: 'active',
-              created_by: 'AI Care Monitor'
+              message: finding.description,
+              recommended_actions: finding.proposed_intervention ? [finding.proposed_intervention] : [],
+              status: 'active'
             }).catch((err) => console.error('Failed to create care plan alert:', err));
           }
         }

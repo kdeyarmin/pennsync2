@@ -97,20 +97,44 @@ export default function EventReport() {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
-    
+
     try {
+      // Resolve the real patient name from the entered id. The id is required, so
+      // a non-matching id is a hard validation failure (we must not store the raw
+      // id string as the patient's name).
+      let patient = null;
+      try {
+        const matches = await base44.entities.Patient.filter({ id: formData.patient_id });
+        patient = matches?.[0] || null;
+      } catch (lookupErr) {
+        console.error('Patient lookup failed:', lookupErr);
+      }
+
+      if (!patient) {
+        toast.error("Could not find a patient with that Patient ID. Please verify the ID.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const patientName = [patient.first_name, patient.last_name].filter(Boolean).join(" ").trim()
+        || patient.full_name
+        || patient.name
+        || formData.patient_id;
+
       // State-reportable events take the reliable server-side path (persist +
       // retained PDF + immediate admin email). Other event reports still persist
       // server-side and notify admins in-app, but without the urgent email/PDF.
       const isStateReportable = formData.state_reportable === "Yes";
-      const patientName = formData.patient_id;
+
+      // Send the enum/code value (e.g. "HE"), not the long human-readable label.
+      const eventTypeCode = formData.event_type_id;
 
       let result;
       if (isStateReportable) {
         result = await submitStateReportableIncident({
           patient_id: formData.patient_id,
           patient_name: patientName,
-          event_type: formData.event_type,
+          event_type: eventTypeCode,
           event_type_id: formData.event_type_id,
           event_date: formData.date_of_event,
           event_time: formData.time_of_event,

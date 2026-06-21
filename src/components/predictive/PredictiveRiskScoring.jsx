@@ -69,7 +69,7 @@ export default function PredictiveRiskScoring({ patients = [], visits = [], care
         return {
           id: patient.id,
           name: `${patient.first_name} ${patient.last_name}`,
-          age: patient.date_of_birth ? differenceInDays(new Date(), new Date(patient.date_of_birth)) / 365 : null,
+          age: patient.date_of_birth ? Math.floor(differenceInDays(new Date(), new Date(patient.date_of_birth)) / 365.25) : null,
           primary_diagnosis: patient.primary_diagnosis,
           secondary_diagnoses: patient.secondary_diagnoses,
           care_type: patient.care_type,

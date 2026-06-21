@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,6 +35,23 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
   const [isAssigning, setIsAssigning] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [autoSuggestions, setAutoSuggestions] = useState(null);
+
+  // Load the real TrainingModule records so selected titles can be resolved to
+  // actual module ids (TrainingCompletion.training_module_id must hold an id,
+  // never a title string).
+  const { data: trainingModules = [] } = useQuery({
+    queryKey: ['trainingModules'],
+    queryFn: () => base44.entities.TrainingModule.list('order_index', 500),
+  });
+
+  // Map normalized module title -> real module id.
+  const moduleIdByTitle = useMemo(() => {
+    const map = new Map();
+    trainingModules.forEach(m => {
+      if (m.title) map.set(m.title.trim().toLowerCase(), m.id);
+    });
+    return map;
+  }, [trainingModules]);
 
   // Analyze recommendations to suggest training assignments
   const analyzeAndSuggest = () => {
@@ -117,12 +134,25 @@ export default function AutoAssignTraining({ recommendations = [], users = [] })
     const dueDate = format(addDays(new Date(), parseInt(dueInDays)), 'yyyy-MM-dd');
 
     try {
+      // Resolve selected titles to real module ids. Skip any title that has no
+      // matching TrainingModule rather than persisting a title string into the
+      // id reference field.
+      const resolvedModules = selectedModules
+        .map(title => ({ title, id: moduleIdByTitle.get(title.trim().toLowerCase()) }))
+        .filter(m => m.id);
+
+      if (resolvedModules.length === 0) {
+        console.error("No selected modules could be matched to a TrainingModule id");
+        setIsAssigning(false);
+        return;
+      }
+
       const assignments = [];
       for (const nurseEmail of selectedNurses) {
-        for (const moduleTitle of selectedModules) {
+        for (const moduleRef of resolvedModules) {
           assignments.push({
             nurse_email: nurseEmail,
-            training_module_id: moduleTitle,
+            training_module_id: moduleRef.id,
             status: 'assigned',
             due_date: dueDate
           });

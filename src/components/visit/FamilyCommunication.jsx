@@ -180,7 +180,7 @@ Generate the family update now:`;
 
       // Pull real agency contact details and the sending nurse once up front.
       const settingsList = await base44.entities.AgencySettings.list('-created_date', 1).catch(() => []);
-      const settings = settingsList[0] || {};
+      const settings = (Array.isArray(settingsList) && settingsList.length > 0) ? settingsList[0] : {};
       const me = await base44.auth.me();
       const agencyName = settings.office_name || 'Penn Sync Home Health';
 

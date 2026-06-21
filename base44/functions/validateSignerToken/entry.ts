@@ -116,12 +116,31 @@ Deno.serve(async (req) => {
       signerEmail: tokenRecord.signer_email,
       dueDate: pkg.due_date,
       packageStatus: pkg.status,
-      documents: validSignatures.map((sig) => ({
-        id: sig.id,
-        name: sig.document_name,
-        status: sig.status,
-        signedAt: sig.signed_at,
-      })),
+      documents: validSignatures.map((sig) => {
+        const signers = Array.isArray(sig.signers) ? sig.signers : [];
+        const completedSigners = signers.filter(
+          (s) => s?.status === 'completed' || s?.signed_date
+        );
+        const lastSignedAt = completedSigners
+          .map((s) => s.signed_date)
+          .filter(Boolean)
+          .sort()
+          .slice(-1)[0] || sig.completed_date || null;
+        return {
+          id: sig.id,
+          name: sig.document_title,
+          status: sig.status,
+          signedAt: lastSignedAt,
+          signers: signers.map((s) => ({
+            name: s.name,
+            email: s.email,
+            role: s.role,
+            required: s.required,
+            status: s.status,
+            signed_date: s.signed_date,
+          })),
+        };
+      }),
       expiresAt: tokenRecord.expires_at,
     });
   } catch (error) {

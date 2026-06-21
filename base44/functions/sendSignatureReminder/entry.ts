@@ -25,11 +25,29 @@ Deno.serve(async (req) => {
     const sig = signature[0];
 
     // Get patient details
-    const patients = await base44.entities.Patient.filter({ id: sig.patient_id });
+    const patients = await base44.asServiceRole.entities.Patient.filter({ id: sig.patient_id });
     const patient = patients[0];
 
     if (!patient || !patient.email) {
       return Response.json({ error: 'Patient email not found' }, { status: 404 });
+    }
+
+    // Authorization: any authenticated user must NOT be able to email any patient
+    // for any signature request. Allow only:
+    //   - admins / clinical roles, OR
+    //   - the caller who created/owns the signature request, OR
+    //   - a nurse assigned to (or creator of) the patient.
+    // (Mirrors the assignment model used in getScopedPatientAlerts.)
+    const role = user.role;
+    const privilegedRole = role === 'admin' || role === 'clinician' || role === 'nurse_manager';
+    const ownsSignature = sig.created_by === user.email
+      || sig.requested_by === user.email
+      || sig.sender_email === user.email;
+    const assignedToPatient = patient.created_by === user.email
+      || (Array.isArray(patient.assigned_nurses) && patient.assigned_nurses.includes(user.email));
+
+    if (!privilegedRole && !ownsSignature && !assignedToPatient) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Send reminder email

@@ -44,6 +44,8 @@ export default function DesktopSidebar({
           variant="ghost" size="icon"
           className="h-7 w-7 text-slate-400 hover:text-navy-700 hover:bg-slate-100 flex-shrink-0"
           onClick={onToggleCollapse}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </Button>
@@ -205,6 +207,7 @@ export default function DesktopSidebar({
             onClick={onLogout}
             className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-slate-100 flex-shrink-0"
             title="Logout"
+            aria-label="Log out"
           >
             <LogOut className="w-4 h-4" />
           </Button>

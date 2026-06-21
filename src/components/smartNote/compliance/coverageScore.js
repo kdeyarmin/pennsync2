@@ -54,6 +54,9 @@ export function toNoteConversionFields({
     rough_note_compliance: draftPresenceScore,
     enhanced_note_compliance: coverageScore,
     compliance_improvement: Math.max(0, coverageScore - draftPresenceScore),
+    draft_presence_score: draftPresenceScore,
+    rough_len: roughLen,
+    enhanced_len: enhancedLen,
   };
 }
 

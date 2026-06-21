@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -224,9 +225,10 @@ Analyze the following risk domains and provide detailed scores and explanations:
       queryClient.invalidateQueries({ queryKey: ['highRiskPatients'] });
     } catch (error) {
       console.error('Error performing risk assessment:', error);
-      alert('Failed to perform risk assessment. Please try again.');
+      toast.error('Failed to perform risk assessment. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
     }
-    setIsAnalyzing(false);
   };
 
   const calculateAge = (dob) => {

@@ -133,8 +133,14 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
               properties: {
                 title: { type: 'string' },
                 description: { type: 'string' },
-                type: { type: 'string' },
-                priority: { type: 'string' },
+                type: {
+                  type: 'string',
+                  enum: ['call', 'notify', 'schedule', 'order', 'coordinate', 'document', 'safety', 'followup', 'other']
+                },
+                priority: {
+                  type: 'string',
+                  enum: ['high', 'medium', 'low']
+                },
                 due_timeframe: { type: 'string' },
                 reason: { type: 'string' }
               }
@@ -157,16 +163,24 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
       status: 'completed'
     });
 
+    // Allowed Task enums; the AI can emit values outside the enum (which a plain
+    // `|| default` would not catch since it only handles falsy), so validate
+    // against the allowed sets and fall back to safe defaults before create.
+    const ALLOWED_TASK_TYPES = new Set(['call', 'notify', 'schedule', 'order', 'coordinate', 'document', 'safety', 'followup', 'other']);
+    const ALLOWED_TASK_PRIORITIES = new Set(['high', 'medium', 'low']);
+
     // Create follow-up tasks
     const createdTasks = [];
     if (tasksResponse?.tasks && tasksResponse.tasks.length > 0) {
       for (const task of tasksResponse.tasks) {
+        const taskType = ALLOWED_TASK_TYPES.has(task.type) ? task.type : 'followup';
+        const taskPriority = ALLOWED_TASK_PRIORITIES.has(task.priority) ? task.priority : 'medium';
         const createdTask = await base44.entities.Task.create({
           patient_id: visit.patient_id,
           title: task.title,
           description: task.description,
-          type: task.type || 'followup',
-          priority: task.priority || 'medium',
+          type: taskType,
+          priority: taskPriority,
           due_timeframe: task.due_timeframe || '24_hours',
           assigned_to: user.email,
           source: 'ai_generated',

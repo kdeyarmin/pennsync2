@@ -14,8 +14,12 @@ export default function SmartReminders({ patient, visit, allVisits }) {
     if (admissionVisit) {
       const admissionDate = parseISO(admissionVisit.visit_date);
       const daysSinceAdmission = differenceInDays(today, admissionDate);
-      const recertDue = 60 - daysSinceAdmission;
-      
+      // Recert recurs every 60 days. Anchor on the CURRENT cycle (not the whole
+      // lifetime since admission) so episodes 2, 3, ... still fire. A freshly
+      // admitted patient (day 0) yields recertDue 60, which won't false-warn.
+      const dayInCycle = daysSinceAdmission % 60;
+      const recertDue = 60 - dayInCycle;
+
       if (recertDue <= 14 && recertDue > 0) {
         reminders.push({
           type: 'recertification',
@@ -30,7 +34,12 @@ export default function SmartReminders({ patient, visit, allVisits }) {
 
   // Check for gaps in visit schedule
   if (allVisits && allVisits.length > 0) {
-    const lastVisit = allVisits[0];
+    // allVisits is an unsorted prop; sort a copy newest-first before taking the
+    // most recent visit so the gap calculation uses the real last visit.
+    const sortedVisits = [...allVisits].sort(
+      (a, b) => new Date(b.visit_date) - new Date(a.visit_date)
+    );
+    const lastVisit = sortedVisits[0];
     if (lastVisit && lastVisit.id !== visit?.id) {
       const daysSinceLastVisit = differenceInDays(today, parseISO(lastVisit.visit_date));
       

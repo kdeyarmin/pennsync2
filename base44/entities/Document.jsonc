@@ -130,6 +130,44 @@
         }
       },
       "description": "AI analysis results"
+    },
+    "clinician_signed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the clinician has signed the document"
+    },
+    "clinician_signed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the clinician signed the document"
+    },
+    "clinician_name": {
+      "type": "string",
+      "description": "Name of the clinician who signed"
+    },
+    "patient_signed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the patient has signed the document"
+    },
+    "patient_signed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the patient signed the document"
+    },
+    "patient_name": {
+      "type": "string",
+      "description": "Name of the patient who signed"
+    },
+    "is_signed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the document is fully signed"
+    },
+    "is_locked": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the document is locked from further edits"
     }
   },
   "required": [

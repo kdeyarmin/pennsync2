@@ -26,6 +26,9 @@ export default function SecureESignatureCapture({
   documentType,
   documentId,
   documentTitle,
+  patientId,
+  documentContent,
+  documentUrl,
   onSignatureComplete,
   requireWitness = false,
   signatureRole = 'signer'
@@ -132,13 +135,36 @@ export default function SecureESignatureCapture({
       return;
     }
 
+    // patient_id is a required field on DocumentSignature; without it we'd write
+    // an invalid row that the backend rejects (or that breaks patient-scoped
+    // reads). Guard rather than persist an incomplete legal signature.
+    if (!patientId) {
+      toast.error('Cannot capture signature: no patient is associated with this document.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const timestamp = new Date().toISOString();
+      const deviceType = /mobile|android|iphone/i.test(navigator.userAgent)
+        ? 'mobile'
+        : /tablet|ipad/i.test(navigator.userAgent)
+          ? 'tablet'
+          : 'desktop';
 
-      // Create signature record with audit trail
-      const signatureRecord = {
+      // Map the workflow signatureRole onto the DocumentSignature signer-role enum
+      // (patient|guardian|witness|clinician|other). A generic "signer" attestation
+      // in a clinical workflow is recorded as a clinician.
+      const signerRole = ['patient', 'guardian', 'witness', 'clinician'].includes(signatureRole)
+        ? signatureRole
+        : signatureRole === 'signer'
+          ? 'clinician'
+          : 'other';
+
+      // Build the canonical integrity payload from the flat attestation data so the
+      // tamper-evident hash stays computed over the same fields used historically.
+      const integritySource = {
         document_type: documentType,
         document_id: documentId,
         document_title: documentTitle,
@@ -152,15 +178,46 @@ export default function SecureESignatureCapture({
         user_agent: navigator.userAgent,
         attestation_accepted: attestation,
         attestation_text: `I attest that I am ${user.full_name} and that the information in this ${documentType} is accurate and complete to the best of my knowledge.`,
-        signature_method: 'electronic_capture',
-        signature_role: signatureRole,
-        device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
+        signature_method: 'signature_image',
+        device_type: deviceType,
       };
+      const signatureHash = generateSignatureHash(buildSignatureIntegrityPayload(integritySource));
 
-      // Generate tamper-evident hash from the canonical integrity payload so that
-      // verification (which uses the same shared util) matches exactly.
-      const signatureHash = generateSignatureHash(buildSignatureIntegrityPayload(signatureRecord));
-      signatureRecord.signature_hash = signatureHash;
+      // Persist a schema-valid DocumentSignature record. This is a single-clinician
+      // attestation, so the document is fully signed (status: completed) and the
+      // attestation data lives inside a signers[] entry.
+      const signatureRecord = {
+        patient_id: patientId,
+        document_type: documentType,
+        document_title: documentTitle,
+        document_content: documentContent || documentTitle || '',
+        ...(documentUrl ? { document_url: documentUrl } : {}),
+        status: 'completed',
+        completed_date: timestamp,
+        created_by_email: user.email,
+        signers: [
+          {
+            id: 1,
+            name: user.full_name,
+            email: user.email,
+            role: signerRole,
+            required: true,
+            status: 'completed',
+            signed_date: timestamp,
+            signature: signatureData,
+            ip_address: ipAddress,
+            signature_method: 'signature_image',
+          },
+        ],
+        audit_trail: [
+          {
+            action: 'signed',
+            timestamp,
+            signer_id: 1,
+            notes: `Signed by ${user.full_name} (${credentials}); role=${signerRole}; device=${deviceType}; hash=${signatureHash}; ip=${ipAddress || 'Unknown'}`,
+          },
+        ],
+      };
 
       // Save to DocumentSignature entity
       const savedSignature = await base44.entities.DocumentSignature.create(signatureRecord);
@@ -193,7 +250,15 @@ export default function SecureESignatureCapture({
       toast.success('Signature captured successfully');
 
       if (onSignatureComplete) {
-        onSignatureComplete(savedSignature);
+        // Surface the flat attestation fields the calling workflows rely on
+        // (signed_by / signed_by_name / signed_date) alongside the saved record,
+        // since these no longer live at the top level of the DocumentSignature row.
+        onSignatureComplete({
+          ...savedSignature,
+          signed_by: user.email,
+          signed_by_name: user.full_name,
+          signed_date: timestamp,
+        });
       }
     } catch (error) {
       console.error('Signature capture failed:', error);

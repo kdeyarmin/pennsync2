@@ -96,9 +96,9 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
 
     } catch (error) {
       console.error("Error analyzing patient data:", error);
+    } finally {
+      setIsAnalyzing(false);
     }
-    
-    setIsAnalyzing(false);
   };
 
   // Analyze vital signs trends
@@ -115,7 +115,10 @@ export default function EarlyWarningSystem({ patient, _currentVisit, allVisits }
         date: v.visit_date,
         systolic: v.vital_signs.blood_pressure_systolic,
         diastolic: v.vital_signs.blood_pressure_diastolic
-      }));
+      }))
+      // visitsWithVitals derives from an unsorted prop; sort newest-first so the
+      // trend (recent[0] - recent[last]) has the correct sign.
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (bpReadings.length >= 3) {
       const recent = bpReadings.slice(0, 3);

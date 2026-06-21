@@ -42,7 +42,7 @@ export default function StaffEducationComplianceReport() {
 
   const { data: allModules = [] } = useQuery({
     queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
   });
 
   const complianceData = React.useMemo(() => {

@@ -25,7 +25,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
 
   const { data: modules = [] } = useQuery({
     queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
   });
 
   const { data: recommendations = [] } = useQuery({

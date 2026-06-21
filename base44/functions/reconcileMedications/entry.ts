@@ -170,13 +170,11 @@ Return JSON with discrepancies array.`;
     if (criticalCount > 0) {
       await base44.entities.PatientAlert.create({
         patient_id,
-        alert_type: 'medication_discrepancy',
+        alert_type: 'medication_risk',
         severity: 'high',
         title: `Critical Medication Discrepancies Detected`,
         message: `${criticalCount} critical medication discrepancies found during reconciliation. Immediate review required.`,
-        status: 'active',
-        requires_action: true,
-        related_record_id: reconciliation.id
+        status: 'active'
       });
     }
 

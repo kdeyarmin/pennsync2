@@ -51,7 +51,7 @@ export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
   // Fetch available training modules
   const { data: allModules = [] } = useQuery({
     queryKey: ['training-modules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
     initialData: []
   });
 

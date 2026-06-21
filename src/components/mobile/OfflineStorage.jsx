@@ -11,6 +11,10 @@ const PENDING_VISITS_KEY = OFFLINE_KEYS.PENN_PENDING_VISITS;
 const PENDING_UPDATES_KEY = OFFLINE_KEYS.PENN_PENDING_UPDATES;
 const SYNC_ERRORS_KEY = OFFLINE_KEYS.PENN_SYNC_ERRORS;
 const SYNC_STATUS_KEY = OFFLINE_KEYS.PENN_SYNC_STATUS;
+// Shared offline_->real id map (same key the offline/OfflineSyncService uses) so a
+// queued update against an offline visit id can be retargeted to the real server id
+// once the visit itself has synced — otherwise Visit.update('offline_...') 404s.
+const ID_MAP_KEY = OFFLINE_KEYS.ID_MAP;
 
 class OfflineStorage {
   constructor() {
@@ -429,11 +433,15 @@ class OfflineStorage {
 
           // Sync the visit
           if (visit.id.startsWith('offline_')) {
-            await base44.entities.Visit.create(dataToSync);
+            // Capture the real server id so queued updates that reference this
+            // offline visit id (saveUpdate('offline_...')) can be retargeted to
+            // the real record instead of 404ing on the placeholder id.
+            const created = await base44.entities.Visit.create(dataToSync);
+            this.setIdMapping(visit.id, created?.id);
           } else {
             await base44.entities.Visit.update(visit.data.id, dataToSync);
           }
-          
+
           this.markVisitSynced(visit.id);
           successCount++;
           
@@ -451,7 +459,15 @@ class OfflineStorage {
       
       for (const update of pendingUpdates) {
         try {
-          await base44.entities.Visit.update(update.visitId, update.data);
+          // An update may target an offline visit id; resolve it to the real
+          // server id (set when that visit synced, possibly this same run since
+          // visits are processed first). If the visit hasn't synced yet there's
+          // no mapping, so leave the update pending rather than 404 on 'offline_'.
+          const realVisitId = this.resolveId(update.visitId);
+          if (!realVisitId) {
+            continue;
+          }
+          await base44.entities.Visit.update(realVisitId, update.data);
           this.markUpdateSynced(update.visitId, update.timestamp);
           successCount++;
         } catch (error) {
@@ -516,10 +532,40 @@ class OfflineStorage {
 
   markVisitSynced(visitId) {
     const pending = this.getPendingVisits();
-    const updated = pending.map(v => 
+    const updated = pending.map(v =>
       v.id === visitId ? { ...v, synced: true } : v
     );
     localStorage.setItem(PENDING_VISITS_KEY, JSON.stringify(updated));
+  }
+
+  // ── offline_ -> real server id mapping ──────────────────────────────────────
+  getIdMap() {
+    try {
+      const data = localStorage.getItem(ID_MAP_KEY);
+      return data ? JSON.parse(data) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  // Record that an offline placeholder id now maps to a real server id.
+  setIdMapping(offlineId, realId) {
+    if (!offlineId || !realId) return;
+    try {
+      const map = this.getIdMap();
+      map[offlineId] = realId;
+      localStorage.setItem(ID_MAP_KEY, JSON.stringify(map));
+    } catch (error) {
+      console.error('Failed to persist offline id mapping:', error);
+    }
+  }
+
+  // Resolve a possibly-offline id to its real server id. Non-offline ids pass
+  // through unchanged; an unsynced offline id with no mapping yet returns null.
+  resolveId(id) {
+    if (typeof id !== 'string' || !id.startsWith('offline_')) return id;
+    const map = this.getIdMap();
+    return map[id] || null;
   }
 
   markUpdateSynced(visitId, timestamp) {

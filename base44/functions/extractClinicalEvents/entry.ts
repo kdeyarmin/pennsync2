@@ -68,11 +68,39 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
             items: {
               type: "object",
               properties: {
-                event_type: { type: "string" },
+                event_type: {
+                  type: "string",
+                  enum: [
+                    "medication_change",
+                    "medication_started",
+                    "medication_stopped",
+                    "physician_appointment",
+                    "hospitalization",
+                    "er_visit",
+                    "fall",
+                    "wound_new",
+                    "wound_change",
+                    "lab_result",
+                    "symptom_new",
+                    "symptom_resolved",
+                    "vital_change",
+                    "cognitive_change",
+                    "functional_change",
+                    "pain_change",
+                    "infection",
+                    "surgery",
+                    "therapy_change",
+                    "dme_ordered",
+                    "other"
+                  ]
+                },
                 event_title: { type: "string" },
                 event_description: { type: "string" },
                 structured_data: { type: "object" },
-                severity: { type: "string" },
+                severity: {
+                  type: "string",
+                  enum: ["low", "medium", "high", "critical"]
+                },
                 requires_followup: { type: "boolean" },
                 followup_notes: { type: "string" },
                 source_text: { type: "string" },
@@ -85,9 +113,24 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
       }
     });
 
+    // Allowed ClinicalEvent enums; coerce any AI value outside these sets to a
+    // safe default so ClinicalEvent.create won't reject the record.
+    const ALLOWED_EVENT_TYPES = new Set([
+      'medication_change', 'medication_started', 'medication_stopped',
+      'physician_appointment', 'hospitalization', 'er_visit', 'fall',
+      'wound_new', 'wound_change', 'lab_result', 'symptom_new',
+      'symptom_resolved', 'vital_change', 'cognitive_change',
+      'functional_change', 'pain_change', 'infection', 'surgery',
+      'therapy_change', 'dme_ordered', 'other'
+    ]);
+    const ALLOWED_SEVERITIES = new Set(['low', 'medium', 'high', 'critical']);
+
     // Save extracted events to database with text anchors
     const savedEvents = [];
     for (const event of result.events || []) {
+      // Coerce out-of-enum AI values to safe defaults before persisting
+      event.event_type = ALLOWED_EVENT_TYPES.has(event.event_type) ? event.event_type : 'other';
+      event.severity = ALLOWED_SEVERITIES.has(event.severity) ? event.severity : 'medium';
       // Find text position in source document
       let text_anchor_start = null;
       let text_anchor_end = null;

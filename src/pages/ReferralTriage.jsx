@@ -31,12 +31,20 @@ export default function ReferralTriage() {
 
     try {
       // Create patient from triage analysis
+      // phone, address, emergency_contact_name and emergency_contact_phone are
+      // required on the Patient entity but are rarely present in triage output.
+      // Fall back to clearly-marked placeholders so the create succeeds; staff
+      // complete these during admission.
       const patientData = {
         first_name: lastAnalysis.patient_name?.split(' ')[0] || 'Unknown',
         last_name: lastAnalysis.patient_name?.split(' ').slice(1).join(' ') || '',
         date_of_birth: lastAnalysis.date_of_birth === 'Not provided' ? null : lastAnalysis.date_of_birth,
         primary_diagnosis: lastAnalysis.primary_diagnosis,
         secondary_diagnoses: lastAnalysis.secondary_diagnoses || [],
+        phone: lastAnalysis.phone || 'Not provided on referral',
+        address: lastAnalysis.address || 'Not provided on referral',
+        emergency_contact_name: lastAnalysis.emergency_contact_name || 'Not provided on referral',
+        emergency_contact_phone: lastAnalysis.emergency_contact_phone || 'Not provided on referral',
         status: 'active',
         care_type: 'home_health',
         clinical_notes: lastAnalysis.clinical_summary,
@@ -60,6 +68,9 @@ export default function ReferralTriage() {
       }
 
       // Create a referral intake task
+      const dueTimeframe = lastAnalysis.urgency_level === 'CRITICAL' ? '24_hours' : 'this_week';
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + (dueTimeframe === '24_hours' ? 1 : 7));
       await base44.entities.Task.create({
         title: `Admission Setup: ${lastAnalysis.patient_name}`,
         description: `Complete admission assessment and reconcile medications. Urgency: ${lastAnalysis.urgency_level}`,
@@ -67,7 +78,8 @@ export default function ReferralTriage() {
         priority: lastAnalysis.urgency_level === 'CRITICAL' ? 'high' : 'medium',
         status: 'pending',
         assigned_to: currentUser?.email,
-        due_timeframe: lastAnalysis.urgency_level === 'CRITICAL' ? '24_hours' : 'this_week',
+        due_timeframe: dueTimeframe,
+        due_date: dueDate.toISOString().split('T')[0],
       });
 
       setShowCreatePatient(false);

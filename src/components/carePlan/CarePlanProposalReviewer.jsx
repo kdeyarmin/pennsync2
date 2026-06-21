@@ -10,6 +10,7 @@ import {
   TrendingUp, FileText, Activity, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 
 export default function CarePlanProposalReviewer({ patientId = null, compact = false }) {
@@ -76,15 +77,14 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
 
         await base44.entities.CarePlan.update(proposal.care_plan_id, {
           interventions: updatedInterventions,
-          goals: updatedGoals,
-          updated_by: currentUser.email
+          goal: updatedGoals
         });
       } else if (implementNow && !proposal.care_plan_id) {
         // Create new care plan
         await base44.entities.CarePlan.create({
           patient_id: proposal.patient_id,
           interventions: proposal.proposed_interventions,
-          goals: proposal.proposed_goals,
+          goal: proposal.proposed_goals,
           status: 'active',
           created_by: currentUser.email
         });
@@ -97,6 +97,11 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
       queryClient.invalidateQueries({ queryKey: ['activeCarePlans'] });
       setReviewingProposal(null);
       setNurseNotes("");
+    },
+    onError: (error) => {
+      console.error('Error approving care plan proposal:', error);
+      toast.error("Failed to approve proposal. Please try again.");
+      setReviewingProposal(null);
     },
   });
 
@@ -116,6 +121,11 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
       setReviewingProposal(null);
       setNurseNotes("");
       setRejectionReason("");
+    },
+    onError: (error) => {
+      console.error('Error rejecting care plan proposal:', error);
+      toast.error("Failed to reject proposal. Please try again.");
+      setReviewingProposal(null);
     },
   });
 

@@ -1,21 +1,42 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Award, Download, CheckCircle2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { getAccessToken } from "@base44/sdk";
+import { appParams } from "@/lib/app-params";
 
 export default function CompletionCertificate({ completion, module, userName }) {
   const handleDownload = async () => {
     try {
-      const response = await base44.functions.invoke('generateTrainingCertificate', {
-        nurse_name: userName,
-        module_title: module.title,
-        completion_date: completion.completion_date,
-        score: completion.score,
-        certificate_id: completion.id
-      });
+      // generateTrainingCertificate streams raw PDF bytes. base44.functions.invoke
+      // routes through axios with a JSON responseType, which decodes/corrupts the
+      // binary body. POST to the same function endpoint and read it as a blob so
+      // the bytes stay intact.
+      const { serverUrl, appId, token } = appParams;
+      const accessToken = token || getAccessToken();
+      const response = await fetch(
+        `${serverUrl}/api/apps/${appId}/functions/generateTrainingCertificate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-App-Id': String(appId),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+          },
+          body: JSON.stringify({
+            nurse_name: userName,
+            module_title: module.title,
+            completion_date: completion.completion_date,
+            score: completion.score,
+            certificate_id: completion.id
+          })
+        }
+      );
 
-      // Create blob and download
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      if (!response.ok) {
+        throw new Error(`Certificate request failed (${response.status})`);
+      }
+
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -59,7 +80,7 @@ export default function CompletionCertificate({ completion, module, userName }) 
             )}
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">Certificate ID:</span>
-              <span className="font-mono text-xs">{completion.id.slice(0, 8)}</span>
+              <span className="font-mono text-xs">{completion.id?.slice(0, 8) || 'N/A'}</span>
             </div>
           </div>
 

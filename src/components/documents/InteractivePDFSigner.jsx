@@ -256,18 +256,33 @@ export default function InteractivePDFSigner({
       // Update DocumentSignature status
       if (patientId && response.data.signed_pdf_url) {
         try {
+          const signerEmail = (await base44.auth.me()).email;
+          const signedAt = new Date().toISOString();
           const existingDocs = await base44.entities.DocumentSignature.filter({
             patient_id: patientId,
-            original_pdf_url: pdfUrl,
+            document_url: pdfUrl,
             status: 'pending'
           });
-          
+
           if (existingDocs.length > 0) {
-            await base44.entities.DocumentSignature.update(existingDocs[0].id, {
+            const doc = existingDocs[0];
+            const existingSigners = Array.isArray(doc.signers) ? doc.signers : [];
+            // Record the signature inside the signers[] array (schema shape);
+            // there are no flat signed_at/signed_by fields.
+            const updatedSigners = existingSigners.length > 0
+              ? existingSigners.map((s) => ({ ...s, status: 'completed', signed_date: signedAt }))
+              : [{
+                  email: signerEmail,
+                  role: 'patient',
+                  required: true,
+                  status: 'completed',
+                  signed_date: signedAt,
+                }];
+            await base44.entities.DocumentSignature.update(doc.id, {
               signed_pdf_url: response.data.signed_pdf_url,
-              status: 'signed',
-              signed_at: new Date().toISOString(),
-              signed_by: (await base44.auth.me()).email
+              status: 'completed',
+              completed_date: signedAt,
+              signers: updatedSigners,
             });
           }
         } catch (err) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +47,8 @@ export default function MicroLearningModule({
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [progressRecord, setProgressRecord] = useState(null);
+
+  const setQuizError = (message) => toast.error(message);
 
   useEffect(() => {
     if (skillGap) {
@@ -171,9 +174,14 @@ Return JSON:
   };
 
   const handleQuizSubmit = () => {
-    if (!moduleContent?.quiz?.questions) return;
-    
-    const results = moduleContent.quiz.questions.map((q, idx) => ({
+    const questions = moduleContent?.quiz?.questions;
+    // Guard against an empty/missing quiz so we never compute 0/0 = NaN.
+    if (!Array.isArray(questions) || questions.length === 0) {
+      setQuizError('The quiz could not be generated. Please retry the module.');
+      return;
+    }
+
+    const results = questions.map((q, idx) => ({
       question: q.question,
       userAnswer: quizAnswers[idx],
       correctAnswer: q.correct_answer,
@@ -239,21 +247,36 @@ Return JSON:
 
   const completeModule = async () => {
     const timeSpent = Math.round((Date.now() - startTime) / 60000);
-    const finalScore = quizResults?.score || 0;
+    // The quiz is one optional component of the module. Only let the quiz score
+    // drive pass/fail when the quiz was actually taken; if it was skipped, the
+    // module is still considered complete (we don't fabricate a 0 that would
+    // wrongly flag it for review).
+    const quizTaken = quizResults != null && typeof quizResults.score === 'number';
+    const finalScore = quizTaken ? quizResults.score : null;
+    const passed = quizTaken ? finalScore >= 80 : true;
+    const status = passed ? 'completed' : 'needs_review';
 
     if (progressRecord) {
-      await base44.entities.MicroLearningProgress.update(progressRecord.id, {
-        status: finalScore >= 70 ? 'completed' : 'needs_review',
-        score: finalScore,
-        time_spent_minutes: timeSpent
-      });
+      try {
+        const updatePayload = {
+          status,
+          time_spent_minutes: timeSpent
+        };
+        // Only persist a score when one was actually computed (avoid NaN/0 noise).
+        if (quizTaken) updatePayload.score = finalScore;
+        await base44.entities.MicroLearningProgress.update(progressRecord.id, updatePayload);
+      } catch (error) {
+        console.error("Error saving module progress:", error);
+        toast.error("Could not save your progress. Please try again.");
+        return;
+      }
     }
 
     onComplete?.({
       skill_area: skillGap.area,
       score: finalScore,
       time_spent: timeSpent,
-      passed: finalScore >= 70
+      passed
     });
   };
 
@@ -424,11 +447,11 @@ Return JSON:
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className={`p-6 rounded-lg text-center ${quizResults.score >= 70 ? 'bg-green-50' : 'bg-yellow-50'}`}>
-                    <Award className={`w-12 h-12 mx-auto mb-2 ${quizResults.score >= 70 ? 'text-green-600' : 'text-yellow-600'}`} />
+                  <div className={`p-6 rounded-lg text-center ${quizResults.score >= 80 ? 'bg-green-50' : 'bg-yellow-50'}`}>
+                    <Award className={`w-12 h-12 mx-auto mb-2 ${quizResults.score >= 80 ? 'text-green-600' : 'text-yellow-600'}`} />
                     <p className="text-3xl font-bold">{quizResults.score}%</p>
-                    <p className={quizResults.score >= 70 ? 'text-green-700' : 'text-yellow-700'}>
-                      {quizResults.score >= 70 ? 'Great job! You passed!' : 'Keep learning - you can retry!'}
+                    <p className={quizResults.score >= 80 ? 'text-green-700' : 'text-yellow-700'}>
+                      {quizResults.score >= 80 ? 'Great job! You passed!' : 'Keep learning - you can retry!'}
                     </p>
                   </div>
 
@@ -453,9 +476,9 @@ Return JSON:
                     </Card>
                   ))}
 
-                  {quizResults.score < 70 && (
-                    <Button 
-                      variant="outline" 
+                  {quizResults.score < 80 && (
+                    <Button
+                      variant="outline"
                       onClick={() => {
                         setQuizAnswers({});
                         setQuizResults(null);
