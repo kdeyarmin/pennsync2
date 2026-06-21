@@ -48,6 +48,10 @@ Deno.serve(async (req) => {
       
       try {
         await base44.asServiceRole.entities.User.update(user.id, {
+          // Apply the admin-provided name from the invitation so invited users
+          // start with their real name (not an email-derived placeholder).
+          // Fall back to whatever the signup already set so we never wipe a name.
+          full_name: invitation.full_name || user.full_name,
           role: invitation.role,
           care_scope: invitation.care_scope,
           phone: invitation.phone,

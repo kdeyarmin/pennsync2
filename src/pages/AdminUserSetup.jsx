@@ -23,6 +23,7 @@ import { toast } from "sonner";
 export default function AdminUserSetup() {
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteFullName, setInviteFullName] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
 
   const { data: currentUser } = useQuery({
@@ -38,12 +39,13 @@ export default function AdminUserSetup() {
   });
 
   const inviteUserMutation = useMutation({
-    mutationFn: async ({ email, role }) => {
-      return await base44.functions.invoke('createUserWithTempPassword', { email, full_name: email.split('@')[0], role });
+    mutationFn: async ({ email, full_name, role }) => {
+      return await base44.functions.invoke('createUserWithTempPassword', { email, full_name, role });
     },
     onSuccess: () => {
       toast.success(`Invitation sent to ${inviteEmail}. They will be auto-approved when they sign up.`);
       setInviteEmail("");
+      setInviteFullName("");
       setInviteRole("user");
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
@@ -61,7 +63,11 @@ export default function AdminUserSetup() {
       toast.error("Please enter a valid email address");
       return;
     }
-    inviteUserMutation.mutate({ email: inviteEmail, role: inviteRole });
+    if (!inviteFullName.trim()) {
+      toast.error("Please enter the user's full name");
+      return;
+    }
+    inviteUserMutation.mutate({ email: inviteEmail, full_name: inviteFullName.trim(), role: inviteRole });
   };
 
   const isAdmin = currentUser?.role === 'admin';
@@ -100,6 +106,17 @@ export default function AdminUserSetup() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="full_name">Full Name</Label>
+              <Input
+                id="full_name"
+                type="text"
+                placeholder="e.g. Kevin Deyarmin"
+                value={inviteFullName}
+                onChange={(e) => setInviteFullName(e.target.value)}
+                className="mt-1"
+              />
+            </div>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="md:col-span-2">
                 <Label htmlFor="email">Email Address</Label>
