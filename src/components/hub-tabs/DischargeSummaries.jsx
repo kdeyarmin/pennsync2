@@ -12,7 +12,7 @@ import {
   Clock, Send
 } from 'lucide-react';
 
-import DischargeSummaryWorkflow from '../components/discharge/DischargeSummaryWorkflow';
+import DischargeSummaryWorkflow from '@/components/discharge/DischargeSummaryWorkflow';
 
 export default function DischargeSummaries() {
   const queryClient = useQueryClient();

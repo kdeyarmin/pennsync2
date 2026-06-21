@@ -13,8 +13,8 @@ import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 
-const OfflineVisitDocumentation = lazy(() => import("@/pages/OfflineVisitDocumentation"));
-const OfflineDocumentation = lazy(() => import("@/pages/OfflineDocumentation"));
+const OfflineVisitDocumentation = lazy(() => import("@/components/hub-tabs/OfflineVisitDocumentation"));
+const OfflineDocumentation = lazy(() => import("@/components/hub-tabs/OfflineDocumentation"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired offline pages redirect to the right tab.

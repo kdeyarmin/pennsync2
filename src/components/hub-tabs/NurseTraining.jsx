@@ -16,15 +16,15 @@ import {
   RefreshCw,
   Zap
 } from "lucide-react";
-import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
-import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
-import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
-import DetailedDeficitReport from "../components/training/DetailedDeficitReport";
-import OnboardingTracker from "../components/training/OnboardingTracker";
-import TrainingModuleViewer from "../components/training/TrainingModuleViewer";
-import PersonalizedLearningPath from "../components/training/PersonalizedLearningPath";
-import TrainingLibrary from "../components/training/TrainingLibrary";
-import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import InteractiveDocumentationScenarios from "@/components/training/InteractiveDocumentationScenarios";
+import AIComplianceQuizGenerator from "@/components/training/AIComplianceQuizGenerator";
+import NurseLearningDashboard from "@/components/training/NurseLearningDashboard";
+import DetailedDeficitReport from "@/components/training/DetailedDeficitReport";
+import OnboardingTracker from "@/components/training/OnboardingTracker";
+import TrainingModuleViewer from "@/components/training/TrainingModuleViewer";
+import PersonalizedLearningPath from "@/components/training/PersonalizedLearningPath";
+import TrainingLibrary from "@/components/training/TrainingLibrary";
+import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 
 export default function NurseTraining() {
   const [activeTab, setActiveTab] = useState("onboarding");

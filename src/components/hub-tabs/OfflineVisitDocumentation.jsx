@@ -13,8 +13,8 @@ import {
   ArrowLeft,
   CheckCircle2
 } from 'lucide-react';
-import OfflineVisitNoteCapture from '../components/offline/OfflineVisitNoteCapture';
-import OfflineSyncService, { useOfflineSync } from '../components/offline/OfflineSyncService';
+import OfflineVisitNoteCapture from '@/components/offline/OfflineVisitNoteCapture';
+import OfflineSyncService, { useOfflineSync } from '@/components/offline/OfflineSyncService';
 
 export default function OfflineVisitDocumentation() {
   const [searchTerm, setSearchTerm] = useState('');

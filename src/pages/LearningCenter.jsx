@@ -56,11 +56,11 @@ import { getCourseFeedbackSummary } from '@/functions/getCourseFeedbackSummary';
 // Lazy spokes — the former My Learning hub's tabs (My Courses, In-Services,
 // Annual Education, Transcripts) now render inside this canonical Learning Center.
 // /MyLearning and its sub-page paths redirect here (see REDIRECTS in src/routes.jsx).
-const MyTraining = lazy(() => import('@/pages/MyTraining'));
-const MyAnnualEducation = lazy(() => import('@/pages/MyAnnualEducation'));
-const AnnualMandatoryEducation = lazy(() => import('@/pages/AnnualMandatoryEducation'));
-const AnnualEducationTranscript = lazy(() => import('@/pages/AnnualEducationTranscript'));
-const EmployeeTranscript = lazy(() => import('@/pages/EmployeeTranscript'));
+const MyTraining = lazy(() => import('@/components/hub-tabs/MyTraining'));
+const MyAnnualEducation = lazy(() => import('@/components/hub-tabs/MyAnnualEducation'));
+const AnnualMandatoryEducation = lazy(() => import('@/components/hub-tabs/AnnualMandatoryEducation'));
+const AnnualEducationTranscript = lazy(() => import('@/components/hub-tabs/AnnualEducationTranscript'));
+const EmployeeTranscript = lazy(() => import('@/components/hub-tabs/EmployeeTranscript'));
 
 // Tab keys kept in sync with the TabsTrigger values below, so the ?tab= deep-link
 // (and the redirects from the retired My Learning pages) resolve to the right tab.

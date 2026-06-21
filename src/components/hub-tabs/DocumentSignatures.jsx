@@ -19,7 +19,7 @@ import {
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
+import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 
 export default function DocumentSignatures() {
   const navigate = useNavigate();

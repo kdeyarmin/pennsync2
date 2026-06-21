@@ -32,7 +32,7 @@ import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 
 // Lazy spoke — the former Nurse Training (documentation skills) page is now a tab.
-const NurseTraining = lazy(() => import("@/pages/NurseTraining"));
+const NurseTraining = lazy(() => import("@/components/hub-tabs/NurseTraining"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired Nurse Training page redirects to the right tab.

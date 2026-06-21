@@ -27,7 +27,7 @@ import {
   Zap,
   Download,
 } from "lucide-react";
-import GranularComplianceGapAnalyzer from "../components/compliance/GranularComplianceGapAnalyzer";
+import GranularComplianceGapAnalyzer from "@/components/compliance/GranularComplianceGapAnalyzer";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
 

@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import EmptyState from '@/components/ui/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SearchablePatientSelect from '@/components/ui/SearchablePatientSelect';
-import OfflineSyncService from '../components/offline/OfflineSyncService';
-import OfflineVisitDocumentation from '../components/offline/OfflineVisitDocumentation';
+import OfflineSyncService from '@/components/offline/OfflineSyncService';
+import OfflineVisitDocumentation from '@/components/offline/OfflineVisitDocumentation';
 import { FileText, Upload, AlertCircle, Info, UserSearch } from 'lucide-react';
 
 export default function OfflineDocumentation() {

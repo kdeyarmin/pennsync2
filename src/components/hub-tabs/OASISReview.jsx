@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
-import OASISComparisonView from "../components/oasis/OASISComparisonView";
-import OASISApprovalWorkflow from "../components/oasis/OASISApprovalWorkflow";
+import OASISComparisonView from "@/components/oasis/OASISComparisonView";
+import OASISApprovalWorkflow from "@/components/oasis/OASISApprovalWorkflow";
 
 export default function OASISReview() {
   const queryClient = useQueryClient();

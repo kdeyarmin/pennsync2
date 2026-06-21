@@ -15,7 +15,7 @@ import OASISComplianceReport from "@/components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementReport";
 import KPIDashboard from "@/components/reports/KPIDashboard";
 
-const AdminReportsCenter = lazy(() => import("@/pages/AdminReportsCenter"));
+const AdminReportsCenter = lazy(() => import("@/components/hub-tabs/AdminReportsCenter"));
 // Performance Analytics (documentation time / AI utilization / quality, with
 // per-user drill-down and export) now renders as the "perf-dashboard" tab here.
 // /AnalyticsDashboard redirects in (see REDIRECTS in src/routes.jsx).
