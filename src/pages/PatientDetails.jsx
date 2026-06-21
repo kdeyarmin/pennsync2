@@ -64,6 +64,8 @@ export default function PatientDetails() {
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [showOASISPrompt, setShowOASISPrompt] = useState(false);
   const [oasisTriggerVisit, setOasisTriggerVisit] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [aiToolsTab, setAiToolsTab] = useState("analysis");
   const [isDocumentUploaderOpen, setIsDocumentUploaderOpen] = useState(false);
   const [newVisit, setNewVisit] = useState({
     visit_date: format(new Date(), 'yyyy-MM-dd'),
@@ -267,7 +269,7 @@ export default function PatientDetails() {
       )}
 
       {/* Main Patient Tabs */}
-      <Tabs defaultValue="overview" className="mb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-1 scrollbar-hide">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
             {[
@@ -548,7 +550,7 @@ export default function PatientDetails() {
 
         {/* AI Tools Tab */}
         <TabsContent value="ai-tools" className="space-y-6">
-          <Tabs defaultValue="analysis" className="w-full">
+          <Tabs value={aiToolsTab} onValueChange={setAiToolsTab} className="w-full">
             <div className="overflow-x-auto scrollbar-hide">
               <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
                 <TabsTrigger value="analysis" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Analysis</TabsTrigger>
@@ -808,7 +810,12 @@ export default function PatientDetails() {
                   size="sm"
                   className="bg-navy-600 hover:bg-navy-700"
                   onClick={() => {
+                    // Take the user to the AI Tools → Documentation tab, where
+                    // AIGeneratedOASISAssessment renders for this trigger visit.
                     setShowOASISPrompt(false);
+                    setActiveTab("ai-tools");
+                    setAiToolsTab("documentation");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                 >
                   <ClipboardList className="w-4 h-4 mr-1" />

@@ -29,7 +29,19 @@ Deno.serve(async (req) => {
     const sr = base44.asServiceRole.entities;
     const today = todayEastern();
 
-    if (user.role === 'admin') {
+    // Agency-wide view for any administrator tier: the agency `admin` role, an
+    // agency_admin/super_admin account_type, or the designated platform owner.
+    // (Mirrors lib/roles.js getRoleView — kept inline since Deno functions can't
+    // import frontend modules.) Without the account_type/owner checks a super
+    // admin who isn't yet role:'admin' would incorrectly get the nurse view.
+    const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
+    const isAdmin =
+      user.role === 'admin' ||
+      user.account_type === 'agency_admin' ||
+      user.account_type === 'super_admin' ||
+      String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL;
+
+    if (isAdmin) {
       const [patients, visits, carePlans, incidents] = await Promise.all([
         sr.Patient.filter({ status: 'active' }, '-updated_date', 100),
         sr.Visit.filter({ visit_date: today }, '-visit_time'),

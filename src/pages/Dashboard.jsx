@@ -222,29 +222,36 @@ export default function Dashboard() {
       {/* Admin Announcements */}
       <AnnouncementsWidget />
 
-      {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip). */}
+      {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip).
+          The first three deep-link into their domain so the metrics are actionable. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        <StatCard
-          label="Today's Visits"
-          value={visits.filter(v => v.status === 'scheduled').length}
-          sub={`${visits.filter(v => v.status === 'completed').length} completed`}
-          icon={Calendar}
-          tone="emerald"
-        />
-        <StatCard
-          label="Active Care Plans"
-          value={carePlans.length}
-          sub={`${patients.length} patients`}
-          icon={Target}
-          tone="navy"
-        />
-        <StatCard
-          label="Note Enhancements"
-          value={noteConversions.length}
-          sub="AI-assisted"
-          icon={FileText}
-          tone="slate"
-        />
+        <Link to="/ClinicalDocumentation" className="block">
+          <StatCard
+            label="Today's Visits"
+            value={visits.filter(v => v.status === 'scheduled').length}
+            sub={`${visits.filter(v => v.status === 'completed').length} completed`}
+            icon={Calendar}
+            tone="emerald"
+          />
+        </Link>
+        <Link to="/CarePlanManagement" className="block">
+          <StatCard
+            label="Active Care Plans"
+            value={carePlans.length}
+            sub={`${patients.length} patients`}
+            icon={Target}
+            tone="navy"
+          />
+        </Link>
+        <Link to="/SmartNoteAssistant" className="block">
+          <StatCard
+            label="Note Enhancements"
+            value={noteConversions.length}
+            sub="AI-assisted"
+            icon={FileText}
+            tone="slate"
+          />
+        </Link>
         <StatCard
           label="Time Saved"
           value={stats.timeSavedDisplay}

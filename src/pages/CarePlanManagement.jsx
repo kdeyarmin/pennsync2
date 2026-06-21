@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AICarePlanSuggestionEngine from "../components/carePlan/AICarePlanSuggestionEngine";
@@ -91,21 +91,31 @@ export default function CarePlanManagement() {
 
   const myPatientIds = [...new Set(myVisits.map(v => v.patient_id))];
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['myPatients', myPatientIds],
-    queryFn: async () => {
-      if (myPatientIds.length === 0) return [];
-      const allPatients = await base44.entities.Patient.list();
-      return allPatients.filter(p => myPatientIds.includes(p.id));
-    },
-    enabled: myPatientIds.length > 0,
-    initialData: [],
-  });
-
   // Fetch all care plans
   const { data: carePlans = [], isLoading } = useQuery({
     queryKey: ['allCarePlans'],
     queryFn: () => base44.entities.CarePlan.list('-created_date', 500),
+    initialData: [],
+  });
+
+  // Load patients for BOTH the user's charted patients AND every patient that
+  // has a care plan in the list. Previously only charted patients were loaded,
+  // so any care plan whose patient the user hadn't charted on was silently
+  // dropped from the grouped view (getPatient() returned undefined). Union the
+  // two id sets so no plan disappears.
+  const visiblePatientIds = useMemo(
+    () => [...new Set([...myPatientIds, ...carePlans.map(cp => cp.patient_id)])].filter(Boolean),
+    [myPatientIds, carePlans]
+  );
+
+  const { data: patients = [] } = useQuery({
+    queryKey: ['carePlanPatients', visiblePatientIds],
+    queryFn: async () => {
+      if (visiblePatientIds.length === 0) return [];
+      const allPatients = await base44.entities.Patient.list();
+      return allPatients.filter(p => visiblePatientIds.includes(p.id));
+    },
+    enabled: visiblePatientIds.length > 0,
     initialData: [],
   });
 
