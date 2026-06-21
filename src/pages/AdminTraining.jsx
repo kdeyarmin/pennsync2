@@ -1,12 +1,9 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import EmptyState from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3 } from "lucide-react";
+import { BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import EducatorReadinessPanel from "@/components/learning/EducatorReadinessPanel";
@@ -27,7 +24,6 @@ const isManager = (user) =>
   /manager|director|supervisor|lead/i.test(user?.job_title || "");
 
 export default function AdminTraining() {
-  const [selectedPlan, setSelectedPlan] = useState(null);
   const navigate = useNavigate();
 
   const { data: currentUser, isLoading: userLoading } = useQuery({
@@ -67,22 +63,6 @@ export default function AdminTraining() {
     queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 500),
     initialData: [],
     enabled: hasAccess,
-  });
-
-  const { data: plans = [] } = useQuery({
-    queryKey: ['learning-plans'],
-    queryFn: () => base44.entities.LearningPlan.list('-created_date', 50),
-    initialData: [],
-    enabled: hasAccess,
-  });
-
-  const { data: enrollments = [] } = useQuery({
-    queryKey: ['enrollments', selectedPlan?.id],
-    queryFn: () => selectedPlan ? base44.entities.PlanEnrollment.filter({
-      plan_id: selectedPlan.id
-    }, '-enrolled_at') : Promise.resolve([]),
-    initialData: [],
-    enabled: !!selectedPlan,
   });
 
   const teamMembers = useMemo(() => {
@@ -219,10 +199,6 @@ export default function AdminTraining() {
             <TabsTrigger value="learning-plans" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               Learning Plans
             </TabsTrigger>
-            <TabsTrigger value="enrollments" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <Users className="w-4 h-4 mr-2" />
-              Enrollments
-            </TabsTrigger>
             <TabsTrigger value="ai-inservices" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Sparkles className="w-4 h-4 mr-2" />
               AI In-Services
@@ -253,69 +229,6 @@ export default function AdminTraining() {
 
         <TabsContent value="learning-plans">
           <LearningPlanManager />
-        </TabsContent>
-
-        <TabsContent value="enrollments">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <h3 className="font-semibold mb-3 text-lg">Learning Plans</h3>
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {plans.map((plan) => (
-                  <Card
-                    key={plan.id}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
-                      selectedPlan?.id === plan.id ? 'border-indigo-600 bg-indigo-50 border-2' : ''
-                    }`}
-                    onClick={() => setSelectedPlan(plan)}
-                  >
-                    <CardContent className="p-4">
-                      <p className="font-medium text-sm">{plan.name}</p>
-                      <p className="text-xs text-slate-600 mt-1">{plan.year}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            <div className="lg:col-span-2">
-              {selectedPlan ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{selectedPlan.name} - Enrollments</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {enrollments.length > 0 ? (
-                      <div className="space-y-3">
-                        {enrollments.map((enrollment) => (
-                          <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">{enrollment.user_name}</p>
-                              <p className="text-xs text-slate-600">{enrollment.user_id}</p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {enrollment.courses_completed}/{enrollment.courses_total} courses completed
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <Badge className={
-                                enrollment.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                              }>
-                                {enrollment.status}
-                              </Badge>
-                              <p className="text-sm font-semibold text-slate-700">{enrollment.progress_percentage}%</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-center text-slate-600 py-8">No enrollments yet</p>
-                    )}
-                  </CardContent>
-                </Card>
-              ) : (
-                <EmptyState icon={Users} title="No learning plan selected" description="Select a learning plan to view its enrollments." />
-              )}
-            </div>
-          </div>
         </TabsContent>
 
         <TabsContent value="ai-inservices">
