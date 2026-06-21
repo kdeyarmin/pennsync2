@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * submitSignerSignature — the ONLY authorized path for an external signer to
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       requiredSigners.every((s) => s?.status === 'completed' || s?.signed_date);
     const rowStatus = allSigned ? 'completed' : 'in_progress';
 
-    const updatePayload: Record<string, unknown> = {
+    const updatePayload = {
       status: rowStatus,
       signers: updatedSigners,
     };
