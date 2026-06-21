@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { PDFDocument, rgb } from 'npm:pdf-lib@1.17.1';
 
 // Parse a "#RRGGBB" string into a pdf-lib color, defaulting to black. A missing

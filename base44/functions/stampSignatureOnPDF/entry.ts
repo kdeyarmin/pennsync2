@@ -8,14 +8,14 @@
  * Returns: { file_url: string }
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { PDFDocument, rgb } from 'npm:pdf-lib@1.17.1';
 
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
 // storage host(s). (Does not stop DNS rebinding — pair with the allowlist.)
-function isSafeFetchUrl(raw: string): boolean {
-  let u: URL;
+function isSafeFetchUrl(raw) {
+  let u;
   try { u = new URL(String(raw)); } catch { return false; }
   if (u.protocol !== 'https:') return false;
   const host = u.hostname.toLowerCase();
