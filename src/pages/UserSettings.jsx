@@ -349,15 +349,6 @@ export default function UserSettings() {
                 />
                 <p className="mt-1 text-xs text-slate-500">This is the name shown in your dashboard greeting and across the app.</p>
               </div>
-              <div className="flex justify-end">
-                <Button onClick={handleSaveProfile} disabled={isSavingProfile} className="min-h-[44px]">
-                  {isSavingProfile ? (
-                    <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
-                  ) : (
-                    <><Save className="w-4 h-4 mr-2" /> Save Profile</>
-                  )}
-                </Button>
-              </div>
               <div>
                 <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
                 <Input
@@ -392,6 +383,15 @@ export default function UserSettings() {
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex justify-end pt-2 border-t">
+                <Button onClick={handleSaveProfile} disabled={isSavingProfile} className="min-h-[44px] bg-blue-600 hover:bg-blue-700">
+                  {isSavingProfile ? (
+                    <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                  ) : (
+                    <><Save className="w-4 h-4 mr-2" /> Save Profile Information</>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
