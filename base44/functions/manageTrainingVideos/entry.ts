@@ -62,11 +62,30 @@ async function createVideo(script: string, title: string, avatarId?: string, voi
   return result.data?.video_id;
 }
 
+// Run async work with bounded concurrency so starting/polling many jobs stays
+// fast and predictable without flooding the provider.
+async function runChunked<T>(items: T[], size: number, fn: (item: T) => Promise<void>) {
+  for (let i = 0; i < items.length; i += size) {
+    await Promise.all(items.slice(i, i + size).map(fn));
+  }
+}
+
+// A module with a real video_url has a usable video regardless of how it was
+// produced (e.g. the older generateTrainingVideo path that didn't stamp
+// video_status, which schema-defaults to the truthy string "none"). An
+// in-flight job still reports "processing".
+function effectiveStatus(m: Record<string, unknown>): string {
+  if (m.video_status === 'processing') return 'processing';
+  if (m.video_url) return 'completed';
+  if (m.video_status === 'failed') return 'failed';
+  return 'none';
+}
+
 const view = (m: Record<string, unknown>) => ({
   module_id: m.id,
   title: m.title,
   order_index: Number(m.order_index) || 0,
-  video_status: m.video_status || (m.video_url ? 'completed' : 'none'),
+  video_status: effectiveStatus(m),
   video_url: m.video_url || null,
   video_thumbnail_url: m.video_thumbnail_url || null,
   video_duration_seconds: m.video_duration_seconds || null,
@@ -97,10 +116,10 @@ Deno.serve(async (req) => {
     // ── STATUS: poll each in-flight job once, finalize finished modules ──────
     if (action === 'status') {
       if (HEYGEN_API_KEY) {
-        for (const m of modules) {
-          if (m.video_status !== 'processing' || !m.video_job_id) continue;
+        const processing = modules.filter((m) => m.video_status === 'processing' && m.video_job_id);
+        await runChunked(processing, 5, async (m) => {
           try {
-            const r = await heygen(`/v1/video_status.get?video_id=${m.video_job_id}`, 'GET');
+            const r = await heygen(`/v1/video_status.get?video_id=${encodeURIComponent(String(m.video_job_id))}`, 'GET');
             const d = (r.data || {}) as Record<string, unknown>;
             if (d.status === 'completed') {
               const patch = {
@@ -120,7 +139,7 @@ Deno.serve(async (req) => {
           } catch (_e) {
             // transient poll error — keep processing, try again next poll
           }
-        }
+        });
       }
       return Response.json({ heygen_configured: !!HEYGEN_API_KEY, modules: modules.map(view) });
     }
@@ -130,8 +149,16 @@ Deno.serve(async (req) => {
       if (!HEYGEN_API_KEY) {
         return Response.json({ error: 'HeyGen API key not configured', heygen_configured: false }, { status: 400 });
       }
+      // Course-level "start" only fills in lessons that don't already have a
+      // video — so the UI's "Generate N missing" never burns credits or pushes
+      // ready lessons back to processing. "regenerate" (or an explicit single
+      // module) rebuilds regardless.
+      const targets = (action === 'start' && !module_id)
+        ? modules.filter((m) => effectiveStatus(m) !== 'completed')
+        : modules;
+
       let started = 0;
-      for (const m of modules) {
+      await runChunked(targets, 4, async (m) => {
         try {
           const script = buildNarrationScript(String(m.title), (m.content_json || {}) as Record<string, unknown>);
           const videoId = await createVideo(script, `${m.title} - Training Video`, avatar_id, voice_id);
@@ -148,7 +175,7 @@ Deno.serve(async (req) => {
           m.video_status = 'failed';
           m.video_error = e.message;
         }
-      }
+      });
 
       await svc.TrainingAuditLog.create({
         actor_id: user.email,
@@ -156,7 +183,7 @@ Deno.serve(async (req) => {
         action: 'videos_generated',
         entity_type: course_id ? 'TrainingCourse' : 'TrainingModule',
         entity_id: course_id || module_id,
-        after_json: { mode: action, started, targeted: modules.length },
+        after_json: { mode: action, started, targeted: targets.length },
         severity: 'info',
       });
 

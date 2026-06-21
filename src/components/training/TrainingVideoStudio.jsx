@@ -127,13 +127,15 @@ export default function TrainingVideoStudio() {
             </div>
             {selectedCourseId && (
               <Button
-                onClick={() => startMutation.mutate({ course_id: selectedCourseId })}
+                onClick={() => startMutation.mutate({ course_id: selectedCourseId, action: missingCount > 0 ? "start" : "regenerate" })}
                 disabled={!heygenConfigured || startMutation.isPending || anyProcessing || modules.length === 0}
               >
                 {startMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Starting…</>
+                ) : missingCount === 0 ? (
+                  <><RefreshCw className="w-4 h-4 mr-2" />Regenerate all</>
                 ) : (
-                  <><Sparkles className="w-4 h-4 mr-2" />{missingCount > 0 && missingCount < modules.length ? `Generate ${missingCount} missing` : "Generate all"}</>
+                  <><Sparkles className="w-4 h-4 mr-2" />{missingCount < modules.length ? `Generate ${missingCount} missing` : "Generate all"}</>
                 )}
               </Button>
             )}
@@ -233,7 +235,7 @@ export default function TrainingVideoStudio() {
                         size="sm"
                         variant={m.video_status === "completed" ? "outline" : "default"}
                         disabled={!heygenConfigured || busy || startMutation.isPending}
-                        onClick={() => startMutation.mutate({ module_id: m.module_id })}
+                        onClick={() => startMutation.mutate({ module_id: m.module_id, action: m.video_status === "completed" ? "regenerate" : "start" })}
                       >
                         {m.video_status === "completed" ? (
                           <><RefreshCw className="w-3.5 h-3.5 mr-1.5" />Regenerate</>

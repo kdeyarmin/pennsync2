@@ -164,6 +164,8 @@ Deno.serve(async (req) => {
         video_url: result.video_url,
         video_thumbnail_url: result.thumbnail_url,
         video_duration_seconds: result.duration,
+        video_status: 'completed',
+        video_generated_at: new Date().toISOString(),
         type: 'video',
       });
 
@@ -206,6 +208,8 @@ Deno.serve(async (req) => {
             video_url: videoResult.video_url,
             video_thumbnail_url: videoResult.thumbnail_url,
             video_duration_seconds: videoResult.duration,
+            video_status: 'completed',
+            video_generated_at: new Date().toISOString(),
             type: 'video',
           });
 
