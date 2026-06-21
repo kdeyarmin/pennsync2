@@ -115,8 +115,19 @@ Goal: documenting a visit should be a single, clear choice between **Smart Note*
   `PatientDetails`, `ComplianceAlertAggregator`, and `TemplateLibrary`'s "Use in Visit"
   repointed to the hub; removed from the sidebar and the mobile back-button list.
   **Tradeoff (accepted):** the hub selects the patient/visit itself, so the old
-  `?visitId` binding and DocumentVisit's vitals/template/offline extras are not carried
+  `?visitId` binding and DocumentVisit's template-prefill/offline extras are not carried
   over. The page file remains on disk, so the change is reversible.
+- **Vitals restored** in the Smart Note flow (`SmartNoteAssistant`): a structured
+  `VitalSignsForm` (canonical `vital_signs` shape — temp, BP, HR, resp rate, O2, pain)
+  is captured in step 1 and saved onto the Visit (`Visit.create`/`update` and the
+  offline `CREATE_VISIT` queue), so vitals reach the chart, vitals trends, and
+  critical-vitals escalation just as Document Visit did. Vitals reset on patient switch
+  and on reset, so one patient's readings never carry onto another's chart.
+  - Scope note: the **Visit Scribe (audio)** path enhances a transcribed note via
+    `UnifiedDocumentReview` and is not currently passed a patient/save target, so it has
+    no Visit to attach structured vitals to (spoken vitals flow into the narrative).
+    Adding structured vitals there would require giving that path its own patient
+    selection + save — a separate follow-up.
 
 ## Analytics AI-cost cleanup (done)
 

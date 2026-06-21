@@ -13,6 +13,7 @@ import SmartNoteHeader from "../components/smartNote/SmartNoteHeader";
 import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
 import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
+import VitalSignsForm from "../components/visit/VitalSignsForm";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
 import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
@@ -68,6 +69,10 @@ export default function SmartNoteAssistant() {
   const [visitType, setVisitType] = useState("routine_visit");
   const visitDate = todayEastern();
   const [note, setNote] = useState("");
+  // Structured vital signs (canonical vital_signs shape) saved onto the visit so
+  // they reach the chart, trends, and escalation — restoring the capture the
+  // retired Document Visit page provided.
+  const [vitals, setVitals] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
@@ -199,6 +204,9 @@ export default function SmartNoteAssistant() {
     const prev = prevPatientRef.current;
     if (prev === patientId) return;
     prevPatientRef.current = patientId;
+    // Vitals are per-visit, not part of the draft store — clear them on a patient
+    // switch so one patient's readings never carry onto another's chart.
+    setVitals({});
     let incoming = null;
     const saved = sessionStorage.getItem(draftKeyFor(patientId));
     if (saved) {
@@ -342,7 +350,7 @@ export default function SmartNoteAssistant() {
       // `__audit` is meta the drain peels off to also create a ComplianceAudit so
       // offline-documented visits aren't invisible to the compliance dashboards;
       // it is stripped before Visit.create (older queue items simply lack it).
-      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured, ...reportingFields, __audit: { nurse_email: currentUser.email, ...auditFields } });
+      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, vital_signs: vitals, ...structured, ...reportingFields, __audit: { nurse_email: currentUser.email, ...auditFields } });
       toast.success("Saved offline. Will sync when reconnected.");
       logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
       return;
@@ -358,7 +366,7 @@ export default function SmartNoteAssistant() {
         history[history.length - 1] = { ...history[history.length - 1], note: finalText, compliance_score: coverageScore };
       }
       await Promise.all([
-        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured, ...reportingFields }),
+        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, vital_signs: vitals, ...structured, ...reportingFields }),
         base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
         // Keep the audit in step with the edit — a re-save that resolves a conflict
         // must clear the stale `critical` status/issues, not leave them behind.
@@ -371,7 +379,7 @@ export default function SmartNoteAssistant() {
     const visit = await base44.entities.Visit.create({
       patient_id: patientId, visit_date: visitDate, visit_type: visitType,
       status: "completed", nurse_notes: finalText, raw_transcription: note,
-      compliance_score: coverageScore, ...structured, ...reportingFields,
+      compliance_score: coverageScore, vital_signs: vitals, ...structured, ...reportingFields,
     });
     setSavedVisitId(visit.id);
 
@@ -438,6 +446,7 @@ export default function SmartNoteAssistant() {
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
+    setVitals({});
     clearDraft(patientIdRef.current);
   };
 
@@ -620,6 +629,10 @@ export default function SmartNoteAssistant() {
                   </span>
                 </div>
               )}
+
+              {/* Structured vitals — saved to the visit's vital_signs (feeds the
+                  chart, vitals trends, and critical-vitals escalation). */}
+              <VitalSignsForm vitalSigns={vitals} onChange={setVitals} />
 
               <NoteTemplateSelector currentVisitType={visitType} onSelect={(content, type) => {
                 setNote(content); setVisitType(type);
