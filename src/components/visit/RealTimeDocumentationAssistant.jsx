@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,8 @@ export default function RealTimeDocumentationAssistant({
   const [complianceScore, setComplianceScore] = useState(null);
 
   // Debounced analysis function
-  const analyzeNote = useCallback(
-    debounce(async (content) => {
+  const analyzeNote = useMemo(
+    () => debounce(async (content) => {
       if (!content || content.length < 50) {
         setSuggestions([]);
         setComplianceScore(null);
@@ -113,6 +113,7 @@ Return as JSON:
     }, 1500),
     [visitType, diagnosis, patient, vitalSigns]
   );
+
 
   useEffect(() => {
     analyzeNote(noteContent);

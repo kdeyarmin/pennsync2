@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -38,13 +38,7 @@ export default function PDGMDocumentationImpactAnalyzer({
 
   const isAdmin = currentUser?.role === 'admin';
 
-  useEffect(() => {
-    if (noteContent && noteContent.length > 100) {
-      analyzeImpact();
-    }
-  }, [noteContent, diagnosis]);
-
-  const analyzeImpact = debounce(async () => {
+  const analyzeImpact = useMemo(() => debounce(async () => {
     setIsAnalyzing(true);
     try {
       const result = await invokeLLM({
@@ -188,7 +182,13 @@ Return JSON with detailed analysis and actionable recommendations.
       console.error("Error analyzing PDGM impact:", error);
     }
     setIsAnalyzing(false);
-  }, 2000);
+  }, 2000), [noteContent, diagnosis, patientData, vitalSigns, carePlans]);
+
+  useEffect(() => {
+    if (noteContent && noteContent.length > 100) {
+      analyzeImpact();
+    }
+  }, [noteContent, diagnosis, analyzeImpact]);
 
   const handleApplyOptimization = (action) => {
     if (onApplySuggestion && action.text_to_add) {

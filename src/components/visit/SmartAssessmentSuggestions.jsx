@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,21 +17,7 @@ export default function SmartAssessmentSuggestions({
   const [dismissedSuggestions, setDismissedSuggestions] = useState([]);
   const [lastAnalyzedText, setLastAnalyzedText] = useState("");
 
-  useEffect(() => {
-    // Only analyze if narrative has changed significantly (more than 50 characters)
-    if (narrativeText && narrativeText.length > 50 && 
-        Math.abs(narrativeText.length - lastAnalyzedText.length) > 50) {
-      
-      // Debounce the analysis
-      const timer = setTimeout(() => {
-        analyzeAndSuggest();
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [narrativeText]);
-
-  const analyzeAndSuggest = async () => {
+  const analyzeAndSuggest = useCallback(async () => {
     setIsAnalyzing(true);
     
     try {
@@ -110,7 +96,21 @@ Generate the suggestions now:`;
     }
     
     setIsAnalyzing(false);
-  };
+  }, [patient, vitalSigns, narrativeText, dismissedSuggestions]);
+
+  useEffect(() => {
+    // Only analyze if narrative has changed significantly (more than 50 characters)
+    if (narrativeText && narrativeText.length > 50 &&
+        Math.abs(narrativeText.length - lastAnalyzedText.length) > 50) {
+
+      // Debounce the analysis
+      const timer = setTimeout(() => {
+        analyzeAndSuggest();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [narrativeText, lastAnalyzedText.length, analyzeAndSuggest]);
 
   const handleAddSuggestion = (suggestion) => {
     onAddSuggestion(suggestion.suggestion);

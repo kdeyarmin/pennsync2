@@ -37,13 +37,7 @@ export default function ProactiveClinicalTaskGenerator({
   const [dismissedTasks, setDismissedTasks] = useState(() => new Set());
   const [creatingTasks, setCreatingTasks] = useState(false);
 
-  React.useEffect(() => {
-    if (autoAnalyze && patientId && suggestedTasks.length === 0 && !analyzing) {
-      handleAnalyze();
-    }
-  }, [autoAnalyze, patientId]);
-
-  const handleAnalyze = async () => {
+  const handleAnalyze = React.useCallback(async () => {
     setAnalyzing(true);
     try {
       const response = await base44.functions.invoke('analyzeAndGenerateClinicalTasks', {
@@ -67,7 +61,13 @@ export default function ProactiveClinicalTaskGenerator({
       alert('Failed to analyze patient data. Please try again.');
     }
     setAnalyzing(false);
-  };
+  }, [patientId]);
+
+  React.useEffect(() => {
+    if (autoAnalyze && patientId && suggestedTasks.length === 0 && !analyzing) {
+      handleAnalyze();
+    }
+  }, [autoAnalyze, patientId, suggestedTasks.length, analyzing, handleAnalyze]);
 
   const handleApproveTask = async (task) => {
     try {

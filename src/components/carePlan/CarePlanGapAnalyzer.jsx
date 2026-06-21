@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,7 @@ export default function CarePlanGapAnalyzer({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 
-  useEffect(() => {
-    if (autoAnalyze && diagnosis) {
-      analyzeCarePlanGaps();
-    }
-  }, [autoAnalyze, patientId]);
-
-  const analyzeCarePlanGaps = async () => {
+  const analyzeCarePlanGaps = useCallback(async () => {
     if (!diagnosis) return;
 
     setIsAnalyzing(true);
@@ -151,7 +145,13 @@ Return comprehensive analysis including:
       setAnalysis({ error: error.message });
     }
     setIsAnalyzing(false);
-  };
+  }, [carePlans, diagnosis, patientData, recentVisits]);
+
+  useEffect(() => {
+    if (autoAnalyze && diagnosis) {
+      analyzeCarePlanGaps();
+    }
+  }, [autoAnalyze, patientId, analyzeCarePlanGaps, diagnosis]);
 
   return (
     <Card className="border-2 border-blue-300">

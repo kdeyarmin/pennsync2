@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
@@ -50,14 +50,7 @@ export default function MicroLearningModule({
 
   const setQuizError = (message) => toast.error(message);
 
-  useEffect(() => {
-    if (skillGap) {
-      generateLearningContent();
-      setStartTime(Date.now());
-    }
-  }, [skillGap]);
-
-  const generateLearningContent = async () => {
+  const generateLearningContent = useCallback(async () => {
     setIsGenerating(true);
     try {
       const result = await invokeLLM({
@@ -171,7 +164,14 @@ Return JSON:
       console.error("Error generating content:", error);
     }
     setIsGenerating(false);
-  };
+  }, [nurseEmail, skillGap]);
+
+  useEffect(() => {
+    if (skillGap) {
+      generateLearningContent();
+      setStartTime(Date.now());
+    }
+  }, [skillGap, generateLearningContent]);
 
   const handleQuizSubmit = () => {
     const questions = moduleContent?.quiz?.questions;

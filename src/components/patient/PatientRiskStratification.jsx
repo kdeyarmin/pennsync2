@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,13 +46,17 @@ export default function PatientRiskStratification({
   const [isExpanded, setIsExpanded] = useState(!compact);
   const [lastCalculated, setLastCalculated] = useState(null);
 
-  useEffect(() => {
-    if (autoCalculate && patient && !riskData) {
-      calculateRisk();
-    }
-  }, [patient?.id]);
+  const calculateAge = useCallback((dob) => {
+    if (!dob) return 'Unknown';
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
+  }, []);
 
-  const calculateRisk = async () => {
+  const calculateRisk = useCallback(async () => {
     if (!patient) return;
 
     setIsCalculating(true);
@@ -179,17 +183,13 @@ Return JSON:
       console.error("Error calculating risk:", error);
     }
     setIsCalculating(false);
-  };
+  }, [patient, visits, carePlans, incidents, onRiskCalculated, calculateAge]);
 
-  const calculateAge = (dob) => {
-    if (!dob) return 'Unknown';
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age;
-  };
+  useEffect(() => {
+    if (autoCalculate && patient && !riskData) {
+      calculateRisk();
+    }
+  }, [patient?.id, autoCalculate, patient, riskData, calculateRisk]);
 
   const getRiskColor = (level) => {
     const colors = {

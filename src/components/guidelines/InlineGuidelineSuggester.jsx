@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,9 +25,9 @@ export default function InlineGuidelineSuggester({
     if (selectedText && selectedText.length > 10) {
       loadContextualGuidelines();
     }
-  }, [selectedText]);
+  }, [selectedText, loadContextualGuidelines]);
 
-  const loadContextualGuidelines = async () => {
+  const loadContextualGuidelines = useCallback(async () => {
     setIsLoading(true);
     try {
       const guidelines = await retrieveRelevantGuidelines({
@@ -44,7 +44,7 @@ export default function InlineGuidelineSuggester({
       console.error('Error loading guidelines:', error);
     }
     setIsLoading(false);
-  };
+  }, [diagnosis, visitType, selectedText]);
 
   if (!selectedText || selectedText.length < 10) return null;
 

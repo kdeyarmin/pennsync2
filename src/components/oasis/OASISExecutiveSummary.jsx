@@ -26,7 +26,7 @@ export default function OASISExecutiveSummary({ analysisResults, pdgmData }) {
       // Don't auto-generate, let user click button
       setIsGenerating(false);
     }
-  }, [analysisResults, pdgmData]);
+  }, [analysisResults, pdgmData, summary, isGenerating]);
 
   const generateExecutiveSummary = async () => {
     setIsGenerating(true);

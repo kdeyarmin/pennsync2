@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,26 @@ export default function OfflineSyncManager() {
   const isSyncingRef = useRef(false);
   const [conflicts, setConflicts] = useState([]);
   const [backgroundSyncEnabled, _setBackgroundSyncEnabled] = useState(true);
+
+  const loadPendingDrafts = useCallback(() => {
+    let drafts = [];
+    try {
+      drafts = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]');
+    } catch (e) {
+      console.warn('Failed to parse offline drafts:', e);
+    }
+    setPendingDrafts(drafts);
+  }, []);
+
+  const loadSyncErrors = useCallback(() => {
+    const errors = offlineStorage.getSyncErrors();
+    setSyncErrors(errors.filter(e => !e.resolved));
+  }, []);
+
+  const loadConflicts = useCallback(() => {
+    const conflicts = offlineStorage.getConflicts();
+    setConflicts(conflicts.filter(c => !c.resolved));
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -76,27 +96,7 @@ export default function OfflineSyncManager() {
       window.removeEventListener('sync-error', handleSyncError);
       clearInterval(interval);
     };
-  }, []);
-
-  const loadPendingDrafts = () => {
-    let drafts = [];
-    try {
-      drafts = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]');
-    } catch (e) {
-      console.warn('Failed to parse offline drafts:', e);
-    }
-    setPendingDrafts(drafts);
-  };
-
-  const loadSyncErrors = () => {
-    const errors = offlineStorage.getSyncErrors();
-    setSyncErrors(errors.filter(e => !e.resolved));
-  };
-
-  const loadConflicts = () => {
-    const conflicts = offlineStorage.getConflicts();
-    setConflicts(conflicts.filter(c => !c.resolved));
-  };
+  }, [loadPendingDrafts, loadSyncErrors, loadConflicts]);
 
   const clearErrors = () => {
     offlineStorage.clearSyncErrors();
@@ -116,20 +116,7 @@ export default function OfflineSyncManager() {
     }
   };
 
-  // Auto-sync when coming online
-  useEffect(() => {
-    if (isOnline && pendingDrafts.length > 0 && !isSyncing) {
-      // Wait 2 seconds to ensure connection is stable. Clear on cleanup so a
-      // flapping connection or an unmount within the window doesn't fire a sync
-      // (and setState) after the effect is torn down.
-      const timer = setTimeout(() => {
-        syncOfflineData();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isOnline]);
-
-  const syncOfflineData = async () => {
+  const syncOfflineData = useCallback(async () => {
     if (!isOnline || pendingDrafts.length === 0) return;
     if (isSyncingRef.current) return; // an overlapping run would duplicate visits
     isSyncingRef.current = true;
@@ -211,7 +198,20 @@ export default function OfflineSyncManager() {
     isSyncingRef.current = false;
     setIsSyncing(false);
     setSyncProgress(0);
-  };
+  }, [isOnline, pendingDrafts, queryClient, loadPendingDrafts]);
+
+  // Auto-sync when coming online
+  useEffect(() => {
+    if (isOnline && pendingDrafts.length > 0 && !isSyncing) {
+      // Wait 2 seconds to ensure connection is stable. Clear on cleanup so a
+      // flapping connection or an unmount within the window doesn't fire a sync
+      // (and setState) after the effect is torn down.
+      const timer = setTimeout(() => {
+        syncOfflineData();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, pendingDrafts.length, isSyncing, syncOfflineData]);
 
   return (
     <Card className={`border-2 ${isOnline ? 'border-green-300' : 'border-orange-300'}`}>

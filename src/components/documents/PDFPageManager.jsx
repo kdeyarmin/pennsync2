@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,9 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
 
   useEffect(() => {
     loadPDFPages();
-  }, [pdfUrl]);
+  }, [loadPDFPages]);
 
-  const loadPDFPages = async () => {
+  const loadPDFPages = useCallback(async () => {
     setIsLoading(true);
     try {
       const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
@@ -47,7 +47,7 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
       toast.error("Failed to load PDF");
       setIsLoading(false);
     }
-  };
+  }, [pdfUrl]);
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;

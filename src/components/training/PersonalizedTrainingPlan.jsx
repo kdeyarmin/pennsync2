@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -208,13 +208,7 @@ export default function PersonalizedTrainingPlan({
   const [expandedModules, setExpandedModules] = useState(new Set());
   const [moduleProgress, _setModuleProgress] = useState({});
 
-  useEffect(() => {
-    if (skillGaps.length > 0) {
-      generatePersonalizedPlan();
-    }
-  }, [skillGaps]);
-
-  const generatePersonalizedPlan = async () => {
+  const generatePersonalizedPlan = useCallback(async () => {
     setIsGenerating(true);
 
     // Build personalized plan based on skill gaps
@@ -257,7 +251,13 @@ export default function PersonalizedTrainingPlan({
 
     setTrainingPlan(plan);
     setIsGenerating(false);
-  };
+  }, [nurseEmail, skillGaps]);
+
+  useEffect(() => {
+    if (skillGaps.length > 0) {
+      generatePersonalizedPlan();
+    }
+  }, [skillGaps, generatePersonalizedPlan]);
 
   const toggleModule = (index) => {
     setExpandedModules(prev => {

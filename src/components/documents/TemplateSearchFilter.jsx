@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,23 +12,23 @@ export default function TemplateSearchFilter({ templates, onFilter }) {
   const categories = [...new Set(templates.map(t => t.template_category))];
   const statuses = ["active", "inactive"];
 
-  const handleFilter = () => {
+  const handleFilter = useCallback(() => {
     const filtered = templates.filter(template => {
       const matchesSearch = template.template_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            template.description?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = !selectedCategory || template.template_category === selectedCategory;
-      const matchesStatus = !selectedStatus || 
+      const matchesStatus = !selectedStatus ||
                            (selectedStatus === "active" ? template.is_active : !template.is_active);
-      
+
       return matchesSearch && matchesCategory && matchesStatus;
     });
 
     onFilter(filtered);
-  };
+  }, [templates, searchQuery, selectedCategory, selectedStatus, onFilter]);
 
   React.useEffect(() => {
     handleFilter();
-  }, [searchQuery, selectedCategory, selectedStatus]);
+  }, [searchQuery, selectedCategory, selectedStatus, handleFilter]);
 
   const clearFilters = () => {
     setSearchQuery("");

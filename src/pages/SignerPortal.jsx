@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { validateSignerToken } from '@/functions/validateSignerToken';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,28 @@ export default function SignerPortal() {
   const [isComplete, setIsComplete] = useState(false);
 
   const token = searchParams.get('token');
+
+  const validateToken = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await validateSignerToken({ token });
+      // functions.invoke returns the full axios response (interceptResponses:false);
+      // the body is under .data. Reading response.valid directly always failed
+      // (undefined), so the portal showed "invalid link" for every valid token.
+      const result = response?.data || response;
+
+      if (result.valid) {
+        setIsValid(true);
+        setPackageData(result);
+      } else {
+        setError(result.error || 'Invalid or expired access link.');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to validate access link.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
 
   // Final signature: the backend single-uses (deactivates) the token, so we must
   // NOT re-validate it (that would 403 → "Access Denied"). Show the completion
@@ -35,29 +57,7 @@ export default function SignerPortal() {
     }
 
     validateToken();
-  }, [token]);
-
-  const validateToken = async () => {
-    try {
-      setIsLoading(true);
-      const response = await validateSignerToken({ token });
-      // functions.invoke returns the full axios response (interceptResponses:false);
-      // the body is under .data. Reading response.valid directly always failed
-      // (undefined), so the portal showed "invalid link" for every valid token.
-      const result = response?.data || response;
-
-      if (result.valid) {
-        setIsValid(true);
-        setPackageData(result);
-      } else {
-        setError(result.error || 'Invalid or expired access link.');
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to validate access link.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [token, validateToken]);
 
   if (isLoading) {
     return (

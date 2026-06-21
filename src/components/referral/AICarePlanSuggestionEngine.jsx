@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,21 +30,15 @@ export default function AICarePlanSuggestionEngine({
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
   }, []);
 
-  const generationStages = [
+  const generationStages = useMemo(() => [
     "Analyzing patient diagnoses and comorbidities...",
     "Evaluating functional limitations and ADLs...",
     "Identifying clinical risk factors...",
     "Formulating evidence-based care plans...",
     "Generating specific interventions..."
-  ];
+  ], []);
 
-  useEffect(() => {
-    if (autoGenerate && referralData && !carePlans.length && !generating) {
-      generateCarePlans();
-    }
-  }, [autoGenerate, referralData]);
-
-  const generateCarePlans = async () => {
+  const generateCarePlans = useCallback(async () => {
     if (!referralData) {
       alert("No referral data available");
       return;
@@ -178,7 +172,13 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
       setGenerating(false);
       setGenerationStage(0);
     }
-  };
+  }, [referralData, oasisData, generationStages, onCarePlansGenerated]);
+
+  useEffect(() => {
+    if (autoGenerate && referralData && !carePlans.length && !generating) {
+      generateCarePlans();
+    }
+  }, [autoGenerate, referralData, carePlans.length, generating, generateCarePlans]);
 
   const handleEditPlan = (index) => {
     setEditingIndex(index);

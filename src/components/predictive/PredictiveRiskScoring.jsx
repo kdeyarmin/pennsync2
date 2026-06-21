@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,32 @@ export default function PredictiveRiskScoring({ patients = [], visits = [], care
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 
-  const analyzePatientRisks = async () => {
+  const calculateVitalTrends = useCallback((visits) => {
+    if (visits.length < 2) return null;
+
+    const trends = {};
+    const latest = visits[0]?.vital_signs;
+    const previous = visits[1]?.vital_signs;
+
+    if (latest && previous) {
+      if (latest.blood_pressure_systolic && previous.blood_pressure_systolic) {
+        const bpChange = latest.blood_pressure_systolic - previous.blood_pressure_systolic;
+        trends.blood_pressure = bpChange > 10 ? 'increasing' : bpChange < -10 ? 'decreasing' : 'stable';
+      }
+      if (latest.weight && previous.weight) {
+        const weightChange = latest.weight - previous.weight;
+        trends.weight = weightChange > 2 ? 'increasing' : weightChange < -2 ? 'decreasing' : 'stable';
+      }
+      if (latest.oxygen_saturation && previous.oxygen_saturation) {
+        const o2Change = latest.oxygen_saturation - previous.oxygen_saturation;
+        trends.oxygen = o2Change < -2 ? 'decreasing' : o2Change > 2 ? 'increasing' : 'stable';
+      }
+    }
+
+    return trends;
+  }, []);
+
+  const analyzePatientRisks = useCallback(async () => {
     if (patients.length === 0) return;
     
     setIsAnalyzing(true);
@@ -165,40 +190,15 @@ Return JSON array:
     } catch (error) {
       console.error("Error analyzing risks:", error);
     }
-    
-    setIsAnalyzing(false);
-  };
 
-  const calculateVitalTrends = (visits) => {
-    if (visits.length < 2) return null;
-    
-    const trends = {};
-    const latest = visits[0]?.vital_signs;
-    const previous = visits[1]?.vital_signs;
-    
-    if (latest && previous) {
-      if (latest.blood_pressure_systolic && previous.blood_pressure_systolic) {
-        const bpChange = latest.blood_pressure_systolic - previous.blood_pressure_systolic;
-        trends.blood_pressure = bpChange > 10 ? 'increasing' : bpChange < -10 ? 'decreasing' : 'stable';
-      }
-      if (latest.weight && previous.weight) {
-        const weightChange = latest.weight - previous.weight;
-        trends.weight = weightChange > 2 ? 'increasing' : weightChange < -2 ? 'decreasing' : 'stable';
-      }
-      if (latest.oxygen_saturation && previous.oxygen_saturation) {
-        const o2Change = latest.oxygen_saturation - previous.oxygen_saturation;
-        trends.oxygen = o2Change < -2 ? 'decreasing' : o2Change > 2 ? 'increasing' : 'stable';
-      }
-    }
-    
-    return trends;
-  };
+    setIsAnalyzing(false);
+  }, [patients, visits, carePlans, incidents, calculateVitalTrends]);
 
   useEffect(() => {
     if (patients.length > 0 && !riskScores.risk_assessments) {
       analyzePatientRisks();
     }
-  }, [patients.length]);
+  }, [patients.length, riskScores.risk_assessments, analyzePatientRisks]);
 
   const getRiskLevelColor = (level) => {
     switch (level) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toCsvRows } from '@/components/admin/csvExport';
 import { Badge } from '@/components/ui/badge';
@@ -23,11 +23,7 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
   const [loading, setLoading] = useState(true);
   const [verificationResults, setVerificationResults] = useState({});
 
-  useEffect(() => {
-    loadSignatures();
-  }, [documentId, documentType]);
-
-  const loadSignatures = async () => {
+  const loadSignatures = useCallback(async () => {
     try {
       const signatureResults = await base44.entities.DocumentSignature.filter({
         document_id: documentId,
@@ -48,7 +44,11 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [documentId, documentType]);
+
+  useEffect(() => {
+    loadSignatures();
+  }, [loadSignatures]);
 
   const exportAuditTrail = async () => {
     try {

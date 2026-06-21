@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,9 +32,9 @@ export default function AIPatientDashboardSummary({
     if (patient) {
       generateSummary();
     }
-  }, [patient?.id]);
+  }, [patient, patient?.id, generateSummary]);
 
-  const generateSummary = async () => {
+  const generateSummary = useCallback(async () => {
     setIsLoading(true);
     try {
       // Get recent visits (last 30 days)
@@ -134,7 +134,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
       console.error("Error generating summary:", error);
     }
     setIsLoading(false);
-  };
+  }, [patient, visits, carePlans, tasks, incidents]);
 
   const getStatusColor = (status) => {
     const colors = {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,13 +32,7 @@ export default function AICarePlanOptimizer({
   const [recommendations, setRecommendations] = useState(null);
   const [dismissedIds, setDismissedIds] = useState(new Set());
 
-  useEffect(() => {
-    if (autoAnalyze && enhancedNote && !recommendations) {
-      analyzeCarePlans();
-    }
-  }, [autoAnalyze, enhancedNote]);
-
-  const analyzeCarePlans = async () => {
+  const analyzeCarePlans = useCallback(async () => {
     if (!enhancedNote) return;
     
     setIsAnalyzing(true);
@@ -145,7 +139,13 @@ Return JSON:
       console.error('Error analyzing care plans:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [enhancedNote, existingCarePlans, recentVisits, diagnosis, patientData]);
+
+  useEffect(() => {
+    if (autoAnalyze && enhancedNote && !recommendations) {
+      analyzeCarePlans();
+    }
+  }, [autoAnalyze, enhancedNote, recommendations, analyzeCarePlans]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

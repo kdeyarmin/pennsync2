@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,17 +37,7 @@ export default function ICD10CodeSuggester({
   const [copied, setCopied] = useState(false);
   const [lastAnalyzedLength, setLastAnalyzedLength] = useState(0);
 
-  // Auto-analyze when narrative changes significantly
-  useEffect(() => {
-    if (narrativeText && narrativeText.length > 100 && narrativeText.length - lastAnalyzedLength > 200) {
-      const timer = setTimeout(() => {
-        analyzeCodes();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [narrativeText]);
-
-  const analyzeCodes = async () => {
+  const analyzeCodes = useCallback(async () => {
     if (!narrativeText || narrativeText.length < 50) return;
     
     setIsAnalyzing(true);
@@ -103,7 +93,17 @@ Return up to 8 relevant codes, prioritizing those with strongest documentation s
       console.error("Error analyzing ICD-10 codes:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [narrativeText, diagnosis, patient]);
+
+  // Auto-analyze when narrative changes significantly
+  useEffect(() => {
+    if (narrativeText && narrativeText.length > 100 && narrativeText.length - lastAnalyzedLength > 200) {
+      const timer = setTimeout(() => {
+        analyzeCodes();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [narrativeText, lastAnalyzedLength, analyzeCodes]);
 
   const searchICD10 = async () => {
     if (!searchTerm || searchTerm.length < 2) return;

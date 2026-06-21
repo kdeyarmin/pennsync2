@@ -72,7 +72,7 @@ export default function EnhancedComplianceAuditor({ onAuditComplete }) {
     if (complianceRules.length > 0 && selectedRules.length === 0) {
       setSelectedRules(complianceRules.map(r => r.id));
     }
-  }, [complianceRules]);
+  }, [complianceRules, selectedRules.length]);
 
   const activeRules = complianceRules.filter(r => 
     selectedRules.includes(r.id) && 

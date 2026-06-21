@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -52,8 +52,16 @@ export default function AITrainingRecommendations({ _userId, userEmail }) {
     queryFn: () => base44.entities.TrainingModule.filter({}),
   });
 
+  const getDueDate = useCallback((timeline) => {
+    const days = timeline.toLowerCase().includes('week') ? 7 :
+                  timeline.toLowerCase().includes('month') ? 30 : 14;
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split('T')[0];
+  }, []);
+
   // Analyze and generate recommendations
-  const analyzeTrainingNeeds = async () => {
+  const analyzeTrainingNeeds = useCallback(async () => {
     setAnalyzing(true);
     try {
       // Get common compliance issues from recent audits
@@ -195,15 +203,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
       console.error("Error analyzing training needs:", error);
     }
     setAnalyzing(false);
-  };
-
-  const getDueDate = (timeline) => {
-    const days = timeline.toLowerCase().includes('week') ? 7 : 
-                  timeline.toLowerCase().includes('month') ? 30 : 14;
-    const date = new Date();
-    date.setDate(date.getDate() + days);
-    return date.toISOString().split('T')[0];
-  };
+  }, [complianceAudits, trainingRecommendations, completedTraining, availableModules, userEmail, queryClient, getDueDate]);
 
   // Mark training as started
   const startTrainingMutation = useMutation({
@@ -230,7 +230,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
     if (userEmail && complianceAudits.length > 0 && !recommendations) {
       analyzeTrainingNeeds();
     }
-  }, [userEmail, complianceAudits.length]);
+  }, [userEmail, complianceAudits.length, recommendations, analyzeTrainingNeeds]);
 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {

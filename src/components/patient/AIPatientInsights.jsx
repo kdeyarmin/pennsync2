@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,13 +28,7 @@ export default function AIPatientInsights({ patient, visits, carePlans, incident
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [insights, setInsights] = useState(null);
 
-  useEffect(() => {
-    if (patient && visits?.length > 0) {
-      analyzePatient();
-    }
-  }, [patient?.id]);
-
-  const analyzePatient = async () => {
+  const analyzePatient = useCallback(async () => {
     setIsAnalyzing(true);
     try {
       const recentVisits = visits.slice(0, 10);
@@ -137,7 +131,13 @@ Be specific and actionable. Use actual data trends.`,
       console.error('Patient insights analysis error:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, visits, incidents, carePlans]);
+
+  useEffect(() => {
+    if (patient && visits?.length > 0) {
+      analyzePatient();
+    }
+  }, [patient?.id, patient, visits?.length, analyzePatient]);
 
   const getRiskColor = (level) => {
     switch (level?.toLowerCase()) {

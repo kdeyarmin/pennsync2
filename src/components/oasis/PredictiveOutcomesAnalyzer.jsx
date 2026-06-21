@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -47,15 +47,66 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
     queryFn: () => base44.entities.OASISUpload.list('-created_date', 100),
   });
 
-  // Auto-predict when data is available
-  useEffect(() => {
-    if (analysisResults && pdgmData && !predictions && !isPredicting && !autoPredict) {
-      setAutoPredict(true);
-      generatePredictions();
-    }
-  }, [analysisResults, pdgmData, patientHistory]);
+  const calculateHistoricalTrends = useCallback((history, _patient) => {
+    if (!history || !history.visits) return null;
 
-  const generatePredictions = async () => {
+    const trends = {
+      visit_count: history.visits?.length || 0,
+      incident_count: history.incidents?.length || 0,
+      hospitalization_count: history.incidents?.filter(i => i.incident_type === 'hospitalized')?.length || 0,
+      fall_count: history.incidents?.filter(i => i.incident_type === 'fall')?.length || 0,
+      active_alerts: history.alerts?.filter(a => a.status === 'active').length || 0,
+      critical_alerts: history.alerts?.filter(a => a.severity === 'critical' && a.status === 'active').length || 0,
+      care_plan_adherence: history.carePlans?.filter(cp => cp.status === 'met').length / (history.carePlans?.length || 1),
+      recommendation_completion_rate: history.recommendations?.filter(r => r.status === 'completed').length / (history.recommendations?.length || 1),
+      avg_visit_gap_days: null,
+      functional_trend: 'unknown'
+    };
+
+    // Calculate average days between visits
+    if (history.visits?.length >= 2) {
+      const sortedVisits = [...history.visits].sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date));
+      let totalGap = 0;
+      for (let i = 1; i < sortedVisits.length; i++) {
+        const gap = (new Date(sortedVisits[i].visit_date) - new Date(sortedVisits[i-1].visit_date)) / (1000 * 60 * 60 * 24);
+        totalGap += gap;
+      }
+      trends.avg_visit_gap_days = Math.round(totalGap / (sortedVisits.length - 1));
+    }
+
+    // Analyze functional trend from OASIS history
+    if (history.oasisData?.length >= 2) {
+      const recent = history.oasisData.slice(0, 2);
+      if (recent[0]?.pdgm_data?.functional_level && recent[1]?.pdgm_data?.functional_level) {
+        const levels = ['low', 'medium', 'high'];
+        const current = levels.indexOf(recent[0].pdgm_data.functional_level);
+        const previous = levels.indexOf(recent[1].pdgm_data.functional_level);
+        trends.functional_trend = current > previous ? 'improving' : current < previous ? 'declining' : 'stable';
+      }
+    }
+
+    return trends;
+  }, []);
+
+  const calculatePopulationBenchmarks = useCallback((population, currentPdgm) => {
+    if (!population || population.length === 0) return null;
+
+    // Filter to similar cases (same clinical group)
+    const similarCases = population.filter(p =>
+      p.pdgm_data?.clinical_group === currentPdgm.clinical_group
+    );
+
+    if (similarCases.length === 0) return null;
+
+    return {
+      similar_case_count: similarCases.length,
+      avg_payment: similarCases.reduce((sum, p) => sum + (p.estimated_payment || 0), 0) / similarCases.length,
+      avg_compliance: similarCases.reduce((sum, p) => sum + (p.scores?.compliance || 0), 0) / similarCases.length,
+      clinical_group: currentPdgm.clinical_group
+    };
+  }, []);
+
+  const generatePredictions = useCallback(async () => {
     if (!analysisResults || !pdgmData) return;
 
     setIsPredicting(true);
@@ -322,66 +373,15 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
       setPredictions({ error: "Failed to generate predictions. Please try again." });
     }
     setIsPredicting(false);
-  };
+  }, [analysisResults, calculateHistoricalTrends, calculatePopulationBenchmarks, onPredictionsComplete, patient, patientHistory, pdgmData, populationData]);
 
-  const calculateHistoricalTrends = (history, _patient) => {
-    if (!history || !history.visits) return null;
-
-    const trends = {
-      visit_count: history.visits?.length || 0,
-      incident_count: history.incidents?.length || 0,
-      hospitalization_count: history.incidents?.filter(i => i.incident_type === 'hospitalized')?.length || 0,
-      fall_count: history.incidents?.filter(i => i.incident_type === 'fall')?.length || 0,
-      active_alerts: history.alerts?.filter(a => a.status === 'active').length || 0,
-      critical_alerts: history.alerts?.filter(a => a.severity === 'critical' && a.status === 'active').length || 0,
-      care_plan_adherence: history.carePlans?.filter(cp => cp.status === 'met').length / (history.carePlans?.length || 1),
-      recommendation_completion_rate: history.recommendations?.filter(r => r.status === 'completed').length / (history.recommendations?.length || 1),
-      avg_visit_gap_days: null,
-      functional_trend: 'unknown'
-    };
-
-    // Calculate average days between visits
-    if (history.visits?.length >= 2) {
-      const sortedVisits = [...history.visits].sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date));
-      let totalGap = 0;
-      for (let i = 1; i < sortedVisits.length; i++) {
-        const gap = (new Date(sortedVisits[i].visit_date) - new Date(sortedVisits[i-1].visit_date)) / (1000 * 60 * 60 * 24);
-        totalGap += gap;
-      }
-      trends.avg_visit_gap_days = Math.round(totalGap / (sortedVisits.length - 1));
+  // Auto-predict when data is available
+  useEffect(() => {
+    if (analysisResults && pdgmData && !predictions && !isPredicting && !autoPredict) {
+      setAutoPredict(true);
+      generatePredictions();
     }
-
-    // Analyze functional trend from OASIS history
-    if (history.oasisData?.length >= 2) {
-      const recent = history.oasisData.slice(0, 2);
-      if (recent[0]?.pdgm_data?.functional_level && recent[1]?.pdgm_data?.functional_level) {
-        const levels = ['low', 'medium', 'high'];
-        const current = levels.indexOf(recent[0].pdgm_data.functional_level);
-        const previous = levels.indexOf(recent[1].pdgm_data.functional_level);
-        trends.functional_trend = current > previous ? 'improving' : current < previous ? 'declining' : 'stable';
-      }
-    }
-
-    return trends;
-  };
-
-  const calculatePopulationBenchmarks = (population, currentPdgm) => {
-    if (!population || population.length === 0) return null;
-
-    // Filter to similar cases (same clinical group)
-    const similarCases = population.filter(p => 
-      p.pdgm_data?.clinical_group === currentPdgm.clinical_group
-    );
-
-    if (similarCases.length === 0) return null;
-
-    return {
-      similar_case_count: similarCases.length,
-      avg_payment: similarCases.reduce((sum, p) => sum + (p.estimated_payment || 0), 0) / similarCases.length,
-      avg_compliance: similarCases.reduce((sum, p) => sum + (p.scores?.compliance || 0), 0) / similarCases.length,
-      clinical_group: currentPdgm.clinical_group
-    };
-  };
+  }, [analysisResults, pdgmData, patientHistory, autoPredict, generatePredictions, isPredicting, predictions]);
 
   const getRiskColor = (level) => {
     switch (level) {

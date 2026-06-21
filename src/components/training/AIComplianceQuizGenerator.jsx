@@ -75,7 +75,7 @@ export default function AIComplianceQuizGenerator({ nurseEmail, _recommendations
         generateQuiz(topic);
       }
     }
-  }, [initialTopicId]);
+  }, [initialTopicId, quiz]);
 
   const savePracticeMutation = useMutation({
     mutationFn: async (practiceData) => {

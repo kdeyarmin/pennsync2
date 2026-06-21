@@ -29,7 +29,7 @@ export default function RichTextNoteEditor({
       setEditableText(value);
     }
     isInternalChange.current = false;
-  }, [value]);
+  }, [value, editableText]);
 
   // Track changes for undo/redo
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function RichTextNoteEditor({
       setHistoryIndex(newHistory.length - 1);
       lastValueRef.current = value;
     }
-  }, [value]);
+  }, [value, history, historyIndex]);
 
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {

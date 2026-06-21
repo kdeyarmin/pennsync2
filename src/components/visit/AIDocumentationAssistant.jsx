@@ -44,7 +44,7 @@ export default function AIDocumentationAssistant({
     if (shouldAutoAnalyze) {
       analyzeDocs();
     }
-  }, [patient?.id, visit?.id]);
+  }, [patient?.id, visit?.id, analyzeDocs, narrativeText, patient, suggestions, visit]);
 
   const analyzeDocs = useCallback(async () => {
     if (!patient || !visit) return;

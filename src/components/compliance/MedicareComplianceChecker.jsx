@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -44,13 +44,7 @@ export default function MedicareComplianceChecker({
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoCheck && noteContent && noteContent.length > 100 && complianceRules.length > 0) {
-      analyzeCompliance();
-    }
-  }, [noteContent, autoCheck, complianceRules]);
-
-  const analyzeCompliance = async () => {
+  const analyzeCompliance = useCallback(async () => {
     if (!noteContent || noteContent.length < 100) return;
 
     setIsAnalyzing(true);
@@ -144,7 +138,13 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
       console.error('Compliance check error:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [noteContent, complianceRules, visitType, diagnosis, nurseType, patientData]);
+
+  useEffect(() => {
+    if (autoCheck && noteContent && noteContent.length > 100 && complianceRules.length > 0) {
+      analyzeCompliance();
+    }
+  }, [noteContent, autoCheck, complianceRules, analyzeCompliance]);
 
   const handleApplyFix = (violation) => {
     onApplyFix?.(violation.compliant_example, violation.rule_name, false);

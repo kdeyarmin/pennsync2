@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,29 +31,21 @@ export default function SkillGapRemediationSection({
   const [completedItems, setCompletedItems] = useState(new Set());
   const [complianceModules, setComplianceModules] = useState([]);
 
-  useEffect(() => {
-    loadDeficitAnalysis();
-  }, [nurseEmail]);
-
-  useEffect(() => {
-    mapComplianceRisksToTraining();
-  }, [complianceRisks, pdgmWarnings]);
-
-  const loadDeficitAnalysis = async () => {
+  const loadDeficitAnalysis = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await analyzeNurseDeficits({ 
-        nurseEmail, 
-        daysPeriod: 30 
+      const response = await analyzeNurseDeficits({
+        nurseEmail,
+        daysPeriod: 30
       });
       setAnalysis(response.data);
     } catch (error) {
       console.error("Error loading deficit analysis:", error);
     }
     setIsLoading(false);
-  };
+  }, [nurseEmail]);
 
-  const mapComplianceRisksToTraining = () => {
+  const mapComplianceRisksToTraining = useCallback(() => {
     const modules = [];
     const riskToTrainingMap = {
       'homebound': { quiz: 'homebound', scenario: 'homebound_justification', priority: 'critical' },
@@ -124,7 +116,15 @@ export default function SkillGapRemediationSection({
     });
 
     setComplianceModules(uniqueModules);
-  };
+  }, [complianceRisks, pdgmWarnings]);
+
+  useEffect(() => {
+    loadDeficitAnalysis();
+  }, [loadDeficitAnalysis]);
+
+  useEffect(() => {
+    mapComplianceRisksToTraining();
+  }, [mapComplianceRisksToTraining]);
 
   const handleScenarioComplete = (scenarioId) => {
     setCompletedItems(prev => new Set([...prev, scenarioId]));

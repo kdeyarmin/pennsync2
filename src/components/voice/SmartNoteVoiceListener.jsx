@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -77,57 +77,7 @@ export default function SmartNoteVoiceListener({
     isListeningRef.current = isListening;
   }, [isListening]);
 
-  useEffect(() => {
-    // Check for Web Speech API support
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.log('Speech recognition not supported');
-      return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event) => {
-      const lastResult = event.results[event.results.length - 1];
-      if (lastResult.isFinal) {
-        const transcript = lastResult[0].transcript.toLowerCase().trim();
-        processCommand(transcript);
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.log('Speech recognition error:', event.error);
-      if (event.error !== 'no-speech') {
-        setIsListening(false);
-      }
-    };
-
-    recognition.onend = () => {
-      // Restart if still meant to be listening (read the ref, not stale state).
-      if (isListeningRef.current && recognitionRef.current) {
-        try {
-          recognitionRef.current.start();
-        } catch (e) {
-          console.log('Recognition restart failed:', e);
-        }
-      }
-    };
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      // Release the mic stream + AudioContext too (previously leaked on unmount).
-      stopAudioCapture();
-    };
-  }, []);
-
-  const processCommand = (transcript) => {
+  const processCommand = useCallback((transcript) => {
     // Check for vital signs
     const bpMatch = transcript.match(/(?:blood pressure|bp)\s*(?:is\s*)?(\d{2,3})\s*(?:over|\/)\s*(\d{2,3})/i);
     if (bpMatch) {
@@ -241,7 +191,57 @@ export default function SmartNoteVoiceListener({
         return;
       }
     }
-  };
+  }, [onVitalChange, onAction, onPhraseInsert]);
+
+  useEffect(() => {
+    // Check for Web Speech API support
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      console.log('Speech recognition not supported');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      const lastResult = event.results[event.results.length - 1];
+      if (lastResult.isFinal) {
+        const transcript = lastResult[0].transcript.toLowerCase().trim();
+        processCommand(transcript);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.log('Speech recognition error:', event.error);
+      if (event.error !== 'no-speech') {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onend = () => {
+      // Restart if still meant to be listening (read the ref, not stale state).
+      if (isListeningRef.current && recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          console.log('Recognition restart failed:', e);
+        }
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      // Release the mic stream + AudioContext too (previously leaked on unmount).
+      stopAudioCapture();
+    };
+  }, [processCommand]);
 
   const toggleListening = async () => {
     if (isListening) {

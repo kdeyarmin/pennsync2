@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -89,12 +89,14 @@ export default function Telehealth() {
     });
   };
 
-  const handleJoin = async (session) => {
+  const { mutateAsync: updateSessionAsync } = updateSession;
+
+  const handleJoin = useCallback(async (session) => {
     endingRef.current = false;
-    await updateSession.mutateAsync({ id: session.id, data: { status: "active", started_at: new Date().toISOString() } });
+    await updateSessionAsync({ id: session.id, data: { status: "active", started_at: new Date().toISOString() } });
     setActiveSession(session);
     setShowDocumentation(false);
-  };
+  }, [updateSessionAsync]);
 
   const handleDisconnect = async () => {
     if (!activeSession) {
@@ -150,7 +152,7 @@ export default function Telehealth() {
       autoJoinedRef.current = true;
       handleJoin(match);
     }
-  }, [searchParams, sessions, activeSession]);
+  }, [searchParams, sessions, activeSession, handleJoin]);
 
   const upcoming = sessions.filter(s => s.status === "scheduled" || s.status === "active");
   const past = sessions.filter(s => s.status === "completed" || s.status === "cancelled");

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,20 +22,7 @@ export default function ClinicalNoteToOASISMapper({
   const [isMapping, setIsMapping] = useState(false);
   const [mappedFields, setMappedFields] = useState(null);
 
-  // Auto-populate with extracted narrative from OASIS
-  useEffect(() => {
-    if (extractedNarrative && !clinicalNotes) {
-      setClinicalNotes(extractedNarrative);
-    }
-  }, [extractedNarrative]);
-
-  useEffect(() => {
-    if (autoMap && clinicalNotes.length > 100) {
-      performMapping();
-    }
-  }, [autoMap, clinicalNotes]);
-
-  const performMapping = async () => {
+  const performMapping = useCallback(async () => {
     if (!clinicalNotes || clinicalNotes.length < 50) return;
 
     setIsMapping(true);
@@ -123,7 +110,20 @@ Focus on:
       console.error('Mapping error:', error);
     }
     setIsMapping(false);
-  };
+  }, [clinicalNotes, existingOASISData, onMappingComplete]);
+
+  // Auto-populate with extracted narrative from OASIS
+  useEffect(() => {
+    if (extractedNarrative && !clinicalNotes) {
+      setClinicalNotes(extractedNarrative);
+    }
+  }, [extractedNarrative, clinicalNotes]);
+
+  useEffect(() => {
+    if (autoMap && clinicalNotes.length > 100) {
+      performMapping();
+    }
+  }, [autoMap, clinicalNotes, performMapping]);
 
   const handleCopyValue = (value) => {
     navigator.clipboard.writeText(value);

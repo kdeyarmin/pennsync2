@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,39 +42,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
     }
   });
 
-  // Check for pathway triggers when data changes
-  useEffect(() => {
-    if (pdgmData && pathways.length > 0) {
-      checkPathwayTriggers();
-    }
-  }, [pdgmData, pathways]);
-
-  const checkPathwayTriggers = () => {
-    const triggered = [];
-
-    pathways.forEach(pathway => {
-      let isTriggered = false;
-
-      pathway.trigger_conditions?.forEach(condition => {
-        if (evaluateCondition(condition, pdgmData)) {
-          isTriggered = true;
-        }
-      });
-
-      if (isTriggered) {
-        triggered.push(pathway);
-      }
-    });
-
-    setTriggeredPathways(triggered);
-    
-    // Notify parent component
-    if (onPathwaysTriggered) {
-      onPathwaysTriggered(triggered);
-    }
-  };
-
-  const evaluateCondition = (condition, data) => {
+  const evaluateCondition = useCallback((condition, data) => {
     const { type, value, operator } = condition;
     const valueLower = (value || '').toLowerCase();
 
@@ -123,7 +91,39 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
     }
 
     return false;
-  };
+  }, []);
+
+  const checkPathwayTriggers = useCallback(() => {
+    const triggered = [];
+
+    pathways.forEach(pathway => {
+      let isTriggered = false;
+
+      pathway.trigger_conditions?.forEach(condition => {
+        if (evaluateCondition(condition, pdgmData)) {
+          isTriggered = true;
+        }
+      });
+
+      if (isTriggered) {
+        triggered.push(pathway);
+      }
+    });
+
+    setTriggeredPathways(triggered);
+
+    // Notify parent component
+    if (onPathwaysTriggered) {
+      onPathwaysTriggered(triggered);
+    }
+  }, [pathways, pdgmData, onPathwaysTriggered, evaluateCondition]);
+
+  // Check for pathway triggers when data changes
+  useEffect(() => {
+    if (pdgmData && pathways.length > 0) {
+      checkPathwayTriggers();
+    }
+  }, [pdgmData, pathways, checkPathwayTriggers]);
 
   const createPathwayTasks = async (pathway) => {
     if (!pathway.recommended_tasks || pathway.recommended_tasks.length === 0) return;

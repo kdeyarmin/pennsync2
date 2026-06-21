@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,13 +28,7 @@ export default function AutomatedQualityAssurance({
   const [isRunning, setIsRunning] = useState(false);
   const [qaResults, setQaResults] = useState(null);
 
-  useEffect(() => {
-    if (autoRun && oasisData) {
-      runQualityAssurance();
-    }
-  }, [autoRun, oasisData?.id]);
-
-  const runQualityAssurance = async () => {
+  const runQualityAssurance = useCallback(async () => {
     if (!oasisData) return;
 
     setIsRunning(true);
@@ -206,7 +200,13 @@ For each failure, provide:
       console.error('QA check error:', error);
     }
     setIsRunning(false);
-  };
+  }, [oasisData, patientData, clinicalNotes, onQAComplete]);
+
+  useEffect(() => {
+    if (autoRun && oasisData) {
+      runQualityAssurance();
+    }
+  }, [autoRun, oasisData?.id, oasisData, runQualityAssurance]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

@@ -14,11 +14,7 @@ export default function MultiReferralDetector({ fileUrl, onDetectionComplete, on
   const [error, setError] = useState(null);
   const [selectedReferrals, setSelectedReferrals] = useState([]);
 
-  React.useEffect(() => {
-    analyzeFile();
-  }, [fileUrl]);
-
-  const analyzeFile = async () => {
+  const analyzeFile = React.useCallback(async () => {
     setIsAnalyzing(true);
     setError(null);
     try {
@@ -42,7 +38,11 @@ export default function MultiReferralDetector({ fileUrl, onDetectionComplete, on
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [fileUrl]);
+
+  React.useEffect(() => {
+    analyzeFile();
+  }, [fileUrl, analyzeFile]);
 
   if (isAnalyzing) {
     return (

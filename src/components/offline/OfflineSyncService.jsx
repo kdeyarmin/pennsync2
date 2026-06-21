@@ -424,7 +424,7 @@ export default function OfflineSyncService() {
       setQueue(getQueue());
       setConflicts(getConflicts());
     }
-  }, [showDetails]);
+  }, [showDetails, getQueue, getConflicts]);
 
   if (!showDetails && pendingCount === 0 && isOnline) {
     return null; // Hide when nothing to sync

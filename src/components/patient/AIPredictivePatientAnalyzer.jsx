@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -56,13 +56,7 @@ export default function AIPredictivePatientAnalyzer({ patientId, autoAnalyze = f
     enabled: !!patientId
   });
 
-  useEffect(() => {
-    if (autoAnalyze && patient && !analysis && !isAnalyzing) {
-      performAnalysis();
-    }
-  }, [autoAnalyze, patient]);
-
-  const performAnalysis = async () => {
+  const performAnalysis = useCallback(async () => {
     if (!patient) return;
 
     setIsAnalyzing(true);
@@ -280,7 +274,13 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [carePlans, incidents, patient, visits]);
+
+  useEffect(() => {
+    if (autoAnalyze && patient && !analysis && !isAnalyzing) {
+      performAnalysis();
+    }
+  }, [autoAnalyze, patient, analysis, isAnalyzing, performAnalysis]);
 
   const getSeverityColor = (severity) => {
     const severityLower = (severity || '').toLowerCase();

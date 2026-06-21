@@ -74,7 +74,7 @@ export default function Dashboard() {
           user_role: currentUser.role
         });
       }
-    }, [currentUser?.email]);
+    }, [currentUser?.email, currentUser?.role]);
 
   // Core datasets are fetched through a SERVER-SCOPED function so a non-admin's
   // browser only receives their assigned patients' data (admins: agency-wide).
@@ -91,7 +91,7 @@ export default function Dashboard() {
     staleTime: 120000,
     gcTime: 300000,
   });
-  const visits = dashboardData.visits || [];
+  const visits = useMemo(() => dashboardData.visits || [], [dashboardData.visits]);
   const patients = dashboardData.patients || [];
   const carePlans = dashboardData.carePlans || [];
   const incidents = dashboardData.incidents || [];

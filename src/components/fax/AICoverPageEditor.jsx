@@ -34,11 +34,13 @@ export default function AICoverPageEditor({ patientId, documentId, recipientNumb
     }
   });
 
+  const { mutate: doGenerate } = generateMutation;
+
   useEffect(() => {
     if ((patientId || documentId) && recipientNumber && senderNumber) {
-      generateMutation.mutate({});
+      doGenerate({});
     }
-  }, [patientId, documentId, recipientNumber, senderNumber]);
+  }, [patientId, documentId, recipientNumber, senderNumber, doGenerate]);
 
   const handleFieldChange = (path, value) => {
     const keys = path.split('.');

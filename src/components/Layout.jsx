@@ -81,7 +81,7 @@ export default function Layout({ children, currentPageName }) {
       user_agent: navigator.userAgent,
     }).catch((e) => console.warn("Failed to log login activity:", e?.message));
     sessionStorage.setItem(key, 'true');
-  }, [currentUser?.email]);
+  }, [currentUser?.email, currentUser?.full_name, currentUser?.role]);
 
   const { data: messages = [] } = useQuery({
     queryKey: ['unreadMessages', currentUser?.email],
@@ -226,7 +226,7 @@ export default function Layout({ children, currentPageName }) {
     try { await clearCachedPHI(); } catch { /* no-op */ }
     base44.auth.logout();
 
-  }, [currentUser?.email]);
+  }, [currentUser?.email, currentUser?.full_name, currentUser?.role]);
 
   const isActive = useCallback((pageName) => currentPageName === pageName, [currentPageName]);
 

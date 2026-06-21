@@ -65,6 +65,53 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
       });
   }, [pdfUrl]);
 
+  const getAnnotations = useCallback((page) => annotationsRef.current[page] || [], []);
+
+  const drawAnnotation = useCallback((ctx, ann) => {
+    if (ann.type === "stroke") {
+      const { points, color, width } = ann.data;
+      if (!points || points.length < 2) return;
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+    } else if (ann.type === "text") {
+      const { x, y, text, color, size } = ann.data;
+      ctx.font = `${size}px Arial`;
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    } else if (ann.type === "erase") {
+      const { points, width } = ann.data;
+      if (!points || points.length < 2) return;
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(0,0,0,1)";
+      ctx.lineWidth = width * 4;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }, []);
+
+  const redrawAnnotations = useCallback((page) => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    const ctx = overlay.getContext("2d");
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+    const anns = getAnnotations(page);
+    anns.forEach((ann) => drawAnnotation(ctx, ann));
+  }, [getAnnotations, drawAnnotation]);
+
   // Render current page to base canvas
   const renderPage = useCallback(async () => {
     if (!pdfDoc || !canvasRef.current) return;
@@ -100,7 +147,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
     // Redraw saved annotations for this page
     redrawAnnotations(pageNum);
     setIsLoading(false);
-  }, [pdfDoc, pageNum, scale]);
+  }, [pdfDoc, pageNum, scale, redrawAnnotations]);
 
   useEffect(() => {
     renderPage();
@@ -112,56 +159,9 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
     };
   }, [renderPage]);
 
-  const getAnnotations = (page) => annotationsRef.current[page] || [];
-
   const saveAnnotation = (page, annotation) => {
     if (!annotationsRef.current[page]) annotationsRef.current[page] = [];
     annotationsRef.current[page].push(annotation);
-  };
-
-  const redrawAnnotations = (page) => {
-    const overlay = overlayRef.current;
-    if (!overlay) return;
-    const ctx = overlay.getContext("2d");
-    ctx.clearRect(0, 0, overlay.width, overlay.height);
-    const anns = getAnnotations(page);
-    anns.forEach((ann) => drawAnnotation(ctx, ann));
-  };
-
-  const drawAnnotation = (ctx, ann) => {
-    if (ann.type === "stroke") {
-      const { points, color, width } = ann.data;
-      if (!points || points.length < 2) return;
-      ctx.beginPath();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = width;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
-      }
-      ctx.stroke();
-    } else if (ann.type === "text") {
-      const { x, y, text, color, size } = ann.data;
-      ctx.font = `${size}px Arial`;
-      ctx.fillStyle = color;
-      ctx.fillText(text, x, y);
-    } else if (ann.type === "erase") {
-      const { points, width } = ann.data;
-      if (!points || points.length < 2) return;
-      ctx.save();
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.beginPath();
-      ctx.strokeStyle = "rgba(0,0,0,1)";
-      ctx.lineWidth = width * 4;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-      ctx.stroke();
-      ctx.restore();
-    }
   };
 
   const getPos = (e) => {

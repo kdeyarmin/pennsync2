@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,13 +45,26 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
     enabled: !!nurseEmail
   });
 
-  useEffect(() => {
-    if (audits.length > 0 || recommendations.length > 0 || noteConversions.length > 0) {
-      aggregateFeedback();
-    }
-  }, [audits, recommendations, noteConversions]);
+  const categorizeIssue = useCallback((element) => {
+    const elementLower = (element || '').toLowerCase();
+    if (elementLower.includes('homebound')) return 'Homebound Status';
+    if (elementLower.includes('skilled') || elementLower.includes('need')) return 'Skilled Need Justification';
+    if (elementLower.includes('vital') || elementLower.includes('bp') || elementLower.includes('heart')) return 'Vital Signs Documentation';
+    if (elementLower.includes('assessment') || elementLower.includes('finding')) return 'Assessment Documentation';
+    if (elementLower.includes('response') || elementLower.includes('patient')) return 'Patient Response';
+    if (elementLower.includes('plan') || elementLower.includes('goal')) return 'Care Planning';
+    if (elementLower.includes('intervention')) return 'Interventions';
+    if (elementLower.includes('functional') || elementLower.includes('adl')) return 'Functional Status';
+    if (elementLower.includes('medication') || elementLower.includes('med')) return 'Medication Documentation';
+    if (elementLower.includes('communication') || elementLower.includes('family')) return 'Communication';
+    return 'General Documentation';
+  }, []);
 
-  const aggregateFeedback = async () => {
+  const calculatePriority = useCallback((data) => {
+    return (data.severity.critical * 4) + (data.severity.high * 3) + (data.severity.medium * 2) + (data.severity.low * 1) + data.count;
+  }, []);
+
+  const aggregateFeedback = useCallback(async () => {
     setIsAnalyzing(true);
 
     // Aggregate issues from compliance audits
@@ -123,26 +136,13 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
     setAggregatedData(aggregated);
     onTrainingRecommendations?.(skillGaps);
     setIsAnalyzing(false);
-  };
+  }, [audits, recommendations, noteConversions, onTrainingRecommendations, categorizeIssue, calculatePriority]);
 
-  const categorizeIssue = (element) => {
-    const elementLower = (element || '').toLowerCase();
-    if (elementLower.includes('homebound')) return 'Homebound Status';
-    if (elementLower.includes('skilled') || elementLower.includes('need')) return 'Skilled Need Justification';
-    if (elementLower.includes('vital') || elementLower.includes('bp') || elementLower.includes('heart')) return 'Vital Signs Documentation';
-    if (elementLower.includes('assessment') || elementLower.includes('finding')) return 'Assessment Documentation';
-    if (elementLower.includes('response') || elementLower.includes('patient')) return 'Patient Response';
-    if (elementLower.includes('plan') || elementLower.includes('goal')) return 'Care Planning';
-    if (elementLower.includes('intervention')) return 'Interventions';
-    if (elementLower.includes('functional') || elementLower.includes('adl')) return 'Functional Status';
-    if (elementLower.includes('medication') || elementLower.includes('med')) return 'Medication Documentation';
-    if (elementLower.includes('communication') || elementLower.includes('family')) return 'Communication';
-    return 'General Documentation';
-  };
-
-  const calculatePriority = (data) => {
-    return (data.severity.critical * 4) + (data.severity.high * 3) + (data.severity.medium * 2) + (data.severity.low * 1) + data.count;
-  };
+  useEffect(() => {
+    if (audits.length > 0 || recommendations.length > 0 || noteConversions.length > 0) {
+      aggregateFeedback();
+    }
+  }, [audits, recommendations, noteConversions, aggregateFeedback]);
 
   const getSkillRadarData = () => {
     if (!aggregatedData) return [];

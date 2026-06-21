@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,14 +78,7 @@ export default function AIDocumentationQualityAnalyzer({ analysisResults, pdgmDa
   const [activeTab, setActiveTab] = useState("analysis");
   const [copiedExample, setCopiedExample] = useState(null);
 
-  // Auto-analyze when results are available
-  useEffect(() => {
-    if (analysisResults && !qualityAnalysis && !isAnalyzing) {
-      runQualityAnalysis();
-    }
-  }, [analysisResults]);
-
-  const runQualityAnalysis = async () => {
+  const runQualityAnalysis = useCallback(async () => {
     if (!analysisResults) return;
 
     setIsAnalyzing(true);
@@ -212,7 +205,14 @@ Return JSON:
     }
 
     setIsAnalyzing(false);
-  };
+  }, [analysisResults, pdgmData]);
+
+  // Auto-analyze when results are available
+  useEffect(() => {
+    if (analysisResults && !qualityAnalysis && !isAnalyzing) {
+      runQualityAnalysis();
+    }
+  }, [analysisResults, qualityAnalysis, isAnalyzing, runQualityAnalysis]);
 
   const copyToClipboard = (text, exampleKey) => {
     navigator.clipboard.writeText(text);

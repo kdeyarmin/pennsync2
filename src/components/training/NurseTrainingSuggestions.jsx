@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +30,7 @@ export default function NurseTrainingSuggestions({ nurseEmail, compact = false }
     enabled: !!nurseEmail,
   });
 
-  const analyzeAndSuggest = async () => {
+  const analyzeAndSuggest = useCallback(async () => {
     if (recommendations.length === 0) return;
     
     setIsAnalyzing(true);
@@ -83,13 +83,13 @@ export default function NurseTrainingSuggestions({ nurseEmail, compact = false }
 
     setSuggestedModules(sorted);
     setIsAnalyzing(false);
-  };
+  }, [recommendations, compact]);
 
   useEffect(() => {
     if (recommendations.length > 0) {
       analyzeAndSuggest();
     }
-  }, [recommendations]);
+  }, [recommendations, analyzeAndSuggest]);
 
   const getPriorityColor = (priority) => {
     switch (priority) {

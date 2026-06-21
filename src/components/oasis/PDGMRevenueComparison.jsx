@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -394,7 +394,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
       calculateRevenue();
       setHasAutoCalculated(true);
     }
-  }, [pdgmData]);
+  }, [pdgmData, revenueData, isCalculating, hasAutoCalculated, calculateRevenue]);
 
   // Reset when pdgmData changes
   useEffect(() => {
@@ -407,10 +407,10 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
   }, [pdgmData]);
 
   // Debounced What-If calculation
-  const calculateWhatIfRevenue = useCallback(
-    debounce(async (scenarioData) => {
+  const calculateWhatIfRevenue = useMemo(
+    () => debounce(async (scenarioData) => {
       if (!pdgmData || !scenarioData) return;
-      
+
       setIsCalculatingWhatIf(true);
       try {
         const mergedScenario = {
@@ -442,7 +442,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
     calculateWhatIfRevenue(scenarioData);
   };
 
-  const calculateRevenue = async () => {
+  const calculateRevenue = useCallback(async () => {
     if (!pdgmData) return;
 
     setIsCalculating(true);
@@ -483,7 +483,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
             }
 
             setIsCalculating(false);
-          };
+          }, [pdgmData, analysisResults, onRevenueCalculated, onPaymentCalculated]);
 
   const buildCorrectedPdgmData = (original, analysis) => {
     const corrected = JSON.parse(JSON.stringify(original)); // Deep clone

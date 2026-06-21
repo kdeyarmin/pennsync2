@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,11 +26,7 @@ export default function RealTimePatientAlerts({
   const [alerts, setAlerts] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    generateAlerts();
-  }, [patients, visits, carePlans, incidents, currentUser]);
-
-  const generateAlerts = () => {
+  const generateAlerts = useCallback(() => {
     const newAlerts = [];
     const today = new Date();
 
@@ -134,7 +130,11 @@ export default function RealTimePatientAlerts({
     newAlerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 
     setAlerts(newAlerts.slice(0, 10)); // Limit to 10 alerts
-  };
+  }, [patients, visits, carePlans, incidents, currentUser]);
+
+  useEffect(() => {
+    generateAlerts();
+  }, [generateAlerts]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

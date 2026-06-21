@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,14 +43,7 @@ export default function GuidelineReferencePanel({
     initialData: [],
   });
 
-  // Auto-load relevant guidelines based on context
-  useEffect(() => {
-    if (diagnosis || visitType || noteContent) {
-      loadRelevantGuidelines();
-    }
-  }, [diagnosis, visitType]);
-
-  const loadRelevantGuidelines = async () => {
+  const loadRelevantGuidelines = useCallback(async () => {
     setIsLoadingRelevant(true);
     try {
       const relevant = await retrieveRelevantGuidelines({
@@ -64,7 +57,14 @@ export default function GuidelineReferencePanel({
       console.error('Error loading relevant guidelines:', error);
     }
     setIsLoadingRelevant(false);
-  };
+  }, [diagnosis, visitType, noteContent]);
+
+  // Auto-load relevant guidelines based on context
+  useEffect(() => {
+    if (diagnosis || visitType || noteContent) {
+      loadRelevantGuidelines();
+    }
+  }, [diagnosis, visitType, noteContent, loadRelevantGuidelines]);
 
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);

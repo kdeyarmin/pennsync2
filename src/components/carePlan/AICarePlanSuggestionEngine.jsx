@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
@@ -45,13 +45,7 @@ export default function AICarePlanSuggestionEngine({
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoGenerate && diagnosis && !suggestions) {
-      generateSuggestions();
-    }
-  }, [autoGenerate, diagnosis]);
-
-  const generateSuggestions = async () => {
+  const generateSuggestions = useCallback(async () => {
     if (!diagnosis) return;
 
     setIsGenerating(true);
@@ -130,7 +124,13 @@ Return JSON with suggestions array.`,
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [diagnosis, existingCarePlans, patientData, medicareRules, educationMaterials]);
+
+  useEffect(() => {
+    if (autoGenerate && diagnosis && !suggestions) {
+      generateSuggestions();
+    }
+  }, [autoGenerate, diagnosis, suggestions, generateSuggestions]);
 
   const handleAcceptSuggestion = async (suggestion, index) => {
     const targetDate = new Date();

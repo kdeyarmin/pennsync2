@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ArrowRight, HelpCircle, AlertTriangle, ShieldCheck, ShieldAlert, Loader2, Copy, CheckCircle2, Activity, BellRing, ListChecks } from "lucide-react";
@@ -134,23 +134,23 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     setEscalatedKeys(prev => new Set(prev).add(key));
   };
 
-  const computeNotDocumented = () => {
+  const computeNotDocumented = useCallback(() => {
     if (!analysis) return [];
     return analysis.gaps
       .filter(e => e.severity !== "critical" && !answers[e.id]?.trim() && !confirmedNegatives.has(e.id))
       .map(e => e.notDocumentedPhrase);
-  };
+  }, [analysis, answers, confirmedNegatives]);
   // The trend summary, when the nurse opts in, is whitelisted as input: its
   // current values come from the draft and its prior values from the chart note,
   // so it is legitimate source material (not an LLM invention) and must pass the
   // value-guard / grounding rather than be flagged as unverified.
-  const activeTrendSummary = () => (includeTrend && trendSummary ? trendSummary : "");
-  const buildAllowedInput = () => {
+  const activeTrendSummary = useCallback(() => (includeTrend && trendSummary ? trendSummary : ""), [includeTrend, trendSummary]);
+  const buildAllowedInput = useCallback(() => {
     if (!analysis) return "";
     const answerTexts = analysis.required.filter(e => answers[e.id]?.trim()).map(e => answers[e.id].trim());
     const negPhrases = analysis.required.filter(e => confirmedNegatives.has(e.id) && e.standardNegative).map(e => e.standardNegative.phrase);
     return [analysis.normalized, ...answerTexts, ...negPhrases, ...computeNotDocumented(), activeTrendSummary()].filter(Boolean).join(" ");
-  };
+  }, [analysis, answers, confirmedNegatives, computeNotDocumented, activeTrendSummary]);
 
   // Save-ready snapshot the host (e.g. SmartNoteAssistant) persists to the chart.
   const computeResult = (text) => {
@@ -168,7 +168,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     return { finalNote: text, coverageScore, draftScore: analysis.draftScore, presence: analysis.presence, required: analysis.required, answeredIds, confirmedNegativeIds, answers, chartFindings, sustainedTrends, comparisons, acknowledgment };
   };
 
-  const verifyNote = async (text) => {
+  const verifyNote = useCallback(async (text) => {
     const allowed = buildAllowedInput();
     const vg = valueGuard(text, allowed);
     if (!vg.ok) return { ok: false, fix: { values: vg.unverified, sentences: [], offlinePending: false } };
@@ -185,14 +185,14 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       return { ok: true, offline: false };
     }
     return { ok: true, offline: true };
-  };
+  }, [buildAllowedInput, currentUser?.email]);
 
-  const applyVerification = (text, v) => {
+  const applyVerification = useCallback((text, v) => {
     if (!v.ok) { setVerifiedNote(""); setFixRequired(v.fix); return; }
     setVerifiedNote(text);
     setFixRequired(v.offline ? { offlinePending: true } : null);
     onFinalNote?.(text);
-  };
+  }, [onFinalNote]);
 
   const generate = async () => {
     if (!analysis) return;
@@ -269,7 +269,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     };
     window.addEventListener("online", onReconnect);
     return () => window.removeEventListener("online", onReconnect);
-  }, [finalNote, fixRequired]);
+  }, [finalNote, fixRequired, applyVerification, verifyNote]);
 
   const copy = async () => {
     try {

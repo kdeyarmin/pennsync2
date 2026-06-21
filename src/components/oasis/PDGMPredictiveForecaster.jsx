@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -39,14 +39,7 @@ export default function PDGMPredictiveForecaster({ pdgmData, analysisResults, cu
     }
   });
 
-  useEffect(() => {
-    if (pdgmData && analysisResults && !predictions && !isPredicting && !hasAutoPredicted) {
-      generatePredictions();
-      setHasAutoPredicted(true);
-    }
-  }, [pdgmData, analysisResults]);
-
-  const generatePredictions = async () => {
+  const generatePredictions = useCallback(async () => {
     if (!pdgmData || !analysisResults) return;
 
     setIsPredicting(true);
@@ -179,7 +172,14 @@ Return JSON:
     }
 
     setIsPredicting(false);
-  };
+  }, [pdgmData, analysisResults, currentPayment, triggeredPathways, agencySettings]);
+
+  useEffect(() => {
+    if (pdgmData && analysisResults && !predictions && !isPredicting && !hasAutoPredicted) {
+      generatePredictions();
+      setHasAutoPredicted(true);
+    }
+  }, [pdgmData, analysisResults, predictions, isPredicting, hasAutoPredicted, generatePredictions]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);

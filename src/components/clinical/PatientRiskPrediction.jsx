@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,13 +41,7 @@ export default function PatientRiskPrediction({
   const [isExpanded, setIsExpanded] = useState(!compact);
   const [selectedRisk, setSelectedRisk] = useState(null);
 
-  useEffect(() => {
-    if (patient && previousVisits.length > 0) {
-      analyzePatientRisk();
-    }
-  }, [patient?.id]);
-
-  const analyzePatientRisk = async () => {
+  const analyzePatientRisk = useCallback(async () => {
     if (!patient) return;
     
     setIsAnalyzing(true);
@@ -245,7 +239,13 @@ Return JSON:
       console.error('Error analyzing patient risk:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, previousVisits, carePlans, incidents, currentVitals, onAlertGenerated]);
+
+  useEffect(() => {
+    if (patient && previousVisits.length > 0) {
+      analyzePatientRisk();
+    }
+  }, [patient?.id, patient, previousVisits.length, analyzePatientRisk]);
 
   const getRiskColor = (level) => {
     switch (level) {

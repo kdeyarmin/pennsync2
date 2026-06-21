@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -63,9 +63,9 @@ export default function UnifiedComplianceEngine({
     if (!autoCheck || !noteContent || noteContent.length <= 100) return;
     const timer = setTimeout(() => { analyzeCompliance(); }, 1500);
     return () => clearTimeout(timer);
-  }, [noteContent, autoCheck]);
+  }, [noteContent, autoCheck, analyzeCompliance]);
 
-  const analyzeCompliance = async () => {
+  const analyzeCompliance = useCallback(async () => {
     if (!noteContent || noteContent.length < 100) return;
 
     setIsAnalyzing(true);
@@ -328,7 +328,7 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
       console.error('Unified compliance check error:', error);
     }
     setIsAnalyzing(false);
-  };
+  }, [noteContent, visitType, diagnosis, patientData, nurseType, careType, regulatoryUpdates]);
 
   const handleApplyFix = (violation) => {
     onApplyFix?.(violation.compliant_example, violation.rule_name, false);

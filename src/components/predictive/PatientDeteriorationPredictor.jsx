@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,7 @@ export default function PatientDeteriorationPredictor({ patientId, recentVisits,
   const [analysis, setAnalysis] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
 
-  useEffect(() => {
-    if (autoAnalyze && recentVisits?.length >= 2) {
-      analyzeDeteriorationRisk();
-    }
-  }, [autoAnalyze, patientId, recentVisits]);
-
-  const analyzeDeteriorationRisk = async () => {
+  const analyzeDeteriorationRisk = useCallback(async () => {
     if (!recentVisits || recentVisits.length < 2) return;
 
     setIsAnalyzing(true);
@@ -113,7 +107,13 @@ Return a deterioration risk assessment with:
       setAnalysis({ error: error.message });
     }
     setIsAnalyzing(false);
-  };
+  }, [recentVisits]);
+
+  useEffect(() => {
+    if (autoAnalyze && recentVisits?.length >= 2) {
+      analyzeDeteriorationRisk();
+    }
+  }, [autoAnalyze, patientId, recentVisits, analyzeDeteriorationRisk]);
 
   if (!recentVisits || recentVisits.length < 2) {
     return (

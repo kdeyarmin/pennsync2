@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -66,14 +66,62 @@ export default function PatientAlertAnalyzer({
     enabled: !!patientId
   });
 
-  // Auto-analyze on mount if enabled
-  useEffect(() => {
-    if (autoAnalyze && patientId && patient) {
-      runAnalysis();
-    }
-  }, [autoAnalyze, patientId, patient]);
+  const extractVitalTrends = useCallback((visits) => {
+    const vitals = visits
+      .filter(v => v.vital_signs)
+      .map(v => ({
+        date: v.visit_date,
+        ...v.vital_signs
+      }));
 
-  const runAnalysis = async () => {
+    if (vitals.length < 2) return { insufficient_data: true };
+
+    const trends = {};
+    const vitalKeys = ['blood_pressure_systolic', 'blood_pressure_diastolic', 'heart_rate', 'oxygen_saturation', 'weight', 'temperature'];
+
+    vitalKeys.forEach(key => {
+      const values = vitals.map(v => v[key]).filter(v => v != null);
+      if (values.length >= 2) {
+        const first = values[values.length - 1];
+        const last = values[0];
+        const change = last - first;
+        const percentChange = first !== 0 ? ((change / first) * 100).toFixed(1) : 0;
+
+        trends[key] = {
+          current: last,
+          previous: first,
+          change,
+          percent_change: parseFloat(percentChange),
+          trend: change > 0 ? 'increasing' : change < 0 ? 'decreasing' : 'stable',
+          values: values.slice(0, 5)
+        };
+      }
+    });
+
+    return trends;
+  }, []);
+
+  const sendAlertNotifications = useCallback(async (criticalAlerts) => {
+    for (const alert of criticalAlerts) {
+      try {
+        // Create a high-priority task for critical alerts
+        await base44.entities.Task.create({
+          patient_id: patientId,
+          title: `🚨 CRITICAL ALERT: ${alert.title}`,
+          description: `${alert.message}\n\nContributing Factors:\n${alert.contributing_factors?.join('\n')}\n\nRecommended Actions:\n${alert.recommended_actions?.join('\n')}`,
+          priority: 'high',
+          type: 'safety',
+          status: 'pending',
+          source: 'ai_generated',
+          ai_reason: 'Critical patient alert requiring immediate attention'
+        });
+      } catch (error) {
+        console.error("Error creating alert task:", error);
+      }
+    }
+  }, [patientId]);
+
+  const runAnalysis = useCallback(async () => {
     if (!patient) return;
 
     setIsAnalyzing(true);
@@ -240,62 +288,14 @@ Return JSON:
       console.error("Error analyzing patient:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, recentVisits, incidents, carePlans, patientId, existingAlerts, queryClient, onAlertsGenerated, extractVitalTrends, sendAlertNotifications]);
 
-  const extractVitalTrends = (visits) => {
-    const vitals = visits
-      .filter(v => v.vital_signs)
-      .map(v => ({
-        date: v.visit_date,
-        ...v.vital_signs
-      }));
-
-    if (vitals.length < 2) return { insufficient_data: true };
-
-    const trends = {};
-    const vitalKeys = ['blood_pressure_systolic', 'blood_pressure_diastolic', 'heart_rate', 'oxygen_saturation', 'weight', 'temperature'];
-
-    vitalKeys.forEach(key => {
-      const values = vitals.map(v => v[key]).filter(v => v != null);
-      if (values.length >= 2) {
-        const first = values[values.length - 1];
-        const last = values[0];
-        const change = last - first;
-        const percentChange = first !== 0 ? ((change / first) * 100).toFixed(1) : 0;
-        
-        trends[key] = {
-          current: last,
-          previous: first,
-          change,
-          percent_change: parseFloat(percentChange),
-          trend: change > 0 ? 'increasing' : change < 0 ? 'decreasing' : 'stable',
-          values: values.slice(0, 5)
-        };
-      }
-    });
-
-    return trends;
-  };
-
-  const sendAlertNotifications = async (criticalAlerts) => {
-    for (const alert of criticalAlerts) {
-      try {
-        // Create a high-priority task for critical alerts
-        await base44.entities.Task.create({
-          patient_id: patientId,
-          title: `🚨 CRITICAL ALERT: ${alert.title}`,
-          description: `${alert.message}\n\nContributing Factors:\n${alert.contributing_factors?.join('\n')}\n\nRecommended Actions:\n${alert.recommended_actions?.join('\n')}`,
-          priority: 'high',
-          type: 'safety',
-          status: 'pending',
-          source: 'ai_generated',
-          ai_reason: 'Critical patient alert requiring immediate attention'
-        });
-      } catch (error) {
-        console.error("Error creating alert task:", error);
-      }
+  // Auto-analyze on mount if enabled
+  useEffect(() => {
+    if (autoAnalyze && patientId && patient) {
+      runAnalysis();
     }
-  };
+  }, [autoAnalyze, patientId, patient, runAnalysis]);
 
   const getAlertIcon = (type) => {
     const icons = {

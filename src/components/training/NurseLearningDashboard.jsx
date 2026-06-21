@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -28,18 +28,18 @@ export default function NurseLearningDashboard({
   const [deficitAnalysis, setDeficitAnalysis] = useState(null);
   const [_isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    if (nurseEmail) {
-      loadDeficitAnalysis();
-    }
-  }, [nurseEmail]);
-
-  const loadDeficitAnalysis = async () => {
+  const loadDeficitAnalysis = useCallback(async () => {
     setIsAnalyzing(true);
     const analysis = await analyzeNurseDeficits(nurseEmail);
     setDeficitAnalysis(analysis);
     setIsAnalyzing(false);
-  };
+  }, [nurseEmail]);
+
+  useEffect(() => {
+    if (nurseEmail) {
+      loadDeficitAnalysis();
+    }
+  }, [nurseEmail, loadDeficitAnalysis]);
   // Calculate statistics
   const totalCompleted = trainingProgress.filter(p => p.status === 'completed').length;
   const totalInProgress = trainingProgress.filter(p => p.status === 'in_progress').length;

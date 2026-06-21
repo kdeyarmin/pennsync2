@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,21 +23,15 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
   }, []);
 
-  const generationStages = [
+  const generationStages = useMemo(() => [
     "Analyzing patient demographics and history...",
     "Structuring assessment findings...",
     "Formulating clinical impressions...",
     "Generating plan of care...",
     "Finalizing admission note..."
-  ];
+  ], []);
 
-  useEffect(() => {
-    if (autoGenerate && referralData && !generatedNote && !generating) {
-      generateAdmissionNote();
-    }
-  }, [autoGenerate, referralData]);
-
-  const generateAdmissionNote = async () => {
+  const generateAdmissionNote = useCallback(async () => {
     if (!referralData) {
       alert("No referral data available");
       return;
@@ -250,7 +244,13 @@ Generate a complete, detailed admission note that a skilled nurse would write af
       setGenerating(false);
       setGenerationStage(0);
     }
-  };
+  }, [generationStages, onNoteGenerated, referralData]);
+
+  useEffect(() => {
+    if (autoGenerate && referralData && !generatedNote && !generating) {
+      generateAdmissionNote();
+    }
+  }, [autoGenerate, referralData, generateAdmissionNote, generatedNote, generating]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(isEditing ? editedNote : generatedNote);

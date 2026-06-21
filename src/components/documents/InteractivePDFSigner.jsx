@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,37 +77,10 @@ export default function InteractivePDFSigner({
     }
   }, [pdfUrl]);
   
-  // Render current page
-  useEffect(() => {
-    const renderPage = async () => {
-      if (!pdfDoc || !canvasRef.current) return;
-      
-      const page = await pdfDoc.getPage(currentPage);
-      const viewport = page.getViewport({ scale });
-      
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport
-      };
-      
-      await page.render(renderContext).promise;
-      
-      // Render annotations on top
-      renderAnnotations();
-    };
-    
-    renderPage();
-  }, [pdfDoc, currentPage, scale, annotations]);
-  
-  const renderAnnotations = () => {
+  const renderAnnotations = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const context = canvas.getContext('2d');
     const pageAnnotations = annotations[currentPage] || [];
     
@@ -143,8 +116,35 @@ export default function InteractivePDFSigner({
         context.fillText(`Date: ${annotation.text}`, annotation.x, annotation.y);
       }
     });
-  };
-  
+  }, [annotations, currentPage]);
+
+  // Render current page
+  useEffect(() => {
+    const renderPage = async () => {
+      if (!pdfDoc || !canvasRef.current) return;
+
+      const page = await pdfDoc.getPage(currentPage);
+      const viewport = page.getViewport({ scale });
+
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+      };
+
+      await page.render(renderContext).promise;
+
+      // Render annotations on top
+      renderAnnotations();
+    };
+
+    renderPage();
+  }, [pdfDoc, currentPage, scale, annotations, renderAnnotations]);
+
   const handleCanvasClick = (e) => {
     if (mode === 'view') return;
     

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,14 +15,7 @@ export default function PredictiveMonitoring({ patient, currentVitals, allVisits
   const [predictions, setPredictions] = useState([]);
   const [hospitalizationRisk, setHospitalizationRisk] = useState(null);
 
-  useEffect(() => {
-    if (allVisits && allVisits.length >= 2) {
-      analyzeTrends();
-      calculateHospitalizationRisk();
-    }
-  }, [allVisits, currentVitals]);
-
-  const analyzeTrends = () => {
+  const analyzeTrends = useCallback(() => {
     const recentVisits = allVisits.slice(0, 5).reverse(); // Last 5 visits chronologically
     const alerts = [];
 
@@ -111,9 +104,9 @@ export default function PredictiveMonitoring({ patient, currentVitals, allVisits
     }
 
     setPredictions(alerts);
-  };
+  }, [allVisits, currentVitals, patient]);
 
-  const calculateHospitalizationRisk = async () => {
+  const calculateHospitalizationRisk = useCallback(async () => {
     try {
       const recentVisits = allVisits.slice(0, 5);
       
@@ -158,11 +151,18 @@ Return JSON:
       });
 
       setHospitalizationRisk(risk);
-      
+
     } catch (error) {
       console.error("Error calculating hospitalization risk:", error);
     }
-  };
+  }, [allVisits, patient]);
+
+  useEffect(() => {
+    if (allVisits && allVisits.length >= 2) {
+      analyzeTrends();
+      calculateHospitalizationRisk();
+    }
+  }, [allVisits, currentVitals, analyzeTrends, calculateHospitalizationRisk]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {

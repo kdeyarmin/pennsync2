@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -31,14 +31,7 @@ export default function DischargeVisitSummary({
     enabled: !!patient?.id
   });
 
-  // Auto-generate on mount for discharge visits
-  useEffect(() => {
-    if (visit?.visit_type === 'discharge' && !hasGenerated && patient) {
-      generateDischargeSummary();
-    }
-  }, [visit?.visit_type, patient?.id]);
-
-  const generateDischargeSummary = async () => {
+  const generateDischargeSummary = useCallback(async () => {
     if (!patient || !visit) return;
     
     setIsGenerating(true);
@@ -121,7 +114,14 @@ DO NOT include any meta-commentary at the end. Just provide the clinical narrati
       console.error("Error generating discharge summary:", error);
     }
     setIsGenerating(false);
-  };
+  }, [allVisits, carePlans, incidents, onSummaryGenerated, patient, visit]);
+
+  // Auto-generate on mount for discharge visits
+  useEffect(() => {
+    if (visit?.visit_type === 'discharge' && !hasGenerated && patient) {
+      generateDischargeSummary();
+    }
+  }, [visit?.visit_type, patient?.id, generateDischargeSummary, hasGenerated, patient]);
 
   // Only show for discharge visits
   if (visit?.visit_type !== 'discharge') {

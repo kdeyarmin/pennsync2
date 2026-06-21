@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,11 @@ export default function GuidedVisitWorkflow({
 }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState({});
+  // Latest formData for buildContextForAI to read without making the AI-suggestion
+  // effect re-run (and re-call the LLM) on every keystroke. The suggestions are
+  // regenerated on step change, matching the prior behavior.
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
   const [smartSuggestions, setSmartSuggestions] = useState([]);
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
@@ -71,17 +76,7 @@ export default function GuidedVisitWorkflow({
   const currentStep = workflow[currentStepIndex];
   const progress = ((currentStepIndex + 1) / workflow.length) * 100;
 
-  // Pre-fill data when patient or step changes
-  useEffect(() => {
-    prefillStepData(currentStep.id);
-  }, [currentStepIndex, patientData]);
-
-  // Generate smart suggestions when step changes
-  useEffect(() => {
-    generateSmartSuggestions(currentStep.id);
-  }, [currentStepIndex]);
-
-  const prefillStepData = (stepId) => {
+  const prefillStepData = useCallback((stepId) => {
     const prefilled = {};
 
     switch (stepId) {
@@ -132,41 +127,9 @@ export default function GuidedVisitWorkflow({
     }
 
     setFormData(prev => ({ ...prev, [stepId]: { ...prefilled, ...(prev[stepId] || {}) } }));
-  };
+  }, [patientData, carePlans, recentVisits]);
 
-  const generateSmartSuggestions = async (stepId) => {
-    if (!patientData) return;
-    
-    setIsGeneratingSuggestions(true);
-    
-    try {
-      const context = buildContextForAI(stepId);
-      
-      const result = await invokeLLM({
-        prompt: `You are a home health nursing assistant. Based on the following context, provide 3-5 brief, actionable suggestions for the ${currentStep.title} step.
-
-Context:
-${context}
-
-Provide specific suggestions that would help the nurse complete this step efficiently. Return as JSON with a suggestions array.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            suggestions: { type: "array", items: { type: "string" } }
-          }
-        }
-      });
-
-      setSmartSuggestions(result?.suggestions || []);
-    } catch (error) {
-      console.error('Error generating suggestions:', error);
-      setSmartSuggestions([]);
-    } finally {
-      setIsGeneratingSuggestions(false);
-    }
-  };
-
-  const buildContextForAI = (stepId) => {
+  const buildContextForAI = useCallback((stepId) => {
     let context = `Patient: ${patientData?.first_name} ${patientData?.last_name}\n`;
     context += `Visit Type: ${visitType}\n`;
     context += `Current Step: ${currentStep.title}\n\n`;
@@ -190,15 +153,59 @@ Provide specific suggestions that would help the nurse complete this step effici
       });
     }
 
-    // Add data from previous steps
-    Object.keys(formData).forEach(key => {
+    // Add data from previous steps (read latest via ref so per-keystroke formData
+    // changes don't churn this callback's identity / re-trigger the AI effect).
+    const latestFormData = formDataRef.current;
+    Object.keys(latestFormData).forEach(key => {
       if (key !== stepId) {
-        context += `\n${key} data: ${JSON.stringify(formData[key]).substring(0, 100)}\n`;
+        context += `\n${key} data: ${JSON.stringify(latestFormData[key]).substring(0, 100)}\n`;
       }
     });
 
     return context;
-  };
+  }, [patientData, visitType, currentStep.title, recentVisits, carePlans]);
+
+  const generateSmartSuggestions = useCallback(async (stepId) => {
+    if (!patientData) return;
+
+    setIsGeneratingSuggestions(true);
+
+    try {
+      const context = buildContextForAI(stepId);
+
+      const result = await invokeLLM({
+        prompt: `You are a home health nursing assistant. Based on the following context, provide 3-5 brief, actionable suggestions for the ${currentStep.title} step.
+
+Context:
+${context}
+
+Provide specific suggestions that would help the nurse complete this step efficiently. Return as JSON with a suggestions array.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            suggestions: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
+
+      setSmartSuggestions(result?.suggestions || []);
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+      setSmartSuggestions([]);
+    } finally {
+      setIsGeneratingSuggestions(false);
+    }
+  }, [patientData, buildContextForAI, currentStep.title]);
+
+  // Pre-fill data when patient or step changes
+  useEffect(() => {
+    prefillStepData(currentStep.id);
+  }, [currentStep.id, patientData, prefillStepData]);
+
+  // Generate smart suggestions when step changes
+  useEffect(() => {
+    generateSmartSuggestions(currentStep.id);
+  }, [currentStep.id, generateSmartSuggestions]);
 
   const updateFormField = (field, value) => {
     setFormData(prev => ({

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
@@ -268,13 +268,16 @@ export default function LearningCenter() {
 
   // An assignment counts as "required" when the assignment is flagged required,
   // or its course is an annual mandatory / compliance in-service.
-  const isRequiredAssignment = (a) =>
-    a.required === true ||
-    ['annual_mandatory', 'in_service'].includes(courseById[a.course_id]?.training_type);
+  const isRequiredAssignment = useCallback(
+    (a) =>
+      a.required === true ||
+      ['annual_mandatory', 'in_service'].includes(courseById[a.course_id]?.training_type),
+    [courseById]
+  );
 
   const requiredAssignments = useMemo(
     () => assignments.filter(isRequiredAssignment),
-    [assignments, courseById]
+    [assignments, isRequiredAssignment]
   );
   const requiredCompleted = useMemo(
     () => requiredAssignments.filter(a => a.status === 'completed' || a.pass_fail_result === 'passed'),

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,14 +41,16 @@ export default function AIPatientHistorySummary({
   const [isExpanded, setIsExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  // Auto-generate on patient selection
-  useEffect(() => {
-    if (autoGenerate && patient && !summary) {
-      generateSummary();
-    }
-  }, [patient?.id]);
+  const calculateAge = useCallback((dob) => {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
+  }, []);
 
-  const generateSummary = async () => {
+  const generateSummary = useCallback(async () => {
     if (!patient) return;
 
     setIsGenerating(true);
@@ -193,16 +195,14 @@ Return JSON:
       console.error("Error generating patient history summary:", error);
     }
     setIsGenerating(false);
-  };
+  }, [patient, visits, carePlans, incidents, calculateAge]);
 
-  const calculateAge = (dob) => {
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age;
-  };
+  // Auto-generate on patient selection
+  useEffect(() => {
+    if (autoGenerate && patient && !summary) {
+      generateSummary();
+    }
+  }, [patient, summary, autoGenerate, generateSummary]);
 
   const handleCopy = () => {
     if (summary?.clinical_narrative) {

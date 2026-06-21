@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { buildPdgmNavigatorCsv } from "./pdgmNavigatorExport";
@@ -91,15 +91,7 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
     wage_index: 1.0
   };
 
-  // Auto-analyze when data is available
-  useEffect(() => {
-    if (pdgmData && !navigation && !isAnalyzing && !autoAnalyzed) {
-      runPDGMNavigation();
-      setAutoAnalyzed(true);
-    }
-  }, [pdgmData]);
-
-  const runPDGMNavigation = async () => {
+  const runPDGMNavigation = useCallback(async () => {
     if (!pdgmData) return;
 
     setIsAnalyzing(true);
@@ -295,7 +287,15 @@ Return JSON:
     }
 
     setIsAnalyzing(false);
-  };
+  }, [pdgmData, analysisResults, revenueData, onNavigationComplete]);
+
+  // Auto-analyze when data is available
+  useEffect(() => {
+    if (pdgmData && !navigation && !isAnalyzing && !autoAnalyzed) {
+      runPDGMNavigation();
+      setAutoAnalyzed(true);
+    }
+  }, [pdgmData, navigation, isAnalyzing, autoAnalyzed, runPDGMNavigation]);
 
   const getConfidenceBadge = (confidence) => {
     const styles = {
@@ -639,14 +639,7 @@ Return JSON:
     queryFn: () => base44.entities.Patient.list('-created_date', 100),
   });
 
-  // Auto-generate forecasts when navigation completes
-  useEffect(() => {
-    if (navigation && !patientForecasts && !isLoadingForecasts) {
-      generatePatientForecasts();
-    }
-  }, [navigation]);
-
-  const generatePatientForecasts = async () => {
+  const generatePatientForecasts = useCallback(async () => {
     if (!navigation || !pdgmData) return;
 
     setIsLoadingForecasts(true);
@@ -825,7 +818,14 @@ PREDICT:
       console.error('Forecasting error:', error);
     }
     setIsLoadingForecasts(false);
-  };
+  }, [navigation, pdgmData, allPatients]);
+
+  // Auto-generate forecasts when navigation completes
+  useEffect(() => {
+    if (navigation && !patientForecasts && !isLoadingForecasts) {
+      generatePatientForecasts();
+    }
+  }, [navigation, patientForecasts, isLoadingForecasts, generatePatientForecasts]);
 
   const exportPDF = async () => {
     if (!navigation) return;

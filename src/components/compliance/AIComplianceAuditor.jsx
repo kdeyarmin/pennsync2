@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -76,9 +76,9 @@ export default function AIComplianceAuditor({
     if (autoRun && patient && !auditResults && !isAnalyzing) {
       runComplianceAudit();
     }
-  }, [autoRun, patient]);
+  }, [autoRun, patient, auditResults, isAnalyzing, runComplianceAudit]);
 
-  const runComplianceAudit = async () => {
+  const runComplianceAudit = useCallback(async () => {
     if (!patient) return;
 
     setIsAnalyzing(true);
@@ -513,7 +513,7 @@ For each area, provide:
       console.error("Compliance audit failed:", error);
     }
     setIsAnalyzing(false);
-  };
+  }, [patient, visits, carePlans, oasisData, incidents, currentUser, patientId, visitId, onIssuesFound, queryClient]);
 
   const getRiskColor = (level) => {
     switch (level) {

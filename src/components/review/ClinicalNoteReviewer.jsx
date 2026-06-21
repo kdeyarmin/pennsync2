@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,13 +33,7 @@ export default function ClinicalNoteReviewer({
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewResults, setReviewResults] = useState(null);
 
-  React.useEffect(() => {
-    if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {
-      reviewNote();
-    }
-  }, [autoReview, noteContent]);
-
-  const reviewNote = async () => {
+  const reviewNote = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) return;
 
     setIsReviewing(true);
@@ -196,7 +190,13 @@ Return detailed analysis with:
       alert('Failed to review note. Please try again.');
     }
     setIsReviewing(false);
-  };
+  }, [noteContent, visitType, diagnosis, patientData]);
+
+  React.useEffect(() => {
+    if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {
+      reviewNote();
+    }
+  }, [autoReview, noteContent, reviewResults, reviewNote]);
 
   const getScoreColor = (score) => {
     if (score >= 90) return 'text-green-600';

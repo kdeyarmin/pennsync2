@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,13 +33,7 @@ export default function VisitTypeComplianceChecker({
   const [complianceResults, setComplianceResults] = useState(null);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  useEffect(() => {
-    if (autoCheck && visitType && noteContent?.length > 50) {
-      performComplianceCheck();
-    }
-  }, [visitType, noteContent, autoCheck]);
-
-  const performComplianceCheck = async () => {
+  const performComplianceCheck = useCallback(async () => {
     if (!visitType || !noteContent) return;
 
     setIsChecking(true);
@@ -250,7 +244,13 @@ Return detailed compliance analysis in JSON format.`;
       setComplianceResults({ error: "Failed to perform compliance check" });
     }
     setIsChecking(false);
-  };
+  }, [visitType, noteContent, careType, oasisData, patientData, vitalSigns, onIssuesDetected]);
+
+  useEffect(() => {
+    if (autoCheck && visitType && noteContent?.length > 50) {
+      performComplianceCheck();
+    }
+  }, [visitType, noteContent, autoCheck, performComplianceCheck]);
 
   const _getStatusIcon = (status) => {
     switch (status) {
