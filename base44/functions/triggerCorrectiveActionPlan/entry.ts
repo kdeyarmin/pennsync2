@@ -6,6 +6,26 @@ const normalizeTag = (value) => String(value || '')
   .replace(/^_+|_+$/g, '')
   .slice(0, 60);
 
+// Tolerant JSON extractor: the model is asked (in-prompt) to return strict JSON
+// but may wrap it in ```json fences or prose. Pull the outermost {...} and parse.
+const parseLLMJson = (raw) => {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+};
+
 const deriveTopicLabel = (question) => {
   if (question?.question_bank_tag) {
     return question.question_bank_tag;
@@ -28,66 +48,16 @@ Rules:
 - Make it appropriate for busy frontline staff.
 - Include a realistic example and 3 short questions.`;
 
-  // Use Base44's InvokeLLM (handles auth/model resolution) instead of the OpenAI
-  // SDK with a hard-coded, invalid model id that threw and failed every plan.
+  // Use Base44's InvokeLLM (handles auth/model resolution). We ask for JSON
+  // in-prompt and parse the text result rather than passing response_json_schema:
+  // the provider's strict structured-output mode rejects deeply-nested free-form
+  // objects (it requires an explicit `required` array on every nested object).
   let parsed = {};
   try {
-    parsed = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          course: {
-            type: 'object',
-            properties: {
-              title: { type: 'string' },
-              short_description: { type: 'string' },
-              description: { type: 'string' },
-              learning_objectives: { type: 'array', items: { type: 'string' } },
-              passing_score: { type: 'number' }
-            }
-          },
-          module: {
-            type: 'object',
-            properties: {
-              title: { type: 'string' },
-              content: {
-                type: 'object',
-                properties: {
-                  intro: { type: 'string' },
-                  sections: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        heading: { type: 'string' },
-                        body: { type: 'string' },
-                        bullets: { type: 'array', items: { type: 'string' } },
-                        example: { type: 'string' }
-                      }
-                    }
-                  },
-                  key_takeaways: { type: 'array', items: { type: 'string' } }
-                }
-              }
-            }
-          },
-          questions: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                type: { type: 'string' },
-                prompt: { type: 'string' },
-                options: { type: 'array', items: { type: 'object', properties: { value: { type: 'string' }, label: { type: 'string' } } } },
-                correct_answer: { type: 'object' },
-                rationale: { type: 'string' }
-              }
-            }
-          }
-        }
-      }
+    const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `${prompt}\n\nReturn ONLY valid JSON with this shape (no prose or code fences):\n{"course":{"title":"","short_description":"","description":"","learning_objectives":[""],"passing_score":80},"module":{"title":"","content":{"intro":"","sections":[{"heading":"","body":"","bullets":[""],"example":""}],"key_takeaways":[""]}},"questions":[{"type":"mcq","prompt":"","options":[{"value":"A","label":""}],"correct_answer":{},"rationale":""}]}`
     });
+    parsed = parseLLMJson(raw) || {};
   } catch (e) {
     console.error('Failed to generate micro-learning for corrective action plan:', e?.message || e);
     parsed = {};

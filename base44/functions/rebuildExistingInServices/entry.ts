@@ -2,6 +2,26 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
+// Tolerant JSON extractor: the model is asked (in-prompt) to return strict JSON,
+// but may wrap it in ```json fences or prose. Pull the outermost {...} and parse.
+const parseLLMJson = (raw) => {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+};
+
 const buildPrompt = (course) => `Create a presentation-style healthcare in-service with short, easy-to-follow lesson sections and a graded quiz at the end.
 
 Course title: ${course.title}
@@ -89,15 +109,16 @@ Deno.serve(async (req) => {
 
     for (const course of targets) {
      try {
-      // Route AI generation through Base44's InvokeLLM (handles auth + model
-      // resolution) instead of the OpenAI SDK with a hard-coded model id that is
-      // not a valid OpenAI model and threw on every rebuild.
+      // Ask for JSON in-prompt and parse the text result. We avoid
+      // response_json_schema because the provider's strict structured-output mode
+      // rejects deeply-nested free-form objects (requires explicit `required` on
+      // every nested object), which this rich lesson/quiz shape can't satisfy.
       let generated;
       try {
-        generated = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          prompt: `You create practical healthcare in-service training as valid JSON only.\n\n${buildPrompt(course)}`,
-          response_json_schema: { type: 'object', additionalProperties: true }
+        const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: `You create practical healthcare in-service training. Return ONLY valid JSON, no prose or code fences.\n\n${buildPrompt(course)}`
         });
+        generated = parseLLMJson(raw);
       } catch {
         generated = null;
       }

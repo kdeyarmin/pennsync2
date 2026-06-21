@@ -10,6 +10,26 @@ const normalizeBusinessLine = (value) => {
   return 'all';
 };
 
+// Tolerant JSON extractor: the model is asked (in-prompt) to return strict JSON
+// but may wrap it in ```json fences or prose. Pull the outermost {...} and parse.
+const parseLLMJson = (raw) => {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -102,14 +122,16 @@ Design principles:
 - Make the "real_world_relevance" compelling — connect to actual incidents, regulatory changes, or common audit findings in ${business_line === 'all' ? 'home health and hospice' : business_line}`;
 
     // Route AI generation through Base44's InvokeLLM (handles auth + model
-    // resolution) instead of the OpenAI SDK with a hard-coded model id that is
-    // not a valid OpenAI model and threw on every call.
+    // resolution). We ask for JSON in-prompt and parse the text result rather
+    // than passing response_json_schema: the provider's strict structured-output
+    // mode rejects deeply-nested free-form objects (it requires an explicit
+    // `required` array on every nested object), which this rich shape can't meet.
     let outline;
     try {
-      outline = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        prompt: `You are a senior healthcare instructional designer with expertise in ADDIE methodology, Bloom's Taxonomy, and CMS regulatory compliance for home health and hospice. Return valid JSON only.\n\n${outlinePrompt}`,
-        response_json_schema: { type: 'object', additionalProperties: true }
+      const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `You are a senior healthcare instructional designer with expertise in ADDIE methodology, Bloom's Taxonomy, and CMS regulatory compliance for home health and hospice. Return ONLY valid JSON, no prose or code fences.\n\n${outlinePrompt}`
       });
+      outline = parseLLMJson(raw);
     } catch {
       outline = null;
     }
@@ -315,10 +337,10 @@ CONTENT CREATION RULES:
 
     let generated;
     try {
-      generated = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        prompt: `You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. You have deep expertise in CMS Conditions of Participation, OSHA standards, and state healthcare regulations. Return valid JSON only.\n\n${contentPrompt}`,
-        response_json_schema: { type: 'object', additionalProperties: true }
+      const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. You have deep expertise in CMS Conditions of Participation, OSHA standards, and state healthcare regulations. Return ONLY valid JSON, no prose or code fences.\n\n${contentPrompt}`
       });
+      generated = parseLLMJson(raw);
     } catch {
       generated = null;
     }
