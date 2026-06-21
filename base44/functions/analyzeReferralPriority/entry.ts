@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
@@ -34,49 +51,15 @@ ${JSON.stringify(extractedData, null, 2)}
 AI-ASSISTED INITIAL ANALYSIS:
 ${JSON.stringify(analysisResults, null, 2)}
 
-Provide a detailed priority assessment with clear reasoning and identify specific phrases or keywords from unstructured data that influenced your decision.`,
-            response_json_schema: {
-                type: "object",
-                properties: {
-                    priority: {
-                        type: "string",
-                        enum: ["urgent", "high", "normal", "low"],
-                        description: "Overall priority level"
-                    },
-                    priority_score: {
-                        type: "number",
-                        description: "Numerical score 1-100 (higher = more urgent)"
-                    },
-                    urgency_factors: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "Key factors driving the priority"
-                    },
-                    clinical_risks: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "Identified clinical risks"
-                    },
-                    recommended_response_time: {
-                        type: "string",
-                        description: "When this should be addressed (e.g., 'within 24 hours', 'within 48 hours', 'this week')"
-                    },
-                    reasoning: {
-                        type: "string",
-                        description: "Detailed explanation of priority assignment"
-                    },
-                    critical_actions: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "Immediate actions that should be taken"
-                    }
-                }
-            }
+Provide a detailed priority assessment with clear reasoning and identify specific phrases or keywords from unstructured data that influenced your decision.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"priority":"urgent|high|normal|low","priority_score":0,"urgency_factors":[""],"clinical_risks":[""],"recommended_response_time":"","reasoning":"","critical_actions":[""]}`
         });
 
         return Response.json({
             success: true,
-            priorityAnalysis
+            priorityAnalysis: parseLLMJson(priorityAnalysis) || {}
         });
 
     } catch (error) {

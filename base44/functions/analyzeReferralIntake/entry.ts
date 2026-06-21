@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -65,78 +82,17 @@ Provide a JSON response with the following structure:
   "documentation_gaps": [
     "specific documentation that should be obtained before first visit"
   ]
-}`;
+}
+
+Return ONLY valid JSON matching the structure above, no prose or code fences.`;
 
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: analysisPrompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          category: {
-            type: "object",
-            properties: {
-              primary: { type: "string" },
-              secondary: { type: "array", items: { type: "string" } },
-              specialty_requirements: { type: "array", items: { type: "string" } }
-            }
-          },
-          missing_critical_info: {
-            type: "object",
-            properties: {
-              high_priority: { type: "array", items: { type: "string" } },
-              medium_priority: { type: "array", items: { type: "string" } },
-              low_priority: { type: "array", items: { type: "string" } }
-            }
-          },
-          risk_assessment: {
-            type: "object",
-            properties: {
-              clinical_complexity: { type: "string" },
-              readmission_risk: { type: "string" },
-              fall_risk: { type: "string" },
-              infection_risk: { type: "string" },
-              key_concerns: { type: "array", items: { type: "string" } }
-            }
-          },
-          suggested_next_steps: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                action: { type: "string" },
-                priority: { type: "string" },
-                timeframe: { type: "string" },
-                responsible_role: { type: "string" }
-              }
-            }
-          },
-          assignment_recommendations: {
-            type: "object",
-            properties: {
-              ideal_nurse_qualifications: { type: "array", items: { type: "string" } },
-              visit_frequency_suggested: { type: "string" },
-              estimated_episode_length: { type: "string" },
-              requires_specialized_skills: { type: "boolean" }
-            }
-          },
-          care_coordination_needs: {
-            type: "object",
-            properties: {
-              physician_contact_priority: { type: "string" },
-              dme_orders_needed: { type: "array", items: { type: "string" } },
-              therapy_services_recommended: { type: "array", items: { type: "string" } },
-              other_services: { type: "array", items: { type: "string" } }
-            }
-          },
-          compliance_alerts: { type: "array", items: { type: "string" } },
-          documentation_gaps: { type: "array", items: { type: "string" } }
-        }
-      }
+      prompt: analysisPrompt
     });
 
     return Response.json({
       success: true,
-      analysis: response
+      analysis: parseLLMJson(response) || {}
     });
 
   } catch (error) {
