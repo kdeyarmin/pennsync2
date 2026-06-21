@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import OpenAI from 'npm:openai@4.56.0';
 
-const openai = new OpenAI({ apiKey: Deno.env.get('OPENAI_API_KEY') });
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
 const normalizeValue = (value) => JSON.stringify(value ?? '').toLowerCase().replace(/\s+/g, '');
@@ -31,7 +29,7 @@ const parseAssignmentNotes = (value) => {
   }
 };
 
-const gradeSubjectiveQuestions = async (subjectiveQuestions) => {
+const gradeSubjectiveQuestions = async (base44, subjectiveQuestions) => {
   if (subjectiveQuestions.length === 0) return [];
 
   const questionsForGrading = subjectiveQuestions.map(q => ({
@@ -42,7 +40,7 @@ const gradeSubjectiveQuestions = async (subjectiveQuestions) => {
     maxPoints: q.maxPoints
   }));
 
-  const prompt = `You are a healthcare compliance training evaluator. Grade each learner response below and return JSON only.
+  const prompt = `You are an experienced healthcare compliance educator and clinical instructor with expertise in CMS Conditions of Participation, OSHA standards, and evidence-based clinical practice. Patient safety is your top priority. Grade each learner response below and return JSON only.
 
 GRADING CRITERIA:
 - Award full points when the response demonstrates correct understanding AND practical application ability
@@ -65,27 +63,43 @@ Return this exact JSON structure:
 Questions to grade:
 ${JSON.stringify(questionsForGrading)}`;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-5.5',
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: 'You are an experienced healthcare compliance educator and clinical instructor with expertise in CMS Conditions of Participation, OSHA standards, and evidence-based clinical practice. You grade training assessments with clinical accuracy and provide constructive educational feedback. Patient safety is your top priority when evaluating responses. Return valid JSON only.' },
-      { role: 'user', content: prompt }
-    ]
-  });
-
+  // Grade via Base44's standardized InvokeLLM (same path the rest of the app
+  // uses, e.g. enhanceNoteOptimized) rather than the raw OpenAI SDK. This avoids
+  // a hardcoded/invalid model name and a module-level SDK init, and returns a
+  // parsed object directly when a response_json_schema is supplied.
   let parsed;
   try {
-    parsed = JSON.parse(completion.choices[0].message.content || '{"evaluations":[]}');
+    parsed = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt,
+      model: 'gpt_5_5',
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          evaluations: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                questionId: { type: 'string' },
+                scoreAwarded: { type: 'number' },
+                maxPoints: { type: 'number' },
+                confidence: { type: 'number' },
+                feedback: { type: 'string' }
+              }
+            }
+          }
+        }
+      }
+    });
   } catch (e) {
-    console.error('Failed to parse AI grading response:', e);
+    console.error('AI grading call failed:', e);
     // Don't return [] — that would score every subjective question as 0 while
     // still counting them in the denominator, failing a learner because of an
     // AI hiccup. Surface the error so the attempt is NOT recorded and the
     // learner can retry without consuming an attempt.
     throw new Error('AI grading is temporarily unavailable. Your attempt was not recorded — please try again.');
   }
-  return parsed.evaluations || [];
+  return parsed?.evaluations || [];
 };
 
 Deno.serve(async (req) => {
@@ -174,7 +188,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const subjectiveEvaluations = await gradeSubjectiveQuestions(subjectivePayload);
+    const subjectiveEvaluations = await gradeSubjectiveQuestions(base44, subjectivePayload);
 
     // Every subjective question must receive an evaluation; otherwise the
     // missing ones silently score 0 yet stay in the denominator, producing a
