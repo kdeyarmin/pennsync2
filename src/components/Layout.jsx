@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 import { buildNavCategories, buildAdminItems, NAV_MANIFEST } from "@/lib/nav.manifest";
 import { isSuperAdmin } from "@/lib/superAdmin";
+import { getRoleView } from "@/lib/roles";
 
 import DesktopSidebar from "@/components/layout/DesktopSidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -64,7 +65,12 @@ export default function Layout({ children, currentPageName }) {
   // owner-email / super_admin account_type). Without this, an unpromoted super
   // admin reaches admin routes by URL but gets NO admin nav — including the only
   // link to SuperAdminConfig, defeating the ensureSuperAdmin self-bootstrap.
-  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
+  // Three-tier role model (see lib/roles.js): super_admin sees everything
+  // (incl. platform/system config), facility_admin sees the full facility surface
+  // (clinical + analytics + reporting + compliance), nurse sees clinical only.
+  const roleView = getRoleView(currentUser);
+  const isSuperAdminUser = roleView === 'super_admin';
+  const isAdmin = roleView === 'super_admin' || roleView === 'facility_admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
   const isTimeOffApprover = isAdmin || currentUser?.is_manager === true;
 
@@ -179,7 +185,7 @@ export default function Layout({ children, currentPageName }) {
   }, [badgeValues]);
 
   const adminItems = useMemo(() => {
-    const cats = buildAdminItems(NAV_MANIFEST);
+    const cats = buildAdminItems(NAV_MANIFEST, isSuperAdminUser);
     // Append the special Alerts action item to the (single) Administration section
     const withAlerts = cats.map(cat => {
       if (cat.category !== "Administration") {
@@ -209,7 +215,7 @@ export default function Layout({ children, currentPageName }) {
       };
     });
     return withAlerts;
-  }, [badgeValues, actionHandlers, unreadNotificationCount]);
+  }, [badgeValues, actionHandlers, unreadNotificationCount, isSuperAdminUser]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -287,7 +293,7 @@ export default function Layout({ children, currentPageName }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>
-      <CommandPalette isAdmin={isAdmin} />
+      <CommandPalette isAdmin={isAdmin} isSuperAdmin={isSuperAdminUser} />
       <div className="min-h-screen flex">
         <DesktopSidebar
           collapsed={sidebarCollapsed}

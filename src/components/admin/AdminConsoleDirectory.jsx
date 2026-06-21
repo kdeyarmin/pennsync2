@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +10,7 @@ import {
   ShieldCheck, BarChart3, Database, Settings, LayoutGrid,
 } from "lucide-react";
 import { NAV_MAP, isLinkablePage } from "@/lib/nav.manifest";
+import { isSuperAdminView } from "@/lib/roles";
 
 /**
  * AdminConsoleDirectory — a single launchpad that surfaces EVERY admin tool in
@@ -115,21 +118,30 @@ function ToolTile({ page }) {
 export default function AdminConsoleDirectory() {
   const [query, setQuery] = useState("");
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me().catch(() => null),
+    retry: false,
+  });
+  const superAdmin = isSuperAdminView(currentUser);
+
   // Pre-resolve linkable pages per group, then apply the text filter. Groups
   // with no matching tiles are hidden so the directory stays tight while searching.
+  // Platform-level (superAdminOnly) tools are hidden from facility admins.
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
     return GROUPS.map((group) => {
       const pages = group.pages.filter((page) => {
         const entry = NAV_MAP[page];
         if (!entry || !isLinkablePage(page)) return false;
+        if (entry.superAdminOnly && !superAdmin) return false;
         if (!q) return true;
         const label = `${entry.navLabel ?? entry.label} ${(entry.keywords ?? []).join(" ")} ${group.title}`.toLowerCase();
         return label.includes(q);
       });
       return { ...group, resolvedPages: pages };
     }).filter((group) => group.resolvedPages.length > 0);
-  }, [query]);
+  }, [query, superAdmin]);
 
   const totalTools = useMemo(
     () => groups.reduce((sum, g) => sum + g.resolvedPages.length, 0),

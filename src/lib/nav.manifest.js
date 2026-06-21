@@ -12,7 +12,9 @@
  *  navLabel         – shorter sidebar label (falls back to label when omitted)
  *  icon             – Lucide icon component
  *  category         – sidebar section heading; null = not in sidebar
- *  adminOnly        – hide from non-admin users
+ *  adminOnly        – hide from nurses (visible to facility admins + super admin)
+ *  superAdminOnly   – platform-level page: hide from facility admins too
+ *                     (visible to the super admin only). Implies adminOnly.
  *  breadcrumbParent – page key of the logical parent (builds the crumb chain)
  *  keywords         – extra search terms for the command palette
  *  badge            – runtime badge key resolved in Layout: "messages" | "sms" | "notifications" | "timeOffApprovals"
@@ -202,11 +204,13 @@ export const NAV_MANIFEST = [
   // choice (Record / Upload + Live Dictation sub-modes), so /VisitScribe redirects
   // to /ClinicalDocumentation?tab=visit-scribe (see REDIRECTS in src/routes.jsx).
   {
+    // Documents is an admin-staff workspace (signatures, packages, audit logs),
+    // not a clinical tool — hidden from the nurse view.
     page: "DocumentHub",
     label: "Documents",
     icon: FileText,
     category: "Documentation",
-    adminOnly: false,
+    adminOnly: true,
     breadcrumbParent: null,
     keywords: ["documents", "files", "hub"],
   },
@@ -465,6 +469,7 @@ export const NAV_MANIFEST = [
     // Owner-only, rarely touched — reached via the Admin Console, not the sidebar.
     category: null,
     adminOnly: true,
+    superAdminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["super admin", "telnyx", "api secret", "integration", "provisioning", "phone setup", "owner"],
   },
@@ -553,10 +558,10 @@ export const NAV_MANIFEST = [
     label: "Communications",
     navLabel: "Comms",
     icon: Radio,
-    // Reached via Admin Console → System & Configuration (also avoids colliding
-    // with the everyday "Communication" sidebar section).
+    // Platform telephony delivery (Telnyx) — super admin only.
     category: null,
     adminOnly: true,
+    superAdminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["sms", "calls", "fax", "telnyx", "phone", "delivery"],
   },
@@ -650,8 +655,10 @@ export const NAV_MANIFEST = [
     page: "SystemJobMonitor",
     label: "Background Jobs",
     icon: Monitor,
+    // Platform-level scheduled jobs — super admin only.
     category: null,
     adminOnly: true,
+    superAdminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["system", "jobs", "monitor", "background", "scheduled", "tasks", "system monitoring"],
   },
@@ -679,8 +686,10 @@ export const NAV_MANIFEST = [
     page: "AIToolsCenter",
     label: "AI Tools",
     icon: Brain,
+    // Platform AI / OCR configuration — super admin only.
     category: null,
     adminOnly: true,
+    superAdminOnly: true,
     breadcrumbParent: "AdminOperations",
     keywords: ["ai", "tools", "auto-tag", "tagger", "ocr", "training", "feedback", "automation"],
   },
@@ -805,8 +814,11 @@ export function buildNavCategories(manifest) {
 /**
  * Build adminItems array (admin-only sidebar sections).
  * Dynamic badge/action values are injected by Layout after this call.
+ *
+ * `isSuperAdmin` controls whether superAdminOnly (platform-level) entries are
+ * included — facility admins get the facility surface; the super admin gets all.
  */
-export function buildAdminItems(manifest) {
+export function buildAdminItems(manifest, isSuperAdmin = false) {
   // A single slim "Administration" section. The former Analytics / Configuration
   // sub-headings were folded in (and most of their items moved into the Admin
   // Console launchpad) to stop the sidebar from re-listing the whole admin
@@ -816,6 +828,7 @@ export function buildAdminItems(manifest) {
   const routed = new Set(PAGE_NAMES);
   for (const entry of manifest) {
     if (!entry.category || !entry.adminOnly) continue;
+    if (entry.superAdminOnly && !isSuperAdmin) continue;  // platform-only pages
     if (!routed.has(entry.page)) continue;  // never link to an unrouted page
     if (!map[entry.category]) map[entry.category] = [];
     map[entry.category].push({
@@ -865,9 +878,27 @@ export function buildBreadcrumbs(pageName, navMap = NAV_MAP) {
  * instead of dead-ending on PageNotFound. Redirect aliases are excluded to
  * avoid duplicate entries for the same destination.
  */
-export function buildPaletteEntries(manifest, isAdmin) {
+export function buildPaletteEntries(manifest, isAdmin, isSuperAdmin = false) {
   const routed = new Set(PAGE_NAMES);
-  return manifest.filter(e => (!e.adminOnly || isAdmin) && routed.has(e.page));
+  return manifest.filter(e => {
+    if (!routed.has(e.page)) return false;
+    if (e.superAdminOnly && !isSuperAdmin) return false;  // platform-only pages
+    if (e.adminOnly && !isAdmin) return false;
+    return true;
+  });
+}
+
+/**
+ * Whether a page should be REACHABLE for a given role view. Used by the route
+ * guard so a facility admin (or nurse) can't open a higher-tier page by URL.
+ * `roleView` is one of: 'super_admin' | 'facility_admin' | 'nurse'.
+ */
+export function isPageAllowedForRole(pageName, roleView) {
+  const entry = NAV_MAP[pageName];
+  if (!entry) return true; // unknown/derived pages aren't gated here
+  if (entry.superAdminOnly) return roleView === "super_admin";
+  if (entry.adminOnly) return roleView === "super_admin" || roleView === "facility_admin";
+  return true;
 }
 
 /**

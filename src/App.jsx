@@ -20,7 +20,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import ErrorBoundary from '@/components/utils/ErrorBoundary';
 import { ROUTES, REDIRECTS, MAIN_PAGE } from '@/routes';
-import { isSuperAdmin } from '@/lib/superAdmin';
+import { getRoleView } from '@/lib/roles';
 
 // Public (no-login) patient telehealth join page.
 const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
@@ -33,12 +33,15 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 // are hidden from the sidebar/palette for non-admins, but routes are reachable
 // by URL, so this is the client-side authorization gate (server RLS is the real
 // boundary). Rendered inside the layout so the user keeps their navigation.
-const AdminOnlyFallback = () => (
+const AdminOnlyFallback = ({ superAdmin = false }) => (
   <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
-    <h1 className="text-2xl font-bold text-slate-900">Administrator access required</h1>
+    <h1 className="text-2xl font-bold text-slate-900">
+      {superAdmin ? 'Platform administrator access required' : 'Administrator access required'}
+    </h1>
     <p className="mt-2 max-w-md text-slate-600">
-      You don’t have permission to view this page. If you believe this is a mistake,
-      contact your agency administrator.
+      {superAdmin
+        ? 'This is a platform-level page reserved for the super administrator.'
+        : 'You don’t have permission to view this page. If you believe this is a mistake, contact your agency administrator.'}
     </p>
   </div>
 );
@@ -62,12 +65,15 @@ const RedirectTo = ({ to }) => {
 const AuthenticatedApp = () => {
   const location = useLocation();
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  // Three-tier role model (see lib/roles.js): super_admin > facility_admin > nurse.
   // The platform super admin (owner email or super_admin account_type) reaches
   // admin routes even before their `role` is `admin`. This is what lets the
   // owner land on SuperAdminConfig on first sign-in so its ensureSuperAdmin
   // self-bootstrap can run — without it, an unpromoted owner hits the
   // AdminOnlyFallback and the chicken-and-egg never resolves.
-  const isAdmin = user?.role === 'admin' || isSuperAdmin(user);
+  const roleView = getRoleView(user);
+  const isSuperAdminUser = roleView === 'super_admin';
+  const isAdmin = roleView === 'super_admin' || roleView === 'facility_admin';
 
   // Public patient join/signer routes render WITHOUT authentication — they are
   // gated by capability tokens in the link, not by an app login. This is
@@ -125,24 +131,34 @@ const AuthenticatedApp = () => {
     }>
       <Routes>
         <Route path="/" element={<Navigate to={`/${MAIN_PAGE}`} replace />} />
-        {ROUTES.map(({ name, Component, adminOnly }) => (
-          <Route
-            key={name}
-            path={`/${name}`}
-            element={
-              <LayoutWrapper currentPageName={name}>
-                {/* Per-route boundary: a render error in one page shows a
-                    contained error here while the nav shell stays mounted, and
-                    navigating to another route remounts a fresh boundary (no
-                    full-app reload). The app-level boundary in App() still
-                    catches errors in the layout/providers themselves. */}
-                <ErrorBoundary key={name}>
-                  {adminOnly && !isAdmin ? <AdminOnlyFallback /> : <Component />}
-                </ErrorBoundary>
-              </LayoutWrapper>
-            }
-          />
-        ))}
+        {ROUTES.map(({ name, Component, adminOnly, superAdminOnly }) => {
+          // Role gate: platform-level pages require super_admin; other admin
+          // pages require facility_admin or super_admin; everything else is open.
+          const blockedSuperAdmin = superAdminOnly && !isSuperAdminUser;
+          const blockedAdmin = adminOnly && !isAdmin;
+          return (
+            <Route
+              key={name}
+              path={`/${name}`}
+              element={
+                <LayoutWrapper currentPageName={name}>
+                  {/* Per-route boundary: a render error in one page shows a
+                      contained error here while the nav shell stays mounted, and
+                      navigating to another route remounts a fresh boundary (no
+                      full-app reload). The app-level boundary in App() still
+                      catches errors in the layout/providers themselves. */}
+                  <ErrorBoundary key={name}>
+                    {blockedSuperAdmin
+                      ? <AdminOnlyFallback superAdmin />
+                      : blockedAdmin
+                        ? <AdminOnlyFallback />
+                        : <Component />}
+                  </ErrorBoundary>
+                </LayoutWrapper>
+              }
+            />
+          );
+        })}
         {REDIRECTS.map(({ from, to }) => (
           <Route key={from} path={from} element={<RedirectTo to={to} />} />
         ))}
