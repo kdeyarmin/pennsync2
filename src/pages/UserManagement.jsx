@@ -860,18 +860,8 @@ export default function UserManagement() {
                     <SelectValue placeholder="Select credential" />
                   </SelectTrigger>
                   <SelectContent style={{ zIndex: 9999 }}>
-                    <SelectItem value="none">None</SelectItem>
                     <SelectItem value="RN">RN - Registered Nurse</SelectItem>
                     <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
-                    <SelectItem value="LVN">LVN - Licensed Vocational Nurse</SelectItem>
-                    <SelectItem value="NP">NP - Nurse Practitioner</SelectItem>
-                    <SelectItem value="CNS">CNS - Clinical Nurse Specialist</SelectItem>
-                    <SelectItem value="PT">PT - Physical Therapist</SelectItem>
-                    <SelectItem value="OT">OT - Occupational Therapist</SelectItem>
-                    <SelectItem value="ST">ST - Speech Therapist</SelectItem>
-                    <SelectItem value="MSW">MSW - Medical Social Worker</SelectItem>
-                    <SelectItem value="HHA">HHA - Home Health Aide</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
