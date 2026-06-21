@@ -1306,6 +1306,213 @@ const ENRICHMENT = {
 };
 
 // ───────────────────────────────────────────────────────────────────────────
+// MODULE-LEVEL CONTENT ENRICHMENT (keyed by course key)
+// A realistic case scenario, a clinical pearl, a module summary, and self-check
+// questions for each in-service. The lesson viewer renders all of these, so
+// adding them turns plain text lessons into the kind of applied, professional
+// in-service staff actually engage with. Merged into each course's first module
+// and additively backfilled onto existing seeded courses (gaps only).
+// ───────────────────────────────────────────────────────────────────────────
+const cs = (title, patient_context, situation, challenge, guidance, what_could_go_wrong) =>
+  ({ title, patient_context, situation, challenge, guidance, what_could_go_wrong });
+
+const MODULE_ENRICHMENT = {
+  infection_control: {
+    summary: 'Consistent hand hygiene, task-matched PPE, and a clean field on every visit are the few habits that prevent most home-care infections.',
+    clinical_pearl: 'If you change only one thing, make it hand hygiene at the right moments — it prevents more infections than any single piece of PPE.',
+    check: ['At minimum, when should you perform hand hygiene during a visit?', 'How would you re-establish a clean field if your work surface became contaminated mid-task?'],
+    case_scenario: cs(
+      'A contaminated work surface',
+      '78-year-old with a stage 3 sacral wound; cluttered home with indoor pets.',
+      'You arrive for a scheduled dressing change and the only available surface is a cluttered side table covered in pet hair.',
+      'How do you set up safely before starting wound care?',
+      'Perform hand hygiene, lay down a clean barrier, organize clean supplies away from used items, and don task-appropriate PPE before opening the dressing kit.',
+      'Starting on a contaminated surface to save time can introduce pathogens directly into an open wound.'
+    ),
+  },
+  hipaa: {
+    summary: 'Share only the minimum necessary, secure devices and conversations in the field, and report any suspected breach immediately.',
+    clinical_pearl: "When unsure about sharing information, ask: does this person need this specific detail to care for this patient right now?",
+    check: ['Explain the "minimum necessary" standard in your own words.', 'What is the first thing you should do if you realize a fax went to the wrong office?'],
+    case_scenario: cs(
+      'A misdirected fax',
+      'Discharge summary containing diagnoses and a medication list.',
+      'You notice the discharge summary was faxed to a number belonging to a former referral source, not the current physician.',
+      'What do you do?',
+      "Stop, report the disclosure through your agency's privacy channel right away, and follow breach-assessment procedures — do not try to quietly fix or hide it.",
+      'Failing to report can turn a small, manageable disclosure into an unreported breach with regulatory consequences.'
+    ),
+  },
+  abuse_neglect: {
+    summary: 'Recognize the physical, behavioral, and environmental signs of mistreatment, document objectively, and report within required timeframes.',
+    clinical_pearl: 'You do not have to prove abuse occurred — you are required to report a reasonable suspicion. When unsure, report.',
+    check: ['Name two warning signs that should raise suspicion of neglect.', 'Who do you notify, and how quickly, when you suspect abuse?'],
+    case_scenario: cs(
+      'Unexplained bruising',
+      '82-year-old living with an adult child who manages their finances and medications.',
+      'You notice patterned bruising on both upper arms, and the patient becomes quiet and withdrawn when the caregiver enters the room.',
+      'What is your responsibility?',
+      'Document objective findings (location, pattern, patient demeanor) without accusation, ensure immediate safety, and report the suspicion to your supervisor and APS per state timeframes.',
+      'Dismissing the signs as accidental without reporting leaves a vulnerable adult at continued risk.'
+    ),
+  },
+  emergency_prep: {
+    summary: "Know your role, your patients' priority tiers, and your backup communication plan before an emergency — not during one.",
+    clinical_pearl: 'Patient acuity tiers exist so that when resources are stretched, the most vulnerable patients are reached first.',
+    check: ['What is your role in the agency emergency plan?', 'If phones and internet are down, how do you reach the office?'],
+    case_scenario: cs(
+      'A regional power outage',
+      'Your census includes an oxygen-dependent patient and an infusion patient.',
+      'A storm knocks out power across the service area for an expected 24–48 hours.',
+      'Which patients do you prioritize, and why?',
+      "Follow the emergency plan's priority tiers — reach life-support-dependent patients (oxygen, infusion) first, confirm backup power and supplies, and report status through the designated channel.",
+      'Visiting in routine order can delay help to a patient whose equipment fails without power.'
+    ),
+  },
+  osha_bbp: {
+    summary: 'Treat all blood and body fluids as infectious, use safe sharps technique, and know the wash-report-evaluate steps cold before you ever need them.',
+    clinical_pearl: 'Activate the sharps safety feature and dispose at the point of care — most needlesticks happen during the walk to find a container.',
+    check: ['What are the immediate steps after a needlestick exposure?', 'Where should a used needle be placed, and when?'],
+    case_scenario: cs(
+      'A needlestick during insulin administration',
+      'Diabetic patient; cramped bedroom with poor lighting.',
+      'While recapping a used insulin needle by hand, you sustain a needlestick to your finger.',
+      'What do you do, in order?',
+      'Wash the area with soap and water immediately, report the exposure to the office right away, and follow the post-exposure evaluation/prophylaxis protocol; never recap by hand.',
+      'Delaying reporting can push you past the window where post-exposure prophylaxis is most effective.'
+    ),
+  },
+  patient_rights: {
+    summary: 'Patients have the right to understand their care, participate in decisions, voice grievances without fear, and have advance directives honored.',
+    clinical_pearl: "An advance directive only protects a patient's wishes if the team knows it exists and it's in the record — confirm it on admission.",
+    check: ['How would you explain the grievance process to a patient in plain language?', "What do you do if care seems to conflict with a patient's advance directive?"],
+    case_scenario: cs(
+      'An unhonored preference',
+      'Patient with a documented DNR who is hospitalized frequently.',
+      'During a visit, the patient says no one explained their right to refuse a recommended treatment.',
+      'How do you respond?',
+      'Acknowledge the concern, explain their rights and the grievance process, and ensure the care team and the record reflect their informed choices and advance directive.',
+      'Proceeding without addressing the concern undermines informed consent and patient autonomy.'
+    ),
+  },
+  compliance_fraud: {
+    summary: 'Document the care you actually provided and its medical necessity; honest records are the foundation of compliant billing.',
+    clinical_pearl: "If it wasn't documented, it wasn't done — and if it was billed but not documented, that's a compliance problem.",
+    check: ['Why must documentation match the services billed?', 'Where do you take a compliance concern, and is it confidential?'],
+    case_scenario: cs(
+      'Pressure to upcode a visit',
+      'Routine follow-up visit with no change in condition.',
+      'A colleague suggests documenting a higher-complexity visit than what occurred to capture more reimbursement.',
+      'What is the right action?',
+      'Document only what was actually performed and medically necessary, decline to alter the record, and report the suggestion through the confidential compliance channel.',
+      'Inflating documentation to support a higher claim can create false-claims liability for you and the agency.'
+    ),
+  },
+  workplace_violence: {
+    summary: 'Read the environment, recognize escalation early, and use de-escalation, exit awareness, and check-ins to stay safe in the field.',
+    clinical_pearl: "Your safest move is often made before you enter — trust early warning signs and don't enter a situation you can't safely exit.",
+    check: ['Name two early warning signs of escalating aggression.', 'What is your personal-safety plan if a visit feels unsafe?'],
+    case_scenario: cs(
+      'An escalating household',
+      'Field visit to a home with a history of conflict between household members.',
+      'On arrival you hear shouting inside, and a visibly agitated, intoxicated person answers the door.',
+      'What do you do?',
+      'Do not enter; keep a safe distance and an exit path, calmly disengage and leave, notify the office, and reschedule with a safety plan or escort as needed.',
+      "Entering to 'just get the visit done' can place you in a situation with no safe exit."
+    ),
+  },
+  body_mechanics: {
+    summary: 'Assess the patient, equipment, and environment before every transfer, and use neutral posture and assistive devices instead of muscling the load.',
+    clinical_pearl: 'If a transfer feels unsafe, it is — stop and get a device or a second person rather than risking a fall or a back injury.',
+    check: ['What should you assess before initiating a transfer?', 'When is a mechanical lift or a second person indicated?'],
+    case_scenario: cs(
+      'A heavier-than-expected transfer',
+      'Patient post-stroke with left-sided weakness; no caregiver present.',
+      'The patient needs to move from bed to wheelchair but cannot bear weight as documented, and no transfer device is set up.',
+      'How do you proceed?',
+      'Reassess weight-bearing, position and lock the chair, use a gait belt with a device or schedule a two-person assist; never perform an unsafe solo lift.',
+      'Attempting a solo manual lift can drop the patient and cause a career-ending back injury.'
+    ),
+  },
+  aide_inservice: {
+    summary: "Aides keep core personal-care skills sharp and observation-ready, and promptly report any change in a patient's condition to the supervising nurse.",
+    clinical_pearl: 'Aides spend the most time with patients — your report of a small change is often the earliest warning the nurse gets.',
+    check: ['Name a change in condition you would report to the nurse right away.', 'Which personal-care task are you most due to have observed for competency?'],
+    case_scenario: cs(
+      'A subtle change during personal care',
+      'Elderly patient you assist with bathing three times weekly.',
+      'During a bath you notice new redness over the tailbone and the patient seems more confused than usual.',
+      'What do you do?',
+      'Complete care safely, avoid pressure on the area, and report the skin change and mental-status change to the supervising nurse promptly with specifics.',
+      "Assuming 'it's nothing' can delay treatment of a pressure injury or an acute change such as a UTI."
+    ),
+  },
+  oasis_homebound: {
+    summary: 'Accurate OASIS scoring and a specific, defensible homebound narrative protect both reimbursement and survey outcomes.',
+    clinical_pearl: 'Homebound has two prongs — a normal inability to leave home AND that leaving requires a taxing effort. Document both, with specifics.',
+    check: ['What two criteria must your homebound documentation support?', 'What makes an OASIS response defensible on audit?'],
+    case_scenario: cs(
+      'A thin homebound narrative',
+      'COPD patient who occasionally attends church with family assistance.',
+      "Your draft note simply states 'patient is homebound' with no supporting detail.",
+      'How do you strengthen it?',
+      'Describe the taxing effort to leave (dyspnea on exertion, requires assist and rest), supportive devices, and that absences are infrequent and effortful — tie OASIS items to objective findings.',
+      "A conclusory 'homebound' statement without specifics is a common audit denial."
+    ),
+  },
+  hospice_philosophy: {
+    summary: 'Frame care around comfort and patient/family goals, and match needs to the right level of care under the hospice benefit.',
+    clinical_pearl: "A change in symptoms isn't automatically a hospital trip — the right level of hospice care often meets the need at home.",
+    check: ['Name the four hospice levels of care.', 'What triggers a move to a higher level of care?'],
+    case_scenario: cs(
+      'A symptom crisis at home',
+      'Hospice patient with end-stage cancer; family overwhelmed by uncontrolled pain.',
+      'The family is considering calling 911 because pain is escalating overnight.',
+      'What hospice options apply?',
+      'Explain and mobilize the appropriate level of care — continuous home care or general inpatient for a symptom crisis — and coordinate with the IDG rather than defaulting to the ED.',
+      'An ED transfer can disrupt goals of care when an in-benefit option would serve the patient better.'
+    ),
+  },
+  hospice_pain: {
+    summary: 'Assess pain and symptoms systematically, anticipate end-of-life changes, and adjust the plan proactively to prevent crises.',
+    clinical_pearl: "Anticipate, don't chase — having breakthrough orders and a bowel regimen in place before they're needed prevents most pain crises.",
+    check: ['What elements belong in a thorough pain assessment?', 'How do you document response to an intervention?'],
+    case_scenario: cs(
+      'Breakthrough pain',
+      'Patient on a long-acting opioid for cancer pain.',
+      'The patient reports evening breakthrough pain rated 8/10 despite the scheduled regimen.',
+      'What is your approach?',
+      'Reassess pain characteristics and the regimen, ensure breakthrough medication and a bowel plan are ordered and used, educate the family, and document response to each intervention with the IDG.',
+      'Treating only the scheduled dose without addressing breakthrough pain leaves the patient suffering and erodes family trust.'
+    ),
+  },
+  medication_safety: {
+    summary: 'Reconcile the medication list at every opportunity and stay vigilant for high-alert drugs and interactions that drive avoidable harm.',
+    clinical_pearl: "The most dangerous medication list is the one that's out of date — reconcile against what the patient is actually taking, not just the chart.",
+    check: ['What does medication reconciliation involve?', 'Name two high-alert medication classes that warrant extra checks.'],
+    case_scenario: cs(
+      'A reconciliation discrepancy',
+      'Patient recently discharged from the hospital on a new anticoagulant.',
+      'During the home visit you find the patient is still taking the pre-hospital anticoagulant in addition to the newly prescribed one.',
+      'What do you do?',
+      'Stop, reconcile the full list against what the patient is actually taking, hold and clarify the duplicate with the prescriber immediately, and educate the patient on the corrected regimen.',
+      'Missing the duplication can cause a serious bleed from doubled anticoagulation.'
+    ),
+  },
+};
+
+// Returns only the enrichment fields the first module is missing, so backfill
+// and creation never overwrite content an author already provided.
+const moduleAdditions = (me, content) => {
+  const add = {};
+  if (me.clinical_pearl && !content.clinical_pearl) add.clinical_pearl = me.clinical_pearl;
+  if (me.summary && !content.summary) add.summary = me.summary;
+  if (me.check?.length && !(content.check_your_understanding || []).length) add.check_your_understanding = me.check;
+  if (me.case_scenario && !(content.case_scenarios || []).length) add.case_scenarios = [me.case_scenario];
+  return add;
+};
+
+// ───────────────────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -1323,6 +1530,7 @@ Deno.serve(async (req) => {
     for (const sample of courses) {
       const title = sample.title;
       const enrich = ENRICHMENT[sample.key] || {};
+      const me = MODULE_ENRICHMENT[sample.key] || {};
       const existing = await svc.TrainingCourse.filter({ title, annual_cycle_year: year }, '-created_date', 5);
       let course = existing[0];
 
@@ -1380,11 +1588,16 @@ Deno.serve(async (req) => {
         createdCourses.push(title);
 
         for (const [moduleIndex, module] of sample.modules.entries()) {
+          // Enrich the first module with an applied case scenario, clinical
+          // pearl, summary, and self-check questions (only fields it lacks).
+          const content_json = moduleIndex === 0
+            ? { ...module.content_json, ...moduleAdditions(me, module.content_json) }
+            : module.content_json;
           await svc.TrainingModule.create({
             course_id: course.id,
             title: module.title,
             type: 'lesson',
-            content_json: module.content_json,
+            content_json,
             order_index: moduleIndex,
             estimated_minutes: Math.max(10, Math.round((sample.estimated_minutes || 30) / sample.modules.length)),
             is_required: true,
@@ -1433,6 +1646,20 @@ Deno.serve(async (req) => {
         }
         if (Object.keys(patch).length > 0) {
           await svc.TrainingCourse.update(course.id, patch);
+        }
+
+        // Backfill the first module's applied content (scenario, pearl, summary,
+        // self-checks) on previously-seeded courses — additive, gaps only.
+        if (me.clinical_pearl || me.case_scenario || me.summary || me.check) {
+          const mods = await svc.TrainingModule.filter({ course_id: course.id }, 'order_index', 1);
+          const first = mods[0];
+          if (first) {
+            const content = first.content_json || {};
+            const add = moduleAdditions(me, content);
+            if (Object.keys(add).length > 0) {
+              await svc.TrainingModule.update(first.id, { content_json: { ...content, ...add } });
+            }
+          }
         }
       }
 
