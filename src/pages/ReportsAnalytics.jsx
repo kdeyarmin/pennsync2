@@ -20,10 +20,15 @@ import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementRepor
 import KPIDashboard from "@/components/reports/KPIDashboard";
 
 const AdminReportsCenter = lazy(() => import("@/pages/AdminReportsCenter"));
+// Performance Analytics (documentation time / AI utilization / quality, with
+// per-user drill-down and export) now renders as the "perf-dashboard" tab here.
+// /AnalyticsDashboard redirects in (see REDIRECTS in src/routes.jsx).
+const AnalyticsDashboard = lazy(() => import("@/pages/AnalyticsDashboard"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
-// ?tab= deep-link so the retired Reports Center page redirects to the right tab.
-const TAB_KEYS = ["kpi", "referrals", "outcomes", "performance", "oasis", "pdgm", "population", "reports-center"];
+// ?tab= deep-link so the retired Reports Center / Analytics Dashboard pages
+// redirect to the right tab.
+const TAB_KEYS = ["kpi", "perf-dashboard", "referrals", "outcomes", "performance", "oasis", "pdgm", "population", "reports-center"];
 
 const tabLoader = (
   <div className="flex justify-center py-12">
@@ -130,6 +135,10 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
               <BarChart3 className="w-4 h-4 mr-2" />
               KPI Dashboard
             </TabsTrigger>
+            <TabsTrigger value="perf-dashboard" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Activity className="w-4 h-4 mr-2" />
+              Performance Dashboard
+            </TabsTrigger>
             <TabsTrigger value="referrals" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               Referral Volume
             </TabsTrigger>
@@ -159,6 +168,12 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
         <TabsContent value="kpi">
           <KPIDashboard dateRange={dateRange} />
+        </TabsContent>
+
+        <TabsContent value="perf-dashboard">
+          <Suspense fallback={tabLoader}>
+            <AnalyticsDashboard />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="referrals">

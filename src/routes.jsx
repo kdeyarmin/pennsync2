@@ -148,17 +148,21 @@ export const REDIRECTS = [
   { from: '/SecurityPolicy', to: '/ComplianceCenter?tab=security&view=policies' },
 
   // ─── Learning consolidation ──────────────────────────────────────────────────
-  // The personal-training wrapper pages are now tabs of My Learning; NurseTraining
-  // is a tab of the Nurse Training Hub.
-  { from: '/MyTraining', to: '/MyLearning?tab=inservices' },
-  { from: '/MyAnnualEducation', to: '/MyLearning?tab=annual' },
-  { from: '/AnnualMandatoryEducation', to: '/MyLearning?tab=annual' },
-  { from: '/AnnualEducationTranscript', to: '/MyLearning?tab=transcripts' },
-  { from: '/EmployeeTranscript', to: '/MyLearning?tab=transcripts' },
+  // My Learning was merged into the Learning Center (the canonical learner hub):
+  // its My Courses / In-Services / Annual Education / Transcripts views are now
+  // tabs there. NurseTraining is a tab of the Nurse Training Hub.
+  { from: '/MyLearning', to: '/LearningCenter' },
+  { from: '/MyTraining', to: '/LearningCenter?tab=inservices' },
+  { from: '/MyAnnualEducation', to: '/LearningCenter?tab=annual' },
+  { from: '/AnnualMandatoryEducation', to: '/LearningCenter?tab=annual' },
+  { from: '/AnnualEducationTranscript', to: '/LearningCenter?tab=transcripts' },
+  { from: '/EmployeeTranscript', to: '/LearningCenter?tab=transcripts' },
   { from: '/NurseTraining', to: '/NurseTrainingHub?tab=documentation' },
 
   // ─── Misc hub consolidations ─────────────────────────────────────────────────
   { from: '/AdminReportsCenter', to: '/ReportsAnalytics?tab=reports-center' },
+  // Analytics Dashboard (Performance Analytics) folded into Reports & Analytics.
+  { from: '/AnalyticsDashboard', to: '/ReportsAnalytics?tab=perf-dashboard' },
 
   // ─── Feature-audit consolidation ─────────────────────────────────────────────
   // Redundant standalone pages folded into their canonical homes — see

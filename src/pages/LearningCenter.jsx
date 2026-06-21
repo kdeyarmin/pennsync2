@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
@@ -42,8 +42,9 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
+import EmbeddedPage from '@/components/ui/embeddedPage';
 import { createPageUrl } from '@/utils';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import CertificateDownloadButton from '@/components/training/CertificateDownloadButton';
 import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel';
 import GamificationDashboard from '@/components/training/GamificationDashboard';
@@ -51,6 +52,29 @@ import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
 import { generateLearningTranscriptPDF } from '@/functions/generateLearningTranscriptPDF';
 import { submitCourseFeedback } from '@/functions/submitCourseFeedback';
 import { getCourseFeedbackSummary } from '@/functions/getCourseFeedbackSummary';
+
+// Lazy spokes — the former My Learning hub's tabs (My Courses, In-Services,
+// Annual Education, Transcripts) now render inside this canonical Learning Center.
+// /MyLearning and its sub-page paths redirect here (see REDIRECTS in src/routes.jsx).
+const MyTraining = lazy(() => import('@/pages/MyTraining'));
+const MyAnnualEducation = lazy(() => import('@/pages/MyAnnualEducation'));
+const AnnualMandatoryEducation = lazy(() => import('@/pages/AnnualMandatoryEducation'));
+const AnnualEducationTranscript = lazy(() => import('@/pages/AnnualEducationTranscript'));
+const EmployeeTranscript = lazy(() => import('@/pages/EmployeeTranscript'));
+
+// Tab keys kept in sync with the TabsTrigger values below, so the ?tab= deep-link
+// (and the redirects from the retired My Learning pages) resolve to the right tab.
+// "active" is the default.
+const TAB_KEYS = [
+  'active', 'plans', 'catalog', 'competencies', 'certificates', 'renewals', 'achievements',
+  'courses', 'inservices', 'annual', 'transcripts',
+];
+
+const tabLoader = (
+  <div className="flex justify-center py-12">
+    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+  </div>
+);
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
 
@@ -438,6 +462,24 @@ export default function LearningCenter() {
     ? Math.round((completedAssignments.length / assignments.length) * 100)
     : 0;
 
+  // Controlled tabs so the active tab is shareable/bookmarkable and the redirects
+  // from the retired My Learning pages deep-link correctly. "active" is the default,
+  // so it stays a clean /LearningCenter with no query string.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : 'active';
+  const handleTabChange = (value) => {
+    setSearchParams(value === 'active' ? {} : { tab: value });
+  };
+  // Converge on the canonical URL: strip a redundant or unknown ?tab= so the
+  // default tab is plain /LearningCenter (a valid deep-link like ?tab=annual is
+  // left untouched).
+  useEffect(() => {
+    if (requestedTab !== null && activeTab === 'active') {
+      setSearchParams({}, { replace: true });
+    }
+  }, [requestedTab, activeTab, setSearchParams]);
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -463,18 +505,6 @@ export default function LearningCenter() {
                 <><Download className="w-4 h-4 mr-1.5" /> Transcript PDF</>
               )}
             </Button>
-            <Link to={createPageUrl('MyLearning')}>
-              <Button variant="outline" size="sm">
-                <BookOpen className="w-4 h-4 mr-1.5" />
-                My Courses
-              </Button>
-            </Link>
-            <Link to={createPageUrl('MyAnnualEducation')}>
-              <Button variant="outline" size="sm">
-                <GraduationCap className="w-4 h-4 mr-1.5" />
-                My Annual Education
-              </Button>
-            </Link>
             {isEducatorOrAdmin && (
               <Link to={createPageUrl('AdminTraining')}>
                 <Button variant="outline" size="sm">
@@ -718,7 +748,7 @@ export default function LearningCenter() {
                 </div>
               ))}
               {overdueAssignments.length > 3 && (
-                <Link to={createPageUrl('MyLearning')}>
+                <Link to={`${createPageUrl('LearningCenter')}?tab=courses`}>
                   <Button variant="ghost" size="sm" className="text-red-700 w-full">
                     View all {overdueAssignments.length} overdue courses
                   </Button>
@@ -753,7 +783,8 @@ export default function LearningCenter() {
       )}
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="active" className="space-y-4">
+      <EmbeddedPage>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
             <TabsTrigger value="active" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
@@ -783,6 +814,22 @@ export default function LearningCenter() {
             <TabsTrigger value="achievements" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Trophy className="w-4 h-4 mr-2" />
               Achievements
+            </TabsTrigger>
+            <TabsTrigger value="courses" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <BookOpen className="w-4 h-4 mr-2" />
+              My Courses
+            </TabsTrigger>
+            <TabsTrigger value="inservices" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Sparkles className="w-4 h-4 mr-2" />
+              In-Services
+            </TabsTrigger>
+            <TabsTrigger value="annual" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Calendar className="w-4 h-4 mr-2" />
+              Annual Education
+            </TabsTrigger>
+            <TabsTrigger value="transcripts" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Award className="w-4 h-4 mr-2" />
+              Transcripts
             </TabsTrigger>
           </TabsList>
         </div>
@@ -852,7 +899,7 @@ export default function LearningCenter() {
             })
           )}
           {activeAssignments.length > 0 && (
-            <Link to={createPageUrl('MyLearning')}>
+            <Link to={`${createPageUrl('LearningCenter')}?tab=courses`}>
               <Button variant="outline" className="w-full">
                 View Full Training Dashboard
               </Button>
@@ -1111,7 +1158,7 @@ export default function LearningCenter() {
               ))}
             </div>
           )}
-          <Link to={createPageUrl('MyLearning')}>
+          <Link to={`${createPageUrl('LearningCenter')}?tab=competencies`}>
             <Button variant="outline" className="w-full">
               View All Competencies
             </Button>
@@ -1172,7 +1219,7 @@ export default function LearningCenter() {
             </div>
           )}
           {certificates.length > 0 && (
-            <Link to={createPageUrl('MyLearning')}>
+            <Link to={`${createPageUrl('LearningCenter')}?tab=certificates`}>
               <Button variant="outline" className="w-full">
                 View All Certificates
               </Button>
@@ -1252,7 +1299,79 @@ export default function LearningCenter() {
         <TabsContent value="achievements" className="space-y-3">
           {user?.email && <GamificationDashboard userId={user.email} />}
         </TabsContent>
+
+        {/* My Courses — the full course dashboard (formerly the My Learning page). */}
+        <TabsContent value="courses">
+          <Suspense fallback={tabLoader}>
+            <MyTraining />
+          </Suspense>
+        </TabsContent>
+
+        {/* In-Services — same dashboard, filtered to assigned in-services. */}
+        <TabsContent value="inservices">
+          <Suspense fallback={tabLoader}>
+            <MyTraining filterByType="in_service" />
+          </Suspense>
+        </TabsContent>
+
+        {/* Annual Education — the employee dashboard plus the admin builder
+            (the builder self-gates to admins via AccessDeniedState). */}
+        <TabsContent value="annual">
+          <Suspense fallback={tabLoader}>
+            <Tabs defaultValue="my-education" className="space-y-4">
+              <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                  <TabsTrigger value="my-education" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                    My Education
+                  </TabsTrigger>
+                  <TabsTrigger value="builder" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                    Education Builder
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="my-education">
+                <Suspense fallback={tabLoader}>
+                  <MyAnnualEducation />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="builder">
+                <Suspense fallback={tabLoader}>
+                  <AnnualMandatoryEducation />
+                </Suspense>
+              </TabsContent>
+            </Tabs>
+          </Suspense>
+        </TabsContent>
+
+        {/* Transcripts — Annual and Employee certificate history. */}
+        <TabsContent value="transcripts">
+          <Suspense fallback={tabLoader}>
+            <Tabs defaultValue="annual" className="space-y-4">
+              <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                  <TabsTrigger value="annual" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                    Annual
+                  </TabsTrigger>
+                  <TabsTrigger value="employee" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                    Employee
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="annual">
+                <Suspense fallback={tabLoader}>
+                  <AnnualEducationTranscript />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="employee">
+                <Suspense fallback={tabLoader}>
+                  <EmployeeTranscript />
+                </Suspense>
+              </TabsContent>
+            </Tabs>
+          </Suspense>
+        </TabsContent>
       </Tabs>
+      </EmbeddedPage>
 
       {/* Recently Completed Section */}
       {completedAssignments.length > 0 && (
@@ -1300,7 +1419,7 @@ export default function LearningCenter() {
               })}
             </div>
             {completedAssignments.length > 6 && (
-              <Link to={createPageUrl('MyLearning')}>
+              <Link to={`${createPageUrl('LearningCenter')}?tab=courses`}>
                 <Button variant="ghost" size="sm" className="w-full mt-3 text-slate-500">
                   View all {completedAssignments.length} completed courses
                 </Button>

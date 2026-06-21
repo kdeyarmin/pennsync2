@@ -47,36 +47,43 @@ links/bookmarks still resolve.
 
 ---
 
-## Planned (larger merges — UI work, not yet done)
+## Larger merges (done)
 
-These require combining real components, so they are documented rather than auto-applied.
+These combined real components, so they were done after confirming the canonical page.
 
-### Analytics: 5 pages → 3
+### Analytics: 5 pages → 3 ✅ done
+
+Direction chosen: fold **AnalyticsDashboard** into **ReportsAnalytics**.
 
 | Page | Decision | Notes |
 |---|---|---|
-| `ReportsAnalytics` | **Keep** (compliance/PDGM/export home) | Move its KPI tab into `AnalyticsDashboard`. Its **Population Health tab makes on-demand LLM calls** — biggest recurring AI cost in this cluster. |
-| `AnalyticsDashboard` | **Keep** (becomes "Performance & Compliance") | Absorb ReportsAnalytics' KPI tab; has unique per-user drill-down + PDF/JSON export. |
+| `ReportsAnalytics` | **Canonical** (single operational dashboard) | Now hosts a **"Performance Dashboard"** tab that lazy-embeds AnalyticsDashboard (via `EmbeddedPage`, so no duplicate header). Its **Population Health tab makes on-demand LLM calls** — biggest recurring AI cost in this cluster. |
+| `AnalyticsDashboard` | **Folded in** ✅ | `/AnalyticsDashboard → /ReportsAnalytics?tab=perf-dashboard`. File kept (rendered as the embedded tab). |
 | `PredictiveAnalytics` | **Keep** (risk/forecast home) | |
 | `AgencyAnalytics` | **Keep** (business: financial + training) | Genuinely distinct; no LLM. |
-| `ClinicalInsightsDashboard` | **Cut** ✅ done | Redirected to Predictive Analytics. |
+| `ClinicalInsightsDashboard` | **Cut** ✅ | Redirected to Predictive Analytics. |
 
-**AI-cost win:** Population-health / risk analysis is currently implemented in three places
-(`ReportsAnalytics` Population Health, `PredictiveAnalytics`, `ClinicalInsightsDashboard`).
-Cutting the third and consolidating on Predictive Analytics stops paying for the same
-analysis multiple times. Prefer batch/pre-computed scoring over the on-demand `invokeLLM()`
-call in ReportsAnalytics' Population Health tab.
+**AI-cost win:** population/risk analysis previously lived in three places
+(`ReportsAnalytics` Population Health, `PredictiveAnalytics`, `ClinicalInsightsDashboard`);
+cutting the third consolidates on Predictive Analytics. Still recommended: prefer
+batch/pre-computed scoring over the on-demand `invokeLLM()` call in ReportsAnalytics'
+Population Health tab.
 
-### Training: 6 pages → 2 (+ EducationLibrary reclassified)
+### Training: 6 pages → 2 (+ EducationLibrary reclassified) ✅ done
+
+Direction chosen: **LearningCenter** is canonical; **MyLearning** folded in.
 
 | Page | Decision | Notes |
 |---|---|---|
-| `LearningCenter` (1,376 lines) | **Merge** with `MyLearning` | Two competing learner "home" dashboards. |
-| `MyLearning` (182 lines) | **Merge target** | Keep its clean `?tab=` wrapper pattern; fold in LearningCenter's catalog/certs/renewals/gamification. |
+| `LearningCenter` (1,376 lines) | **Canonical hub** | Converted to controlled `?tab=` tabs; added **My Courses / In-Services / Annual Education / Transcripts** tabs that lazy-embed the former MyLearning spokes. |
+| `MyLearning` | **Folded in** ✅ | `/MyLearning → /LearningCenter`; its sub-page redirects (MyTraining, MyAnnualEducation, AnnualMandatoryEducation, Annual/Employee transcripts) now deep-link to the matching LearningCenter tab. Removed from the sidebar. |
 | `NurseTrainingHub` | **Keep** | AI-personalized hub. |
-| `DocumentationTraining` | **Cut + file deleted** ✅ done | |
-| `NurseEducationVideos` | **Cut** ✅ done | |
-| `EducationLibrary` | **Keep, recategorize** | Not staff training — it manages **patient** education materials. Move under Patient Care, not Learning & Resources. |
+| `DocumentationTraining` | **Cut + file deleted** ✅ | |
+| `NurseEducationVideos` | **Cut** ✅ | |
+| `EducationLibrary` | **Keep** | Not staff training — it manages **patient** education materials. (Recategorization under Patient Care still recommended; not yet moved.) |
+
+`TrainingCoursePlayer`'s breadcrumb parent and its "Back to My Learning" / "View All
+Certificates" buttons were repointed from MyLearning to the LearningCenter tabs.
 
 ### Patient views: 4 → 3 (done)
 
@@ -92,6 +99,7 @@ Alerts.
 - `nav.manifest.js` and `routes.jsx` remain the single sources of truth; sidebar, palette,
   breadcrumbs, and Admin Console directory all derive from the manifest, so the cuts
   propagate automatically.
-- Old links/bookmarks to the five cut pages resolve via the new redirects (no
+- Old links/bookmarks to the cut/folded pages resolve via the new redirects (no
   PageNotFound).
-- Run `npm run build` and `npm run test:utils` to confirm.
+- Verified on this branch: `npm run build` (exit 0), `npm run test:utils` (594 pass),
+  `npm run test:components` (82 pass, incl. the nav-page mount tests).

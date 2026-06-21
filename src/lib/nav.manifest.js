@@ -384,16 +384,7 @@ export const NAV_MANIFEST = [
     category: "Learning & Resources",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["learning", "courses", "catalog", "browse", "education"],
-  },
-  {
-    page: "MyLearning",
-    label: "My Courses",
-    icon: BookOpen,
-    category: "Learning & Resources",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["training", "my courses", "progress", "education"],
+    keywords: ["learning", "courses", "catalog", "browse", "education", "my courses", "in-services", "annual education", "transcripts", "training", "progress", "certificates", "competencies"],
   },
   {
     page: "TrainingCoursePlayer",
@@ -401,7 +392,7 @@ export const NAV_MANIFEST = [
     icon: GraduationCap,
     category: null,
     adminOnly: false,
-    breadcrumbParent: "MyLearning",
+    breadcrumbParent: "LearningCenter",
     keywords: ["course", "player", "training", "video"],
   },
   {
@@ -626,7 +617,7 @@ export const NAV_MANIFEST = [
     category: "Administration",
     adminOnly: true,
     breadcrumbParent: null,
-    keywords: ["reports", "analytics", "metrics", "export", "data"],
+    keywords: ["reports", "analytics", "metrics", "export", "data", "performance dashboard", "documentation time", "ai utilization", "quality score"],
   },
   {
     page: "AgencyAnalytics",
@@ -636,15 +627,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: "ReportsAnalytics",
     keywords: ["agency", "analytics", "metrics"],
-  },
-  {
-    page: "AnalyticsDashboard",
-    label: "Analytics Dashboard",
-    icon: PieChart,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ReportsAnalytics",
-    keywords: ["analytics", "dashboard"],
   },
   {
     page: "PredictiveAnalytics",
