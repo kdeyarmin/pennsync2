@@ -156,13 +156,8 @@ export default function UserSettings() {
 
     setIsSaving(true);
     try {
-      // Update user profile. full_name drives the dashboard greeting and other
-      // name displays, so let users correct it here (new accounts default it to
-      // the email prefix). Only send full_name when non-empty so a blank field
-      // never wipes an existing name (matches the backend's "never wipe" rule).
-      const trimmedFullName = profileData.full_name.trim();
+      // full_name is admin-set at invite time and must not be changed by the user.
       await base44.auth.updateMe({
-        ...(trimmedFullName ? { full_name: trimmedFullName } : {}),
         phone: profileData.phone,
         credential_type: profileData.credential_type,
       });
@@ -170,7 +165,7 @@ export default function UserSettings() {
       // Update AI config
       const configData = {
         user_email: currentUser.email,
-        user_name: trimmedFullName || currentUser.full_name,
+        user_name: currentUser.full_name,
         ...preferences
       };
 
@@ -194,15 +189,10 @@ export default function UserSettings() {
 
   const handleSaveProfile = async () => {
     if (!currentUser?.email) return;
-    const trimmedFullName = profileData.full_name.trim();
-    if (!trimmedFullName) {
-      toast.error('Please enter your full name before saving.');
-      return;
-    }
     setIsSavingProfile(true);
     try {
+      // full_name is admin-set at invite time and is intentionally NOT sent here.
       await base44.auth.updateMe({
-        full_name: trimmedFullName,
         phone: profileData.phone,
         credential_type: profileData.credential_type,
       });
@@ -338,16 +328,11 @@ export default function UserSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="full_name" className="text-sm font-medium">Full Name</Label>
-                <Input
-                  id="full_name"
-                  type="text"
-                  placeholder="e.g. Kevin Deyarmin"
-                  value={profileData.full_name}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
-                  className="mt-1"
-                />
-                <p className="mt-1 text-xs text-slate-500">This is the name shown in your dashboard greeting and across the app.</p>
+                <Label className="text-sm font-medium">Full Name</Label>
+                <div className="mt-1 px-3 py-2 rounded-md border border-slate-200 bg-slate-50 text-slate-900">
+                  {currentUser?.full_name || '—'}
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Your name is set by your administrator and cannot be changed here. Contact your administrator if it needs to be corrected.</p>
               </div>
               <div>
                 <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
@@ -389,7 +374,7 @@ export default function UserSettings() {
                   {isSavingProfile ? (
                     <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                   ) : (
-                    <><Save className="w-4 h-4 mr-2" /> Save Profile Information</>
+                    <><Save className="w-4 h-4 mr-2" /> Save Contact Info</>
                   )}
                 </Button>
               </div>
