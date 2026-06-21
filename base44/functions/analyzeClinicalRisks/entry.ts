@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -119,87 +136,13 @@ For EACH identified risk or concern, provide:
 - **Patient Education Topics**: What patient/family should understand
 - **Nurse Education Resources**: If nurse needs training in this area
 
-Return comprehensive JSON analysis:`;
+Return comprehensive JSON analysis.
 
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          overall_risk_score: { type: "number" },
-          risk_level: { type: "string" },
-          clinical_alerts: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                alert_type: { type: "string" },
-                severity: { type: "string" },
-                title: { type: "string" },
-                clinical_evidence: { type: "array", items: { type: "string" } },
-                recommended_interventions: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      intervention: { type: "string" },
-                      priority: { type: "number" },
-                      rationale: { type: "string" },
-                      expected_outcome: { type: "string" }
-                    }
-                  }
-                },
-                patient_education_topics: { type: "array", items: { type: "string" } },
-                nurse_education_resources: { type: "array", items: { type: "string" } },
-                monitoring_frequency: { type: "string" },
-                escalation_criteria: { type: "string" }
-              }
-            }
-          },
-          trend_analysis: {
-            type: "object",
-            properties: {
-              vital_signs_trend: { type: "string" },
-              functional_status_trend: { type: "string" },
-              care_plan_progress: { type: "string" },
-              incident_frequency: { type: "string" }
-            }
-          },
-          care_plan_deviations: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                care_plan_problem: { type: "string" },
-                deviation_description: { type: "string" },
-                corrective_action: { type: "string" }
-              }
-            }
-          },
-          medication_concerns: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                concern_type: { type: "string" },
-                medications_involved: { type: "array", items: { type: "string" } },
-                risk_description: { type: "string" },
-                recommendation: { type: "string" }
-              }
-            }
-          },
-          predictive_insights: {
-            type: "object",
-            properties: {
-              readmission_risk: { type: "string" },
-              fall_risk: { type: "string" },
-              infection_risk: { type: "string" },
-              deterioration_risk: { type: "string" }
-            }
-          }
-        }
-      }
-    });
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"overall_risk_score":0,"risk_level":"","clinical_alerts":[{"alert_type":"","severity":"","title":"","clinical_evidence":[""],"recommended_interventions":[{"intervention":"","priority":0,"rationale":"","expected_outcome":""}],"patient_education_topics":[""],"nurse_education_resources":[""],"monitoring_frequency":"","escalation_criteria":""}],"trend_analysis":{"vital_signs_trend":"","functional_status_trend":"","care_plan_progress":"","incident_frequency":""},"care_plan_deviations":[{"care_plan_problem":"","deviation_description":"","corrective_action":""}],"medication_concerns":[{"concern_type":"","medications_involved":[""],"risk_description":"","recommendation":""}],"predictive_insights":{"readmission_risk":"","fall_risk":"","infection_risk":"","deterioration_risk":""}}`;
+
+    const raw = await base44.integrations.Core.InvokeLLM({ prompt });
+    const result = parseLLMJson(raw) || {};
 
     return Response.json({
       success: true,

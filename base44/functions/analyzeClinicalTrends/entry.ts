@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -47,7 +64,7 @@ Deno.serve(async (req) => {
     );
 
     // Analyze trends with AI
-    const result = await base44.integrations.Core.InvokeLLM({
+    const rawTrends = await base44.integrations.Core.InvokeLLM({
       prompt: `Analyze this patient's clinical data over time and identify significant trends, patterns, and risks.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -107,117 +124,12 @@ Analyze and provide:
    - Goals being met
    - Successful interventions
 
-Provide actionable insights for clinicians.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          vital_trends: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                vital_type: { type: "string" },
-                trend_direction: { type: "string" },
-                concern_level: { type: "string" },
-                description: { type: "string" },
-                recommendation: { type: "string" }
-              }
-            }
-          },
-          symptom_patterns: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                symptom: { type: "string" },
-                pattern: { type: "string" },
-                severity_trend: { type: "string" },
-                clinical_notes: { type: "string" }
-              }
-            }
-          },
-          medication_insights: {
-            type: "object",
-            properties: {
-              adherence_assessment: { type: "string" },
-              effectiveness_notes: { type: "string" },
-              concerns: {
-                type: "array",
-                items: { type: "string" }
-              }
-            }
-          },
-          risk_indicators: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                risk_type: { type: "string" },
-                severity: { type: "string" },
-                evidence: { type: "string" },
-                action_needed: { type: "string" }
-              }
-            }
-          },
-          positive_trends: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                achievement: { type: "string" },
-                supporting_data: { type: "string" }
-              }
-            }
-          },
-          comparative_insights: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                correlation: { type: "string" },
-                metric_a: { type: "string" },
-                metric_b: { type: "string" },
-                relationship: { type: "string" },
-                clinical_significance: { type: "string" }
-              }
-            }
-          },
-          predictive_analytics: {
-            type: "object",
-            properties: {
-              readmission_risk_score: { type: "number" },
-              readmission_risk_level: { type: "string" },
-              deterioration_risk_score: { type: "number" },
-              deterioration_risk_level: { type: "string" },
-              key_risk_factors: {
-                type: "array",
-                items: { type: "string" }
-              },
-              predicted_outcomes: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    outcome: { type: "string" },
-                    probability: { type: "string" },
-                    timeframe: { type: "string" },
-                    prevention_strategies: {
-                      type: "array",
-                      items: { type: "string" }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          overall_trajectory: { type: "string" },
-          priority_recommendations: {
-            type: "array",
-            items: { type: "string" }
-          }
-        }
-      }
+Provide actionable insights for clinicians.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"vital_trends":[{"vital_type":"","trend_direction":"","concern_level":"","description":"","recommendation":""}],"symptom_patterns":[{"symptom":"","pattern":"","severity_trend":"","clinical_notes":""}],"medication_insights":{"adherence_assessment":"","effectiveness_notes":"","concerns":[""]},"risk_indicators":[{"risk_type":"","severity":"","evidence":"","action_needed":""}],"positive_trends":[{"achievement":"","supporting_data":""}],"comparative_insights":[{"correlation":"","metric_a":"","metric_b":"","relationship":"","clinical_significance":""}],"predictive_analytics":{"readmission_risk_score":0,"readmission_risk_level":"","deterioration_risk_score":0,"deterioration_risk_level":"","key_risk_factors":[""],"predicted_outcomes":[{"outcome":"","probability":"","timeframe":"","prevention_strategies":[""]}]},"overall_trajectory":"","priority_recommendations":[""]}`
     });
+    const result = parseLLMJson(rawTrends) || {};
 
     return Response.json({
       success: true,
