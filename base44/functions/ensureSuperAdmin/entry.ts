@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * ensureSuperAdmin — promotes the designated platform owner
@@ -17,7 +17,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
 
-const sameEmail = (a: unknown, b: unknown) =>
+const sameEmail = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
 Deno.serve(async (req) => {
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.User.update(target.id, { role: 'admin' });
         roleUpdated = true;
       } catch (err) {
-        console.error('ensureSuperAdmin: could not set role=admin directly:', (err as Error).message);
+        console.error('ensureSuperAdmin: could not set role=admin directly:', err.message);
       }
     }
 
@@ -85,6 +85,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('ensureSuperAdmin error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -21,10 +21,10 @@ Deno.serve(async (req) => {
     // rejection-sampled to avoid the modulo bias of `byte % alphabetLength`
     // (the alphabet length does not divide 256).
     const PW_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-    const randomIndex = (max: number): number => {
+    const randomIndex = (max) => {
       const limit = Math.floor(256 / max) * max;
       const buf = new Uint8Array(1);
-      let x: number;
+      let x;
       do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
       return x % max;
     };
