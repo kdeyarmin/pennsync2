@@ -615,7 +615,7 @@ async function handleFaxEvent(base44, payload) {
       title: '✅ Fax delivered',
       message: `Your fax to ${recipientName} was delivered successfully (${update.pages || faxLog.pages || 'N/A'} pages).`,
       type: 'fax_delivered', priority: 'medium', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
-      is_read: false, action_url: `/fax-logs?fax_id=${faxLog.id}`,
+      is_read: false, action_url: `/SendFax?tab=logs&fax_id=${faxLog.id}`,
     }).catch((err) => console.error('Failed to send fax delivered notification:', err));
   }
 
@@ -627,7 +627,7 @@ async function handleFaxEvent(base44, payload) {
       title: '❌ Fax failed',
       message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${update.failure_reason}). Verify the number and resend.`,
       type: 'fax_failed', priority: 'high', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
-      is_read: false, action_url: `/send-fax?fax_id=${faxLog.id}`,
+      is_read: false, action_url: `/SendFax?fax_id=${faxLog.id}`,
     }).catch((err) => console.error('Failed to send fax failure notification:', err));
   }
   return Response.json({ success: true, status: mapped });
