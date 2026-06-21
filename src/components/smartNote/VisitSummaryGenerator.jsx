@@ -23,13 +23,21 @@ function SectionBlock({ section, content, copiedKey, onCopy }) {
   const isCopied = copiedKey === section.key;
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 bg-slate-50 cursor-pointer" onClick={() => setOpen(o => !o)}>
-        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">{section.label}</span>
+      <div className="flex items-center justify-between px-3 py-2 bg-slate-50">
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          className="flex flex-1 items-center text-left cursor-pointer"
+        >
+          <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">{section.label}</span>
+        </button>
         <div className="flex items-center gap-2">
           <button
-            onClick={e => { e.stopPropagation(); onCopy(section.key, content); }}
+            onClick={() => onCopy(section.key, content)}
             className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
             title={`Copy ${section.label}`}
+            aria-label="Copy summary"
           >
             {isCopied ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>

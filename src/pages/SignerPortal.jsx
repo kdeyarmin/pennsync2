@@ -61,8 +61,9 @@ export default function SignerPortal() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4" role="status">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        <span className="sr-only">Validating access…</span>
       </div>
     );
   }
@@ -71,7 +72,7 @@ export default function SignerPortal() {
 
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4" role="status">
         <Card className="max-w-md w-full border-green-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-700">
@@ -95,7 +96,7 @@ export default function SignerPortal() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4" role="alert">
         <Card className="max-w-md w-full border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">

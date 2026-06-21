@@ -35,7 +35,7 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
 
   const { data: modules = [] } = useQuery({
     queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }).catch(() => [])
+    queryFn: () => base44.entities.TrainingModule.filter({}).catch(() => [])
   });
 
   const { data: tasks = [] } = useQuery({

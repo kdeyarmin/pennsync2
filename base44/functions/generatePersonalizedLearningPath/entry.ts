@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     });
 
     // Get all available training modules
-    const allModules = await base44.asServiceRole.entities.TrainingModule.filter({ is_active: true });
+    const allModules = await base44.asServiceRole.entities.TrainingModule.filter({});
 
     // Use AI to generate personalized learning path
     const prompt = `

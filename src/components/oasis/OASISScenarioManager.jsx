@@ -66,6 +66,7 @@ export default function OASISScenarioManager({
   // Fetch saved scenarios
   const { data: savedScenarios = [] } = useQuery({
     queryKey: ['oasis-scenarios', analysisId],
+    // Scenarios are scoped to the OASIS analysis they were modeled from.
     queryFn: () => base44.entities.OASISScenario.filter({ analysis_id: analysisId }),
     enabled: !!analysisId
   });

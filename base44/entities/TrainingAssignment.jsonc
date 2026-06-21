@@ -161,6 +161,13 @@
       "format": "date",
       "description": "Last reminder sent date"
     },
+    "reminder_offsets_sent": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "List of expiration reminder offsets already sent"
+    },
     "completion_date": {
       "type": "string",
       "format": "date-time",

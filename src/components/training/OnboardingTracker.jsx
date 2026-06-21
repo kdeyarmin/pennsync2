@@ -17,10 +17,7 @@ import {
 export default function OnboardingTracker({ nurseEmail, onStartModule }) {
   const { data: modules = [] } = useQuery({
     queryKey: ['onboardingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ 
-      required_for_onboarding: true,
-      is_active: true 
-    }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
     initialData: [],
   });
 

@@ -387,7 +387,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
   if (status === "connecting") {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-slate-900 rounded-xl">
+      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-slate-900 rounded-xl" role="status">
         <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
         <p className="text-white text-lg">Connecting to session...</p>
       </div>
@@ -396,7 +396,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
   if (status === "error") {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-slate-900 rounded-xl">
+      <div className="flex flex-col items-center justify-center h-96 gap-4 bg-slate-900 rounded-xl" role="status">
         <p className="text-red-400 text-lg">Failed to connect: {error}</p>
         <Button onClick={connectToRoom} variant="outline">Retry</Button>
       </div>
@@ -410,7 +410,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     <div ref={containerRef} className={`flex flex-col gap-4 ${isFullscreen ? "h-full overflow-y-auto bg-slate-950 p-4" : ""}`}>
       {/* Status bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" aria-live="polite">
           {status === "reconnecting" ? (
             <>
               <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />

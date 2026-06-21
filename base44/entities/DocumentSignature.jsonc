@@ -126,6 +126,46 @@
       "format": "date-time",
       "description": "Expiration date for signature requests (30 days default)"
     },
+    "due_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Deadline by which signatures should be completed (read by signatureUtils.getSignatureDueDate / isSignatureOverdue)"
+    },
+    "required_signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signer_id": {
+            "type": "string",
+            "description": "ID of the signer this required-signature entry refers to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the signer"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the signer (e.g., patient, witness)"
+          },
+          "is_required": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this signature is required for completion"
+          },
+          "is_signed": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this required signature has been collected"
+          },
+          "order": {
+            "type": "number",
+            "description": "Signing order for this entry"
+          }
+        }
+      },
+      "description": "Per-signer required-signature progress entries (read by signatureUtils.getSignerProgress and DocumentSignatureTracker)"
+    },
     "reminder_sent": {
       "type": "boolean",
       "default": false,

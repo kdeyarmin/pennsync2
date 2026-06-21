@@ -122,8 +122,6 @@ export default function DocumentPackageCreator({ open, onClose }) {
           signaturePromises.push(
             base44.entities.DocumentSignature.create({
               patient_id: patientId,
-              template_id: template.id,
-              template_document_id: packetDocument.document_id || `${template.id}-${index + 1}`,
               document_type: template.template_category,
               document_title: documentName,
               document_content: pdfUrl || '',
@@ -148,10 +146,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 is_signed: false,
                 order: signer.order || signerIndex + 1,
               })),
-              field_mappings: packetDocument.field_mappings || template.field_mappings || [],
-              carry_forward_fields: packetDocument.carry_forward_fields || template.carry_forward_fields || [],
               due_date: dueDate || null,
-              form_data: useExistingPatient ? null : patientData,
             })
           );
         }
@@ -185,10 +180,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 }]
               : [],
             required_signatures: [],
-            field_mappings: [],
-            carry_forward_fields: [],
             due_date: dueDate || null,
-            form_data: useExistingPatient ? null : patientData,
           })
         );
       }

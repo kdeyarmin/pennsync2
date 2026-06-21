@@ -23,10 +23,7 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
 
   const { data: modules = [] } = useQuery({
     queryKey: ['trainingModules', moduleType],
-    queryFn: () => base44.entities.TrainingModule.filter({ 
-      module_type: moduleType,
-      is_active: true 
-    }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
     initialData: [],
   });
 

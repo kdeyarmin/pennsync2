@@ -29,7 +29,10 @@ Deno.serve(async (req) => {
       if (!certificate.expiration_date || !certificate.annual_cycle_year) continue;
       const expiration = new Date(`${certificate.expiration_date}T00:00:00Z`);
       const daysUntilExpiration = Math.ceil((expiration.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysUntilExpiration !== 30) continue;
+      // Create the renewal within 30 days of expiration (not only on the exact
+      // 30-day mark), so a missed cron run doesn't skip it. The existing-renewal
+      // query below prevents a duplicate assignment once one has been created.
+      if (daysUntilExpiration > 30) continue;
 
       const nextCycleYear = (certificate.annual_cycle_year || today.getUTCFullYear()) + 1;
       // Check for existing renewal assignment (single query instead of list filter)

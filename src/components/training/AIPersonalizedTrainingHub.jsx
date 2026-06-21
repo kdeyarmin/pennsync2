@@ -49,7 +49,7 @@ export default function AIPersonalizedTrainingHub({ nurseEmail }) {
   // Fetch available training modules
   const { data: allModules = [] } = useQuery({
     queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
   });
 
   // Calculate skill gaps and performance metrics
