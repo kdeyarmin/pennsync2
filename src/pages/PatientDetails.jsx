@@ -521,7 +521,7 @@ export default function PatientDetails() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => navigate(createPageUrl("ClinicalDocumentation"))}
+                                  onClick={() => navigate(`${createPageUrl("ClinicalDocumentation")}?visitId=${visit.id}`)}
                                 >
                                   <ExternalLink className="w-3 h-3 mr-1" />
                                   View

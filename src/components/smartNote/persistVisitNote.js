@@ -37,6 +37,7 @@ export async function persistVisitNote({
   patientDiagnosis = "",
   savedVisitId = null,
   savedAuditId = null,
+  existingVisitId = null,
 }) {
   if (!result || !patientId || !currentUser?.email) return null;
   const {
@@ -90,11 +91,19 @@ export async function persistVisitNote({
     return { mode: 'update', visitId: savedVisitId, auditId: savedAuditId, finalText, coverageScore };
   }
 
-  const visit = await base44.entities.Visit.create({
+  // First documentation of this visit. When an existingVisitId was provided (e.g.
+  // documenting a scheduled/overdue visit deep-linked from a compliance alert or
+  // the patient's visit list), COMPLETE that visit in place instead of creating a
+  // duplicate — so the original visit closes and stops triggering overdue alerts.
+  // A brand-new visit is created only when no existing one was given.
+  const visitFields = {
     patient_id: patientId, visit_date: visitDate, visit_type: visitType,
     status: "completed", nurse_notes: finalText, raw_transcription: roughNote,
     compliance_score: coverageScore, vital_signs: vitals, ...structured, ...reportingFields,
-  });
+  };
+  const visit = existingVisitId
+    ? (await base44.entities.Visit.update(existingVisitId, visitFields), { id: existingVisitId })
+    : await base44.entities.Visit.create(visitFields);
 
   const currentPatient = await base44.entities.Patient.get(patientId);
   const enhancedHistory = currentPatient.enhanced_notes_history || [];

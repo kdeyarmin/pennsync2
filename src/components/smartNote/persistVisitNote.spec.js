@@ -67,6 +67,16 @@ describe("persistVisitNote", () => {
     expect(visitUpdate).not.toHaveBeenCalled();
   });
 
+  it("completes an existing (deep-linked) visit instead of creating a duplicate", async () => {
+    const out = await persistVisitNote({ ...baseArgs, existingVisitId: "visit-sched", vitals: { heart_rate: 70 } });
+    expect(out).toMatchObject({ mode: "create", visitId: "visit-sched", auditId: "audit-1" });
+    expect(visitUpdate).toHaveBeenCalledWith("visit-sched", expect.objectContaining({ status: "completed", vital_signs: { heart_rate: 70 } }));
+    expect(visitCreate).not.toHaveBeenCalled();
+    // Per-documentation records still created, tied to the completed visit.
+    expect(noteConvCreate).toHaveBeenCalledTimes(1);
+    expect(auditCreate.mock.calls[0][0]).toMatchObject({ visit_id: "visit-sched" });
+  });
+
   it("updates the same visit (with vitals) on a re-save, never duplicating", async () => {
     const out = await persistVisitNote({ ...baseArgs, savedVisitId: "visit-9", savedAuditId: "audit-9", vitals: { temperature: 99 } });
     expect(out).toMatchObject({ mode: "update", visitId: "visit-9" });

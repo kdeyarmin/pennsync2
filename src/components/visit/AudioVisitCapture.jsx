@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,7 +41,7 @@ const HOSPICE_VISIT_TYPES = [
  * audio-documented visit lands the same Visit / NoteConversion / ComplianceAudit
  * records — and the same vital_signs — as a typed Smart Note.
  */
-export default function AudioVisitCapture({ currentUser }) {
+export default function AudioVisitCapture({ currentUser, visitId = null }) {
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [uploadedAudio, setUploadedAudio] = useState(null);
   const [_transcription, setTranscription] = useState(null);
@@ -62,6 +62,10 @@ export default function AudioVisitCapture({ currentUser }) {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [signatureImage, setSignatureImage] = useState(null);
+  // Visit binding (?visitId): COMPLETE an existing scheduled visit rather than
+  // create a duplicate. Cleared once saved or when the patient changes away.
+  const [existingVisitId, setExistingVisitId] = useState(null);
+  const boundPatientRef = useRef(null);
   const visitDate = todayEastern();
 
   // Mirror SmartNoteAssistant's query exactly: both flows share the ["patients"]
@@ -86,17 +90,34 @@ export default function AudioVisitCapture({ currentUser }) {
     enabled: !!patientId,
   });
 
+  // Visit binding: when deep-linked with ?visitId, load it and pre-select its
+  // patient + visit type so saving completes that visit instead of duplicating it.
+  const { data: boundVisit } = useQuery({
+    queryKey: ["visit", visitId],
+    queryFn: () => base44.entities.Visit.get(visitId),
+    enabled: !!visitId,
+  });
+  useEffect(() => {
+    if (!boundVisit?.id) return;
+    boundPatientRef.current = boundVisit.patient_id;
+    setExistingVisitId(boundVisit.id);
+    if (boundVisit.patient_id) setPatientId(boundVisit.patient_id);
+    if (boundVisit.visit_type) setVisitType(boundVisit.visit_type);
+  }, [boundVisit]);
+
   // A new patient must start a fresh visit — clear the prior save target (so a
   // re-save can't update the previous patient's visit) and the per-visit vitals
   // and signature (so one patient's readings/signature never land on another's
   // chart). The transcribed note itself is intentionally kept: the audio is often
-  // captured before the patient is picked.
+  // captured before the patient is picked. Keep the ?visitId binding only while the
+  // selected patient still matches the bound visit's.
   useEffect(() => {
     setSavedVisitId(null);
     setSavedAuditId(null);
     setSaved(false);
     setVitals({});
     setSignatureImage(null);
+    if (patientId !== boundPatientRef.current) setExistingVisitId(null);
   }, [patientId]);
 
   const careScope = patient?.care_type || currentUser?.care_scope;
@@ -163,11 +184,13 @@ export default function AudioVisitCapture({ currentUser }) {
       const out = await persistVisitNote({
         result, patientId, visitDate, visitType, roughNote, vitals,
         currentUser, patientDiagnosis: patientDetail?.primary_diagnosis || patient?.primary_diagnosis || "",
-        savedVisitId, savedAuditId,
+        savedVisitId, savedAuditId, existingVisitId,
       });
       if (out) {
         if (out.mode === 'create') {
           setSavedVisitId(out.visitId);
+          // Bound visit is now the same-session target; re-saves update it.
+          setExistingVisitId(null);
           if (out.auditId) setSavedAuditId(out.auditId);
         }
         setSaved(true);
@@ -190,6 +213,7 @@ export default function AudioVisitCapture({ currentUser }) {
     setSavedAuditId(null);
     setSaved(false);
     setSignatureImage(null);
+    setExistingVisitId(null);
   };
 
   const hasAudio = recordedAudio || uploadedAudio;

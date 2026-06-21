@@ -64,7 +64,7 @@ import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
 import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
-export default function SmartNoteAssistant() {
+export default function SmartNoteAssistant({ visitId = null }) {
   const [patientId, setPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
   const visitDate = todayEastern();
@@ -77,6 +77,11 @@ export default function SmartNoteAssistant() {
   const [saved, setSaved] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
   const [savedAuditId, setSavedAuditId] = useState(null);
+  // When documenting a specific existing visit (deep-linked via ?visitId), the
+  // save COMPLETES that visit instead of creating a new one. Cleared once bound or
+  // when the user switches to a different patient than the bound visit's.
+  const [existingVisitId, setExistingVisitId] = useState(null);
+  const boundPatientRef = useRef(null);
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
@@ -156,6 +161,23 @@ export default function SmartNoteAssistant() {
     if (currentUser?.email) logActivity(ActivityActions.PAGE_VISIT, { page: "SmartNoteAssistant" });
   }, [currentUser?.email]);
 
+  // Visit binding: when deep-linked with ?visitId (e.g. from a compliance alert or
+  // the patient's visit list), load that visit and pre-select its patient + visit
+  // type so saving COMPLETES it rather than creating a duplicate. Vitals are left
+  // for the nurse to enter fresh (the scheduled visit has none yet).
+  const { data: boundVisit } = useQuery({
+    queryKey: ["visit", visitId],
+    queryFn: () => base44.entities.Visit.get(visitId),
+    enabled: !!visitId,
+  });
+  useEffect(() => {
+    if (!boundVisit?.id) return;
+    boundPatientRef.current = boundVisit.patient_id;
+    setExistingVisitId(boundVisit.id);
+    if (boundVisit.patient_id) setPatientId(boundVisit.patient_id);
+    if (boundVisit.visit_type) setVisitType(boundVisit.visit_type);
+  }, [boundVisit]);
+
   // Restore saved patient context across tabs
   useEffect(() => {
     const saved = sessionStorage.getItem(SAVED_PATIENT_KEY);
@@ -200,6 +222,9 @@ export default function SmartNoteAssistant() {
     // Vitals are per-visit, not part of the draft store — clear them on a patient
     // switch so one patient's readings never carry onto another's chart.
     setVitals({});
+    // Drop the visit binding if the nurse switches to a different patient than the
+    // bound visit's — so the save can't complete the wrong patient's visit.
+    if (patientId !== boundPatientRef.current) setExistingVisitId(null);
     let incoming = null;
     const saved = sessionStorage.getItem(draftKeyFor(patientId));
     if (saved) {
@@ -316,12 +341,15 @@ export default function SmartNoteAssistant() {
   const persistNote = async (result) => {
     const out = await persistVisitNote({
       result, patientId, visitDate, visitType, roughNote: note, vitals,
-      currentUser, patientDiagnosis: patient?.primary_diagnosis || "",
-      savedVisitId, savedAuditId,
+      currentUser, patientDiagnosis: patientDetail?.primary_diagnosis || patient?.primary_diagnosis || "",
+      savedVisitId, savedAuditId, existingVisitId,
     });
     if (!out) return;
     if (out.mode === 'create') {
       setSavedVisitId(out.visitId);
+      // The visit (new or the just-completed bound one) is now the same-session
+      // target, so further re-saves go through the savedVisitId update path.
+      setExistingVisitId(null);
       // Remember the audit so a later re-save updates it in place.
       if (out.auditId) setSavedAuditId(out.auditId);
       generateTasksFromNote(out.finalText, out.visitId);
@@ -362,7 +390,7 @@ export default function SmartNoteAssistant() {
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
-    setVitals({});
+    setVitals({}); setExistingVisitId(null);
     clearDraft(patientIdRef.current);
   };
 

@@ -36,22 +36,29 @@ export default function ClinicalDocumentation() {
   // Visit Scribe sub-mode: default to Record / Upload; a legacy ?tab=live-dictation
   // link opens the Dictation sub-mode instead.
   const initialScribeMode = requestedTab === "live-dictation" ? "dictation" : "record";
+  // Optional deep-link to document a specific existing visit (e.g. from a
+  // compliance alert or a patient's visit list). Passed to the active flow so the
+  // save COMPLETES that visit instead of creating a duplicate.
+  const visitId = searchParams.get("visitId") || null;
 
-  // Reflect the active choice in the URL so it's shareable/bookmarkable and the
-  // Visit Scribe redirect deep-links correctly. "smart-notes" is the default, so
-  // it stays a clean /ClinicalDocumentation with no query string.
+  // Preserve any ?visitId binding when switching tabs (only the tab key changes).
+  // Reflect the active choice in the URL so it's shareable/bookmarkable; the
+  // default Smart Note choice stays a clean URL apart from a present visitId.
   const handleTabChange = (value) => {
-    setSearchParams(value === "smart-notes" ? {} : { tab: value });
+    const next = {};
+    if (value !== "smart-notes") next.tab = value;
+    if (visitId) next.visitId = visitId;
+    setSearchParams(next);
   };
 
   // Converge on the canonical URL: strip a redundant, legacy, or unknown ?tab=
   // once it resolves to the default Smart Note choice (a valid deep-link like
-  // ?tab=visit-scribe is left untouched).
+  // ?tab=visit-scribe is left untouched). A ?visitId binding is always preserved.
   useEffect(() => {
     if (requestedTab !== null && activeTab === "smart-notes") {
-      setSearchParams({}, { replace: true });
+      setSearchParams(visitId ? { visitId } : {}, { replace: true });
     }
-  }, [requestedTab, activeTab, setSearchParams]);
+  }, [requestedTab, activeTab, visitId, setSearchParams]);
 
   return (
     <PageContainer>
@@ -75,7 +82,7 @@ export default function ClinicalDocumentation() {
 
           {/* Smart Note — write rough notes; AI checks compliance and polishes. */}
           <TabsContent value="smart-notes">
-            <SmartNoteAssistant />
+            <SmartNoteAssistant visitId={visitId} />
           </TabsContent>
 
           {/* Visit Scribe — capture the visit by audio (record/upload) or by
@@ -92,7 +99,7 @@ export default function ClinicalDocumentation() {
               </TabsList>
 
               <TabsContent value="record">
-                <AudioVisitCapture currentUser={currentUser} />
+                <AudioVisitCapture currentUser={currentUser} visitId={visitId} />
               </TabsContent>
 
               <TabsContent value="dictation">

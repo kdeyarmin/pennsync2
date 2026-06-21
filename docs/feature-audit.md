@@ -113,12 +113,19 @@ Goal: documenting a visit should be a single, clear choice between **Smart Note*
 - **`DocumentVisit` retired** (chosen direction: redirect into the hub). It was a
   separate visit-bound page (`?visitId`) with its own manual "Documentation" + "AI
   Workflow" tabs, vitals entry, template generation, and offline support. Now
-  `/DocumentVisit → /ClinicalDocumentation`; "Document this visit" links in
-  `PatientDetails`, `ComplianceAlertAggregator`, and `TemplateLibrary`'s "Use in Visit"
-  repointed to the hub; removed from the sidebar and the mobile back-button list.
-  **Tradeoff (accepted):** the hub selects the patient/visit itself, so the old
-  `?visitId` binding and DocumentVisit's template-prefill/offline extras are not carried
-  over. The page file remains on disk, so the change is reversible.
+  `/DocumentVisit → /ClinicalDocumentation` (the redirect preserves an incoming
+  `?visitId`); removed from the sidebar and the mobile back-button list.
+- **Visit binding preserved** (review follow-up): the Clinical Notes hub now reads
+  `?visitId` and passes it to the active flow, which loads that visit, pre-selects its
+  patient + visit type, and **completes the existing visit on save instead of creating a
+  duplicate** (`persistVisitNote` updates it and sets `status: "completed"`). The
+  "Document this visit" / "Document Now" links in `PatientDetails` and
+  `ComplianceAlertAggregator` pass `?visitId`, so documenting an overdue scheduled visit
+  closes it and clears the alert. `TemplateLibrary`'s "Use in Visit" copies the generated
+  template to the clipboard before navigating (the hub composes the note itself).
+  Remaining gap: DocumentVisit's offline-first vitals/template authoring is not
+  reproduced; the audio path also still has no offline visit-binding (online completes
+  in place, offline queues a new visit).
 - **Vitals restored** in the Smart Note flow (`SmartNoteAssistant`): a structured
   `VitalSignsForm` (canonical `vital_signs` shape — temp, BP, HR, resp rate, O2, pain)
   is captured in step 1 and saved onto the Visit (`Visit.create`/`update` and the
