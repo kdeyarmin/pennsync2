@@ -30,12 +30,6 @@ export default function InterdisciplinaryTeamCoordinator({
   const [recommendation, setRecommendation] = useState(null);
   const [isCreatingAlert, setIsCreatingAlert] = useState(false);
 
-  useEffect(() => {
-    if (autoAnalyze && patientData) {
-      analyzeTeamMeetingNeed();
-    }
-  }, [autoAnalyze, patientId, patientData, analyzeTeamMeetingNeed]);
-
   const analyzeTeamMeetingNeed = useCallback(async () => {
     if (!patientData) return;
 
@@ -131,6 +125,12 @@ Return recommendation with:
     }
     setIsAnalyzing(false);
   }, [patientData, carePlans, incidents, alerts, recentVisits]);
+
+  useEffect(() => {
+    if (autoAnalyze && patientData) {
+      analyzeTeamMeetingNeed();
+    }
+  }, [autoAnalyze, patientId, patientData, analyzeTeamMeetingNeed]);
 
   const handleCreateCoordinationAlert = async () => {
     if (!recommendation?.meeting_recommended) return;

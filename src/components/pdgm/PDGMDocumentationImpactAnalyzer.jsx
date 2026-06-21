@@ -188,6 +188,7 @@ Return JSON with detailed analysis and actionable recommendations.
     if (noteContent && noteContent.length > 100) {
       analyzeImpact();
     }
+    return () => analyzeImpact.cancel();
   }, [noteContent, diagnosis, analyzeImpact]);
 
   const handleApplyOptimization = (action) => {

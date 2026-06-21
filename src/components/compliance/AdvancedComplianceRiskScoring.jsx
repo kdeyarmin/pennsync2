@@ -45,12 +45,6 @@ export default function AdvancedComplianceRiskScoring({
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoAnalyze && audits.length > 0 && !riskAnalysis) {
-      analyzeRisk();
-    }
-  }, [autoAnalyze, audits, riskAnalysis, analyzeRisk]);
-
   const analyzeRisk = useCallback(async () => {
     setIsAnalyzing(true);
     try {
@@ -239,6 +233,12 @@ Return detailed JSON analysis suitable for executive dashboard.`,
     }
     setIsAnalyzing(false);
   }, [alerts, audits, medicareRules, timeRange, trainingRecommendations]);
+
+  useEffect(() => {
+    if (autoAnalyze && audits.length > 0 && !riskAnalysis) {
+      analyzeRisk();
+    }
+  }, [autoAnalyze, audits, riskAnalysis, analyzeRisk]);
 
   const getRiskColor = (score) => {
     if (score >= 80) return { bg: 'bg-green-500', text: 'text-green-600', border: 'border-green-500' };

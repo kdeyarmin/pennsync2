@@ -388,14 +388,6 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
   const [dataValidation, setDataValidation] = useState(null);
   const [alternativeScenarios, setAlternativeScenarios] = useState(null);
 
-  // Auto-calculate when pdgmData becomes available
-  useEffect(() => {
-    if (pdgmData && !revenueData && !isCalculating && !hasAutoCalculated) {
-      calculateRevenue();
-      setHasAutoCalculated(true);
-    }
-  }, [pdgmData, revenueData, isCalculating, hasAutoCalculated, calculateRevenue]);
-
   // Reset when pdgmData changes
   useEffect(() => {
     if (!pdgmData) {
@@ -435,6 +427,9 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
     }, 500),
     [pdgmData]
   );
+
+  // Cancel any pending debounced What-If calculation on unmount
+  useEffect(() => () => calculateWhatIfRevenue.cancel(), [calculateWhatIfRevenue]);
 
   // Handle What-If scenario changes
   const handleScenarioChange = (scenarioData) => {
@@ -484,6 +479,14 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
 
             setIsCalculating(false);
           }, [pdgmData, analysisResults, onRevenueCalculated, onPaymentCalculated]);
+
+  // Auto-calculate when pdgmData becomes available
+  useEffect(() => {
+    if (pdgmData && !revenueData && !isCalculating && !hasAutoCalculated) {
+      calculateRevenue();
+      setHasAutoCalculated(true);
+    }
+  }, [pdgmData, revenueData, isCalculating, hasAutoCalculated, calculateRevenue]);
 
   const buildCorrectedPdgmData = (original, analysis) => {
     const corrected = JSON.parse(JSON.stringify(original)); // Deep clone

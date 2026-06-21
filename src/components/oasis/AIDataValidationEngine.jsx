@@ -31,12 +31,6 @@ export default function AIDataValidationEngine({
   const [validationResults, setValidationResults] = useState(null);
   const [appliedCorrections, setAppliedCorrections] = useState(new Set());
 
-  useEffect(() => {
-    if (autoValidate && oasisData && patientData) {
-      performValidation();
-    }
-  }, [autoValidate, oasisData?.id, oasisData, patientData, performValidation]);
-
   const performValidation = useCallback(async () => {
     if (!oasisData || !patientData) return;
 
@@ -202,6 +196,12 @@ For each issue found, provide:
     }
     setIsValidating(false);
   }, [oasisData, patientData, clinicalNotes, patientHistory]);
+
+  useEffect(() => {
+    if (autoValidate && oasisData && patientData) {
+      performValidation();
+    }
+  }, [autoValidate, oasisData?.id, oasisData, patientData, performValidation]);
 
   const applyCorrection = (correction, key) => {
     if (onCorrection) {

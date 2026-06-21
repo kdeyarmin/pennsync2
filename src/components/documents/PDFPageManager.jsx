@@ -23,10 +23,6 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
   const [isSaving, setIsSaving] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(() => {
-    loadPDFPages();
-  }, [loadPDFPages]);
-
   const loadPDFPages = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -48,6 +44,10 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
       setIsLoading(false);
     }
   }, [pdfUrl]);
+
+  useEffect(() => {
+    loadPDFPages();
+  }, [loadPDFPages]);
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;

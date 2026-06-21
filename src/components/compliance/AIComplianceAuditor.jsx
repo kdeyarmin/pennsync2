@@ -72,12 +72,6 @@ export default function AIComplianceAuditor({
     queryFn: () => base44.auth.me(),
   });
 
-  useEffect(() => {
-    if (autoRun && patient && !auditResults && !isAnalyzing) {
-      runComplianceAudit();
-    }
-  }, [autoRun, patient, auditResults, isAnalyzing, runComplianceAudit]);
-
   const runComplianceAudit = useCallback(async () => {
     if (!patient) return;
 
@@ -514,6 +508,12 @@ For each area, provide:
     }
     setIsAnalyzing(false);
   }, [patient, visits, carePlans, oasisData, incidents, currentUser, patientId, visitId, onIssuesFound, queryClient]);
+
+  useEffect(() => {
+    if (autoRun && patient && !auditResults && !isAnalyzing) {
+      runComplianceAudit();
+    }
+  }, [autoRun, patient, auditResults, isAnalyzing, runComplianceAudit]);
 
   const getRiskColor = (level) => {
     switch (level) {

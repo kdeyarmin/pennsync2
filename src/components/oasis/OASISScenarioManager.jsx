@@ -119,6 +119,9 @@ export default function OASISScenarioManager({
     [originalPdgmData]
   );
 
+  // Cancel any pending debounced calculation on unmount
+  useEffect(() => () => calculateScenarioPayment.cancel(), [calculateScenarioPayment]);
+
   // Update scenario and recalculate
   const updateScenario = (field, value) => {
     const updated = { ...currentScenario };

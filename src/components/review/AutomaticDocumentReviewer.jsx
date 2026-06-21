@@ -53,12 +53,6 @@ export default function AutomaticDocumentReviewer({
     queryFn: () => base44.auth.me(),
   });
 
-  useEffect(() => {
-    if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {
-      performReview();
-    }
-  }, [autoReview, noteContent, reviewResults, performReview]);
-
   const performReview = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) {
       alert('Note is too short for comprehensive review');
@@ -278,6 +272,12 @@ Return detailed JSON analysis.`,
     }
     setIsReviewing(false);
   }, [currentUser?.email, diagnosis, medicareRules, noteContent, nurseEmail, onReviewComplete, patientData.date_of_birth, queryClient, visitId, visitType, vitalSigns]);
+
+  useEffect(() => {
+    if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {
+      performReview();
+    }
+  }, [autoReview, noteContent, reviewResults, performReview]);
 
   const getScoreColor = (score) => {
     if (score >= 90) return 'text-green-600';

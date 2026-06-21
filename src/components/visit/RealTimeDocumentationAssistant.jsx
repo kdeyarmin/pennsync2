@@ -117,6 +117,7 @@ Return as JSON:
 
   useEffect(() => {
     analyzeNote(noteContent);
+    return () => analyzeNote.cancel();
   }, [noteContent, analyzeNote]);
 
   const getSeverityColor = (severity) => {

@@ -90,12 +90,6 @@ export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRang
     initialData: [],
   });
 
-  useEffect(() => {
-    if (autoAnalyze && audits.length > 0 && !performanceData) {
-      analyzePerformance();
-    }
-  }, [autoAnalyze, audits, performanceData, analyzePerformance]);
-
   const analyzePerformance = useCallback(async () => {
     setIsAnalyzing(true);
     try {
@@ -350,6 +344,12 @@ Return detailed analysis suitable for management dashboard.`,
     }
     setIsAnalyzing(false);
   }, [audits, recommendations, selectedNurse, timeRange, trainingCompletions, visits]);
+
+  useEffect(() => {
+    if (autoAnalyze && audits.length > 0 && !performanceData) {
+      analyzePerformance();
+    }
+  }, [autoAnalyze, audits, performanceData, analyzePerformance]);
 
   const _getPerformanceColor = (score) => {
     if (score >= 85) return 'bg-green-500';

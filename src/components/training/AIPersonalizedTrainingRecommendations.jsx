@@ -55,12 +55,6 @@ export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
     initialData: []
   });
 
-  useEffect(() => {
-    if (nurseEmail && visits.length > 0 && existingRecommendations.length > 0) {
-      analyzeAndRecommend();
-    }
-  }, [nurseEmail, visits, existingRecommendations, analyzeAndRecommend]);
-
   const analyzeAndRecommend = useCallback(async () => {
     setAnalyzing(true);
 
@@ -266,6 +260,12 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
       setAnalyzing(false);
     }
   }, [existingRecommendations, nurseEmail, visits, completedTraining, allModules]);
+
+  useEffect(() => {
+    if (nurseEmail && visits.length > 0 && existingRecommendations.length > 0) {
+      analyzeAndRecommend();
+    }
+  }, [nurseEmail, visits, existingRecommendations, analyzeAndRecommend]);
 
   const handleEnrollModule = async (moduleId) => {
     try {

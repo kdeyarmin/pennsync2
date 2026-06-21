@@ -101,15 +101,6 @@ export default function ReferralPDFSummarizer({
 
   const isAdmin = currentUser?.role === 'admin';
 
-  // Auto-process if fileUrl is provided externally
-  React.useEffect(() => {
-    if (externalFileUrl && !extractedData && !isProcessing) {
-      setFileUrl(externalFileUrl);
-      lastProcessedRef.current = { url: externalFileUrl, mime: "application/pdf" };
-      processReferral(externalFileUrl);
-    }
-  }, [externalFileUrl, extractedData, isProcessing, processReferral]);
-
   // Clear the progress interval if the component unmounts mid-processing.
   React.useEffect(() => () => {
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
@@ -274,6 +265,15 @@ export default function ReferralPDFSummarizer({
       setProcessingStage(0);
     }
   }, [onDataExtracted, onExtractionComplete, buildAdmissionPacket]);
+
+  // Auto-process if fileUrl is provided externally
+  React.useEffect(() => {
+    if (externalFileUrl && !extractedData && !isProcessing) {
+      setFileUrl(externalFileUrl);
+      lastProcessedRef.current = { url: externalFileUrl, mime: "application/pdf" };
+      processReferral(externalFileUrl);
+    }
+  }, [externalFileUrl, extractedData, isProcessing, processReferral]);
 
   const copySection = (text, label = "Section") => {
     navigator.clipboard.writeText(text)

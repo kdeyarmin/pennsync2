@@ -28,12 +28,6 @@ export default function AIPatientDashboardSummary({
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (patient) {
-      generateSummary();
-    }
-  }, [patient, patient?.id, generateSummary]);
-
   const generateSummary = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -135,6 +129,12 @@ Provide a comprehensive yet concise dashboard summary in JSON:
     }
     setIsLoading(false);
   }, [patient, visits, carePlans, tasks, incidents]);
+
+  useEffect(() => {
+    if (patient) {
+      generateSummary();
+    }
+  }, [patient, patient?.id, generateSummary]);
 
   const getStatusColor = (status) => {
     const colors = {

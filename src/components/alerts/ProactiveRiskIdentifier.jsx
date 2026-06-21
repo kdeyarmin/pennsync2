@@ -49,16 +49,6 @@ export default function ProactiveRiskIdentifier({
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 
-  // Auto-analyze on mount and when key data changes
-  useEffect(() => {
-    if (patient?.id) {
-      const timer = setTimeout(() => {
-        analyzeRisks();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [patient?.id, recentVisits?.length, vitalSigns, analyzeRisks]);
-
   const analyzeRisks = useCallback(async () => {
     if (!patient) return;
 
@@ -168,6 +158,16 @@ Only flag genuine risks supported by the data. Don't create alerts without evide
     }
     setIsAnalyzing(false);
   }, [patient, recentVisits, carePlans, vitalSigns, incidents, onAlertCreated]);
+
+  // Auto-analyze on mount and when key data changes
+  useEffect(() => {
+    if (patient?.id) {
+      const timer = setTimeout(() => {
+        analyzeRisks();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [patient?.id, recentVisits?.length, vitalSigns, analyzeRisks]);
 
   const calculateAge = (dob) => {
     const today = new Date();

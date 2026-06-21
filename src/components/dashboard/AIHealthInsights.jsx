@@ -20,12 +20,6 @@ export default function AIHealthInsights({ patientId, patient, visits, carePlans
   const [insights, setInsights] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    if (patientId && visits.length > 0) {
-      generateInsights();
-    }
-  }, [patientId, visits.length, generateInsights]);
-
   const generateInsights = useCallback(async () => {
     setIsAnalyzing(true);
     try {
@@ -158,6 +152,12 @@ Provide comprehensive health trend analysis:
     }
     setIsAnalyzing(false);
   }, [visits, patient, carePlans, alerts, oasisData]);
+
+  useEffect(() => {
+    if (patientId && visits.length > 0) {
+      generateInsights();
+    }
+  }, [patientId, visits.length, generateInsights]);
 
   const getTrendIcon = (trend) => {
     switch (trend) {

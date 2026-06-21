@@ -21,12 +21,6 @@ export default function InlineGuidelineSuggester({
   const [relevantGuidelines, setRelevantGuidelines] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (selectedText && selectedText.length > 10) {
-      loadContextualGuidelines();
-    }
-  }, [selectedText, loadContextualGuidelines]);
-
   const loadContextualGuidelines = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -45,6 +39,12 @@ export default function InlineGuidelineSuggester({
     }
     setIsLoading(false);
   }, [diagnosis, visitType, selectedText]);
+
+  useEffect(() => {
+    if (selectedText && selectedText.length > 10) {
+      loadContextualGuidelines();
+    }
+  }, [selectedText, loadContextualGuidelines]);
 
   if (!selectedText || selectedText.length < 10) return null;
 
