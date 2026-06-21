@@ -30,7 +30,6 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import PhoneFrame, { PhoneEmptyState } from "@/components/phone/PhoneFrame";
@@ -175,8 +174,8 @@ export default function Messages() {
   };
 
   const handleSendMessage = () => {
-    if (!newMessage.message_text || newMessage.recipients.length === 0) {
-      toast.error('Please fill in all required fields');
+    if (newMessage.recipients.length === 0 || !newMessage.subject.trim() || !newMessage.message_text.trim()) {
+      toast.error('Please add a recipient, subject, and message.');
       return;
     }
 
@@ -269,7 +268,7 @@ export default function Messages() {
                       </div>
                       {msg.patient_id && (
                         <Link
-                          to={createPageUrl(`PatientDetails?id=${msg.patient_id}`)}
+                          to={`/PatientDetails?id=${msg.patient_id}`}
                           className="mt-1 inline-flex items-center gap-1 px-1 text-[11px] text-navy-600 hover:underline"
                         >
                           <User className="h-3 w-3" />
