@@ -10,6 +10,7 @@ import { ArrowLeft, User, Sparkles, FileText, Copy, CheckCircle2, Bot } from "lu
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import ClinicalTemplateLibrary from "../components/templates/ClinicalTemplateLibrary";
 import TemplateEditor from "../components/templates/TemplateEditor";
@@ -38,12 +39,21 @@ export default function TemplateLibrary() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleUseInVisit = () => {
+  const handleUseInVisit = async () => {
     if (selectedPatient && templateContent) {
-      // Navigate to document visit with template
-      navigate(`${createPageUrl("DocumentVisit")}?patientId=${selectedPatient}&template=${encodeURIComponent(templateContent.substring(0, 1000))}`);
+      // Document Visit was retired; send the clinician to the unified Clinical
+      // Notes hub (Smart Note / Visit Scribe). The hub composes the note itself,
+      // so copy the generated template to the clipboard first (don't discard it)
+      // and tell the nurse to paste it into their note.
+      try {
+        await navigator.clipboard.writeText(templateContent);
+        toast.success("Template copied — paste it into your note in Clinical Notes.");
+      } catch {
+        toast.info("Couldn't copy automatically — copy the template, then paste it into your note.");
+      }
+      navigate(createPageUrl("ClinicalDocumentation"));
     } else {
-      alert('Please select a patient and generate a template first.');
+      toast.error('Please select a patient and generate a template first.');
     }
   };
 

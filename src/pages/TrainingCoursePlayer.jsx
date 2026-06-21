@@ -681,8 +681,8 @@ export default function TrainingCoursePlayer() {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={() => navigate(createPageUrl("MyLearning"))}>
-              <Home className="w-4 h-4 mr-2" /> Back to My Learning
+            <Button variant="outline" onClick={() => navigate(createPageUrl("LearningCenter") + "?tab=courses")}>
+              <Home className="w-4 h-4 mr-2" /> Back to My Courses
             </Button>
             {!result.passed && !result.locked && (
               <Button
@@ -700,7 +700,7 @@ export default function TrainingCoursePlayer() {
               </Button>
             )}
             {result.passed && (
-              <Button variant="outline" onClick={() => navigate(createPageUrl("MyLearning") + "?tab=transcript")}>
+              <Button variant="outline" onClick={() => navigate(createPageUrl("LearningCenter") + "?tab=transcripts")}>
                 <Star className="w-4 h-4 mr-2" /> View All Certificates
               </Button>
             )}

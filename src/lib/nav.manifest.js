@@ -25,9 +25,9 @@ import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, BookOpen, WifiOff,
   Mail, BookUser, Video, HelpCircle, AlertTriangle,
-  Phone, Send, Heart, Activity, Database, Lock, Award,
+  Phone, Send, Heart, Database, Lock, Award,
   Clipboard, Filter, Globe,
-  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Mic, Pen, CalendarDays
+  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays
 } from "lucide-react";
 
 import { PAGE_NAMES, REDIRECTS } from "@/routes";
@@ -66,15 +66,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "Patients",
     keywords: ["record", "chart", "profile"],
-  },
-  {
-    page: "ClinicalChart",
-    label: "Clinical Chart",
-    icon: Activity,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "Patients",
-    keywords: ["chart", "clinical", "patient chart"],
   },
   {
     page: "PatientAlerts",
@@ -184,24 +175,16 @@ export const NAV_MANIFEST = [
     keywords: ["referral", "intake", "admission"],
   },
   {
-    page: "DocumentVisit",
-    label: "Document Visit",
-    icon: FileText,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["document visit", "visit note"],
-  },
-  {
     page: "ClinicalDocumentation",
     label: "Clinical Notes",
     icon: Brain,
     category: "Documentation",
     adminOnly: false,
     breadcrumbParent: null,
-    // Includes the former Visit Scribe (now the "Record / Upload" tab) keywords so
-    // search still surfaces this hub for "scribe", "voice", "record audio", etc.
-    keywords: ["clinical", "documentation", "notes", "charting", "smart notes", "dictation", "scribe", "voice", "visit", "record", "audio", "upload"],
+    // Documenting a visit is a two-choice flow here: Smart Note or Visit Scribe
+    // (record/upload or live dictation). Keep the audio/scribe keywords so search
+    // still surfaces this hub for "scribe", "voice", "record audio", etc.
+    keywords: ["clinical", "documentation", "notes", "charting", "smart note", "visit scribe", "dictation", "scribe", "voice", "visit", "record", "audio", "upload"],
   },
   {
     // Smart Notes is the default tab *inside* the Clinical Notes hub
@@ -215,10 +198,9 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "ClinicalDocumentation",
     keywords: ["smart note", "ai note", "documentation", "ai"],
   },
-  // NOTE: Visit Scribe was folded into the Clinical Notes hub. Its Record/Upload
-  // audio capture is now the "Record / Upload" tab (its "Live Dictation" tab was a
-  // duplicate of Clinical Notes' own), so /VisitScribe redirects to
-  // /ClinicalDocumentation?tab=record (see REDIRECTS in src/routes.jsx).
+  // NOTE: Visit Scribe was folded into the Clinical Notes hub as the "Visit Scribe"
+  // choice (Record / Upload + Live Dictation sub-modes), so /VisitScribe redirects
+  // to /ClinicalDocumentation?tab=visit-scribe (see REDIRECTS in src/routes.jsx).
   {
     page: "DocumentHub",
     label: "Documents",
@@ -236,15 +218,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "Incidents",
     keywords: ["event", "report", "incident report"],
-  },
-  {
-    page: "MedicalScribe",
-    label: "Medical Scribe",
-    icon: Mic,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "ClinicalDocumentation",
-    keywords: ["scribe", "medical", "ai scribe"],
   },
   {
     page: "ReferralTriage",
@@ -402,16 +375,7 @@ export const NAV_MANIFEST = [
     category: "Learning & Resources",
     adminOnly: false,
     breadcrumbParent: null,
-    keywords: ["learning", "courses", "catalog", "browse", "education"],
-  },
-  {
-    page: "MyLearning",
-    label: "My Courses",
-    icon: BookOpen,
-    category: "Learning & Resources",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["training", "my courses", "progress", "education"],
+    keywords: ["learning", "courses", "catalog", "browse", "education", "my courses", "in-services", "annual education", "transcripts", "training", "progress", "certificates", "competencies"],
   },
   {
     page: "TrainingCoursePlayer",
@@ -419,7 +383,7 @@ export const NAV_MANIFEST = [
     icon: GraduationCap,
     category: null,
     adminOnly: false,
-    breadcrumbParent: "MyLearning",
+    breadcrumbParent: "LearningCenter",
     keywords: ["course", "player", "training", "video"],
   },
   {
@@ -439,24 +403,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: "LearningCenter",
     keywords: ["education", "library", "courses"],
-  },
-  {
-    page: "NurseEducationVideos",
-    label: "Nurse Education Videos",
-    icon: Video,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["nurse", "education", "video", "training"],
-  },
-  {
-    page: "DocumentationTraining",
-    label: "Documentation Training",
-    icon: FileText,
-    category: null,
-    adminOnly: false,
-    breadcrumbParent: "LearningCenter",
-    keywords: ["documentation", "training"],
   },
   {
     page: "NurseTrainingHub",
@@ -615,15 +561,6 @@ export const NAV_MANIFEST = [
     keywords: ["sms", "calls", "fax", "telnyx", "phone", "delivery"],
   },
   {
-    page: "ClinicalInsightsDashboard",
-    label: "Clinical Insights",
-    icon: Brain,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "AdminOperations",
-    keywords: ["clinical insights", "analytics", "ai"],
-  },
-  {
     page: "PatientDataManagement",
     label: "Data Management",
     icon: Database,
@@ -671,7 +608,7 @@ export const NAV_MANIFEST = [
     category: "Administration",
     adminOnly: true,
     breadcrumbParent: null,
-    keywords: ["reports", "analytics", "metrics", "export", "data"],
+    keywords: ["reports", "analytics", "metrics", "export", "data", "performance dashboard", "documentation time", "ai utilization", "quality score"],
   },
   {
     page: "AgencyAnalytics",
@@ -681,15 +618,6 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: "ReportsAnalytics",
     keywords: ["agency", "analytics", "metrics"],
-  },
-  {
-    page: "AnalyticsDashboard",
-    label: "Analytics Dashboard",
-    icon: PieChart,
-    category: null,
-    adminOnly: true,
-    breadcrumbParent: "ReportsAnalytics",
-    keywords: ["analytics", "dashboard"],
   },
   {
     page: "PredictiveAnalytics",

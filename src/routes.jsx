@@ -109,8 +109,8 @@ export const REDIRECTS = [
   { from: '/OASISAuditDashboard', to: '/OASISCenter?tab=audit' },
 
   // ─── Clinical Notes consolidation ────────────────────────────────────────────
-  // Visit Scribe's audio capture is now the Clinical Notes "Record / Upload" tab.
-  { from: '/VisitScribe', to: '/ClinicalDocumentation?tab=record' },
+  // Visit Scribe is now the Clinical Notes "Visit Scribe" choice (record/dictation).
+  { from: '/VisitScribe', to: '/ClinicalDocumentation?tab=visit-scribe' },
 
   // ─── Document Hub consolidation ──────────────────────────────────────────────
   // Signature, storage/intake, discharge and audit pages are now Document Hub tabs.
@@ -148,17 +148,44 @@ export const REDIRECTS = [
   { from: '/SecurityPolicy', to: '/ComplianceCenter?tab=security&view=policies' },
 
   // ─── Learning consolidation ──────────────────────────────────────────────────
-  // The personal-training wrapper pages are now tabs of My Learning; NurseTraining
-  // is a tab of the Nurse Training Hub.
-  { from: '/MyTraining', to: '/MyLearning?tab=inservices' },
-  { from: '/MyAnnualEducation', to: '/MyLearning?tab=annual' },
-  { from: '/AnnualMandatoryEducation', to: '/MyLearning?tab=annual' },
-  { from: '/AnnualEducationTranscript', to: '/MyLearning?tab=transcripts' },
-  { from: '/EmployeeTranscript', to: '/MyLearning?tab=transcripts' },
+  // My Learning was merged into the Learning Center (the canonical learner hub):
+  // its My Courses / In-Services / Annual Education / Transcripts views are now
+  // tabs there. NurseTraining is a tab of the Nurse Training Hub.
+  { from: '/MyLearning', to: '/LearningCenter?tab=courses' },
+  { from: '/MyTraining', to: '/LearningCenter?tab=inservices' },
+  { from: '/MyAnnualEducation', to: '/LearningCenter?tab=annual' },
+  { from: '/AnnualMandatoryEducation', to: '/LearningCenter?tab=annual' },
+  { from: '/AnnualEducationTranscript', to: '/LearningCenter?tab=transcripts' },
+  { from: '/EmployeeTranscript', to: '/LearningCenter?tab=transcripts' },
   { from: '/NurseTraining', to: '/NurseTrainingHub?tab=documentation' },
 
   // ─── Misc hub consolidations ─────────────────────────────────────────────────
   { from: '/AdminReportsCenter', to: '/ReportsAnalytics?tab=reports-center' },
+  // Analytics Dashboard (Performance Analytics) folded into Reports & Analytics.
+  { from: '/AnalyticsDashboard', to: '/ReportsAnalytics?tab=perf-dashboard' },
+
+  // ─── Feature-audit consolidation ─────────────────────────────────────────────
+  // Redundant standalone pages folded into their canonical homes — see
+  // docs/feature-audit.md. The page files remain on disk (reachable via the
+  // targets below or as embedded components) so each redirect is reversible.
+  //   ClinicalChart       → its vitals / care-plan / OASIS tabs already live in
+  //                          PatientDetails; sent to the patient list (no id ctx).
+  //   MedicalScribe       → same record→transcribe→review pipeline as the Clinical
+  //                          Notes "Visit Scribe" choice (a strict superset).
+  //   ClinicalInsights    → population/risk views duplicated by Predictive Analytics.
+  //   DocumentationTraining / NurseEducationVideos → consolidated under the Nurse
+  //                          Training Hub. (See doc for the unique-content caveat.)
+  { from: '/ClinicalChart', to: '/Patients' },
+  // DocumentVisit (the separate visit-bound page with its own manual/AI-workflow
+  // tabs) retired in favor of the unified Clinical Notes hub's Smart Note / Visit
+  // Scribe choice. The hub selects the patient/visit itself, so the old ?visitId
+  // binding and DocumentVisit's vitals/template/offline extras are not carried over.
+  { from: '/DocumentVisit', to: '/ClinicalDocumentation' },
+  { from: '/MedicalScribe', to: '/ClinicalDocumentation?tab=visit-scribe' },
+  { from: '/ClinicalInsightsDashboard', to: '/PredictiveAnalytics' },
+  { from: '/DocumentationTraining', to: '/NurseTrainingHub?tab=documentation' },
+  { from: '/NurseEducationVideos', to: '/NurseTrainingHub' },
+
   { from: '/OfflineVisitDocumentation', to: '/OfflineMode?tab=visit' },
   { from: '/OfflineDocumentation', to: '/OfflineMode?tab=pending' },
   { from: '/UserActivityLog', to: '/UserActivityReport?tab=log' },

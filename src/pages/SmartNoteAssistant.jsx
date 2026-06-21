@@ -13,6 +13,7 @@ import SmartNoteHeader from "../components/smartNote/SmartNoteHeader";
 import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
 import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
+import VitalSignsForm from "../components/visit/VitalSignsForm";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
 import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
@@ -22,8 +23,8 @@ import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
 import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNoteRecorder";
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
-import { toNoteConversionFields, deriveStructuredVisitFields } from "../components/smartNote/compliance/coverageScore";
-import { buildVisitReportingFields, buildAuditFields } from "../components/smartNote/compliance/reportingFields";
+import { persistVisitNote } from "../components/smartNote/persistVisitNote";
+import { getPriorNote, parseNoteSections } from "../components/smartNote/noteHelpers";
 import { claimDictation, releaseDictation } from "@/components/smartNote/dictationController";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
@@ -63,15 +64,24 @@ import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
 import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
-export default function SmartNoteAssistant() {
+export default function SmartNoteAssistant({ visitId = null }) {
   const [patientId, setPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
   const visitDate = todayEastern();
   const [note, setNote] = useState("");
+  // Structured vital signs (canonical vital_signs shape) saved onto the visit so
+  // they reach the chart, trends, and escalation — restoring the capture the
+  // retired Document Visit page provided.
+  const [vitals, setVitals] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
   const [savedAuditId, setSavedAuditId] = useState(null);
+  // When documenting a specific existing visit (deep-linked via ?visitId), the
+  // save COMPLETES that visit instead of creating a new one. Cleared once bound or
+  // when the user switches to a different patient than the bound visit's.
+  const [existingVisitId, setExistingVisitId] = useState(null);
+  const boundPatientRef = useRef(null);
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
@@ -147,16 +157,26 @@ export default function SmartNoteAssistant() {
     queryFn: () => base44.entities.Patient.get(patientId),
     enabled: !!patientId,
   });
-  const getPriorNote = (p) => {
-    if (!p) return "";
-    const hist = p.enhanced_notes_history;
-    if (Array.isArray(hist) && hist.length) return hist[hist.length - 1]?.note || "";
-    return p.clinical_notes || "";
-  };
-
   useEffect(() => {
     if (currentUser?.email) logActivity(ActivityActions.PAGE_VISIT, { page: "SmartNoteAssistant" });
   }, [currentUser?.email]);
+
+  // Visit binding: when deep-linked with ?visitId (e.g. from a compliance alert or
+  // the patient's visit list), load that visit and pre-select its patient + visit
+  // type so saving COMPLETES it rather than creating a duplicate. Vitals are left
+  // for the nurse to enter fresh (the scheduled visit has none yet).
+  const { data: boundVisit } = useQuery({
+    queryKey: ["visit", visitId],
+    queryFn: () => base44.entities.Visit.get(visitId),
+    enabled: !!visitId,
+  });
+  useEffect(() => {
+    if (!boundVisit?.id) return;
+    boundPatientRef.current = boundVisit.patient_id;
+    setExistingVisitId(boundVisit.id);
+    if (boundVisit.patient_id) setPatientId(boundVisit.patient_id);
+    if (boundVisit.visit_type) setVisitType(boundVisit.visit_type);
+  }, [boundVisit]);
 
   // Restore saved patient context across tabs
   useEffect(() => {
@@ -199,6 +219,12 @@ export default function SmartNoteAssistant() {
     const prev = prevPatientRef.current;
     if (prev === patientId) return;
     prevPatientRef.current = patientId;
+    // Vitals are per-visit, not part of the draft store — clear them on a patient
+    // switch so one patient's readings never carry onto another's chart.
+    setVitals({});
+    // Drop the visit binding if the nurse switches to a different patient than the
+    // bound visit's — so the save can't complete the wrong patient's visit.
+    if (patientId !== boundPatientRef.current) setExistingVisitId(null);
     let incoming = null;
     const saved = sessionStorage.getItem(draftKeyFor(patientId));
     if (saved) {
@@ -309,100 +335,26 @@ export default function SmartNoteAssistant() {
     }
   };
 
-  // Create-or-update the chart records from the reviewer's save-ready result,
-  // with a real, deterministic coverage score.
+  // Create-or-update the chart records from the reviewer's save-ready result via
+  // the shared persistVisitNote helper (also used by the Visit Scribe audio flow),
+  // then run the host-only follow-up (state + task/supply analysis) on a fresh save.
   const persistNote = async (result) => {
-    if (!result || !patientId || !currentUser?.email) return;
-    const { finalNote: finalText, coverageScore, draftScore, presence, answeredIds, confirmedNegativeIds, answers, chartFindings = [], sustainedTrends = [] } = result;
-    const structured = deriveStructuredVisitFields(presence, { answeredIds, confirmedNegativeIds, textById: answers });
-    // Surface the deterministic chart conflicts + trends in the saved records so
-    // they reach the compliance dashboards, not just the live review UI.
-    const reportingFields = buildVisitReportingFields({ chartFindings, sustainedTrends });
-    // When a critical chart conflict was knowingly accepted, stamp who/when onto
-    // the nurse's override trail so the audit can show it was a reviewed decision.
-    // Gate on `acknowledged` (not merely the object's presence): the reviewer
-    // builds this object whenever critical findings exist even before the nurse
-    // checks the box, so persisting it unconditionally could stamp a false ack
-    // trail if a caller ever bypassed the save gate.
-    const acknowledgment = result.acknowledgment?.acknowledged
-      ? { acknowledged_by: currentUser.email, acknowledged_at: new Date().toISOString(), justification: result.acknowledgment.justification, finding_ids: result.acknowledgment.finding_ids }
-      : null;
-    const auditFields = buildAuditFields({ coverageScore, chartFindings, acknowledgment });
-
-    if (!navigator.onLine) {
-      const { addToSyncQueue } = await import('@/lib/indexedDB');
-      // Stable client-generated idempotency key so the offline-sync drain can
-      // dedupe: if Visit.create succeeds but the queue item isn't removed (tab
-      // close, second `online` event, re-mount), the drain skips the re-create.
-      // crypto.randomUUID is only defined in secure contexts; fall back so the
-      // offline save (the whole point of this branch) never throws in the field.
-      const clientRequestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      // `__audit` is meta the drain peels off to also create a ComplianceAudit so
-      // offline-documented visits aren't invisible to the compliance dashboards;
-      // it is stripped before Visit.create (older queue items simply lack it).
-      await addToSyncQueue('CREATE_VISIT', { client_request_id: clientRequestId, patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: finalText, raw_transcription: note, compliance_score: coverageScore, ...structured, ...reportingFields, __audit: { nurse_email: currentUser.email, ...auditFields } });
-      toast.success("Saved offline. Will sync when reconnected.");
-      logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
-      return;
-    }
-
-    // Re-save after an edit → update the same visit, never duplicate. Also keep
-    // the appended enhanced_notes_history entry in sync, since getPriorNote()
-    // prefers it for the next note's carry-forward pre-fill.
-    if (savedVisitId) {
-      const currentPatient = await base44.entities.Patient.get(patientId);
-      const history = currentPatient.enhanced_notes_history || [];
-      if (history.length) {
-        history[history.length - 1] = { ...history[history.length - 1], note: finalText, compliance_score: coverageScore };
-      }
-      await Promise.all([
-        base44.entities.Visit.update(savedVisitId, { nurse_notes: finalText, compliance_score: coverageScore, ...structured, ...reportingFields }),
-        base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
-        // Keep the audit in step with the edit — a re-save that resolves a conflict
-        // must clear the stale `critical` status/issues, not leave them behind.
-        ...(savedAuditId ? [base44.entities.ComplianceAudit.update(savedAuditId, auditFields)] : []),
-      ]);
-      toast.success("Chart updated.");
-      return;
-    }
-
-    const visit = await base44.entities.Visit.create({
-      patient_id: patientId, visit_date: visitDate, visit_type: visitType,
-      status: "completed", nurse_notes: finalText, raw_transcription: note,
-      compliance_score: coverageScore, ...structured, ...reportingFields,
+    const out = await persistVisitNote({
+      result, patientId, visitDate, visitType, roughNote: note, vitals,
+      currentUser, patientDiagnosis: patientDetail?.primary_diagnosis || patient?.primary_diagnosis || "",
+      savedVisitId, savedAuditId, existingVisitId,
     });
-    setSavedVisitId(visit.id);
-
-    const currentPatient = await base44.entities.Patient.get(patientId);
-    const enhancedHistory = currentPatient.enhanced_notes_history || [];
-    enhancedHistory.push({
-      date: visitDate, visit_type: visitType, note: finalText,
-      compliance_score: coverageScore, created_by: currentUser.email,
-      created_at: new Date().toISOString(),
-    });
-
-    const [, , audit] = await Promise.all([
-      base44.entities.Patient.update(patientId, { enhanced_notes_history: enhancedHistory, clinical_notes: finalText }),
-      base44.entities.NoteConversion.create(toNoteConversionFields({
-        coverageScore, draftPresenceScore: draftScore,
-        roughLen: note.length, enhancedLen: finalText.length,
-        visitType, diagnosis: patient?.primary_diagnosis || "",
-        nurseEmail: currentUser.email, patientId,
-      })),
-      base44.entities.ComplianceAudit.create({
-        visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId,
-        audit_date: new Date().toISOString(), audit_type: "automated",
-        ...auditFields,
-      }),
-    ]);
-    // Remember the audit so a later re-save updates it in place (see above).
-    if (audit?.id) setSavedAuditId(audit.id);
-    generateTasksFromNote(finalText, visit.id);
-    analyzeSupplyUsage(finalText, visit.id);
-    toast.success("Saved to the patient's chart.");
-    logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: coverageScore });
+    if (!out) return;
+    if (out.mode === 'create') {
+      setSavedVisitId(out.visitId);
+      // The visit (new or the just-completed bound one) is now the same-session
+      // target, so further re-saves go through the savedVisitId update path.
+      setExistingVisitId(null);
+      // Remember the audit so a later re-save updates it in place.
+      if (out.auditId) setSavedAuditId(out.auditId);
+      generateTasksFromNote(out.finalText, out.visitId);
+      analyzeSupplyUsage(out.finalText, out.visitId);
+    }
   };
 
   const analyzeSupplyUsage = async (noteText, visitId) => {
@@ -438,6 +390,7 @@ export default function SmartNoteAssistant() {
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
+    setVitals({}); setExistingVisitId(null);
     clearDraft(patientIdRef.current);
   };
 
@@ -502,26 +455,6 @@ export default function SmartNoteAssistant() {
       console.error("Failed to queue failed escalation task(s):", err);
       toast.error("Couldn't save the follow-up task. Try again.");
     }
-  };
-
-  const parseNoteSections = (text) => {
-    if (!text) return null;
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    const vitals = sentences.filter(s => /bp|blood pressure|hr|heart rate|o2|oxygen|temp|weight|respir|pain/i.test(s));
-    const assessment = sentences.filter(s => /assess|exam|appear|ambul|mobil|wound|skin|edema|breath|lung|bowel/i.test(s));
-    const education = sentences.filter(s => /teach|educat|instruct|verbali|understand|demonstrat/i.test(s));
-    const safety = sentences.filter(s => /fall|safe|hazard|medic|adher|complian/i.test(s));
-    const plan = sentences.filter(s => /plan|next|follow|return|notif|physician|refer|schedul/i.test(s));
-    const rest = sentences.filter(s => ![...vitals, ...assessment, ...education, ...safety, ...plan].includes(s));
-    const secs = [
-      { key: "vitals", label: "Vital Signs", text: vitals.join(" ").trim() },
-      { key: "assessment", label: "Assessment", text: assessment.join(" ").trim() },
-      { key: "education", label: "Education / Teaching", text: education.join(" ").trim() },
-      { key: "safety", label: "Safety", text: safety.join(" ").trim() },
-      { key: "plan", label: "Plan", text: plan.join(" ").trim() },
-      { key: "other", label: "Clinical Narrative", text: rest.join(" ").trim() },
-    ].filter(s => s.text.length > 10);
-    return secs.length > 1 ? secs : null;
   };
 
   const ready = note.trim().length >= 20;
@@ -620,6 +553,10 @@ export default function SmartNoteAssistant() {
                   </span>
                 </div>
               )}
+
+              {/* Structured vitals — saved to the visit's vital_signs (feeds the
+                  chart, vitals trends, and critical-vitals escalation). */}
+              <VitalSignsForm vitalSigns={vitals} onChange={setVitals} />
 
               <NoteTemplateSelector currentVisitType={visitType} onSelect={(content, type) => {
                 setNote(content); setVisitType(type);
