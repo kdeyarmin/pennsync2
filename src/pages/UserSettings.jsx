@@ -64,6 +64,7 @@ export default function UserSettings() {
   const [showCredentialForm, setShowCredentialForm] = useState(false);
   const [editingCredential, setEditingCredential] = useState(null);
   const [profileData, setProfileData] = useState({
+    full_name: '',
     phone: '',
     credential_type: '',
   });
@@ -76,6 +77,7 @@ export default function UserSettings() {
   useEffect(() => {
     if (currentUser) {
       setProfileData({
+        full_name: currentUser.full_name || '',
         phone: currentUser.phone || '',
         credential_type: currentUser.credential_type || '',
       });
@@ -153,8 +155,11 @@ export default function UserSettings() {
 
     setIsSaving(true);
     try {
-      // Update user profile
+      // Update user profile. full_name drives the dashboard greeting and other
+      // name displays, so let users correct it here (new accounts default it to
+      // the email prefix).
       await base44.auth.updateMe({
+        full_name: profileData.full_name.trim(),
         phone: profileData.phone,
         credential_type: profileData.credential_type,
       });
@@ -162,7 +167,7 @@ export default function UserSettings() {
       // Update AI config
       const configData = {
         user_email: currentUser.email,
-        user_name: currentUser.full_name,
+        user_name: profileData.full_name.trim() || currentUser.full_name,
         ...preferences
       };
 
@@ -304,6 +309,18 @@ export default function UserSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="full_name" className="text-sm font-medium">Full Name</Label>
+                <Input
+                  id="full_name"
+                  type="text"
+                  placeholder="e.g. Kevin Deyarmin"
+                  value={profileData.full_name}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
+                  className="mt-1"
+                />
+                <p className="mt-1 text-xs text-slate-500">This is the name shown in your dashboard greeting and across the app.</p>
+              </div>
               <div>
                 <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
                 <Input
