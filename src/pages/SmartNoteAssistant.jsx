@@ -323,7 +323,7 @@ export default function SmartNoteAssistant() {
         base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
         // Keep the audit in step with the edit — a re-save that resolves a conflict
         // must clear the stale `critical` status/issues, not leave them behind.
-        ...(savedAuditId ? [base44.entities.ComplianceAudit.update(savedAuditId, auditFields)] : []),
+        ...(savedAuditId ? [base44.entities.ComplianceAudit.update(savedAuditId, { ...auditFields, acknowledgment: acknowledgment || null })] : []),
       ]);
       toast.success("Chart updated.");
       return;
