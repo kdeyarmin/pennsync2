@@ -109,8 +109,18 @@ export default function SessionTimeoutManager({
   };
 
   return (
-    <Dialog open={showWarning} onOpenChange={setShowWarning}>
-      <DialogContent className="sm:max-w-sm p-0 overflow-hidden rounded-2xl border-0 shadow-2xl">
+    // The warning must not be dismissible by outside-click/Esc: closing it that
+    // way left showWarning=false without resetting lastActivity, so the 1s
+    // interval immediately re-opened it (flicker), and a user could "close" the
+    // warning without actually extending the session. Force the choice through
+    // the explicit Keep / Sign Out buttons.
+    <Dialog open={showWarning} onOpenChange={() => {}}>
+      <DialogContent
+        className="sm:max-w-sm p-0 overflow-hidden rounded-2xl border-0 shadow-2xl"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         {/* Header band */}
         <div className="bg-amber-500 px-6 pt-6 pb-5 text-white text-center">
           <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
