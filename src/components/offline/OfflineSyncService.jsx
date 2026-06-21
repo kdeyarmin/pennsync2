@@ -326,21 +326,6 @@ export function useOfflineSync() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-sync when coming online OR when items are queued while already online.
-  // pendingCount must be a dep so newly-queued items trigger a sync (the prior
-  // [isOnline]-only deps left this a stale closure that only fired on
-  // offline->online transitions). syncNow is a stable useCallback whose identity
-  // already tracks isOnline/pendingCount, so depending on it here is safe and
-  // the 2s debounce + cleanup prevents a tight re-render loop.
-  useEffect(() => {
-    if (isOnline && pendingCount > 0) {
-      const timer = setTimeout(() => {
-        syncNow();
-      }, 2000); // Wait 2 seconds to ensure stable connection
-      return () => clearTimeout(timer);
-    }
-  }, [isOnline, pendingCount, syncNow]);
-
   const saveOffline = useCallback((type, data) => {
     const id = OfflineStorageManager.saveToQueue(type, data);
     setPendingCount(prev => prev + 1);
@@ -382,6 +367,21 @@ export function useOfflineSync() {
       setSyncProgress(null);
     }
   }, [isOnline, pendingCount]);
+
+  // Auto-sync when coming online OR when items are queued while already online.
+  // pendingCount must be a dep so newly-queued items trigger a sync (the prior
+  // [isOnline]-only deps left this a stale closure that only fired on
+  // offline->online transitions). Declared after syncNow so it isn't referenced
+  // in the dep array before initialization (temporal dead zone). The 2s debounce
+  // + cleanup prevents a tight re-render loop.
+  useEffect(() => {
+    if (isOnline && pendingCount > 0) {
+      const timer = setTimeout(() => {
+        syncNow();
+      }, 2000); // Wait 2 seconds to ensure stable connection
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, pendingCount, syncNow]);
 
   const clearQueue = useCallback(() => {
     OfflineStorageManager.clearQueue();

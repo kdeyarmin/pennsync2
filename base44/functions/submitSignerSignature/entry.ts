@@ -125,7 +125,10 @@ Deno.serve(async (req) => {
     //     and leave the row without signed_pdf_url so it can be retried.
     if (allSigned) {
       try {
-        const sourcePdf = signature.document_url || signature_image_url || null;
+        // Source must be the document PDF. Never fall back to the signature
+        // image URL — stamping a non-PDF guarantees the embed fails and leaves
+        // signed_pdf_url unset; better to skip and let it retry.
+        const sourcePdf = signature.document_url || null;
         const stampImage = signature_image_url ||
           updatedSigners.find((s) => s?.signature)?.signature || null;
         if (sourcePdf && stampImage) {

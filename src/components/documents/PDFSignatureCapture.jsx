@@ -117,12 +117,16 @@ export default function PDFSignatureCapture({
             const updatedSigners = existingSigners.length > 0
               ? existingSigners.map((s) => {
                   const matched = capturedByName.get(String(s.name || '').toLowerCase());
-                  if (matched || s.required !== false) {
+                  // Only complete signers actually captured in this session.
+                  // Never mark an unmatched required signer (witness/clinician)
+                  // completed off another signer's submission — that would
+                  // fabricate their signature/timestamp.
+                  if (matched) {
                     return {
                       ...s,
                       status: 'completed',
-                      signed_date: matched?.signedAt || signedAt,
-                      signature: matched?.dataUrl || s.signature || null,
+                      signed_date: matched.signedAt || signedAt,
+                      signature: matched.dataUrl || s.signature || null,
                     };
                   }
                   return s;

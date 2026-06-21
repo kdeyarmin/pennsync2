@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { base44 } from "@/api/base44Client";
-import { logSecurityEvent } from "@/components/utils/security";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -202,18 +201,28 @@ Return JSON:
     setIsOverriding(true);
     try {
       // Persist a durable audit record of the override BEFORE allowing the note
-      // through. If we cannot record the override, we do NOT let the note pass.
+      // through. logSecurityEvent fires the SecurityLog write without awaiting
+      // it, so it resolves even when the write fails — we must write the audit
+      // row directly and await it so a SecurityLog/RLS/network failure throws
+      // and the note stays blocked.
       const user = await base44.auth.me().catch(() => null);
-      await logSecurityEvent('COMPLIANCE_GATE_OVERRIDDEN', {
-        care_type: careType,
-        visit_type: visitType,
-        diagnosis: diagnosis || null,
-        compliance_score: complianceResult?.score ?? null,
-        override_reason: overrideReason,
-        acknowledged_warning_ids: acknowledgedIssues,
-        warning_count: complianceResult?.warnings?.length || 0,
-        overridden_by: user?.email || null,
-      }, 'warning');
+      await base44.entities.SecurityLog.create({
+        timestamp: new Date().toISOString(),
+        user_email: user?.email || null,
+        user_role: user?.role || null,
+        action: 'COMPLIANCE_GATE_OVERRIDDEN',
+        details: {
+          care_type: careType,
+          visit_type: visitType,
+          diagnosis: diagnosis || null,
+          compliance_score: complianceResult?.score ?? null,
+          override_reason: overrideReason,
+          acknowledged_warning_ids: acknowledgedIssues,
+          warning_count: complianceResult?.warnings?.length || 0,
+        },
+        ip_address: 'client-side',
+        user_agent: navigator.userAgent,
+      });
 
       onCompliancePassed && onCompliancePassed(true, { overridden: true, reason: overrideReason });
     } catch (error) {
