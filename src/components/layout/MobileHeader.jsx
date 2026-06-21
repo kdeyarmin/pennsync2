@@ -3,7 +3,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Shield, Bell, Menu, X, ChevronLeft, Search } from "lucide-react";
 
-const BACK_PAGES = ['PatientDetails', 'DocumentVisit', 'DocumentHub', 'ReferralIntake', 'TrainingCoursePlayer', 'EventReport'];
+const BACK_PAGES = ['PatientDetails', 'DocumentHub', 'ReferralIntake', 'TrainingCoursePlayer', 'EventReport'];
 
 export default function MobileHeader({ currentPageName, totalNotificationCount, mobileMenuOpen, onToggleMobileMenu, onOpenNotificationCenter }) {
   return (

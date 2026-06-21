@@ -66,7 +66,7 @@ export default function ComplianceAlertAggregator() {
             title: 'Overdue Visit Documentation',
             message: `Visit for ${patient?.first_name || 'Patient'} ${patient?.last_name || ''} on ${format(visitDate, 'MMM d')} needs documentation`,
             daysOverdue: daysSince,
-            link: `${createPageUrl("DocumentVisit")}?visitId=${visit.id}`,
+            link: createPageUrl("ClinicalDocumentation"),
             linkText: 'Document Now',
             category: 'Documentation'
           });

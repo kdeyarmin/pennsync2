@@ -94,6 +94,39 @@ Alerts.
 
 ---
 
+## Visit documentation → two choices (done)
+
+Goal: documenting a visit should be a single, clear choice between **Smart Note** and
+**Visit Scribe**.
+
+- **Clinical Notes hub (`ClinicalDocumentation`)** restructured from a flat four-tab
+  layout (Smart Notes / Live Dictation / Record / Quick Guide) to **two top-level
+  choices**:
+  - **Smart Note** — `SmartNoteAssistant` (write rough notes; AI compliance + polish).
+  - **Visit Scribe** — Record / Upload (`AudioVisitCapture`) and Live Dictation
+    (`RealTimeDictationScribe`) as sub-modes; both transcribe into a compliant note.
+  - Legacy `?tab=record` / `?tab=live-dictation` deep-links and the Visit Scribe /
+    Medical Scribe redirects (now → `?tab=visit-scribe`) still resolve. Quick Guide
+    tab dropped.
+- **`DocumentVisit` retired** (chosen direction: redirect into the hub). It was a
+  separate visit-bound page (`?visitId`) with its own manual "Documentation" + "AI
+  Workflow" tabs, vitals entry, template generation, and offline support. Now
+  `/DocumentVisit → /ClinicalDocumentation`; "Document this visit" links in
+  `PatientDetails`, `ComplianceAlertAggregator`, and `TemplateLibrary`'s "Use in Visit"
+  repointed to the hub; removed from the sidebar and the mobile back-button list.
+  **Tradeoff (accepted):** the hub selects the patient/visit itself, so the old
+  `?visitId` binding and DocumentVisit's vitals/template/offline extras are not carried
+  over. The page file remains on disk, so the change is reversible.
+
+## Analytics AI-cost cleanup (done)
+
+- **Removed the Population Health tab** from `ReportsAnalytics` along with its on-demand
+  `invokeLLM()` call (the largest recurring AI cost in analytics) and the now-unused
+  patients/visits/incidents queries. Population/risk insight now lives solely in
+  Predictive Analytics.
+
+---
+
 ## Verification
 
 - `nav.manifest.js` and `routes.jsx` remain the single sources of truth; sidebar, palette,
@@ -102,4 +135,5 @@ Alerts.
 - Old links/bookmarks to the cut/folded pages resolve via the new redirects (no
   PageNotFound).
 - Verified on this branch: `npm run build` (exit 0), `npm run test:utils` (594 pass),
-  `npm run test:components` (82 pass, incl. the nav-page mount tests).
+  `npm run test:components` (81 pass, incl. the nav-page mount tests — DocumentVisit
+  left the nav-mount set when it was retired).

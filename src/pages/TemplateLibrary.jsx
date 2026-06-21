@@ -40,8 +40,9 @@ export default function TemplateLibrary() {
 
   const handleUseInVisit = () => {
     if (selectedPatient && templateContent) {
-      // Navigate to document visit with template
-      navigate(`${createPageUrl("DocumentVisit")}?patientId=${selectedPatient}&template=${encodeURIComponent(templateContent.substring(0, 1000))}`);
+      // Document Visit was retired; send the clinician to the unified Clinical
+      // Notes hub (Smart Note / Visit Scribe). Copy the template first to paste in.
+      navigate(createPageUrl("ClinicalDocumentation"));
     } else {
       alert('Please select a patient and generate a template first.');
     }

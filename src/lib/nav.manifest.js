@@ -175,15 +175,6 @@ export const NAV_MANIFEST = [
     keywords: ["referral", "intake", "admission"],
   },
   {
-    page: "DocumentVisit",
-    label: "Document Visit",
-    icon: FileText,
-    category: "Documentation",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["document visit", "visit note"],
-  },
-  {
     page: "ClinicalDocumentation",
     label: "Clinical Notes",
     icon: Brain,

@@ -176,6 +176,11 @@ export const REDIRECTS = [
   //   DocumentationTraining / NurseEducationVideos → consolidated under the Nurse
   //                          Training Hub. (See doc for the unique-content caveat.)
   { from: '/ClinicalChart', to: '/Patients' },
+  // DocumentVisit (the separate visit-bound page with its own manual/AI-workflow
+  // tabs) retired in favor of the unified Clinical Notes hub's Smart Note / Visit
+  // Scribe choice. The hub selects the patient/visit itself, so the old ?visitId
+  // binding and DocumentVisit's vitals/template/offline extras are not carried over.
+  { from: '/DocumentVisit', to: '/ClinicalDocumentation' },
   { from: '/MedicalScribe', to: '/ClinicalDocumentation?tab=visit-scribe' },
   { from: '/ClinicalInsightsDashboard', to: '/PredictiveAnalytics' },
   { from: '/DocumentationTraining', to: '/NurseTrainingHub?tab=documentation' },
