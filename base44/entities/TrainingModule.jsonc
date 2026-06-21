@@ -69,6 +69,50 @@
         "type": "string"
       },
       "description": "Display names for lesson/module attachments"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Produced presenter video for this module (e.g. HeyGen)"
+    },
+    "video_thumbnail_url": {
+      "type": "string",
+      "description": "Thumbnail/poster image for the module video"
+    },
+    "video_duration_seconds": {
+      "type": "number",
+      "description": "Duration of the module video in seconds"
+    },
+    "video_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "processing",
+        "completed",
+        "failed"
+      ],
+      "default": "none",
+      "description": "AI presenter video generation status"
+    },
+    "video_job_id": {
+      "type": "string",
+      "description": "Provider (HeyGen) video id used to poll generation status"
+    },
+    "video_error": {
+      "type": "string",
+      "description": "Last video generation error message, if any"
+    },
+    "video_generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the module video finished generating"
+    },
+    "video_avatar_id": {
+      "type": "string",
+      "description": "Provider avatar id used to generate the module video"
+    },
+    "video_voice_id": {
+      "type": "string",
+      "description": "Provider voice id used to generate the module video"
     }
   },
   "required": [

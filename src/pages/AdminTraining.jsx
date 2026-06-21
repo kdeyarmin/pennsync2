@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3 } from "lucide-react";
+import { BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3, Clapperboard } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import EducatorReadinessPanel from "@/components/learning/EducatorReadinessPanel";
 import CourseManager from "@/components/training/CourseManager";
+import TrainingVideoStudio from "@/components/training/TrainingVideoStudio";
 import LearningPlanManager from "@/components/training/LearningPlanManager";
 import AIComplianceInServicesHub from "@/components/training/AIComplianceInServicesHub";
 import AnnualMandatoryEducationHub from "@/components/training/AnnualMandatoryEducationHub";
@@ -211,6 +212,12 @@ export default function AdminTraining() {
               Skill Gaps
             </TabsTrigger>
             {isAdmin && (
+              <TabsTrigger value="video-studio" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                <Clapperboard className="w-4 h-4 mr-2" />
+                Video Studio
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="compliance-report" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
                 <FileText className="w-4 h-4 mr-2" />
                 Compliance Report
@@ -246,6 +253,12 @@ export default function AdminTraining() {
             <ManagerSkillGapPeople people={analysis.people} missedTopics={analysis.missedTopics} />
           </div>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="video-studio">
+            <TrainingVideoStudio />
+          </TabsContent>
+        )}
 
         {isAdmin && (
           <TabsContent value="compliance-report">
