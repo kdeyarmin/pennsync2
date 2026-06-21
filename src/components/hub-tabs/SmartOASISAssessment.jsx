@@ -7,9 +7,10 @@ import PageContainer from "@/components/ui/PageContainer";
 import { useIsEmbedded } from "@/components/ui/embeddedPage";
 import {
   ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2,
-  Loader2, AlertCircle, AlertTriangle, Brain, Activity, ShieldAlert, Lightbulb
+  Loader2, AlertCircle, AlertTriangle, Brain, Activity, ShieldAlert, Lightbulb, Printer
 } from "lucide-react";
 import { toast } from "sonner";
+import { exportToPDF } from "@/components/utils/pdfExporter";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
 import OASISComplianceWarnings, { getComplianceIssues } from "@/components/oasis/OASISComplianceWarnings";
@@ -209,6 +210,7 @@ export default function SmartOASISAssessment() {
   const [answers, setAnswers] = useState({});
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [addedToCarePlan, setAddedToCarePlan] = useState([]);
   const [guidanceOpen, setGuidanceOpen] = useState(false);
   const [currentGuidance, setCurrentGuidance] = useState({ questionId: null, questionLabel: "" });
@@ -305,6 +307,101 @@ export default function SmartOASISAssessment() {
     both: { label: "Home Health + Hospice", color: "bg-indigo-100 text-indigo-800 border-indigo-200" },
   };
 
+  // Build a printable PDF that lists every OASIS item with the response captured
+  // here, so the nurse can use it as a side-by-side guide when transcribing the
+  // assessment into the EMR.
+  const handleExportPDF = async () => {
+    if (!selectedPatientId) { toast.error("Please select a patient first."); return; }
+    setExporting(true);
+    try {
+      const selectedPatient = patients.find(p => p.id === selectedPatientId);
+      const patientName = selectedPatient
+        ? `${selectedPatient.first_name} ${selectedPatient.last_name}`.trim()
+        : "";
+
+      const toNum = (v) => (typeof v === "number" ? v : parseInt(v, 10));
+      // A select's first option (value 0, "Select …") is a placeholder prompt,
+      // not a real response — don't count it as answered or print it as one.
+      const isAnswered = (q) => {
+        const val = answers[q.id];
+        if (val === undefined || val === "") return false;
+        if (q.type === "select") {
+          const placeholder = q.options[0];
+          if (placeholder && /^select/i.test(placeholder.label) && toNum(val) === placeholder.value) {
+            return false;
+          }
+        }
+        return true;
+      };
+      const responseLabel = (q) => {
+        if (!isAnswered(q)) return "— Not answered —";
+        const opt = q.options.find(o => o.value === toNum(answers[q.id]));
+        return opt ? opt.label : String(answers[q.id]);
+      };
+
+      const exportAnswered = OASIS_SECTIONS.reduce(
+        (n, s) => n + s.questions.filter(isAnswered).length, 0,
+      );
+      if (exportAnswered === 0) {
+        toast.error("Answer at least one OASIS item before printing the guide.");
+        return;
+      }
+      const exportPct = Math.round((exportAnswered / totalQuestions) * 100);
+
+      const content = [
+        { type: "text", text: `Patient: ${patientName || "—"}` },
+        { type: "text", text: `Suggested Care Scope: ${careScopeBadge[careScope].label}` },
+        { type: "text", text: `Items Answered: ${exportAnswered} of ${totalQuestions} (${exportPct}%)` },
+        { type: "spacer", height: 2 },
+        {
+          type: "text",
+          text: "Transcribe each OASIS item below into your EMR. Verify every response against your clinical findings before submission — care-scope and AI suggestions are estimates, not an official OASIS determination.",
+        },
+        { type: "line" },
+      ];
+
+      OASIS_SECTIONS.forEach(section => {
+        content.push({ type: "heading", text: section.title, size: 12 });
+        content.push({
+          type: "table",
+          headers: ["OASIS Item", "Selected Response"],
+          rows: section.questions.map(q => [q.label, responseLabel(q)]),
+        });
+        content.push({ type: "spacer", height: 3 });
+      });
+
+      if (complianceIssues.length > 0) {
+        content.push({ type: "pageBreak" });
+        content.push({ type: "heading", text: "Compliance Flags to Review", size: 14 });
+        content.push({
+          type: "table",
+          headers: ["Severity", "CMS Ref", "Flag"],
+          rows: complianceIssues.map(i => [
+            i.severity,
+            i.cms_ref || "",
+            `${i.title} — ${i.message}`,
+          ]),
+        });
+      }
+
+      const safeName =
+        (patientName || "Patient").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "Patient";
+      const dateStr = new Date().toISOString().slice(0, 10);
+      await exportToPDF({
+        filename: `OASIS_Guide_${safeName}_${dateStr}.pdf`,
+        title: "OASIS Data Entry Guide",
+        subtitle: patientName || "Smart OASIS Assessment",
+        content,
+      });
+      toast.success("OASIS guide PDF downloaded — open it to print.");
+    } catch (err) {
+      console.error("Failed to export OASIS guide PDF:", err);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (patientsLoading) return <AssessmentSkeleton />;
 
   const shell = (
@@ -358,6 +455,10 @@ export default function SmartOASISAssessment() {
             </div>
             <span className="text-xs text-slate-400">{completionPct}%</span>
           </div>
+          <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={exporting || answeredTotal === 0 || !selectedPatientId}>
+            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Printer className="w-3.5 h-3.5 mr-1.5" />}
+            Print Guide
+          </Button>
           <Button size="sm" onClick={handleSaveAssessment} disabled={saving || answeredTotal === 0 || !selectedPatientId}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
             Save Assessment
