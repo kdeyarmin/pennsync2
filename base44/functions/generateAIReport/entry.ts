@@ -204,8 +204,30 @@ function calculateMetrics(data) {
   };
 }
 
+// Tolerant JSON extractor: ask for strict JSON in-prompt and parse the text,
+// rather than passing response_json_schema. The provider's structured-output
+// mode rejects nested objects (areas_of_concern/priority_actions) that lack an
+// explicit `required` array on every level, which this free-form shape can't meet.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+}
+
 async function generateAIInsights(base44, metricsData, reportType) {
-  const result = await base44.integrations.Core.InvokeLLM({
+  const raw = await base44.integrations.Core.InvokeLLM({
     prompt: `Analyze these healthcare metrics and provide actionable AI insights.
 
 REPORT TYPE: ${reportType}
@@ -221,42 +243,22 @@ Provide:
 5. Predictive insights (trends and forecasts)
 6. Benchmarking analysis (compare to industry standards if applicable)
 
-Be specific, actionable, and data-driven.`,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        executive_summary: { type: "string" },
-        performance_highlights: { type: "array", items: { type: "string" } },
-        areas_of_concern: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              concern: { type: "string" },
-              impact: { type: "string" },
-              data_points: { type: "array", items: { type: "string" } }
-            }
-          }
-        },
-        priority_actions: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              action: { type: "string" },
-              rationale: { type: "string" },
-              expected_impact: { type: "string" },
-              timeline: { type: "string" }
-            }
-          }
-        },
-        predictive_insights: { type: "array", items: { type: "string" } },
-        benchmarking: { type: "string" }
-      }
-    }
+Be specific, actionable, and data-driven.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"executive_summary":"","performance_highlights":[""],"areas_of_concern":[{"concern":"","impact":"","data_points":[""]}],"priority_actions":[{"action":"","rationale":"","expected_impact":"","timeline":""}],"predictive_insights":[""],"benchmarking":""}`
   });
 
-  return result;
+  // Normalize so downstream PDF code can dereference fields safely.
+  const parsed = parseLLMJson(raw) || {};
+  return {
+    executive_summary: parsed.executive_summary || '',
+    performance_highlights: parsed.performance_highlights || [],
+    areas_of_concern: parsed.areas_of_concern || [],
+    priority_actions: parsed.priority_actions || [],
+    predictive_insights: parsed.predictive_insights || [],
+    benchmarking: parsed.benchmarking || ''
+  };
 }
 
 function calculateDailyTrend(noteConversions, startDate, endDate) {
