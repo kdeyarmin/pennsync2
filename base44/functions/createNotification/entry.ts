@@ -96,11 +96,23 @@ Deno.serve(async (req) => {
                            userPrefs.digest_mode === 'instant';
 
     if (shouldSendEmail) {
-      // Check quiet hours
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const currentTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      // Check quiet hours. The quiet_hours start/end times are entered by the
+      // user in THEIR local time, but Deno Deploy runs in UTC — using
+      // now.getHours() compared the window against UTC and shifted it by the
+      // agency's offset (~4–5h for ET), so emails fired during the user's night
+      // or were suppressed during their day. Evaluate the current HH:MM in the
+      // agency's configured timezone instead (default America/New_York).
+      const agencyRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+      const tz = agencyRows[0]?.business_hours_timezone || agencyRows[0]?.duty_timezone || 'America/New_York';
+      let currentTime;
+      try {
+        currentTime = new Intl.DateTimeFormat('en-GB', {
+          timeZone: tz, hour12: false, hour: '2-digit', minute: '2-digit'
+        }).format(new Date());
+      } catch {
+        const now = new Date();
+        currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      }
       
       let inQuietHours = false;
       if (userPrefs.quiet_hours?.enabled) {
