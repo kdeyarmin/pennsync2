@@ -74,6 +74,19 @@ export default function LearningPlanManager() {
     enabled: !!selectedPlan,
   });
 
+  // Overdue is derived from the plan's assignments (not enrollment status):
+  // a per-course "Due by" date can lapse while the plan-level enrollment due
+  // date has not, and the overdue job flags the assignment, not the enrollment.
+  const { data: planAssignments = [] } = useQuery({
+    queryKey: ["plan-assignments-rollup", selectedPlan?.id],
+    queryFn: () =>
+      selectedPlan
+        ? base44.entities.TrainingAssignment.filter({ plan_id: selectedPlan.id }, "-due_date", 2000)
+        : Promise.resolve([]),
+    initialData: [],
+    enabled: !!selectedPlan,
+  });
+
   const { data: users = [] } = useQuery({
     queryKey: ["plan-assign-users"],
     queryFn: () => base44.entities.User.list("-created_date", 500),
@@ -109,18 +122,27 @@ export default function LearningPlanManager() {
 
   const enrollmentStats = useMemo(() => {
     const total = planEnrollments.length;
-    const now = new Date();
     const completed = planEnrollments.filter((e) => e.status === "completed").length;
-    const overdue = planEnrollments.filter(
-      (e) =>
-        e.status === "overdue" ||
-        (e.status !== "completed" && e.due_date && new Date(e.due_date) < now)
-    ).length;
     const avgProgress = total
       ? Math.round(planEnrollments.reduce((sum, e) => sum + (e.progress_percentage || 0), 0) / total)
       : 0;
-    return { total, completed, overdue, avgProgress, inProgress: total - completed - overdue };
+    return { total, completed, avgProgress };
   }, [planEnrollments]);
+
+  // Distinct staff with at least one overdue, still-incomplete assignment —
+  // this is exactly who remindPlanOverdueStaff would notify.
+  const overdueUserCount = useMemo(() => {
+    const now = new Date();
+    const users = new Set();
+    for (const a of planAssignments) {
+      const overdue =
+        a.status !== "completed" &&
+        a.pass_fail_result !== "passed" &&
+        (a.status === "overdue" || (a.due_date && new Date(a.due_date) < now));
+      if (overdue && a.assigned_to_user_id) users.add(a.assigned_to_user_id);
+    }
+    return users.size;
+  }, [planAssignments]);
 
   // ─── Mutations ──────────────────────────────────────────────────────────────
   const refetchPlans = () => queryClient.invalidateQueries({ queryKey: ["learning-plans"] });
@@ -142,7 +164,9 @@ export default function LearningPlanManager() {
         plan_id: selectedPlan.id,
         course_id: course.id,
         course_title: course.title,
-        order_index: planCourses.length,
+        // One past the current max — stays unique even after a mid-list removal
+        // left gaps in the index sequence (length would collide).
+        order_index: planCourses.reduce((max, pc) => Math.max(max, pc.order_index ?? -1), -1) + 1,
         is_required: true,
       }),
     onSuccess: () => refetchCourses(),
@@ -221,6 +245,7 @@ export default function LearningPlanManager() {
         toast.success(`Reminder sent to ${data.reminded_users} overdue staff (${data.assignments_flagged} courses flagged).`);
       }
       queryClient.invalidateQueries({ queryKey: ["plan-enrollments-rollup", selectedPlan.id] });
+      queryClient.invalidateQueries({ queryKey: ["plan-assignments-rollup", selectedPlan.id] });
     } catch (e) {
       toast.error(`Could not send reminders: ${e.message}`);
     } finally {
@@ -512,6 +537,9 @@ export default function LearningPlanManager() {
                             <div className="flex flex-col gap-1">
                               <Label className="text-[10px] uppercase tracking-wide text-slate-400">Due by</Label>
                               <Input
+                                // Remount when the persisted value changes so the displayed
+                                // date stays in sync after a refetch / server normalization.
+                                key={`due-${pc.specific_due_date || "none"}`}
                                 type="date"
                                 className="h-8 w-[150px] text-xs"
                                 defaultValue={pc.specific_due_date || ""}
@@ -557,7 +585,7 @@ export default function LearningPlanManager() {
                     <CardTitle className="text-base flex items-center gap-2">
                       <Users className="w-4 h-4 text-indigo-600" /> Staff progress on this plan
                     </CardTitle>
-                    {enrollmentStats.overdue > 0 && (
+                    {overdueUserCount > 0 && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -568,7 +596,7 @@ export default function LearningPlanManager() {
                         {reminding ? (
                           <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" />Sending…</>
                         ) : (
-                          <><Bell className="w-4 h-4 mr-1.5" />Remind {enrollmentStats.overdue} overdue</>
+                          <><Bell className="w-4 h-4 mr-1.5" />Remind {overdueUserCount} overdue</>
                         )}
                       </Button>
                     )}
@@ -585,7 +613,7 @@ export default function LearningPlanManager() {
                         {[
                           { label: "Enrolled", value: enrollmentStats.total, icon: Users, color: "text-slate-700" },
                           { label: "Completed", value: enrollmentStats.completed, icon: CheckCircle2, color: "text-emerald-600" },
-                          { label: "Overdue", value: enrollmentStats.overdue, icon: AlertTriangle, color: enrollmentStats.overdue ? "text-red-600" : "text-slate-700" },
+                          { label: "Overdue staff", value: overdueUserCount, icon: AlertTriangle, color: overdueUserCount ? "text-red-600" : "text-slate-700" },
                           { label: "Avg progress", value: `${enrollmentStats.avgProgress}%`, icon: Target, color: "text-indigo-600" },
                         ].map((m) => {
                           const Icon = m.icon;

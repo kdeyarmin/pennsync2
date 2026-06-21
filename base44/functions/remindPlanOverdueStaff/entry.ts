@@ -55,11 +55,14 @@ Deno.serve(async (req) => {
     }
 
     const today = now.toISOString().slice(0, 10);
-    let remindedUsers = 0;
-    let flagged = 0;
 
+    // One reminder per user; flag every overdue assignment. Both run in bounded
+    // parallel chunks so a large plan (many staff × many courses) doesn't
+    // serialize into a long, timeout-prone sequence of awaits.
+    const notifications = [];
+    const flagOps = [];
     for (const [email, items] of byUser.entries()) {
-      await base44.asServiceRole.entities.Notification.create({
+      notifications.push(() => base44.asServiceRole.entities.Notification.create({
         user_email: email,
         title: 'Overdue required training',
         message: `You have ${items.length} overdue in-service${items.length === 1 ? '' : 's'} in "${plan.name}". Please complete ${items.length === 1 ? 'it' : 'them'} to stay compliant.`,
@@ -68,17 +71,25 @@ Deno.serve(async (req) => {
         action_url: '/MyLearning',
         action_label: 'Open My Learning',
         metadata: { plan_id: planId, plan_name: plan.name, overdue_count: items.length },
-      });
-      remindedUsers += 1;
-
+      }));
       for (const a of items) {
-        await base44.asServiceRole.entities.TrainingAssignment.update(a.id, {
+        flagOps.push(() => base44.asServiceRole.entities.TrainingAssignment.update(a.id, {
           reminder_sent: true,
           last_reminder_date: today,
-        });
-        flagged += 1;
+        }));
       }
     }
+
+    const remindedUsers = notifications.length;
+    const flagged = flagOps.length;
+
+    const runChunked = async (ops, size = 25) => {
+      for (let i = 0; i < ops.length; i += size) {
+        await Promise.all(ops.slice(i, i + size).map((op) => op()));
+      }
+    };
+    await runChunked(notifications);
+    await runChunked(flagOps);
 
     await base44.asServiceRole.entities.TrainingAuditLog.create({
       actor_id: user.email,

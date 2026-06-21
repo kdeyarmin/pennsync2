@@ -14,11 +14,18 @@ const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "â
  * member always knows what they must finish to stay compliant without scanning
  * the full list. Renders nothing when the learner has no required items.
  */
-const isRequired = (assignment, course) =>
-  assignment?.required === true ||
-  course?.is_mandatory === true ||
-  course?.training_type === "annual_mandatory" ||
-  course?.training_type === "in_service";
+const isRequired = (assignment, course) => {
+  // An explicit opt-out on the assignment (e.g. a plan course toggled to
+  // "optional") always wins over the course-type fallback, so optional items
+  // never block the all-caught-up state.
+  if (assignment?.required === false) return false;
+  return (
+    assignment?.required === true ||
+    course?.is_mandatory === true ||
+    course?.training_type === "annual_mandatory" ||
+    course?.training_type === "in_service"
+  );
+};
 
 const isComplete = (assignment) =>
   assignment?.status === "completed" || assignment?.pass_fail_result === "passed";
