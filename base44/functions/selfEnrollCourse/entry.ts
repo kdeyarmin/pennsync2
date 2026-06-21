@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Lets an authenticated user self-enroll in an elective (non-required) published
 // course. Required/mandatory and annual-mandatory compliance training stays
