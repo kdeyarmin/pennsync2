@@ -27,7 +27,7 @@ is reversible** — restore the manifest entry and delete the redirect to bring 
 | `ClinicalChart` | `/Patients` | Its Vitals / Care Plan / OASIS panes already exist as tabs in `PatientDetails`. No inbound links. |
 | `MedicalScribe` | `/ClinicalDocumentation?tab=record` | Identical record→transcribe (`generateNoteFromRecording`)→review (`ConstrainedNoteReviewer`) pipeline; the Record/Upload tab is a strict superset (defers patient binding). Mirrors the existing `/VisitScribe` redirect. |
 | `ClinicalInsightsDashboard` | `/PredictiveAnalytics` | Population-trend / disease-progression views duplicate Predictive Analytics + the Reports Population Health tab. Admin-only. |
-| `DocumentationTraining` | `/NurseTrainingHub?tab=documentation` | Documentation-training theme consolidated under the Nurse Training Hub. **Caveat below.** |
+| `DocumentationTraining` | `/NurseTrainingHub?tab=documentation` | Standalone documentation-training page; **file deleted** (content confirmed not wanted). See note below. |
 | `NurseEducationVideos` | `/NurseTrainingHub` | 9 hard-coded YouTube links with client-side checkboxes; no DB backing. |
 
 Supporting cleanups:
@@ -35,18 +35,15 @@ Supporting cleanups:
 - `AdminConsoleDirectory.jsx`: removed the dead `ClinicalInsightsDashboard` entry.
 - `MobileHeader.jsx`: removed `ClinicalChart` from the back-button `BACK_PAGES` list.
 
-### ⚠️ Caveat — DocumentationTraining
+### DocumentationTraining — deleted
 
-Earlier analysis assumed `DocumentationTraining` was already embedded in
-`NurseTrainingHub`. It is **not** — the Hub's "documentation" tab renders the separate
-`NurseTraining` page. `DocumentationTraining` has genuinely distinct content
-(InteractiveTutorials, PracticeNoteSubmission, ScenarioSimulator, AISkillAssessment) that
-is **not** replicated in that tab. The redirect makes this content unreachable.
-
-**Recommended follow-up:** before deleting the file, either (a) add a real
-"Documentation Training" tab to `NurseTrainingHub` that lazy-loads
-`DocumentationTraining`, or (b) confirm the tutorials/scenarios/AI-assessment features are
-not wanted and then remove the file. Until then the file is preserved on disk.
+`DocumentationTraining` was **not** embedded in `NurseTrainingHub` (the Hub's
+"documentation" tab renders the separate `NurseTraining` page), so it was a genuinely
+standalone page. Its content (InteractiveTutorials, PracticeNoteSubmission,
+ScenarioSimulator, AISkillAssessment) was reviewed and confirmed not wanted, so the page
+file `src/pages/DocumentationTraining.jsx` has been **deleted**. The
+`/DocumentationTraining → /NurseTrainingHub?tab=documentation` redirect is retained so old
+links/bookmarks still resolve.
 
 ---
 
@@ -77,7 +74,7 @@ call in ReportsAnalytics' Population Health tab.
 | `LearningCenter` (1,376 lines) | **Merge** with `MyLearning` | Two competing learner "home" dashboards. |
 | `MyLearning` (182 lines) | **Merge target** | Keep its clean `?tab=` wrapper pattern; fold in LearningCenter's catalog/certs/renewals/gamification. |
 | `NurseTrainingHub` | **Keep** | AI-personalized hub. |
-| `DocumentationTraining` | **Cut** ✅ done (see caveat) | |
+| `DocumentationTraining` | **Cut + file deleted** ✅ done | |
 | `NurseEducationVideos` | **Cut** ✅ done | |
 | `EducationLibrary` | **Keep, recategorize** | Not staff training — it manages **patient** education materials. Move under Patient Care, not Learning & Resources. |
 
