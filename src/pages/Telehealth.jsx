@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Video, Plus, Calendar, Clock, CheckCircle2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import StatCard from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import TelehealthCall from "../components/telehealth/TelehealthCall";
 import SessionCard from "../components/telehealth/SessionCard";
@@ -55,12 +56,20 @@ export default function Telehealth() {
   });
 
   const createSession = useMutation({
-    mutationFn: (data) => base44.entities.TelehealthSession.create(data),
+    mutationFn: (data) => {
+      // Guard against creating an orphaned session before the current user has
+      // loaded — host_email is what scopes the session to its clinician.
+      if (!data.host_email) {
+        throw new Error("Still loading your account — please try again in a moment.");
+      }
+      return base44.entities.TelehealthSession.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["telehealth-sessions"] });
       setShowNewSession(false);
       toast.success("Session created successfully");
-    }
+    },
+    onError: (e) => toast.error(e?.message || "Couldn't create the session")
   });
 
   const updateSession = useMutation({
@@ -173,30 +182,18 @@ export default function Telehealth() {
         description="Secure video visits with patients via Telnyx"
         favoritePage="Telehealth"
         actions={
-          <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+          <Button onClick={() => setShowNewSession(true)} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" /> New Session
           </Button>
         }
       />
 
-      {/* Stats */}
-      <div className="px-3 sm:px-4 md:px-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[
-          { label: "Total Sessions", value: stats.total, icon: Video, color: "text-blue-600" },
-          { label: "Completed", value: stats.completed, icon: CheckCircle2, color: "text-emerald-600" },
-          { label: "Upcoming", value: stats.scheduled, icon: Calendar, color: "text-amber-600" },
-          { label: "Total Minutes", value: stats.totalMinutes, icon: Clock, color: "text-navy-600" }
-        ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <s.icon className={`w-8 h-8 ${s.color} flex-shrink-0`} />
-              <div>
-                <p className="text-2xl font-bold text-slate-900">{s.value}</p>
-                <p className="text-xs text-slate-500">{s.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Stats — shared StatCard treatment, matching Dashboard/Patients. */}
+      <div className="px-3 sm:px-4 md:px-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard label="Total Sessions" value={stats.total} icon={Video} tone="navy" />
+        <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} tone="emerald" />
+        <StatCard label="Upcoming" value={stats.scheduled} icon={Calendar} tone="amber" />
+        <StatCard label="Total Minutes" value={stats.totalMinutes} icon={Clock} tone="gold" />
       </div>
 
       {/* Active session */}
