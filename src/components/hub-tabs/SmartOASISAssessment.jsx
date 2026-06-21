@@ -311,10 +311,7 @@ export default function SmartOASISAssessment() {
   // here, so the nurse can use it as a side-by-side guide when transcribing the
   // assessment into the EMR.
   const handleExportPDF = async () => {
-    if (answeredTotal === 0) {
-      toast.error("Answer at least one OASIS item before printing the guide.");
-      return;
-    }
+    if (!selectedPatientId) { toast.error("Please select a patient first."); return; }
     setExporting(true);
     try {
       const selectedPatient = patients.find(p => p.id === selectedPatientId);
@@ -323,17 +320,38 @@ export default function SmartOASISAssessment() {
         : "";
 
       const toNum = (v) => (typeof v === "number" ? v : parseInt(v, 10));
-      const responseLabel = (q) => {
+      // A select's first option (value 0, "Select …") is a placeholder prompt,
+      // not a real response — don't count it as answered or print it as one.
+      const isAnswered = (q) => {
         const val = answers[q.id];
-        if (val === undefined || val === "") return "— Not answered —";
-        const opt = q.options.find(o => o.value === toNum(val));
-        return opt ? opt.label : String(val);
+        if (val === undefined || val === "") return false;
+        if (q.type === "select") {
+          const placeholder = q.options[0];
+          if (placeholder && /^select/i.test(placeholder.label) && toNum(val) === placeholder.value) {
+            return false;
+          }
+        }
+        return true;
       };
+      const responseLabel = (q) => {
+        if (!isAnswered(q)) return "— Not answered —";
+        const opt = q.options.find(o => o.value === toNum(answers[q.id]));
+        return opt ? opt.label : String(answers[q.id]);
+      };
+
+      const exportAnswered = OASIS_SECTIONS.reduce(
+        (n, s) => n + s.questions.filter(isAnswered).length, 0,
+      );
+      if (exportAnswered === 0) {
+        toast.error("Answer at least one OASIS item before printing the guide.");
+        return;
+      }
+      const exportPct = Math.round((exportAnswered / totalQuestions) * 100);
 
       const content = [
         { type: "text", text: `Patient: ${patientName || "—"}` },
         { type: "text", text: `Suggested Care Scope: ${careScopeBadge[careScope].label}` },
-        { type: "text", text: `Items Answered: ${answeredTotal} of ${totalQuestions} (${completionPct}%)` },
+        { type: "text", text: `Items Answered: ${exportAnswered} of ${totalQuestions} (${exportPct}%)` },
         { type: "spacer", height: 2 },
         {
           type: "text",
@@ -366,9 +384,11 @@ export default function SmartOASISAssessment() {
         });
       }
 
-      const safeName = (patientName || "Patient").replace(/\s+/g, "_");
+      const safeName =
+        (patientName || "Patient").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "Patient";
+      const dateStr = new Date().toISOString().slice(0, 10);
       await exportToPDF({
-        filename: `OASIS_Guide_${safeName}_${new Date().toISOString().split("T")[0]}.pdf`,
+        filename: `OASIS_Guide_${safeName}_${dateStr}.pdf`,
         title: "OASIS Data Entry Guide",
         subtitle: patientName || "Smart OASIS Assessment",
         content,
@@ -435,7 +455,7 @@ export default function SmartOASISAssessment() {
             </div>
             <span className="text-xs text-slate-400">{completionPct}%</span>
           </div>
-          <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={exporting || answeredTotal === 0}>
+          <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={exporting || answeredTotal === 0 || !selectedPatientId}>
             {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Printer className="w-3.5 h-3.5 mr-1.5" />}
             Print Guide
           </Button>
