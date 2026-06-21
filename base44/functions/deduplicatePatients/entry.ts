@@ -563,9 +563,65 @@ export function effectiveThreshold(matches, base = 35) {
 }
 
 /**
- * Group patients into duplicate clusters. Deterministic for a given input
- * order: each patient is claimed by at most one group, and pairwise scoring is
- * symmetric so a forward-only scan is exhaustive.
+ * Score a single (possibly unsaved) candidate patient against an existing
+ * roster and return the records it most likely duplicates, strongest first.
+ *
+ * This powers the add-time guard: before a new patient is created we run the
+ * exact same scoring engine the scanner uses, so anything the scanner would
+ * later flag is caught at the point of entry instead — and the two surfaces can
+ * never disagree about what counts as a duplicate.
+ *
+ * @param {object} candidate           the patient being entered (need not have an id)
+ * @param {Array}  patients            existing patient records to compare against
+ * @param {{
+ *   threshold?: number,
+ *   scoreOptions?: object,
+ *   excludeId?: string | null,        skip this id (e.g. the record being edited)
+ *   limit?: number,                   cap the number of matches returned
+ * }} [opts]
+ * @returns {Array<{ patient, score, matches, confidenceLevel, confidencePercent }>}
+ */
+export function findDuplicatesForCandidate(candidate, patients = [], opts = {}) {
+  const { threshold = 35, scoreOptions = undefined, excludeId = null, limit = 10 } = opts;
+  if (!candidate) return [];
+
+  const matchesOut = [];
+  for (const other of patients) {
+    if (!other) continue;
+    if (excludeId != null && other.id === excludeId) continue;
+
+    const { score, matches } = scorePatientPair(candidate, other, scoreOptions);
+    if (matches.length === 0) continue;
+    const cutoff = effectiveThreshold(matches, threshold);
+    if (score >= cutoff) {
+      matchesOut.push({
+        patient: other,
+        score,
+        matches,
+        confidenceLevel: confidenceFromScore(score),
+        confidencePercent: confidencePercent(score),
+      });
+    }
+  }
+
+  matchesOut.sort((a, b) => b.score - a.score);
+  return limit != null ? matchesOut.slice(0, limit) : matchesOut;
+}
+
+/**
+ * Group patients into duplicate clusters.
+ *
+ * Clustering is TRANSITIVE: records are linked by a union-find pass over every
+ * qualifying pair, so a chain like A↔B and B↔C lands A, B and C in one group
+ * even when A and C don't directly score above threshold. The previous greedy
+ * pass claimed each match under the first record that matched it and never
+ * revisited it, so those bridged duplicates were silently dropped — a common
+ * source of "the scanner missed obvious duplicates" in real, messy data.
+ *
+ * Deterministic for a given input order: the lowest-indexed record in each
+ * cluster is its `primary`, every other record is reported once with the score
+ * of its strongest link to another cluster member, and groups come out in
+ * primary-index order. Each patient belongs to at most one group.
  *
  * @param {Array} patients
  * @param {{
@@ -582,40 +638,85 @@ export function effectiveThreshold(matches, base = 35) {
  */
 export function findDuplicateGroups(patients, opts = {}) {
   const { visitsByPatient = null, threshold = 35, minScore = null, scoreOptions = undefined } = opts;
-  const groups = [];
-  const processed = new Set();
+  const n = patients.length;
 
-  for (let i = 0; i < patients.length; i++) {
-    const primary = patients[i];
-    if (processed.has(primary.id)) continue;
+  // Union-Find. Always attach the higher root to the lower one so each cluster's
+  // root is its lowest original index — that index is the deterministic primary.
+  const parent = Array.from({ length: n }, (_, i) => i);
+  const find = (x) => {
+    let r = x;
+    while (parent[r] !== r) r = parent[r];
+    while (parent[x] !== r) { const next = parent[x]; parent[x] = r; x = next; } // path compression
+    return r;
+  };
+  const union = (a, b) => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[Math.max(ra, rb)] = Math.min(ra, rb);
+  };
 
-    const duplicates = [];
-    for (let j = i + 1; j < patients.length; j++) {
-      const other = patients[j];
-      if (processed.has(other.id)) continue;
+  // Sparse adjacency of only the pairs that cleared the cutoff (real candidate
+  // duplicates are rare relative to n², so this stays small).
+  const links = new Map(); // index -> [{ idx, score, matches }]
+  const addLink = (i, j, score, matches) => {
+    if (!links.has(i)) links.set(i, []);
+    if (!links.has(j)) links.set(j, []);
+    links.get(i).push({ idx: j, score, matches });
+    links.get(j).push({ idx: i, score, matches });
+  };
 
-      const base = scorePatientPair(primary, other, scoreOptions);
-      const related = relatedEntityScore(primary, other, visitsByPatient);
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const base = scorePatientPair(patients[i], patients[j], scoreOptions);
+      const related = relatedEntityScore(patients[i], patients[j], visitsByPatient);
       const totalScore = base.score + related.score;
       const cutoff = minScore != null ? minScore : effectiveThreshold(base.matches, threshold);
 
       if (totalScore >= cutoff) {
-        duplicates.push({
-          patient: other,
-          score: totalScore,
-          matches: [...base.matches, ...related.matches],
-          confidenceLevel: confidenceFromScore(totalScore),
-          confidencePercent: confidencePercent(totalScore),
-        });
-        processed.add(other.id);
+        addLink(i, j, totalScore, [...base.matches, ...related.matches]);
+        union(i, j);
       }
     }
+  }
 
-    if (duplicates.length > 0) {
-      duplicates.sort((a, b) => b.score - a.score);
-      groups.push({ primary, duplicates });
-      processed.add(primary.id);
+  // Collect cluster members by root. Iterating i ascending means each root (the
+  // cluster's min index) is first seen at i === root, so clusters land in
+  // primary-index order without a follow-up sort.
+  const clusters = new Map(); // root -> [indices]
+  for (let i = 0; i < n; i++) {
+    if (!links.has(i)) continue; // record matched nothing — not part of any group
+    const root = find(i);
+    if (!clusters.has(root)) clusters.set(root, []);
+    clusters.get(root).push(i);
+  }
+
+  const groups = [];
+  for (const indices of clusters.values()) {
+    if (indices.length < 2) continue;
+    const memberSet = new Set(indices);
+    const primaryIdx = indices[0]; // ascending insertion => lowest index first
+
+    const duplicates = [];
+    for (const idx of indices) {
+      if (idx === primaryIdx) continue;
+      // Report this record with its strongest link to any other cluster member,
+      // so a record bridged in via a third party still shows a meaningful score.
+      let best = null;
+      for (const link of links.get(idx)) {
+        if (!memberSet.has(link.idx)) continue;
+        if (!best || link.score > best.score) best = link;
+      }
+      duplicates.push({
+        patient: patients[idx],
+        score: best.score,
+        matches: best.matches,
+        confidenceLevel: confidenceFromScore(best.score),
+        confidencePercent: confidencePercent(best.score),
+      });
     }
+
+    duplicates.sort((a, b) => b.score - a.score);
+    groups.push({ primary: patients[primaryIdx], duplicates });
   }
 
   return groups;

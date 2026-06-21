@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +12,15 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
-  UserX,
-  Search
+  X,
+  GitMerge,
+  RefreshCw,
 } from "lucide-react";
 import {
   buildVisitsByPatient,
   findDuplicateGroups,
 } from "@/components/patient/patientDuplicateUtils";
+import { mergePatientGroup } from "@/components/patient/mergePatients";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
@@ -26,89 +29,102 @@ export default function DuplicatePatients() {
   const [isScanning, setIsScanning] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   const [duplicateGroups, setDuplicateGroups] = useState([]);
+  const [mergingKey, setMergingKey] = useState(null);
+  const autoScanned = useRef(false);
   const queryClient = useQueryClient();
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: patients = [], isLoading } = useQuery({
     queryKey: ['all-patients-duplicate-scan'],
-    queryFn: () => base44.entities.Patient.list('-created_date', 10000)
+    queryFn: async () => {
+      const all = await base44.entities.Patient.list('-created_date', 10000);
+      // Don't surface already-archived/merged records as fresh duplicates.
+      return all.filter((p) => !p.is_archived);
+    }
   });
 
-  const { data: allVisits = [] } = useQuery({
+  const { data: allVisits = [], isLoading: visitsLoading } = useQuery({
     queryKey: ['all-visits-duplicate-analysis'],
     queryFn: () => base44.entities.Visit.list('-created_date', 5000),
     enabled: patients.length > 0
   });
 
-  const mergePatientMutation = useMutation({
-    mutationFn: async ({ _keepId, mergeIds }) => {
-      for (const mergeId of mergeIds) {
-        await base44.entities.Patient.update(mergeId, { status: 'discharged' });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-    }
-  });
-
-  const scanForDuplicates = async () => {
+  const runScan = (patientList, visitList) => {
     setIsScanning(true);
     setDuplicateGroups([]);
-    // Yield to the event loop so the "Scanning..." state actually paints
-    // before the (potentially heavy) synchronous matching work runs.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    // Pre-index visits by patient once (O(V)) instead of filtering per pair.
-    const visitsByPatient = buildVisitsByPatient(allVisits);
-    const groups = findDuplicateGroups(patients, { visitsByPatient });
-
-    setDuplicateGroups(groups);
-    setHasScanned(true);
-    setIsScanning(false);
+    // Yield so the "Scanning..." state paints before the (synchronous) matching
+    // work runs.
+    setTimeout(() => {
+      const visitsByPatient = buildVisitsByPatient(visitList);
+      const groups = findDuplicateGroups(patientList, { visitsByPatient });
+      setDuplicateGroups(groups);
+      setHasScanned(true);
+      setIsScanning(false);
+    }, 0);
   };
 
-  const handleMerge = async (keepPatient, mergePatients) => {
-    if (!(await confirm({ title: "Merge duplicates?", description: `Close ${mergePatients.length} duplicate patient(s) and keep "${keepPatient.first_name} ${keepPatient.last_name}"?`, confirmText: "Merge", destructive: true }))) {
-      return;
-    }
+  // Auto-scan once the roster (and its visits, for corroboration) have loaded —
+  // the admin shouldn't have to click a button to find out the database is dirty.
+  useEffect(() => {
+    if (autoScanned.current) return;
+    if (isLoading || visitsLoading) return;
+    if (patients.length === 0) return;
+    autoScanned.current = true;
+    runScan(patients, allVisits);
+  }, [isLoading, visitsLoading, patients, allVisits]);
 
-    await mergePatientMutation.mutateAsync({
-      keepId: keepPatient.id,
-      mergeIds: mergePatients.map(p => p.patient.id)
+  const rescan = () => runScan(patients, allVisits);
+
+  // Merge an entire group into one surviving record: reassign that record's
+  // clinical history onto the survivor and archive the rest. `survivor` is the
+  // record the admin chose to keep (defaults to the group's primary).
+  const handleMergeGroup = async (group, groupKey, survivor) => {
+    const others = [group.primary, ...group.duplicates.map((d) => d.patient)].filter(
+      (p) => p.id !== survivor.id
+    );
+    const ok = await confirm({
+      title: "Merge duplicates?",
+      description:
+        `Keep "${survivor.first_name} ${survivor.last_name}" and merge ${others.length} ` +
+        `other record(s) into it? Their visits and care plans move to the kept record, ` +
+        `and the duplicates are archived (recoverable).`,
+      confirmText: "Merge",
+      destructive: true,
     });
+    if (!ok) return;
 
-    setDuplicateGroups(prev => prev.filter(g => g.primary.id !== keepPatient.id));
-  };
-
-  const handleClosePrimary = async (group) => {
-    if (!(await confirm({ title: "Close patient?", description: `Are you sure you want to close "${group.primary.first_name} ${group.primary.last_name}"?`, confirmText: "Close patient", destructive: true }))) {
-      return;
+    setMergingKey(groupKey);
+    try {
+      const { patientsMerged, reassigned } = await mergePatientGroup(
+        survivor.id,
+        others.map((p) => p.id),
+        { mergedBy: currentUser?.email }
+      );
+      const moved = Object.values(reassigned).reduce((a, b) => a + b, 0);
+      toast.success(
+        `Merged ${patientsMerged} record(s) into ${survivor.first_name} ${survivor.last_name}` +
+          (moved > 0 ? ` and moved ${moved} related record(s).` : '.')
+      );
+      setDuplicateGroups((prev) => prev.filter((_, i) => `group-${i}` !== groupKey));
+      queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+    } catch (error) {
+      console.error('Merge error:', error);
+      toast.error('Failed to merge the duplicates. Please try again.');
+    } finally {
+      setMergingKey(null);
     }
-
-    await base44.entities.Patient.update(group.primary.id, { status: 'discharged' });
-    setDuplicateGroups(prev => prev.filter(g => g.primary.id !== group.primary.id));
-    queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
   };
 
-  const handleCloseSpecific = async (groupPrimary, duplicatePatient) => {
-    if (!(await confirm({ title: "Close patient?", description: `Are you sure you want to close "${duplicatePatient.patient.first_name} ${duplicatePatient.patient.last_name}"?`, confirmText: "Close patient", destructive: true }))) {
-      return;
-    }
-
-    await base44.entities.Patient.update(duplicatePatient.patient.id, { status: 'discharged' });
-    
-    setDuplicateGroups(prev => prev.map(g => {
-      if (g.primary.id === groupPrimary.id) {
-        return {
-          ...g,
-          duplicates: g.duplicates.filter(d => d.patient.id !== duplicatePatient.patient.id)
-        };
-      }
-      return g;
-    }).filter(g => g.duplicates.length > 0));
-    
-    queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
+  const dismissGroup = (groupKey) => {
+    setDuplicateGroups((prev) => prev.filter((_, i) => `group-${i}` !== groupKey));
   };
+
+  const totalDuplicateRecords = duplicateGroups.reduce((sum, g) => sum + g.duplicates.length, 0);
 
   if (isLoading) {
     return (
@@ -129,33 +145,22 @@ export default function DuplicatePatients() {
         icon={Users}
         eyebrow="Patient Care"
         title="Duplicate Patients"
-        description="Scan the database for potential duplicate patient records"
+        description="Automatically scans the database for likely duplicate records and merges them — moving visits and care plans onto the record you keep."
         favoritePage="DuplicatePatients"
       />
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="w-5 h-5" />
-            Scan for Duplicates
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-600 mb-1">
-                Total patients in database: <strong>{patients.length}</strong>
-              </p>
-              {duplicateGroups.length > 0 && (
-                <p className="text-sm text-orange-600 font-medium">
-                  Found {duplicateGroups.length} duplicate group(s)
-                </p>
-              )}
-            </div>
+          <CardTitle className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <GitMerge className="w-5 h-5" />
+              Duplicate scan
+            </span>
             <Button
-              onClick={scanForDuplicates}
-              disabled={isScanning}
-              className="bg-orange-600 hover:bg-orange-700"
+              variant="outline"
+              size="sm"
+              onClick={rescan}
+              disabled={isScanning || patients.length === 0}
             >
               {isScanning ? (
                 <>
@@ -164,14 +169,40 @@ export default function DuplicatePatients() {
                 </>
               ) : (
                 <>
-                  <Search className="w-4 h-4 mr-2" />
-                  Scan for Duplicates
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Rescan
                 </>
               )}
             </Button>
-          </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-600">
+            Total patients scanned: <strong>{patients.length}</strong>
+            {hasScanned && !isScanning && (
+              <>
+                {' · '}
+                {duplicateGroups.length > 0 ? (
+                  <span className="text-orange-600 font-medium">
+                    {duplicateGroups.length} duplicate group(s), {totalDuplicateRecords} extra record(s)
+                  </span>
+                ) : (
+                  <span className="text-emerald-600 font-medium">no duplicates found</span>
+                )}
+              </>
+            )}
+          </p>
         </CardContent>
       </Card>
+
+      {isScanning && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
+            <p className="text-sm text-slate-600">Scanning {patients.length} patients for duplicates...</p>
+          </CardContent>
+        </Card>
+      )}
 
       {hasScanned && duplicateGroups.length === 0 && !isScanning && (
         <Card className="border-emerald-200 bg-emerald-50">
@@ -185,138 +216,126 @@ export default function DuplicatePatients() {
         </Card>
       )}
 
-      {duplicateGroups.length > 0 && (
+      {duplicateGroups.length > 0 && !isScanning && (
         <div className="space-y-6">
           <Alert className="bg-orange-50 border-orange-200">
             <AlertTriangle className="w-4 h-4 text-orange-600" />
             <AlertDescription className="text-orange-900">
-              <strong>{duplicateGroups.length} potential duplicate group(s) found.</strong> Review each group and choose to keep one patient or close specific duplicates.
+              <strong>{duplicateGroups.length} potential duplicate group(s) found.</strong> Choose the
+              record to keep in each group — its visits and care plans absorb the others, which are
+              archived (recoverable).
             </AlertDescription>
           </Alert>
 
-          {duplicateGroups.map((group, idx) => (
-            <Card key={idx} className="border-2 border-orange-300">
-              <CardHeader className="bg-orange-50">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="w-5 h-5 text-orange-600" />
-                  Duplicate Group {idx + 1}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                {/* Primary Patient */}
-                <Card className="mb-4 border-2 border-blue-300 bg-blue-50">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <Badge className="bg-blue-600 mb-2">Primary Record</Badge>
-                        <h4 className="font-bold text-lg text-slate-900">
-                          {group.primary.first_name} {group.primary.last_name}
-                        </h4>
-                        <div className="text-sm text-slate-600 mt-1 space-y-1">
-                          <p>DOB: {group.primary.date_of_birth || 'N/A'}</p>
-                          <p>MRN: {group.primary.medical_record_number || 'N/A'}</p>
-                          <p>Phone: {group.primary.phone || 'N/A'}</p>
-                          <p>Diagnosis: {group.primary.primary_diagnosis || 'N/A'}</p>
-                        </div>
-                      </div>
-                      <Badge className={
-                        group.primary.status === 'active' ? 'bg-emerald-600' :
-                        group.primary.status === 'discharged' ? 'bg-slate-600' :
-                        'bg-orange-600'
-                      }>
-                        {group.primary.status || 'unknown'}
-                      </Badge>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                      <Button
-                        size="sm"
-                        onClick={() => handleMerge(group.primary, group.duplicates)}
-                        disabled={mergePatientMutation.isPending}
-                        className="bg-emerald-600 hover:bg-emerald-700"
-                      >
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Keep This & Close Others
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleClosePrimary(group)}
-                        disabled={mergePatientMutation.isPending}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
-                      >
-                        <UserX className="w-4 h-4 mr-2" />
-                        Close This Record
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+          {duplicateGroups.map((group, idx) => {
+            const groupKey = `group-${idx}`;
+            const isMerging = mergingKey === groupKey;
+            const records = [
+              { patient: group.primary, isPrimary: true, confidencePercent: null, confidenceLevel: null, matches: [] },
+              ...group.duplicates.map((d) => ({ patient: d.patient, isPrimary: false, ...d })),
+            ];
 
-                {/* Duplicate Patients */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-sm text-slate-700">
-                    Possible Duplicates ({group.duplicates.length}):
-                  </h4>
-                  {group.duplicates.map((dup, dupIdx) => (
-                    <Card key={dupIdx} className="bg-slate-50">
+            return (
+              <Card key={groupKey} className="border-2 border-orange-300">
+                <CardHeader className="bg-orange-50">
+                  <CardTitle className="text-lg flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-orange-600" />
+                      Duplicate Group {idx + 1}
+                      <Badge variant="outline" className="bg-white">{records.length} records</Badge>
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-slate-500"
+                      onClick={() => dismissGroup(groupKey)}
+                      disabled={isMerging}
+                      title="Not duplicates — dismiss"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Not duplicates
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-3">
+                  <p className="text-xs text-slate-500">
+                    Pick the most complete record to keep. The other{records.length > 2 ? 's' : ''} will
+                    be merged into it.
+                  </p>
+                  {records.map(({ patient, isPrimary, confidencePercent, confidenceLevel, matches }) => (
+                    <Card
+                      key={patient.id}
+                      className={isPrimary ? 'border-2 border-blue-300 bg-blue-50' : 'bg-slate-50'}
+                    >
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h5 className="font-semibold text-slate-900">
-                              {dup.patient.first_name} {dup.patient.last_name}
-                            </h5>
-                            <div className="text-sm text-slate-600 mt-1 space-y-1">
-                              <p>DOB: {dup.patient.date_of_birth || 'N/A'}</p>
-                              <p>MRN: {dup.patient.medical_record_number || 'N/A'}</p>
-                              <p>Phone: {dup.patient.phone || 'N/A'}</p>
-                              <p>Diagnosis: {dup.patient.primary_diagnosis || 'N/A'}</p>
-                            </div>
-                            <div className="flex gap-1 mt-2 flex-wrap">
-                              <Badge className={
-                                dup.confidenceLevel === 'high' ? 'bg-red-100 text-red-800' :
-                                dup.confidenceLevel === 'medium' ? 'bg-orange-100 text-orange-800' :
-                                'bg-amber-100 text-amber-800'
-                              }>
-                                {dup.confidencePercent}% • {dup.confidenceLevel} confidence
-                              </Badge>
-                              {dup.matches.slice(0, 4).map((match, mIdx) => (
-                                <Badge key={mIdx} variant="outline" className="text-xs">
-                                  {match}
-                                </Badge>
-                              ))}
-                              {dup.matches.length > 4 && (
-                                <Badge variant="outline" className="text-xs text-slate-500">
-                                  +{dup.matches.length - 4} more
-                                </Badge>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <h4 className="font-bold text-slate-900">
+                                {patient.first_name} {patient.last_name}
+                              </h4>
+                              {isPrimary ? (
+                                <Badge className="bg-blue-600">Suggested keep</Badge>
+                              ) : (
+                                confidencePercent != null && (
+                                  <Badge
+                                    className={
+                                      confidenceLevel === 'high' ? 'bg-red-100 text-red-800' :
+                                      confidenceLevel === 'medium' ? 'bg-orange-100 text-orange-800' :
+                                      'bg-amber-100 text-amber-800'
+                                    }
+                                  >
+                                    {confidencePercent}% match
+                                  </Badge>
+                                )
                               )}
+                              <Badge className={
+                                patient.status === 'active' ? 'bg-emerald-600' :
+                                patient.status === 'discharged' ? 'bg-slate-600' :
+                                'bg-orange-600'
+                              }>
+                                {patient.status || 'unknown'}
+                              </Badge>
                             </div>
+                            <div className="text-sm text-slate-600 space-y-0.5">
+                              <p>DOB: {patient.date_of_birth || 'N/A'}</p>
+                              <p>MRN: {patient.medical_record_number || 'N/A'}</p>
+                              <p>Phone: {patient.phone || 'N/A'}</p>
+                              <p>Diagnosis: {patient.primary_diagnosis || 'N/A'}</p>
+                            </div>
+                            {!isPrimary && matches?.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {matches.slice(0, 5).map((reason, mIdx) => (
+                                  <Badge key={mIdx} variant="outline" className="text-xs bg-white">
+                                    {reason}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          <div className="flex flex-col gap-2 ml-4">
-                            <Badge className={
-                              dup.patient.status === 'active' ? 'bg-emerald-600' :
-                              dup.patient.status === 'discharged' ? 'bg-slate-600' :
-                              'bg-orange-600'
-                            }>
-                              {dup.patient.status || 'unknown'}
-                            </Badge>
+                          <div className="flex-shrink-0">
                             <Button
                               size="sm"
-                              variant="outline"
-                              onClick={() => handleCloseSpecific(group.primary, dup)}
-                              disabled={mergePatientMutation.isPending}
-                              className="text-red-600 border-red-300 hover:bg-red-50"
+                              onClick={() => handleMergeGroup(group, groupKey, patient)}
+                              disabled={isMerging}
+                              className="bg-emerald-600 hover:bg-emerald-700 whitespace-nowrap"
                             >
-                              <UserX className="w-3 h-3 mr-1" />
-                              Close
+                              {isMerging ? (
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                              ) : (
+                                <GitMerge className="w-4 h-4 mr-1" />
+                              )}
+                              Keep &amp; merge others
                             </Button>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </PageContainer>
