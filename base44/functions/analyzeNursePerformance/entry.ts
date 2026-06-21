@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -205,48 +222,14 @@ ${JSON.stringify(metrics.suggestions_by_type, null, 2)}
 Recent Unaddressed Recommendations (sample):
 ${recommendations.filter(r => !r.addressed).slice(0, 5).map(r => `- ${r.recommendation_type}: ${r.recommendation_text.substring(0, 100)}`).join('\n')}
 
-Provide actionable, specific insights. Be constructive and focus on growth opportunities.`;
+Provide actionable, specific insights. Be constructive and focus on growth opportunities.
 
-    const insights = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: analysisPrompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          strengths: {
-            type: 'array',
-            items: { type: 'string' }
-          },
-          areas_for_improvement: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                area: { type: 'string' },
-                suggestion: { type: 'string' },
-                priority: { type: 'string' }
-              }
-            }
-          },
-          training_recommendations: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                topic: { type: 'string' },
-                reason: { type: 'string' },
-                urgency: { type: 'string' }
-              }
-            }
-          },
-          risk_factors: {
-            type: 'array',
-            items: { type: 'string' }
-          },
-          overall_summary: { type: 'string' },
-          performance_grade: { type: 'string' }
-        }
-      }
-    });
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"strengths":[""],"areas_for_improvement":[{"area":"","suggestion":"","priority":""}],"training_recommendations":[{"topic":"","reason":"","urgency":""}],"risk_factors":[""],"overall_summary":"","performance_grade":""}`;
+
+    const insights = parseLLMJson(await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: analysisPrompt
+    })) || {};
 
     // Calculate skill gaps
     const skillGaps = [];
@@ -365,37 +348,14 @@ QUALITY INDICATORS:
 - Template Usage: ${metrics.template_usage} times
 - Unaddressed Recommendations: ${recommendations.filter(r => !r.addressed).length}
 
-Assess burnout risk (low/moderate/high) and provide specific warning signs and recommendations.`;
+Assess burnout risk (low/moderate/high) and provide specific warning signs and recommendations.
 
-    const burnoutAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: burnoutPrompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          risk_level: { 
-            type: 'string',
-            enum: ['low', 'moderate', 'high', 'critical']
-          },
-          risk_score: { type: 'number' },
-          warning_signs: {
-            type: 'array',
-            items: { type: 'string' }
-          },
-          contributing_factors: {
-            type: 'array',
-            items: { type: 'string' }
-          },
-          recommendations: {
-            type: 'array',
-            items: { type: 'string' }
-          },
-          positive_indicators: {
-            type: 'array',
-            items: { type: 'string' }
-          }
-        }
-      }
-    });
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"risk_level":"low|moderate|high|critical","risk_score":0,"warning_signs":[""],"contributing_factors":[""],"recommendations":[""],"positive_indicators":[""]}`;
+
+    const burnoutAnalysis = parseLLMJson(await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: burnoutPrompt
+    })) || {};
 
     return Response.json({
       success: true,
