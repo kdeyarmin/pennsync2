@@ -58,6 +58,7 @@ const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type ===
 export default function UserSettings() {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -188,6 +189,31 @@ export default function UserSettings() {
       toast.error('Failed to save preferences. Please try again.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentUser?.email) return;
+    const trimmedFullName = profileData.full_name.trim();
+    if (!trimmedFullName) {
+      toast.error('Please enter your full name before saving.');
+      return;
+    }
+    setIsSavingProfile(true);
+    try {
+      await base44.auth.updateMe({
+        full_name: trimmedFullName,
+        phone: profileData.phone,
+        credential_type: profileData.credential_type,
+      });
+      // Refetch so the field (and dashboard greeting) reflect the saved value.
+      await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      toast.success('Profile saved.');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error('Failed to save profile. Please try again.');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -322,6 +348,15 @@ export default function UserSettings() {
                   className="mt-1"
                 />
                 <p className="mt-1 text-xs text-slate-500">This is the name shown in your dashboard greeting and across the app.</p>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={handleSaveProfile} disabled={isSavingProfile} className="min-h-[44px]">
+                  {isSavingProfile ? (
+                    <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                  ) : (
+                    <><Save className="w-4 h-4 mr-2" /> Save Profile</>
+                  )}
+                </Button>
               </div>
               <div>
                 <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
