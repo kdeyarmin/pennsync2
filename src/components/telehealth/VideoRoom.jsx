@@ -501,22 +501,37 @@ function RemoteParticipant({ participant, room }) {
     if (!tracks.length) return undefined;
     const mediaStream = new MediaStream(tracks);
 
-    if (videoRef.current && mediaStream.getVideoTracks().length) {
+    const videoHost = videoRef.current;
+    const audioHost = audioRef.current;
+    if (videoHost && mediaStream.getVideoTracks().length) {
       const v = document.createElement("video");
       v.autoplay = true;
       v.playsInline = true;
       v.srcObject = mediaStream;
-      videoRef.current.innerHTML = "";
-      videoRef.current.appendChild(v);
+      videoHost.innerHTML = "";
+      videoHost.appendChild(v);
     }
-    if (audioRef.current && mediaStream.getAudioTracks().length) {
+    if (audioHost && mediaStream.getAudioTracks().length) {
       const a = document.createElement("audio");
       a.autoplay = true;
       a.srcObject = mediaStream;
-      audioRef.current.innerHTML = "";
-      audioRef.current.appendChild(a);
+      audioHost.innerHTML = "";
+      audioHost.appendChild(a);
     }
-    return undefined;
+    // Tear down the created media elements when the participant/room changes or
+    // the participant leaves: detach srcObject and pause so the old <audio>/
+    // <video> stop playing immediately instead of lingering until GC (a leaving
+    // participant's audio could otherwise keep playing for a beat).
+    return () => {
+      [videoHost, audioHost].forEach((host) => {
+        if (!host) return;
+        host.querySelectorAll("video, audio").forEach((el) => {
+          try { el.pause(); } catch { /* not playing */ }
+          el.srcObject = null;
+        });
+        host.innerHTML = "";
+      });
+    };
   }, [participant, room]);
 
   return (
