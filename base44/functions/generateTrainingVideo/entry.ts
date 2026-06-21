@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const HEYGEN_API_KEY = Deno.env.get('HEYGEN_API_KEY') || '';
 const HEYGEN_BASE = 'https://api.heygen.com';
@@ -7,14 +7,7 @@ const HEYGEN_BASE = 'https://api.heygen.com';
 const DEFAULT_AVATAR_ID = 'Daisy-inskirt-20220818';
 const DEFAULT_VOICE_ID = '55f8c0f546884f9cbdefa113f5e7b682'; // Elizabeth - Friendly English
 
-interface VideoScene {
-  avatar_id?: string;
-  voice_id?: string;
-  input_text: string;
-  background_color?: string;
-}
-
-async function heygenRequest(path: string, method: string, body?: unknown) {
+async function heygenRequest(path, method, body) {
   const res = await fetch(`${HEYGEN_BASE}${path}`, {
     method,
     headers: {
@@ -30,7 +23,7 @@ async function heygenRequest(path: string, method: string, body?: unknown) {
   return res.json();
 }
 
-async function createVideo(scenes: VideoScene[], title: string) {
+async function createVideo(scenes, title) {
   const video_inputs = scenes.map((scene) => ({
     character: {
       type: 'avatar',
@@ -60,7 +53,7 @@ async function createVideo(scenes: VideoScene[], title: string) {
   return result.data?.video_id;
 }
 
-async function pollVideoStatus(videoId: string, maxAttempts = 60, intervalMs = 10000): Promise<{ status: string; video_url?: string; thumbnail_url?: string; duration?: number }> {
+async function pollVideoStatus(videoId, maxAttempts = 60, intervalMs = 10000) {
   for (let i = 0; i < maxAttempts; i++) {
     const result = await heygenRequest(`/v1/video_status.get?video_id=${videoId}`, 'GET');
     const data = result.data || {};
@@ -85,8 +78,8 @@ async function pollVideoStatus(videoId: string, maxAttempts = 60, intervalMs = 1
   throw new Error('Video generation timed out after polling');
 }
 
-function buildNarrationScript(moduleTitle: string, content: Record<string, unknown>): string {
-  const parts: string[] = [];
+function buildNarrationScript(moduleTitle, content) {
+  const parts = [];
 
   parts.push(`Welcome to this module: ${moduleTitle}.`);
 
@@ -94,7 +87,7 @@ function buildNarrationScript(moduleTitle: string, content: Record<string, unkno
     parts.push(String(content.intro));
   }
 
-  const sections = (content.sections || []) as Array<Record<string, unknown>>;
+  const sections = content.sections || [];
   for (const section of sections) {
     if (section.heading) {
       parts.push(`Let's talk about: ${section.heading}.`);
@@ -186,7 +179,7 @@ Deno.serve(async (req) => {
       }
 
       // Sort by order_index
-      modules.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+      modules.sort((a, b) =>
         (Number(a.order_index) || 0) - (Number(b.order_index) || 0)
       );
 
@@ -239,8 +232,8 @@ Deno.serve(async (req) => {
         entity_id: course_id,
         after_json: {
           modules_processed: results.length,
-          modules_completed: results.filter((r: Record<string, unknown>) => r.status === 'completed').length,
-          modules_failed: results.filter((r: Record<string, unknown>) => r.status === 'failed').length,
+          modules_completed: results.filter((r) => r.status === 'completed').length,
+          modules_failed: results.filter((r) => r.status === 'failed').length,
         },
         severity: 'info',
       });

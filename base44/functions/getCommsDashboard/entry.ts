@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * getCommsDashboard — admin-only aggregation for the Communications Dashboard.
@@ -15,23 +15,23 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
 
-const isAdminLike = (u: { role?: string; account_type?: string; email?: string } | null) =>
+const isAdminLike = (u) =>
   !!u &&
   (u.role === 'admin' ||
     u.account_type === 'agency_admin' ||
     u.account_type === 'super_admin' ||
     u.email === SUPER_ADMIN_EMAIL);
 
-const round = (n: number) => Math.round(n);
+const round = (n) => Math.round(n);
 
-function rate(delivered: number, outbound: number): number {
+function rate(delivered, outbound) {
   if (!outbound || outbound <= 0) return 0;
   return round((delivered / outbound) * 100);
 }
 
-function localDayKey(value: unknown): string | null {
+function localDayKey(value) {
   if (!value) return null;
-  const d = new Date(value as string);
+  const d = new Date(value);
   if (Number.isNaN(d.getTime())) return null;
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -39,17 +39,16 @@ function localDayKey(value: unknown): string | null {
   return `${y}-${m}-${day}`;
 }
 
-function lastSevenDayKeys(now: Date): string[] {
-  const keys: string[] = [];
+function lastSevenDayKeys(now) {
+  const keys = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-    keys.push(localDayKey(d) as string);
+    keys.push(localDayKey(d));
   }
   return keys;
 }
 
-// deno-lint-ignore no-explicit-any
-function summarize(messages: any[], calls: any[], faxes: any[], now: Date) {
+function summarize(messages, calls, faxes, now) {
   const msgs = Array.isArray(messages) ? messages : [];
   const callRows = Array.isArray(calls) ? calls : [];
   const faxRows = Array.isArray(faxes) ? faxes : [];
@@ -104,10 +103,9 @@ function summarize(messages: any[], calls: any[], faxes: any[], now: Date) {
   };
 
   const dayKeys = lastSevenDayKeys(now);
-  const dayIndex: Record<string, { date: string; sms: number; calls: number; faxes: number }> = {};
+  const dayIndex = {};
   for (const k of dayKeys) dayIndex[k] = { date: k, sms: 0, calls: 0, faxes: 0 };
-  // deno-lint-ignore no-explicit-any
-  const bump = (rows: any[], field: 'sms' | 'calls' | 'faxes') => {
+  const bump = (rows, field) => {
     for (const r of rows) {
       const key = localDayKey(r.created_date);
       if (key && dayIndex[key]) dayIndex[key][field] += 1;
@@ -129,6 +127,7 @@ Deno.serve(async (req) => {
     if (!isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
+    // (TypeScript annotations stripped below for plain-JS Deno compliance.)
 
     // Pull recent rows (newest first), then restrict to the last ~30 days.
     const [messages, calls, faxes, users] = await Promise.all([
@@ -140,8 +139,8 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).getTime();
-    const inWindow = (row: { created_date?: string }) => {
-      const t = new Date(row.created_date as string).getTime();
+    const inWindow = (row) => {
+      const t = new Date(row.created_date).getTime();
       return Number.isFinite(t) ? t >= cutoff : true;
     };
     const recentMessages = (messages || []).filter(inWindow);
@@ -151,9 +150,9 @@ Deno.serve(async (req) => {
     const summary = summarize(recentMessages, recentCalls, recentFaxes, now);
 
     // Map work numbers -> user full names (digits-only, last 10 for matching).
-    const last10 = (v: unknown) => String(v || '').replace(/[^\d]/g, '').slice(-10);
-    const nameByNumber: Record<string, string> = {};
-    const nameByEmail: Record<string, string> = {};
+    const last10 = (v) => String(v || '').replace(/[^\d]/g, '').slice(-10);
+    const nameByNumber = {};
+    const nameByEmail = {};
     for (const u of users || []) {
       if (u.email) nameByEmail[u.email] = u.full_name || u.email;
       const key = last10(u.work_phone_number);
@@ -161,8 +160,7 @@ Deno.serve(async (req) => {
     }
 
     // ---- Recent failures (no message bodies) ----
-    // deno-lint-ignore no-explicit-any
-    const failures: any[] = [];
+    const failures = [];
     for (const m of recentMessages) {
       if (m.status === 'failed') {
         failures.push({
@@ -199,8 +197,8 @@ Deno.serve(async (req) => {
     const failuresCapped = failures.slice(0, 25);
 
     // ---- Per-number outbound activity ----
-    const perNumberMap: Record<string, { number: string; sms: number; calls: number }> = {};
-    const ensure = (num: string) => {
+    const perNumberMap = {};
+    const ensure = (num) => {
       if (!perNumberMap[num]) perNumberMap[num] = { number: num, sms: 0, calls: 0 };
       return perNumberMap[num];
     };
@@ -227,6 +225,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('getCommsDashboard error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Returns per-course rating aggregates (average + count) plus the current user's
 // own ratings. Aggregation happens server-side so the client never downloads

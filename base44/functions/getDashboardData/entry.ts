@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * getDashboardData — returns the Dashboard's core datasets (active patients,
@@ -14,7 +14,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  */
 
 // Today's date in America/New_York (matches the client's todayEastern()).
-function todayEastern(): string {
+function todayEastern() {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
   }).format(new Date());
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
 
     // Non-admin: restrict everything to the caller's assigned patients.
     const patients = await sr.Patient.filter({ assigned_nurses: user.email, status: 'active' }, '-updated_date', 100);
-    const ids = (patients || []).map((p: any) => p.id).filter(Boolean);
+    const ids = (patients || []).map((p) => p.id).filter(Boolean);
     if (ids.length === 0) {
       return Response.json({ patients: [], visits: [], carePlans: [], incidents: [] });
     }
