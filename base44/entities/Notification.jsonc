@@ -28,7 +28,18 @@
         "training_due",
         "system_update",
         "message_received",
-        "info"
+        "sms_failed",
+        "sms_urgent",
+        "sms_received",
+        "fax_delivered",
+        "fax_failed",
+        "voicemail",
+        "info",
+        "expiration_warning",
+        "credential_expiration",
+        "admin_expiration_summary",
+        "care_plan_proposal",
+        "signature_request"
       ],
       "description": "Type of notification"
     },

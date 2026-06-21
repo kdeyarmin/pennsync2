@@ -87,7 +87,7 @@ function CarePlanCard({ plan, currentUser, onUpdated }) {
                 <ul className="space-y-1">
                   {plan.interventions.map((item, i) => (
                     <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
-                      <span className="text-teal-500 mt-0.5">•</span> {item}
+                      <span className="text-navy-500 mt-0.5">•</span> {item}
                     </li>
                   ))}
                 </ul>
@@ -124,7 +124,7 @@ function CarePlanCard({ plan, currentUser, onUpdated }) {
                 />
               </div>
             </div>
-            <Button size="sm" onClick={handleSave} disabled={saving} className="bg-teal-600 hover:bg-teal-700 min-h-[36px]">
+            <Button size="sm" onClick={handleSave} disabled={saving} className="bg-navy-600 hover:bg-navy-700 min-h-[36px]">
               {saving ? "Saving…" : "Save Update"}
             </Button>
           </div>
@@ -163,7 +163,7 @@ export default function CarePlanInteractive({ patientId, currentUser }) {
     <div className="space-y-3">
       <CardHeader className="px-0 pt-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <ClipboardList className="w-4 h-4 text-teal-600" />
+          <ClipboardList className="w-4 h-4 text-navy-600" />
           {carePlans.length} Care Plan{carePlans.length !== 1 ? "s" : ""}
         </CardTitle>
       </CardHeader>

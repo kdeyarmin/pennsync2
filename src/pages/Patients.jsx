@@ -2,28 +2,20 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, User, FileText, ArrowUpDown, Users } from "lucide-react";
-import { format } from 'date-fns';
+import { Plus, User, ArrowUpDown, Users, UserCheck, Target, CalendarPlus } from "lucide-react";
 import { secureDelete, handleSecureError } from "../components/utils/security";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 import PatientForm from "../components/patient/PatientForm";
 import { patientMatchesSearch } from "../components/patient/AdvancedPatientFilters";
-import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
 import BulkPatientActions from "../components/patient/BulkPatientActions";
 import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import PaginatedPatientList from "../components/patient/PaginatedPatientList";
-import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import StatCard from "@/components/ui/stat-card";
+import EmptyState from "@/components/ui/empty-state";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
 import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
@@ -54,8 +46,6 @@ export default function Patients() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
-  const [summaryPatient, setSummaryPatient] = useState(null);
   const [selectedPatients, setSelectedPatients] = useState([]);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
@@ -110,71 +100,10 @@ export default function Patients() {
     staleTime: 300000,
   });
 
-  // Fetch visits and care plans for summary dialog
-  const { data: summaryVisits = [] } = useQuery({
-    queryKey: ['summaryVisits', summaryPatient?.id],
-    queryFn: () => base44.entities.Visit.filter({ patient_id: summaryPatient.id, status: 'completed' }, '-visit_date', 10),
-    enabled: !!summaryPatient?.id,
-  });
-
-  const { data: summaryCarePlans = [] } = useQuery({
-    queryKey: ['summaryCarePlans', summaryPatient?.id],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: summaryPatient.id }),
-    enabled: !!summaryPatient?.id,
-  });
-
-  const _handleShowSummary = (patient) => {
-    setSummaryPatient(patient);
-    setShowSummaryDialog(true);
-  };
-
   // Handle query errors gracefully
   if (patientsError) {
     console.error('Error loading patients:', patientsError);
   }
-
-  const createPatientMutation = useMutation({
-    mutationFn: (patientData) => base44.entities.Patient.create(patientData),
-    onSuccess: (newPatient) => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      setShowForm(false);
-      setEditingPatient(null);
-      
-      toast.success(`Patient ${newPatient.first_name} ${newPatient.last_name} created successfully`);
-      
-      // Log patient creation
-      logActivity(ActivityActions.CREATE, {
-        entity_type: 'Patient',
-        entity_id: newPatient.id,
-        patient_name: `${newPatient.first_name} ${newPatient.last_name}`,
-        page: 'Patients'
-      });
-    },
-    onError: (error) => {
-      toast.error(`Failed to create patient: ${error.message}`);
-    }
-  });
-
-  const updatePatientMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Patient.update(id, data),
-    onSuccess: (updatedPatient, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      setShowForm(false);
-      setEditingPatient(null);
-      
-      toast.success('Patient updated successfully');
-      
-      // Log patient update
-      logActivity(ActivityActions.UPDATE, {
-        entity_type: 'Patient',
-        entity_id: variables.id,
-        page: 'Patients'
-      });
-    },
-    onError: (error) => {
-      toast.error(`Failed to update patient: ${error.message}`);
-    }
-  });
 
   const deletePatientMutation = useMutation({
     mutationFn: async (patientId) => {
@@ -204,43 +133,6 @@ export default function Patients() {
     setIsDeleting(true);
     deletePatientMutation.mutate(patientToDelete.id);
   };
-
-  const _handleSubmit = (data) => {
-    if (editingPatient) {
-      updatePatientMutation.mutate({ id: editingPatient.id, data });
-    } else {
-      createPatientMutation.mutate(data);
-    }
-  };
-
-  // Visit type template quick-add
-  const _createVisitFromTemplate = useMutation({
-    mutationFn: async ({ patientId, templateType }) => {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const visitData = {
-        patient_id: patientId,
-        visit_date: today,
-        visit_time: '', // Could be dynamic or default to empty
-        visit_type: templateType,
-        status: 'scheduled'
-      };
-      return base44.entities.Visit.create(visitData);
-    },
-    onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
-    toast.success('Visit scheduled successfully!');
-    },
-    onError: (error) => {
-      toast.error(`Failed to schedule visit: ${error.message}`);
-    }
-  });
-
-  const _visitTemplates = [
-    { type: 'routine_visit', label: 'Routine Visit', icon: '📋' },
-    { type: 'skilled_nursing', label: 'Skilled Nursing', icon: '💉' },
-    { type: 'admission', label: 'Admission', icon: '🏥' },
-    { type: 'recertification', label: 'Recertification', icon: '📝' },
-  ];
 
   const calculateAge = (dob) => {
     if (!dob) return null;
@@ -371,18 +263,27 @@ export default function Patients() {
         eyebrow="Patient Care"
         title="Patient Management"
         description="Manage the active roster, review duplicates, and keep imported census data clean and organized."
-        badges={[
-          { label: `${patients.length} patients`, className: "bg-blue-100 text-blue-800 hover:bg-blue-100" },
-          { label: `${patients.filter(patient => patient.status === 'active').length} active`, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100" },
-        ]}
         favoritePage="Patients"
         actions={
-          <Button onClick={() => { setEditingPatient(null); setShowForm(true); }} className="bg-blue-600 hover:bg-blue-700 min-h-[46px] px-5">
+          <Button onClick={() => { setEditingPatient(null); setShowForm(true); }} className="min-h-[46px] px-5">
             <Plus className="w-4 h-4 mr-2" />
             Add Patient
           </Button>
         }
       />
+
+      {/* Roster summary — shared StatCard treatment, matching the Dashboard. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard label="Total Patients" value={patients.length} icon={Users} tone="navy" />
+        <StatCard label="Active" value={patients.filter(p => p.status === 'active').length} icon={UserCheck} tone="emerald" />
+        <StatCard label="With Care Plans" value={patients.filter(p => (carePlanCountByPatientId[p.id] || 0) > 0).length} icon={Target} tone="gold" />
+        <StatCard
+          label="New (30 days)"
+          value={patients.filter(p => p.created_date && (Date.now() - new Date(p.created_date).getTime()) <= 30 * 86400000).length}
+          icon={CalendarPlus}
+          tone="slate"
+        />
+      </div>
 
       {showForm && (
         <PatientForm
@@ -402,12 +303,11 @@ export default function Patients() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Roster tools</h2>
-            <p className="text-sm text-slate-500">Import census files, review duplicates, and refine the active patient list.</p>
+            <p className="text-sm text-slate-500">Review duplicates and refine the active patient list.</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.9fr)] gap-4 mb-4">
-          <PatientFileUpdateUploader />
+        <div className="mb-4">
           <DuplicatePatientManager />
         </div>
 
@@ -468,24 +368,17 @@ export default function Patients() {
             <PatientCardSkeleton />
           </>
         ) : filteredPatients.length === 0 ? (
-          <Card className="border-2 border-dashed">
-            <CardContent className="p-8 text-center">
-              <User className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No patients found</h3>
-              <p className="text-slate-500 mb-6">
-                {filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
-              </p>
-              {!filters.search && (
-                <Button
-                  onClick={() => setShowForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 min-h-[44px]"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Patient
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={User}
+            title="No patients found"
+            description={filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
+            action={!filters.search && (
+              <Button onClick={() => setShowForm(true)} className="min-h-[44px]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Patient
+              </Button>
+            )}
+          />
         ) : (
           filteredPatients.map((patient) => (
             <SwipeablePatientCard
@@ -516,24 +409,18 @@ export default function Patients() {
             <PatientCardSkeleton />
           </>
         ) : filteredPatients.length === 0 ? (
-          <Card className="md:col-span-2 border-2 border-dashed">
-            <CardContent className="p-8 sm:p-12 text-center">
-              <User className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No patients found</h3>
-              <p className="text-slate-500 mb-6">
-                {filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
-              </p>
-              {!filters.search && (
-                <Button
-                  onClick={() => setShowForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 min-h-[44px]"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Patient
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            className="md:col-span-2"
+            icon={User}
+            title="No patients found"
+            description={filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
+            action={!filters.search && (
+              <Button onClick={() => setShowForm(true)} className="min-h-[44px]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Patient
+              </Button>
+            )}
+          />
         ) : (
           <div className="md:col-span-2">
             <PaginatedPatientList
@@ -573,26 +460,6 @@ export default function Patients() {
       />
 
 
-
-      {/* Patient Summary Dialog */}
-                  <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
-                    <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-indigo-600" />
-                          Patient Summary: {summaryPatient?.first_name} {summaryPatient?.last_name}
-                        </DialogTitle>
-                      </DialogHeader>
-                      {summaryPatient && (
-                        <AIPatientSummaryReport
-                          patient={summaryPatient}
-                          previousVisits={summaryVisits}
-                          carePlans={summaryCarePlans}
-                          compact={false}
-                        />
-                      )}
-                    </DialogContent>
-                  </Dialog>
 
                   {/* Delete Confirmation Dialog */}
                   <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

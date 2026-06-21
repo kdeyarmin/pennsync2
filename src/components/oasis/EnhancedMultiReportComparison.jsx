@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -469,62 +470,60 @@ export default function EnhancedMultiReportComparison({
             </div>
 
             {/* Detailed Report Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs border rounded-lg overflow-hidden">
-                <thead className="bg-navy-100">
-                  <tr>
-                    <th className="p-2 text-left font-semibold">Report</th>
-                    <th className="p-2 text-center font-semibold">Revenue</th>
-                    <th className="p-2 text-center font-semibold">Clinical Group</th>
-                    <th className="p-2 text-center font-semibold">Functional</th>
-                    <th className="p-2 text-center font-semibold">Comorbidity</th>
-                    <th className="p-2 text-center font-semibold">Source/Timing</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {comparisonResults.reports.map((report, idx) => (
-                    <tr key={report.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                      <td className="p-2">
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-2 h-2 rounded-full" 
-                            style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                          />
-                          <span className="font-medium">{report.shortLabel}</span>
-                          {report.revenue === comparisonResults.statistics.maxRevenue && (
-                            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-2 text-center">
-                        <span className={`font-bold ${
-                          report.revenue === comparisonResults.statistics.maxRevenue ? 'text-green-700' :
-                          report.revenue === comparisonResults.statistics.minRevenue ? 'text-slate-500' :
-                          'text-slate-700'
-                        }`}>
-                          {formatCurrency(report.revenue)}
-                        </span>
-                      </td>
-                      <td className="p-2 text-center">
-                        <Badge variant="outline" className="text-xs">
-                          {report.clinicalGroup?.replace('MMTA_', '')}
-                        </Badge>
-                      </td>
-                      <td className="p-2 text-center">
-                        <span className="capitalize">{report.functionalLevel}</span>
-                        <span className="text-slate-400 ml-1">({report.functionalPoints}pts)</span>
-                      </td>
-                      <td className="p-2 text-center capitalize">{report.comorbidityLevel}</td>
-                      <td className="p-2 text-center">
-                        <span className="capitalize">{report.admissionSource}</span>
-                        <span className="text-slate-400"> / </span>
-                        <span className="capitalize">{report.episodeTiming}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Report</TableHead>
+                  <TableHead className="text-center">Revenue</TableHead>
+                  <TableHead className="text-center">Clinical Group</TableHead>
+                  <TableHead className="text-center">Functional</TableHead>
+                  <TableHead className="text-center">Comorbidity</TableHead>
+                  <TableHead className="text-center">Source/Timing</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {comparisonResults.reports.map((report, idx) => (
+                  <TableRow key={report.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                        />
+                        <span className="font-medium">{report.shortLabel}</span>
+                        {report.revenue === comparisonResults.statistics.maxRevenue && (
+                          <Star className="w-3 h-3 text-gold-500 fill-gold-500" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={`font-bold ${
+                        report.revenue === comparisonResults.statistics.maxRevenue ? 'text-emerald-700' :
+                        report.revenue === comparisonResults.statistics.minRevenue ? 'text-slate-500' :
+                        'text-slate-700'
+                      }`}>
+                        {formatCurrency(report.revenue)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="text-xs">
+                        {report.clinicalGroup?.replace('MMTA_', '')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="capitalize">{report.functionalLevel}</span>
+                      <span className="text-slate-400 ml-1">({report.functionalPoints}pts)</span>
+                    </TableCell>
+                    <TableCell className="text-center capitalize">{report.comorbidityLevel}</TableCell>
+                    <TableCell className="text-center">
+                      <span className="capitalize">{report.admissionSource}</span>
+                      <span className="text-slate-400"> / </span>
+                      <span className="capitalize">{report.episodeTiming}</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
             {/* Key Differences */}
             {comparisonResults.keyDifferences.length > 0 && (

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +43,7 @@ import PageHeader from "@/components/ui/PageHeader";
 
 export default function MedicareGuidelinesLibrary() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedGuideline, setSelectedGuideline] = useState(null);
@@ -142,11 +145,11 @@ export default function MedicareGuidelinesLibrary() {
     const colors = {
       oasis: "bg-navy-100 text-navy-800",
       medicare_cop: "bg-red-100 text-red-800",
-      billing_reimbursement: "bg-green-100 text-green-800",
+      billing_reimbursement: "bg-emerald-100 text-emerald-800",
       clinical_documentation: "bg-blue-100 text-blue-800",
       home_health_regulations: "bg-indigo-100 text-indigo-800",
       hospice_regulations: "bg-gold-100 text-gold-800",
-      quality_measures: "bg-yellow-100 text-yellow-800",
+      quality_measures: "bg-amber-100 text-amber-800",
       compliance_audit: "bg-orange-100 text-orange-800",
       pdgm: "bg-teal-100 text-teal-800",
       other: "bg-slate-100 text-slate-800"
@@ -315,26 +318,19 @@ export default function MedicareGuidelinesLibrary() {
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
       ) : filteredGuidelines.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-            <p className="text-slate-500">
-              {searchTerm || categoryFilter !== "all" 
-                ? "No guidelines found matching your search"
-                : "No guidelines available yet"}
-            </p>
-            {isAdmin && (
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setAddDialogOpen(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Guideline
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={FileText}
+          title={searchTerm || categoryFilter !== "all" ? "No guidelines found" : "No guidelines yet"}
+          description={searchTerm || categoryFilter !== "all"
+            ? "No guidelines match your search."
+            : "Medicare guidelines will appear here once added."}
+          action={isAdmin && (
+            <Button variant="outline" onClick={() => setAddDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Guideline
+            </Button>
+          )}
+        />
       ) : (
         <div className="grid gap-3 sm:gap-4">
           {filteredGuidelines.map((guideline) => (
@@ -426,10 +422,11 @@ export default function MedicareGuidelinesLibrary() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Delete guideline"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        if (confirm('Are you sure you want to delete this guideline?')) {
+                        if (await confirm({ title: "Delete guideline?", description: "Are you sure you want to delete this guideline? This can't be undone.", confirmText: "Delete", destructive: true })) {
                           deleteGuidelineMutation.mutate(selectedGuideline.id);
                         }
                       }}

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Download, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { exportToPDF } from "../utils/pdfExporter";
@@ -156,46 +157,44 @@ export default function NursePerformanceReport({ dateRange }) {
           <CardTitle>Detailed Performance Metrics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Rank</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Nurse</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Visits</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Compliance</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Pass Rate</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Performance</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {nurseMetrics.map((nurse, index) => (
-                  <tr key={nurse.email} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-sm font-semibold text-slate-900">
-                      {index === 0 && <Award className="w-4 h-4 text-yellow-500 inline mr-1" />}
-                      #{index + 1}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.name}</td>
-                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.completedVisits}</td>
-                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.avgComplianceScore}%</td>
-                    <td className="px-4 py-3 text-sm text-slate-900">{nurse.auditPassRate}%</td>
-                    <td className="px-4 py-3 text-sm">
-                      <Badge className={
-                        parseFloat(nurse.avgComplianceScore) >= 90 ? 'bg-green-100 text-green-800' :
-                        parseFloat(nurse.avgComplianceScore) >= 80 ? 'bg-blue-100 text-blue-800' :
-                        parseFloat(nurse.avgComplianceScore) >= 70 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }>
-                        {parseFloat(nurse.avgComplianceScore) >= 90 ? 'Excellent' :
-                         parseFloat(nurse.avgComplianceScore) >= 80 ? 'Good' :
-                         parseFloat(nurse.avgComplianceScore) >= 70 ? 'Fair' : 'Needs Improvement'}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rank</TableHead>
+                <TableHead>Nurse</TableHead>
+                <TableHead>Visits</TableHead>
+                <TableHead>Compliance</TableHead>
+                <TableHead>Pass Rate</TableHead>
+                <TableHead>Performance</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {nurseMetrics.map((nurse, index) => (
+                <TableRow key={nurse.email}>
+                  <TableCell className="font-semibold text-slate-900">
+                    {index === 0 && <Award className="w-4 h-4 text-gold-500 inline mr-1" />}
+                    #{index + 1}
+                  </TableCell>
+                  <TableCell className="text-slate-900">{nurse.name}</TableCell>
+                  <TableCell className="text-slate-900">{nurse.completedVisits}</TableCell>
+                  <TableCell className="text-slate-900">{nurse.avgComplianceScore}%</TableCell>
+                  <TableCell className="text-slate-900">{nurse.auditPassRate}%</TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      parseFloat(nurse.avgComplianceScore) >= 90 ? 'success' :
+                      parseFloat(nurse.avgComplianceScore) >= 80 ? 'info' :
+                      parseFloat(nurse.avgComplianceScore) >= 70 ? 'warning' :
+                      'destructive'
+                    }>
+                      {parseFloat(nurse.avgComplianceScore) >= 90 ? 'Excellent' :
+                       parseFloat(nurse.avgComplianceScore) >= 80 ? 'Good' :
+                       parseFloat(nurse.avgComplianceScore) >= 70 ? 'Fair' : 'Needs Improvement'}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

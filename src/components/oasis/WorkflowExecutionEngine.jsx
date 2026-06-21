@@ -155,7 +155,7 @@ export default function WorkflowExecutionEngine({
         try {
           const alert = await createAlertMutation.mutateAsync({
             patient_id: patientId,
-            alert_type: "compliance_issue",
+            alert_type: "documentation_risk",
             severity: config.task_priority || "medium",
             title: rule.rule_name,
             message: config.notification_message || rule.description,

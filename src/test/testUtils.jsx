@@ -13,6 +13,7 @@
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ConfirmDialogProvider } from '@/components/ui/confirm-dialog';
 
 /** Render `ui` inside Router + a fresh (retry-disabled) QueryClient. */
 export function renderWithProviders(ui, { route = '/', queryClient } = {}) {
@@ -23,7 +24,9 @@ export function renderWithProviders(ui, { route = '/', queryClient } = {}) {
     });
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      <ConfirmDialogProvider>
+        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      </ConfirmDialogProvider>
     </QueryClientProvider>
   );
 }

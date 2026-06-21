@@ -17,10 +17,7 @@ import {
 export default function OnboardingTracker({ nurseEmail, onStartModule }) {
   const { data: modules = [] } = useQuery({
     queryKey: ['onboardingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ 
-      required_for_onboarding: true,
-      is_active: true 
-    }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
     initialData: [],
   });
 
@@ -33,8 +30,8 @@ export default function OnboardingTracker({ nurseEmail, onStartModule }) {
     initialData: [],
   });
 
-  // Sort modules by order
-  const sortedModules = [...modules].sort((a, b) => (a.order || 0) - (b.order || 0));
+  // Sort modules by order (TrainingModule schema field is order_index)
+  const sortedModules = [...modules].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
   const getModuleStatus = (module) => {
     const completion = completions.find(c => c.training_module_id === module.id);

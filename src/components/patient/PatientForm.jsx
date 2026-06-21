@@ -422,12 +422,12 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
             </div>
             <div className="flex flex-wrap gap-2">
               {formData.secondary_diagnoses?.map((diagnosis, index) => (
-                <div key={index} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                <div key={index} className="flex items-center gap-1 bg-navy-100 text-navy-800 px-3 py-1 rounded-full">
                   <span className="text-sm">{diagnosis}</span>
                   <button
                     type="button"
                     onClick={() => removeSecondaryDiagnosis(index)}
-                    className="hover:bg-blue-200 rounded-full p-1"
+                    className="hover:bg-navy-200 rounded-full p-1"
                   >
                     <X className="w-3 h-3" />
                   </button>

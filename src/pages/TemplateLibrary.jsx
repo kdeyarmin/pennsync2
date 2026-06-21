@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, Sparkles, FileText, Copy, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, Sparkles, FileText, Copy, CheckCircle2, Bot } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { useNavigate } from "react-router-dom";
@@ -122,7 +122,7 @@ export default function TemplateLibrary() {
               />
               
               {/* Action Buttons */}
-              <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+              <Card>
                 <CardContent className="p-4">
                   <div className="flex flex-wrap gap-3">
                     <Button
@@ -132,7 +132,7 @@ export default function TemplateLibrary() {
                     >
                       {copied ? (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                           Copied!
                         </>
                       ) : (
@@ -144,7 +144,7 @@ export default function TemplateLibrary() {
                     </Button>
                     <Button
                       onClick={handleUseInVisit}
-                      className="bg-green-600 hover:bg-green-700 gap-2"
+                      className="bg-emerald-600 hover:bg-emerald-700 gap-2"
                     >
                       <FileText className="w-4 h-4" />
                       Use in Visit Documentation
@@ -171,7 +171,7 @@ export default function TemplateLibrary() {
       </div>
 
       {/* Features Info */}
-      <Card className="mt-8 bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
+      <Card className="mt-8 border-l-4 border-l-gold-400">
         <CardContent className="p-6">
           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-navy-600" />
@@ -179,21 +179,21 @@ export default function TemplateLibrary() {
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-medium text-slate-900 mb-2">📋 Visit Type Templates</h4>
+              <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-navy-600" /> Visit Type Templates</h4>
               <p className="text-sm text-slate-600">
                 Pre-built templates for Admission, Routine, Recertification, Discharge, PRN, 
                 and Supervisory visits with all required Medicare elements.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-slate-900 mb-2">💊 Condition-Specific</h4>
+              <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4 text-navy-600" /> Condition-Specific</h4>
               <p className="text-sm text-slate-600">
                 Specialized templates for CHF, COPD, Diabetes, Wound Care, Stroke, 
                 Orthopedic, Hospice, and Hypertension with condition-specific assessments.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-slate-900 mb-2">🤖 AI-Intelligent</h4>
+              <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2"><Bot className="w-4 h-4 text-navy-600" /> AI-Intelligent</h4>
               <p className="text-sm text-slate-600">
                 Templates include clinical prompts, dropdown options for structured data, 
                 and AI enhancement to complete documentation professionally.

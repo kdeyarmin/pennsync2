@@ -22,8 +22,9 @@
 // admission-source + episode-timing combination. (These default numbers are
 // APPROXIMATE — replace them with your official CMS case-mix weights.)
 export const DEFAULT_PDGM_RATES = {
-  // 2024 national standardized 30-day payment amount (CMS).
-  basePaymentRate: 2031.64,
+  // CY2026 national standardized 30-day period payment amount, quality submitters
+  // (CMS-1828-F, eff. 2026-01-01). Verify against your agency's official rate sheet.
+  basePaymentRate: 2038.22,
   clinicalGroupWeights: {
     MMTA_Surgical_Aftercare:  { community_early: 0.9234, community_late: 0.8512, institutional_early: 1.1456, institutional_late: 1.0534 },
     MMTA_Cardiac_Circulatory: { community_early: 0.9456, community_late: 0.8698, institutional_early: 1.0876, institutional_late: 1.0006 },

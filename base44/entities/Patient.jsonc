@@ -166,7 +166,8 @@
       "enum": [
         "active",
         "discharged",
-        "hospitalized"
+        "hospitalized",
+        "merged"
       ],
       "default": "active"
     },
@@ -207,6 +208,23 @@
         "type": "string"
       },
       "description": "List of missing critical patient safety fields"
+    },
+    "validation_overrides": {
+      "type": "object",
+      "description": "Audit trail of validation warnings the user explicitly overrode, keyed by field name"
+    },
+    "merged_into_id": {
+      "type": "string",
+      "description": "ID of the surviving patient this record was merged into during deduplication"
+    },
+    "merged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this patient record was merged into another during deduplication"
+    },
+    "merged_by": {
+      "type": "string",
+      "description": "Email of the user who merged this patient record"
     }
   },
   "required": [

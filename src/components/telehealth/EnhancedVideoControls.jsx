@@ -26,6 +26,8 @@ export default function EnhancedVideoControls({
             : 'bg-slate-700 hover:bg-slate-600 text-white'
         }`}
         title={audioMuted ? 'Unmute' : 'Mute'}
+        aria-label={audioMuted ? 'Unmute' : 'Mute'}
+        aria-pressed={audioMuted}
       >
         {audioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
       </Button>
@@ -40,6 +42,8 @@ export default function EnhancedVideoControls({
             : 'bg-slate-700 hover:bg-slate-600 text-white'
         }`}
         title={videoMuted ? 'Turn on camera' : 'Turn off camera'}
+        aria-label={videoMuted ? 'Turn on camera' : 'Turn off camera'}
+        aria-pressed={videoMuted}
       >
         {videoMuted ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
       </Button>
@@ -54,6 +58,8 @@ export default function EnhancedVideoControls({
             : 'bg-slate-700 hover:bg-slate-600 text-white'
         }`}
         title={screenSharing ? 'Stop sharing screen' : 'Share screen'}
+        aria-label={screenSharing ? 'Stop sharing screen' : 'Share screen'}
+        aria-pressed={screenSharing}
       >
         <Monitor className="w-5 h-5" />
       </Button>
@@ -69,6 +75,8 @@ export default function EnhancedVideoControls({
               : 'bg-slate-700 hover:bg-slate-600 text-white'
           }`}
           title={chatActive ? 'Hide chat' : 'Show chat'}
+          aria-label={chatActive ? 'Hide chat' : 'Show chat'}
+          aria-pressed={chatActive}
         >
           <MessageSquare className="w-5 h-5" />
         </Button>
@@ -81,6 +89,8 @@ export default function EnhancedVideoControls({
           onClick={onToggleFullscreen}
           className="rounded-full h-12 w-12 bg-slate-700 hover:bg-slate-600 text-white transition"
           title={isFullscreen ? 'Exit full screen' : 'Full screen'}
+          aria-label={isFullscreen ? 'Exit full screen' : 'Full screen'}
+          aria-pressed={isFullscreen}
         >
           {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
         </Button>
@@ -94,6 +104,7 @@ export default function EnhancedVideoControls({
         onClick={onDisconnect}
         className="rounded-full h-14 w-14 bg-red-600 hover:bg-red-700 text-white transition"
         title="End session"
+        aria-label="End session"
       >
         <PhoneOff className="w-6 h-6" />
       </Button>

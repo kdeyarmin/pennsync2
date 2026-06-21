@@ -148,9 +148,9 @@ export default function VisitScribePage() {
       />
 
         {saveSuccess && (
-          <Alert className="bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
+          <Alert className="bg-emerald-50 border-emerald-200">
+            <CheckCircle className="h-4 w-4 text-emerald-600" />
+            <AlertDescription className="text-emerald-800">
               Note saved successfully! You can now create another note.
             </AlertDescription>
           </Alert>
@@ -234,9 +234,9 @@ export default function VisitScribePage() {
                 onNoteGenerated={handleNoteGenerated}
               />
             ) : (
-              <Alert className="bg-yellow-50 border-yellow-200">
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800">
+              <Alert className="bg-amber-50 border-amber-200">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
                   Please select a patient, visit type, and diagnosis to begin recording.
                 </AlertDescription>
               </Alert>
@@ -262,7 +262,7 @@ export default function VisitScribePage() {
                   className="w-full min-h-[280px] font-mono text-sm border-0 px-4 py-3 bg-white resize-none outline-none"
                 />
                 <div className="flex gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50">
-                  <Button onClick={api.copy} className="flex-1 bg-green-600 hover:bg-green-700 h-11 gap-2 font-semibold">
+                  <Button onClick={api.copy} className="flex-1 bg-emerald-600 hover:bg-emerald-700 h-11 gap-2 font-semibold">
                     {api.copied ? "Copied!" : "Copy"}
                   </Button>
                   <Button

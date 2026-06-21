@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
-  Mic, Square
+  Mic, Square, AlertTriangle
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -24,6 +24,7 @@ import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import { toNoteConversionFields, deriveStructuredVisitFields } from "../components/smartNote/compliance/coverageScore";
 import { buildVisitReportingFields, buildAuditFields } from "../components/smartNote/compliance/reportingFields";
+import { claimDictation, releaseDictation } from "@/components/smartNote/dictationController";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
@@ -80,14 +81,43 @@ export default function SmartNoteAssistant() {
   const [followUpTasks, setFollowUpTasks] = useState([]);
   const [generatingTasks, setGeneratingTasks] = useState(false);
   const recRef = useRef(null);
+  const recStopRef = useRef(null);
   const textareaRef = useRef(null);
   const SAVED_PATIENT_KEY = "smart_note_patient_v1";
   // Mirror the latest patient so the autosave effect can write under the active
   // patient without re-subscribing on patientId (which would clobber drafts on
-  // switch). prevPatientRef drives the on-switch draft swap.
+  // switch). prevPatientRef drives the on-switch draft swap. noteRef guards the
+  // async durable-draft restore from clobbering text the nurse has started typing.
   const patientIdRef = useRef(patientId);
   const prevPatientRef = useRef(patientId);
+  const noteRef = useRef(note);
   patientIdRef.current = patientId;
+  noteRef.current = note;
+
+  // Durable cross-session restore: a draft persisted to IndexedDB survives a full
+  // browser restart (sessionStorage does not). Apply it only if we're still on
+  // the same bucket and the nurse hasn't already started typing.
+  const tryRestoreDurableDraft = (pid) => {
+    import('@/lib/indexedDB')
+      .then(({ getDraftNoteLocally }) => getDraftNoteLocally(`draft_${pid || 'unassigned'}`))
+      .then((d) => {
+        if (patientIdRef.current !== pid || noteRef.current?.trim()) return;
+        if (!d?.note || d.note.trim().length <= 20) return;
+        setNote(d.note);
+        if (d.visitType) setVisitType(d.visitType);
+        setDraftRestored(true);
+      })
+      .catch(() => {});
+  };
+
+  // Clear a patient's draft from both stores once the note is saved or reset, so
+  // drafts don't accumulate (one PHI-bearing row per patient) indefinitely.
+  const clearDraft = (pid) => {
+    sessionStorage.removeItem(draftKeyFor(pid));
+    import('@/lib/indexedDB')
+      .then(({ deleteDraftNoteLocally }) => deleteDraftNoteLocally(`draft_${pid || 'unassigned'}`))
+      .catch(() => {});
+  };
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const careScope = currentUser?.care_scope || "home_health";
@@ -149,7 +179,7 @@ export default function SmartNoteAssistant() {
   // patient, or the unassigned bucket) so an in-progress note survives a reload.
   useEffect(() => {
     const saved = sessionStorage.getItem(draftKeyFor(patientIdRef.current));
-    if (!saved) return;
+    if (!saved) { tryRestoreDurableDraft(patientIdRef.current); return; }
     try {
       const parsed = JSON.parse(saved);
       if (parsed.note?.trim().length > 20) {
@@ -182,9 +212,12 @@ export default function SmartNoteAssistant() {
       setNote(incoming);
       setDraftRestored(incoming.trim().length > 20);
     } else if (prev) {
-      // Switching between two real patients and the incoming one has no draft.
+      // Switching between two real patients and the incoming one has no session
+      // draft — clear, then check the durable store (covers a post-restart switch
+      // where the only copy of their draft is in IndexedDB).
       setNote("");
       setDraftRestored(false);
+      tryRestoreDurableDraft(patientId);
     }
     // else: came from the unassigned bucket with nothing saved — keep the typed
     // note so it isn't lost; it will autosave under the newly-selected patient.
@@ -205,9 +238,8 @@ export default function SmartNoteAssistant() {
 
   useEffect(() => {
     return () => {
-      if (recRef.current) {
-        recRef.current.stop();
-      }
+      try { recRef.current?.stop(); } catch { /* already stopped */ }
+      releaseDictation(recStopRef.current);
     };
   }, []);
 
@@ -223,13 +255,17 @@ export default function SmartNoteAssistant() {
       const enhanced = enhanceTranscription(t);
       setNote(prev => prev ? prev + " " + enhanced : enhanced);
     };
-    rec.onerror = () => setListening(false);
-    rec.onend = () => setListening(false);
+    const stop = () => { try { rec.stop(); } catch { /* already stopped */ } };
+    recStopRef.current = stop;
+    rec.onerror = () => { setListening(false); releaseDictation(stop); };
+    rec.onend = () => { setListening(false); releaseDictation(stop); };
     recRef.current = rec;
+    // Stop any per-question dictation mic first — only one recognizer at a time.
+    claimDictation(stop);
     rec.start();
     setListening(true);
   };
-  const stopDictation = () => { recRef.current?.stop(); setListening(false); };
+  const stopDictation = () => { recRef.current?.stop(); setListening(false); releaseDictation(recStopRef.current); };
 
   // Step 1 → 2. The deterministic scan + questions + generation + fact-check all
   // live in <ConstrainedNoteReviewer>, which scans `note` on mount.
@@ -262,6 +298,9 @@ export default function SmartNoteAssistant() {
       }
       await persistNote(result);
       setSaved(true);
+      // The work is now persisted (online) or queued (offline) — drop the local
+      // draft so it doesn't linger as stale PHI for this patient.
+      clearDraft(patientId);
     } catch (err) {
       console.error("Save to chart error:", err);
       toast.error("Saving to the chart failed.");
@@ -323,7 +362,7 @@ export default function SmartNoteAssistant() {
         base44.entities.Patient.update(patientId, { clinical_notes: finalText, enhanced_notes_history: history }),
         // Keep the audit in step with the edit — a re-save that resolves a conflict
         // must clear the stale `critical` status/issues, not leave them behind.
-        ...(savedAuditId ? [base44.entities.ComplianceAudit.update(savedAuditId, { ...auditFields, acknowledgment: acknowledgment || null })] : []),
+        ...(savedAuditId ? [base44.entities.ComplianceAudit.update(savedAuditId, auditFields)] : []),
       ]);
       toast.success("Chart updated.");
       return;
@@ -399,32 +438,69 @@ export default function SmartNoteAssistant() {
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
-    sessionStorage.removeItem(draftKeyFor(patientIdRef.current));
+    clearDraft(patientIdRef.current);
   };
 
   // Turn critical chart conflicts / vitals flagged in the reviewer into high-
-  // priority provider follow-up tasks (persisted to Task Management and shown in
-  // the panel). Best-effort: a failure (e.g. offline) is surfaced, not fatal.
+  // priority provider follow-up tasks. A critical follow-up must never be lost,
+  // so offline (or on a failed create) it is queued to the offline sync drain
+  // instead of being dropped.
   const escalateToTasks = async (items) => {
     if (!items?.length || !currentUser?.email) return;
-    try {
-      const created = await Promise.all(items.map((it) => base44.entities.Task.create({
-        patient_id: patientId || undefined,
-        title: it.title,
-        description: it.description || "",
-        type: "notify",
-        priority: "high",
-        status: "pending",
-        source: "manual",
-        assigned_to: currentUser.email,
-        ai_reason: it.reason || "",
-        related_visit_id: savedVisitId || undefined,
-      })));
-      setFollowUpTasks((prev) => [...created, ...prev]);
+    const payloads = items.map((it) => ({
+      patient_id: patientId || undefined,
+      title: it.title,
+      description: it.description || "",
+      type: "notify",
+      priority: "high",
+      status: "pending",
+      source: "manual",
+      assigned_to: currentUser.email,
+      ai_reason: it.reason || "",
+      related_visit_id: savedVisitId || undefined,
+    }));
+    const queueForSync = async (toQueue) => {
+      const { addToSyncQueue } = await import('@/lib/indexedDB');
+      await Promise.all(toQueue.map((p) => addToSyncQueue('CREATE_TASK', p)));
+    };
+
+    // Offline: queue everything; the OfflineManager drain creates them on reconnect.
+    if (!navigator.onLine) {
+      try {
+        await queueForSync(payloads);
+        setFollowUpTasks((prev) => [...payloads, ...prev]);
+        toast.success(`Saved ${payloads.length} follow-up task${payloads.length !== 1 ? "s" : ""} offline — will sync when reconnected.`);
+      } catch (err) {
+        console.error("Failed to queue escalation task(s):", err);
+        toast.error("Couldn't save the follow-up task offline.");
+      }
+      return;
+    }
+
+    // Online: create each individually so a partial failure can't re-create the
+    // ones that already succeeded (Promise.all would reject the whole batch and
+    // the retry would duplicate the successes).
+    const results = await Promise.allSettled(payloads.map((p) => base44.entities.Task.create(p)));
+    const created = [];
+    const failed = [];
+    results.forEach((r, i) => (r.status === "fulfilled" ? created.push(r.value) : failed.push(payloads[i])));
+    if (created.length) setFollowUpTasks((prev) => [...created, ...prev]);
+    if (!failed.length) {
       toast.success(`Created ${created.length} provider follow-up task${created.length !== 1 ? "s" : ""}.`);
+      return;
+    }
+    // Queue ONLY the failures (a transient 5xx, not necessarily a disconnect),
+    // then kick the sync drain so they retry now — not just on the next
+    // offline→online transition, which may never come while we stay online.
+    console.error("Some escalation task creates failed; queuing for retry:", results.find((r) => r.status === "rejected")?.reason);
+    try {
+      await queueForSync(failed);
+      setFollowUpTasks((prev) => [...failed, ...prev]);
+      window.dispatchEvent(new Event('online'));
+      toast.message(`Couldn't reach the server for ${failed.length} follow-up task${failed.length !== 1 ? "s" : ""} — saved and retrying.`);
     } catch (err) {
-      console.error("Failed to create escalation task(s):", err);
-      toast.error("Couldn't create the follow-up task. Try again when online.");
+      console.error("Failed to queue failed escalation task(s):", err);
+      toast.error("Couldn't save the follow-up task. Try again.");
     }
   };
 
@@ -491,9 +567,9 @@ export default function SmartNoteAssistant() {
       {activeTab === "builder" && (
         <>
           {draftRestored && (
-            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <p className="text-xs text-green-700 font-medium">Draft restored.</p>
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <p className="text-xs text-emerald-700 font-medium">Draft restored.</p>
             </div>
           )}
 
@@ -505,7 +581,7 @@ export default function SmartNoteAssistant() {
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <User className="w-3.5 h-3.5 text-indigo-500" />
+                    <User className="w-3.5 h-3.5 text-navy-600" />
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Patient</label>
                     <span className="text-xs text-slate-400 font-normal normal-case ml-1">optional</span>
                   </div>
@@ -519,13 +595,13 @@ export default function SmartNoteAssistant() {
                 <div className="border-t border-slate-100" />
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
+                    <ClipboardList className="w-3.5 h-3.5 text-navy-600" />
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Visit Type</label>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {VISIT_TYPES.map(v => (
                       <button key={v.value} onClick={() => setVisitType(v.value)}
-                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${visitType === v.value ? "bg-indigo-600 border-indigo-600 text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50"}`}>
+                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${visitType === v.value ? "bg-navy-600 border-navy-600 text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-navy-300 hover:bg-navy-50"}`}>
                         {v.label}
                       </button>
                     ))}
@@ -534,13 +610,13 @@ export default function SmartNoteAssistant() {
               </div>
 
               {patient && (
-                <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-navy-700 bg-navy-50 border border-navy-200 rounded-lg px-3 py-2">
                   <User className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     <strong>{patient.first_name} {patient.last_name}</strong>
                     {patient.primary_diagnosis ? ` · ${patient.primary_diagnosis}` : ""}
                     {patient.current_medications?.length > 0 ? ` · ${patient.current_medications.length} meds` : ""}
-                    {patient.functional_status?.fall_risk === "high" && <span className="ml-2 text-red-600 font-bold">⚠ High Fall Risk</span>}
+                    {patient.functional_status?.fall_risk === "high" && <span className="ml-2 inline-flex items-center gap-1 text-rose-600 font-bold"><AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" /> High Fall Risk</span>}
                   </span>
                 </div>
               )}
@@ -560,19 +636,19 @@ export default function SmartNoteAssistant() {
 
               <ComplianceChecklist isHospice={isHospice} />
 
-              <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-navy-50 border-b border-indigo-100">
-                  <span className="text-xs font-semibold text-indigo-700">Your Rough Notes / Bullet Points</span>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
+                  <span className="text-xs font-semibold text-navy-700">Your Rough Notes / Bullet Points</span>
                   <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-navy-600 hover:text-navy-800"
                     onClick={() => { setActiveTab("drafter"); }}>
                     <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
                   </Button>
                 </div>
                 {/* Enhanced Audio Recorder */}
-                <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex flex-wrap gap-2 items-center">
+                <div className="px-4 py-2 bg-navy-50 border-b border-navy-100 flex flex-wrap gap-2 items-center">
                   <Button
                     variant={listening ? "destructive" : "default"}
-                    className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                    className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-navy-600 hover:bg-navy-700 text-white'}`}
                     onClick={listening ? stopDictation : startDictation}
                   >
                     {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
@@ -591,10 +667,10 @@ export default function SmartNoteAssistant() {
                   className="w-full min-h-[240px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed" spellCheck={false}
                 />
                 <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50 gap-3">
-                  <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-slate-400"}`}>
+                  <span className={`text-xs shrink-0 ${ready ? "text-emerald-600 font-medium" : "text-slate-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
-                  <Button onClick={startReview} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
+                  <Button onClick={startReview} disabled={!ready} className="bg-navy-600 hover:bg-navy-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
                     <Sparkles className="w-4 h-4" /> Check Compliance <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
@@ -619,8 +695,8 @@ export default function SmartNoteAssistant() {
               renderFinalNote={(api) => (
                 <>
                   {generatingTasks && (
-                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-                      <Loader2 className="w-4 h-4 animate-spin text-green-600 shrink-0" />
+                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800">
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600 shrink-0" />
                       Generating follow-up tasks from your note…
                     </div>
                   )}
@@ -630,7 +706,15 @@ export default function SmartNoteAssistant() {
                   <FinalNoteDisplay
                     finalNote={api.finalNote}
                     setFinalNote={api.setFinalNote}
-                    onCopy={async () => { await navigator.clipboard.writeText(api.finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); }}
+                    onCopy={async () => {
+                      try {
+                        await navigator.clipboard.writeText(api.finalNote);
+                        setCopied(true); setTimeout(() => setCopied(false), 2500);
+                      } catch {
+                        setCopied(false);
+                        toast.error("Couldn't copy to the clipboard. Select the note text and copy manually.");
+                      }
+                    }}
                     copied={copied}
                     patient={patient}
                     visitType={visitType}

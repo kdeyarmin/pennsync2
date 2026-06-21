@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { base44 } from "@/api/base44Client";
-import { 
-  Target, 
+import { getAccessToken } from "@base44/sdk";
+import { appParams } from "@/lib/app-params";
+import {
+  Target,
   Award,
   BarChart3,
   CheckCircle2,
@@ -18,19 +19,32 @@ export default function TrainingProgressTracker({ _userEmail, trainingProgress, 
   const [isDownloading, setIsDownloading] = React.useState(false);
   
   const completedTutorials = trainingProgress.filter(t => t.status === 'completed').length;
-  const totalTutorials = 3; // Based on TUTORIALS array
-  const tutorialProgress = (completedTutorials / totalTutorials) * 100;
+  // Derive the total from the actual tutorial records rather than a hardcoded
+  // count; never let completed exceed the total. Clamp progress to <= 100.
+  const totalTutorials = Math.max(trainingProgress.length, completedTutorials);
+  const tutorialProgress = totalTutorials > 0
+    ? Math.min(100, (completedTutorials / totalTutorials) * 100)
+    : 0;
 
-  const practiceScores = practiceSubmissions
+  // Sort submissions oldest -> newest so the improvement trend is computed
+  // against a known ordering (the source order is not guaranteed).
+  const submissionDate = (s) => new Date(s.created_date || s.created_at || 0).getTime();
+  const submissionsByDateAsc = [...practiceSubmissions].sort(
+    (a, b) => submissionDate(a) - submissionDate(b)
+  );
+
+  const practiceScores = submissionsByDateAsc
     .filter(s => s.score != null)
     .map(s => s.score);
   const averagePracticeScore = practiceScores.length > 0
     ? practiceScores.reduce((sum, score) => sum + score, 0) / practiceScores.length
     : 0;
 
-  const recentPractice = practiceSubmissions.slice(0, 5);
+  // Recent = newest first.
+  const recentPractice = [...submissionsByDateAsc].reverse().slice(0, 5);
+  // Trend = newest score - oldest score (positive = improving).
   const improvementTrend = practiceScores.length >= 2
-    ? practiceScores[0] - practiceScores[practiceScores.length - 1]
+    ? practiceScores[practiceScores.length - 1] - practiceScores[0]
     : 0;
 
   // Identify weak areas
@@ -45,13 +59,33 @@ export default function TrainingProgressTracker({ _userEmail, trainingProgress, 
       const moduleMatch = completion.training_module_id?.match(/documentation-(.+)/);
       const moduleName = moduleMatch ? moduleMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Documentation Training';
       
-      const response = await base44.functions.invoke('generateTrainingCertificate', {
-        moduleName,
-        completionDate: completion.completion_date,
-        score: completion.score
-      });
-      
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      // generateTrainingCertificate returns raw PDF bytes; POST to the function
+      // endpoint and read the body as a blob so the binary isn't decoded/
+      // corrupted by the axios JSON path that base44.functions.invoke uses.
+      const { serverUrl, appId, token } = appParams;
+      const accessToken = token || getAccessToken();
+      const response = await fetch(
+        `${serverUrl}/api/apps/${appId}/functions/generateTrainingCertificate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-App-Id': String(appId),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+          },
+          body: JSON.stringify({
+            moduleName,
+            completionDate: completion.completion_date,
+            score: completion.score
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Certificate request failed (${response.status})`);
+      }
+
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

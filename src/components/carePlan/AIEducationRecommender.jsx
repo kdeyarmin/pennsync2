@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -124,35 +125,56 @@ Return JSON:`,
 
     setIsAssigning(true);
     try {
-      const assignments = [];
-      for (const topic of selected) {
-        const assignment = await base44.entities.PatientEducationAssignment.create({
-          patient_id: patient.id,
-          topic: topic.topic,
-          content: topic.content,
-          format: topic.delivery_format,
-          status: 'assigned',
-          assigned_date: format(new Date(), 'yyyy-MM-dd'),
-          assigned_by: (await base44.auth.me()).email,
-          priority: topic.priority,
-          materials_provided: topic.key_points || []
-        });
-        assignments.push(assignment);
-      }
+      const assignedBy = (await base44.auth.me()).email;
 
-      if (onAssignEducation) {
+      const results = await Promise.allSettled(
+        selected.map((topic) =>
+          base44.entities.PatientEducationAssignment.create({
+            patient_id: patient.id,
+            topic: topic.topic,
+            content: topic.content,
+            format: topic.delivery_format,
+            status: 'assigned',
+            assigned_date: format(new Date(), 'yyyy-MM-dd'),
+            assigned_by: assignedBy,
+            priority: topic.priority,
+            materials_provided: topic.key_points || []
+          })
+        )
+      );
+
+      const assignments = results
+        .filter((r) => r.status === 'fulfilled')
+        .map((r) => r.value);
+      const failedCount = results.length - assignments.length;
+
+      if (assignments.length > 0 && onAssignEducation) {
         onAssignEducation(assignments);
       }
 
-      alert(`Assigned ${assignments.length} education topic(s)!`);
-      setRecommendations([]);
-      setSelectedTopics({});
+      if (failedCount === 0) {
+        toast.success(`Assigned ${assignments.length} education topic(s)!`);
+      } else if (assignments.length > 0) {
+        results
+          .filter((r) => r.status === 'rejected')
+          .forEach((r) => console.error("Education assignment error:", r.reason));
+        toast.error(`Assigned ${assignments.length} topic(s), but ${failedCount} failed. Please retry the rest.`);
+      } else {
+        results.forEach((r) => console.error("Education assignment error:", r.reason));
+        toast.error("Failed to assign education. Please try again.");
+      }
 
+      // Only clear topics that succeeded so failures can be retried.
+      if (failedCount === 0) {
+        setRecommendations([]);
+        setSelectedTopics({});
+      }
     } catch (error) {
       console.error("Assignment error:", error);
-      alert("Failed to assign education. Please try again.");
+      toast.error("Failed to assign education. Please try again.");
+    } finally {
+      setIsAssigning(false);
     }
-    setIsAssigning(false);
   };
 
   const getPriorityColor = (priority) => {

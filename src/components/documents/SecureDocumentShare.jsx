@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,70 +12,61 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { generateSecureToken } from '@/components/utils/security';
-import { Share2, Mail, Link as LinkIcon, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, AlertCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
+// NOTE: There is no backend that mints, persists, validates, or expires a
+// document share token, and no /shared-document route exists. A "secure share
+// link" cannot be implemented safely on the client alone, so the link-sharing
+// path is intentionally disabled and the previous "HIPAA-secure / auto-expiring
+// link" claims have been removed rather than left as a fake security control.
 export default function SecureDocumentShare({ documentName, _documentData }) {
   const [isOpen, setIsOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState('');
-  const [expiresIn, setExpiresIn] = useState('7');
   const [isSending, setIsSending] = useState(false);
-  const [shareMethod, setShareMethod] = useState('email');
 
-  const handleShare = async () => {
-    if (!recipientEmail && shareMethod === 'email') {
+  const handleNotify = async () => {
+    if (!recipientEmail) {
       toast.error('Please enter a recipient email');
       return;
     }
 
     setIsSending(true);
     try {
-      // In a real implementation, this would generate a secure token
-      // and send via email or create a shareable link
-      
-      const shareData = {
-        document_name: documentName,
-        recipient_email: recipientEmail || 'link_share',
-        share_method: shareMethod,
-        expires_in_days: parseInt(expiresIn),
-        shared_at: new Date().toISOString()
-      };
-
-      // Log the share action for compliance
+      // Record the notification action for the audit trail.
       await base44.entities.SecurityLog.create({
         user_email: (await base44.auth.me()).email,
-        action: 'share_patient_document',
-        details: shareData,
-        timestamp: new Date().toISOString()
+        action: 'notify_document_recipient',
+        details: {
+          document_name: documentName,
+          recipient_email: recipientEmail,
+          // Explicitly NOT a secure share — no link/token was issued.
+          method: 'email_notification_only',
+          shared_at: new Date().toISOString(),
+        },
+        timestamp: new Date().toISOString(),
       });
 
-      // Create a share link. Use a CSPRNG token (not the predictable Math.random)
-      // so the link can't be guessed/enumerated. NOTE: this token is not yet
-      // persisted/validated server-side — see docs/CODE_REVIEW_2026-06-05.md (S11).
-      const shareLink = `${window.location.origin}/shared-document/${generateSecureToken(24)}`;
+      // Send a notification email WITHOUT a share link. We cannot guarantee a
+      // secure, expiring, access-controlled link from the client, so we don't
+      // pretend to. The recipient is directed to request access through normal
+      // channels instead of clicking a fabricated "secure" URL.
+      await base44.integrations.Core.SendEmail({
+        to: recipientEmail,
+        subject: `Document available: ${documentName}`,
+        body:
+          `A document ("${documentName}") is ready to be shared with you.\n\n` +
+          `For your privacy and security, this notification does not contain the document ` +
+          `or a direct link. Please contact the sending healthcare provider to arrange ` +
+          `secure access through an approved channel.`,
+      });
 
-      if (shareMethod === 'email' && recipientEmail) {
-        // Send email with document
-        await base44.integrations.Core.SendEmail({
-          to: recipientEmail,
-          subject: `Secure Medical Document: ${documentName}`,
-          body: `A HIPAA-protected medical document has been securely shared with you.\n\nDocument: ${documentName}\nExpires in: ${expiresIn} days\n\nAccess the secure link: ${shareLink}\n\nThis link will expire in ${expiresIn} days. Please download the document before it expires.`
-        });
-
-        toast.success(`Document shared securely with ${recipientEmail}`);
-      } else {
-        // Copy shareable link
-        navigator.clipboard.writeText(shareLink);
-        toast.success('Secure share link copied to clipboard');
-      }
-
+      toast.success(`Recipient notified at ${recipientEmail}`);
       setRecipientEmail('');
       setIsOpen(false);
-
     } catch (error) {
-      console.error('Share error:', error);
-      toast.error('Failed to share document');
+      console.error('Notify error:', error);
+      toast.error('Failed to notify recipient');
     } finally {
       setIsSending(false);
     }
@@ -89,109 +79,52 @@ export default function SecureDocumentShare({ documentName, _documentData }) {
         variant="outline"
         className="gap-2"
       >
-        <Share2 className="w-4 h-4" />
-        Share Securely
+        <Mail className="w-4 h-4" />
+        Notify Recipient
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Share2 className="w-5 h-5 text-green-600" />
-              Secure Document Share
+              <Mail className="w-5 h-5 text-slate-600" />
+              Notify a Recipient
             </DialogTitle>
             <DialogDescription>
-              Share {documentName} with specialists while maintaining HIPAA compliance
+              Send an email letting a recipient know that {documentName} is available.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription className="ml-3 text-sm text-green-900">
-                All shares are encrypted and logged for compliance
+            <Alert className="bg-amber-50 border-amber-300">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="ml-3 text-sm text-amber-900">
+                <p className="font-semibold">Secure document sharing is not yet available.</p>
+                <p>
+                  This action only sends a notification email — it does NOT attach the document or
+                  generate an access link. There is no enforced expiry, watermarking, or
+                  access-controlled link. To actually share the document, use an approved secure
+                  channel.
+                </p>
               </AlertDescription>
             </Alert>
 
-            {/* Share Method Selection */}
             <div className="space-y-2">
-              <Label className="font-semibold">Share Method</Label>
-              <div className="flex gap-2">
-                <Button
-                  variant={shareMethod === 'email' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setShareMethod('email')}
-                  className="flex-1 gap-1"
-                >
-                  <Mail className="w-4 h-4" />
-                  Email
-                </Button>
-                <Button
-                  variant={shareMethod === 'link' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setShareMethod('link')}
-                  className="flex-1 gap-1"
-                >
-                  <LinkIcon className="w-4 h-4" />
-                  Link
-                </Button>
-              </div>
+              <Label htmlFor="recipient-email">Recipient Email</Label>
+              <Input
+                id="recipient-email"
+                type="email"
+                placeholder="specialist@hospital.com"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+              />
             </div>
 
-            {/* Email Input */}
-            {shareMethod === 'email' && (
-              <div className="space-y-2">
-                <Label htmlFor="recipient-email">Recipient Email</Label>
-                <Input
-                  id="recipient-email"
-                  type="email"
-                  placeholder="specialist@hospital.com"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                />
-              </div>
-            )}
-
-            {/* Expiration Setting */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Link Expires In
-              </Label>
-              <select
-                value={expiresIn}
-                onChange={(e) => setExpiresIn(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-              >
-                <option value="1">1 day</option>
-                <option value="3">3 days</option>
-                <option value="7">7 days</option>
-                <option value="30">30 days</option>
-              </select>
-            </div>
-
-            {/* Security Info */}
-            <Card className="bg-blue-50 border-blue-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  Security Measures
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-xs space-y-1 text-blue-900">
-                <div>✓ End-to-end encrypted transmission</div>
-                <div>✓ Time-limited access links</div>
-                <div>✓ Automatic expiration</div>
-                <div>✓ Access logging for compliance</div>
-                <div>✓ Watermarked documents</div>
-              </CardContent>
-            </Card>
-
-            {/* Compliance Notice */}
-            <Alert className="bg-amber-50 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="ml-3 text-xs text-amber-900">
-                By sharing this document, you confirm the recipient is an authorized healthcare provider or covered entity. All sharing is logged for HIPAA audit trails.
+            <Alert className="bg-slate-50 border-slate-200">
+              <AlertCircle className="h-4 w-4 text-slate-600" />
+              <AlertDescription className="ml-3 text-xs text-slate-700">
+                The recipient should be an authorized healthcare provider or covered entity. This
+                notification is logged for the audit trail.
               </AlertDescription>
             </Alert>
           </div>
@@ -205,11 +138,10 @@ export default function SecureDocumentShare({ documentName, _documentData }) {
               Cancel
             </Button>
             <Button
-              onClick={handleShare}
+              onClick={handleNotify}
               disabled={isSending}
-              className="bg-green-600 hover:bg-green-700"
             >
-              {isSending ? 'Sharing...' : 'Share Securely'}
+              {isSending ? 'Sending...' : 'Send Notification'}
             </Button>
           </DialogFooter>
         </DialogContent>

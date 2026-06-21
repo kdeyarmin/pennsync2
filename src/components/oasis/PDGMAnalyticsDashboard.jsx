@@ -338,10 +338,10 @@ export default function PDGMAnalyticsDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-teal-600" />
+              <Target className="w-4 h-4 text-navy-600" />
               <span className="text-xs text-slate-500">Adoption</span>
             </div>
-            <p className="text-2xl font-bold text-teal-700">{summaryStats.adoptionRate}%</p>
+            <p className="text-2xl font-bold text-navy-700">{summaryStats.adoptionRate}%</p>
           </CardContent>
         </Card>
       </div>
@@ -483,14 +483,14 @@ export default function PDGMAnalyticsDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-4 h-4 text-teal-600" />
+              <Target className="w-4 h-4 text-navy-600" />
               Optimization Adoption Status
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="text-center mb-4">
-                <p className="text-4xl font-bold text-teal-700">{optimizationAdoption.adoptionRate}%</p>
+                <p className="text-4xl font-bold text-navy-700">{optimizationAdoption.adoptionRate}%</p>
                 <p className="text-sm text-slate-600">Overall Adoption Rate</p>
                 <p className="text-xs text-slate-500 mt-1">
                   {optimizationAdoption.adopted} of {optimizationAdoption.total} opportunities adopted

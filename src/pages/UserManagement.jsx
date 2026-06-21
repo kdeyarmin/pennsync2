@@ -61,6 +61,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import LoadingState from "@/components/ui/LoadingState";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
 import { toast } from "sonner";
@@ -426,13 +427,13 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card className="modern-card border-green-200">
+        <Card className="modern-card border-emerald-200">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+              <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-slate-500 truncate">Active</p>
-                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</p>
+                <p className="text-xl sm:text-2xl font-bold text-emerald-600">{stats.active}</p>
               </div>
             </div>
           </CardContent>
@@ -650,7 +651,7 @@ export default function UserManagement() {
         </CardHeader>
         <CardContent className="p-3 sm:p-4 md:p-6">
           {isLoading ? (
-            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-slate-500">Loading users...</div>
+            <LoadingState label="Loading users..." className="py-8 sm:py-12" />
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-slate-500">No users found</div>
           ) : (
@@ -678,7 +679,7 @@ export default function UserManagement() {
                       <TableRow className={!isActive ? 'opacity-50' : ''}>
                         <TableCell className="text-xs sm:text-sm">
                           <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium flex-shrink-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-navy-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium flex-shrink-0">
                               {user.full_name?.charAt(0) || 'U'}
                             </div>
                             <div className="min-w-0">
@@ -698,7 +699,7 @@ export default function UserManagement() {
                         </TableCell>
                         <TableCell>{getRoleBadge(user.role)}</TableCell>
                         <TableCell>
-                          <Badge className={`text-xs ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          <Badge className={`text-xs ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
                             {isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
@@ -750,7 +751,7 @@ export default function UserManagement() {
                               size="sm"
                               onClick={() => handleToggleActive(user)}
                               disabled={currentUser.email === user.email}
-                              className={`min-h-[44px] w-10 sm:w-auto p-2 ${isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
+                              className={`min-h-[44px] w-10 sm:w-auto p-2 ${isActive ? 'text-red-600 hover:text-red-700' : 'text-emerald-600 hover:text-emerald-700'}`}
                               title={isActive ? 'Disable user' : 'Enable user'}
                             >
                               {isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
@@ -864,7 +865,7 @@ export default function UserManagement() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmToggleActive}
-              className={selectedUser?.is_active === false ? 'bg-green-600' : 'bg-red-600'}
+              className={selectedUser?.is_active === false ? 'bg-emerald-600' : 'bg-red-600'}
             >
               {selectedUser?.is_active === false ? 'Enable' : 'Disable'}
             </AlertDialogAction>
@@ -980,9 +981,9 @@ export default function UserManagement() {
                 </>
               ) : resetPasswordResult.success ? (
                 <div className="space-y-3">
-                  <Alert className="bg-green-50 border-green-300">
-                    <AlertDescription className="text-green-900">
-                      ✅ Password reset successfully! An email with the temporary password has been sent to the user.
+                  <Alert className="bg-emerald-50 border-emerald-300">
+                    <AlertDescription className="text-emerald-900">
+                      Password reset successfully! An email with the temporary password has been sent to the user.
                     </AlertDescription>
                   </Alert>
                   <div className="p-4 bg-slate-50 rounded-lg border">
@@ -991,14 +992,14 @@ export default function UserManagement() {
                       {resetPasswordResult.tempPassword}
                     </p>
                     <p className="text-xs text-slate-500 mt-2">
-                      💡 You can share this with the user if they didn't receive the email
+                      You can share this with the user if they didn't receive the email
                     </p>
                   </div>
                 </div>
               ) : (
                 <Alert className="bg-red-50 border-red-300">
                   <AlertDescription className="text-red-900">
-                    ❌ Failed to reset password: {resetPasswordResult?.error || 'Unknown error'}
+                    Failed to reset password: {resetPasswordResult?.error || 'Unknown error'}
                   </AlertDescription>
                 </Alert>
               )}

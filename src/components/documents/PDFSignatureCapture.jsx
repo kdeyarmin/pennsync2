@@ -98,22 +98,67 @@ export default function PDFSignatureCapture({
       // Auto-route: Update DocumentSignature if exists
       if (patientId && response.data.signed_pdf_url) {
         try {
+          const signedAt = new Date().toISOString();
           const existingDocs = await base44.entities.DocumentSignature.filter({
             patient_id: patientId,
-            original_pdf_url: pdfUrl,
+            document_url: pdfUrl,
             status: 'pending'
           });
-          
+
           if (existingDocs.length > 0) {
-            await base44.entities.DocumentSignature.update(existingDocs[0].id, {
+            const doc = existingDocs[0];
+            const existingSigners = Array.isArray(doc.signers) ? doc.signers : [];
+            // Record each captured signature inside the signers[] array. Match
+            // by signer name where possible; mark matched/required signers
+            // completed. There are no flat signed_at/signed_by fields.
+            const capturedByName = new Map(
+              Object.values(signatures).map((sig) => [String(sig.signerName || '').toLowerCase(), sig])
+            );
+            const updatedSigners = existingSigners.length > 0
+              ? existingSigners.map((s) => {
+                  const matched = capturedByName.get(String(s.name || '').toLowerCase());
+                  // Only complete signers actually captured in this session.
+                  // Never mark an unmatched required signer (witness/clinician)
+                  // completed off another signer's submission — that would
+                  // fabricate their signature/timestamp.
+                  if (matched) {
+                    return {
+                      ...s,
+                      status: 'completed',
+                      signed_date: matched.signedAt || signedAt,
+                      signature: matched.dataUrl || s.signature || null,
+                    };
+                  }
+                  return s;
+                })
+              : Object.values(signatures).map((sig) => ({
+                  name: sig.signerName,
+                  role: sig.role || 'patient',
+                  required: true,
+                  status: 'completed',
+                  signed_date: sig.signedAt || signedAt,
+                  signature: sig.dataUrl || null,
+                  signature_method: 'signature_image',
+                }));
+
+            const requiredSigners = updatedSigners.filter((s) => s.required !== false);
+            const allSigned = requiredSigners.length > 0 &&
+              requiredSigners.every((s) => s.status === 'completed' || s.signed_date);
+            const newStatus = allSigned ? 'completed' : 'in_progress';
+
+            await base44.entities.DocumentSignature.update(doc.id, {
               signed_pdf_url: response.data.signed_pdf_url,
-              status: 'signed',
-              signed_at: new Date().toISOString(),
-              signed_by: (await base44.auth.me()).email
+              status: newStatus,
+              ...(allSigned ? { completed_date: signedAt } : {}),
+              signers: updatedSigners,
             });
           }
         } catch (err) {
+          // Surface the auto-route failure rather than swallowing it: the PDF was
+          // signed but the DocumentSignature record was not updated, so tracking
+          // and downstream completion triggers will be stale.
           console.error("Failed to auto-route document:", err);
+          toast.warning("Document signed, but updating the signature record failed. Please refresh tracking.");
         }
       }
       

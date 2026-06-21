@@ -98,21 +98,31 @@ export default function DuplicatePatientManager() {
       // their Visits/CarePlans (lost clinical history). Mirrors PatientMergeDialog.
       const otherPatients = selectedGroup.patients.filter(p => p.patient.id !== primaryPatientId);
       for (const { patient } of otherPatients) {
-        const [visits, carePlans] = await Promise.all([
+        const [visits, carePlans, alerts, pendingUpdates] = await Promise.all([
           base44.entities.Visit.filter({ patient_id: patient.id }),
           base44.entities.CarePlan.filter({ patient_id: patient.id }),
+          base44.entities.PatientAlert.filter({ patient_id: patient.id }),
+          base44.entities.PendingPatientUpdate.filter({ patient_id: patient.id }),
         ]);
-        for (const visit of visits) {
+        for (const visit of (visits || [])) {
           await base44.entities.Visit.update(visit.id, { patient_id: primaryPatientId });
         }
-        for (const carePlan of carePlans) {
+        for (const carePlan of (carePlans || [])) {
           await base44.entities.CarePlan.update(carePlan.id, { patient_id: primaryPatientId });
+        }
+        for (const alert of (alerts || [])) {
+          await base44.entities.PatientAlert.update(alert.id, { patient_id: primaryPatientId });
+        }
+        for (const pendingUpdate of (pendingUpdates || [])) {
+          await base44.entities.PendingPatientUpdate.update(pendingUpdate.id, { patient_id: primaryPatientId });
         }
         await deleteMutation.mutateAsync(patient.id);
       }
 
       queryClient.invalidateQueries({ queryKey: ['patientVisits'] });
       queryClient.invalidateQueries({ queryKey: ['patientCarePlans'] });
+      queryClient.invalidateQueries({ queryKey: ['patientAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['pendingPatientUpdates'] });
       setMergeDialogOpen(false);
       setSelectedGroup(null);
       setPrimaryPatientId(null);

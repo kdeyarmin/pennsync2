@@ -5,6 +5,8 @@ import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
+import AccessDeniedState from "@/components/ui/AccessDeniedState";
 import { Button } from "@/components/ui/button";
 import { BarChart3, TrendingUp, Activity, Brain, RefreshCw, Building2, Loader2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
@@ -17,7 +19,7 @@ import OASISComplianceReport from "@/components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementReport";
 import KPIDashboard from "@/components/reports/KPIDashboard";
 
-const AdminReportsCenter = lazy(() => import("@/pages/AdminReportsCenter"));
+const AdminReportsCenter = lazy(() => import("@/components/hub-tabs/AdminReportsCenter"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired Reports Center page redirects to the right tab.
@@ -107,13 +109,7 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
   };
 
   if (!isAdmin) {
-    return (
-      <div className="p-8 text-center">
-        <BarChart3 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">Admin Access Required</h2>
-        <p className="text-slate-600">Reports & Analytics are available to administrators only.</p>
-      </div>
-    );
+    return <AccessDeniedState description="Reports & Analytics are available to administrators only." />;
   }
 
   return (
@@ -187,20 +183,17 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
         <TabsContent value="population">
           {!populationData && !analyzing && (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Activity className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">Population Health Intelligence</h3>
-                <p className="text-slate-600 mb-6">
-                  AI-powered analytics to identify infection clusters, readmission patterns,
-                  and emerging clinical trends across your entire patient population.
-                </p>
+            <EmptyState
+              icon={Activity}
+              title="Population Health Intelligence"
+              description="AI-powered analytics to identify infection clusters, readmission patterns, and emerging clinical trends across your entire patient population."
+              action={
                 <Button onClick={runPopulationAnalysis} size="lg">
                   <Brain className="w-5 h-5 mr-2" />
                   Run Population Analysis
                 </Button>
-              </CardContent>
-            </Card>
+              }
+            />
           )}
 
           {analyzing && (

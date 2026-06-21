@@ -18,11 +18,6 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
   const [riskScores, setRiskScores] = useState(null);
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
   const { data: patients = [] } = useQuery({
     queryKey: ['activePatients'],
     queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 100),
@@ -197,14 +192,15 @@ Return detailed risk assessment:`,
       for (const patientRisk of highRiskPatients) {
         await base44.entities.PatientAlert.create({
           patient_id: patientRisk.patient_id,
-          alert_type: 'hospitalization_risk',
+          alert_type: 'readmission_risk',
           severity: patientRisk.risk_level === 'critical' ? 'critical' : 'high',
           title: `High Hospitalization Risk: ${patientRisk.patient_name}`,
-          description: `Risk Score: ${patientRisk.risk_score}/100 - ${patientRisk.trending_direction}\n\nKey Factors:\n${patientRisk.risk_factors?.slice(0, 3).join('\n')}`,
-          recommended_action: patientRisk.immediate_actions?.join('; ') || 'Review patient immediately',
-          status: 'active',
-          created_by: currentUser?.email
-        }).catch(() => {}); // Ignore if alert already exists
+          message: `Risk Score: ${patientRisk.risk_score}/100 - ${patientRisk.trending_direction}\n\nKey Factors:\n${patientRisk.risk_factors?.slice(0, 3).join('\n')}`,
+          recommended_actions: patientRisk.immediate_actions?.length
+            ? patientRisk.immediate_actions
+            : ['Review patient immediately'],
+          status: 'active'
+        }).catch(err => console.error('Failed to create hospitalization risk alert:', err));
       }
 
     } catch (error) {

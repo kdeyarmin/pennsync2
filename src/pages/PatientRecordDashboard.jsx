@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/stat-card";
+import LoadingState from "@/components/ui/LoadingState";
 import PatientSearchBar from "../components/dashboard/PatientSearchBar";
 import PatientQuickActions from "../components/dashboard/PatientQuickActions";
 import PatientOverviewCard from "../components/dashboard/PatientOverviewCard";
@@ -30,6 +33,14 @@ export default function PatientRecordDashboard() {
   });
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [view, setView] = useState("grid"); // grid or list
+  const queryClient = useQueryClient();
+
+  // Refresh the dashboard's data after a quick action without a full page reload.
+  const refreshDashboard = () => {
+    ['all-patients', 'all-visits', 'all-care-plans', 'active-alerts'].forEach(
+      (key) => queryClient.invalidateQueries({ queryKey: [key] })
+    );
+  };
 
   // Fetch all data in parallel
   const { data: patients = [], isLoading: loadingPatients } = useQuery({
@@ -133,12 +144,9 @@ export default function PatientRecordDashboard() {
 
   if (loadingPatients) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading patient records...</p>
-        </div>
-      </div>
+      <PageContainer>
+        <LoadingState label="Loading patient records..." className="py-24" />
+      </PageContainer>
     );
   }
 
@@ -151,62 +159,16 @@ export default function PatientRecordDashboard() {
         description="Comprehensive patient management and overview"
         favoritePage="PatientRecordDashboard"
         actions={
-          <PatientQuickActions onActionComplete={() => {
-            // Refresh data
-            window.location.reload();
-          }} />
+          <PatientQuickActions onActionComplete={refreshDashboard} />
         }
       />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">Total Patients</p>
-                  <p className="text-3xl font-bold text-blue-900 mt-1">{stats.totalPatients}</p>
-                </div>
-                <Users className="w-12 h-12 text-blue-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Active Patients</p>
-                  <p className="text-3xl font-bold text-green-900 mt-1">{stats.activePatients}</p>
-                </div>
-                <Activity className="w-12 h-12 text-green-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">Critical Alerts</p>
-                  <p className="text-3xl font-bold text-orange-900 mt-1">{stats.criticalAlerts}</p>
-                </div>
-                <AlertCircle className="w-12 h-12 text-orange-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-navy-200 bg-gradient-to-br from-navy-50 to-navy-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-navy-600 font-medium">Visits (7 days)</p>
-                  <p className="text-3xl font-bold text-navy-900 mt-1">{stats.recentVisits}</p>
-                </div>
-                <Calendar className="w-12 h-12 text-navy-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard label="Total Patients" value={stats.totalPatients} icon={Users} tone="navy" />
+          <StatCard label="Active Patients" value={stats.activePatients} icon={Activity} tone="emerald" />
+          <StatCard label="Critical Alerts" value={stats.criticalAlerts} icon={AlertCircle} tone="rose" />
+          <StatCard label="Visits (7 days)" value={stats.recentVisits} icon={Calendar} tone="sky" />
         </div>
 
         {/* Search and Filters */}
@@ -254,10 +216,7 @@ export default function PatientRecordDashboard() {
               <CardContent>
                 <ScrollArea className="h-[600px] pr-4">
                   {filteredPatients.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-500">No patients found matching your criteria</p>
-                    </div>
+                    <EmptyState icon={Users} title="No patients found" description="No patients match your current criteria." />
                   ) : (
                     <div className={view === "grid" ? "grid grid-cols-1 gap-4" : "space-y-2"}>
                       {filteredPatients.map(patient => (

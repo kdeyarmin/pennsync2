@@ -554,9 +554,9 @@ Return JSON:
 
       {/* Next Steps */}
       {assessment.next_steps?.length > 0 && (
-        <Card className="border-2 border-teal-300 bg-gradient-to-br from-teal-50 to-emerald-50">
+        <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-emerald-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-teal-900">
+            <CardTitle className="flex items-center gap-2 text-navy-900">
               <Target className="w-5 h-5" />
               Your Next Steps
             </CardTitle>
@@ -564,10 +564,10 @@ Return JSON:
           <CardContent>
             <div className="space-y-3">
               {assessment.next_steps.map((step, idx) => (
-                <Card key={idx} className="bg-white border-teal-200">
+                <Card key={idx} className="bg-white border-navy-200">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                      <div className="w-6 h-6 bg-navy-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">
                         {idx + 1}
                       </div>
                       <div className="flex-1">

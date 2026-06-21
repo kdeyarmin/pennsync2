@@ -33,6 +33,11 @@ export default function AutomatedTaskAssigner({
     queryFn: () => base44.entities.User.list(),
   });
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const generateTaskAssignments = async () => {
     setIsGenerating(true);
     try {
@@ -121,7 +126,7 @@ Focus on tasks that require specialized expertise or coordination.`,
           priority: task.priority === 'urgent' || task.priority === 'high' ? 'high' : 
                     task.priority === 'medium' ? 'medium' : 'low',
           due_timeframe: dueTimeframe ? timeframeMap[dueTimeframe] : 'this_week',
-          assigned_to: roleMatch?.email,
+          assigned_to: roleMatch?.email || currentUser?.email,
           source: 'ai_generated',
           ai_reason: task.rationale
         });

@@ -23,10 +23,7 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
 
   const { data: modules = [] } = useQuery({
     queryKey: ['trainingModules', moduleType],
-    queryFn: () => base44.entities.TrainingModule.filter({ 
-      module_type: moduleType,
-      is_active: true 
-    }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
     initialData: [],
   });
 
@@ -46,8 +43,15 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
                          (module.description || '').toLowerCase().includes(search);
     const matchesCategory = categoryFilter === "all" || module.category === categoryFilter;
     const matchesDifficulty = difficultyFilter === "all" || module.difficulty_level === difficultyFilter;
+    // Tabs have no dedicated category field, so split by requirement:
+    // "ongoing" = mandatory modules (is_required, default true),
+    // "skill_development" = optional modules. Other callers see everything.
+    const matchesModuleType =
+      moduleType === 'ongoing' ? module.is_required !== false :
+      moduleType === 'skill_development' ? module.is_required === false :
+      true;
 
-    return matchesSearch && matchesCategory && matchesDifficulty;
+    return matchesSearch && matchesCategory && matchesDifficulty && matchesModuleType;
   });
 
   const categories = [...new Set(modules.map(m => m.category))];

@@ -48,13 +48,13 @@ export default function PhoneCenter() {
           {
             label: (
               <span className="flex items-center gap-1.5">
-                <span className={cn("inline-block h-2 w-2 rounded-full", offNow ? "bg-amber-500" : "bg-green-500")} />
+                <span className={cn("inline-block h-2 w-2 rounded-full", offNow ? "bg-amber-500" : "bg-emerald-500")} />
                 {offNow ? "Off duty" : "On duty"}
               </span>
             ),
             className: offNow
               ? "bg-amber-100 text-amber-800 hover:bg-amber-100"
-              : "bg-green-100 text-green-800 hover:bg-green-100",
+              : "bg-emerald-100 text-emerald-800 hover:bg-emerald-100",
           },
           {
             label: `Work line · ${formatPhoneDisplay(user.work_phone_number)}`,
@@ -100,7 +100,7 @@ export default function PhoneCenter() {
               accessory={
                 hasWorkNumber ? (
                   <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                    <span className={cn("inline-block h-2 w-2 rounded-full", offNow ? "bg-amber-500" : "bg-green-500")} />
+                    <span className={cn("inline-block h-2 w-2 rounded-full", offNow ? "bg-amber-500" : "bg-emerald-500")} />
                     {offNow ? "Off" : "On"}
                   </span>
                 ) : null

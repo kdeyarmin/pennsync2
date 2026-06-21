@@ -195,20 +195,19 @@ PROVIDE:
       return await base44.entities.OASISAudit.create({
         oasis_upload_id: oasisData.id,
         patient_id: patientId,
-        audit_type: 'group_assignment_override',
         auditor_email: currentUser.email,
-        auditor_name: currentUser.full_name,
-        audit_date: new Date().toISOString(),
-        findings: {
+        reviewed_at: new Date().toISOString(),
+        flag_reason: 'group_assignment_override',
+        auditor_findings: JSON.stringify({
           original_clinical_group: pdgmData?.clinical_group,
           original_functional_level: pdgmData?.functional_level,
           overridden_clinical_group: overrideData.clinical_group,
           overridden_functional_level: overrideData.functional_level,
           override_reason: overrideData.reason,
           ai_recommendation: assignment
-        },
-        status: 'completed',
-        severity: 'medium'
+        }),
+        status: 'reviewed',
+        priority: 'medium'
       });
     },
     onSuccess: () => {

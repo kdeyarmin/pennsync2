@@ -45,13 +45,26 @@ Deno.serve(async (req) => {
         if (!template) continue;
 
         // Create document signature from template
+        const signerName = patient.caregiver_name || `${patient.first_name} ${patient.last_name}`;
+        const signerEmail = patient.caregiver_email || patient.email;
         const signature = await base44.asServiceRole.entities.DocumentSignature.create({
           patient_id: patientId,
           document_name: template.name,
+          document_title: template.name,
+          document_content: template.content || '',
           document_type: template.category,
           status: 'pending',
-          signer_name: patient.caregiver_name || `${patient.first_name} ${patient.last_name}`,
-          signer_email: patient.caregiver_email || patient.email,
+          signers: [
+            {
+              name: signerName,
+              email: signerEmail || '',
+              role: 'patient',
+              required: true,
+              status: 'pending',
+            },
+          ],
+          signer_name: signerName,
+          signer_email: signerEmail,
         });
 
         // Create document package

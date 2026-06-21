@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
   const [showForm, setShowForm] = useState(false);
   const [editingPhysician, setEditingPhysician] = useState(null);
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const { data: physicians = [], isLoading } = useQuery({
     queryKey: ['physicians'],
@@ -207,9 +209,9 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                             <Button
                               size="icon"
                               variant="ghost"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                if (confirm('Remove this provider from the directory?')) {
+                                if (await confirm({ title: "Remove provider?", description: "Remove this provider from the directory?", confirmText: "Remove", destructive: true })) {
                                   deletePhysicianMutation.mutate(physician.id);
                                 }
                               }}

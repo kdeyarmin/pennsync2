@@ -119,7 +119,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
               }
             }
           }
-        }).catch(_err => ({ compliance_score: 0, violations: [] })),
+        }).catch(_err => ({ error: true, compliance_score: null, violations: [] })),
 
         // Clinical Guideline Check
         invokeLLM({
@@ -160,7 +160,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
               }
             }
           }
-        }).catch(_err => ({ compliance_score: 0, violations: [] })),
+        }).catch(_err => ({ error: true, compliance_score: null, violations: [] })),
 
         // Visit Type Check
         invokeLLM({
@@ -198,7 +198,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
               }
             }
           }
-        }).catch(_err => ({ compliance_score: 0, violations: [] })),
+        }).catch(_err => ({ error: true, compliance_score: null, violations: [] })),
 
         // Recent Regulatory Updates Check
         invokeLLM({
@@ -241,23 +241,32 @@ Identify any violations of these recent regulations.`,
         }).catch(_err => ({ compliance_score: 0, violations: [] }))
       ]);
 
-      // Aggregate results
-      const aggregatedViolations = [
-        ...medicareResult.violations.map(v => ({ ...v, category: 'medicare_cop' })),
-        ...guidelineResult.violations.map(v => ({ ...v, category: 'clinical_guideline' })),
-        ...visitTypeResult.violations.map(v => ({ ...v, category: 'visit_type' })),
-        ...regulatoryResult.violations.map(v => ({ ...v, category: 'regulatory' }))
+      // Track which analyzers FAILED to run (vs. genuinely returned a low score).
+      // A failed analyzer must not be silently counted as a clean 0% or dropped —
+      // it is surfaced as "could not evaluate" so the overall score isn't inflated
+      // and a missed Medicare check isn't mistaken for a pass.
+      const analyzerResults = [
+        { category: 'medicare_cop', result: medicareResult },
+        { category: 'clinical_guideline', result: guidelineResult },
+        { category: 'visit_type', result: visitTypeResult },
+        { category: 'regulatory', result: regulatoryResult },
       ];
+      const failedCategories = analyzerResults
+        .filter(({ result }) => result?.error)
+        .map(({ category }) => category);
 
-      // Calculate overall score
-      const scores = [
-        medicareResult.compliance_score,
-        guidelineResult.compliance_score,
-        visitTypeResult.compliance_score,
-        regulatoryResult.compliance_score
-      ].filter(s => s > 0);
+      // Aggregate results (failed analyzers contribute no violations).
+      const aggregatedViolations = analyzerResults.flatMap(({ category, result }) =>
+        result?.error ? [] : (result.violations || []).map(v => ({ ...v, category }))
+      );
 
-      const overallScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+      // Calculate overall score ONLY from analyzers that successfully ran. A null
+      // score (failed analyzer) is excluded rather than treated as 0.
+      const scores = analyzerResults
+        .filter(({ result }) => !result?.error && typeof result.compliance_score === 'number')
+        .map(({ result }) => result.compliance_score);
+
+      const overallScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
 
       // Identify quick wins (low severity, easy fixes)
       const quickWins = aggregatedViolations
@@ -269,15 +278,18 @@ Identify any violations of these recent regulations.`,
           fix: v.compliant_example
         }));
 
+      const fmtScore = (r) => r?.error ? 'could not evaluate' : `${r.compliance_score}% (${(r.violations || []).length} issues)`;
+
       // Generate AI summary using all results
       const summaryResult = await invokeLLM({
         prompt: `Create a brief executive summary of these compliance check results:
 
-MEDICARE CoP: ${medicareResult.compliance_score}% (${medicareResult.violations.length} issues)
-CLINICAL GUIDELINES: ${guidelineResult.compliance_score}% (${guidelineResult.violations.length} issues)
-VISIT TYPE: ${visitTypeResult.compliance_score}% (${visitTypeResult.violations.length} issues)
-REGULATORY: ${regulatoryResult.compliance_score}% (${regulatoryResult.violations.length} issues)
+MEDICARE CoP: ${fmtScore(medicareResult)}
+CLINICAL GUIDELINES: ${fmtScore(guidelineResult)}
+VISIT TYPE: ${fmtScore(visitTypeResult)}
+REGULATORY: ${fmtScore(regulatoryResult)}
 
+${failedCategories.length ? `NOTE: ${failedCategories.length} analyzer(s) could not be evaluated and are excluded from the score.` : ''}
 Critical issues: ${aggregatedViolations.filter(v => v.severity === 'critical').length}
 High priority: ${aggregatedViolations.filter(v => v.severity === 'high').length}
 
@@ -290,14 +302,19 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
         }
       });
 
+      // Per-category score: null when that analyzer failed (rendered as "N/A"),
+      // so a failed check is never shown as 0% / a clean pass.
+      const catScore = (r) => (r?.error || typeof r?.compliance_score !== 'number') ? null : r.compliance_score;
+
       const result = {
         overall_compliance_score: overallScore,
         category_scores: {
-          medicare_cop: medicareResult.compliance_score || 0,
-          clinical_guideline: guidelineResult.compliance_score || 0,
-          visit_type: visitTypeResult.compliance_score || 0,
-          regulatory: regulatoryResult.compliance_score || 0
+          medicare_cop: catScore(medicareResult),
+          clinical_guideline: catScore(guidelineResult),
+          visit_type: catScore(visitTypeResult),
+          regulatory: catScore(regulatoryResult)
         },
+        failed_categories: failedCategories,
         violations: aggregatedViolations,
         quick_wins: quickWins,
         critical_gaps: aggregatedViolations
@@ -441,6 +458,7 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
     <div className="space-y-4">
       {/* Overall Score Dashboard */}
       <Card className={`border-2 ${
+        complianceResults.overall_compliance_score == null ? 'border-slate-300 bg-slate-50' :
         complianceResults.overall_compliance_score >= 90 ? 'border-green-400 bg-green-50' :
         complianceResults.overall_compliance_score >= 75 ? 'border-yellow-400 bg-yellow-50' :
         'border-red-400 bg-red-50'
@@ -452,17 +470,30 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
               Overall Compliance Score
             </span>
             <Badge className={`text-lg ${
+              complianceResults.overall_compliance_score == null ? 'bg-slate-500' :
               complianceResults.overall_compliance_score >= 90 ? 'bg-green-600' :
               complianceResults.overall_compliance_score >= 75 ? 'bg-yellow-600' :
               'bg-red-600'
             }`}>
-              {complianceResults.overall_compliance_score}%
+              {complianceResults.overall_compliance_score == null ? 'N/A' : `${complianceResults.overall_compliance_score}%`}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Progress value={complianceResults.overall_compliance_score} className="h-3" />
-          
+          <Progress value={complianceResults.overall_compliance_score ?? 0} className="h-3" />
+
+          {/* Analyzers that could not be evaluated */}
+          {complianceResults.failed_categories?.length > 0 && (
+            <Alert className="border-slate-400 bg-slate-50">
+              <AlertTriangle className="w-4 h-4 text-slate-600" />
+              <AlertDescription className="text-sm text-slate-800">
+                <strong>Could not evaluate:</strong>{' '}
+                {complianceResults.failed_categories.map(getCategoryLabel).join(', ')}.
+                These analyzers failed to run and are excluded from the score — they were NOT counted as passing.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Category Scores */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             {Object.entries(complianceResults.category_scores || {}).map(([category, score]) => (
@@ -471,9 +502,13 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
                   {getCategoryIcon(category)}
                   <p className="text-xs font-semibold text-slate-700">{getCategoryLabel(category)}</p>
                 </div>
-                <p className={`text-xl font-bold ${score >= 90 ? 'text-green-600' : score >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
-                  {score}%
-                </p>
+                {score == null ? (
+                  <p className="text-xs font-bold text-slate-400" title="Analyzer could not be evaluated">N/A</p>
+                ) : (
+                  <p className={`text-xl font-bold ${score >= 90 ? 'text-green-600' : score >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {score}%
+                  </p>
+                )}
               </div>
             ))}
           </div>

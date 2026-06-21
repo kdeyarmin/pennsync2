@@ -59,6 +59,9 @@ export default function PhysicianForm({ physician, onClose }) {
     if (!formData.full_name.trim()) {
       return toast.error('Provider name is required');
     }
+    if (!formData.fax_number.trim()) {
+      return toast.error('Fax number is required');
+    }
     saveMutation.mutate(formData);
   };
 

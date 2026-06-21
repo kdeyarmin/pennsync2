@@ -426,7 +426,7 @@ async function handleOutboundMessageStatus(base44: any, payload: any): Promise<R
       user_email: row.nurse_email,
       title: '⚠️ Text not delivered',
       message: `Your text to ${row.to_number} could not be delivered (${update.failure_reason}). Verify the number and try again.`,
-      type: 'sms_failed', priority: 'high', related_entity: 'SmsMessage', related_entity_id: row.id, is_read: false,
+      type: 'sms_failed', priority: 'high', metadata: { related_entity: 'SmsMessage', related_entity_id: row.id }, is_read: false,
     }).catch((err) => console.error('Failed to send sms failure notification:', err));
   }
   return Response.json({ success: true, status: mapped });
@@ -542,14 +542,14 @@ async function handleInboundMessage(base44: any, apiKey: string | null, messagin
     await base44.asServiceRole.entities.Notification.create({
       user_email: nurse.email, title: '🚨 Possibly urgent patient text',
       message: `A text from ${patientNum} may need immediate attention (flagged: ${urgency.matches.slice(0, 3).join(', ')}). Review now.`,
-      type: 'sms_urgent', priority: 'urgent', related_entity: 'SmsMessage', related_entity_id: inboundRow.id, is_read: false,
+      type: 'sms_urgent', priority: 'critical', metadata: { related_entity: 'SmsMessage', related_entity_id: inboundRow.id }, is_read: false,
     }).catch((err) => console.error('urgent notification failed:', err));
   }
 
   // --- Notify the nurse in-app ---
   await base44.asServiceRole.entities.Notification.create({
     user_email: nurse.email, title: '💬 New text message', message: `You have a new text from ${patientNum}.`,
-    type: 'sms_received', priority: 'normal', related_entity: 'SmsMessage', related_entity_id: inboundRow.id, is_read: false,
+    type: 'sms_received', priority: 'medium', metadata: { related_entity: 'SmsMessage', related_entity_id: inboundRow.id }, is_read: false,
   }).catch((err) => console.error('notification failed:', err));
 
   // Audit — never log message body.
@@ -620,7 +620,7 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
       user_email: faxLog.sent_by,
       title: '✅ Fax delivered',
       message: `Your fax to ${recipientName} was delivered successfully (${update.pages || faxLog.pages || 'N/A'} pages).`,
-      type: 'fax_delivered', priority: 'normal', related_entity: 'FaxLog', related_entity_id: faxLog.id,
+      type: 'fax_delivered', priority: 'medium', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
       is_read: false, action_url: `/fax-logs?fax_id=${faxLog.id}`,
     }).catch((err) => console.error('Failed to send fax delivered notification:', err));
   }
@@ -632,7 +632,7 @@ async function handleFaxEvent(base44: any, payload: any): Promise<Response> {
       user_email: faxLog.sent_by,
       title: '❌ Fax failed',
       message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${update.failure_reason}). Verify the number and resend.`,
-      type: 'fax_failed', priority: 'high', related_entity: 'FaxLog', related_entity_id: faxLog.id,
+      type: 'fax_failed', priority: 'high', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
       is_read: false, action_url: `/send-fax?fax_id=${faxLog.id}`,
     }).catch((err) => console.error('Failed to send fax failure notification:', err));
   }
@@ -975,7 +975,7 @@ async function saveVoicemail(base44: any, payload: any) {
     await base44.asServiceRole.entities.Notification.create({
       user_email: row.nurse_email, title: '📞 New voicemail',
       message: `New voicemail from ${row.from_number || 'a caller'}.${preview}`,
-      type: 'voicemail', priority: 'normal', related_entity: 'CallLog', related_entity_id: row.id, is_read: false,
+      type: 'voicemail', priority: 'medium', metadata: { related_entity: 'CallLog', related_entity_id: row.id }, is_read: false,
     }).catch(() => {});
   }
 }

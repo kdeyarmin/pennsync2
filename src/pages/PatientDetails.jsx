@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,7 +128,7 @@ export default function PatientDetails() {
 
   const { data: _patientOASIS = [] } = useQuery({
     queryKey: ['patientOASIS', patientId],
-    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date'),
+    queryFn: async () => (await base44.functions.invoke('listOASISUploads', { patientId, sort: '-created_date' }))?.data?.uploads || [],
     initialData: [],
     enabled: !!patientId,
   });
@@ -343,7 +344,7 @@ export default function PatientDetails() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
+                  <User className="w-5 h-5 text-navy-600" />
                   Contact Information
                 </CardTitle>
               </CardHeader>
@@ -407,7 +408,7 @@ export default function PatientDetails() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Stethoscope className="w-5 h-5 text-green-600" />
+                  <Stethoscope className="w-5 h-5 text-emerald-600" />
                   Physician & Payor
                 </CardTitle>
               </CardHeader>
@@ -436,7 +437,7 @@ export default function PatientDetails() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-600" />
+                <Activity className="w-5 h-5 text-navy-600" />
                 Medical Information
               </CardTitle>
             </CardHeader>
@@ -451,8 +452,8 @@ export default function PatientDetails() {
                 </div>
 
                 <TabsContent value="allergies" className="space-y-4">
-                  <Alert className={patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}>
-                    <AlertTriangle className={`w-4 h-4 ${patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'text-red-600' : 'text-green-600'}`} />
+                  <Alert className={patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'bg-red-50 border-red-300' : 'bg-emerald-50 border-emerald-300'}>
+                    <AlertTriangle className={`w-4 h-4 ${patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'text-red-600' : 'text-emerald-600'}`} />
                     <AlertDescription>
                       <p className="font-semibold mb-2">Allergy Information</p>
                       <p className="text-sm">{sanitizeInput(patient.allergies) || 'No Known Drug Allergies (NKDA)'}</p>
@@ -501,10 +502,7 @@ export default function PatientDetails() {
 
                 <TabsContent value="visits" className="space-y-4">
                   {visits.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p>No visit notes available</p>
-                    </div>
+                    <EmptyState icon={FileText} title="No visit notes" description="Visit notes will appear here once recorded." />
                   ) : (
                     <ScrollArea className="max-h-[500px]">
                       <div className="space-y-3">
@@ -690,19 +688,19 @@ export default function PatientDetails() {
                   <div className="space-y-3">
                     {carePlans.map((plan) => (
                       <Card key={plan.id} className={`border-l-4 ${
-                        plan.status === 'met' ? 'border-l-green-500' :
+                        plan.status === 'met' ? 'border-l-emerald-500' :
                         plan.status === 'not_met' ? 'border-l-red-500' :
-                        plan.status === 'revised' ? 'border-l-yellow-500' :
-                        'border-l-blue-500'
+                        plan.status === 'revised' ? 'border-l-amber-500' :
+                        'border-l-navy-500'
                       }`}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-2">
                             <p className="font-semibold text-slate-900">{sanitizeInput(plan.problem)}</p>
                             <Badge className={
-                              plan.status === 'met' ? 'bg-green-500' :
+                              plan.status === 'met' ? 'bg-emerald-500' :
                               plan.status === 'not_met' ? 'bg-red-500' :
-                              plan.status === 'revised' ? 'bg-yellow-500' :
-                              'bg-blue-500'
+                              plan.status === 'revised' ? 'bg-amber-500' :
+                              'bg-navy-500'
                             }>
                               {(plan.status || '').replace('_', ' ')}
                             </Badge>
@@ -832,7 +830,7 @@ export default function PatientDetails() {
             </CardTitle>
             <Button
               onClick={() => setShowVisitForm(!showVisitForm)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-navy-600 hover:bg-navy-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Visit
@@ -841,7 +839,7 @@ export default function PatientDetails() {
         </CardHeader>
         {showVisitForm && (
           <CardContent>
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-slate-50 border-slate-200">
               <CardContent className="p-4 space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
@@ -884,7 +882,7 @@ export default function PatientDetails() {
                     <Button variant="outline" onClick={() => setShowVisitForm(false)} className="min-h-[48px] sm:min-h-[40px]">
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateVisit} className="bg-blue-600 hover:bg-blue-700 min-h-[48px] sm:min-h-[40px]">
+                    <Button onClick={handleCreateVisit} className="bg-navy-600 hover:bg-navy-700 min-h-[48px] sm:min-h-[40px]">
                       Create Visit
                     </Button>
                   </div>

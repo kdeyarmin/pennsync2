@@ -11,7 +11,7 @@ export default function MobileHeader({ currentPageName, totalNotificationCount, 
       <div className="h-16 flex items-center justify-between px-4">
       <div className="flex items-center gap-2">
         {BACK_PAGES.includes(currentPageName) && (
-          <Button variant="ghost" size="icon" className="text-slate-500 hover:text-navy-700 hover:bg-slate-100 h-10 w-10 mr-1" onClick={() => window.history.back()}>
+          <Button variant="ghost" size="icon" className="text-slate-500 hover:text-navy-700 hover:bg-slate-100 h-10 w-10 mr-1" onClick={() => window.history.back()} aria-label="Go back">
             <ChevronLeft className="w-5 h-5" />
           </Button>
         )}
@@ -27,13 +27,13 @@ export default function MobileHeader({ currentPageName, totalNotificationCount, 
         <Button variant="ghost" size="icon" className="text-slate-500 hover:text-navy-700 hover:bg-slate-100 h-10 w-10" onClick={() => window.dispatchEvent(new Event('open-command-palette'))} title="Search pages">
           <Search className="w-5 h-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-navy-700 hover:bg-slate-100 h-10 w-10" onClick={onOpenNotificationCenter}>
+        <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-navy-700 hover:bg-slate-100 h-10 w-10" onClick={onOpenNotificationCenter} aria-label="Notifications">
           <Bell className="w-5 h-5" />
           {totalNotificationCount > 0 && (
             <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[9px] rounded-full px-1 py-0.5 min-w-[16px] text-center font-bold leading-none">{totalNotificationCount}</span>
           )}
         </Button>
-        <Button variant="ghost" size="icon" onClick={onToggleMobileMenu} className="text-slate-500 hover:text-navy-700 hover:bg-slate-100 h-10 w-10">
+        <Button variant="ghost" size="icon" onClick={onToggleMobileMenu} className="text-slate-500 hover:text-navy-700 hover:bg-slate-100 h-10 w-10" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen}>
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
       </div>

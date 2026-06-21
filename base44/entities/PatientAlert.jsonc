@@ -18,7 +18,8 @@
         "care_gap",
         "urgent_intervention",
         "hospice_transition",
-        "caregiver_burnout"
+        "caregiver_burnout",
+        "documentation_risk"
       ],
       "description": "Type of alert"
     },

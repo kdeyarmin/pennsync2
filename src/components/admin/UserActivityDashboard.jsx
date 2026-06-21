@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import {
   Search, LogIn, LogOut, Eye, Plus, Edit, Trash2, Download,
@@ -228,88 +229,84 @@ export default function UserActivityDashboard() {
               <p className="text-slate-500">No activities found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left px-4 py-3 font-semibold text-slate-900">Time</th>
-                    <th className="text-left px-4 py-3 font-semibold text-slate-900">User</th>
-                    <th className="text-left px-4 py-3 font-semibold text-slate-900">Action</th>
-                    <th className="text-left px-4 py-3 font-semibold text-slate-900">Entity</th>
-                    <th className="text-left px-4 py-3 font-semibold text-slate-900">Device</th>
-                    <th className="text-left px-4 py-3 font-semibold text-slate-900">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {filteredActivities.map((activity) => {
-                    const actionConfig = ACTION_CONFIG[activity.action] || ACTION_CONFIG.page_visit;
-                    const ActionIcon = actionConfig.icon;
-                    const deviceConfig = DEVICE_CONFIG[activity.device_type] || DEVICE_CONFIG.desktop;
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Time</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Entity</TableHead>
+                  <TableHead>Device</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredActivities.map((activity) => {
+                  const actionConfig = ACTION_CONFIG[activity.action] || ACTION_CONFIG.page_visit;
+                  const ActionIcon = actionConfig.icon;
+                  const deviceConfig = DEVICE_CONFIG[activity.device_type] || DEVICE_CONFIG.desktop;
 
-                    return (
-                      <tr key={activity.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-slate-900">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5 text-slate-400" />
-                            {new Date(activity.created_date).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit'
-                            })}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
+                  return (
+                    <TableRow key={activity.id}>
+                      <TableCell className="text-slate-900">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5 text-slate-400" />
+                          {new Date(activity.created_date).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                          })}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-slate-900">{activity.user_name || 'Unknown'}</p>
+                        <p className="text-xs text-slate-500">{activity.user_email}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={actionConfig.color}>
+                          <ActionIcon className="h-3 w-3 mr-1" />
+                          {actionConfig.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {activity.entity_type ? (
                           <div>
-                            <p className="font-medium text-slate-900">{activity.user_name || 'Unknown'}</p>
-                            <p className="text-xs text-slate-500">{activity.user_email}</p>
+                            <p className="text-sm font-medium">{activity.entity_type}</p>
+                            {activity.page && <p className="text-xs text-slate-500">{activity.page}</p>}
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge className={actionConfig.color}>
-                            <ActionIcon className="h-3 w-3 mr-1" />
-                            {actionConfig.label}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">
-                          {activity.entity_type ? (
-                            <div>
-                              <p className="text-sm font-medium">{activity.entity_type}</p>
-                              {activity.page && <p className="text-xs text-slate-500">{activity.page}</p>}
-                            </div>
-                          ) : activity.page ? (
-                            <p className="text-sm">{activity.page}</p>
-                          ) : (
-                            <p className="text-slate-400 text-xs">-</p>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge className={deviceConfig.color}>
-                            {deviceConfig.label}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          {activity.status === 'failure' ? (
-                            <div className="flex items-center gap-1">
-                              <AlertCircle className="h-4 w-4 text-red-600" />
-                              <span className="text-red-600 font-medium">Failed</span>
-                            </div>
-                          ) : activity.status === 'warning' ? (
-                            <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>
-                          ) : (
-                            <div className="flex items-center gap-1">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              <span className="text-green-600 font-medium">Success</span>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        ) : activity.page ? (
+                          <p className="text-sm">{activity.page}</p>
+                        ) : (
+                          <p className="text-slate-400 text-xs">-</p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={deviceConfig.color}>
+                          {deviceConfig.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {activity.status === 'failure' ? (
+                          <div className="flex items-center gap-1">
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <span className="text-red-600 font-medium">Failed</span>
+                          </div>
+                        ) : activity.status === 'warning' ? (
+                          <Badge variant="warning">Warning</Badge>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <CheckCircle className="h-4 w-4 text-emerald-600" />
+                            <span className="text-emerald-600 font-medium">Success</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

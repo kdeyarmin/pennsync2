@@ -70,6 +70,11 @@ Deno.serve(async (req) => {
         const existingAssignment = await base44.asServiceRole.entities.TrainingAssignment.filter({ plan_id: planId, course_id: item.course_id, assigned_to_user_id: candidate.email }, '-created_date', 5);
         if (existingAssignment.length > 0) continue;
 
+        // Honor the per-course configuration set in the plan builder: a course's
+        // own "Due by" date (specific_due_date) overrides the plan-level due
+        // date, and its required flag drives whether the assignment is required.
+        const courseDueDate = item.specific_due_date || dueDate;
+
         await base44.asServiceRole.entities.TrainingAssignment.create({
           course_id: item.course_id,
           course_title: item.course_title,
@@ -81,11 +86,11 @@ Deno.serve(async (req) => {
           assigned_to_business_line: candidate.business_line || '',
           assigned_by: user.email,
           assigned_date: new Date().toISOString(),
-          due_date: dueDate,
+          due_date: courseDueDate,
           annual_cycle_year: plan.year,
           priority: settings.priority || 'high',
           status: 'assigned',
-          required: true,
+          required: item.is_required !== false,
           passing_score_required: settings.passingScoreRequired || 80,
           max_attempts: settings.maxAttempts ?? null,
           waiting_period_hours: settings.waitingPeriodHours || 0,

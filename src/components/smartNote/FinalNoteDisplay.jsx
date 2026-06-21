@@ -48,7 +48,7 @@ export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copi
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : saved ? <><CheckCircle2 className="w-4 h-4" /> Saved</> : "Save to chart"}
             </Button>
           )}
-          <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={onReset}><RotateCcw className="w-4 h-4" /></Button>
+          <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={onReset} aria-label="Start a new note" title="Start a new note"><RotateCcw className="w-4 h-4" /></Button>
         </div>
       </div>
 

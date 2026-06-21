@@ -31,12 +31,20 @@ export default function ReferralTriage() {
 
     try {
       // Create patient from triage analysis
+      // phone, address, emergency_contact_name and emergency_contact_phone are
+      // required on the Patient entity but are rarely present in triage output.
+      // Fall back to clearly-marked placeholders so the create succeeds; staff
+      // complete these during admission.
       const patientData = {
         first_name: lastAnalysis.patient_name?.split(' ')[0] || 'Unknown',
         last_name: lastAnalysis.patient_name?.split(' ').slice(1).join(' ') || '',
         date_of_birth: lastAnalysis.date_of_birth === 'Not provided' ? null : lastAnalysis.date_of_birth,
         primary_diagnosis: lastAnalysis.primary_diagnosis,
         secondary_diagnoses: lastAnalysis.secondary_diagnoses || [],
+        phone: lastAnalysis.phone || 'Not provided on referral',
+        address: lastAnalysis.address || 'Not provided on referral',
+        emergency_contact_name: lastAnalysis.emergency_contact_name || 'Not provided on referral',
+        emergency_contact_phone: lastAnalysis.emergency_contact_phone || 'Not provided on referral',
         status: 'active',
         care_type: 'home_health',
         clinical_notes: lastAnalysis.clinical_summary,
@@ -60,6 +68,9 @@ export default function ReferralTriage() {
       }
 
       // Create a referral intake task
+      const dueTimeframe = lastAnalysis.urgency_level === 'CRITICAL' ? '24_hours' : 'this_week';
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + (dueTimeframe === '24_hours' ? 1 : 7));
       await base44.entities.Task.create({
         title: `Admission Setup: ${lastAnalysis.patient_name}`,
         description: `Complete admission assessment and reconcile medications. Urgency: ${lastAnalysis.urgency_level}`,
@@ -67,7 +78,8 @@ export default function ReferralTriage() {
         priority: lastAnalysis.urgency_level === 'CRITICAL' ? 'high' : 'medium',
         status: 'pending',
         assigned_to: currentUser?.email,
-        due_timeframe: lastAnalysis.urgency_level === 'CRITICAL' ? '24_hours' : 'this_week',
+        due_timeframe: dueTimeframe,
+        due_date: dueDate.toISOString().split('T')[0],
       });
 
       setShowCreatePatient(false);
@@ -104,14 +116,14 @@ export default function ReferralTriage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 border-green-200">
+        <Card className="bg-emerald-50 border-emerald-200">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-1" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
               <div>
-                <p className="text-xs text-green-600 font-semibold uppercase">Structured Data</p>
-                <p className="text-2xl font-bold text-green-900">100%</p>
-                <p className="text-xs text-green-600 mt-1">automatically parsed</p>
+                <p className="text-xs text-emerald-600 font-semibold uppercase">Structured Data</p>
+                <p className="text-2xl font-bold text-emerald-900">100%</p>
+                <p className="text-xs text-emerald-600 mt-1">automatically parsed</p>
               </div>
             </div>
           </CardContent>
@@ -136,10 +148,10 @@ export default function ReferralTriage() {
 
       {/* Post-Analysis Actions */}
       {lastAnalysis && showCreatePatient && (
-        <Card className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+        <Card className="mt-8 border-l-4 border-l-emerald-500">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="w-6 h-6 text-indigo-600" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
               Next Steps
             </CardTitle>
           </CardHeader>

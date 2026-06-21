@@ -105,7 +105,14 @@ Deno.serve(async (req) => {
     let skippedCount = 0;
 
     const { apiKey, faxConnectionId } = await resolveTelnyxCreds(base44);
-    const fromNumber = Deno.env.get('TELNYX_FAX_NUMBER');
+    // Resolve the office fax from-number the same way sendFax does: prefer the
+    // in-app AgencySettings.office_fax_number_e164, else the TELNYX_FAX_NUMBER env.
+    const settingsRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+    const officeFax = (settingsRows[0]?.office_fax_number_e164 || '').toString().trim();
+    const fromNumber = officeFax || Deno.env.get('TELNYX_FAX_NUMBER');
+    // Include the same DLR webhook sendFax uses so the retried fax reports status.
+    const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
+    const webhookUrl = functionsBaseUrl ? `${functionsBaseUrl}/handleTelnyxStatusWebhook` : undefined;
 
     if (!apiKey || !faxConnectionId || !fromNumber) {
       return Response.json({ error: 'Telnyx credentials not configured' }, { status: 500 });
@@ -136,19 +143,21 @@ Deno.serve(async (req) => {
 
       // Attempt the retry via Telnyx
       try {
+        const retryPayload: Record<string, unknown> = {
+          connection_id: faxConnectionId,
+          from: fromNumber,
+          to: fax.to_number,
+          media_url: fax.document_url,
+          quality: 'high'
+        };
+        if (webhookUrl) retryPayload.webhook_url = webhookUrl;
         const telnyxResp = await fetch('https://api.telnyx.com/v2/faxes', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            connection_id: faxConnectionId,
-            from: fromNumber,
-            to: fax.to_number,
-            media_url: fax.document_url,
-            quality: 'high'
-          })
+          body: JSON.stringify(retryPayload)
         });
 
         if (telnyxResp.ok) {
@@ -229,7 +238,9 @@ async function handleRetryExhausted(base44, fax, reason, maxRetries = 3, notify 
       user_email: fax.sent_by,
       title: '❌ Fax Failed — All Retries Exhausted',
       message: `"${docName}" to ${recipient} could not be delivered after ${MAX_RETRIES} attempts.`,
-      type: 'error',
+      type: 'fax_failed',
+      priority: 'high',
+      metadata: { related_entity: 'FaxLog', related_entity_id: fax.id },
       is_read: false,
       action_url: `/send-fax?fax_id=${fax.id}`
     });

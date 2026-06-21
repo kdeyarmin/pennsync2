@@ -32,9 +32,9 @@ import BatchFaxSender from "../components/fax/BatchFaxSender";
 import RealtimeFaxStatusTracker from "../components/fax/RealtimeFaxStatusTracker";
 import { isSuperAdmin } from "@/lib/superAdmin";
 
-const FaxContacts = lazy(() => import("@/pages/FaxContacts"));
-const FaxLogsDashboard = lazy(() => import("@/pages/FaxLogsDashboard"));
-const FaxAnalytics = lazy(() => import("@/pages/FaxAnalytics"));
+const FaxContacts = lazy(() => import("@/components/hub-tabs/FaxContacts"));
+const FaxLogsDashboard = lazy(() => import("@/components/hub-tabs/FaxLogsDashboard"));
+const FaxAnalytics = lazy(() => import("@/components/hub-tabs/FaxAnalytics"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired standalone pages (Contacts, Address Book, Logs,

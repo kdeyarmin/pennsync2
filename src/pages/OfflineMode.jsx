@@ -13,8 +13,8 @@ import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
 
-const OfflineVisitDocumentation = lazy(() => import("@/pages/OfflineVisitDocumentation"));
-const OfflineDocumentation = lazy(() => import("@/pages/OfflineDocumentation"));
+const OfflineVisitDocumentation = lazy(() => import("@/components/hub-tabs/OfflineVisitDocumentation"));
+const OfflineDocumentation = lazy(() => import("@/components/hub-tabs/OfflineDocumentation"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired offline pages redirect to the right tab.
@@ -100,17 +100,17 @@ export default function OfflineMode() {
         </div>
 
         <TabsContent value="status" className="space-y-4 sm:space-y-6">
-      <Alert className={isOnline ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'}>
+      <Alert className={isOnline ? 'bg-emerald-50 border-emerald-300' : 'bg-orange-50 border-orange-300'}>
         <AlertDescription className="text-sm flex items-center gap-2">
           {isOnline ? (
             <>
-              <Wifi className="w-4 h-4 text-green-600" />
-              <span className="text-green-800">✅ Connected - Data will sync automatically</span>
+              <Wifi className="w-4 h-4 text-emerald-600" />
+              <span className="text-emerald-800">Connected — data will sync automatically</span>
             </>
           ) : (
             <>
-              <WifiOff className="w-4 h-4 text-orange-600" />
-              <span className="text-orange-800">⚠️ Offline - Using cached data</span>
+              <WifiOff className="w-4 h-4 text-amber-600" />
+              <span className="text-amber-800">Offline — using cached data</span>
             </>
           )}
         </AlertDescription>
@@ -129,16 +129,16 @@ export default function OfflineMode() {
           </CardContent>
         </Card>
 
-        <Card className="border-yellow-200">
+        <Card className="border-amber-200">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-yellow-600 font-medium mb-1 truncate">Pending Sync</p>
-                <p className="text-2xl sm:text-3xl font-bold text-yellow-900">
+                <p className="text-xs sm:text-sm text-amber-600 font-medium mb-1 truncate">Pending Sync</p>
+                <p className="text-2xl sm:text-3xl font-bold text-amber-900">
                   {(() => { try { return JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]').length; } catch { return 0; } })()}
                 </p>
               </div>
-              <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 flex-shrink-0" />
+              <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

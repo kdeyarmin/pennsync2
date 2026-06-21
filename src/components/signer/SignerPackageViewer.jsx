@@ -12,10 +12,11 @@ export default function SignerPackageViewer({
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [isSigningMode, setIsSigningMode] = useState(false);
 
-  const signedDocs = packageData.documents.filter((d) => d.status === 'signed');
-  const pendingDocs = packageData.documents.filter(
-    (d) => d.status !== 'signed'
-  );
+  // DocumentSignature's canonical completed status is 'completed'; tolerate the
+  // legacy 'signed' value so the portal counts/splits documents correctly.
+  const isDocSigned = (d) => ['signed', 'completed'].includes(d.status);
+  const signedDocs = packageData.documents.filter(isDocSigned);
+  const pendingDocs = packageData.documents.filter((d) => !isDocSigned(d));
 
   if (isSigningMode && selectedDocId) {
     return (

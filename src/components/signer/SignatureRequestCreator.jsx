@@ -173,14 +173,6 @@ export default function SignatureRequestCreator({ onCancel }) {
         patient_id: "none",
         status: "pending",
         signers: mappedSigners,
-        signature_fields: fields.map(f => ({
-          id: f.id,
-          label: f.label,
-          required: f.required,
-          signer_id: parseInt(f.signerId),
-          position: f.position,
-          signed: false
-        })),
         created_by_email: 'system',
         sent_date: new Date().toISOString()
       });

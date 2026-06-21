@@ -60,6 +60,12 @@ export default function OfflineManager() {
             }
             await removeFromSyncQueue(item.id);
             syncedCount += 1;
+          } else if (item.action === 'CREATE_TASK') {
+            // A provider follow-up escalated while offline (critical chart conflict
+            // or vital). Create the Task on reconnect so the follow-up isn't lost.
+            await base44.entities.Task.create(item.payload);
+            await removeFromSyncQueue(item.id);
+            syncedCount += 1;
           } else {
             // Unknown action types have no handler; log so they aren't invisibly
             // stuck in the queue forever. Left in place (not removed) for inspection.

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -178,9 +179,28 @@ export default function OASISActionWorkflow({
       });
     });
 
-    // Create all actions
+    // Create all actions. Continue past individual failures so a mid-loop
+    // error doesn't leave the UI stuck or silently drop the remaining actions.
+    let createdCount = 0;
+    let failedCount = 0;
     for (const action of actions) {
-      await createActionMutation.mutateAsync(action);
+      try {
+        await createActionMutation.mutateAsync(action);
+        createdCount += 1;
+      } catch (error) {
+        failedCount += 1;
+        console.error("Failed to create OASIS action item:", error);
+      }
+    }
+
+    if (failedCount === 0) {
+      if (createdCount > 0) {
+        toast.success(`Created ${createdCount} action item(s).`);
+      }
+    } else if (createdCount > 0) {
+      toast.error(`Created ${createdCount} action item(s), but ${failedCount} failed. Please retry.`);
+    } else {
+      toast.error("Failed to create action items. Please try again.");
     }
   };
 

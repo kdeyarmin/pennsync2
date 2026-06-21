@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, Copy, Shield, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Copy, Shield, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -99,7 +99,7 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
       });
     }
 
-    toast.success(`De-identified text - ${replacements.length} items masked`);
+    toast.success(`${replacements.length} item(s) masked — review output before sharing`);
   };
 
   const copyToClipboard = (text) => {
@@ -116,10 +116,20 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert className="bg-navy-50 border-navy-300">
-          <AlertDescription className="text-navy-900 text-sm">
-            <p className="font-semibold mb-1">🛡️ HIPAA Safe Harbor De-Identification</p>
-            <p>Automatically removes 18 identifiers: names, dates, addresses, phone numbers, emails, SSN, MRN, ages {'>'} 89, etc.</p>
+        <Alert className="bg-amber-50 border-amber-300">
+          <AlertDescription className="text-amber-900 text-sm">
+            <p className="font-semibold mb-1">⚠️ Best-effort redaction — manual review required</p>
+            <p>
+              This tool uses simple pattern matching to mask common identifiers (obvious names,
+              dates, addresses, phone numbers, emails, SSN, MRN, ages {'>'} 89). It does NOT detect
+              all 18 HIPAA Safe Harbor identifier classes — for example URLs, IP addresses, vehicle/
+              device/account identifiers, biometric data, photos, and uniquely identifying free-text
+              details are not handled, and unusual name/date formats may be missed.
+            </p>
+            <p className="mt-1 font-medium">
+              Always manually review the output before sharing. Do not treat this as certified
+              Safe Harbor de-identification.
+            </p>
           </AlertDescription>
         </Alert>
 
@@ -163,7 +173,7 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
-                De-Identified Text (Safe for AI Processing)
+                Redacted Text (review before sharing)
               </label>
               <Button
                 variant="outline"
@@ -181,11 +191,12 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
               className="min-h-[200px] font-mono text-sm bg-green-50 border-green-300"
             />
             
-            <Alert className="bg-green-50 border-green-300">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <AlertDescription className="text-green-800 text-sm">
-                This text is safe to use with external AI services or share for training purposes.
-                All protected health information has been removed.
+            <Alert className="bg-amber-50 border-amber-300">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <AlertDescription className="text-amber-900 text-sm">
+                Detected identifiers were masked, but this does not guarantee all PHI was removed.
+                Carefully review the text above for any remaining names, locations, or uniquely
+                identifying details before using it with external services or for sharing.
               </AlertDescription>
             </Alert>
           </div>

@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
-// CMS PDGM 2024 Base Payment Rates
-const BASE_PAYMENT_RATE_2024 = 2031.64; // 2024 national standardized 30-day payment
+// CMS PDGM base payment rate
+const BASE_PAYMENT_RATE_2026 = 2038.22; // CY2026 national standardized 30-day period payment, quality submitters (CMS-1828-F, eff. 2026-01-01)
 
 // Clinical Group Weights by Admission Source and Episode Timing (CMS PDGM model)
 // Format: { [clinicalGroup]: { community_early, community_late, institutional_early, institutional_late } }
@@ -94,7 +94,7 @@ const COMORBIDITY_MULTIPLIERS = {
 // values over these defaults so they can keep their case-mix weights / base rate
 // current each CMS rate year. Shape mirrors src/components/pdgm/pdgmRates.js.
 const DEFAULT_RATES = {
-  basePaymentRate: BASE_PAYMENT_RATE_2024,
+  basePaymentRate: BASE_PAYMENT_RATE_2026,
   clinicalGroupWeights: CLINICAL_GROUP_WEIGHTS,
   functionalThresholds: FUNCTIONAL_THRESHOLDS,
   functionalMultipliers: FUNCTIONAL_MULTIPLIERS,
@@ -579,6 +579,22 @@ function validateEpisodeTiming(data) {
   };
 }
 
+// Financial visibility gate. MIRRORS src/lib/permissions.canViewFinancials
+// (which is isAdminLike): backend Deno modules can't import src/lib, so the
+// literal owner email and the admin checks are duplicated here. Keep in sync.
+// PDGM payment/revenue is restricted to administrators; clinical staff (nurses)
+// must never receive dollar figures, even by calling this endpoint directly.
+const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
+function canViewFinancials(user) {
+  if (!user) return false;
+  return (
+    user.role === 'admin' ||
+    user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin' ||
+    String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL
+  );
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -641,6 +657,30 @@ Deno.serve(async (req) => {
       ...sourceValidation.discrepancies,
       ...timingValidation.discrepancies
     ];
+
+    // Server-side financial gate (defense in depth): clinical staff never receive
+    // dollar figures, even via a direct API call — this is the real boundary that
+    // backs the client-side FinancialGate. Clinical/validation data is still
+    // returned, and the revenue math is skipped entirely for non-financial users.
+    if (!canViewFinancials(user)) {
+      // Strip the payment-impact strings the validation helpers attach to each
+      // discrepancy (revenueImpact: admission-source / episode-timing payment
+      // effects) so the clinical-only payload carries no financial information.
+      const clinicalDiscrepancies = allDiscrepancies.map(({ revenueImpact, ...rest }) => rest);
+      return Response.json({
+        financialsRestricted: true,
+        rateBasis: { isOfficial, isEstimate: !isOfficial },
+        dataValidation: {
+          discrepancies: clinicalDiscrepancies,
+          hasDiscrepancies: clinicalDiscrepancies.length > 0,
+          validatedAdmissionSource: sourceValidation.validatedSource,
+          validatedEpisodeTiming: timingValidation.validatedTiming,
+          m1000Value: sourceValidation.m1000Value,
+          m0110Value: timingValidation.m0110Value,
+          daysSinceSoc: timingValidation.daysSinceSoc,
+        },
+      });
+    }
 
     // Calculate original PDGM revenue
     const originalRevenue = calculatePDGMRevenue(pdgmData, appliedWageIndex, rates, isOfficial, icdMap);
@@ -761,7 +801,7 @@ function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOf
   const functionalMultipliersTable = rates?.functionalMultipliers || FUNCTIONAL_MULTIPLIERS;
   const comorbidityMultipliersTable = rates?.comorbidityMultipliers || COMORBIDITY_MULTIPLIERS;
   const functionalThresholdsTable = rates?.functionalThresholds || FUNCTIONAL_THRESHOLDS;
-  const basePayment = Number.isFinite(rates?.basePaymentRate) ? rates.basePaymentRate : BASE_PAYMENT_RATE_2024;
+  const basePayment = Number.isFinite(rates?.basePaymentRate) ? rates.basePaymentRate : BASE_PAYMENT_RATE_2026;
 
   // Extract data - try multiple fields for primary diagnosis
   const primaryDiagnosis = data.primary_diagnosis || data.primary_diagnosis_description || '';

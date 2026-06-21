@@ -49,7 +49,7 @@ export default function AITrainingRecommendations({ _userId, userEmail }) {
   // Fetch available training modules
   const { data: availableModules = [] } = useQuery({
     queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
+    queryFn: () => base44.entities.TrainingModule.filter({}),
   });
 
   // Analyze and generate recommendations

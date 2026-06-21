@@ -122,11 +122,10 @@ export default function DocumentPackageCreator({ open, onClose }) {
           signaturePromises.push(
             base44.entities.DocumentSignature.create({
               patient_id: patientId,
-              template_id: template.id,
-              template_document_id: packetDocument.document_id || `${template.id}-${index + 1}`,
               document_type: template.template_category,
-              document_name: documentName,
-              original_pdf_url: pdfUrl,
+              document_title: documentName,
+              document_content: pdfUrl || '',
+              document_url: pdfUrl,
               status: 'pending',
               signers: (packetDocument.signature_fields || template.signature_fields || []).map((signer, signerIndex) => ({
                 id: signer.signer_id || signer.id || `${template.id}-${index + 1}-${signerIndex + 1}`,
@@ -147,10 +146,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 is_signed: false,
                 order: signer.order || signerIndex + 1,
               })),
-              field_mappings: packetDocument.field_mappings || template.field_mappings || [],
-              carry_forward_fields: packetDocument.carry_forward_fields || template.carry_forward_fields || [],
               due_date: dueDate || null,
-              form_data: useExistingPatient ? null : patientData,
             })
           );
         }
@@ -166,14 +162,25 @@ export default function DocumentPackageCreator({ open, onClose }) {
           base44.entities.DocumentSignature.create({
             patient_id: patientId,
             document_type: 'other',
-            document_name: file.name,
-            original_pdf_url: file_url,
+            document_title: file.name,
+            document_content: file_url,
+            document_url: file_url,
             status: 'pending',
+            signers: (signerName || signerEmail)
+              ? [{
+                  id: 1,
+                  name: signerName || patientDisplayName || 'Signer 1',
+                  email: signerEmail || '',
+                  role: 'patient',
+                  required: true,
+                  status: 'pending',
+                  signed_date: null,
+                  signature: null,
+                  signature_method: null,
+                }]
+              : [],
             required_signatures: [],
-            field_mappings: [],
-            carry_forward_fields: [],
             due_date: dueDate || null,
-            form_data: useExistingPatient ? null : patientData,
           })
         );
       }
@@ -206,7 +213,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
           version_number: 1,
           document_name: meta.document_name || 'Document',
           document_type: meta.document_type || 'other',
-          pdf_url: sig.original_pdf_url,
+          pdf_url: sig.document_url || sig.original_pdf_url || null,
           uploaded_by: uploadedByEmail,
           uploaded_at: new Date().toISOString(),
           change_reason: 'Initial document upload',

@@ -291,13 +291,17 @@ Deno.serve(async (req) => {
 
     if (assignment.plan_id) {
       const planAssignments = await base44.asServiceRole.entities.TrainingAssignment.filter({ plan_id: assignment.plan_id, assigned_to_user_id: assignment.assigned_to_user_id }, '-created_date', 500);
-      const completedCount = planAssignments.filter((item) => item.id === assignmentId ? passed : item.status === 'completed').length;
-      const progressPercentage = Math.round((completedCount / Math.max(planAssignments.length, 1)) * 100);
+      // Plan completion is gated by REQUIRED courses only — optional courses
+      // (assigned with required: false) are tracked but never block reaching
+      // 100% / "completed". Plans where every course is required are unaffected.
+      const requiredAssignments = planAssignments.filter((item) => item.required !== false);
+      const completedCount = requiredAssignments.filter((item) => item.id === assignmentId ? passed : item.status === 'completed').length;
+      const progressPercentage = Math.round((completedCount / Math.max(requiredAssignments.length, 1)) * 100);
       const [existingEnrollment] = await base44.asServiceRole.entities.PlanEnrollment.filter({ plan_id: assignment.plan_id, user_id: assignment.assigned_to_user_id });
       if (existingEnrollment) {
         await base44.asServiceRole.entities.PlanEnrollment.update(existingEnrollment.id, {
           courses_completed: completedCount,
-          courses_total: planAssignments.length,
+          courses_total: requiredAssignments.length,
           progress_percentage: progressPercentage,
           status: progressPercentage === 100 ? 'completed' : 'in_progress',
           completion_date: progressPercentage === 100 ? submittedAt : existingEnrollment.completion_date

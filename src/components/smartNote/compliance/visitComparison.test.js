@@ -66,6 +66,20 @@ test("reports a pain change with the /10 suffix preserved", () => {
   assert.equal(pain.concern, true); // rose by >=2
 });
 
+test("normalizes a kg weight to lbs so a unit switch isn't a bogus change", () => {
+  // 80 kg == 176.4 lb; the prior visit recorded 176 lb. Same patient, ~0.4 lb
+  // apart — below the 3 lb threshold, so it must NOT be reported as a change.
+  assert.deepEqual(compareVisits("weight 80 kg", "weight 176 lbs"), []);
+});
+
+test("detects a real change between two kg weights (normalized to lbs)", () => {
+  // 80 kg -> 85 kg == 176.4 -> 187.4 lb, a real +11 lb gain.
+  const out = compareVisits("weight 85 kg", "weight 80 kg");
+  const wt = out.find((c) => c.key === "weight");
+  assert.ok(wt, "expected a weight row");
+  assert.equal(wt.direction, "up");
+});
+
 test("buildTrendSummary is factual, plain-text, and value-grounded", () => {
   const out = compareVisits("BP 132/84, O2 90%, pain 6/10", "BP 150/92, O2 96%, pain 3/10");
   const summary = buildTrendSummary(out);

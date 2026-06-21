@@ -427,4 +427,41 @@ engine already computes into one-tap actions:
    advisory provider-notification banner (with the same escalate action). Never
    blocks saving a genuine reading.
 
+## Update — robustness & hardening pass (2026-06-20)
+
+A follow-up audit (dead-code, error-handling, offline, a11y) surfaced seven gaps;
+all are fixed here:
+
+- **A. Offline drafts were durable-in-name-only and leaked PHI.** `saveDraftNoteLocally`
+  wrote a `draft_<patientId>` row on every keystroke, but nothing ever read or
+  deleted it (restore was `sessionStorage`-only), so drafts didn't survive a
+  browser restart and a PHI row accumulated per patient forever. Now: a
+  `getDraftNoteLocally(id)` durable fallback restores from IndexedDB when
+  `sessionStorage` is empty (on mount and on patient switch), and `clearDraft`
+  deletes both stores on save and on reset — bounding accumulation to genuinely
+  unsaved work.
+- **B. "Copy to EMR" could fail silently.** `navigator.clipboard.writeText` is now
+  wrapped in try/catch in `ConstrainedNoteReviewer`, `SmartNoteAssistant`,
+  `FinalNoteDisplay`'s callback, `VisitSummaryGenerator`, and `StructuredNoteDrafter`,
+  with an error toast — so the nurse never sees a false "Copied!" and pastes stale
+  text into the chart.
+- **C. Offline provider-escalation was dropped.** `escalateToTasks` now queues a
+  `CREATE_TASK` sync item when offline (or on a failed create); `OfflineManager`
+  drains it on reconnect, so a critical conflict/vital follow-up is never lost.
+- **D. Concurrent dictation mics.** A module-level `dictationController`
+  (`claim`/`release`) ensures only one `SpeechRecognition` runs at a time across
+  the main note dictation and every per-question mic (browsers allow one).
+- **E. No timeout on LLM calls.** `compliance/withTimeout.js` (pure, 3 unit tests)
+  bounds the generation (45s) and grounding (30s) calls so a hung request surfaces
+  a re-checkable error instead of an indefinite "Building…" spinner.
+- **F. Trend comparison ignored units.** `visitComparison` now normalizes a
+  documented kg weight to lbs before comparing, so a visit-to-visit unit switch
+  isn't reported as a huge swing (2 new tests).
+- **G. Accessibility.** The icon-only reset button (`FinalNoteDisplay`) gets an
+  `aria-label`; `SmartNoteTabs` get `role="tablist"`/`role="tab"`/`aria-selected`
+  and a visible focus ring.
+
+The audit also confirmed **no dead code** (all 20 components in
+`src/components/smartNote/` are wired in) and **no TODO/FIXME debt**.
+
 </content>

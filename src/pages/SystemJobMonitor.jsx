@@ -41,8 +41,10 @@ import {
   Monitor
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
 
 export default function SystemJobMonitor() {
   const queryClient = useQueryClient();
@@ -74,6 +76,13 @@ export default function SystemJobMonitor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['systemLogs'] });
+      toast.success('Guideline sync started');
+    },
+    onError: (error) => {
+      // Previously the failure was swallowed with console.error only, leaving the
+      // admin with no feedback that the manual sync never ran.
+      console.error('Sync failed:', error);
+      toast.error(`Guideline sync failed: ${error?.message || 'Unknown error'}`);
     }
   });
 
@@ -81,17 +90,17 @@ export default function SystemJobMonitor() {
     setIsRunning(true);
     try {
       await runGuidelineSyncMutation.mutateAsync();
-    } catch (error) {
-      console.error('Sync failed:', error);
+    } catch {
+      // Error surfaced to the user via the mutation's onError toast above.
     }
     setIsRunning(false);
   };
 
   const getStatusIcon = (status) => {
     const icons = {
-      success: <CheckCircle2 className="w-5 h-5 text-green-600" />,
+      success: <CheckCircle2 className="w-5 h-5 text-emerald-600" />,
       error: <XCircle className="w-5 h-5 text-red-600" />,
-      warning: <AlertTriangle className="w-5 h-5 text-yellow-600" />,
+      warning: <AlertTriangle className="w-5 h-5 text-amber-600" />,
       running: <Clock className="w-5 h-5 text-blue-600 animate-spin" />
     };
     return icons[status] || <Activity className="w-5 h-5 text-slate-400" />;
@@ -99,9 +108,9 @@ export default function SystemJobMonitor() {
 
   const getStatusBadge = (status) => {
     const colors = {
-      success: "bg-green-100 text-green-800 border-green-300",
+      success: "bg-emerald-100 text-emerald-800 border-emerald-300",
       error: "bg-red-100 text-red-800 border-red-300",
-      warning: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      warning: "bg-amber-100 text-amber-800 border-amber-300",
       running: "bg-blue-100 text-blue-800 border-blue-300"
     };
     return (
@@ -187,9 +196,9 @@ export default function SystemJobMonitor() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Success</p>
-                <p className="text-2xl font-bold text-green-600">{stats.success}</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.success}</p>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
           </CardContent>
         </Card>
@@ -211,9 +220,9 @@ export default function SystemJobMonitor() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Warnings</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.warnings}</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.warnings}</p>
               </div>
-              <AlertTriangle className="w-8 h-8 text-yellow-600" />
+              <AlertTriangle className="w-8 h-8 text-amber-600" />
             </div>
           </CardContent>
         </Card>
@@ -297,10 +306,7 @@ export default function SystemJobMonitor() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">
-              <RefreshCw className="w-8 h-8 animate-spin text-slate-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">Loading logs...</p>
-            </div>
+            <LoadingState label="Loading logs..." className="py-8" />
           ) : logs.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />

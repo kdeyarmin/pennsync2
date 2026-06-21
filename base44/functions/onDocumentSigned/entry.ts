@@ -27,15 +27,18 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: 'signature not found' });
     }
 
-    // Only process if signature status changed to "signed"
-    if (signature.status !== 'signed') {
+    // Only process once the signature row is fully "completed"
+    if (signature.status !== 'completed') {
       return Response.json({ success: true });
     }
 
-    // Get the package details
-    const pkg = await base44.asServiceRole.entities.DocumentPackage.get(
-      signature.package_id
-    );
+    // Resolve the package via membership rather than a flat package_id (which is
+    // NOT a field on DocumentSignature). DocumentPackage.document_signatures is
+    // the authoritative array of member signature ids.
+    const packages = await base44.asServiceRole.entities.DocumentPackage.filter({
+      document_signatures: signature.id,
+    }).catch(() => []);
+    const pkg = (packages && packages.length > 0) ? packages[0] : null;
 
     if (!pkg) {
       return Response.json({ success: true });
@@ -54,11 +57,11 @@ Deno.serve(async (req) => {
     const present = members.filter(Boolean);
     const allSigned = memberIds.length > 0 &&
       present.length === memberIds.length &&
-      present.every((sig) => sig.status === 'signed');
+      present.every((sig) => sig.status === 'completed');
 
     // Update package status if all documents are signed
     if (allSigned) {
-      await base44.asServiceRole.entities.DocumentPackage.update(signature.package_id, {
+      await base44.asServiceRole.entities.DocumentPackage.update(pkg.id, {
         status: 'completed',
         completed_at: new Date().toISOString(),
       });
@@ -72,12 +75,19 @@ Deno.serve(async (req) => {
     try {
       const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
       if (admins && admins.length > 0) {
+        // Signer identity lives in the signers[] array, not flat fields. Report
+        // the signers that have completed on this document.
+        const signedSigners = (Array.isArray(signature.signers) ? signature.signers : [])
+          .filter((s) => s?.status === 'completed' || s?.signed_date);
+        const signedByText = signedSigners.length > 0
+          ? signedSigners.map((s) => `${s.name || 'Signer'}${s.email ? ` (${s.email})` : ''}`).join(', ')
+          : 'A signer';
         await Promise.all(
           admins.map((admin) =>
             base44.integrations.Core.SendEmail({
               to: admin.email,
-              subject: `Document Signed: ${pkg.package_name}`,
-              body: `${signature.signer_name} (${signature.signer_email}) has signed the document.\n\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
+              subject: `Document Signed: ${signature.document_title || pkg.package_name}`,
+              body: `${signedByText} has signed the document.\n\nDocument: ${signature.document_title || 'Document'}\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
             })
           )
         );

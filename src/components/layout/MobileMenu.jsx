@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,20 @@ function GoldIndicator() {
 }
 
 export default function MobileMenu({ open, onClose, navCategories, adminItems, isAdmin, isActive, currentUser, onLogout }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
-    <div className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} role="button" aria-label="Close menu" tabIndex={-1}>
+      <div className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Navigation menu">
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -33,7 +43,7 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
             />
             <span className="font-bold text-base text-navy-900 tracking-tight">Penn<span className="text-gold-600">Sync</span></span>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-400 hover:text-navy-700 hover:bg-slate-100">
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-400 hover:text-navy-700 hover:bg-slate-100" aria-label="Close menu">
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -139,6 +149,7 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
               onClick={onLogout}
               className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-slate-100 flex-shrink-0"
               title="Logout"
+              aria-label="Log out"
             >
               <LogOut className="w-4 h-4" />
             </Button>

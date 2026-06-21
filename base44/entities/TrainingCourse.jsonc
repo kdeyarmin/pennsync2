@@ -249,6 +249,24 @@
       "type": "boolean",
       "default": false,
       "description": "Whether the course is archived"
+    },
+    "real_world_relevance": {
+      "type": "string",
+      "description": "Short 'why this matters right now' framing shown on the course intro screen"
+    },
+    "regulatory_crosswalk_json": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Regulations this course addresses — each item: { regulation, title, how_this_course_addresses_it }"
+    },
+    "competency_skills_json": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Observable skills the learner will demonstrate — each item: { skill, criteria }"
     }
   },
   "required": [

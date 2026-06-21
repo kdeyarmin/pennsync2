@@ -25,6 +25,7 @@ import {
   FileText
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { toast } from "sonner";
 
 export default function PendingPatientUpdates() {
   const [expandedUpdates, setExpandedUpdates] = useState({});
@@ -65,6 +66,10 @@ export default function PendingPatientUpdates() {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       setReviewingUpdate(null);
       setReviewNotes("");
+    },
+    onError: (error) => {
+      // Keep the dialog open so the reviewer can retry; surface the failure.
+      toast.error(`Failed to approve update: ${error?.message || 'Unknown error'}`);
     }
   });
 
@@ -81,6 +86,10 @@ export default function PendingPatientUpdates() {
       queryClient.invalidateQueries({ queryKey: ['pendingPatientUpdates'] });
       setReviewingUpdate(null);
       setReviewNotes("");
+    },
+    onError: (error) => {
+      // Keep the dialog open so the reviewer can retry; surface the failure.
+      toast.error(`Failed to reject update: ${error?.message || 'Unknown error'}`);
     }
   });
 
@@ -240,17 +249,17 @@ export default function PendingPatientUpdates() {
                               <div className="flex items-start gap-2">
                                 <span className="text-red-600 font-mono">-</span>
                                 <span className="text-red-600 flex-1">
-                                  {typeof change.oldValue === 'object' 
-                                    ? JSON.stringify(change.oldValue) 
-                                    : change.oldValue || '(empty)'}
+                                  {typeof change.old_value === 'object'
+                                    ? JSON.stringify(change.old_value)
+                                    : change.old_value || '(empty)'}
                                 </span>
                               </div>
                               <div className="flex items-start gap-2">
                                 <span className="text-green-600 font-mono">+</span>
                                 <span className="text-green-600 flex-1">
-                                  {typeof change.newValue === 'object' 
-                                    ? JSON.stringify(change.newValue) 
-                                    : change.newValue}
+                                  {typeof change.new_value === 'object'
+                                    ? JSON.stringify(change.new_value)
+                                    : change.new_value}
                                 </span>
                               </div>
                             </div>
@@ -330,14 +339,14 @@ export default function PendingPatientUpdates() {
                       </div>
                       <div className="space-y-1 text-sm">
                         <div className="text-red-600">
-                          Old: {typeof change.oldValue === 'object' 
-                            ? JSON.stringify(change.oldValue, null, 2) 
-                            : change.oldValue || '(empty)'}
+                          Old: {typeof change.old_value === 'object'
+                            ? JSON.stringify(change.old_value, null, 2)
+                            : change.old_value || '(empty)'}
                         </div>
                         <div className="text-green-600">
-                          New: {typeof change.newValue === 'object' 
-                            ? JSON.stringify(change.newValue, null, 2) 
-                            : change.newValue}
+                          New: {typeof change.new_value === 'object'
+                            ? JSON.stringify(change.new_value, null, 2)
+                            : change.new_value}
                         </div>
                       </div>
                     </div>

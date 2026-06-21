@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -453,13 +454,11 @@ export default function ClinicalPathwayManager() {
 
           <TabsContent value="pathways">
             {pathways.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Route className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">No Clinical Pathways Yet</h3>
-              <p className="text-slate-600 mb-4">
-                Create pathways to automatically guide documentation and task creation for specific diagnoses
-              </p>
+          <EmptyState
+            icon={Route}
+            title="No clinical pathways yet"
+            description="Create pathways to automatically guide documentation and task creation for specific diagnoses."
+            action={
               <Button onClick={createSamplePathways} disabled={createMutation.isPending}>
                 {createMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</>
@@ -467,8 +466,8 @@ export default function ClinicalPathwayManager() {
                   <>Load Sample Pathways</>
                 )}
               </Button>
-            </CardContent>
-          </Card>
+            }
+          />
             ) : (
               <div className="grid gap-4">
                 {pathways.map((pathway) => (
@@ -476,7 +475,7 @@ export default function ClinicalPathwayManager() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-2 h-12 rounded ${pathway.is_active ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      <div className={`w-2 h-12 rounded ${pathway.is_active ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                       <div>
                         <CardTitle className="text-lg">{pathway.pathway_name}</CardTitle>
                         <CardDescription>{pathway.description}</CardDescription>
@@ -507,10 +506,10 @@ export default function ClinicalPathwayManager() {
                       <p className="font-bold text-navy-700">{pathway.documentation_prompts?.length || 0}</p>
                       <p className="text-navy-600">Doc Prompts</p>
                     </div>
-                    <div className="bg-green-50 p-2 rounded">
-                      <DollarSign className="w-3 h-3 text-green-600 mx-auto mb-1" />
-                      <p className="font-bold text-green-700">{pathway.rescore_opportunities?.length || 0}</p>
-                      <p className="text-green-600">Rescores</p>
+                    <div className="bg-emerald-50 p-2 rounded">
+                      <DollarSign className="w-3 h-3 text-emerald-600 mx-auto mb-1" />
+                      <p className="font-bold text-emerald-700">{pathway.rescore_opportunities?.length || 0}</p>
+                      <p className="text-emerald-600">Rescores</p>
                     </div>
                     <div className="bg-navy-50 p-2 rounded">
                       <ClipboardList className="w-3 h-3 text-navy-600 mx-auto mb-1" />
@@ -591,13 +590,11 @@ export default function ClinicalPathwayManager() {
               )}
 
               {!selectedPathwayForUpdate && (
-                <Card className="border-slate-200">
-                  <CardContent className="p-8 text-center">
-                    <Brain className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-600 mb-2">Select a pathway from the list to get AI update recommendations</p>
-                    <p className="text-sm text-slate-500">Or generate a new pathway using the generator on the left</p>
-                  </CardContent>
-                </Card>
+                <EmptyState
+                  icon={Brain}
+                  title="Select a pathway"
+                  description="Select a pathway from the list to get AI update recommendations, or generate a new one using the generator on the left."
+                />
               )}
             </div>
           </TabsContent>
@@ -829,7 +826,7 @@ const getPriorityColor = (priority) => {
   switch (priority) {
     case 'critical': return 'bg-red-600 text-white';
     case 'high': return 'bg-orange-500 text-white';
-    case 'medium': return 'bg-yellow-500 text-white';
+    case 'medium': return 'bg-amber-500 text-white';
     case 'low': return 'bg-blue-500 text-white';
     default: return 'bg-slate-500 text-white';
   }

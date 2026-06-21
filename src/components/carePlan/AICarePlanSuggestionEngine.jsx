@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery } from "@tanstack/react-query";
@@ -125,8 +126,10 @@ Return JSON with suggestions array.`,
       setSuggestions(result.suggestions || []);
     } catch (error) {
       console.error('Error generating care plan suggestions:', error);
+      toast.error("Failed to generate care plan suggestions. Please try again.");
+    } finally {
+      setIsGenerating(false);
     }
-    setIsGenerating(false);
   };
 
   const handleAcceptSuggestion = async (suggestion, index) => {

@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle, Loader2, ArrowRight } from "lucide-react";
 import DocumentIngestionUploader from "../documents/DocumentIngestionUploader";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
+import { todayEastern } from "@/components/utils/timezone";
 
 export default function DocumentToTriageMapper({ onTriageCreated }) {
   const queryClient = useQueryClient();
@@ -85,7 +86,8 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
           medications: extractedData.clinical?.current_medications || [],
           allergies: extractedData.clinical?.allergies || "",
           urgency: assessUrgency(extractedData),
-          status: "pending_triage",
+          status: "new",
+          referral_date: todayEastern(),
           ai_extracted: true,
           document_type: extractedData.document_info?.document_type || "clinical_record",
           confidence_score: extractedData.document_info?.confidence_score || 0

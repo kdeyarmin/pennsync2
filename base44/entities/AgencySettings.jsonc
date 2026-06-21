@@ -51,6 +51,89 @@
       "type": "number",
       "default": 50,
       "description": "Average similar episodes per year"
+    },
+    "tcpa_quiet_hours_enabled": {
+      "type": "boolean",
+      "description": "Whether TCPA quiet-hours gating is enforced on outbound SMS"
+    },
+    "tcpa_quiet_start_hour": {
+      "type": "number",
+      "default": 8,
+      "description": "Start hour (local) of the TCPA quiet-hours window"
+    },
+    "tcpa_quiet_end_hour": {
+      "type": "number",
+      "default": 21,
+      "description": "End hour (local) of the TCPA quiet-hours window"
+    },
+    "monthly_sms_cap": {
+      "type": "number",
+      "description": "Maximum outbound SMS messages allowed per billing period"
+    },
+    "sms_messaging_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether outbound SMS messaging is enabled for the agency"
+    },
+    "blocked_area_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "NANP area codes blocked from outbound calls/texts/faxes"
+    },
+    "business_hours_enabled": {
+      "type": "boolean",
+      "description": "Whether agency business-hours gating is enabled"
+    },
+    "business_hours_timezone": {
+      "type": "string",
+      "description": "IANA timezone used to evaluate business hours"
+    },
+    "business_hours_holidays": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Holiday date keys (YYYY-MM-DD) treated as closed"
+    },
+    "after_hours_call_action": {
+      "type": "string",
+      "description": "Action for inbound calls after hours (e.g. transfer, voicemail)"
+    },
+    "after_hours_call_greeting": {
+      "type": "string",
+      "description": "Greeting played to callers after hours"
+    },
+    "after_hours_sms_auto_reply": {
+      "type": "string",
+      "description": "Auto-reply text sent for inbound SMS after hours"
+    },
+    "after_hours_sms_auto_reply_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the after-hours SMS auto-reply is sent"
+    },
+    "after_hours_transfer_number_e164": {
+      "type": "string",
+      "description": "E.164 number to transfer after-hours calls to"
+    },
+    "duty_timezone": {
+      "type": "string",
+      "description": "IANA timezone used for on-call/duty scheduling"
+    },
+    "ringdown_max": {
+      "type": "number",
+      "description": "Maximum number of ringdown targets to attempt for on-call routing"
+    },
+    "office_fax_number_e164": {
+      "type": "string",
+      "description": "E.164 office fax number used as the outbound fax sender"
+    },
+    "fax_receiving_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether inbound fax receiving is enabled"
     }
   },
   "rls": {

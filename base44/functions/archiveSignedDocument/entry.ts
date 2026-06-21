@@ -42,9 +42,12 @@ Deno.serve(async (req) => {
       notes: `Document archived by ${user.full_name}. ${archive_notes || ''}`
     });
 
-    // Update document with archived status and audit trail
+    // Mark the document archived via the dedicated `archived` flag and keep the
+    // audit trail. 'archived' is NOT a member of the status enum
+    // (pending/in_progress/completed/rejected), so writing it as a status would
+    // be silently dropped; the boolean is the schema-correct marker.
     await base44.asServiceRole.entities.DocumentSignature.update(document_id, {
-      status: 'archived',
+      archived: true,
       audit_trail: updatedAuditTrail
     });
 

@@ -245,10 +245,10 @@ export default function CarePlanManagement() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'bg-green-500';
+      case 'active': return 'bg-emerald-500';
       case 'met': return 'bg-blue-500';
       case 'not_met': return 'bg-red-500';
-      case 'revised': return 'bg-yellow-500';
+      case 'revised': return 'bg-amber-500';
       default: return 'bg-slate-500';
     }
   };
@@ -377,7 +377,7 @@ export default function CarePlanManagement() {
     <div className="flex flex-col h-[calc(100vh-16rem)] overflow-hidden">
       <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Target className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+            <Target className="w-5 h-5 text-navy-600 flex-shrink-0" />
             <Input
               value={planName}
               onChange={e => setPlanName(e.target.value)}
@@ -419,7 +419,7 @@ export default function CarePlanManagement() {
                     <button
                       key={p.id}
                       onClick={() => { setBuilderPatient(p); setShowPatientDropdown(false); setPatientSearch(""); }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition-colors ${builderPatient?.id === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700"}`}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-navy-50 transition-colors ${builderPatient?.id === p.id ? "bg-navy-50 text-indigo-700 font-medium" : "text-slate-700"}`}
                     >
                       <div className="font-medium">{p.first_name} {p.last_name}</div>
                       {p.primary_diagnosis && <div className="text-xs text-slate-400 truncate">{p.primary_diagnosis}</div>}
@@ -432,7 +432,7 @@ export default function CarePlanManagement() {
 
           <div className="hidden sm:flex items-center gap-3 text-xs text-slate-500 border-x border-slate-200 px-3">
             <span className="flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-navy-600" />
               <span><strong className="text-slate-700">{planItems.length}</strong> interventions</span>
             </span>
             <span className="flex items-center gap-1">
@@ -529,14 +529,14 @@ export default function CarePlanManagement() {
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
-        <Card className="modern-card border-l-4 border-l-blue-600 bg-white shadow-md">
+        <Card className="modern-card border-l-4 border-l-navy-600 bg-white shadow-md">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-slate-500 text-xs sm:text-sm font-medium mb-1 truncate">Total Plans</p>
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">{totalPlans}</p>
               </div>
-              <Target className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-500/20 flex-shrink-0" />
+              <Target className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-navy-500/20 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -608,14 +608,14 @@ export default function CarePlanManagement() {
                 <Button
                   variant={viewMode === "list" ? "default" : "outline"}
                   onClick={() => setViewMode("list")}
-                  className={`flex-1 sm:flex-none min-h-[44px] ${viewMode === "list" ? "bg-blue-600" : ""}`}
+                  className={`flex-1 sm:flex-none min-h-[44px] ${viewMode === "list" ? "bg-navy-600" : ""}`}
                 >
                   List
                 </Button>
                 <Button
                   variant={viewMode === "timeline" ? "default" : "outline"}
                   onClick={() => setViewMode("timeline")}
-                  className={`flex-1 sm:flex-none min-h-[44px] ${viewMode === "timeline" ? "bg-blue-600" : ""}`}
+                  className={`flex-1 sm:flex-none min-h-[44px] ${viewMode === "timeline" ? "bg-navy-600" : ""}`}
                 >
                   Timeline
                 </Button>
@@ -766,7 +766,7 @@ export default function CarePlanManagement() {
             if (!patient) return null;
 
             return (
-              <Card key={patientId} className="modern-card border-l-4 border-l-blue-600 shadow-md">
+              <Card key={patientId} className="modern-card border-l-4 border-l-navy-600 shadow-md">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -790,7 +790,7 @@ export default function CarePlanManagement() {
                        setActiveTab("builder");
                        setPlanItems([]);
                      }}
-                     className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
+                     className="bg-navy-600 hover:bg-navy-700 min-h-[44px]"
                     >
                      <Plus className="w-4 h-4 mr-1" />
                      <span className="hidden sm:inline">Build Plan</span>

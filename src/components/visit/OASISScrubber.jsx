@@ -1455,7 +1455,7 @@ Return JSON:
                         pink: { bg: 'bg-gold-50 border-gold-200', text: 'text-gold-600', label: 'text-gold-900', badge: 'bg-gold-500' },
                         amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600', label: 'text-amber-900', badge: 'bg-amber-500' },
                         rose: { bg: 'bg-red-50 border-red-200', text: 'text-red-600', label: 'text-red-900', badge: 'bg-red-500' },
-                        teal: { bg: 'bg-teal-50 border-teal-200', text: 'text-teal-600', label: 'text-teal-900', badge: 'bg-teal-500' },
+                        teal: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600', label: 'text-navy-900', badge: 'bg-navy-500' },
                         indigo: { bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-600', label: 'text-indigo-900', badge: 'bg-indigo-500' },
                         green: { bg: 'bg-green-50 border-green-200', text: 'text-green-600', label: 'text-green-900', badge: 'bg-green-500' },
                       };
@@ -2582,39 +2582,39 @@ Return JSON:
                         </div>
 
                         {/* Care Plan Modification Suggestions */}
-                        <div className="bg-white p-3 rounded border border-teal-200">
+                        <div className="bg-white p-3 rounded border border-navy-200">
                           <div className="flex items-start gap-2">
-                            <Badge className="bg-teal-500 text-white text-xs flex-shrink-0">Care Plan</Badge>
+                            <Badge className="bg-navy-500 text-white text-xs flex-shrink-0">Care Plan</Badge>
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-teal-900">Care Plan Modification Suggestions</p>
+                              <p className="text-sm font-medium text-navy-900">Care Plan Modification Suggestions</p>
                               <div className="mt-2 space-y-2 text-xs">
                                 {oasisResults.pdgm_analysis.functional_level !== 'high' && (
-                                  <div className="bg-teal-50 p-2 rounded">
-                                    <p className="text-teal-800">
+                                  <div className="bg-navy-50 p-2 rounded">
+                                    <p className="text-navy-800">
                                       <strong>🎯 Therapy Referral:</strong> Consider PT/OT evaluation to document objective functional limitations 
                                       and establish measurable goals. Therapy assessments often capture functional deficits more precisely.
                                     </p>
                                   </div>
                                 )}
                                 {extractedIndicators?.clinical?.diabetic?.detected && (
-                                  <div className="bg-teal-50 p-2 rounded">
-                                    <p className="text-teal-800">
+                                  <div className="bg-navy-50 p-2 rounded">
+                                    <p className="text-navy-800">
                                       <strong>🩺 Diabetic Care Plan:</strong> Ensure diabetic complications are documented as separate diagnoses 
                                       (neuropathy, nephropathy, retinopathy) with specific ICD-10 codes for comorbidity credit.
                                     </p>
                                   </div>
                                 )}
                                 {extractedIndicators?.clinical?.cardiacIssues?.detected && (
-                                  <div className="bg-teal-50 p-2 rounded">
-                                    <p className="text-teal-800">
+                                  <div className="bg-navy-50 p-2 rounded">
+                                    <p className="text-navy-800">
                                       <strong>❤️ Cardiac Care Plan:</strong> Document EF% if known, specific CHF type (HFrEF/HFpEF), 
                                       and daily weight monitoring plan for optimal coding and care coordination.
                                     </p>
                                   </div>
                                 )}
                                 {extractedIndicators?.clinical?.woundPresent?.detected && (
-                                  <div className="bg-teal-50 p-2 rounded">
-                                    <p className="text-teal-800">
+                                  <div className="bg-navy-50 p-2 rounded">
+                                    <p className="text-navy-800">
                                       <strong>🩹 Wound Care Plan:</strong> Ensure weekly wound measurements are documented with healing trajectory. 
                                       Non-healing wounds may indicate need for specialist referral and support higher clinical group assignment.
                                     </p>

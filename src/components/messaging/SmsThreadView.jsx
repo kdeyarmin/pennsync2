@@ -244,6 +244,7 @@ export default function SmsThreadView({
                   }
                 }}
                 placeholder="Text message — avoid PHI"
+                aria-label="Message text"
                 className="max-h-28 w-full resize-none border-0 bg-transparent py-2 text-[15px] placeholder:text-slate-400 focus:outline-none focus:ring-0"
               />
             </div>

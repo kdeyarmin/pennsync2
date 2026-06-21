@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   Brain,
   Activity,
-  Zap
+  Zap,
+  CheckCircle2
 } from "lucide-react";
 
 import PatientAlertsDashboard from "../components/alerts/PatientAlertsDashboard";
@@ -59,10 +60,10 @@ export default function PatientAlerts() {
         {/* Sidebar - Analyzer & Quick Actions */}
         <div className="space-y-4 sm:space-y-6">
           {/* Patient Selector for Analysis */}
-          <Card className="border-blue-200">
-            <CardHeader className="py-3 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <Card>
+            <CardHeader className="py-3 border-b border-slate-100">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Brain className="w-4 h-4 text-blue-600" />
+                <Brain className="w-4 h-4 text-navy-600" />
                 Analyze Patient
               </CardTitle>
             </CardHeader>
@@ -94,10 +95,10 @@ export default function PatientAlerts() {
 
           {/* Analysis Results Summary */}
           {analysisResults && (
-            <Card className="border-green-200">
-              <CardHeader className="py-3 bg-gradient-to-r from-green-50 to-emerald-50">
+            <Card>
+              <CardHeader className="py-3 border-b border-slate-100">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-green-600" />
+                  <Activity className="w-4 h-4 text-emerald-600" />
                   Analysis Summary
                 </CardTitle>
               </CardHeader>
@@ -108,22 +109,25 @@ export default function PatientAlerts() {
 
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-slate-600">Overall Risk:</span>
-                  <Badge className={
-                    analysisResults.overall_risk_level === 'critical' ? 'bg-red-600 text-white' :
-                    analysisResults.overall_risk_level === 'high' ? 'bg-orange-500 text-white' :
-                    analysisResults.overall_risk_level === 'moderate' ? 'bg-yellow-500 text-white' :
-                    'bg-green-500 text-white'
-                  }>
+                  <Badge variant={
+                    analysisResults.overall_risk_level === 'critical' ? 'destructive' :
+                    analysisResults.overall_risk_level === 'high' ? 'warning' :
+                    analysisResults.overall_risk_level === 'moderate' ? 'warning' :
+                    'success'
+                  } className="capitalize">
                     {analysisResults.overall_risk_level}
                   </Badge>
                 </div>
 
                 {analysisResults.positive_indicators?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-green-700 mb-1">Positive Indicators:</p>
-                    <ul className="text-xs text-green-600 space-y-0.5">
+                    <p className="text-xs font-medium text-emerald-700 mb-1">Positive Indicators:</p>
+                    <ul className="text-xs text-emerald-700 space-y-1">
                       {analysisResults.positive_indicators.map((indicator, idx) => (
-                        <li key={idx}>✓ {indicator}</li>
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                          <span>{indicator}</span>
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -131,10 +135,13 @@ export default function PatientAlerts() {
 
                 {analysisResults.monitoring_recommendations?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-blue-700 mb-1">Monitor:</p>
-                    <ul className="text-xs text-blue-600 space-y-0.5">
+                    <p className="text-xs font-medium text-navy-700 mb-1">Monitor:</p>
+                    <ul className="text-xs text-navy-700 space-y-1">
                       {analysisResults.monitoring_recommendations.slice(0, 3).map((rec, idx) => (
-                        <li key={idx}>• {rec}</li>
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <span className="mt-1 h-1 w-1 flex-shrink-0 rounded-full bg-navy-400" aria-hidden="true" />
+                          <span>{rec}</span>
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -144,27 +151,29 @@ export default function PatientAlerts() {
           )}
 
           {/* Quick Tips */}
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+          <Card>
+            <CardHeader className="py-3 border-b border-slate-100">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-600" />
+                Alert Response Guide
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-3 sm:p-4">
-              <h3 className="font-bold text-sm sm:text-base text-orange-900 mb-2 flex items-center gap-2">
-                <Zap className="w-4 h-4 flex-shrink-0" />
-                <span>Alert Response Guide</span>
-              </h3>
-              <ul className="text-xs sm:text-sm text-orange-800 space-y-2">
+              <ul className="text-xs sm:text-sm text-slate-700 space-y-2">
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-red-600 text-white text-xs shrink-0 min-w-[60px] justify-center">Critical</Badge>
+                  <Badge variant="destructive" className="text-xs shrink-0 min-w-[60px] justify-center">Critical</Badge>
                   <span className="flex-1">Immediate action within 1 hour</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-orange-500 text-white text-xs shrink-0 min-w-[60px] justify-center">High</Badge>
+                  <Badge variant="warning" className="text-xs shrink-0 min-w-[60px] justify-center">High</Badge>
                   <span className="flex-1">Address within 24 hours</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-yellow-500 text-white text-xs shrink-0 min-w-[60px] justify-center">Medium</Badge>
+                  <Badge variant="warning" className="text-xs shrink-0 min-w-[60px] justify-center">Medium</Badge>
                   <span className="flex-1">Address within 48-72 hours</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-blue-500 text-white text-xs shrink-0 min-w-[60px] justify-center">Low</Badge>
+                  <Badge variant="info" className="text-xs shrink-0 min-w-[60px] justify-center">Low</Badge>
                   <span className="flex-1">Monitor at next visit</span>
                 </li>
               </ul>

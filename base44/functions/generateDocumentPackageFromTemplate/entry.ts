@@ -59,8 +59,19 @@ Deno.serve(async (req) => {
     const signature = await base44.asServiceRole.entities.DocumentSignature.create({
       patient_id: patient_id,
       document_name: `${template.name}`,
+      document_title: `${template.name}`,
+      document_content: populatedContent,
       document_type: template.category,
       status: 'pending',
+      signers: [
+        {
+          name: `${patient.first_name} ${patient.last_name}`,
+          email: patient.email || '',
+          role: 'patient',
+          required: true,
+          status: 'pending',
+        },
+      ],
       signer_email: patient.email || '',
       signer_name: `${patient.first_name} ${patient.last_name}`,
       requires_signature: true,

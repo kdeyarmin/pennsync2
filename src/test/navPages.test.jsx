@@ -15,6 +15,7 @@ import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 // nav.manifest.js and routes.jsx import each other; in the app, routes.jsx is
 // the cycle's entry point. Evaluate it first here so NAV_MANIFEST is fully
 // defined before routes.jsx reads it (otherwise we hit a TDZ-style undefined).
@@ -99,7 +100,9 @@ function Providers({ children }) {
   });
   return (
     <MemoryRouter>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+      </QueryClientProvider>
     </MemoryRouter>
   );
 }

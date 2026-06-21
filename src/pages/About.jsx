@@ -107,8 +107,8 @@ export default function About() {
         <h2 className="text-3xl font-bold text-slate-900 mb-6">Why Choose Penn Sync?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {benefits.map((benefit, index) => (
-            <div key={index} className="flex items-start gap-3 bg-green-50 p-4 rounded-lg border border-green-200">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div key={index} className="flex items-start gap-3 bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
               <span className="text-slate-800 font-medium">{benefit}</span>
             </div>
           ))}
@@ -117,8 +117,7 @@ export default function About() {
 
       {/* CTA Section */}
       <div className="mb-12">
-        <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
-          <CardContent className="p-8 text-center">
+        <div className="rounded-xl border border-navy-100 bg-navy-50 p-8 text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to Transform Your Agency?</h2>
             <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
               Join home health and hospice organizations using Penn Sync to streamline operations, improve compliance, and deliver better patient care.
@@ -129,12 +128,11 @@ export default function About() {
                   Get Started <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link to={createPageUrl("Support")}>
+              <Link to={createPageUrl("Help")}>
                 <Button variant="outline">Learn More</Button>
               </Link>
             </div>
-          </CardContent>
-        </Card>
+        </div>
       </div>
     </PageContainer>
   );

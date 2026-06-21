@@ -226,8 +226,32 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
   if (!tz) return { allowed: true, reason: 'unknown_timezone' };
   const h = hourInZone(now, tz);
   if (h == null) return { allowed: true, reason: 'unknown_timezone' };
-  const allowed = h >= startHour && h < endHour;
+  // Allowed contact window; supports a window that wraps past midnight
+  // (start > end). Mirrors quietHoursCheck in sendSms / isWithinQuietHours.
+  const allowed = startHour === endHour ? true
+    : startHour < endHour ? (h >= startHour && h < endHour)
+      : (h >= startHour || h < endHour);
   return { allowed, reason: allowed ? 'within_hours' : 'quiet_hours' };
+}
+
+// ---- cost controls (mirrors sendSms / src/components/voice/costControls.js) ----
+const PREMIUM_AREA_CODES = new Set(['900', '976']);
+function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+  const s = settings || {};
+  const e = String(e164 || '').trim();
+  if (/^\+1\d{10}$/.test(e)) {
+    const areaCode = e.slice(2, 5);
+    if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
+    return { allowed: true, reason: 'allowed' };
+  }
+  if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: 'invalid_destination' };
+  if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
+  return { allowed: false, reason: 'international_blocked' };
+}
+function monthStartISO(now = new Date()): string {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
 Deno.serve(async (req) => {
@@ -290,6 +314,32 @@ Deno.serve(async (req) => {
 
       if (!apiKey) { await fail('Telnyx SMS credentials not configured'); continue; }
       if (!smsEnabled) { await fail('SMS messaging disabled for the agency'); continue; }
+
+      // Cost control: block premium/blocked/international destinations by default
+      // (mirrors sendSms). A blocked destination is terminal — fail the row.
+      const destAllowed = isAllowedDestination(row.to_number, settings);
+      if (!destAllowed.allowed) { await fail(`Destination blocked at send time: ${destAllowed.reason}`); continue; }
+
+      // Cost control: enforce the optional monthly outbound-SMS cap (mirrors
+      // sendSms). When the cap is already reached, leave the row pending so a
+      // later run (next month / after the cap is raised) can pick it up rather
+      // than failing a scheduled reminder outright.
+      const monthlyCap = Number(settings?.monthly_sms_cap);
+      if (Number.isFinite(monthlyCap) && monthlyCap > 0) {
+        const since = monthStartISO();
+        const recentOutbound = await base44.asServiceRole.entities.SmsMessage
+          .filter({ direction: 'outbound' }, '-created_date', monthlyCap)
+          .catch(() => []);
+        const sentThisMonth = (Array.isArray(recentOutbound) ? recentOutbound : [])
+          .filter((m: any) => m.created_date && m.created_date >= since).length;
+        if (sentThisMonth >= monthlyCap) {
+          await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
+            status: 'pending', claimed_by: '', claimed_at: null,
+          }).catch(() => {});
+          result.skipped++;
+          continue;
+        }
+      }
 
       // Re-check opt-out at send time (fail closed on a read error).
       let optedOut = true;

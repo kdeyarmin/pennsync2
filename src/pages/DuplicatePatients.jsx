@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
 export default function DuplicatePatients() {
+  const confirm = useConfirm();
   const [isScanning, setIsScanning] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   const [duplicateGroups, setDuplicateGroups] = useState([]);
@@ -66,7 +68,7 @@ export default function DuplicatePatients() {
   };
 
   const handleMerge = async (keepPatient, mergePatients) => {
-    if (!confirm(`Are you sure you want to close ${mergePatients.length} duplicate patient(s) and keep "${keepPatient.first_name} ${keepPatient.last_name}"?`)) {
+    if (!(await confirm({ title: "Merge duplicates?", description: `Close ${mergePatients.length} duplicate patient(s) and keep "${keepPatient.first_name} ${keepPatient.last_name}"?`, confirmText: "Merge", destructive: true }))) {
       return;
     }
 
@@ -79,7 +81,7 @@ export default function DuplicatePatients() {
   };
 
   const handleClosePrimary = async (group) => {
-    if (!confirm(`Are you sure you want to close "${group.primary.first_name} ${group.primary.last_name}"?`)) {
+    if (!(await confirm({ title: "Close patient?", description: `Are you sure you want to close "${group.primary.first_name} ${group.primary.last_name}"?`, confirmText: "Close patient", destructive: true }))) {
       return;
     }
 
@@ -89,7 +91,7 @@ export default function DuplicatePatients() {
   };
 
   const handleCloseSpecific = async (groupPrimary, duplicatePatient) => {
-    if (!confirm(`Are you sure you want to close "${duplicatePatient.patient.first_name} ${duplicatePatient.patient.last_name}"?`)) {
+    if (!(await confirm({ title: "Close patient?", description: `Are you sure you want to close "${duplicatePatient.patient.first_name} ${duplicatePatient.patient.last_name}"?`, confirmText: "Close patient", destructive: true }))) {
       return;
     }
 
@@ -172,11 +174,11 @@ export default function DuplicatePatients() {
       </Card>
 
       {hasScanned && duplicateGroups.length === 0 && !isScanning && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-emerald-200 bg-emerald-50">
           <CardContent className="p-8 text-center">
-            <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-green-900 mb-2">No Duplicates Found</h3>
-            <p className="text-sm text-green-700">
+            <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-emerald-900 mb-2">No Duplicates Found</h3>
+            <p className="text-sm text-emerald-700">
               The database is clean. No duplicate patient records detected.
             </p>
           </CardContent>
@@ -218,7 +220,7 @@ export default function DuplicatePatients() {
                         </div>
                       </div>
                       <Badge className={
-                        group.primary.status === 'active' ? 'bg-green-600' :
+                        group.primary.status === 'active' ? 'bg-emerald-600' :
                         group.primary.status === 'discharged' ? 'bg-slate-600' :
                         'bg-orange-600'
                       }>
@@ -230,7 +232,7 @@ export default function DuplicatePatients() {
                         size="sm"
                         onClick={() => handleMerge(group.primary, group.duplicates)}
                         disabled={mergePatientMutation.isPending}
-                        className="bg-green-600 hover:bg-green-700"
+                        className="bg-emerald-600 hover:bg-emerald-700"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-2" />
                         Keep This & Close Others
@@ -272,7 +274,7 @@ export default function DuplicatePatients() {
                               <Badge className={
                                 dup.confidenceLevel === 'high' ? 'bg-red-100 text-red-800' :
                                 dup.confidenceLevel === 'medium' ? 'bg-orange-100 text-orange-800' :
-                                'bg-yellow-100 text-yellow-800'
+                                'bg-amber-100 text-amber-800'
                               }>
                                 {dup.confidencePercent}% • {dup.confidenceLevel} confidence
                               </Badge>
@@ -290,7 +292,7 @@ export default function DuplicatePatients() {
                           </div>
                           <div className="flex flex-col gap-2 ml-4">
                             <Badge className={
-                              dup.patient.status === 'active' ? 'bg-green-600' :
+                              dup.patient.status === 'active' ? 'bg-emerald-600' :
                               dup.patient.status === 'discharged' ? 'bg-slate-600' :
                               'bg-orange-600'
                             }>
