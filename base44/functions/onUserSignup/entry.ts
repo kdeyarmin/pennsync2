@@ -25,13 +25,20 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // Check if user was invited
+    // Check if user was invited. Match the invitation email case-insensitively:
+    // the invitation casing may differ from the signup payload (e.g. an admin
+    // invites Jane.Doe@Example.com but the auth event sends jane.doe@example.com).
+    // A case-sensitive match would misclassify a genuinely invited user as an
+    // uninvited signup — and with invite-only there is no manual-approval rescue.
     debugLog('Checking for invitation...');
-    const invitations = await base44.asServiceRole.entities.UserInvitation.filter({ 
-      email: user.email,
+    const normalizedEmail = (user.email || '').trim().toLowerCase();
+    const pendingInvitations = await base44.asServiceRole.entities.UserInvitation.filter({
       status: 'pending'
     });
-    debugLog('Found invitations:', invitations?.length || 0);
+    const invitations = (pendingInvitations || []).filter(
+      (inv) => (inv.email || '').trim().toLowerCase() === normalizedEmail
+    );
+    debugLog('Found invitations:', invitations.length);
 
     if (invitations && invitations.length > 0) {
       const invitation = invitations[0];
@@ -115,6 +122,23 @@ Deno.serve(async (req) => {
       console.error('Failed to log blocked signup:', logError);
     }
 
+    // Defense-in-depth: explicitly ensure this account is NOT approved, so an
+    // unexpected platform default can never grant access. Verify the id resolves
+    // to this email first (don't trust the body's id<->email pairing). This is
+    // fail-closed — it only ever removes access, never grants it.
+    try {
+      const blockedUsers = await base44.asServiceRole.entities.User.filter({ id: user.id });
+      const blockedUser = blockedUsers?.[0];
+      if (blockedUser
+        && (blockedUser.email || '').trim().toLowerCase() === normalizedEmail
+        && blockedUser.is_approved) {
+        await base44.asServiceRole.entities.User.update(user.id, { is_approved: false });
+        debugLog('Forced is_approved=false for uninvited signup');
+      }
+    } catch (blockError) {
+      console.error('Failed to enforce blocked state for uninvited signup:', blockError);
+    }
+
     debugLog('Fetching admin users...');
     const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
     debugLog('Found admins:', admins.length);
@@ -150,15 +174,19 @@ Deno.serve(async (req) => {
       })
     );
 
-    // Also alert kdeyarmin@pennhospice.com
-    emailPromises.push(
-      base44.asServiceRole.integrations.Core.SendEmail({
-        to: 'kdeyarmin@pennhospice.com',
-        subject: `🚫 Blocked Uninvited Sign-up - Penn Sync`,
-        from_name: 'Penn Sync Security',
-        body: `Hello,\n\n${emailBody}`
-      })
-    );
+    // Optionally also alert an additional security contact, configurable per
+    // deployment via SECURITY_ALERT_EMAIL (admins are always alerted above).
+    const extraAlertEmail = Deno.env.get('SECURITY_ALERT_EMAIL');
+    if (extraAlertEmail) {
+      emailPromises.push(
+        base44.asServiceRole.integrations.Core.SendEmail({
+          to: extraAlertEmail,
+          subject: `🚫 Blocked Uninvited Sign-up - Penn Sync`,
+          from_name: 'Penn Sync Security',
+          body: `Hello,\n\n${emailBody}`
+        })
+      );
+    }
 
     debugLog('Sending blocked-signup security alert to admins...');
     await Promise.all(emailPromises);

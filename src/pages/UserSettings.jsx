@@ -157,9 +157,11 @@ export default function UserSettings() {
     try {
       // Update user profile. full_name drives the dashboard greeting and other
       // name displays, so let users correct it here (new accounts default it to
-      // the email prefix).
+      // the email prefix). Only send full_name when non-empty so a blank field
+      // never wipes an existing name (matches the backend's "never wipe" rule).
+      const trimmedFullName = profileData.full_name.trim();
       await base44.auth.updateMe({
-        full_name: profileData.full_name.trim(),
+        ...(trimmedFullName ? { full_name: trimmedFullName } : {}),
         phone: profileData.phone,
         credential_type: profileData.credential_type,
       });
@@ -167,7 +169,7 @@ export default function UserSettings() {
       // Update AI config
       const configData = {
         user_email: currentUser.email,
-        user_name: profileData.full_name.trim() || currentUser.full_name,
+        user_name: trimmedFullName || currentUser.full_name,
         ...preferences
       };
 
