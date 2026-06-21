@@ -70,7 +70,6 @@ Generate a comprehensive, Medicare-compliant clinical note that includes:
 Format the note professionally for medical records.`;
 
     const noteResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "gpt_5_5",
       prompt: notePrompt,
       add_context_from_internet: false
     });
@@ -96,25 +95,32 @@ Provide 3-5 specific treatment suggestions in JSON format:
 
 Only include clinically appropriate suggestions.`;
 
+    // Ask for strict JSON in-prompt and tolerantly parse the text. The platform
+    // rejects an array-root response_json_schema (root must be an object), so we
+    // avoid the schema entirely here.
     const treatmentResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "gpt_5_5",
-      prompt: treatmentPrompt,
-      response_json_schema: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            treatment: { type: 'string' },
-            rationale: { type: 'string' },
-            category: { type: 'string' },
-            confidence: { type: 'number' }
-          }
-        }
-      },
+      prompt: `${treatmentPrompt}
+
+Return ONLY a valid JSON object, no prose or code fences, of the form:
+{"suggestions":[{"treatment":"","rationale":"","category":"","confidence":0}]}`,
       add_context_from_internet: false
     });
 
-    const treatmentSuggestions = Array.isArray(treatmentResponse) ? treatmentResponse : [];
+    const parseTreatments = (raw) => {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'object') return raw.suggestions || [];
+      const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+      const slice = text.slice(text.indexOf('{') === -1 ? 0 : text.indexOf('{'), (text.lastIndexOf('}') + 1) || text.length);
+      try {
+        const obj = JSON.parse(slice);
+        return Array.isArray(obj) ? obj : (obj.suggestions || []);
+      } catch {
+        return [];
+      }
+    };
+
+    const treatmentSuggestions = parseTreatments(treatmentResponse);
 
     return Response.json({
       success: true,
