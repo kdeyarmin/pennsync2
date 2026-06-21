@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * autoAssignWorkNumbers — admin-only, one-click bulk provisioning. Gives every
@@ -19,7 +19,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * aren't bridged before they toggle on), and records the Telnyx number id.
  */
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -28,7 +28,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return null;
 }
 
-const isBlank = (v: unknown) => v == null || String(v).trim() === '';
+const isBlank = (v) => v == null || String(v).trim() === '';
 
 Deno.serve(async (req) => {
   try {
@@ -44,8 +44,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const onlyEmails: string[] | null = Array.isArray(body.emails)
-      ? body.emails.map((e: any) => String(e || '').trim().toLowerCase()).filter(Boolean)
+    const onlyEmails = Array.isArray(body.emails)
+      ? body.emails.map((e) => String(e || '').trim().toLowerCase()).filter(Boolean)
       : null;
 
     // Available pool numbers (FIFO by creation), and the set already in use so we
@@ -53,17 +53,17 @@ Deno.serve(async (req) => {
     const pool = await base44.asServiceRole.entities.PhoneNumber.filter({ status: 'available' }, 'created_date', 500).catch(() => []);
     const allUsers = await base44.asServiceRole.entities.User.list('full_name', 2000).catch(() => []);
     const inUse = new Set(
-      allUsers.map((u: any) => normalizeE164(u.work_phone_number)).filter(Boolean) as string[],
+      allUsers.map((u) => normalizeE164(u.work_phone_number)).filter(Boolean),
     );
 
     // Candidate users: those missing a work number (optionally limited to `emails`).
-    const candidates = allUsers.filter((u: any) => {
+    const candidates = allUsers.filter((u) => {
       if (!isBlank(u.work_phone_number)) return false;
       if (onlyEmails && !onlyEmails.includes(String(u.email || '').trim().toLowerCase())) return false;
       return true;
     });
 
-    const assigned: Array<{ email: string; e164: string }> = [];
+    const assigned = [];
     let poolIdx = 0;
     for (const target of candidates) {
       // Find the next pool number that isn't already in use on a User.
@@ -75,13 +75,13 @@ Deno.serve(async (req) => {
       }
       if (!chosen) break; // pool exhausted
 
-      const update: Record<string, unknown> = {
+      const update = {
         work_phone_number: chosen.e164,
         twilio_phone_number_sid: chosen.row.twilio_phone_number_sid || '',
       };
       if (target.duty_status === undefined || target.duty_status === null) update.duty_status = 'off_duty';
       const ok = await base44.asServiceRole.entities.User.update(target.id, update)
-        .then(() => true).catch((err: any) => { console.error('assign failed for', target.email, err?.message); return false; });
+        .then(() => true).catch((err) => { console.error('assign failed for', target.email, err?.message); return false; });
       if (!ok) continue;
 
       await base44.asServiceRole.entities.PhoneNumber.update(chosen.row.id, {
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         : `Assigned ${assigned.length} work number(s).`,
     });
   } catch (error) {
-    console.error('autoAssignWorkNumbers error:', (error as Error)?.message);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    console.error('autoAssignWorkNumbers error:', error?.message);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * managePhoneNumberPool — admin-only CRUD + assignment for the Twilio number
@@ -15,7 +15,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * The number itself is not PHI; the personal cell is masked to last-4 in audit.
  */
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -25,7 +25,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
 }
 
 // Mirrors maskPhone() in src/components/voice/phoneUtils.js — last-4 only.
-function maskLast4(e164: string): string {
+function maskLast4(e164) {
   const d = (e164 || '').replace(/[^\d]/g, '');
   if (!e164) return 'unknown';
   if (d.length < 4) return '••••';
@@ -48,12 +48,12 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || '');
-    const audit = (action2: string, details: Record<string, unknown>) =>
+    const audit = (action2, details) =>
       base44.asServiceRole.entities.UserActivity.create({
         user_email: user.email, user_name: user.full_name,
         action: action2, entity_type: 'PhoneNumber',
         details: { ...details, timestamp: new Date().toISOString() }, status: 'success',
-      }).catch((err: any) => console.error('audit failed:', err));
+      }).catch((err) => console.error('audit failed:', err));
 
     if (action === 'add') {
       const e164 = normalizeE164(body.e164);
@@ -113,13 +113,13 @@ Deno.serve(async (req) => {
 
       // Work numbers must be unique across nurses.
       const holders = await base44.asServiceRole.entities.User.filter({ work_phone_number: e164 }).catch(() => []);
-      const conflict = holders.find((u: any) => u.email !== targetEmail);
+      const conflict = holders.find((u) => u.email !== targetEmail);
       if (conflict) {
         return Response.json({ error: `${e164} is already assigned to ${conflict.email}.` }, { status: 409 });
       }
 
       // Update the nurse's masking record.
-      const update: Record<string, unknown> = { work_phone_number: e164 };
+      const update = { work_phone_number: e164 };
       if (cellNum) update.personal_cell_e164 = cellNum;
       if (row.twilio_phone_number_sid) update.twilio_phone_number_sid = row.twilio_phone_number_sid;
       if (target.duty_status === undefined || target.duty_status === null) update.duty_status = 'off_duty';
@@ -166,6 +166,6 @@ Deno.serve(async (req) => {
     return Response.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (error) {
     console.error('managePhoneNumberPool error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * provisionNurseWorkNumber — admin-only. Assigns a nurse their dedicated Twilio
@@ -9,7 +9,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * mapping in PennSync.
  */
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -20,7 +20,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
 
 // Mirrors maskPhone() in src/components/voice/phoneUtils.js — reveals only the
 // last 4 digits so the nurse's private cell is never written in full to audit.
-function maskLast4(e164: string): string {
+function maskLast4(e164) {
   const d = (e164 || '').replace(/[^\d]/g, '');
   if (!e164) return 'unknown';
   if (d.length < 4) return '••••';
@@ -63,13 +63,13 @@ Deno.serve(async (req) => {
     // Work numbers must be unique across nurses.
     if (workNum) {
       const existing = await base44.asServiceRole.entities.User.filter({ work_phone_number: workNum });
-      const conflict = existing.find((u: any) => u.email !== target_user_email);
+      const conflict = existing.find((u) => u.email !== target_user_email);
       if (conflict) {
         return Response.json({ error: `Work number ${workNum} is already assigned to ${conflict.email}` }, { status: 409 });
       }
     }
 
-    const update: Record<string, unknown> = {};
+    const update = {};
     if (workNum) update.work_phone_number = workNum;
     if (cellNum) update.personal_cell_e164 = cellNum;
     if (twilio_phone_number_sid !== undefined) update.twilio_phone_number_sid = twilio_phone_number_sid;

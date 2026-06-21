@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * autoEndDutyDay — scheduled end-of-day sweep. Flips every nurse who is still
@@ -17,7 +17,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * admin user may invoke it manually.
  */
 
-function timingSafeEqual(a: string, b: string): boolean {
+function timingSafeEqual(a, b) {
   if (a.length !== b.length) return false;
   let out = 0;
   for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     for (const u of onDuty) {
       const ok = await base44.asServiceRole.entities.User.update(u.id, { duty_status: 'off_duty', duty_on_since: null })
         .then(() => true)
-        .catch((err: any) => { console.error('autoEndDutyDay update failed for', u.id, err?.message); return false; });
+        .catch((err) => { console.error('autoEndDutyDay update failed for', u.id, err?.message); return false; });
       if (ok) flipped += 1;
     }
 
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, flipped, checked: onDuty.length });
   } catch (error) {
-    console.error('autoEndDutyDay error:', (error as Error)?.message);
+    console.error('autoEndDutyDay error:', error?.message);
     return Response.json({ error: 'Failed to end duty day' }, { status: 500 });
   }
 });

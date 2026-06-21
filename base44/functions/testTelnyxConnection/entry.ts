@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * testTelnyxConnection — admin-only setup diagnostic for the Telnyx integration
@@ -16,7 +16,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * generated_at }. It never sends anything and never returns a secret.
  */
 
-const isSet = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+const isSet = (v) => typeof v === 'string' && v.trim() !== '';
 
 const PROBE_TIMEOUT_MS = 8000;
 
@@ -27,14 +27,8 @@ const PROBE_TIMEOUT_MS = 8000;
  * function (single-file Deno deploy model); drift is guarded by
  * base44/functions/telnyxCredsInlineParity.test.js.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -60,7 +54,7 @@ async function resolveTelnyxCreds(base44: any): Promise<{
  *   - 200                     → authenticated and reachable (ok)
  *   - other                   → reached Telnyx but unexpected response (warn)
  */
-async function probeTelnyxApi(apiKey: string) {
+async function probeTelnyxApi(apiKey) {
   const url = 'https://api.telnyx.com/v2/whoami';
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
@@ -81,12 +75,12 @@ async function probeTelnyxApi(apiKey: string) {
     }
     return { status: 'warn', detail: `Reached Telnyx but received an unexpected response (HTTP ${resp.status}). Credentials were not rejected — send a test text to verify end to end.`, latencyMs };
   } catch (err) {
-    const aborted = (err as Error)?.name === 'AbortError';
+    const aborted = err?.name === 'AbortError';
     return {
       status: 'fail',
       detail: aborted
         ? `Timed out after ${PROBE_TIMEOUT_MS} ms reaching api.telnyx.com. Check that the function has network egress.`
-        : `Could not reach api.telnyx.com — verify network egress. (${(err as Error).message})`,
+        : `Could not reach api.telnyx.com — verify network egress. (${err.message})`,
       latencyMs: Date.now() - startedAt,
     };
   } finally {
@@ -108,7 +102,7 @@ Deno.serve(async (req) => {
     }
 
     const creds = await resolveTelnyxCreds(base44);
-    const checks: Array<{ id: string; label: string; status: string; detail: string }> = [];
+    const checks = [];
 
     // --- API key (presence only — never echo the value) ---
     checks.push({
@@ -174,6 +168,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, checks, stats, generated_at: new Date().toISOString() });
   } catch (error) {
     console.error('testTelnyxConnection error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

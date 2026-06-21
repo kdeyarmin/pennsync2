@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * redriveFailedSms — cron "outbox" that re-sends outbound texts which Telnyx
@@ -31,13 +31,13 @@ const PERMANENT_FAILURE_PATTERNS = [
   /opted out/i, /opt.?out/i, /unsubscrib/i, /invalid/i, /\b(400|401|403|404|422)\b/,
   /blocked/i, /blacklist/i, /not configured/i, /disabled/i, /too long/i, /consent/i,
 ];
-function isTransientFailureReason(reason: string): boolean {
+function isTransientFailureReason(reason) {
   const s = String(reason || '');
   if (!s.trim()) return false;
   if (PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s))) return false;
   return TRANSIENT_FAILURE_PATTERNS.some((re) => re.test(s));
 }
-function shouldRedriveSms(row: any, now = Date.now(), maxAttempts = 4, baseGapMs = 60_000, maxAgeMs = 24 * 60 * 60 * 1000): boolean {
+function shouldRedriveSms(row, now = Date.now(), maxAttempts = 4, baseGapMs = 60_000, maxAgeMs = 24 * 60 * 60 * 1000) {
   if (!row || row.status !== 'failed' || row.direction !== 'outbound') return false;
   const attempts = Number(row.retry_count) || 0;
   if (attempts >= maxAttempts) return false;
@@ -50,7 +50,7 @@ function shouldRedriveSms(row: any, now = Date.now(), maxAttempts = 4, baseGapMs
   return true;
 }
 
-async function getAgencyConfig(base44: any) {
+async function getAgencyConfig(base44) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return {
@@ -64,14 +64,8 @@ async function getAgencyConfig(base44: any) {
  * row with provider 'telnyx'. Either path configures the integration, so the
  * Base44 dashboard env is optional.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -89,12 +83,12 @@ async function resolveTelnyxCreds(base44: any): Promise<{
   return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
 
-async function sendTelnyx(apiKey: string, messagingProfileId: string | null, from: string, to: string, body: string, webhookUrl?: string) {
+async function sendTelnyx(apiKey, messagingProfileId, from, to, body, webhookUrl) {
   const url = `https://api.telnyx.com/v2/messages`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
-    const payload: Record<string, unknown> = { from, to, text: body };
+    const payload = { from, to, text: body };
     if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
     if (webhookUrl) payload.webhook_url = webhookUrl;
     const resp = await fetch(url, {
@@ -114,7 +108,7 @@ async function sendTelnyx(apiKey: string, messagingProfileId: string | null, fro
 }
 
 // ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
-const AREA_CODE_TIMEZONE: Record<number, string> = {
+const AREA_CODE_TIMEZONE = {
   // Eastern
   201: "America/New_York", 202: "America/New_York", 203: "America/New_York", 207: "America/New_York",
   212: "America/New_York", 215: "America/New_York", 216: "America/New_York", 220: "America/New_York",
@@ -189,13 +183,13 @@ const AREA_CODE_TIMEZONE: Record<number, string> = {
   // Alaska / Hawaii
   907: "America/Anchorage", 808: "Pacific/Honolulu",
 };
-function tzForNumber(raw: string): string | null {
+function tzForNumber(raw) {
   const d = String(raw || '').replace(/[^\d]/g, '');
   const ten = d.length === 11 && d.startsWith('1') ? d.slice(1) : d;
   if (ten.length !== 10) return null;
   return AREA_CODE_TIMEZONE[Number(ten.slice(0, 3))] || null;
 }
-function hourInZone(date: Date, timeZone: string): number | null {
+function hourInZone(date, timeZone) {
   try {
     const h = new Intl.DateTimeFormat('en-US', { timeZone, hour12: false, hour: '2-digit' }).format(date);
     let n = parseInt(h, 10);
@@ -206,7 +200,7 @@ function hourInZone(date: Date, timeZone: string): number | null {
   }
 }
 /** TCPA quiet-hours check in the RECIPIENT's timezone. Fails open when unknown. */
-function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed: boolean; reason: string } {
+function quietHoursCheck(toNumber, now, settings) {
   const startHour = Number(settings?.tcpa_quiet_start_hour ?? 8);
   const endHour = Number(settings?.tcpa_quiet_end_hour ?? 21);
   const tz = tzForNumber(toNumber);
@@ -286,13 +280,13 @@ Deno.serve(async (req) => {
       const clientMessageId = row.client_message_id || `redrive-${row.id}`;
       let resp;
       try {
-        resp = await sendTelnyx(apiKey!, messagingProfileId, row.from_number, row.to_number, row.body, statusCallback);
+        resp = await sendTelnyx(apiKey, messagingProfileId, row.from_number, row.to_number, row.body, statusCallback);
       } catch (netErr) {
-        const aborted = (netErr as Error)?.name === 'AbortError';
+        const aborted = netErr?.name === 'AbortError';
         result.failed++;
         await base44.asServiceRole.entities.SmsMessage.update(row.id, {
           status: 'failed', redrive_claimed_by: null,
-          failure_reason: aborted ? 'Timed out reaching Telnyx (redrive)' : `Network error reaching Telnyx (redrive): ${(netErr as Error).message}`,
+          failure_reason: aborted ? 'Timed out reaching Telnyx (redrive)' : `Network error reaching Telnyx (redrive): ${netErr.message}`,
         }).catch(() => {});
         continue;
       }
@@ -332,6 +326,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, ...result, checked_at: new Date(now).toISOString() });
   } catch (error) {
     console.error('redriveFailedSms error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -1,18 +1,12 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
  * row with provider 'telnyx'. Mirrors the SMS/voice handlers so fax functions work
  * for agencies that store credentials in-app rather than in the dashboard env.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -116,7 +110,7 @@ Deno.serve(async (req) => {
     const telnyxUrl = `https://api.telnyx.com/v2/faxes`;
     // Include the same DLR webhook sendFax uses so the retried fax reports status.
     const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
-    const retryPayload: Record<string, unknown> = {
+    const retryPayload = {
       connection_id: faxConnectionId,
       from: fromNumber,
       to: originalFax.to_number,
@@ -126,7 +120,7 @@ Deno.serve(async (req) => {
     if (functionsBaseUrl) retryPayload.webhook_url = `${functionsBaseUrl}/handleTelnyxStatusWebhook`;
 
     // Re-send the fax
-    let telnyxResponse: Response;
+    let telnyxResponse;
     try {
       telnyxResponse = await fetch(telnyxUrl, {
         method: 'POST',
@@ -157,8 +151,8 @@ Deno.serve(async (req) => {
     // claim — that orphans an already-sent fax and blocks future retries. The
     // fax was accepted, so we also must NOT releaseClaim() back to 'failed'
     // (that would re-send and double-fax). Settle the original to 'retried'.
-    let faxData: any;
-    let newFaxLog: any = null;
+    let faxData;
+    let newFaxLog = null;
     try {
       faxData = await telnyxResponse.json();
 

@@ -1,18 +1,12 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
  * row with provider 'telnyx'. Mirrors the SMS/voice handlers so fax functions work
  * for agencies that store credentials in-app rather than in the dashboard env.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -104,7 +98,7 @@ Please log in to your dashboard to view more details.
         const fromNumber = Deno.env.get('TELNYX_FAX_NUMBER'); // Reuse fax number or dedicated SMS number
 
         if (apiKey && fromNumber) {
-          const payload: Record<string, unknown> = { from: fromNumber, to: notifyPhone, text: smsMessage };
+          const payload = { from: fromNumber, to: notifyPhone, text: smsMessage };
           if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
           const response = await fetch('https://api.telnyx.com/v2/messages', {
             method: 'POST',

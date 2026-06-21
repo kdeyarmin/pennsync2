@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * saveTelnyxSecret — super-admin-only. Stores the Telnyx API key (and the
@@ -26,13 +26,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
 
-const sameEmail = (a: unknown, b: unknown) =>
+const sameEmail = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
-const lastFour = (s: string) => (s.length <= 4 ? s : s.slice(-4));
+const lastFour = (s) => (s.length <= 4 ? s : s.slice(-4));
 
 // Optional string field: present-and-blank/null → clear (''), present → trimmed.
-function optionalField(body: Record<string, unknown>, key: string): string | undefined {
+function optionalField(body, key) {
   if (!(key in body)) return undefined;
   const v = body[key];
   return v == null ? '' : String(v).trim();
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       if (!existing[0]?.id) {
         return Response.json({ error: 'Set your Telnyx API key first.' }, { status: 400 });
       }
-      const update: Record<string, unknown> = { is_active: true, updated_by_email: user.email };
+      const update = { is_active: true, updated_by_email: user.email };
       for (const k of optionalKeys) {
         const v = optionalField(body, k);
         if (v !== undefined) update[k] = v;
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: "That doesn't look like a valid Telnyx API key (must start with \"KEY\" and be at least 16 characters)." }, { status: 400 });
     }
 
-    const update: Record<string, unknown> = {
+    const update = {
       provider: 'telnyx',
       api_key: apiKey,
       secret_last_four: lastFour(apiKey),
@@ -147,6 +147,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('saveTelnyxSecret error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

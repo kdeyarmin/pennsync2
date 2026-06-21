@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * manageSmsConsent — admin-only management surface for the SmsConsent ledger that
@@ -18,7 +18,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 const VALID_STATUSES = ['opted_in', 'opted_out', 'unknown'];
 
 /** Normalize a raw phone string to +E.164, or null if it doesn't look valid. */
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const trimmed = String(raw).trim();
   const digits = trimmed.replace(/[^\d]/g, "");
@@ -116,6 +116,6 @@ Deno.serve(async (req) => {
     return Response.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (error) {
     console.error('manageSmsConsent error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

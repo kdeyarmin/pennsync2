@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * recordSmsConsent — let a nurse/admin record a patient's texting consent
@@ -10,7 +10,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * Body: { phone_e164, consent_status: 'opted_in'|'opted_out', patient_id?, notes? }
  */
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -56,6 +56,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, consent_status: status, phone_e164: phone });
   } catch (error) {
     console.error('recordSmsConsent error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

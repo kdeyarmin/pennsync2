@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * cancelScheduledSms — cancel a still-pending scheduled text. A nurse may cancel
@@ -45,6 +45,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, scheduled_id: row.id });
   } catch (error) {
     console.error('cancelScheduledSms error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

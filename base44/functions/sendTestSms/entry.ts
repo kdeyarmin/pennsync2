@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * sendTestSms — admin-only, end-to-end validation of the Telnyx SMS path.
@@ -15,7 +15,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const TEST_BODY = 'PennSync test message: your Telnyx text messaging integration is working. No reply needed.';
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -29,14 +29,8 @@ function normalizeE164(raw: string | null | undefined): string | null {
  * row with provider 'telnyx'. Either path configures the integration, so the
  * Base44 dashboard env is optional.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -61,10 +55,10 @@ async function resolveTelnyxCreds(base44: any): Promise<{
 // double-text. We no longer rely on provider dedupe; we avoid double-send by not
 // retrying ambiguous network failures.
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
-function isRetryableStatus(status: number): boolean {
+function isRetryableStatus(status) {
   return RETRYABLE_STATUSES.has(Number(status));
 }
-function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
+function parseRetryAfter(headerValue, nowMs = Date.now()) {
   if (headerValue == null) return null;
   const raw = String(headerValue).trim();
   if (raw === '') return null;
@@ -73,14 +67,14 @@ function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number
   if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - nowMs);
   return null;
 }
-function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
+function backoffDelayMs(attempt, baseMs = 300, maxMs = 4000) {
   const n = Math.max(1, Number(attempt) || 1);
   const exp = Math.min(maxMs, baseMs * 2 ** (n - 1));
   return Math.round(exp / 2 + Math.random() * (exp / 2));
 }
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function sendWithRetry(
-  attemptFn: (attempt: number) => Promise<{ ok: boolean; status: number; data: any; retryAfter?: string | null }>,
+  attemptFn,
   maxAttempts = 3,
 ) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -130,7 +124,7 @@ Deno.serve(async (req) => {
     let fromNumber = user.work_phone_number || null;
     if (!fromNumber) {
       const provisioned = await base44.asServiceRole.entities.User.list('full_name', 1000).catch(() => []);
-      fromNumber = provisioned.find((u: any) => u.work_phone_number)?.work_phone_number || null;
+      fromNumber = provisioned.find((u) => u.work_phone_number)?.work_phone_number || null;
     }
     if (!fromNumber) {
       return Response.json({ error: 'No work number is provisioned yet. Assign one to a nurse (or yourself) first.' }, { status: 400 });
@@ -146,13 +140,13 @@ Deno.serve(async (req) => {
     // Send via Telnyx Messages API. Do NOT retry thrown network errors — Telnyx
     // has no client idempotency key and a blind retry could double-text.
     const telnyxUrl = `https://api.telnyx.com/v2/messages`;
-    let result: { ok: boolean; status: number; data: any };
+    let result;
     try {
       result = await sendWithRetry(async () => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 15000);
         try {
-          const payload: Record<string, unknown> = { from: fromNumber!, to: destination, text: TEST_BODY };
+          const payload = { from: fromNumber, to: destination, text: TEST_BODY };
           if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
           const resp = await fetch(telnyxUrl, {
             method: 'POST',
@@ -170,9 +164,9 @@ Deno.serve(async (req) => {
         }
       });
     } catch (netErr) {
-      const aborted = (netErr as Error)?.name === 'AbortError';
+      const aborted = netErr?.name === 'AbortError';
       return Response.json(
-        { error: aborted ? 'Telnyx SMS API timed out' : 'Failed to reach the Telnyx SMS API', details: (netErr as Error).message },
+        { error: aborted ? 'Telnyx SMS API timed out' : 'Failed to reach the Telnyx SMS API', details: netErr.message },
         { status: aborted ? 504 : 502 },
       );
     }
@@ -206,6 +200,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('sendTestSms error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

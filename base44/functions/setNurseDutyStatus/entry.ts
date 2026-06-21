@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * setNurseDutyStatus — self-service duty toggle, scheduled time-off window, and
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       ? off_duty_message.replace(/[<>]/g, "").replace(/[\u0000-\u001F\u007F]/g, " ").slice(0, 320)
       : off_duty_message;
 
-    const update: Record<string, unknown> = {};
+    const update = {};
     if (duty_status) {
       update.duty_status = duty_status;
       // Stamp when they toggled ON so the on-duty state expires nightly on its

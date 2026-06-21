@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * searchPurchaseTelnyxNumbers — admin-only. Search Telnyx for available local
@@ -17,7 +17,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const REQUEST_TIMEOUT_MS = 15000;
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -26,14 +26,8 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return null;
 }
 
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -51,7 +45,7 @@ async function resolveTelnyxCreds(base44: any): Promise<{
   return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
 
-async function fetchJson(url: string, init: RequestInit) {
+async function fetchJson(url, init) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -106,8 +100,8 @@ Deno.serve(async (req) => {
       if (!res.ok) {
         return Response.json({ error: 'Telnyx number search failed.', status: res.status, details: res.data }, { status: 502 });
       }
-      const list: Array<any> = Array.isArray(res.data?.data) ? res.data.data : [];
-      const numbers = list.map((n: any) => ({ e164: normalizeE164(n.phone_number) })).filter((n) => n.e164);
+      const list = Array.isArray(res.data?.data) ? res.data.data : [];
+      const numbers = list.map((n) => ({ e164: normalizeE164(n.phone_number) })).filter((n) => n.e164);
       return Response.json({ success: true, count: numbers.length, numbers });
     }
 
@@ -123,7 +117,7 @@ Deno.serve(async (req) => {
 
       // Create a Telnyx number order. Attach the messaging profile + voice
       // connection so the number is immediately usable for SMS and Call Control.
-      const orderBody: Record<string, unknown> = { phone_numbers: [{ phone_number: e164 }] };
+      const orderBody = { phone_numbers: [{ phone_number: e164 }] };
       if (messagingProfileId) orderBody.messaging_profile_id = messagingProfileId;
       if (voiceConnectionId) orderBody.connection_id = voiceConnectionId;
       const res = await fetchJson(`${TELNYX_API_BASE}/number_orders`, {
@@ -159,6 +153,6 @@ Deno.serve(async (req) => {
     return Response.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (error) {
     console.error('searchPurchaseTelnyxNumbers error:', error);
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

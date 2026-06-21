@@ -1,18 +1,12 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
  * row with provider 'telnyx'. Mirrors the SMS/voice handlers so fax functions work
  * for agencies that store credentials in-app rather than in the dashboard env.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -46,12 +40,12 @@ const PERMANENT_FAILURE_PATTERNS = [
   /rejected/i, /blocked/i, /do not call/i, /unallocated/i, /disconnected/i,
   /forbidden/i, /not in service/i, /no such number/i, /malformed/i,
 ];
-function classifyFaxFailure(errorCode: any, errorMessage: any): string {
+function classifyFaxFailure(errorCode, errorMessage) {
   const s = `${errorCode ?? ''} ${errorMessage ?? ''}`.trim();
   if (!s) return 'transient';
   return PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s)) ? 'permanent' : 'transient';
 }
-function faxRetryConfig(config: any) {
+function faxRetryConfig(config) {
   const c = config || {};
   return {
     enabled: c.auto_retry_enabled !== false,
@@ -61,14 +55,14 @@ function faxRetryConfig(config: any) {
     priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
   };
 }
-function nextRetryDelayMinutes(attempt: number, config: any, priority = 'normal', factor = 2, maxMinutes = 360): number {
+function nextRetryDelayMinutes(attempt, config, priority = 'normal', factor = 2, maxMinutes = 360) {
   const c = faxRetryConfig(config);
   const a = Math.max(0, Number(attempt) || 0);
   const mult = Number.isFinite(c.priorityMultiplier[priority]) ? c.priorityMultiplier[priority] : 1;
   const minutes = c.baseDelayMinutes * factor ** a * mult;
   return Math.max(1, Math.min(maxMinutes, Math.round(minutes)));
 }
-function isFaxRetryDue(fax: any, now: number, config: any): boolean {
+function isFaxRetryDue(fax, now, config) {
   const c = faxRetryConfig(config);
   if (!c.enabled) return false;
   if (!fax || fax.status !== 'failed') return false;
@@ -143,7 +137,7 @@ Deno.serve(async (req) => {
 
       // Attempt the retry via Telnyx
       try {
-        const retryPayload: Record<string, unknown> = {
+        const retryPayload = {
           connection_id: faxConnectionId,
           from: fromNumber,
           to: fax.to_number,
