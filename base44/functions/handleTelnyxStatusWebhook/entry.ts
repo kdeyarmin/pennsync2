@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * handleTelnyxStatusWebhook — the single inbound webhook for the whole Telnyx
@@ -20,14 +20,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  */
 
 // ---- credential resolution (inlined; parity-guarded) ----
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -46,7 +40,7 @@ async function resolveTelnyxCreds(base44: any): Promise<{
 }
 
 // ---- value mapping (mirrors telnyxUtils.js) ----
-function mapMessageStatus(status: any): string | null {
+function mapMessageStatus(status) {
   switch (String(status || '').toLowerCase()) {
     case 'queued': case 'sending': return 'queued';
     case 'sent': return 'sent';
@@ -55,7 +49,7 @@ function mapMessageStatus(status: any): string | null {
     default: return null;
   }
 }
-function mapFaxStatus(status: any): string | null {
+function mapFaxStatus(status) {
   switch (String(status || '').toLowerCase()) {
     case 'queued': return 'queued';
     case 'media.processed': case 'originated': case 'sending': return 'sending';
@@ -65,7 +59,7 @@ function mapFaxStatus(status: any): string | null {
     default: return null;
   }
 }
-function mapCallStatus(eventType: any): string | null {
+function mapCallStatus(eventType) {
   switch (String(eventType || '').toLowerCase()) {
     case 'call.initiated': return 'ringing';
     case 'call.answered': case 'call.bridged': return 'in_progress';
@@ -76,27 +70,27 @@ function mapCallStatus(eventType: any): string | null {
 // Monotonic rank so a late/out-of-order call event can't regress a terminal
 // CallLog status. Mirrors the CALL_RANK guard the former handleTwilioCallStatus
 // enforced.
-const CALL_RANK: Record<string, number> = { ringing: 1, in_progress: 2, completed: 3 };
+const CALL_RANK = { ringing: 1, in_progress: 2, completed: 3 };
 
 // Best-effort call duration (seconds) from a Call Control hangup payload's
 // start/end timestamps. Returns null when they're missing/unparseable.
-function callDurationSecs(payload: any): number | null {
+function callDurationSecs(payload) {
   const start = Date.parse(payload?.start_time || '');
   const end = Date.parse(payload?.end_time || '');
   if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
   return Math.round((end - start) / 1000);
 }
 
-function extractTelnyxEvent(body: any): { eventType: string | null; id: string | null; payload: any } {
+function extractTelnyxEvent(body) {
   const b = body || {};
   const data = b.data || b;
   const payload = data.payload || {};
   return { eventType: data.event_type || b.event_type || null, id: payload.id || data.id || null, payload };
 }
-function buildSignedPayload(timestamp: any, rawBody: any): string {
+function buildSignedPayload(timestamp, rawBody) {
   return `${String(timestamp ?? '')}|${String(rawBody ?? '')}`;
 }
-function isFreshTimestamp(timestamp: any, nowMs = Date.now(), toleranceSeconds = 300): boolean {
+function isFreshTimestamp(timestamp, nowMs = Date.now(), toleranceSeconds = 300) {
   const ts = Number(timestamp);
   if (!Number.isFinite(ts)) return false;
   return Math.abs(nowMs / 1000 - ts) <= toleranceSeconds;
@@ -112,12 +106,12 @@ const PERMANENT_FAILURE_PATTERNS = [
   /rejected/i, /blocked/i, /do not call/i, /unallocated/i, /disconnected/i,
   /forbidden/i, /not in service/i, /no such number/i, /malformed/i,
 ];
-function classifyFaxFailure(errorCode: any, errorMessage: any): string {
+function classifyFaxFailure(errorCode, errorMessage) {
   const s = `${errorCode ?? ''} ${errorMessage ?? ''}`.trim();
   if (!s) return 'transient';
   return PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s)) ? 'permanent' : 'transient';
 }
-function faxRetryConfig(config: any) {
+function faxRetryConfig(config) {
   const c = config || {};
   return {
     enabled: c.auto_retry_enabled !== false,
@@ -127,14 +121,14 @@ function faxRetryConfig(config: any) {
     priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
   };
 }
-function nextRetryDelayMinutes(attempt: number, config: any, priority = 'normal', factor = 2, maxMinutes = 360): number {
+function nextRetryDelayMinutes(attempt, config, priority = 'normal', factor = 2, maxMinutes = 360) {
   const c = faxRetryConfig(config);
   const a = Math.max(0, Number(attempt) || 0);
   const mult = Number.isFinite(c.priorityMultiplier[priority]) ? c.priorityMultiplier[priority] : 1;
   const minutes = c.baseDelayMinutes * factor ** a * mult;
   return Math.max(1, Math.min(maxMinutes, Math.round(minutes)));
 }
-function planFaxRetry(opts: any) {
+function planFaxRetry(opts) {
   const { retryCount = 0, errorCode, errorMessage, priority = 'normal', config, now = Date.now() } = opts || {};
   const c = faxRetryConfig(config);
   const classification = classifyFaxFailure(errorCode, errorMessage);
@@ -147,7 +141,7 @@ function planFaxRetry(opts: any) {
 }
 
 // ---- phone + duty + business-hours helpers (mirror the voice utils) ----
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -155,12 +149,12 @@ function normalizeE164(raw: string | null | undefined): string | null {
   if (String(raw).trim().startsWith('+') && digits.length >= 8 && digits.length <= 15 && digits[0] !== '0') return `+${digits}`;
   return null;
 }
-function getThreadId(a: string, b: string): string {
+function getThreadId(a, b) {
   const na = normalizeE164(a) || a;
   const nb = normalizeE164(b) || b;
   return [na, nb].sort().join('|');
 }
-function phoneVariants(value: string): string[] {
+function phoneVariants(value) {
   const d = (value || '').replace(/[^\d]/g, '');
   const ten = d.slice(-10);
   if (ten.length !== 10) return value ? [value] : [];
@@ -169,7 +163,7 @@ function phoneVariants(value: string): string[] {
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 // Hour (0–23) at `now` in `timeZone`, or null when it can't be computed.
-function dutyHourInZone(date: Date, timeZone?: string): number | null {
+function dutyHourInZone(date, timeZone) {
   try {
     const h = new Intl.DateTimeFormat('en-US', { timeZone: timeZone || undefined, hour12: false, hour: '2-digit' }).format(date);
     let n = parseInt(h, 10);
@@ -181,7 +175,7 @@ function dutyHourInZone(date: Date, timeZone?: string): number | null {
 }
 // At/after the agency's auto-off hour (default 5pm) in the duty timezone. Mirrors
 // isPastAutoOffHour in src/components/voice/dutyUtils.js.
-function isPastAutoOffHour(settings: any, now = new Date()): boolean {
+function isPastAutoOffHour(settings, now = new Date()) {
   const s = settings || {};
   if (s.auto_off_duty_enabled === false) return false;
   const hour = Number.isFinite(Number(s.auto_off_duty_hour)) ? Number(s.auto_off_duty_hour) : 17;
@@ -193,7 +187,7 @@ function isPastAutoOffHour(settings: any, now = new Date()): boolean {
 // Off duty unless explicitly toggled on, before the auto-off hour, and outside a
 // scheduled time-off window. Mirrors isOffDutyNow in dutyUtils.js (default-off +
 // 5pm auto-end-of-day). `settings` enables the cutoff.
-function isOffDutyNow(user: any, now = new Date(), settings: any = null): boolean {
+function isOffDutyNow(user, now = new Date(), settings = null) {
   if (!user) return false;
   const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
   const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
@@ -216,7 +210,7 @@ function isOffDutyNow(user: any, now = new Date(), settings: any = null): boolea
   // duty_on_since keep the prior always-on behavior.) Mirrors dutyUtils.js.
   if (user.duty_on_since) {
     const dtz = (settings && (settings.duty_timezone || settings.business_hours_timezone)) || 'America/New_York';
-    const dateKey = (d: Date) => {
+    const dateKey = (d) => {
       try { return new Intl.DateTimeFormat('en-CA', { timeZone: dtz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
       catch { return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
     };
@@ -225,17 +219,17 @@ function isOffDutyNow(user: any, now = new Date(), settings: any = null): boolea
   return false;
 }
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-function parseHHMM(value: any): number | null {
+const WEEKDAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+function parseHHMM(value) {
   const m = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
   if (!m) return null;
   const h = Number(m[1]); const min = Number(m[2]);
   if (h < 0 || h > 23 || min < 0 || min > 59) return null;
   return h * 60 + min;
 }
-function wallClockInTimeZone(date: Date, timeZone?: string): { weekday: number | null; minutes: number } {
+function wallClockInTimeZone(date, timeZone) {
   const dtf = new Intl.DateTimeFormat('en-US', { timeZone: timeZone || undefined, hour12: false, weekday: 'short', hour: '2-digit', minute: '2-digit' });
-  const parts: Record<string, string> = {};
+  const parts = {};
   for (const p of dtf.formatToParts(date)) parts[p.type] = p.value;
   let hour = parseInt(parts.hour, 10);
   if (hour === 24) hour = 0;
@@ -243,17 +237,17 @@ function wallClockInTimeZone(date: Date, timeZone?: string): { weekday: number |
   const weekday = WEEKDAY_INDEX[parts.weekday];
   return { weekday: weekday ?? null, minutes: hour * 60 + minute };
 }
-function dateKeyInTimeZone(date: Date, timeZone?: string): string {
+function dateKeyInTimeZone(date, timeZone) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || undefined, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 }
-function isAgencyOpen(settings: any, now = new Date()): boolean {
+function isAgencyOpen(settings, now = new Date()) {
   const s = settings || {};
   if (s.business_hours_enabled !== true) return true;
   let wc; let dateKey;
   try { wc = wallClockInTimeZone(now, s.business_hours_timezone); dateKey = dateKeyInTimeZone(now, s.business_hours_timezone); }
   catch { wc = wallClockInTimeZone(now, undefined); dateKey = dateKeyInTimeZone(now, undefined); }
   if (Array.isArray(s.business_hours_holidays) && s.business_hours_holidays.includes(dateKey)) return false;
-  const day = (s.business_hours || {})[DAY_KEYS[wc.weekday as number]];
+  const day = (s.business_hours || {})[DAY_KEYS[wc.weekday]];
   if (!day || day.enabled === false) return false;
   const open = parseHHMM(day.open); const close = parseHHMM(day.close);
   if (open == null || close == null) return false;
@@ -268,13 +262,13 @@ const DEFAULT_URGENT_KEYWORDS = [
   'bleeding', 'fell', 'fall', 'fallen', 'passed out', 'unconscious',
   'stroke', 'seizure', 'severe pain', 'help me', 'not breathing', 'unresponsive',
 ];
-function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-function detectUrgency(text: string, extra: string[] = []): { urgent: boolean; matches: string[] } {
+function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function detectUrgency(text, extra = []) {
   const s = String(text || '');
   if (!s.trim()) return { urgent: false, matches: [] };
   const extras = (Array.isArray(extra) ? extra : []).map((k) => String(k || '').toLowerCase().trim()).filter(Boolean);
   const all = [...new Set([...DEFAULT_URGENT_KEYWORDS, ...extras])];
-  const matches: string[] = [];
+  const matches = [];
   for (const kw of all) {
     if (!kw) continue;
     if (new RegExp(`\\b${escapeRe(kw)}\\b`, 'i').test(s)) matches.push(kw);
@@ -283,7 +277,7 @@ function detectUrgency(text: string, extra: string[] = []): { urgent: boolean; m
 }
 
 // ---- Ed25519 signature verification ----
-function base64ToBytes(b64: string): Uint8Array | null {
+function base64ToBytes(b64) {
   try {
     const bin = atob(String(b64).trim());
     const out = new Uint8Array(bin.length);
@@ -293,7 +287,7 @@ function base64ToBytes(b64: string): Uint8Array | null {
     return null;
   }
 }
-async function verifyTelnyxSignature(rawBody: string, signatureB64: string | null, timestamp: string | null, publicKeyB64: string | null): Promise<boolean> {
+async function verifyTelnyxSignature(rawBody, signatureB64, timestamp, publicKeyB64) {
   if (!publicKeyB64 || !signatureB64 || !timestamp) return false;
   if (!isFreshTimestamp(timestamp)) return false;
   const pubBytes = base64ToBytes(publicKeyB64);
@@ -304,20 +298,20 @@ async function verifyTelnyxSignature(rawBody: string, signatureB64: string | nul
     const data = new TextEncoder().encode(buildSignedPayload(timestamp, rawBody));
     return await crypto.subtle.verify({ name: 'Ed25519' }, key, sigBytes, data);
   } catch (err) {
-    console.error('Telnyx signature verify error:', (err as Error)?.message);
+    console.error('Telnyx signature verify error:', err?.message);
     return false;
   }
 }
 
 // client_state is base64(JSON) used to carry routing/bridge intent across the
 // asynchronous Call Control event stream.
-function encodeClientState(obj: Record<string, unknown>): string {
+function encodeClientState(obj) {
   const bytes = new TextEncoder().encode(JSON.stringify(obj));
   let bin = '';
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin);
 }
-function decodeClientState(b64: any): Record<string, any> | null {
+function decodeClientState(b64) {
   if (!b64 || typeof b64 !== 'string') return null;
   const bytes = base64ToBytes(b64);
   if (!bytes) return null;

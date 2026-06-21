@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * startMaskedCall — outbound click-to-call masking (via Telnyx) (nurse -> patient) via the
@@ -14,7 +14,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * may already be in flight). Only explicit retryable HTTP statuses are retried.
  */
 
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -23,7 +23,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return null;
 }
 
-function phoneVariants(value: string): string[] {
+function phoneVariants(value) {
   const d = (value || '').replace(/[^\d]/g, '');
   const ten = d.slice(-10);
   if (ten.length !== 10) return value ? [value] : [];
@@ -34,13 +34,13 @@ function phoneVariants(value: string): string[] {
 
 // ---- cost controls (mirrors src/components/voice/costControls.js) ----
 const PREMIUM_AREA_CODES = new Set(['900', '976']);
-function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+function isAllowedDestination(e164, settings = {}) {
   const s = settings || {};
   const e = String(e164 || '').trim();
   if (/^\+1\d{10}$/.test(e)) {
     const areaCode = e.slice(2, 5);
     if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
-    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a) => String(a).replace(/[^\d]/g, '')) : [];
     if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
     return { allowed: true, reason: 'allowed' };
   }
@@ -48,7 +48,7 @@ function isAllowedDestination(e164: string, settings: any = {}): { allowed: bool
   if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
   return { allowed: false, reason: 'international_blocked' };
 }
-function blockedReasonMessage(reason: string): string {
+function blockedReasonMessage(reason) {
   switch (reason) {
     case 'premium_number_blocked': return 'Premium-rate numbers (900/976) are blocked.';
     case 'blocked_area_code': return "That area code is blocked by your agency's policy.";
@@ -58,14 +58,8 @@ function blockedReasonMessage(reason: string): string {
   }
 }
 
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -85,8 +79,8 @@ async function resolveTelnyxCreds(base44: any): Promise<{
 
 // ---- transient-failure retry policy (origination is NOT idempotent) ----
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
-function isRetryableStatus(status: number): boolean { return RETRYABLE_STATUSES.has(Number(status)); }
-function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
+function isRetryableStatus(status) { return RETRYABLE_STATUSES.has(Number(status)); }
+function parseRetryAfter(headerValue, nowMs = Date.now()) {
   if (headerValue == null) return null;
   const raw = String(headerValue).trim();
   if (raw === '') return null;
@@ -95,14 +89,14 @@ function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number
   if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - nowMs);
   return null;
 }
-function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
+function backoffDelayMs(attempt, baseMs = 300, maxMs = 4000) {
   const n = Math.max(1, Number(attempt) || 1);
   const exp = Math.min(maxMs, baseMs * 2 ** (n - 1));
   return Math.round(exp / 2 + Math.random() * (exp / 2));
 }
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function originateWithRetry(
-  attemptFn: (attempt: number) => Promise<{ ok: boolean; status: number; data: any; retryAfter?: string | null }>,
+  attemptFn,
   maxAttempts = 3,
 ) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -118,7 +112,7 @@ async function originateWithRetry(
 
 // Telnyx echoes `client_state` (base64) back on every webhook for the call, so we
 // stash the bridge target + presented caller id there for handleTelnyxStatusWebhook.
-function encodeClientState(obj: Record<string, unknown>): string {
+function encodeClientState(obj) {
   const json = JSON.stringify(obj);
   const bytes = new TextEncoder().encode(json);
   let bin = '';
@@ -194,13 +188,13 @@ Deno.serve(async (req) => {
     const ORIGINATE_TIMEOUT_MS = 15000;
     const functionsBase = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
 
-    let result: { ok: boolean; status: number; data: any };
+    let result;
     try {
       result = await originateWithRetry(async () => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), ORIGINATE_TIMEOUT_MS);
         try {
-          const payload: Record<string, unknown> = {
+          const payload = {
             connection_id: voiceConnectionId,
             to: nurseCell,
             from: workNumber,
