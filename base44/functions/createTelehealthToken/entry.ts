@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * createTelehealthToken — mint a Telnyx Video join token for a telehealth
@@ -24,14 +24,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 // still expiring a stale link the same day. Staff joins are unaffected.
 const GUEST_JOIN_WINDOW_MS = 12 * 60 * 60 * 1000;
 
-function timingSafeEqual(a: unknown, b: unknown): boolean {
+function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
   let mismatch = 0;
   for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return mismatch === 0;
 }
 
-function extractJoinToken(inviteLink: unknown): string {
+function extractJoinToken(inviteLink) {
   if (!inviteLink || typeof inviteLink !== 'string') return '';
   try {
     return new URL(inviteLink).searchParams.get('t') || '';
@@ -41,8 +41,8 @@ function extractJoinToken(inviteLink: unknown): string {
   }
 }
 
-async function resolveTelnyxCreds(base44: any): Promise<{ apiKey: string | null }> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   if (!apiKey) {
     try {
@@ -56,13 +56,13 @@ async function resolveTelnyxCreds(base44: any): Promise<{ apiKey: string | null 
 const TELNYX_API_BASE = 'https://api.telnyx.com/v2';
 
 /** Find a Telnyx room by unique_name, creating it if it doesn't exist yet. */
-async function findOrCreateRoom(apiKey: string, uniqueName: string): Promise<string> {
+async function findOrCreateRoom(apiKey, uniqueName) {
   const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
   const findUrl = `${TELNYX_API_BASE}/rooms?filter[unique_name]=${encodeURIComponent(uniqueName)}`;
   const findResp = await fetch(findUrl, { method: 'GET', headers });
   if (findResp.ok) {
     const found = await findResp.json().catch(() => ({}));
-    const existing = Array.isArray(found?.data) ? found.data.find((r: any) => r.unique_name === uniqueName) : null;
+    const existing = Array.isArray(found?.data) ? found.data.find((r) => r.unique_name === uniqueName) : null;
     if (existing?.id) return existing.id;
   }
   const createResp = await fetch(`${TELNYX_API_BASE}/rooms`, {
@@ -77,7 +77,7 @@ async function findOrCreateRoom(apiKey: string, uniqueName: string): Promise<str
     const retry = await fetch(findUrl, { method: 'GET', headers });
     if (retry.ok) {
       const found = await retry.json().catch(() => ({}));
-      const existing = Array.isArray(found?.data) ? found.data.find((r: any) => r.unique_name === uniqueName) : null;
+      const existing = Array.isArray(found?.data) ? found.data.find((r) => r.unique_name === uniqueName) : null;
       if (existing?.id) return existing.id;
     }
   }
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     const session = sessions[0];
     if (!session) return Response.json({ error: 'Telehealth session not found' }, { status: 404 });
 
-    let participantIdentity: string;
+    let participantIdentity;
 
     if (join_token) {
       const expected = extractJoinToken(session.invite_link);
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       host_name: session.host_name || null,
     });
   } catch (error) {
-    console.error('createTelnyxVideoToken error:', (error as Error)?.message);
+    console.error('createTelnyxVideoToken error:', error?.message);
     return Response.json({ error: 'Failed to create video token' }, { status: 500 });
   }
 });
