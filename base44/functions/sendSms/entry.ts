@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * sendSms — outbound SMS (via Telnyx) from a nurse's dedicated work number to a patient,
@@ -12,7 +12,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  */
 
 // ---- inline helpers (single-file Deno deploy; do not rely on imports) ----
-function normalizeE164(raw: string | null | undefined): string | null {
+function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -21,13 +21,13 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return null;
 }
 
-function getThreadId(a: string, b: string): string {
+function getThreadId(a, b) {
   const na = normalizeE164(a) || a;
   const nb = normalizeE164(b) || b;
   return [na, nb].sort().join('|');
 }
 
-function phoneVariants(value: string): string[] {
+function phoneVariants(value) {
   const d = (value || '').replace(/[^\d]/g, '');
   const ten = d.slice(-10);
   if (ten.length !== 10) return value ? [value] : [];
@@ -36,7 +36,7 @@ function phoneVariants(value: string): string[] {
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
-async function getAgencyConfig(base44: any) {
+async function getAgencyConfig(base44) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return { settings: s, smsEnabled: s.sms_messaging_enabled ?? true };
@@ -47,14 +47,8 @@ async function getAgencyConfig(base44: any) {
  * IntegrationSecret row (provider 'telnyx'). Inlined identically across the
  * Telnyx functions; drift guarded by telnyxCredsInlineParity.test.js.
  */
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -72,7 +66,7 @@ async function resolveTelnyxCreds(base44: any): Promise<{
   return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
 }
 
-async function resolvePatientId(base44: any, e164: string): Promise<string | null> {
+async function resolvePatientId(base44, e164) {
   for (const variant of phoneVariants(e164)) {
     const matches = await base44.asServiceRole.entities.Patient.filter({ phone: variant }).catch(() => []);
     if (matches.length > 0) return matches[0].id;
@@ -84,8 +78,8 @@ async function resolvePatientId(base44: any, e164: string): Promise<string | nul
 // We only retry on explicit retryable HTTP statuses and never on a THROWN network
 // error for a send — a blind retry could double-text the patient.
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
-function isRetryableStatus(status: number): boolean { return RETRYABLE_STATUSES.has(Number(status)); }
-function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number | null {
+function isRetryableStatus(status) { return RETRYABLE_STATUSES.has(Number(status)); }
+function parseRetryAfter(headerValue, nowMs = Date.now()) {
   if (headerValue == null) return null;
   const raw = String(headerValue).trim();
   if (raw === '') return null;
@@ -94,14 +88,14 @@ function parseRetryAfter(headerValue: string | null, nowMs = Date.now()): number
   if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - nowMs);
   return null;
 }
-function backoffDelayMs(attempt: number, baseMs = 300, maxMs = 4000): number {
+function backoffDelayMs(attempt, baseMs = 300, maxMs = 4000) {
   const n = Math.max(1, Number(attempt) || 1);
   const exp = Math.min(maxMs, baseMs * 2 ** (n - 1));
   return Math.round(exp / 2 + Math.random() * (exp / 2));
 }
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function sendWithRetry(
-  attemptFn: (attempt: number) => Promise<{ ok: boolean; status: number; data: any; retryAfter?: string | null }>,
+  attemptFn,
   maxAttempts = 3,
 ) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -121,7 +115,7 @@ async function sendWithRetry(
 }
 
 // ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
-const AREA_CODE_TIMEZONE: Record<number, string> = {
+const AREA_CODE_TIMEZONE = {
   201: "America/New_York", 202: "America/New_York", 203: "America/New_York", 207: "America/New_York",
   212: "America/New_York", 215: "America/New_York", 216: "America/New_York", 220: "America/New_York",
   223: "America/New_York", 234: "America/New_York", 239: "America/New_York", 240: "America/New_York",
@@ -190,13 +184,13 @@ const AREA_CODE_TIMEZONE: Record<number, string> = {
   925: "America/Los_Angeles", 949: "America/Los_Angeles", 951: "America/Los_Angeles", 971: "America/Los_Angeles",
   907: "America/Anchorage", 808: "Pacific/Honolulu",
 };
-function tzForNumber(raw: string): string | null {
+function tzForNumber(raw) {
   const d = String(raw || '').replace(/[^\d]/g, '');
   const ten = d.length === 11 && d.startsWith('1') ? d.slice(1) : d;
   if (ten.length !== 10) return null;
   return AREA_CODE_TIMEZONE[Number(ten.slice(0, 3))] || null;
 }
-function hourInZone(date: Date, timeZone: string): number | null {
+function hourInZone(date, timeZone) {
   try {
     const h = new Intl.DateTimeFormat('en-US', { timeZone, hour12: false, hour: '2-digit' }).format(date);
     let n = parseInt(h, 10);
@@ -204,7 +198,7 @@ function hourInZone(date: Date, timeZone: string): number | null {
     return Number.isNaN(n) ? null : n;
   } catch { return null; }
 }
-function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed: boolean; reason: string } {
+function quietHoursCheck(toNumber, now, settings) {
   const startHour = Number(settings?.tcpa_quiet_start_hour ?? 8);
   const endHour = Number(settings?.tcpa_quiet_end_hour ?? 21);
   const tz = tzForNumber(toNumber);
@@ -221,13 +215,13 @@ function quietHoursCheck(toNumber: string, now: Date, settings: any): { allowed:
 
 // ---- cost controls (mirrors src/components/voice/costControls.js) ----
 const PREMIUM_AREA_CODES = new Set(['900', '976']);
-function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+function isAllowedDestination(e164, settings = {}) {
   const s = settings || {};
   const e = String(e164 || '').trim();
   if (/^\+1\d{10}$/.test(e)) {
     const areaCode = e.slice(2, 5);
     if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
-    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a) => String(a).replace(/[^\d]/g, '')) : [];
     if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
     return { allowed: true, reason: 'allowed' };
   }
@@ -235,7 +229,7 @@ function isAllowedDestination(e164: string, settings: any = {}): { allowed: bool
   if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
   return { allowed: false, reason: 'international_blocked' };
 }
-function blockedReasonMessage(reason: string): string {
+function blockedReasonMessage(reason) {
   switch (reason) {
     case 'premium_number_blocked': return 'Premium-rate numbers (900/976) are blocked.';
     case 'blocked_area_code': return "That area code is blocked by your agency's policy.";
@@ -244,7 +238,7 @@ function blockedReasonMessage(reason: string): string {
     default: return "That destination isn't allowed.";
   }
 }
-function monthStartISO(now = new Date()): string {
+function monthStartISO(now = new Date()) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
@@ -266,7 +260,7 @@ Deno.serve(async (req) => {
     }
     // Optional MMS attachments (Telnyx sends an MMS when media_urls is set). Cap
     // the count and require https URLs so a bad payload can't fan out or SSRF.
-    let mediaUrls: string[] | null = null;
+    let mediaUrls = null;
     if (media_urls != null) {
       if (!Array.isArray(media_urls) || media_urls.length > 10 || !media_urls.every((u) => typeof u === 'string' && /^https:\/\//i.test(u))) {
         return Response.json({ error: 'media_urls must be an array of up to 10 https URLs.' }, { status: 400 });
@@ -310,7 +304,7 @@ Deno.serve(async (req) => {
         .filter({ direction: 'outbound' }, '-created_date', monthlyCap)
         .catch(() => []);
       const sentThisMonth = (Array.isArray(recentOutbound) ? recentOutbound : [])
-        .filter((m: any) => m.created_date && m.created_date >= since).length;
+        .filter((m) => m.created_date && m.created_date >= since).length;
       if (sentThisMonth >= monthlyCap) {
         return Response.json({ error: 'This agency has reached its monthly text-message limit. Ask an admin to raise the cap.', reason: 'monthly_cap_reached' }, { status: 429 });
       }
@@ -362,13 +356,13 @@ Deno.serve(async (req) => {
     const SEND_TIMEOUT_MS = 15000;
     const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
     const webhookUrl = functionsBaseUrl ? `${functionsBaseUrl}/handleTelnyxStatusWebhook` : undefined;
-    let result: { ok: boolean; status: number; data: any };
+    let result;
     try {
       result = await sendWithRetry(async () => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
         try {
-          const payload: Record<string, unknown> = { from: fromNumber, to: destination, text: body };
+          const payload = { from: fromNumber, to: destination, text: body };
           if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
           if (mediaUrls) payload.media_urls = mediaUrls; // MMS
           if (webhookUrl) payload.webhook_url = webhookUrl;
