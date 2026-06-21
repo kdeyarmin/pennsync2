@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Upload, TrendingUp, Users, FolderOpen } from "lucide-react";
-import DocumentUploader from "../components/documents/DocumentUploader";
-import DocumentList from "../components/documents/DocumentList";
+import DocumentUploader from "@/components/documents/DocumentUploader";
+import DocumentList from "@/components/documents/DocumentList";
 
 export default function DocumentManagement() {
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);

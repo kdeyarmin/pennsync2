@@ -20,15 +20,15 @@ import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
 import { isSuperAdmin } from "@/lib/superAdmin";
 
-const SmartOASISAssessment = lazy(() => import("@/pages/SmartOASISAssessment"));
-const OASISAnalyzer = lazy(() => import("@/pages/OASISAnalyzer"));
-const OASISReview = lazy(() => import("@/pages/OASISReview"));
-const OASISClinicalReview = lazy(() => import("@/pages/OASISClinicalReview"));
-const OASISComplianceReview = lazy(() => import("@/pages/OASISComplianceReview"));
-const OASISDocumentationReview = lazy(() => import("@/pages/OASISDocumentationReview"));
-const OASISRevenueAnalysis = lazy(() => import("@/pages/OASISRevenueAnalysis"));
-const OASISAnalyticsDashboard = lazy(() => import("@/pages/OASISAnalyticsDashboard"));
-const OASISAuditDashboard = lazy(() => import("@/pages/OASISAuditDashboard"));
+const SmartOASISAssessment = lazy(() => import("@/components/hub-tabs/SmartOASISAssessment"));
+const OASISAnalyzer = lazy(() => import("@/components/hub-tabs/OASISAnalyzer"));
+const OASISReview = lazy(() => import("@/components/hub-tabs/OASISReview"));
+const OASISClinicalReview = lazy(() => import("@/components/hub-tabs/OASISClinicalReview"));
+const OASISComplianceReview = lazy(() => import("@/components/hub-tabs/OASISComplianceReview"));
+const OASISDocumentationReview = lazy(() => import("@/components/hub-tabs/OASISDocumentationReview"));
+const OASISRevenueAnalysis = lazy(() => import("@/components/hub-tabs/OASISRevenueAnalysis"));
+const OASISAnalyticsDashboard = lazy(() => import("@/components/hub-tabs/OASISAnalyticsDashboard"));
+const OASISAuditDashboard = lazy(() => import("@/components/hub-tabs/OASISAuditDashboard"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired standalone pages (Assessment, Analyzer, Review,

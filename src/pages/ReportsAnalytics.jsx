@@ -19,7 +19,7 @@ import OASISComplianceReport from "@/components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementReport";
 import KPIDashboard from "@/components/reports/KPIDashboard";
 
-const AdminReportsCenter = lazy(() => import("@/pages/AdminReportsCenter"));
+const AdminReportsCenter = lazy(() => import("@/components/hub-tabs/AdminReportsCenter"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired Reports Center page redirects to the right tab.

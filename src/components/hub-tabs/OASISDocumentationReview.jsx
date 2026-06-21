@@ -3,11 +3,11 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import OASISDocumentationQualityScorer from "../components/oasis/OASISDocumentationQualityScorer";
-import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
-import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";
-import AIDocumentationAssistant from "../components/oasis/AIDocumentationAssistant";
-import InlineDocumentationAssistant from "../components/oasis/InlineDocumentationAssistant";
+import OASISDocumentationQualityScorer from "@/components/oasis/OASISDocumentationQualityScorer";
+import AIDocumentReviewer from "@/components/oasis/AIDocumentReviewer";
+import AIDocumentationGenerator from "@/components/oasis/AIDocumentationGenerator";
+import AIDocumentationAssistant from "@/components/oasis/AIDocumentationAssistant";
+import InlineDocumentationAssistant from "@/components/oasis/InlineDocumentationAssistant";
 
 export default function OASISDocumentationReview() {
   const location = useLocation();

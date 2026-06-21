@@ -12,7 +12,7 @@ import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
 import { isSuperAdmin } from '@/lib/superAdmin';
 
-const PDFTemplateLibrary = lazy(() => import('@/pages/PDFTemplateLibrary'));
+const PDFTemplateLibrary = lazy(() => import('@/components/hub-tabs/PDFTemplateLibrary'));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired PDF Template Library page redirects to its tab.

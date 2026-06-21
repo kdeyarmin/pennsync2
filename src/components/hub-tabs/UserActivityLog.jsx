@@ -36,7 +36,7 @@ import {
   Mail,
   Send
 } from "lucide-react";
-import { formatEastern } from "../components/utils/timezone";
+import { formatEastern } from "@/components/utils/timezone";
 
 export default function UserActivityLog() {
   const [searchQuery, setSearchQuery] = useState("");

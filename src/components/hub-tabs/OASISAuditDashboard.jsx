@@ -38,7 +38,7 @@ import {
   Lightbulb
 } from "lucide-react";
 import { format } from "date-fns";
-import OASISAuditReportGenerator from "../components/oasis/OASISAuditReportGenerator";
+import OASISAuditReportGenerator from "@/components/oasis/OASISAuditReportGenerator";
 
 export default function OASISAuditDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");

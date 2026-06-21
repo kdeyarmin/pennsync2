@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
-import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
-import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
-import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";
-import AdvancedComplianceAnalyzer from "../components/oasis/AdvancedComplianceAnalyzer";
+import OASISValidationPanel from "@/components/oasis/OASISValidationPanel";
+import AuditRiskPredictor from "@/components/oasis/AuditRiskPredictor";
+import AIAuditRiskPredictor from "@/components/oasis/AIAuditRiskPredictor";
+import AdvancedComplianceAnalyzer from "@/components/oasis/AdvancedComplianceAnalyzer";
 
 export default function OASISComplianceReview() {
   const location = useLocation();

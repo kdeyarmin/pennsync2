@@ -44,12 +44,12 @@ import {
   User,
   Info
 } from "lucide-react";
-import EncryptionStatusIndicator from "../components/security/EncryptionStatusIndicator";
-import AIAuditAnalyzer from "../components/security/AIAuditAnalyzer";
-import SecurityAuditScheduler from "../components/security/SecurityAuditScheduler";
-import VulnerabilityAssessment from "../components/security/VulnerabilityAssessment";
+import EncryptionStatusIndicator from "@/components/security/EncryptionStatusIndicator";
+import AIAuditAnalyzer from "@/components/security/AIAuditAnalyzer";
+import SecurityAuditScheduler from "@/components/security/SecurityAuditScheduler";
+import VulnerabilityAssessment from "@/components/security/VulnerabilityAssessment";
 import { logActivity } from "@/components/utils/activityLogger";
-import { formatEastern } from "../components/utils/timezone";
+import { formatEastern } from "@/components/utils/timezone";
 import { toCsvRows } from "@/components/admin/csvExport";
 
 export default function SecurityCompliance() {

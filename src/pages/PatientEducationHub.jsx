@@ -38,8 +38,8 @@ import HandoutPreview from "../components/education/HandoutPreview";
 import HandoutStyleCustomizer from "../components/education/HandoutStyleCustomizer";
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 
-const PatientEducation = lazy(() => import("./PatientEducation"));
-const PatientEducationPortal = lazy(() => import("./PatientEducationPortal"));
+const PatientEducation = lazy(() => import("@/components/hub-tabs/PatientEducation"));
+const PatientEducationPortal = lazy(() => import("@/components/hub-tabs/PatientEducationPortal"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so redirects from the retired standalone pages (Teach-Back,

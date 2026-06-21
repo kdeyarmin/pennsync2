@@ -15,13 +15,13 @@ import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
 import DocumentAnalytics from "@/components/documents/DocumentAnalytics";
 import { isSuperAdmin } from "@/lib/superAdmin";
 
-const DocumentSignatures = lazy(() => import("@/pages/DocumentSignatures"));
-const CreateSignatureRequest = lazy(() => import("@/pages/CreateSignatureRequest"));
-const BulkSignatureRequests = lazy(() => import("@/pages/BulkSignatureRequests"));
-const DocumentManagement = lazy(() => import("@/pages/DocumentManagement"));
-const DocumentIngestion = lazy(() => import("@/pages/DocumentIngestion"));
-const DischargeSummaries = lazy(() => import("@/pages/DischargeSummaries"));
-const DocumentAuditLogs = lazy(() => import("@/pages/DocumentAuditLogs"));
+const DocumentSignatures = lazy(() => import("@/components/hub-tabs/DocumentSignatures"));
+const CreateSignatureRequest = lazy(() => import("@/components/hub-tabs/CreateSignatureRequest"));
+const BulkSignatureRequests = lazy(() => import("@/components/hub-tabs/BulkSignatureRequests"));
+const DocumentManagement = lazy(() => import("@/components/hub-tabs/DocumentManagement"));
+const DocumentIngestion = lazy(() => import("@/components/hub-tabs/DocumentIngestion"));
+const DischargeSummaries = lazy(() => import("@/components/hub-tabs/DischargeSummaries"));
+const DocumentAuditLogs = lazy(() => import("@/components/hub-tabs/DocumentAuditLogs"));
 
 // Hub tab keys, kept in sync with the TabsTrigger values below. Used to validate
 // the ?tab= deep-link so the retired standalone pages (Document Signatures,

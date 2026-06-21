@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp } from "lucide-react";
-import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
-import EnhancedPDGMCaseMixAnalyzer from "../components/oasis/EnhancedPDGMCaseMixAnalyzer";
-import AutomatedPDGMNavigator from "../components/oasis/AutomatedPDGMNavigator";
-import PDGMImpactAnalyzer from "../components/oasis/PDGMImpactAnalyzer";
+import PDGMRevenueComparison from "@/components/oasis/PDGMRevenueComparison";
+import EnhancedPDGMCaseMixAnalyzer from "@/components/oasis/EnhancedPDGMCaseMixAnalyzer";
+import AutomatedPDGMNavigator from "@/components/oasis/AutomatedPDGMNavigator";
+import PDGMImpactAnalyzer from "@/components/oasis/PDGMImpactAnalyzer";
 
 export default function OASISRevenueAnalysis() {
   const location = useLocation();
