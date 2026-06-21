@@ -136,7 +136,10 @@ export default function Dashboard() {
     return "Good Evening";
   }, []);
 
-  const fullName = currentUser?.full_name || 'there';
+  // Greet by first name only (e.g. "Good Morning, Kevin!"). The full name lives
+  // on the user's profile (editable under Settings → Profile); we take the first
+  // token and fall back to a friendly default if it hasn't been set yet.
+  const firstName = (currentUser?.full_name || '').trim().split(/\s+/)[0] || 'there';
   const careScope = currentUser?.care_scope;
   const careScopeLabel = careScope === "hospice"
     ? "Hospice"
@@ -199,7 +202,7 @@ export default function Dashboard() {
         className="mb-4 sm:mb-6"
         icon={careScope === "hospice" ? Heart : Home}
         eyebrow={careScopeLabel}
-        title={`${greeting}, ${fullName}!`}
+        title={`${greeting}, ${firstName}!`}
         description={formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
         favoritePage="Dashboard"
       />
