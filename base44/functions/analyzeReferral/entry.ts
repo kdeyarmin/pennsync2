@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 /**
  * Unified Referral Analysis Function
  * Handles: priority analysis, task generation, and patient matching
@@ -68,43 +85,15 @@ ${JSON.stringify(extractedData, null, 2)}
 AI-ASSISTED INITIAL ANALYSIS:
 ${JSON.stringify(analysisResults, null, 2)}
 
-Provide a detailed priority assessment with clear reasoning.`,
-        response_json_schema: {
-            type: "object",
-            properties: {
-                priority: {
-                    type: "string",
-                    enum: ["urgent", "high", "normal", "low"]
-                },
-                priority_score: {
-                    type: "number",
-                    description: "Numerical score 1-100"
-                },
-                urgency_factors: {
-                    type: "array",
-                    items: { type: "string" }
-                },
-                clinical_risks: {
-                    type: "array",
-                    items: { type: "string" }
-                },
-                recommended_response_time: {
-                    type: "string"
-                },
-                reasoning: {
-                    type: "string"
-                },
-                critical_actions: {
-                    type: "array",
-                    items: { type: "string" }
-                }
-            }
-        }
+Provide a detailed priority assessment with clear reasoning.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"priority":"urgent|high|normal|low","priority_score":0,"urgency_factors":[""],"clinical_risks":[""],"recommended_response_time":"","reasoning":"","critical_actions":[""]}`
     });
 
     return Response.json({
         success: true,
-        priorityAnalysis
+        priorityAnalysis: parseLLMJson(priorityAnalysis) || {}
     });
 }
 
@@ -135,31 +124,14 @@ Priority-based timing:
 - Normal: Within 2-3 days
 - Low: Within 1 week
 
-Return 5-12 tasks ordered by priority and due date.`, 
-        response_json_schema: {
-            type: "object",
-            properties: {
-                tasks: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            title: { type: "string" },
-                            description: { type: "string" },
-                            type: { type: "string", enum: ["call", "notify", "schedule", "order", "coordinate", "document", "safety", "followup", "other"] },
-                            priority: { type: "string", enum: ["high", "medium", "low"] },
-                            assigned_role: { type: "string", enum: ["intake_coordinator", "nurse_manager", "field_nurse", "billing", "admin", "other"] },
-                            due_date: { type: "string" },
-                            ai_reason: { type: "string" }
-                        },
-                        required: ["title", "description", "type", "priority", "assigned_role", "due_date", "ai_reason"]
-                    }
-                }
-            }
-        }
+Return 5-12 tasks ordered by priority and due date.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"tasks":[{"title":"","description":"","type":"call|notify|schedule|order|coordinate|document|safety|followup|other","priority":"high|medium|low","assigned_role":"intake_coordinator|nurse_manager|field_nurse|billing|admin|other","due_date":"YYYY-MM-DD","ai_reason":""}]}`
     });
 
-    return Response.json({ success: true, tasks: tasks.tasks || [] });
+    const parsedTasks = parseLLMJson(tasks) || {};
+    return Response.json({ success: true, tasks: parsedTasks.tasks || [] });
 }
 
 async function matchPatient(base44, params) {
@@ -217,69 +189,15 @@ For each potential match, identify and list ALL discrepancies:
 - List TOP 3 alternative matches if confidence < 90%
 - Clear reasoning for each match
 - Specific discrepancies that need review
-- Actionable recommendation`,
-        response_json_schema: {
-            type: "object",
-            properties: {
-                best_match_id: { 
-                    type: "string",
-                    description: "ID of the most likely matching patient, or null if no good match"
-                },
-                confidence_score: { 
-                    type: "number",
-                    description: "0-100 confidence score for the best match"
-                },
-                confidence_level: {
-                    type: "string",
-                    enum: ["high", "medium", "low", "no_match"],
-                    description: "Categorical confidence level"
-                },
-                match_factors: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Specific factors that support the match (e.g., 'Exact DOB match', 'Name similarity 95%')"
-                },
-                discrepancies: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Specific discrepancies found (e.g., 'Address differs: 123 Oak St vs 456 Elm Ave', 'Phone changed')"
-                },
-                alternative_matches: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            patient_id: { type: "string" },
-                            patient_name: { type: "string" },
-                            confidence_score: { type: "number" },
-                            reasons: {
-                                type: "array",
-                                items: { type: "string" }
-                            },
-                            discrepancies: {
-                                type: "array",
-                                items: { type: "string" }
-                            }
-                        }
-                    },
-                    description: "Top 3 alternative matches with their confidence scores"
-                },
-                recommendation: {
-                    type: "string",
-                    enum: ["use_match", "manual_review", "create_new"],
-                    description: "Recommended action based on confidence level"
-                },
-                reasoning: { 
-                    type: "string",
-                    description: "Detailed explanation of the matching decision and why this confidence level was assigned"
-                }
-            }
-        }
+- Actionable recommendation
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"best_match_id":"id-or-null","confidence_score":0,"confidence_level":"high|medium|low|no_match","match_factors":[""],"discrepancies":[""],"alternative_matches":[{"patient_id":"","patient_name":"","confidence_score":0,"reasons":[""],"discrepancies":[""]}],"recommendation":"use_match|manual_review|create_new","reasoning":""}`
     });
 
     return Response.json({
         success: true,
-        matchAnalysis
+        matchAnalysis: parseLLMJson(matchAnalysis) || {}
     });
 }
 
