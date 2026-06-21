@@ -1,9 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import OpenAI from 'npm:openai';
-
-const openai = new OpenAI({
-    apiKey: Deno.env.get("OPENAI_API_KEY"),
-});
 
 Deno.serve(async (req) => {
     try {
@@ -13,6 +9,10 @@ Deno.serve(async (req) => {
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Construct the OpenAI client inside the handler — module-level init
+        // crashes boot if the secret is missing (no try/catch reached, no logs).
+        const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
 
         const payload = await req.json();
         const { audio_base64, mime_type } = payload;
