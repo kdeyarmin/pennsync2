@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { useIsEmbedded } from "@/components/ui/embeddedPage";
 import { Input } from "@/components/ui/input";
 import LoadingState from "@/components/ui/LoadingState";
+import RequiredTrainingSummary from "./RequiredTrainingSummary";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -98,6 +99,8 @@ export default function MyTrainingDashboard({ filterByType }) {
           </p>
         </div>
       )}
+
+      <RequiredTrainingSummary assignments={assignments} courseMap={courseMap} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[

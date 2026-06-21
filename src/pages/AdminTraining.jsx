@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText } from "lucide-react";
+import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import EducatorReadinessPanel from "@/components/learning/EducatorReadinessPanel";
 import CourseManager from "@/components/training/CourseManager";
 import LearningPlanManager from "@/components/training/LearningPlanManager";
 import AIComplianceInServicesHub from "@/components/training/AIComplianceInServicesHub";
@@ -204,9 +205,13 @@ export default function AdminTraining() {
         favoritePage="AdminTraining"
       />
 
-      <Tabs defaultValue="courses" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="overview" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Overview
+            </TabsTrigger>
             <TabsTrigger value="courses" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <BookOpen className="w-4 h-4 mr-2" />
               Courses
@@ -237,6 +242,10 @@ export default function AdminTraining() {
             )}
           </TabsList>
         </div>
+
+        <TabsContent value="overview" className="space-y-6">
+          <EducatorReadinessPanel />
+        </TabsContent>
 
         <TabsContent value="courses">
           <CourseManager />

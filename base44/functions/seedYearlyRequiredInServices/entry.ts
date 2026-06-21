@@ -1124,6 +1124,188 @@ const plans = [
 ];
 
 // ───────────────────────────────────────────────────────────────────────────
+// PROFESSIONAL ENRICHMENT (keyed by course key)
+// These fields power the course intro screen's "Why this matters", "Regulatory
+// Requirements Addressed", and "Skills You Will Demonstrate" sections, so every
+// seeded in-service renders with the full professional treatment. They are
+// additive: re-running the seed backfills them on previously-seeded courses
+// without touching lessons, questions, or any other content.
+// ───────────────────────────────────────────────────────────────────────────
+const reg = (regulation, title, how) => ({ regulation, title, how_this_course_addresses_it: how });
+const skill = (skill, criteria) => ({ skill, criteria });
+
+const ENRICHMENT = {
+  infection_control: {
+    real_world_relevance:
+      'Infection prevention is one of the most frequently cited survey deficiencies in home care, and a single lapse in a patient home can lead to serious, avoidable harm.',
+    regulatory_crosswalk: [
+      reg('42 CFR §484.70', 'HH Condition of Participation: Infection prevention & control', 'Reinforces standard precautions, hand hygiene, and PPE use on every visit.'),
+      reg('42 CFR §418.60', 'Hospice CoP: Infection control', 'Applies the same prevention standards to the hospice setting.'),
+    ],
+    competency_skills: [
+      skill('Perform hand hygiene at the right moments', 'Demonstrates hand hygiene before and after patient contact and after PPE removal.'),
+      skill('Select and doff PPE safely', 'Chooses task-appropriate PPE and removes it without self-contamination.'),
+    ],
+  },
+  hipaa: {
+    real_world_relevance:
+      'Most reportable breaches in home care come from everyday mistakes — a lost device, a misdirected fax, or a conversation overheard in a patient home.',
+    regulatory_crosswalk: [
+      reg('45 CFR §164.530', 'HIPAA Privacy Rule: Administrative requirements', 'Covers minimum necessary use and safeguarding PHI in the field.'),
+      reg('45 CFR §164.312', 'HIPAA Security Rule: Technical safeguards', 'Reinforces device security, access controls, and breach reporting.'),
+    ],
+    competency_skills: [
+      skill('Apply the minimum-necessary standard', 'Accesses and shares only the PHI needed for the task at hand.'),
+      skill('Recognize and report a potential breach', 'Identifies a privacy incident and escalates it per agency policy without delay.'),
+    ],
+  },
+  abuse_neglect: {
+    real_world_relevance:
+      'Home care staff are often the only outside eyes on a vulnerable patient, making prompt recognition and reporting of abuse or neglect a life-safety responsibility.',
+    regulatory_crosswalk: [
+      reg('42 CFR §484.50', 'HH CoP: Patient rights — freedom from abuse & neglect', 'Defines the duty to recognize and report mistreatment.'),
+      reg('State APS law', 'Adult Protective Services mandatory reporting', 'Explains who, what, and when to report under state law.'),
+    ],
+    competency_skills: [
+      skill('Recognize indicators of abuse, neglect, or exploitation', 'Identifies physical, behavioral, and environmental warning signs.'),
+      skill('Report a concern correctly and promptly', 'Documents objective findings and notifies the right parties within required timeframes.'),
+    ],
+  },
+  emergency_prep: {
+    real_world_relevance:
+      'When a disaster hits, the plan you practiced is the plan you keep — knowing patient priority levels and your role ahead of time saves lives during an actual emergency.',
+    regulatory_crosswalk: [
+      reg('42 CFR §484.102', 'HH Emergency Preparedness Condition', 'Covers the emergency plan, communication, and patient triage roles.'),
+      reg('42 CFR §418.113', 'Hospice Emergency Preparedness Condition', 'Applies preparedness requirements to hospice operations.'),
+    ],
+    competency_skills: [
+      skill('Apply the agency emergency plan', 'States their role and the patient-priority tiers during an emergency.'),
+      skill('Maintain communication during a disruption', 'Knows backup contact methods and reporting expectations.'),
+    ],
+  },
+  osha_bbp: {
+    real_world_relevance:
+      'A needlestick or splash exposure in the home can have lifelong consequences; safe handling and a known exposure-response plan protect you on every visit.',
+    regulatory_crosswalk: [
+      reg('29 CFR §1910.1030', 'OSHA Bloodborne Pathogens Standard', 'Covers exposure control, safe sharps handling, and post-exposure steps.'),
+      reg('29 CFR §1910.1200', 'OSHA Hazard Communication Standard', 'Reinforces safe handling and labeling of hazardous chemicals.'),
+    ],
+    competency_skills: [
+      skill('Handle and dispose of sharps safely', 'Uses safe technique and an approved sharps container at point of care.'),
+      skill('Respond correctly to an exposure', 'Initiates wash, report, and evaluation steps immediately after an exposure.'),
+    ],
+  },
+  patient_rights: {
+    real_world_relevance:
+      'Honoring patient rights and advance directives is both an ethical duty and a frequent survey focus — patients must understand their choices and have them respected.',
+    regulatory_crosswalk: [
+      reg('42 CFR §484.50', 'HH CoP: Patient rights', 'Covers notice of rights, participation in care, and grievances.'),
+      reg('42 CFR §489.100', 'Advance directive requirements', 'Explains documenting and honoring advance directives.'),
+    ],
+    competency_skills: [
+      skill('Communicate patient rights clearly', 'Explains rights and the grievance process in plain language.'),
+      skill('Honor advance directives', 'Confirms directive status and ensures care reflects the patient’s wishes.'),
+    ],
+  },
+  compliance_fraud: {
+    real_world_relevance:
+      'Accurate documentation and honest billing protect both patients and the agency — most fraud findings trace back to records that did not match the care delivered.',
+    regulatory_crosswalk: [
+      reg('42 USC §1320a-7b', 'Anti-Kickback Statute', 'Explains prohibited inducements and referrals.'),
+      reg('31 USC §3729', 'False Claims Act', 'Connects accurate documentation to compliant billing.'),
+    ],
+    competency_skills: [
+      skill('Document to support the claim', 'Ensures the record reflects the care actually provided and its medical necessity.'),
+      skill('Report a compliance concern', 'Uses the agency’s confidential, non-retaliatory reporting channel.'),
+    ],
+  },
+  workplace_violence: {
+    real_world_relevance:
+      'Field clinicians enter unpredictable environments alone; reading early warning signs and having a personal-safety plan prevents most incidents before they escalate.',
+    regulatory_crosswalk: [
+      reg('OSHA General Duty Clause', 'Section 5(a)(1) — safe workplace', 'Supports the duty to protect staff from recognized hazards including violence.'),
+      reg('OSHA 3148', 'Guidelines for preventing workplace violence for healthcare', 'Provides de-escalation and personal-safety expectations.'),
+    ],
+    competency_skills: [
+      skill('Recognize escalation warning signs', 'Identifies environmental and behavioral cues that signal rising risk.'),
+      skill('Execute a personal-safety plan', 'Uses de-escalation, exit awareness, and check-in procedures appropriately.'),
+    ],
+  },
+  body_mechanics: {
+    real_world_relevance:
+      'Caregiver injuries from manual lifting are common and career-ending; safe handling technique protects both you and the patient on every transfer.',
+    regulatory_crosswalk: [
+      reg('OSHA General Duty Clause', 'Section 5(a)(1) — ergonomic hazards', 'Supports safe patient handling to prevent musculoskeletal injury.'),
+      reg('CDC/NIOSH safe handling', 'Safe patient handling guidance', 'Reinforces assessment and assistive-device use before transfers.'),
+    ],
+    competency_skills: [
+      skill('Assess before every transfer', 'Evaluates patient ability, equipment, and environment prior to moving a patient.'),
+      skill('Apply safe handling technique', 'Uses neutral posture, assistive devices, and team lifts as indicated.'),
+    ],
+  },
+  aide_inservice: {
+    real_world_relevance:
+      'Aides deliver the majority of hands-on care; the required 12 annual in-service hours keep core competencies sharp and observation-ready.',
+    regulatory_crosswalk: [
+      reg('42 CFR §484.80', 'HH aide training & competency', 'Covers the 12-hour annual in-service and competency expectations.'),
+      reg('42 CFR §418.76', 'Hospice aide training & competency', 'Applies aide competency requirements to hospice.'),
+    ],
+    competency_skills: [
+      skill('Demonstrate core personal-care skills', 'Performs ADL assistance safely and per the care plan.'),
+      skill('Report changes in condition', 'Recognizes and reports patient changes to the supervising nurse.'),
+    ],
+  },
+  oasis_homebound: {
+    real_world_relevance:
+      'OASIS accuracy and a defensible homebound narrative drive both payment and survey outcomes; small documentation gaps create large compliance and reimbursement risk.',
+    regulatory_crosswalk: [
+      reg('42 CFR §484.55', 'Comprehensive assessment of patients', 'Covers accurate, timely OASIS data collection.'),
+      reg('Medicare homebound criteria', 'Eligibility & homebound status', 'Reinforces documenting both prongs of the homebound definition.'),
+    ],
+    competency_skills: [
+      skill('Document a defensible homebound status', 'Captures both the taxing-effort and confinement criteria with specifics.'),
+      skill('Score OASIS items accurately', 'Selects responses supported by objective assessment findings.'),
+    ],
+  },
+  hospice_philosophy: {
+    real_world_relevance:
+      'Understanding the hospice benefit, levels of care, and eligibility keeps the team aligned on goals of care and protects the agency from eligibility-related denials.',
+    regulatory_crosswalk: [
+      reg('42 CFR §418.22', 'Certification of terminal illness', 'Connects eligibility and the six-month prognosis standard.'),
+      reg('42 CFR §418.302', 'Hospice levels of care', 'Explains routine, continuous, respite, and general inpatient care.'),
+    ],
+    competency_skills: [
+      skill('Apply the hospice philosophy of care', 'Frames interventions around comfort and patient/family goals.'),
+      skill('Match needs to the right level of care', 'Identifies when a different level of care is indicated.'),
+    ],
+  },
+  hospice_pain: {
+    real_world_relevance:
+      'Unrelieved pain at end of life is the symptom families remember most; skilled assessment and proactive management are central to quality hospice care.',
+    regulatory_crosswalk: [
+      reg('42 CFR §418.54', 'Comprehensive hospice assessment', 'Covers thorough symptom and pain assessment.'),
+      reg('42 CFR §418.56', 'Interdisciplinary plan of care', 'Connects symptom management to the IDG plan of care.'),
+    ],
+    competency_skills: [
+      skill('Assess pain and symptoms systematically', 'Uses an appropriate tool and documents response to interventions.'),
+      skill('Manage symptoms proactively', 'Anticipates and adjusts the plan to prevent crises at end of life.'),
+    ],
+  },
+  medication_safety: {
+    real_world_relevance:
+      'Medication errors and adverse drug events are a leading cause of avoidable hospitalization in home care; reconciliation and high-alert vigilance prevent harm.',
+    regulatory_crosswalk: [
+      reg('42 CFR §484.55', 'Drug regimen review', 'Covers identifying and reporting potential medication issues.'),
+      reg('ISMP high-alert medications', 'Safe use of high-alert drugs', 'Reinforces extra safeguards for high-risk medications.'),
+    ],
+    competency_skills: [
+      skill('Reconcile the medication list', 'Compares and resolves discrepancies across the patient’s medications.'),
+      skill('Flag high-alert and interaction risks', 'Recognizes and escalates potential adverse drug events.'),
+    ],
+  },
+};
+
+// ───────────────────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -1140,6 +1322,7 @@ Deno.serve(async (req) => {
 
     for (const sample of courses) {
       const title = sample.title;
+      const enrich = ENRICHMENT[sample.key] || {};
       const existing = await svc.TrainingCourse.filter({ title, annual_cycle_year: year }, '-created_date', 5);
       let course = existing[0];
 
@@ -1177,6 +1360,9 @@ Deno.serve(async (req) => {
           include_case_scenarios: true,
           include_key_takeaways: true,
           certificate_wording: 'This certifies successful completion of an annual required in-service.',
+          real_world_relevance: enrich.real_world_relevance || '',
+          regulatory_crosswalk_json: enrich.regulatory_crosswalk || [],
+          competency_skills_json: enrich.competency_skills || [],
           retake_settings_json: {
             passing_threshold: 80,
             unlimited_retakes: false,
@@ -1233,6 +1419,21 @@ Deno.serve(async (req) => {
         });
       } else {
         reusedCourses.push(title);
+        // Additive backfill: fill professional metadata on previously-seeded
+        // courses that predate it, without touching lessons or questions.
+        const patch = {};
+        if (enrich.real_world_relevance && !course.real_world_relevance) {
+          patch.real_world_relevance = enrich.real_world_relevance;
+        }
+        if (enrich.regulatory_crosswalk && (course.regulatory_crosswalk_json || []).length === 0) {
+          patch.regulatory_crosswalk_json = enrich.regulatory_crosswalk;
+        }
+        if (enrich.competency_skills && (course.competency_skills_json || []).length === 0) {
+          patch.competency_skills_json = enrich.competency_skills;
+        }
+        if (Object.keys(patch).length > 0) {
+          await svc.TrainingCourse.update(course.id, patch);
+        }
       }
 
       courseIdByKey[sample.key] = { id: course.id, title };
