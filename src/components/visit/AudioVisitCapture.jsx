@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -46,6 +46,10 @@ export default function AudioVisitCapture({ currentUser }) {
   const [uploadedAudio, setUploadedAudio] = useState(null);
   const [_transcription, setTranscription] = useState(null);
   const [roughNote, setRoughNote] = useState("");
+  // Monotonic id bumped on each new transcription — used to re-mount the reviewer
+  // so two different recordings that happen to be the same length still reset its
+  // compliance state (a length-based key would not).
+  const [noteSeq, setNoteSeq] = useState(0);
   const [activeTab, setActiveTab] = useState("record");
 
   // Visit context + chart-save state (parity with the Smart Note flow).
@@ -60,9 +64,18 @@ export default function AudioVisitCapture({ currentUser }) {
   const [signatureImage, setSignatureImage] = useState(null);
   const visitDate = todayEastern();
 
+  // Mirror SmartNoteAssistant's query exactly: both flows share the ["patients"]
+  // react-query cache, so they must resolve to the same data (a different filter
+  // or limit under the same key would serve whichever loaded first).
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
-    queryFn: () => base44.entities.Patient.list("-updated_date", 1000),
+    queryFn: async () => {
+      try {
+        return await base44.entities.Patient.filter({ status: "active" }, "first_name", 200);
+      } catch {
+        return [];
+      }
+    },
     initialData: [],
   });
   const patient = patients.find(p => p.id === patientId);
@@ -72,6 +85,14 @@ export default function AudioVisitCapture({ currentUser }) {
     queryFn: () => base44.entities.Patient.get(patientId),
     enabled: !!patientId,
   });
+
+  // A new patient must start a fresh visit — clear any prior save target so a
+  // re-save can't update the previous patient's visit under the new patient.
+  useEffect(() => {
+    setSavedVisitId(null);
+    setSavedAuditId(null);
+    setSaved(false);
+  }, [patientId]);
 
   const careScope = patient?.care_type || currentUser?.care_scope;
   const serviceLine = careScope === "hospice" ? "hospice" : "home_health";
@@ -95,10 +116,12 @@ export default function AudioVisitCapture({ currentUser }) {
       setTranscription(payload.transcription || "");
       setRoughNote(payload.generatedNote || payload.transcription || "");
       // A new transcription is a new note — clear any prior save so the reviewer
-      // creates a fresh visit rather than updating the last one.
+      // creates a fresh visit rather than updating the last one, and bump the
+      // re-mount key so its review state resets even for an equal-length note.
       setSavedVisitId(null);
       setSavedAuditId(null);
       setSaved(false);
+      setNoteSeq(n => n + 1);
       logActivity(ActivityActions.NOTE_AI_GENERATED, { page: 'ClinicalDocumentation', source: 'audio_recording' });
     },
   });
@@ -134,7 +157,7 @@ export default function AudioVisitCapture({ currentUser }) {
       }
       const out = await persistVisitNote({
         result, patientId, visitDate, visitType, roughNote, vitals,
-        currentUser, patientDiagnosis: patient?.primary_diagnosis || "",
+        currentUser, patientDiagnosis: patientDetail?.primary_diagnosis || patient?.primary_diagnosis || "",
         savedVisitId, savedAuditId,
       });
       if (out) {
@@ -302,7 +325,7 @@ export default function AudioVisitCapture({ currentUser }) {
           Keyed so a new transcription / patient / visit type re-initializes it. */}
       {hasRoughNote && (
         <ConstrainedNoteReviewer
-          key={`${patientId}|${visitType}|${roughNote.length}`}
+          key={`${patientId}|${visitType}|${noteSeq}`}
           roughNote={roughNote}
           serviceLine={serviceLine}
           visitType={visitType}
