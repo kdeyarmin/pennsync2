@@ -55,6 +55,16 @@
       "type": "boolean",
       "default": false
     },
+    "was_applied": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this recommendation was applied"
+    },
+    "applied_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this recommendation was applied"
+    },
     "patient_id": {
       "type": "string",
       "description": "Related patient if applicable"

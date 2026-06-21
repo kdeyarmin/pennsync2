@@ -79,6 +79,10 @@
     "metadata": {
       "type": "object",
       "description": "Additional metadata like page count, file size, etc."
+    },
+    "template_content": {
+      "type": "string",
+      "description": "Populated document content generated from a template"
     }
   },
   "required": [

@@ -212,6 +212,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether assignment is archived"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the attempt was submitted"
     }
   },
   "required": [
