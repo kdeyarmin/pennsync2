@@ -6,6 +6,23 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * Replaces: extractClinicalEvents, analyzeClinicalEvents, analyzeClinicalTrends, generateCarePlanSuggestions
  */
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -53,32 +70,13 @@ For each event:
 - requires_followup: true if needs action/monitoring
 - confidence: 0-100 (only include events with confidence >= 70)
 
-Be thorough - extract ALL clinically significant events, not just major ones.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              events: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    type: { type: "string" },
-                    title: { type: "string" },
-                    description: { type: "string" },
-                    date: { type: "string" },
-                    severity: { type: "string" },
-                    structured_data: { type: "object" },
-                    source_text: { type: "string" },
-                    requires_followup: { type: "boolean" },
-                    confidence: { type: "number" }
-                  }
-                }
-              }
-            }
-          }
+Be thorough - extract ALL clinically significant events, not just major ones.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"events":[{"type":"","title":"","description":"","date":"","severity":"low|medium|high|critical","structured_data":{},"source_text":"","requires_followup":false,"confidence":0}]}`
         });
 
-        return Response.json({ events: eventsResponse?.events || [] });
+        return Response.json({ events: parseLLMJson(eventsResponse)?.events || [] });
       }
 
       case 'analyze_events':
@@ -113,7 +111,7 @@ async function extractEvents(base44, params) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const result = await base44.integrations.Core.InvokeLLM({
+  const rawResult = await base44.integrations.Core.InvokeLLM({
     prompt: `Extract ALL significant clinical events from this nursing note. Be thorough.
 
 Visit Note:
@@ -121,59 +119,15 @@ ${nurse_notes}
 
 Extract: medication changes, appointments, hospitalizations, falls, wounds, labs, symptoms, vital changes, cognitive/functional changes, pain, infections, procedures, therapy changes, DME, and other significant events.
 
-For each event provide: event_type, event_title, event_description, structured_data, severity, requires_followup, followup_notes, source_text (exact quote), source_section, extraction_confidence (0-100).`,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        events: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              event_type: {
-                type: "string",
-                enum: [
-                  "medication_change",
-                  "medication_started",
-                  "medication_stopped",
-                  "physician_appointment",
-                  "hospitalization",
-                  "er_visit",
-                  "fall",
-                  "wound_new",
-                  "wound_change",
-                  "lab_result",
-                  "symptom_new",
-                  "symptom_resolved",
-                  "vital_change",
-                  "cognitive_change",
-                  "functional_change",
-                  "pain_change",
-                  "infection",
-                  "surgery",
-                  "therapy_change",
-                  "dme_ordered",
-                  "other"
-                ]
-              },
-              event_title: { type: "string" },
-              event_description: { type: "string" },
-              structured_data: { type: "object" },
-              severity: {
-                type: "string",
-                enum: ["low", "medium", "high", "critical"]
-              },
-              requires_followup: { type: "boolean" },
-              followup_notes: { type: "string" },
-              source_text: { type: "string" },
-              source_section: { type: "string" },
-              extraction_confidence: { type: "number" }
-            }
-          }
-        }
-      }
-    }
+For each event provide: event_type, event_title, event_description, structured_data, severity, requires_followup, followup_notes, source_text (exact quote), source_section, extraction_confidence (0-100).
+
+event_type must be one of: medication_change, medication_started, medication_stopped, physician_appointment, hospitalization, er_visit, fall, wound_new, wound_change, lab_result, symptom_new, symptom_resolved, vital_change, cognitive_change, functional_change, pain_change, infection, surgery, therapy_change, dme_ordered, other.
+severity must be one of: low, medium, high, critical.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"events":[{"event_type":"","event_title":"","event_description":"","structured_data":{},"severity":"low|medium|high|critical","requires_followup":false,"followup_notes":"","source_text":"","source_section":"","extraction_confidence":0}]}`
   });
+  const parsed = parseLLMJson(rawResult) || {};
 
   // Allowed ClinicalEvent enums; coerce any AI value outside these sets to a
   // safe default so ClinicalEvent.create won't reject the record.
@@ -189,7 +143,7 @@ For each event provide: event_type, event_title, event_description, structured_d
 
   // Save extracted events
   const savedEvents = [];
-  for (const event of result.events || []) {
+  for (const event of parsed.events || []) {
     // Coerce out-of-enum AI values to safe defaults before persisting
     event.event_type = ALLOWED_EVENT_TYPES.has(event.event_type) ? event.event_type : 'other';
     event.severity = ALLOWED_SEVERITIES.has(event.severity) ? event.severity : 'medium';
@@ -277,36 +231,17 @@ Identify:
 4. Potential duplicates or related events
 5. Safety concerns or red flags
 
-Only flag events with actual issues. For each flagged event provide: event_id, issue_category, issue_description, suggested_action, priority, questions_for_clinician.`,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        flagged_events: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              event_id: { type: "string" },
-              issue_category: { type: "string" },
-              issue_description: { type: "string" },
-              suggested_action: { type: "string" },
-              priority: { type: "string" },
-              questions_for_clinician: {
-                type: "array",
-                items: { type: "string" }
-              }
-            }
-          }
-        },
-        overall_summary: { type: "string" }
-      }
-    }
+Only flag events with actual issues. For each flagged event provide: event_id, issue_category, issue_description, suggested_action, priority, questions_for_clinician.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"flagged_events":[{"event_id":"","issue_category":"","issue_description":"","suggested_action":"","priority":"","questions_for_clinician":[""]}],"overall_summary":""}`
   });
+  const parsed = parseLLMJson(result) || {};
 
   return Response.json({
     success: true,
-    flagged_events: result?.flagged_events || [],
-    overall_summary: result?.overall_summary || '',
+    flagged_events: parsed?.flagged_events || [],
+    overall_summary: parsed?.overall_summary || '',
     total_events_analyzed: events.length
   });
 }
@@ -364,104 +299,12 @@ Analyze and provide:
 6. RISK INDICATORS: Early warnings, deteriorating metrics
 7. POSITIVE TRENDS: Improvements, goals met
 
-Provide actionable insights for clinicians.`,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        vital_trends: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              vital_type: { type: "string" },
-              trend_direction: { type: "string" },
-              concern_level: { type: "string" },
-              description: { type: "string" },
-              recommendation: { type: "string" }
-            }
-          }
-        },
-        symptom_patterns: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              symptom: { type: "string" },
-              pattern: { type: "string" },
-              severity_trend: { type: "string" },
-              clinical_notes: { type: "string" }
-            }
-          }
-        },
-        medication_insights: {
-          type: "object",
-          properties: {
-            adherence_assessment: { type: "string" },
-            effectiveness_notes: { type: "string" },
-            concerns: { type: "array", items: { type: "string" } }
-          }
-        },
-        risk_indicators: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              risk_type: { type: "string" },
-              severity: { type: "string" },
-              evidence: { type: "string" },
-              action_needed: { type: "string" }
-            }
-          }
-        },
-        positive_trends: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              achievement: { type: "string" },
-              supporting_data: { type: "string" }
-            }
-          }
-        },
-        comparative_insights: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              correlation: { type: "string" },
-              metric_a: { type: "string" },
-              metric_b: { type: "string" },
-              relationship: { type: "string" },
-              clinical_significance: { type: "string" }
-            }
-          }
-        },
-        predictive_analytics: {
-          type: "object",
-          properties: {
-            readmission_risk_score: { type: "number" },
-            readmission_risk_level: { type: "string" },
-            deterioration_risk_score: { type: "number" },
-            key_risk_factors: { type: "array", items: { type: "string" } },
-            predicted_outcomes: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  outcome: { type: "string" },
-                  probability: { type: "string" },
-                  timeframe: { type: "string" },
-                  prevention_strategies: { type: "array", items: { type: "string" } }
-                }
-              }
-            }
-          }
-        },
-        overall_trajectory: { type: "string" },
-        priority_recommendations: { type: "array", items: { type: "string" } }
-      }
-    }
+Provide actionable insights for clinicians.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"vital_trends":[{"vital_type":"","trend_direction":"","concern_level":"","description":"","recommendation":""}],"symptom_patterns":[{"symptom":"","pattern":"","severity_trend":"","clinical_notes":""}],"medication_insights":{"adherence_assessment":"","effectiveness_notes":"","concerns":[""]},"risk_indicators":[{"risk_type":"","severity":"","evidence":"","action_needed":""}],"positive_trends":[{"achievement":"","supporting_data":""}],"comparative_insights":[{"correlation":"","metric_a":"","metric_b":"","relationship":"","clinical_significance":""}],"predictive_analytics":{"readmission_risk_score":0,"readmission_risk_level":"","deterioration_risk_score":0,"key_risk_factors":[""],"predicted_outcomes":[{"outcome":"","probability":"","timeframe":"","prevention_strategies":[""]}]},"overall_trajectory":"","priority_recommendations":[""]}`
   });
+  const parsed = parseLLMJson(result) || {};
 
   return Response.json({
     success: true,
@@ -473,15 +316,15 @@ Provide actionable insights for clinicians.`,
       lab_events: labEvents.length
     },
     vitals_data: vitalsHistory,
-    vital_trends: result?.vital_trends || [],
-    symptom_patterns: result?.symptom_patterns || [],
-    medication_insights: result?.medication_insights || {},
-    risk_indicators: result?.risk_indicators || [],
-    positive_trends: result?.positive_trends || [],
-    comparative_insights: result?.comparative_insights || [],
-    predictive_analytics: result?.predictive_analytics || {},
-    overall_trajectory: result?.overall_trajectory || 'unknown',
-    priority_recommendations: result?.priority_recommendations || []
+    vital_trends: parsed?.vital_trends || [],
+    symptom_patterns: parsed?.symptom_patterns || [],
+    medication_insights: parsed?.medication_insights || {},
+    risk_indicators: parsed?.risk_indicators || [],
+    positive_trends: parsed?.positive_trends || [],
+    comparative_insights: parsed?.comparative_insights || [],
+    predictive_analytics: parsed?.predictive_analytics || {},
+    overall_trajectory: parsed?.overall_trajectory || 'unknown',
+    priority_recommendations: parsed?.priority_recommendations || []
   });
 }
 
@@ -529,40 +372,19 @@ Generate care plan suggestions addressing:
 
 For each: problem (NANDA-I), measurable goal, 3-5 interventions, expected outcomes, baseline measurement, frequency, priority, rationale, medicare considerations, target_days.
 
-Only suggest NEW care plans not already covered.`,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        suggestions: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              problem: { type: "string" },
-              goal: { type: "string" },
-              interventions: { type: "array", items: { type: "string" } },
-              expected_outcomes: { type: "string" },
-              baseline_measurement: { type: "string" },
-              frequency: { type: "string" },
-              priority: { type: "string" },
-              rationale: { type: "string" },
-              medicare_considerations: { type: "string" },
-              target_days: { type: "number" }
-            }
-          }
-        },
-        overall_assessment: { type: "string" },
-        critical_gaps_identified: { type: "array", items: { type: "string" } }
-      }
-    }
+Only suggest NEW care plans not already covered.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"suggestions":[{"problem":"","goal":"","interventions":[""],"expected_outcomes":"","baseline_measurement":"","frequency":"","priority":"","rationale":"","medicare_considerations":"","target_days":0}],"overall_assessment":"","critical_gaps_identified":[""]}`
   });
+  const parsed = parseLLMJson(result) || {};
 
   return Response.json({
     success: true,
     patient_name: `${patient.first_name} ${patient.last_name}`,
-    suggestions: result?.suggestions || [],
-    overall_assessment: result?.overall_assessment || '',
-    critical_gaps_identified: result?.critical_gaps_identified || []
+    suggestions: parsed?.suggestions || [],
+    overall_assessment: parsed?.overall_assessment || '',
+    critical_gaps_identified: parsed?.critical_gaps_identified || []
   });
 }
 
