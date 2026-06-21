@@ -1,13 +1,174 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-import {
-  cleanValue,
-  parseCsv,
-  buildRowObject,
-  buildExistingLookups,
-  parseUploadedPatient,
-  buildUploadKeys,
-  resolveMatch,
-} from './patientImportUtils.js';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+// ---------------------------------------------------------------------------
+// Patient-import helpers (inlined — backend functions deploy independently and
+// cannot import local files). Pure + deterministic.
+// ---------------------------------------------------------------------------
+
+// Trim a value to a clean string ('' for null/undefined).
+function cleanValue(value) {
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
+}
+
+// RFC-4180-ish CSV parser: handles quoted fields, escaped quotes ("") and
+// embedded commas/newlines inside quotes. Returns an array of row arrays.
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  const s = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (s[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        field += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      row.push(field); field = '';
+    } else if (ch === '\n') {
+      row.push(field); field = '';
+      rows.push(row); row = [];
+    } else {
+      field += ch;
+    }
+  }
+  // Flush the trailing field/row (unless the input ended on a clean newline).
+  if (field !== '' || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  // Drop fully-empty trailing rows.
+  return rows.filter((r) => r.some((c) => cleanValue(c) !== ''));
+}
+
+// Normalize a header into a lookup key: lowercased, non-alphanumerics → underscore.
+function normalizeHeader(h) {
+  return cleanValue(h).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+// Map a row's columns onto an object keyed by normalized header.
+function buildRowObject(headers, cols) {
+  const obj = {};
+  for (let i = 0; i < headers.length; i++) {
+    const key = normalizeHeader(headers[i]);
+    if (!key) continue;
+    obj[key] = cleanValue(cols[i]);
+  }
+  return obj;
+}
+
+// Normalize a DOB to YYYY-MM-DD (best effort) so name+DOB keys align across formats.
+function normalizeDob(value) {
+  const v = cleanValue(value);
+  if (!v) return '';
+  let m = v.match(/^(\d{4})\D(\d{1,2})\D(\d{1,2})/); // YYYY-MM-DD
+  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  m = v.match(/^(\d{1,2})\D(\d{1,2})\D(\d{4})/); // MM/DD/YYYY
+  if (m) return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+  m = v.match(/^(\d{1,2})\D(\d{1,2})\D(\d{2})(?!\d)/); // MM/DD/YY
+  if (m) {
+    const ref = new Date().getFullYear();
+    let year = 2000 + Number(m[3]);
+    if (year > ref) year -= 100;
+    return `${year}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+  }
+  return v;
+}
+
+const firstOf = (row, keys) => {
+  for (const k of keys) {
+    if (row[k] !== undefined && cleanValue(row[k]) !== '') return cleanValue(row[k]);
+  }
+  return '';
+};
+
+// Build the normalized lookups used to detect matches against existing patients.
+function buildExistingLookups(existingPatients) {
+  const existingByMrn = new Map();
+  const existingByNameDob = new Map();
+  for (const p of existingPatients || []) {
+    const mrn = cleanValue(p.medical_record_number).toLowerCase();
+    if (mrn) existingByMrn.set(mrn, p);
+    const first = cleanValue(p.first_name).toLowerCase();
+    const last = cleanValue(p.last_name).toLowerCase();
+    const dob = normalizeDob(p.date_of_birth);
+    if (first && last && dob) existingByNameDob.set(`${first}|${last}|${dob}`, p);
+  }
+  return { existingByMrn, existingByNameDob };
+}
+
+// Parse a raw CSV row object into a normalized patient shape used downstream.
+function parseUploadedPatient(row, rowNumber) {
+  const first_name = firstOf(row, ['first_name', 'firstname', 'first', 'patient_first_name']);
+  const last_name = firstOf(row, ['last_name', 'lastname', 'last', 'patient_last_name']);
+  const middle_name = firstOf(row, ['middle_name', 'middlename', 'middle', 'mi']);
+  const medical_record_number = firstOf(row, ['medical_record_number', 'mrn', 'record_number', 'patient_id', 'chart_number']);
+  const date_of_birth = normalizeDob(firstOf(row, ['date_of_birth', 'dob', 'birth_date', 'birthdate']));
+  const admission_date = normalizeDob(firstOf(row, ['admission_date', 'soc_date', 'start_of_care', 'admit_date']));
+  const discharge_date = normalizeDob(firstOf(row, ['discharge_date', 'dc_date', 'discharged_on']));
+  const rawStatus = firstOf(row, ['status', 'patient_status']).toLowerCase();
+  const status = rawStatus.includes('discharg') ? 'discharged'
+    : rawStatus.includes('active') ? 'active'
+    : (rawStatus || '');
+  const payor = firstOf(row, ['payor', 'payer', 'insurance', 'primary_insurance']);
+  const primary_diagnosis = firstOf(row, ['primary_diagnosis', 'diagnosis', 'dx', 'primary_dx']);
+  const secondaryRaw = firstOf(row, ['secondary_diagnoses', 'secondary_diagnosis', 'other_diagnoses']);
+  const secondary_diagnoses = secondaryRaw ? secondaryRaw.split(/[;|]/).map((s) => s.trim()).filter(Boolean) : [];
+  const phone = firstOf(row, ['phone', 'phone_number', 'home_phone', 'primary_phone']);
+  const address = firstOf(row, ['address', 'street_address', 'home_address']);
+
+  const patientLabel = `${first_name} ${last_name}`.trim() + (medical_record_number ? ` (MRN ${medical_record_number})` : '') + ` [row ${rowNumber}]`;
+
+  return {
+    rowNumber,
+    first_name, middle_name, last_name,
+    medical_record_number, date_of_birth, admission_date, discharge_date,
+    status, payor, primary_diagnosis, secondary_diagnoses, phone, address,
+    patientLabel,
+  };
+}
+
+// The de-dup keys a parsed patient contributes (MRN and/or name+DOB).
+function buildUploadKeys(patient) {
+  const keys = [];
+  const mrn = cleanValue(patient.medical_record_number).toLowerCase();
+  if (mrn) keys.push(`mrn:${mrn}`);
+  const first = cleanValue(patient.first_name).toLowerCase();
+  const last = cleanValue(patient.last_name).toLowerCase();
+  const dob = normalizeDob(patient.date_of_birth);
+  if (first && last && dob) keys.push(`nd:${first}|${last}|${dob}`);
+  return keys;
+}
+
+// Resolve a parsed patient against the existing lookups.
+// Returns { match, matchedBy } or { error } when it can't be safely verified.
+function resolveMatch(patient, existingByMrn, existingByNameDob) {
+  const mrn = cleanValue(patient.medical_record_number).toLowerCase();
+  if (mrn && existingByMrn.has(mrn)) {
+    return { match: existingByMrn.get(mrn), matchedBy: 'MRN' };
+  }
+  const first = cleanValue(patient.first_name).toLowerCase();
+  const last = cleanValue(patient.last_name).toLowerCase();
+  const dob = normalizeDob(patient.date_of_birth);
+  if (first && last && dob) {
+    const key = `${first}|${last}|${dob}`;
+    if (existingByNameDob.has(key)) {
+      return { match: existingByNameDob.get(key), matchedBy: 'name + DOB' };
+    }
+  }
+  if (!mrn && !(first && last && dob)) {
+    return { error: 'Cannot safely verify this patient. Provide an MRN or a name with DOB.' };
+  }
+  return { match: null, matchedBy: null };
+}
 
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
@@ -15,8 +176,8 @@ import {
 // with strict on and no allowlist configured, all external fetches are rejected
 // (fully closes the SSRF surface) rather than allowing any public host.
 // (Allowlisting also mitigates DNS rebinding.)
-function isSafeFetchUrl(raw: string): boolean {
-  let u: URL;
+function isSafeFetchUrl(raw) {
+  let u;
   try { u = new URL(String(raw)); } catch { return false; }
   if (u.protocol !== 'https:') return false;
   const host = u.hostname.toLowerCase();
