@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * sendFax — outbound fax via the Telnyx Programmable Fax API. Mirrors
@@ -11,7 +11,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * (TELNYX_FAX_NUMBER or the in-app TELNYX_FAX_NUMBER env).
  */
 
-function normalizeFaxDest(raw: string | null | undefined): string {
+function normalizeFaxDest(raw) {
   if (!raw) return '';
   const digits = String(raw).replace(/[^\d]/g, '');
   if (digits.length === 10) return `+1${digits}`;
@@ -22,13 +22,13 @@ function normalizeFaxDest(raw: string | null | undefined): string {
 
 // ---- cost controls (mirrors src/components/voice/costControls.js) ----
 const PREMIUM_AREA_CODES = new Set(['900', '976']);
-function isAllowedDestination(e164: string, settings: any = {}): { allowed: boolean; reason: string } {
+function isAllowedDestination(e164, settings = {}) {
   const s = settings || {};
   const e = String(e164 || '').trim();
   if (/^\+1\d{10}$/.test(e)) {
     const areaCode = e.slice(2, 5);
     if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
-    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a: any) => String(a).replace(/[^\d]/g, '')) : [];
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a) => String(a).replace(/[^\d]/g, '')) : [];
     if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
     return { allowed: true, reason: 'allowed' };
   }
@@ -36,7 +36,7 @@ function isAllowedDestination(e164: string, settings: any = {}): { allowed: bool
   if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
   return { allowed: false, reason: 'international_blocked' };
 }
-function blockedReasonMessage(reason: string): string {
+function blockedReasonMessage(reason) {
   switch (reason) {
     case 'premium_number_blocked': return 'Premium-rate numbers (900/976) are blocked.';
     case 'blocked_area_code': return "That area code is blocked by your agency's policy.";
@@ -46,14 +46,8 @@ function blockedReasonMessage(reason: string): string {
   }
 }
 
-async function resolveTelnyxCreds(base44: any): Promise<{
-  apiKey: string | null;
-  publicKey: string | null;
-  messagingProfileId: string | null;
-  voiceConnectionId: string | null;
-  faxConnectionId: string | null;
-}> {
-  const pick = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
+async function resolveTelnyxCreds(base44) {
+  const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
   let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
   let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
   let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
@@ -109,7 +103,7 @@ Deno.serve(async (req) => {
     const recent = await base44.asServiceRole.entities.FaxLog
       .filter({ to_number, document_url: file_url, sent_by: user.email }, '-created_date', 5)
       .catch(() => []);
-    const dupe = (recent || []).find((f: any) => f.created_date && f.created_date >= recentCutoff && f.status !== 'failed');
+    const dupe = (recent || []).find((f) => f.created_date && f.created_date >= recentCutoff && f.status !== 'failed');
     if (dupe) {
       return Response.json({ success: true, deduped: true, fax_id: dupe.id, status: dupe.status });
     }
@@ -126,7 +120,7 @@ Deno.serve(async (req) => {
     });
 
     const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
-    const payload: Record<string, unknown> = {
+    const payload = {
       connection_id: faxConnectionId,
       from: fromNumber,
       to: to_number,
@@ -135,7 +129,7 @@ Deno.serve(async (req) => {
     };
     if (functionsBaseUrl) payload.webhook_url = `${functionsBaseUrl}/handleTelnyxStatusWebhook`;
 
-    let telnyxResponse: Response;
+    let telnyxResponse;
     try {
       telnyxResponse = await fetch('https://api.telnyx.com/v2/faxes', {
         method: 'POST',
@@ -145,7 +139,7 @@ Deno.serve(async (req) => {
     } catch (netErr) {
       await base44.entities.FaxLog.update(faxLog.id, {
         status: 'failed',
-        failure_reason: `Network error reaching Telnyx: ${(netErr as Error).message}`,
+        failure_reason: `Network error reaching Telnyx: ${netErr.message}`,
       }).catch(() => {});
       return Response.json({ error: 'Failed to reach fax provider' }, { status: 502 });
     }
@@ -190,7 +184,7 @@ Deno.serve(async (req) => {
       message: 'Fax sent successfully',
     });
   } catch (error) {
-    console.error('sendTelnyxFax error:', (error as Error)?.message);
+    console.error('sendTelnyxFax error:', error?.message);
     return Response.json({ error: 'Failed to send fax' }, { status: 500 });
   }
 });

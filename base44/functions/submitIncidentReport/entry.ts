@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
               message: `${user.full_name || user.email} submitted a ${payload.severity || 'high'} severity incident for ${payload.patient_name || 'a patient'}.`,
               type: payload.severity === 'high' ? 'critical_alert' : 'patient_alert',
               priority: payload.severity === 'high' ? 'critical' : 'high',
-              action_url: '/IncidentReporting',
+              action_url: '/Incidents',
               action_label: 'Review incident',
               metadata: {
                 incident_id: incident.id,

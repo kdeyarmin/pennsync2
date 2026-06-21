@@ -66,7 +66,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { todayEastern } from "@/components/utils/timezone";
 import { Link, useSearchParams } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import { validateReferralFile, getDocumentType } from "../components/referral/referralUploadUtils";
 import { runReferralQuickScan } from "../components/referral/referralExtraction";
@@ -1093,7 +1092,7 @@ Actions available:
                     <TableRow key={referral.id}>
                       <TableCell className="text-xs sm:text-sm font-medium">
                         {referral.patient_id ? (
-                          <Link to={createPageUrl(`PatientDetails?id=${referral.patient_id}`)} className="text-blue-600 hover:underline">
+                          <Link to={`/PatientDetails?id=${referral.patient_id}`} className="text-blue-600 hover:underline">
                             {referral.patient_name || 'Unknown'}
                           </Link>
                         ) : (
@@ -1199,7 +1198,7 @@ Actions available:
                               Verify Patient
                             </Button>
                          ) : referral.status === 'ready_for_admission' && referral.patient_id && referral.extracted_data ? (
-                           <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
+                           <Link to={`/SmartNoteAssistant?referral_id=${referral.id}`}>
                              <Button
                                size="sm"
                                className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-[36px] text-xs w-full"
@@ -1220,7 +1219,7 @@ Actions available:
                                {referral.analysis_results?.intake_analysis ? 'View Analysis' : 'Process'}
                              </Button>
                              {referral.patient_id && referral.extracted_data && (
-                               <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
+                              <Link to={`/SmartNoteAssistant?referral_id=${referral.id}`}>
                                  <Button
                                    size="sm"
                                    className="bg-navy-600 hover:bg-navy-700 text-white min-h-[36px] text-xs w-full"
