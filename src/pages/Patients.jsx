@@ -7,7 +7,6 @@ import { secureDelete, handleSecureError } from "../components/utils/security";
 
 import PatientForm from "../components/patient/PatientForm";
 import { patientMatchesSearch } from "../components/patient/AdvancedPatientFilters";
-import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
 import BulkPatientActions from "../components/patient/BulkPatientActions";
 import PatientMergeDialog from "../components/patient/PatientMergeDialog";
@@ -262,7 +261,7 @@ export default function Patients() {
         icon={Users}
         eyebrow="Patient Care"
         title="Patient Management"
-        description="Manage the active roster, review duplicates, and keep imported census data clean and organized."
+        description="Search, filter, and manage the active patient roster."
         favoritePage="Patients"
         actions={
           <Button onClick={() => { setEditingPatient(null); setShowForm(true); }} className="min-h-[46px] px-5">
@@ -300,17 +299,6 @@ export default function Patients() {
       )}
 
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Roster tools</h2>
-            <p className="text-sm text-slate-500">Review duplicates and refine the active patient list.</p>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <DuplicatePatientManager />
-        </div>
-
         <AdvancedPatientFilters
           onFilterChange={setFilters}
           activeFilters={filters}
