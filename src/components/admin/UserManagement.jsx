@@ -152,19 +152,9 @@ export default function UserManagement({ users }) {
     updateUserMutation.mutate({ userId: id, data: userData });
   };
 
-  const handleApproveUser = async (userId) => {
-    if (await confirm({ title: "Approve user?", description: "Approve this user to access the system?", confirmText: "Approve" })) {
-      updateUserMutation.mutate({ userId, data: { is_approved: true } });
-      
-      // Log approval
-      await logActivity('user_approved', {
-        entity_type: 'User',
-        entity_id: userId,
-        page: 'UserManagement'
-      });
-    }
-  };
-
+  // Penn Sync is invite-only: there is no manual "approve" path. Access is
+  // granted ONLY by sending an invitation (invited users are auto-approved on
+  // signup). Admins can still revoke access for any approved user.
   const handleRevokeAccess = async (userId) => {
     if (await confirm({ title: "Revoke access?", description: "Revoke access for this user? They will no longer be able to use the system.", confirmText: "Revoke access", destructive: true })) {
       updateUserMutation.mutate({ userId, data: { is_approved: false } });
@@ -258,15 +248,17 @@ export default function UserManagement({ users }) {
             </AlertDescription>
           </Alert>
 
-          {/* Pending Approvals Alert */}
+          {/* Unapproved/blocked accounts. Penn Sync is invite-only, so these
+              accounts cannot be approved here — access is granted only via an
+              invitation. They stay blocked until invited (or were revoked). */}
           {pendingUsers.length > 0 && (
             <Alert className="mb-4 bg-yellow-50 border-yellow-300">
               <Clock className="w-4 h-4 text-yellow-600" />
               <AlertDescription className="text-yellow-900">
                 <p className="font-semibold">
-                  {pendingUsers.length} user{pendingUsers.length > 1 ? 's' : ''} awaiting approval
+                  {pendingUsers.length} unapproved account{pendingUsers.length > 1 ? 's' : ''} (blocked)
                 </p>
-                <p className="text-sm mt-1">New users cannot access the system until approved by an administrator.</p>
+                <p className="text-sm mt-1">Penn Sync is invite-only. These accounts can’t be approved here — to grant someone access, send them an invitation. You can still revoke access for any approved user.</p>
               </AlertDescription>
             </Alert>
           )}
@@ -365,16 +357,6 @@ export default function UserManagement({ users }) {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {!user.is_approved && user.role !== 'admin' && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleApproveUser(user.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                            title="Approve user"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </Button>
-                        )}
                         {user.is_approved && user.role !== 'admin' && (
                           <Button
                             size="sm"
@@ -648,7 +630,11 @@ export default function UserManagement({ users }) {
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                   <div>
                     <Label className="text-base font-medium">Account Approval</Label>
-                    <p className="text-sm text-slate-600">Allow this user to access the system</p>
+                    <p className="text-sm text-slate-600">
+                      {editingUser.is_approved
+                        ? 'Allow this user to access the system'
+                        : 'Invite-only — access is granted only via an invitation, not here'}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={editingUser.is_approved ? 'bg-green-500' : 'bg-yellow-500'}>
@@ -660,18 +646,20 @@ export default function UserManagement({ users }) {
                       ) : (
                         <>
                           <Clock className="w-3 h-3 mr-1" />
-                          Pending
+                          Blocked
                         </>
                       )}
                     </Badge>
-                    <Button
-                      size="sm"
-                      variant={editingUser.is_approved ? "outline" : "default"}
-                      onClick={() => setEditingUser({...editingUser, is_approved: !editingUser.is_approved})}
-                      className={editingUser.is_approved ? '' : 'bg-green-600 hover:bg-green-700'}
-                    >
-                      {editingUser.is_approved ? 'Revoke Access' : 'Approve User'}
-                    </Button>
+                    {/* Invite-only: no manual approve. Revoke remains available. */}
+                    {editingUser.is_approved && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingUser({...editingUser, is_approved: false})}
+                      >
+                        Revoke Access
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

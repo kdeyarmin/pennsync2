@@ -92,7 +92,29 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Not invited - notify admins for manual approval
+    // INVITE-ONLY APP: there is no public sign-up. A signup with no matching
+    // invitation is unauthorized. The account is left unapproved (is_approved
+    // defaults to false) so the app's approval gate blocks it, and it cannot be
+    // approved manually — the only path to access is an admin invitation.
+    // Admins are sent a security alert so they can invite the person if the
+    // attempt was legitimate.
+    console.warn('Blocked uninvited sign-up (invite-only app):', user.email);
+
+    // Record the blocked attempt for the audit trail.
+    try {
+      await base44.asServiceRole.entities.UserActivity.create({
+        user_email: user.email,
+        user_name: user.full_name,
+        action: 'uninvited_signup_blocked',
+        details: { email: user.email, attempted_at: new Date().toISOString() },
+        page: 'Signup',
+        entity_type: 'User',
+        entity_id: user.id
+      });
+    } catch (logError) {
+      console.error('Failed to log blocked signup:', logError);
+    }
+
     debugLog('Fetching admin users...');
     const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
     debugLog('Found admins:', admins.length);
@@ -100,51 +122,52 @@ Deno.serve(async (req) => {
     const emailBody = `
     Hello,
 
-    A new user has signed up for Penn Sync and is awaiting approval:
+    A sign-up attempt was BLOCKED on Penn Sync because the account was not invited.
+
+    Penn Sync is invite-only — there is no public sign-up. This account has NOT
+    been granted access and cannot be approved manually.
 
     👤 Name: ${user.full_name || 'Not provided'}
     📧 Email: ${user.email}
-    📅 Signup Date: ${new Date().toLocaleString()}
-    🎭 Role: ${user.role || 'user'}
+    📅 Attempt Date: ${new Date().toLocaleString()}
 
-    Action Required:
-    Please log in to Penn Sync and navigate to the User Management page to approve or review this user's access.
+    If this person should have access, send them an invitation:
+    ➡️ Admin Dashboard > User Management
 
-    ➡️ Go to Admin Dashboard > User Management
-
-    The user will not be able to access the system until approved by an administrator.
+    No other action is required — they remain blocked until invited.
 
     Best regards,
-    Penn Sync System
+    Penn Sync Security
     `.trim();
 
-    // Send email to all admins
-    const emailPromises = admins.map(admin => 
+    // Send a security alert to all admins
+    const emailPromises = admins.map(admin =>
       base44.asServiceRole.integrations.Core.SendEmail({
         to: admin.email,
-        subject: `🔔 New User Awaiting Approval - Penn Sync`,
-        from_name: 'Penn Sync Notifications',
+        subject: `🚫 Blocked Uninvited Sign-up - Penn Sync`,
+        from_name: 'Penn Sync Security',
         body: `Hello ${admin.full_name || 'Admin'},\n\n${emailBody}`
       })
     );
 
-    // Also send notification to kdeyarmin@pennhospice.com
+    // Also alert kdeyarmin@pennhospice.com
     emailPromises.push(
       base44.asServiceRole.integrations.Core.SendEmail({
         to: 'kdeyarmin@pennhospice.com',
-        subject: `🔔 New User Awaiting Approval - Penn Sync`,
-        from_name: 'Penn Sync Notifications',
+        subject: `🚫 Blocked Uninvited Sign-up - Penn Sync`,
+        from_name: 'Penn Sync Security',
         body: `Hello,\n\n${emailBody}`
       })
     );
 
-    debugLog('Sending signup notification emails to admins...');
+    debugLog('Sending blocked-signup security alert to admins...');
     await Promise.all(emailPromises);
-    debugLog('Signup notification complete');
+    debugLog('Blocked-signup alert complete');
 
-    return Response.json({ 
-      success: true, 
-      message: `Notification sent to ${admins.length} admin(s)` 
+    return Response.json({
+      success: true,
+      blocked: true,
+      message: `Uninvited sign-up blocked; alerted ${admins.length} admin(s)`
     });
 
   } catch (error) {
