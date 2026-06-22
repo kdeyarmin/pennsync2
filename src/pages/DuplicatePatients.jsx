@@ -144,10 +144,15 @@ export default function DuplicatePatients() {
     setIsMergingAll(true);
     let mergedGroups = 0;
     let mergedRecords = 0;
-    try {
-      for (const group of duplicateGroups) {
-        const survivor = group.primary;
-        const others = group.duplicates.map((d) => d.patient).filter((p) => p.id !== survivor.id);
+    // Track groups that failed so the loop continues instead of aborting on the
+    // first error (e.g. one related record the user can't write). Failed groups
+    // stay on screen so the admin can retry or merge them individually.
+    const failedKeys = new Set();
+    for (let i = 0; i < duplicateGroups.length; i++) {
+      const group = duplicateGroups[i];
+      const survivor = group.primary;
+      const others = group.duplicates.map((d) => d.patient).filter((p) => p.id !== survivor.id);
+      try {
         const { patientsMerged } = await mergePatientGroup(
           survivor.id,
           others.map((p) => p.id),
@@ -155,18 +160,27 @@ export default function DuplicatePatients() {
         );
         mergedGroups += 1;
         mergedRecords += patientsMerged;
+      } catch (error) {
+        console.error(`Merge all: group ${i} failed:`, error);
+        failedKeys.add(`group-${i}`);
       }
-      toast.success(`Merged ${mergedRecords} duplicate record(s) across ${mergedGroups} group(s).`);
-      setDuplicateGroups([]);
-      queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-    } catch (error) {
-      console.error('Merge all error:', error);
-      toast.error('Some duplicates could not be merged. Please rescan and try again.');
-      queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
-    } finally {
-      setIsMergingAll(false);
     }
+
+    // Drop only the groups that merged; keep failures visible for retry.
+    setDuplicateGroups((prev) => prev.filter((_, i) => failedKeys.has(`group-${i}`)));
+    queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
+    queryClient.invalidateQueries({ queryKey: ['patients'] });
+
+    if (failedKeys.size === 0) {
+      toast.success(`Merged ${mergedRecords} duplicate record(s) across ${mergedGroups} group(s).`);
+    } else if (mergedGroups > 0) {
+      toast.warning(
+        `Merged ${mergedGroups} group(s); ${failedKeys.size} could not be merged and remain below for you to retry.`
+      );
+    } else {
+      toast.error('Could not merge the duplicates. Please rescan and try again.');
+    }
+    setIsMergingAll(false);
   };
 
   const totalDuplicateRecords = duplicateGroups.reduce((sum, g) => sum + g.duplicates.length, 0);
