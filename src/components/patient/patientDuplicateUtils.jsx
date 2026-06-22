@@ -251,18 +251,24 @@ function scoreNames(p1, p2, add) {
     return true;
   }
 
+  const firstSim = similarity(firstName1, firstName2);
+  const lastSim = similarity(lastName1, lastName2);
+
+  // Fuzzy full-name match, but ONLY when the LAST names are themselves similar.
+  // Comparing the concatenated "first last" string alone let a shared first name
+  // + a prefix-overlapping surname clear the bar (e.g. "John Smith" vs
+  // "John Smithers" scored 77%), bridging unrelated patients. Requiring the
+  // surname to actually match stops that — different families never tie.
   let matchedName = false;
   const fullSim = similarity(name1, name2);
-  if (fullSim >= 90) {
+  if (fullSim >= 90 && lastSim >= 80) {
     add(35, REASON.VERY_SIMILAR_NAME);
     matchedName = true;
-  } else if (fullSim >= 75) {
+  } else if (fullSim >= 75 && lastSim >= 80) {
     add(28, REASON.SIMILAR_NAME);
     matchedName = true;
   }
 
-  const firstSim = similarity(firstName1, firstName2);
-  const lastSim = similarity(lastName1, lastName2);
   if (firstSim >= 85 && lastSim >= 85) {
     add(30, REASON.BOTH_NAMES_SIMILAR);
     matchedName = true;
