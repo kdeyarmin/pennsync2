@@ -40,7 +40,6 @@ import TabButton from "@/components/ui/TabButton";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
-import AdminCredentialApproval from "@/components/personnel/AdminCredentialApproval";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -107,14 +106,6 @@ export default function UserSettings() {
     credentials.filter((item) => item.user_id === currentUser?.email), 
     [credentials, currentUser]
   );
-
-  const pendingApprovals = useMemo(() => {
-    if (!isAgencyAdmin(currentUser)) return [];
-    return credentials.filter((item) => 
-      item.status === 'pending_approval' && 
-      (!currentUser?.agency_name || item.agency_name === currentUser.agency_name)
-    );
-  }, [credentials, currentUser]);
 
   const [preferences, setPreferences] = useState({
     ai_verbosity: 'balanced',
@@ -446,11 +437,6 @@ export default function UserSettings() {
             <TabsList>
               <TabsTrigger value="my-credentials">My Credentials</TabsTrigger>
               <TabsTrigger value="renewals">Renewals</TabsTrigger>
-              {isAgencyAdmin(currentUser) && (
-                <TabsTrigger value="approvals">
-                  Approvals {pendingApprovals.length > 0 && `(${pendingApprovals.length})`}
-                </TabsTrigger>
-              )}
             </TabsList>
 
             <TabsContent value="my-credentials" className="space-y-4">
@@ -531,12 +517,6 @@ export default function UserSettings() {
             <TabsContent value="renewals">
               <CredentialRenewalPortal userId={currentUser?.email} />
             </TabsContent>
-
-            {isAgencyAdmin(currentUser) && (
-              <TabsContent value="approvals">
-                <AdminCredentialApproval />
-              </TabsContent>
-            )}
           </Tabs>
         </TabsContent>
 
