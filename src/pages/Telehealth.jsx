@@ -183,7 +183,7 @@ export default function Telehealth() {
         favoritePage="Telehealth"
         actions={
           <Button onClick={() => setShowNewSession(true)} className="gap-2 w-full sm:w-auto">
-            <Plus className="w-4 h-4" /> New Session
+            <Plus className="w-4 h-4" /> Schedule Telehealth
           </Button>
         }
       />
@@ -275,7 +275,7 @@ export default function Telehealth() {
       {/* New Session Dialog */}
       <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
         <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto sm:rounded-2xl border-0 shadow-2xl">
-          <DialogTitle className="text-xl font-bold text-slate-900">New Telehealth Session</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-slate-900">Schedule Telehealth Visit</DialogTitle>
           <NewSessionForm
             patients={patients}
             currentUser={currentUser}
@@ -358,7 +358,7 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
 
       <Button type="submit" className="w-full gap-2 h-11 rounded-lg font-semibold mt-2" disabled={loading || !form.patient_id}>
         <Video className="w-4 h-4" />
-        {loading ? "Creating..." : "Create Session"}
+        {loading ? "Scheduling..." : "Schedule Telehealth Visit"}
       </Button>
     </form>
   );

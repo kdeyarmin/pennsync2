@@ -16,6 +16,7 @@ import PullToRefresh from "@/components/mobile/PullToRefresh";
 import SmartRouteOptimizer from "@/components/scheduling/SmartRouteOptimizer";
 import ProactiveClinicalSupport from "@/components/clinical/ProactiveClinicalSupport";
 import AnnouncementsWidget from "@/components/dashboard/AnnouncementsWidget";
+import UpcomingTelehealthWidget from "@/components/dashboard/UpcomingTelehealthWidget";
 import DashboardSkeleton from "@/components/loading/DashboardSkeleton";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
@@ -221,6 +222,11 @@ export default function Dashboard() {
 
       {/* Admin Announcements */}
       <AnnouncementsWidget />
+
+      {/* Scheduled Telehealth reminders */}
+      <div className="mb-6">
+        <UpcomingTelehealthWidget />
+      </div>
 
       {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip).
           The first three deep-link into their domain so the metrics are actionable. */}
