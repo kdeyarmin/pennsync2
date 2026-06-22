@@ -708,6 +708,13 @@ export function findDuplicateGroups(patients, opts = {}) {
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
       const base = scorePatientPair(patients[i], patients[j], scoreOptions);
+      // Shared-visit corroboration only BOOSTS a pair that already has a real
+      // identity match (name + non-conflicting DOB/MRN). When the pair was
+      // rejected by the identity guard (base.matches empty), it must stay
+      // unlinked — two different people who happen to share a visit date or
+      // nurse are NOT the same patient. This was bridging unrelated records
+      // (e.g. "John Snyder" into a "John Smithers" cluster).
+      if (base.matches.length === 0) continue;
       const related = relatedEntityScore(patients[i], patients[j], visitsByPatient);
       const totalScore = base.score + related.score;
       const cutoff = minScore != null ? minScore : effectiveThreshold(base.matches, threshold);
