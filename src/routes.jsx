@@ -91,9 +91,6 @@ export const REDIRECTS = [
   // Admin Console "User Activity" tab and the job monitor is its own page.
   { from: '/SystemMonitoring', to: '/SystemJobMonitor' },
 
-  // Medication Reconciliation was retired along with the rest of the medication
-  // entry/checking UI; send old links and bookmarks to the patient list.
-  { from: '/MedicationReconciliation', to: '/Patients' },
   // ─── OASIS Center consolidation ──────────────────────────────────────────────
   // The standalone OASIS assessment/analysis/review pages are now tabs of
   // /OASISCenter. "assessment" is the default tab, so the analyzer must pin its
