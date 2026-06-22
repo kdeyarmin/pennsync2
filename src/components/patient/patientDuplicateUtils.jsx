@@ -495,13 +495,12 @@ export function scorePatientPair(p1, p2, options = {}) {
     if (found) add(8, REASON.NAME_VARIATION);
   }
 
-  // Identity guard: two records may only be considered the same PERSON if at
-  // least one signal actually ties them to the same individual. A pile of weak
-  // coincidences (shared first name + same area code + same zip) must never add
-  // up to a "duplicate" of two clearly different people. Without this, union-find
-  // bridged unrelated patients (e.g. "John Snyder" into a "John Smithers"
-  // cluster) through incidental overlaps.
-  const STRONG_PERSON_SIGNALS = new Set([
+  // ---- Identity guard ----------------------------------------------------
+  // Two records are the same PERSON only when a real NAME tie is present. A pile
+  // of shared circumstantial data (same address, area code, zip, caregiver) must
+  // never bridge two people with different names — that was pulling unrelated
+  // patients (e.g. "John Snyder" into a "John Smithers" cluster) together.
+  const NAME_TIE = new Set([
     REASON.EXACT_NAME,
     REASON.FULL_NAME,
     REASON.PHONETIC_NAME,
@@ -510,19 +509,29 @@ export function scorePatientPair(p1, p2, options = {}) {
     REASON.BOTH_NAMES_SIMILAR,
     REASON.PARTIAL_NAME,
     REASON.NAME_VARIATION,
-    REASON.DOB,
-    REASON.DOB_SWAPPED,
-    REASON.DOB_YEAR_TYPO,
-    REASON.MRN,
-    REASON.MRN_SIMILAR,
-    REASON.PHONE,
-    REASON.EMAIL,
-    REASON.ADDRESS_EXACT,
-    REASON.STREET_ADDRESS,
-    REASON.CAREGIVER_EMAIL,
-    REASON.CAREGIVER_PHONE,
   ]);
-  if (!matches.some((m) => STRONG_PERSON_SIGNALS.has(m))) {
+  if (!matches.some((m) => NAME_TIE.has(m))) {
+    return { score: 0, matches: [] };
+  }
+
+  // Hard blockers: even with a matching name, two DIFFERENT people are not a
+  // duplicate. When BOTH records carry a DOB (or both an MRN) and they clearly
+  // differ — not a swap/typo we already credited — they are distinct patients.
+  const hasDobCredit = matches.some(
+    (m) => m === REASON.DOB || m === REASON.DOB_SWAPPED || m === REASON.DOB_YEAR_TYPO
+  );
+  const dob1 = parseDob(p1.date_of_birth);
+  const dob2 = parseDob(p2.date_of_birth);
+  if (!hasDobCredit && dob1 && dob2) {
+    // Both DOBs present, parseable, and not credited as same/swap/typo → mismatch.
+    return { score: 0, matches: [] };
+  }
+
+  const hasMrnCredit = matches.some((m) => m === REASON.MRN || m === REASON.MRN_SIMILAR);
+  const mrn1 = String(p1.medical_record_number ?? '').trim();
+  const mrn2 = String(p2.medical_record_number ?? '').trim();
+  if (!hasMrnCredit && mrn1 && mrn2) {
+    // Both MRNs present and neither exact nor similar → different patients.
     return { score: 0, matches: [] };
   }
 
