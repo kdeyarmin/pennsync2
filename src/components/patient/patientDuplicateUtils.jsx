@@ -1,4 +1,5 @@
 // Pure, deterministic utilities for duplicate patient detection.
+// (rebuild marker)
 //
 // All scoring/grouping logic lives here (no React / no network) so it can be
 // unit-tested and reused by every duplicate-detection surface in the app.
