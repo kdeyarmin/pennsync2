@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -80,16 +97,9 @@ ${sharedContext}
 NOTE TO ANALYZE:
 ${enhancedNote || roughNote}
 
-Return JSON with compliance_score (0-100), missing_elements array, and specific_gaps array.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              compliance_score: { type: "number" },
-              missing_elements: { type: "array", items: { type: "string" } },
-              specific_gaps: { type: "array", items: { type: "object" } }
-            }
-          }
-        }).then(result => { analyses.compliance = result; })
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"compliance_score":0,"missing_elements":[""],"specific_gaps":[{}]}`
+        }).then(result => { analyses.compliance = parseLLMJson(result) || {}; })
       );
     }
 
@@ -103,16 +113,9 @@ ${sharedContext}
 ENHANCED NOTE:
 ${enhancedNote}
 
-Return JSON with mappings array containing: oasis_item, suggested_value, confidence, evidence_from_note, clinical_justification.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              mappings: { type: "array", items: { type: "object" } },
-              high_confidence_items: { type: "number" },
-              medium_confidence_items: { type: "number" }
-            }
-          }
-        }).then(result => { analyses.oasis = result; })
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"mappings":[{"oasis_item":"","suggested_value":"","confidence":0,"evidence_from_note":"","clinical_justification":""}],"high_confidence_items":0,"medium_confidence_items":0}`
+        }).then(result => { analyses.oasis = parseLLMJson(result) || {}; })
       );
     }
 
@@ -127,16 +130,9 @@ ENHANCED NOTE:
 ${enhancedNote}
 
 Identify comorbidity capture, functional impairment documentation, and clinical group optimization opportunities.
-Return JSON with opportunities array and revenue_impact.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              opportunities: { type: "array", items: { type: "object" } },
-              revenue_impact: { type: "number" },
-              summary: { type: "string" }
-            }
-          }
-        }).then(result => { analyses.pdgm = result; })
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"opportunities":[{}],"revenue_impact":0,"summary":""}`
+        }).then(result => { analyses.pdgm = parseLLMJson(result) || {}; })
       );
     }
 
@@ -150,18 +146,9 @@ ${sharedContext}
 NOTE:
 ${enhancedNote || roughNote}
 
-Return JSON with followup_tasks, care_plan_suggestions, clinical_alerts, documentation_gaps, and education_needs arrays.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              followup_tasks: { type: "array", items: { type: "object" } },
-              care_plan_suggestions: { type: "array", items: { type: "object" } },
-              clinical_alerts: { type: "array", items: { type: "object" } },
-              documentation_gaps: { type: "array", items: { type: "object" } },
-              education_needs: { type: "array", items: { type: "object" } }
-            }
-          }
-        }).then(result => { analyses.proactive = result; })
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"followup_tasks":[{}],"care_plan_suggestions":[{}],"clinical_alerts":[{}],"documentation_gaps":[{}],"education_needs":[{}]}`
+        }).then(result => { analyses.proactive = parseLLMJson(result) || {}; })
       );
     }
 

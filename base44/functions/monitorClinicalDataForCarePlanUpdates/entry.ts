@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -91,7 +108,7 @@ Deno.serve(async (req) => {
       const currentInterventions = carePlans.flatMap(cp => cp.interventions || []);
 
       // AI Analysis
-      const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      const rawAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: `You are a clinical AI monitoring patient data to propose care plan updates when clinical thresholds are met.
 
 PATIENT: ${pt.first_name} ${pt.last_name} (${pt.id})
