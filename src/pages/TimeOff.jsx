@@ -42,6 +42,20 @@ export default function TimeOff() {
     enabled: !!currentUser?.email && isApprover,
   });
 
+  // Approved team time-off for the calendar, visible to everyone. Non-approvers
+  // can't read others' rows via RLS, so a service-role function returns only
+  // approved requests (name + dates, no private reason). Approvers already have
+  // the full team data, so they skip this fetch and use teamRequests instead.
+  const { data: approvedTeam = [] } = useQuery({
+    queryKey: ["timeoff", "approved-team"],
+    queryFn: async () => {
+      const res = await base44.functions.invoke("getApprovedTimeOff", {});
+      return res?.data?.requests || [];
+    },
+    initialData: [],
+    enabled: !!currentUser?.email && !isApprover,
+  });
+
   // Candidate approvers for the request form. User listing is admin-oriented;
   // if it's not permitted for this user we fall back gracefully to "route to admins".
   const { data: approvers = [] } = useQuery({
@@ -71,6 +85,10 @@ export default function TimeOff() {
     [teamRequests, isAdmin, currentUser?.email]
   );
 
+  // Calendar data source: approvers see the full (pending + approved) team data
+  // they oversee; everyone else sees the approved-only team feed.
+  const calendarRequests = isApprover ? teamForViews : approvedTeam;
+
   // Count only requests this user can actually act on (their reports / all for
   // admins) — never their own — so the badge matches the Approvals queue.
   const pendingCount = teamForViews.filter((r) => r.status === "pending").length;
@@ -86,25 +104,25 @@ export default function TimeOff() {
       />
 
       <Tabs defaultValue="mine" className="space-y-6">
-        <TabsList className={`grid w-full ${!isApprover ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}>
+        <TabsList className={`grid w-full ${!isApprover ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
           <TabsTrigger value="mine" className="min-h-[44px]">
             My Time Off
           </TabsTrigger>
           {isApprover && (
-            <>
-              <TabsTrigger value="approvals" className="min-h-[44px] relative">
-                Approvals
-                {pendingCount > 0 && (
-                  <Badge className="ml-2 bg-amber-500 text-white h-5 min-w-[20px] px-1.5">{pendingCount}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="calendar" className="min-h-[44px]">
-                Team Calendar
-              </TabsTrigger>
-              <TabsTrigger value="all" className="min-h-[44px]">
-                All Requests
-              </TabsTrigger>
-            </>
+            <TabsTrigger value="approvals" className="min-h-[44px] relative">
+              Approvals
+              {pendingCount > 0 && (
+                <Badge className="ml-2 bg-amber-500 text-white h-5 min-w-[20px] px-1.5">{pendingCount}</Badge>
+              )}
+            </TabsTrigger>
+          )}
+          <TabsTrigger value="calendar" className="min-h-[44px]">
+            Team Calendar
+          </TabsTrigger>
+          {isApprover && (
+            <TabsTrigger value="all" className="min-h-[44px]">
+              All Requests
+            </TabsTrigger>
           )}
         </TabsList>
 
@@ -121,25 +139,25 @@ export default function TimeOff() {
         </TabsContent>
 
         {isApprover && (
-          <>
-            <TabsContent value="approvals">
-              <PendingApprovalsQueue
-                requests={teamForViews}
-                allRequests={teamRequests}
-              />
-            </TabsContent>
+          <TabsContent value="approvals">
+            <PendingApprovalsQueue
+              requests={teamForViews}
+              allRequests={teamRequests}
+            />
+          </TabsContent>
+        )}
 
-            <TabsContent value="calendar">
-              <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-6 items-start">
-                <TeamTimeOffCalendar requests={teamForViews} />
-                <WhoIsOffPanel requests={teamForViews} />
-              </div>
-            </TabsContent>
+        <TabsContent value="calendar">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-6 items-start">
+            <TeamTimeOffCalendar requests={calendarRequests} />
+            <WhoIsOffPanel requests={calendarRequests} />
+          </div>
+        </TabsContent>
 
-            <TabsContent value="all">
-              <TeamRequestsTable requests={teamForViews} />
-            </TabsContent>
-          </>
+        {isApprover && (
+          <TabsContent value="all">
+            <TeamRequestsTable requests={teamForViews} />
+          </TabsContent>
         )}
       </Tabs>
     </PageContainer>
