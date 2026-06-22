@@ -11,10 +11,11 @@ const TabsList = React.forwardRef((props, ref) => (
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      // max-w-full + overflow-x-auto keeps a long tab bar inside the viewport
-      // on narrow screens (it scrolls horizontally) instead of overflowing the
-      // page; scrollbar-hide keeps the segmented control looking clean.
-      "inline-flex max-w-full items-center justify-center gap-1 overflow-x-auto scrollbar-hide rounded-xl border border-slate-200 bg-slate-100 p-1 text-slate-500 shadow-[inset_0_1px_2px_rgba(15,23,42,0.06)]",
+      // Button-bar layout: a transparent, wrapping/scrolling row that holds each
+      // trigger as its own standalone button (rather than a single boxed track).
+      // gap-2 spaces the buttons; flex-wrap lets many tabs wrap to a second row on
+      // wide screens, and overflow-x-auto keeps them scrollable on narrow ones.
+      "flex max-w-full flex-wrap items-center gap-2 overflow-x-auto scrollbar-hide bg-transparent p-0",
       props.className
     )}
     {...props}
@@ -22,22 +23,47 @@ const TabsList = React.forwardRef((props, ref) => (
 ))
 TabsList.displayName = TabsPrimitive.List.displayName
 
-const TabsTrigger = React.forwardRef((props, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      // gap-2 + [&_svg] rules keep the icon and label on a single inline row with
-      // consistent spacing and a fixed icon size, regardless of what a page passes.
-      // `flex` (not inline-flex) so that when a TabsList lays triggers out in a
-      // grid/flex with stretched cells, each trigger fills its cell and keeps its
-      // icon+label centered together (justify-center). inline-flex would shrink to
-      // content and leave the icon floating away from a centered-looking label.
-      "flex flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 ring-offset-white transition-all [&_svg]:h-4 [&_svg]:w-4 [&_svg]:flex-shrink-0 hover:bg-white/70 hover:text-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-navy-800 data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-slate-900/5",
-      props.className
-    )}
-    {...props}
-  />
-))
+// Professional, theme-consistent BUTTON style for every tab in the app: each
+// trigger is a bordered, shadowed white button; the active one fills solid navy
+// with white text. The active/inactive colors are applied via INLINE STYLES
+// (driven by the data-state attribute Radix sets) because some global CSS in the
+// app overrides Tailwind tab backgrounds — inline styles always win, so the
+// solid navy active state renders reliably on every page.
+const TabsTrigger = React.forwardRef((props, ref) => {
+  const innerRef = React.useRef(null)
+  const [active, setActive] = React.useState(false)
+
+  React.useImperativeHandle(ref, () => innerRef.current)
+
+  React.useEffect(() => {
+    const el = innerRef.current
+    if (!el) return
+    const sync = () => setActive(el.getAttribute("data-state") === "active")
+    sync()
+    const observer = new MutationObserver(sync)
+    observer.observe(el, { attributes: true, attributeFilter: ["data-state"] })
+    return () => observer.disconnect()
+  }, [])
+
+  const { className, style, ...rest } = props
+
+  return (
+    <TabsPrimitive.Trigger
+      ref={innerRef}
+      style={{
+        backgroundColor: active ? "#213a76" : "#ffffff",
+        color: active ? "#ffffff" : "#334155",
+        borderColor: active ? "#213a76" : "#cbd5e1",
+        ...style,
+      }}
+      className={cn(
+        "flex flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2.5 text-sm font-semibold shadow-sm ring-offset-white transition-all [&_svg]:h-4 [&_svg]:w-4 [&_svg]:flex-shrink-0 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+        className
+      )}
+      {...rest}
+    />
+  )
+})
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
 const TabsContent = React.forwardRef((props, ref) => (

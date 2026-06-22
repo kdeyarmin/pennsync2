@@ -36,7 +36,6 @@ import {
 import PageHeader from "@/components/ui/PageHeader";
 import { logSecurityEvent } from "@/components/utils/security";
 import PageContainer from "@/components/ui/PageContainer";
-import TabButton from "@/components/ui/TabButton";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
@@ -276,16 +275,12 @@ export default function UserSettings() {
       )}
 
       <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
-        <TabsList className="flex flex-wrap w-full gap-2 h-auto bg-transparent p-0">
-          {[
-            { value: "profile", label: "Profile", Icon: Heart },
-            { value: "credentials", label: "Credentials", Icon: Shield },
-            { value: "ai-behavior", label: "AI", Icon: Brain },
-            { value: "features", label: "Features", Icon: Sparkles },
-            { value: "documentation", label: "Docs", Icon: FileText },
-          ].map(({ value, label, Icon }) => (
-            <TabButton key={value} value={value} label={label} Icon={Icon} />
-          ))}
+        <TabsList>
+          <TabsTrigger value="profile"><Heart /> Profile</TabsTrigger>
+          <TabsTrigger value="credentials"><Shield /> Credentials</TabsTrigger>
+          <TabsTrigger value="ai-behavior"><Brain /> AI</TabsTrigger>
+          <TabsTrigger value="features"><Sparkles /> Features</TabsTrigger>
+          <TabsTrigger value="documentation"><FileText /> Docs</TabsTrigger>
         </TabsList>
 
         {/* Profile / Role Tab */}
