@@ -150,7 +150,7 @@ export default function PaginatedPatientList({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {paginatedPatients.map((patient) => (
           <Card key={patient.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-4">
+            <CardContent className="relative p-5 flex flex-col items-center text-center">
               {showCheckboxes && (
                 <input
                   type="checkbox"
@@ -161,47 +161,47 @@ export default function PaginatedPatientList({
                       : selectedPatients.filter(id => id !== patient.id);
                     onSelectionChange?.(newSelection);
                   }}
-                  className="float-right"
+                  className="absolute top-3 right-3 h-4 w-4"
                 />
               )}
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                  {getPatientInitials(patient)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-900 truncate">
-                    {getPatientDisplayName(patient)}
-                  </h3>
-                  {patient.medical_record_number && (
-                    <p className="text-xs text-slate-500">MRN: {patient.medical_record_number}</p>
-                  )}
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    <Badge variant="outline" className={getStatusColor(patient.status)}>
-                      {patient.status || 'active'}
-                    </Badge>
-                    {patient.primary_diagnosis && (
-                      <Badge variant="outline" className="text-xs">
-                        {patient.primary_diagnosis.substring(0, 20)}...
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Link to={createPageUrl("PatientDetails") + `?id=${patient.id}`}>
-                      <Button size="sm" variant="outline" className="text-xs">
-                        View Details
-                      </Button>
-                    </Link>
-                    {onPatientSelect && (
-                      <Button 
-                        size="sm" 
-                        onClick={() => onPatientSelect(patient.id)}
-                        className="text-xs"
-                      >
-                        Select
-                      </Button>
-                    )}
-                  </div>
-                </div>
+
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                {getPatientInitials(patient)}
+              </div>
+
+              <h3 className="mt-3 font-semibold text-slate-900 truncate max-w-full">
+                {getPatientDisplayName(patient)}
+              </h3>
+              {patient.medical_record_number && (
+                <p className="mt-0.5 text-xs text-slate-500">MRN: {patient.medical_record_number}</p>
+              )}
+
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                <Badge variant="outline" className={getStatusColor(patient.status)}>
+                  {patient.status || 'active'}
+                </Badge>
+                {patient.primary_diagnosis && (
+                  <Badge variant="outline" className="text-xs max-w-[180px] truncate">
+                    {patient.primary_diagnosis}
+                  </Badge>
+                )}
+              </div>
+
+              <div className="mt-4 flex justify-center gap-2 w-full">
+                <Link to={createPageUrl("PatientDetails") + `?id=${patient.id}`}>
+                  <Button size="sm" variant="outline" className="text-xs">
+                    View Details
+                  </Button>
+                </Link>
+                {onPatientSelect && (
+                  <Button
+                    size="sm"
+                    onClick={() => onPatientSelect(patient.id)}
+                    className="text-xs"
+                  >
+                    Select
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
