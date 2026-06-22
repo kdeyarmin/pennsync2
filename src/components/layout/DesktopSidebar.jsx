@@ -115,7 +115,7 @@ export default function DesktopSidebar({
                   title={collapsed ? item.name : undefined}
                 >
                   {active && <GoldIndicator />}
-                  <item.icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-navy-600' : ''}`} />
+                  <item.icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-gold-400' : ''}`} />
                   {!collapsed && (
                     <span className="flex items-center gap-2 flex-1 min-w-0">
                       <span className="truncate">{item.name}</span>
@@ -142,7 +142,7 @@ export default function DesktopSidebar({
             {adminItems.map((category, catIndex) => (
               <div key={catIndex}>
                 {category.category && !collapsed && (
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-navy-300 uppercase tracking-wider">
                     {category.category}
                   </p>
                 )}
@@ -177,7 +177,7 @@ export default function DesktopSidebar({
                       title={collapsed ? item.name : undefined}
                     >
                       {isActive(item.page) && <GoldIndicator />}
-                      <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive(item.page) ? 'text-navy-600' : ''}`} />
+                      <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive(item.page) ? 'text-gold-400' : ''}`} />
                       {!collapsed && <span className="truncate">{item.name}</span>}
                     </Link>
                   )
