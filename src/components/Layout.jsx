@@ -17,7 +17,6 @@ import DesktopSidebar from "@/components/layout/DesktopSidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
 import MobileMenu from "@/components/layout/MobileMenu";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import OfflineIndicator from "@/components/mobile/OfflineIndicator";
 import OfflineSyncService from "@/components/offline/OfflineSyncService";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
@@ -338,9 +337,7 @@ export default function Layout({ children, currentPageName }) {
 
         <MobileBottomNav isActive={isActive} unreadMessageCount={unreadMessageCount} />
 
-        <OfflineIndicator />
-
-        {/* Floating Sync Status */}
+        {/* Floating Sync Status — only appears when there are pending items to sync */}
         <div className="fixed bottom-20 md:bottom-4 right-4 z-40 max-w-sm">
           <OfflineSyncService />
         </div>
