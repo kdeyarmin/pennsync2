@@ -168,13 +168,15 @@ export const NAV_MANIFEST = [
   // Sidebar order follows the visit lifecycle: intake → chart the visit →
   // note tools → document repository.
   {
+    // Office is an admin/back-office section, deliberately hidden from nurses to
+    // keep their view focused on clinical work.
     page: "ReferralIntake",
     label: "Referrals",
     icon: FileText,
-    category: "Documentation",
-    adminOnly: false,
+    category: "Office",
+    adminOnly: true,
     breadcrumbParent: null,
-    keywords: ["referral", "intake", "admission"],
+    keywords: ["referral", "intake", "admission", "office"],
   },
   {
     page: "ClinicalDocumentation",
@@ -823,7 +825,7 @@ export function buildAdminItems(manifest, isSuperAdmin = false) {
   // sub-headings were folded in (and most of their items moved into the Admin
   // Console launchpad) to stop the sidebar from re-listing the whole admin
   // surface — see the Administration block in NAV_MANIFEST.
-  const categoryOrder = ["Administration"];
+  const categoryOrder = ["Office", "Administration"];
   const map = {};
   const routed = new Set(PAGE_NAMES);
   for (const entry of manifest) {
