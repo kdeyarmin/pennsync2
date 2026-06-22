@@ -10,7 +10,6 @@ import {
   ClipboardList,
   Stethoscope,
   Shield,
-  TrendingUp,
   BarChart3,
   Eye,
   Loader2,
@@ -26,7 +25,6 @@ const OASISReview = lazy(() => import("@/components/hub-tabs/OASISReview"));
 const OASISClinicalReview = lazy(() => import("@/components/hub-tabs/OASISClinicalReview"));
 const OASISComplianceReview = lazy(() => import("@/components/hub-tabs/OASISComplianceReview"));
 const OASISDocumentationReview = lazy(() => import("@/components/hub-tabs/OASISDocumentationReview"));
-const OASISRevenueAnalysis = lazy(() => import("@/components/hub-tabs/OASISRevenueAnalysis"));
 const OASISAnalyticsDashboard = lazy(() => import("@/components/hub-tabs/OASISAnalyticsDashboard"));
 const OASISAuditDashboard = lazy(() => import("@/components/hub-tabs/OASISAuditDashboard"));
 
@@ -36,12 +34,12 @@ const OASISAuditDashboard = lazy(() => import("@/components/hub-tabs/OASISAuditD
 // right tab. "assessment" (completing an OASIS) is the default landing tab.
 // "audit" is admin-only and intentionally part of the set so admins can deep-link
 // to it; non-admins who request it fall through to the default tab below.
-const TAB_KEYS = ["assessment", "analyze", "review", "clinical", "quality", "revenue", "analytics", "audit"];
+const TAB_KEYS = ["assessment", "analyze", "review", "clinical", "quality", "analytics", "audit"];
 // Tabs whose source pages were admin-only — gated to admins (defense in depth;
 // server RLS remains the real boundary). Non-admins requesting these via ?tab=
 // fall through to the default tab. Revenue (AI OASIS revenue-uplift review) is
 // admin-only and intentionally hidden from nurses.
-const ADMIN_TABS = ["revenue", "analytics", "audit"];
+const ADMIN_TABS = ["analytics", "audit"];
 
 const tabLoader = (
   <div className="flex justify-center py-12">
@@ -124,10 +122,6 @@ export default function OASISCenter() {
             </TabsTrigger>
             {isAdmin && (
               <>
-                <TabsTrigger value="revenue" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Revenue
-                </TabsTrigger>
                 <TabsTrigger value="analytics" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
@@ -184,12 +178,6 @@ export default function OASISCenter() {
 
         {isAdmin && (
           <>
-            <TabsContent value="revenue">
-              <Suspense fallback={tabLoader}>
-                <OASISRevenueAnalysis />
-              </Suspense>
-            </TabsContent>
-
             <TabsContent value="analytics">
               <Suspense fallback={tabLoader}>
                 <OASISAnalyticsDashboard />
