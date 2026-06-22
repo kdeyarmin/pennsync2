@@ -548,6 +548,28 @@ export function scorePatientPair(p1, p2, options = {}) {
     return { score: 0, matches: [] };
   }
 
+  // ---- Corroboration requirement -----------------------------------------
+  // A NAME match alone is never enough to declare two records the same person —
+  // common names ("John Smithers", "John Snyder") collide constantly, and the
+  // data is full of bare-name stub records with null DOB/MRN/phone/address. To
+  // call a pair a duplicate we require at least ONE corroborating identifier
+  // beyond the name: a credited DOB, MRN, phone, address, email, or
+  // caregiver/physician/emergency tie. Without that, two same-named records with
+  // no shared real-world identifier are treated as DIFFERENT people. This is
+  // what stops null-stub bridging (the Smithers/Snyder clusters).
+  const CORROBORATING = new Set([
+    REASON.DOB, REASON.DOB_SWAPPED, REASON.DOB_YEAR_TYPO, REASON.DOB_CLOSE,
+    REASON.MRN, REASON.MRN_SIMILAR,
+    REASON.PHONE, REASON.PHONE_LOCAL,
+    REASON.EMERGENCY_PHONE,
+    REASON.STREET_ADDRESS, REASON.ADDRESS_EXACT, REASON.ADDRESS_SIMILAR,
+    REASON.EMAIL, REASON.CAREGIVER_EMAIL, REASON.CAREGIVER_PHONE, REASON.PHYSICIAN_EMAIL,
+    REASON.MIDDLE_NAME,
+  ]);
+  if (!matches.some((m) => CORROBORATING.has(m))) {
+    return { score: 0, matches: [] };
+  }
+
   return { score, matches };
 }
 
@@ -733,50 +755,94 @@ export function findDuplicateGroups(patients, opts = {}) {
       const cutoff = minScore != null ? minScore : effectiveThreshold(base.matches, threshold);
 
       if (totalScore >= cutoff) {
-        addLink(i, j, totalScore, [...base.matches, ...related.matches]);
-        union(i, j);
+        const allMatches = [...base.matches, ...related.matches];
+        addLink(i, j, totalScore, allMatches);
+        // Only merge clusters transitively on a STRONG link — one backed by a
+        // hard identifier (DOB / MRN / phone / address / email). A pair that
+        // qualifies only via softer ties is still reported as a direct pair, but
+        // must NOT bridge other records into its cluster. This stops a chain of
+        // weak links from daisy-chaining unrelated people (Ritchey↔Langham via a
+        // shared phone-area, Smithers↔Snyder via name stubs) into one group.
+        const STRONG_LINK = new Set([
+          REASON.DOB, REASON.DOB_SWAPPED, REASON.DOB_YEAR_TYPO,
+          REASON.MRN, REASON.MRN_SIMILAR,
+          REASON.PHONE,
+          REASON.ADDRESS_EXACT, REASON.STREET_ADDRESS,
+          REASON.EMAIL,
+        ]);
+        if (base.matches.some((m) => STRONG_LINK.has(m))) {
+          union(i, j);
+        }
       }
     }
   }
 
-  // Collect cluster members by root. Iterating i ascending means each root (the
-  // cluster's min index) is first seen at i === root, so clusters land in
-  // primary-index order without a follow-up sort.
-  const clusters = new Map(); // root -> [indices]
-  for (let i = 0; i < n; i++) {
-    if (!links.has(i)) continue; // record matched nothing — not part of any group
-    const root = find(i);
-    if (!clusters.has(root)) clusters.set(root, []);
-    clusters.get(root).push(i);
-  }
-
+  // Build groups as connected components, but treat weak (non-union) links as
+  // STRICTLY PAIRWISE so they can never bridge a third record into a cluster.
+  //
+  // Strong links share a union-find root → those members cluster together. For
+  // each strong cluster we also attach any record weak-linked DIRECTLY to a
+  // member (and only that record, not its onward links). A weak link between two
+  // records that are each in no strong cluster forms its own 2-record group.
+  const memberOf = new Array(n).fill(-1); // index -> group id (once assigned)
   const groups = [];
-  for (const indices of clusters.values()) {
-    if (indices.length < 2) continue;
-    const memberSet = new Set(indices);
-    const primaryIdx = indices[0]; // ascending insertion => lowest index first
 
-    const duplicates = [];
-    for (const idx of indices) {
-      if (idx === primaryIdx) continue;
-      // Report this record with its strongest link to any other cluster member,
-      // so a record bridged in via a third party still shows a meaningful score.
-      let best = null;
-      for (const link of links.get(idx)) {
-        if (!memberSet.has(link.idx)) continue;
-        if (!best || link.score > best.score) best = link;
-      }
-      duplicates.push({
-        patient: patients[idx],
-        score: best.score,
-        matches: best.matches,
-        confidenceLevel: confidenceFromScore(best.score),
-        confidencePercent: confidencePercent(best.score),
-      });
+  // First pass: strong clusters (>= 2 members sharing a union-find root).
+  const strongClusters = new Map(); // root -> [indices]
+  for (let i = 0; i < n; i++) {
+    if (!links.has(i)) continue;
+    const root = find(i);
+    if (root === i && find(i) === i) { /* root may be singleton; handled below */ }
+    if (!strongClusters.has(root)) strongClusters.set(root, []);
+    strongClusters.get(root).push(i);
+  }
+
+  const makeDuplicate = (idx, memberSet) => {
+    let best = null;
+    for (const link of links.get(idx)) {
+      if (!memberSet.has(link.idx)) continue;
+      if (!best || link.score > best.score) best = link;
     }
+    return {
+      patient: patients[idx],
+      score: best.score,
+      matches: best.matches,
+      confidenceLevel: confidenceFromScore(best.score),
+      confidencePercent: confidencePercent(best.score),
+    };
+  };
 
+  for (const indices of strongClusters.values()) {
+    if (indices.length < 2) continue; // singleton root — no strong cluster here
+    const memberSet = new Set(indices);
+    const primaryIdx = indices[0];
+    for (const idx of indices) memberOf[idx] = groups.length;
+    const duplicates = indices
+      .filter((idx) => idx !== primaryIdx)
+      .map((idx) => makeDuplicate(idx, memberSet));
     duplicates.sort((a, b) => b.score - a.score);
     groups.push({ primary: patients[primaryIdx], duplicates });
+  }
+
+  // Second pass: weak-only pairs. Any link whose endpoints are not already in a
+  // strong group becomes its own pairwise group (deduped, lowest index primary).
+  const seenWeakPair = new Set();
+  for (let i = 0; i < n; i++) {
+    if (!links.has(i) || memberOf[i] !== -1) continue;
+    for (const link of links.get(i)) {
+      const j = link.idx;
+      if (memberOf[j] !== -1) continue; // partner already in a strong group
+      const a = Math.min(i, j);
+      const b = Math.max(i, j);
+      const key = `${a}-${b}`;
+      if (seenWeakPair.has(key)) continue;
+      seenWeakPair.add(key);
+      const memberSet = new Set([a, b]);
+      groups.push({
+        primary: patients[a],
+        duplicates: [makeDuplicate(b, memberSet)],
+      });
+    }
   }
 
   return groups;
