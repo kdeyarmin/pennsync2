@@ -14,8 +14,6 @@ export default function ExpirationAlertsWidget({ currentUser }) {
     queryKey: ['expiring-assignments', currentUser?.email, refreshKey],
     queryFn: async () => {
       const today = new Date();
-      const thirtyDaysFromNow = new Date(today);
-      thirtyDaysFromNow.setDate(today.getDate() + 30);
 
       const all = await base44.entities.TrainingAssignment.filter(
         { assigned_to_user_id: currentUser?.email, status: 'completed' },
@@ -27,7 +25,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
         if (!a.renewal_due_date) return false;
         const renewalDate = new Date(a.renewal_due_date);
         const daysUntil = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
-        return daysUntil > 0 && daysUntil <= 30;
+        return daysUntil > 0 && daysUntil <= 90;
       }).map(a => {
         const renewalDate = new Date(a.renewal_due_date);
         const daysUntil = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
@@ -42,8 +40,6 @@ export default function ExpirationAlertsWidget({ currentUser }) {
     queryKey: ['expiring-credentials', currentUser?.email, refreshKey],
     queryFn: async () => {
       const today = new Date();
-      const thirtyDaysFromNow = new Date(today);
-      thirtyDaysFromNow.setDate(today.getDate() + 30);
 
       const all = await base44.entities.PersonnelCredential.filter(
         { user_id: currentUser?.email, status: 'approved' },
@@ -55,7 +51,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
         if (!c.expiration_date) return false;
         const expirationDate = new Date(c.expiration_date);
         const daysUntil = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
-        return daysUntil > 0 && daysUntil <= 30;
+        return daysUntil > 0 && daysUntil <= 90;
       }).map(c => {
         const expirationDate = new Date(c.expiration_date);
         const daysUntil = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
@@ -70,8 +66,6 @@ export default function ExpirationAlertsWidget({ currentUser }) {
     queryKey: ['admin-expirations', refreshKey],
     queryFn: async () => {
       const today = new Date();
-      const thirtyDaysFromNow = new Date(today);
-      thirtyDaysFromNow.setDate(today.getDate() + 30);
 
       // Fetch all assignments and credentials
       const [allAssignments, allCredentials] = await Promise.all([
@@ -86,7 +80,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
         if (!a.renewal_due_date) return;
         const renewalDate = new Date(a.renewal_due_date);
         const daysUntil = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
-        if (daysUntil > 0 && daysUntil <= 30) {
+        if (daysUntil > 0 && daysUntil <= 90) {
           expirations.push({
             type: 'training',
             user_id: a.assigned_to_user_id,
@@ -102,7 +96,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
         if (!c.expiration_date) return;
         const expirationDate = new Date(c.expiration_date);
         const daysUntil = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
-        if (daysUntil > 0 && daysUntil <= 30) {
+        if (daysUntil > 0 && daysUntil <= 90) {
           expirations.push({
             type: 'credential',
             user_id: c.user_id,
@@ -132,8 +126,8 @@ export default function ExpirationAlertsWidget({ currentUser }) {
 
   const getPriorityBadge = (days) => {
     if (days <= 7) return { label: 'Urgent', variant: 'destructive' };
-    if (days <= 14) return { label: 'Soon', variant: 'default' };
-    return { label: '30 Days', variant: 'secondary' };
+    if (days <= 30) return { label: 'Soon', variant: 'default' };
+    return { label: '90 Days', variant: 'secondary' };
   };
 
   if (isLoading) {
@@ -182,7 +176,7 @@ export default function ExpirationAlertsWidget({ currentUser }) {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Clock className="w-8 h-8 text-green-600" />
             </div>
-            <p className="text-sm text-slate-600">No upcoming expirations in the next 30 days</p>
+            <p className="text-sm text-slate-600">No upcoming expirations in the next 90 days</p>
           </div>
         ) : (
           <div className="space-y-3">

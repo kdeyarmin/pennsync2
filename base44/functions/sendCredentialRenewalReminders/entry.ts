@@ -11,10 +11,11 @@ Deno.serve(async (req) => {
 
     const credentials = await base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 5000);
     const today = new Date();
-    const sixtyDaysFromNow = new Date(today);
-    sixtyDaysFromNow.setDate(today.getDate() + 60);
 
     const notificationsSent = [];
+
+    // Collect items per-admin so admins get a consolidated upcoming-expiration digest.
+    const adminDigestItems = [];
 
     for (const cred of credentials) {
       if (!cred.expiration_date || cred.status === 'expired') continue;
@@ -22,12 +23,23 @@ Deno.serve(async (req) => {
       const expirationDate = new Date(cred.expiration_date);
       const daysUntilExpiry = Math.floor((expirationDate - today) / (1000 * 60 * 60 * 24));
 
-      // Send renewal request at 60, 30, 14, and 7 days before expiration.
+      // Anything expiring within 90 days (or already expired) goes into the admin digest.
+      if (daysUntilExpiry <= 90) {
+        adminDigestItems.push({
+          user_name: cred.user_name || cred.user_id,
+          title: cred.title,
+          item_type: cred.item_type,
+          expiration_date: cred.expiration_date,
+          daysUntilExpiry,
+        });
+      }
+
+      // Send renewal request at 90, 60, 30, 14, and 7 days before expiration.
       // Determine which tiers are newly crossed in ONE pass. Iterating and
       // updating per-offset previously read a stale local `remindersSent`, so a
       // credential first seen at <=7 days fired all four tiers at once (and the
       // per-iteration write overwrote the tracking, causing repeats every run).
-      const reminderOffsets = [60, 30, 14, 7];
+      const reminderOffsets = [90, 60, 30, 14, 7];
       const remindersSent = cred.reminder_offsets_sent || [];
       const dueOffsets = reminderOffsets.filter(
         (offset) => daysUntilExpiry <= offset && !remindersSent.includes(offset)
@@ -87,9 +99,37 @@ Credential Management System`
       }
     }
 
+    // Send a consolidated 90-day expiration digest to all admins.
+    let adminDigestSent = 0;
+    if (adminDigestItems.length > 0) {
+      const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+      adminDigestItems.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+
+      const rows = adminDigestItems.map((i) => {
+        const when = i.daysUntilExpiry < 0
+          ? `EXPIRED ${Math.abs(i.daysUntilExpiry)} days ago`
+          : `${i.daysUntilExpiry} days remaining`;
+        return `• ${i.user_name} — ${i.title} (${i.item_type}) — expires ${new Date(i.expiration_date).toLocaleDateString()} (${when})`;
+      }).join('\n');
+
+      for (const admin of admins) {
+        try {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: admin.email,
+            subject: `🗂️ Personnel Expiration Digest — ${adminDigestItems.length} item(s) within 90 days`,
+            body: `The following personnel file items are expired or expiring within the next 90 days:\n\n${rows}\n\nReview them in the Personnel File → Credential Compliance report.`
+          });
+          adminDigestSent++;
+        } catch (digestErr) {
+          console.error(`Failed to send admin digest to ${admin.email}:`, digestErr?.message || digestErr);
+        }
+      }
+    }
+
     return Response.json({
       success: true,
       notifications_sent: notificationsSent.length,
+      admin_digests_sent: adminDigestSent,
       details: notificationsSent
     });
   } catch (error) {

@@ -8,6 +8,7 @@ import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialF
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
 import AdminCredentialApproval from "@/components/personnel/AdminCredentialApproval";
+import CredentialComplianceReport from "@/components/admin/CredentialComplianceReport";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { Users } from "lucide-react";
@@ -41,6 +42,7 @@ export default function PersonnelFile() {
           <TabsTrigger value="my-file">My Personnel File</TabsTrigger>
           <TabsTrigger value="renewals">Renewals</TabsTrigger>
           {isAgencyAdmin(currentUser) && <TabsTrigger value="approvals">Approvals ({pendingApprovals.length})</TabsTrigger>}
+          {isAgencyAdmin(currentUser) && <TabsTrigger value="tracking">Expiration Tracking</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="my-file" className="space-y-4">
@@ -93,6 +95,12 @@ export default function PersonnelFile() {
         {isAgencyAdmin(currentUser) && (
           <TabsContent value="approvals">
             <AdminCredentialApproval />
+          </TabsContent>
+        )}
+
+        {isAgencyAdmin(currentUser) && (
+          <TabsContent value="tracking">
+            <CredentialComplianceReport />
           </TabsContent>
         )}
       </Tabs>

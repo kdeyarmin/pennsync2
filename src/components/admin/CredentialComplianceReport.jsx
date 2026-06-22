@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,9 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toCsvRows } from "@/components/admin/csvExport";
 
+const WINDOW_OPTIONS = [
+  { value: "all", label: "All (including future)" },
+  { value: "expired", label: "Expired only" },
+  { value: "30", label: "Expiring within 30 days" },
+  { value: "60", label: "Expiring within 60 days" },
+  { value: "90", label: "Expiring within 90 days" },
+];
+
 export default function CredentialComplianceReport() {
+  const [itemType, setItemType] = useState("all");
+  const [windowFilter, setWindowFilter] = useState("90");
   const { data: users = [] } = useQuery({
     queryKey: ['all-users'],
     queryFn: () => base44.entities.User.list('-created_date', 500),
@@ -68,6 +79,26 @@ export default function CredentialComplianceReport() {
     };
   }, [users, credentials]);
 
+  // Per-item detail report, filtered by item type and expiration window so admins
+  // can run "specific or all items" expiration reports.
+  const reportItems = useMemo(() => {
+    const now = new Date();
+    return credentials
+      .filter(c => c.expiration_date)
+      .filter(c => itemType === "all" || c.item_type === itemType)
+      .map(c => {
+        const exp = new Date(c.expiration_date);
+        const daysUntil = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+        return { ...c, daysUntil };
+      })
+      .filter(c => {
+        if (windowFilter === "all") return true;
+        if (windowFilter === "expired") return c.daysUntil < 0;
+        return c.daysUntil >= 0 && c.daysUntil <= Number(windowFilter);
+      })
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+  }, [credentials, itemType, windowFilter]);
+
   const downloadCSV = () => {
     const headers = ['Employee', 'Email', 'Total Credentials', 'Expired', 'Expiring 30 Days', 'Expiring 60 Days', 'Expiring 90 Days', 'Status'];
     const rows = complianceData.staff.map(s => [
@@ -87,6 +118,28 @@ export default function CredentialComplianceReport() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `credential-compliance-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  const downloadItemsCSV = () => {
+    const headers = ['Employee', 'Email', 'Item', 'Type', 'Issuing Org', 'Expiration Date', 'Days Until Expiry', 'Status'];
+    const rows = reportItems.map(c => [
+      c.user_name || '',
+      c.user_id || '',
+      c.title || '',
+      c.item_type || '',
+      c.issuing_organization || '',
+      c.expiration_date ? new Date(c.expiration_date).toLocaleDateString() : '',
+      c.daysUntil,
+      c.daysUntil < 0 ? 'Expired' : 'Active',
+    ]);
+
+    const csv = toCsvRows([headers, ...rows]);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `expiration-report-${itemType}-${windowFilter}-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
 
@@ -155,6 +208,69 @@ export default function CredentialComplianceReport() {
           </AlertDescription>
         </Alert>
       )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div>
+              <CardTitle>Expiration Report</CardTitle>
+              <p className="text-sm text-slate-500 mt-1">Run an expiration report for specific or all item types.</p>
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <div>
+                <label className="text-xs text-slate-500 block mb-1">Item type</label>
+                <Select value={itemType} onValueChange={setItemType}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All items</SelectItem>
+                    <SelectItem value="license">Licenses</SelectItem>
+                    <SelectItem value="certification">Certifications</SelectItem>
+                    <SelectItem value="insurance">Insurance / Registration</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 block mb-1">Window</label>
+                <Select value={windowFilter} onValueChange={setWindowFilter}>
+                  <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {WINDOW_OPTIONS.map(o => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={downloadItemsCSV} variant="outline" size="sm" disabled={reportItems.length === 0}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {reportItems.length === 0 ? (
+            <p className="text-center py-6 text-sm text-slate-500">No items match this filter.</p>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {reportItems.map(c => (
+                <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{c.title} <span className="text-slate-400 font-normal">· {c.item_type}</span></p>
+                    <p className="text-xs text-slate-500 truncate">{c.user_name || c.user_id} · expires {new Date(c.expiration_date).toLocaleDateString()}</p>
+                  </div>
+                  {c.daysUntil < 0 ? (
+                    <Badge variant="destructive">Expired {Math.abs(c.daysUntil)}d</Badge>
+                  ) : (
+                    <Badge className={c.daysUntil <= 30 ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}>
+                      {c.daysUntil}d
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
