@@ -71,11 +71,11 @@ export default function ClinicalDocumentation() {
       />
         <EmbeddedPage>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 gap-2">
-            <TabsTrigger value="smart-notes" className="min-h-[44px] font-semibold gap-2">
+          <TabsList className="flex w-full gap-2">
+            <TabsTrigger value="smart-notes" className="flex-1 min-h-[44px] font-semibold">
               <Sparkles className="w-4 h-4" /> Smart Note
             </TabsTrigger>
-            <TabsTrigger value="visit-scribe" className="min-h-[44px] font-semibold gap-2">
+            <TabsTrigger value="visit-scribe" className="flex-1 min-h-[44px] font-semibold">
               <Mic className="w-4 h-4" /> Visit Scribe
             </TabsTrigger>
           </TabsList>
@@ -89,11 +89,11 @@ export default function ClinicalDocumentation() {
               speaking it (live dictation); both transcribe into a compliant note. */}
           <TabsContent value="visit-scribe">
             <Tabs defaultValue={initialScribeMode} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 gap-2 max-w-md">
-                <TabsTrigger value="record" className="min-h-[44px] gap-2">
+              <TabsList className="flex w-full gap-2 max-w-md">
+                <TabsTrigger value="record" className="flex-1 min-h-[44px]">
                   <FileAudio className="w-4 h-4" /> Record / Upload
                 </TabsTrigger>
-                <TabsTrigger value="dictation" className="min-h-[44px] gap-2">
+                <TabsTrigger value="dictation" className="flex-1 min-h-[44px]">
                   <Mic className="w-4 h-4" /> Live Dictation
                 </TabsTrigger>
               </TabsList>

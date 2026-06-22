@@ -28,7 +28,11 @@ const TabsTrigger = React.forwardRef((props, ref) => (
     className={cn(
       // gap-2 + [&_svg] rules keep the icon and label on a single inline row with
       // consistent spacing and a fixed icon size, regardless of what a page passes.
-      "inline-flex flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 ring-offset-white transition-all [&_svg]:h-4 [&_svg]:w-4 [&_svg]:flex-shrink-0 hover:bg-white/70 hover:text-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-navy-800 data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-slate-900/5",
+      // `flex` (not inline-flex) so that when a TabsList lays triggers out in a
+      // grid/flex with stretched cells, each trigger fills its cell and keeps its
+      // icon+label centered together (justify-center). inline-flex would shrink to
+      // content and leave the icon floating away from a centered-looking label.
+      "flex flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 ring-offset-white transition-all [&_svg]:h-4 [&_svg]:w-4 [&_svg]:flex-shrink-0 hover:bg-white/70 hover:text-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-navy-800 data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-slate-900/5",
       props.className
     )}
     {...props}
