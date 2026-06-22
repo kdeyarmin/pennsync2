@@ -16,6 +16,7 @@ import ClinicalLibraryAIAssistant from "./ClinicalLibraryAIAssistant";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClinicalLibraryAnalytics from "./ClinicalLibraryAnalytics";
 import FolderTreeView from "./FolderTreeView";
+import ClinicalLibraryIntro from "./ClinicalLibraryIntro";
 
 export default function ClinicalLibraryManager() {
   const confirm = useConfirm();
@@ -287,6 +288,7 @@ export default function ClinicalLibraryManager() {
       </TabsList>
 
       <TabsContent value="templates" className="space-y-6">
+      <ClinicalLibraryIntro isAdmin={isAdmin} />
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Sidebar */}
         <Card className="lg:col-span-1">
