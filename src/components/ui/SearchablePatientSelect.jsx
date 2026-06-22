@@ -370,7 +370,16 @@ export default function SearchablePatientSelect({
               </CommandGroup>
             )}
 
-
+            <CommandGroup className="border-t">
+              <CommandItem
+                value="__add_new_patient__"
+                onSelect={openCreateDialog}
+                className="flex items-center gap-2 py-3 cursor-pointer text-navy-700 font-medium"
+              >
+                <Plus className="h-4 w-4 flex-shrink-0" />
+                {search.trim() ? `Add "${search.trim()}" as new patient` : "Add new patient"}
+              </CommandItem>
+            </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>
