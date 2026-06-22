@@ -217,15 +217,17 @@ export const NAV_MANIFEST = [
   // choice (Record / Upload + Live Dictation sub-modes), so /VisitScribe redirects
   // to /ClinicalDocumentation?tab=visit-scribe (see REDIRECTS in src/routes.jsx).
   {
-    // Documents is an admin-staff workspace (signatures, packages, audit logs),
-    // not a clinical tool — hidden from the nurse view.
+    // Documents is an admin back-office workspace (e-signing, scan & mark
+    // signature fields, multi-document packets, audit logs) — lives in the Office
+    // section and is hidden from the nurse view.
     page: "DocumentHub",
-    label: "Documents",
-    icon: FileText,
-    category: "Documentation",
+    label: "Documents & E-Signing",
+    navLabel: "Documents",
+    icon: Pen,
+    category: "Office",
     adminOnly: true,
     breadcrumbParent: null,
-    keywords: ["documents", "files", "hub"],
+    keywords: ["documents", "files", "hub", "e-sign", "esign", "signature", "sign", "scan", "packet", "package", "office"],
   },
   {
     page: "EventReport",
