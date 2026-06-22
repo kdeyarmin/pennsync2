@@ -9,8 +9,8 @@ import FeedbackButton from "@/components/feedback/FeedbackButton";
 function navItemClasses(active) {
   return `group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
     active
-      ? "bg-navy-50 text-navy-800 font-semibold"
-      : "text-slate-600 hover:bg-slate-100 hover:text-navy-700"
+      ? "bg-navy-700 text-white font-semibold"
+      : "text-navy-100 hover:bg-navy-700 hover:text-white"
   }`;
 }
 
@@ -25,9 +25,9 @@ export default function DesktopSidebar({
   isActive, onLogout,
 }) {
   return (
-    <aside className={`hidden md:flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0 flex-shrink-0`}>
+    <aside className={`hidden md:flex flex-col bg-navy-800 border-r border-navy-900 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0 flex-shrink-0`}>
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-3 border-b border-slate-200 flex-shrink-0">
+      <div className="h-16 flex items-center justify-between px-3 border-b border-navy-900 flex-shrink-0">
         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 min-w-0">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png"
@@ -35,14 +35,14 @@ export default function DesktopSidebar({
             className="w-8 h-8 rounded-lg flex-shrink-0"
           />
           {!collapsed && (
-            <span className="font-bold text-base text-navy-900 truncate tracking-tight">
-              Penn<span className="text-gold-600">Sync</span>
+            <span className="font-bold text-base text-white truncate tracking-tight">
+              Penn<span className="text-gold-400">Sync</span>
             </span>
           )}
         </Link>
         <Button
           variant="ghost" size="icon"
-          className="h-7 w-7 text-slate-400 hover:text-navy-700 hover:bg-slate-100 flex-shrink-0"
+          className="h-7 w-7 text-navy-200 hover:text-white hover:bg-navy-700 flex-shrink-0"
           onClick={onToggleCollapse}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={!collapsed}
@@ -57,14 +57,14 @@ export default function DesktopSidebar({
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
-          className={`flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-navy-700 transition-colors mb-2 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'w-full px-3 py-2'}`}
+          className={`flex items-center gap-2 rounded-lg border border-navy-700 bg-navy-900/40 text-navy-200 hover:bg-navy-700 hover:text-white transition-colors mb-2 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'w-full px-3 py-2'}`}
           title="Search pages (Ctrl/Cmd+K)"
         >
           <Search className="w-4 h-4 flex-shrink-0" />
           {!collapsed && (
             <>
               <span className="text-sm flex-1 text-left">Search…</span>
-              <kbd className="text-[10px] font-mono bg-white text-slate-500 rounded px-1.5 py-0.5 border border-slate-200">⌘K</kbd>
+              <kbd className="text-[10px] font-mono bg-navy-900 text-navy-200 rounded px-1.5 py-0.5 border border-navy-700">⌘K</kbd>
             </>
           )}
         </button>
@@ -87,21 +87,21 @@ export default function DesktopSidebar({
               <Link
                 key={`fav-patient-${patient.id}`}
                 to={createPageUrl(`PatientDetails?id=${patient.id}`)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-navy-700"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-navy-100 hover:bg-navy-700 hover:text-white"
                 title={collapsed ? patient.name : undefined}
               >
                 <Users className="w-4 h-4 flex-shrink-0" />
                 {!collapsed && <span className="truncate">{patient.name}</span>}
               </Link>
             ))}
-            <div className="border-t border-slate-200 my-2" />
+            <div className="border-t border-navy-700 my-2" />
           </>
         )}
 
         {navCategories.map((category, catIndex) => (
           <div key={catIndex}>
             {category.category && !collapsed && (
-              <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-navy-300 uppercase tracking-wider">
                 {category.category}
               </p>
             )}
@@ -132,13 +132,13 @@ export default function DesktopSidebar({
                 </Link>
               );
             })}
-            {catIndex === 0 && <div className="border-t border-slate-200 my-2" />}
+            {catIndex === 0 && <div className="border-t border-navy-700 my-2" />}
           </div>
         ))}
 
         {isAdmin && (
           <>
-            <div className="border-t border-slate-200 my-2" />
+            <div className="border-t border-navy-700 my-2" />
             {adminItems.map((category, catIndex) => (
               <div key={catIndex}>
                 {category.category && !collapsed && (
@@ -182,7 +182,7 @@ export default function DesktopSidebar({
                     </Link>
                   )
                 )}
-                {catIndex === 0 && <div className="border-t border-slate-200 my-2" />}
+                {catIndex === 0 && <div className="border-t border-navy-700 my-2" />}
               </div>
             ))}
           </>
@@ -190,7 +190,7 @@ export default function DesktopSidebar({
       </nav>
 
       {/* User Footer */}
-      <div className="border-t border-slate-200 p-3 flex-shrink-0">
+      <div className="border-t border-navy-700 p-3 flex-shrink-0">
         {!collapsed && <FeedbackButton />}
         <div className={`flex items-center gap-2 mt-2 ${collapsed ? 'justify-center flex-col' : ''}`}>
           <div className="w-8 h-8 bg-gradient-to-br from-navy-500 to-navy-700 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
@@ -198,14 +198,14 @@ export default function DesktopSidebar({
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{currentUser?.full_name || 'User'}</p>
-              <p className="text-xs text-slate-500 truncate capitalize">{currentUser?.role || 'user'}</p>
+              <p className="text-sm font-medium text-white truncate">{currentUser?.full_name || 'User'}</p>
+              <p className="text-xs text-navy-300 truncate capitalize">{currentUser?.role || 'user'}</p>
             </div>
           )}
           <Button
             variant="ghost" size="icon"
             onClick={onLogout}
-            className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-slate-100 flex-shrink-0"
+            className="h-8 w-8 text-navy-200 hover:text-red-400 hover:bg-navy-700 flex-shrink-0"
             title="Logout"
             aria-label="Log out"
           >
