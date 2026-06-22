@@ -85,6 +85,32 @@ const SCALES = [
     ],
     domains: ["Mobility", "Self-Care", "Communication", "Continence", "Cognition"],
   },
+  {
+    name: "FAST (Functional Assessment Staging Tool)",
+    category: "hospice",
+    description: "Stages functional decline in Alzheimer's/dementia. Stage 7c supports hospice eligibility when paired with comorbidities.",
+    scores: [
+      { label: "Stage 7 — Severe dementia (7a–7f)", range: "7", color: "bg-red-100 text-red-800" },
+      { label: "Stage 6 — Moderately severe", range: "6", color: "bg-orange-100 text-orange-800" },
+      { label: "Stage 5 — Moderate", range: "5", color: "bg-yellow-100 text-yellow-800" },
+      { label: "Stage 4 — Mild", range: "4", color: "bg-blue-100 text-blue-800" },
+      { label: "Stage 1–3 — Normal to early", range: "1–3", color: "bg-green-100 text-green-800" },
+    ],
+    domains: ["Ambulation", "Dressing", "Bathing", "Toileting", "Continence", "Speech (≤6 words)"],
+  },
+  {
+    name: "PPS (Palliative Performance Scale)",
+    category: "hospice",
+    description: "Measures ambulation, activity, self-care, intake, and consciousness in palliative/hospice patients. Lower scores indicate decline.",
+    scores: [
+      { label: "Ambulatory / Full activity", range: "100–80%", color: "bg-green-100 text-green-800" },
+      { label: "Reduced activity / Some assist", range: "70–60%", color: "bg-blue-100 text-blue-800" },
+      { label: "Mainly sit/lie / Considerable assist", range: "50–40%", color: "bg-yellow-100 text-yellow-800" },
+      { label: "Mainly in bed / Total care", range: "30–20%", color: "bg-orange-100 text-orange-800" },
+      { label: "Bed bound / Comatose", range: "10–0%", color: "bg-red-100 text-red-800" },
+    ],
+    domains: ["Ambulation", "Activity & Evidence of Disease", "Self-Care", "Intake", "Conscious Level"],
+  },
 ];
 
 const PROTOCOLS = [
@@ -189,6 +215,7 @@ const categoryColors = {
   diabetes: "bg-emerald-100 text-emerald-800",
   medication: "bg-navy-100 text-navy-800",
   respiratory: "bg-navy-100 text-navy-800",
+  hospice: "bg-purple-100 text-purple-800",
 };
 
 export default function ClinicalReferencePanel() {
