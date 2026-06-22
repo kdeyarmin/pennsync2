@@ -29,7 +29,7 @@ import {
   Mail, BookUser, Video, HelpCircle, AlertTriangle,
   Phone, Send, Heart, Database, Lock, Award,
   Clipboard, Filter, Globe,
-  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays, ShieldAlert
+  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays, ShieldAlert, ShieldCheck
 } from "lucide-react";
 
 import { PAGE_NAMES, REDIRECTS } from "@/routes";
@@ -737,6 +737,18 @@ export const NAV_MANIFEST = [
     breadcrumbParent: null,
     keywords: ["time off", "pto", "leave", "vacation", "request", "schedule"],
     badge: "timeOffApprovals",
+  },
+  {
+    // All users can view the on-call schedule; only admins can enter/edit it
+    // (enforced in-page and by OnCallShift RLS write rules).
+    page: "OnCallSchedule",
+    label: "On-Call Schedule",
+    navLabel: "On-Call",
+    icon: ShieldCheck,
+    category: "Tools",
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["on call", "on-call", "call schedule", "coverage", "holiday", "overnight", "rotation"],
   },
   {
     page: "OfflineMode",
