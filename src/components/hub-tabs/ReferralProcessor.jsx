@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileText, UserPlus, ArrowRight, TrendingUp, Sparkles, Target, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from 'sonner';
 
 export default function ReferralProcessor() {
   const queryClient = useQueryClient();
@@ -50,7 +51,7 @@ export default function ReferralProcessor() {
       }
     } catch (error) {
       console.error('Error ranking diagnoses:', error);
-      alert('Failed to rank diagnoses. Please try again.');
+      toast.error('Failed to rank diagnoses. Please try again.');
     }
     setIsRankingDiagnoses(false);
   };
@@ -92,14 +93,14 @@ export default function ReferralProcessor() {
       setCreatedPatientId(newPatient.id);
       queryClient.invalidateQueries({ queryKey: ['patients'] });
 
-      alert('Patient created successfully!');
+      toast.success('Patient created successfully!');
       // Return the new id so callers (generateCarePlans) can use it immediately
       // — setCreatedPatientId is async and the captured createdPatientId is still
       // stale within the same tick.
       return newPatient.id;
     } catch (error) {
       console.error('Error creating patient:', error);
-      alert('Failed to create patient. Please try again or create manually.');
+      toast.error('Failed to create patient. Please try again or create manually.');
     } finally {
       setIsCreatingPatient(false);
     }
@@ -130,10 +131,10 @@ export default function ReferralProcessor() {
       setCreatedCarePlans(data);
       queryClient.invalidateQueries({ queryKey: ['carePlans'] });
 
-      alert(`Successfully created ${data.care_plans_created} care plans!`);
+      toast.success(`Successfully created ${data.care_plans_created} care plans!`);
     } catch (error) {
       console.error('Error generating care plans:', error);
-      alert('Failed to generate care plans. Please try again.');
+      toast.error('Failed to generate care plans. Please try again.');
     }
     setIsCreatingCarePlans(false);
   };

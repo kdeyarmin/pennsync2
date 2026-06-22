@@ -17,6 +17,7 @@ import {
   Target
 } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { toast } from 'sonner';
 
 export default function AutomatedTaskGenerator({
   patient,
@@ -112,7 +113,7 @@ Return JSON:`,
 
     } catch (error) {
       console.error("Task generation error:", error);
-      alert("Failed to generate tasks. Please try again.");
+      toast.error("Failed to generate tasks. Please try again.");
     }
     setIsGenerating(false);
   };
@@ -137,7 +138,7 @@ Return JSON:`,
 
     const selected = generatedTasks.filter((_, idx) => selectedTasks[idx]);
     if (selected.length === 0) {
-      alert("Please select at least one task to create.");
+      toast.error("Please select at least one task to create.");
       return;
     }
 
@@ -170,13 +171,13 @@ Return JSON:`,
         onTasksGenerated(createdTasks);
       }
 
-      alert(`Successfully created ${createdTasks.length} task(s)!`);
+      toast.success(`Successfully created ${createdTasks.length} task(s)!`);
       setGeneratedTasks([]);
       setSelectedTasks({});
 
     } catch (error) {
       console.error("Task creation error:", error);
-      alert("Failed to create tasks. Please try again.");
+      toast.error("Failed to create tasks. Please try again.");
     }
     setIsCreating(false);
   };

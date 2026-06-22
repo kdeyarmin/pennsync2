@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 import { exportToPDF } from "../utils/pdfExporter";
+import { toast } from 'sonner';
 
 export default function StaffEducationComplianceReport() {
   const [timeframe, setTimeframe] = useState('30');
@@ -139,7 +140,7 @@ export default function StaffEducationComplianceReport() {
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate report. Please try again.');
+      toast.error('Failed to generate report. Please try again.');
     }
     setIsGenerating(false);
   };

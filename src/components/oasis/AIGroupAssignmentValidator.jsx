@@ -32,6 +32,7 @@ import {
   Save,
   TrendingUp
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIGroupAssignmentValidator({ 
   oasisData, 
@@ -213,13 +214,13 @@ PROVIDE:
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oasisAudits'] });
       setShowOverrideDialog(false);
-      alert('Group assignment override saved successfully');
+      toast.success('Group assignment override saved successfully');
     },
   });
 
   const handleOverride = () => {
     if (!overrideReason.trim()) {
-      alert('Please provide a reason for the override');
+      toast.error('Please provide a reason for the override');
       return;
     }
 

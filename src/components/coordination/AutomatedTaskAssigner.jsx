@@ -13,6 +13,7 @@ import {
   Loader2,
   Send
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AutomatedTaskAssigner({ 
   patientId,
@@ -137,10 +138,10 @@ Focus on tasks that require specialized expertise or coordination.`,
       
       setSuggestedTasks([]);
       setSelectedTasks([]);
-      alert(`✅ Created ${tasksToCreate.length} care coordination tasks`);
+      toast.success(`✅ Created ${tasksToCreate.length} care coordination tasks`);
     } catch (error) {
       console.error('Task creation error:', error);
-      alert('Failed to create tasks');
+      toast.error('Failed to create tasks');
     }
     setIsCreating(false);
   };

@@ -31,6 +31,7 @@ import { format, subDays, differenceInDays } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import { useQuery } from "@tanstack/react-query";
 import { escapeCsvField } from "@/components/admin/csvExport";
+import { toast } from 'sonner';
 
 export default function ReportsCenter({ users: allUsers, patients: allPatients, visits, incidents }) {
   const [reportType, setReportType] = useState("productivity");
@@ -304,7 +305,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
     } catch (error) {
       console.error('Error generating report:', error);
-      alert(`Failed to generate report: ${error.message || 'Unknown error'}. Please try again.`);
+      toast.error(`Failed to generate report: ${error.message || 'Unknown error'}. Please try again.`);
     }
     
     setIsGenerating(false);

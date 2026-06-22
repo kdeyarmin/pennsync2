@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Award, Download, Search, Calendar, Star } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function MyCompletedTraining({ nurseEmail }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,7 +43,7 @@ export default function MyCompletedTraining({ nurseEmail }) {
       a.remove();
     } catch (error) {
       console.error('Error downloading certificate:', error);
-      alert('Failed to generate certificate');
+      toast.error('Failed to generate certificate');
     }
   };
 

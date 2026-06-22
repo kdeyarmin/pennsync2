@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function TeachBackConfirmation({ material, patient, onRecorded }) {
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
@@ -43,7 +44,7 @@ export default function TeachBackConfirmation({ material, patient, onRecorded })
 
   const handleRecordResponse = () => {
     if (!currentResponse.trim() || !understandingLevel) {
-      alert("Please enter a response and select understanding level.");
+      toast.error("Please enter a response and select understanding level.");
       return;
     }
 

@@ -18,6 +18,7 @@ import {
   Share2,
   RefreshCw
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function PatientEducationPanel({ patientId }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -39,7 +40,7 @@ export default function PatientEducationPanel({ patientId }) {
       }
     } catch (error) {
       console.error('Error generating education materials:', error);
-      alert('Failed to generate education materials. Please try again.');
+      toast.error('Failed to generate education materials. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -262,7 +263,7 @@ export default function PatientEducationPanel({ patientId }) {
                         onClick={(e) => {
                           e.stopPropagation();
                           navigator.clipboard.writeText(`${material.title}\n\n${material.content}`);
-                          alert('Content copied to clipboard!');
+                          toast.success('Content copied to clipboard!');
                         }}
                         variant="outline"
                         size="sm"

@@ -15,8 +15,8 @@ import {
   Download,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { toast } from 'sonner';
 import { verifySignatureIntegrity } from './signatureUtils';
+import { toast } from 'sonner';
 
 export default function SignatureAuditTrail({ documentId, documentType }) {
   const [signatures, setSignatures] = useState([]);

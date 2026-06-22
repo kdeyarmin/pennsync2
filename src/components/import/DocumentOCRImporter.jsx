@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Upload, FileImage, Scan, CheckCircle2, AlertCircle, FileText, Camera } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function DocumentOCRImporter({ onPatientExtracted }) {
   const [files, setFiles] = useState([]);
@@ -47,7 +48,7 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
     );
     
     if (validFiles.length !== selectedFiles.length) {
-      alert('Only images (JPG, PNG) and PDF files are supported');
+      toast.error('Only images (JPG, PNG) and PDF files are supported');
     }
     
     setFiles(validFiles);
@@ -57,7 +58,7 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
 
   const processDocuments = async () => {
     if (files.length === 0) {
-      alert('Please select at least one document to process');
+      toast.error('Please select at least one document to process');
       return;
     }
 
@@ -121,14 +122,14 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
     try {
       const patientsToCreate = results.map(r => r.data);
       await base44.entities.Patient.bulkCreate(patientsToCreate);
-      alert(`Successfully created ${results.length} patient record(s)`);
+      toast.success(`Successfully created ${results.length} patient record(s)`);
       
       // Reset
       setFiles([]);
       setResults([]);
       setErrors([]);
     } catch (error) {
-      alert('Failed to create patient records: ' + error.message);
+      toast.error('Failed to create patient records: ' + error.message);
     }
   };
 

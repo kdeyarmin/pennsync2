@@ -15,6 +15,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
+import { toast } from 'sonner';
 
 export default function SecurityAnomalyDetector() {
   const [analyzing, setAnalyzing] = useState(false);
@@ -160,7 +161,7 @@ export default function SecurityAnomalyDetector() {
 
     } catch (error) {
       console.error('Error analyzing security patterns:', error);
-      alert('Failed to analyze security patterns');
+      toast.error('Failed to analyze security patterns');
     }
     setAnalyzing(false);
   };

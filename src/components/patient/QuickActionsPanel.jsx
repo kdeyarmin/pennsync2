@@ -14,6 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, isValid } from "date-fns";
+import { toast } from 'sonner';
 
 export default function QuickActionsPanel({ 
   patient, 
@@ -32,7 +33,7 @@ export default function QuickActionsPanel({
       label: "Schedule Visit",
       description: "Add new appointment",
       color: "bg-blue-500 hover:bg-blue-600",
-      onClick: () => alert("Open schedule visit dialog - implement as needed")
+      onClick: () => toast.error("Open schedule visit dialog - implement as needed")
     },
     {
       icon: Stethoscope,

@@ -17,8 +17,8 @@ import {
   Save,
   Clock
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { OfflineStorageManager } from './OfflineSyncService';
+import { toast } from 'sonner';
 
 export default function OfflineVisitNoteCapture({ patient, onComplete }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);

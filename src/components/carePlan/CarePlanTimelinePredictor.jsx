@@ -18,6 +18,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { isValid } from "date-fns";
+import { toast } from 'sonner';
 
 export default function CarePlanTimelinePredictor({ patient, carePlans }) {
   const [predictions, setPredictions] = useState(null);
@@ -34,7 +35,7 @@ export default function CarePlanTimelinePredictor({ patient, carePlans }) {
 
   const analyzeTimelines = async () => {
     if (!patient || activeCarePlans.length === 0) {
-      alert('No active care plans to analyze');
+      toast.error('No active care plans to analyze');
       return;
     }
 
@@ -123,7 +124,7 @@ Return JSON:
       setPredictions(result);
     } catch (error) {
       console.error('Error analyzing timelines:', error);
-      alert('Failed to analyze timelines. Please try again.');
+      toast.error('Failed to analyze timelines. Please try again.');
     }
     setIsAnalyzing(false);
   };

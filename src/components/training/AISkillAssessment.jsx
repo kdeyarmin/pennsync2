@@ -21,6 +21,7 @@ import {
   BarChart3,
   Download
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AISkillAssessment({ userEmail }) {
   const [assessment, setAssessment] = React.useState(null);
@@ -60,7 +61,7 @@ export default function AISkillAssessment({ userEmail }) {
       a.remove();
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to generate PDF report');
+      toast.error('Failed to generate PDF report');
     }
     setIsDownloading(false);
   };

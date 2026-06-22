@@ -30,6 +30,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { toast } from 'sonner';
 
 export default function AITrainingModuleGenerator() {
   const queryClient = useQueryClient();
@@ -64,7 +65,7 @@ export default function AITrainingModuleGenerator() {
 
   const generateTrainingModule = async () => {
     if (selectedRecommendations.size === 0 && selectedExemplars.size === 0) {
-      alert('Please select at least one recommendation or exemplary document');
+      toast.error('Please select at least one recommendation or exemplary document');
       return;
     }
 
@@ -208,7 +209,7 @@ Return structured JSON training module.`,
       setGeneratedModule(result);
     } catch (error) {
       console.error('Error generating training module:', error);
-      alert('Failed to generate training module. Please try again.');
+      toast.error('Failed to generate training module. Please try again.');
     }
     setIsGenerating(false);
   };
@@ -248,14 +249,14 @@ Return structured JSON training module.`,
       queryClient.invalidateQueries({ queryKey: ['trainingRecommendationsForModules'] });
       queryClient.invalidateQueries({ queryKey: ['exemplaryDocumentation'] });
 
-      alert('Training module published successfully!');
+      toast.success('Training module published successfully!');
       setGeneratedModule(null);
       setSelectedRecommendations(new Set());
       setSelectedExemplars(new Set());
       setModuleTitle("");
     } catch (error) {
       console.error('Error publishing module:', error);
-      alert('Failed to publish training module. Please try again.');
+      toast.error('Failed to publish training module. Please try again.');
     }
     setIsPublishing(false);
   };

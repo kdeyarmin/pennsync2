@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Mic } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import { toast } from 'sonner';
 
 const VISIT_TYPES = [
   "skilled_nursing",
@@ -60,7 +61,7 @@ export default function VisitScribePage() {
   // Persist the reviewer's verified note with a REAL deterministic coverage score
   // (replaces the old hardcoded quality_score: 95). Re-verifies edits first.
   const saveToChart = async (api) => {
-    if (!selectedPatient) { alert("Select a patient first."); return; }
+    if (!selectedPatient) { toast.error("Select a patient first."); return; }
     setSaving(true);
     try {
       let result = api.result;
@@ -122,7 +123,7 @@ export default function VisitScribePage() {
       }, 2000);
     } catch (error) {
       console.error("Error saving note:", error);
-      alert("Failed to save note. Please try again.");
+      toast.error("Failed to save note. Please try again.");
     } finally {
       setSaving(false);
     }

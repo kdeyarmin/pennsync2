@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { generateUserManual } from "@/functions/generateUserManual";
+import { toast } from 'sonner';
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
@@ -39,7 +40,7 @@ export default function Help() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      alert('Failed to download manual: ' + message);
+      toast.error('Failed to download manual: ' + message);
     } finally {
       setDownloading(false);
     }

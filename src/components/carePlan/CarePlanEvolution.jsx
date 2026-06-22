@@ -21,6 +21,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import { format, differenceInDays, isValid } from "date-fns";
+import { toast } from 'sonner';
 
 export default function CarePlanEvolution({ 
   _patientId, 
@@ -38,7 +39,7 @@ export default function CarePlanEvolution({
 
   const analyzeCarePlanProgress = async () => {
     if (carePlans.length === 0) {
-      alert("No care plans to analyze");
+      toast.error("No care plans to analyze");
       return;
     }
 
@@ -223,13 +224,13 @@ Return JSON:
       queryClient.invalidateQueries({ queryKey: ['patientCarePlans'] });
       onCarePlanUpdated && onCarePlanUpdated();
       
-      alert(`Successfully updated ${selectedUpdates.length} care plan(s)`);
+      toast.error(`Successfully updated ${selectedUpdates.length} care plan(s)`);
       setRecommendations(null);
       setSelectedUpdates([]);
       
     } catch (error) {
       console.error("Error applying updates:", error);
-      alert("Error updating care plans");
+      toast.error("Error updating care plans");
     }
     
     setIsApplying(false);

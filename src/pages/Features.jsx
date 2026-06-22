@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import { toast } from 'sonner';
 
 export default function FeaturesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -638,7 +639,7 @@ export default function FeaturesPage() {
 
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Error generating guide. Please try again.');
+      toast.error('Error generating guide. Please try again.');
     }
     setIsGeneratingPDF(false);
   };
@@ -1267,7 +1268,7 @@ export default function FeaturesPage() {
 
     } catch (error) {
       console.error('Error generating user manual:', error);
-      alert('Error generating manual. Please try again.');
+      toast.error('Error generating manual. Please try again.');
     }
     setIsGeneratingManual(false);
   };

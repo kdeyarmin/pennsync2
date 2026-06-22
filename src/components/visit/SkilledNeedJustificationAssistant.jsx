@@ -23,6 +23,7 @@ import {
   ChevronUp,
   XCircle
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function SkilledNeedJustificationAssistant({ 
   patient, 
@@ -176,7 +177,7 @@ Be specific and provide exact text that nurses can use. Focus on Medicare compli
 
     } catch (error) {
       console.error("Error analyzing skilled need:", error);
-      alert("Error analyzing documentation. Please try again.");
+      toast.error("Error analyzing documentation. Please try again.");
     }
 
     setIsAnalyzing(false);

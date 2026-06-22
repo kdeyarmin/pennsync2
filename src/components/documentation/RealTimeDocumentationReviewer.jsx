@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
+import { toast } from 'sonner';
 
 export default function RealTimeDocumentationReviewer({ 
   noteContent, 
@@ -32,7 +33,7 @@ export default function RealTimeDocumentationReviewer({
 
   const analyzeDocumentation = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) {
-      alert("Please provide sufficient note content for analysis");
+      toast.error("Please provide sufficient note content for analysis");
       return;
     }
 
@@ -237,7 +238,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
       setComplianceScore(result.scores?.compliance_score || 0);
     } catch (error) {
       console.error('Error analyzing documentation:', error);
-      alert('Failed to analyze documentation. Please try again.');
+      toast.error('Failed to analyze documentation. Please try again.');
     } finally {
       setAnalyzing(false);
     }

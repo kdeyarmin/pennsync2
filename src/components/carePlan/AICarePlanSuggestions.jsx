@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Lightbulb
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AICarePlanSuggestions({ patient, existingCarePlans, onAddCarePlan }) {
   const [suggestions, setSuggestions] = useState(null);
@@ -122,7 +123,7 @@ Return JSON:
       setSuggestions(result);
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      alert('Failed to generate suggestions. Please try again.');
+      toast.error('Failed to generate suggestions. Please try again.');
     }
     setIsGenerating(false);
   };

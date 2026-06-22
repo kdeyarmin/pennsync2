@@ -25,6 +25,7 @@ import {
   Send
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from 'sonner';
 
 const INCIDENT_TYPES = {
   fall: {
@@ -172,7 +173,7 @@ Return the report text only, no JSON.`,
     // patient_id is required by the Incident schema. Guard before creating so we
     // never write an incident with an undefined patient (which fails silently).
     if (!patientId) {
-      alert("A patient must be selected before submitting an incident report.");
+      toast.error("A patient must be selected before submitting an incident report.");
       return;
     }
 
@@ -217,7 +218,7 @@ Return the report text only, no JSON.`,
 
     } catch (error) {
       console.error("Error submitting incident:", error);
-      alert("Error submitting incident. Please try again.");
+      toast.error("Error submitting incident. Please try again.");
     }
     setIsSubmitting(false);
   };

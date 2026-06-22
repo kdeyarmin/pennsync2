@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function ValidationOverrideDialog({ 
   isOpen, 
@@ -16,7 +17,7 @@ export default function ValidationOverrideDialog({
 
   const handleOverride = () => {
     if (!justification.trim()) {
-      alert("Please provide a justification for overriding this warning");
+      toast.error("Please provide a justification for overriding this warning");
       return;
     }
     

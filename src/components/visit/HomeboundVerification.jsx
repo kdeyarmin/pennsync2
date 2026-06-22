@@ -36,6 +36,7 @@ import {
   Eye,
   RefreshCw // Added import for RefreshCw icon
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function HomeboundVerification({ 
   patient,
@@ -248,7 +249,7 @@ export default function HomeboundVerification({
 
   const generateHomeboundText = async () => {
     if (!validateHomebound()) {
-      alert('Please address critical issues before generating documentation');
+      toast.error('Please address critical issues before generating documentation');
       return;
     }
 
@@ -348,7 +349,7 @@ Generate the homebound documentation now:`;
 
     } catch (error) {
       console.error("Error generating homebound text:", error);
-      alert("Error generating documentation. Please try again.");
+      toast.error("Error generating documentation. Please try again.");
     }
 
     setIsGenerating(false);

@@ -17,6 +17,7 @@ import {
   Sparkles,
   Info
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIDocumentationAudit({
   patient,
@@ -33,7 +34,7 @@ export default function AIDocumentationAudit({
 
   const runAudit = async () => {
     if (!narrativeText || narrativeText.length < 50) {
-      alert("Please add more documentation before running an audit.");
+      toast.error("Please add more documentation before running an audit.");
       return;
     }
 

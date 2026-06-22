@@ -19,6 +19,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { toast } from 'sonner';
 
 export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
   const [analyzing, setAnalyzing] = useState(false);
@@ -279,10 +280,10 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
         due_date: dueDate.toISOString().split('T')[0]
       });
 
-      alert('Enrolled in training module!');
+      toast.error('Enrolled in training module!');
     } catch (error) {
       console.error('Error enrolling:', error);
-      alert('Failed to enroll in module');
+      toast.error('Failed to enroll in module');
     }
   };
 

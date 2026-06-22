@@ -103,6 +103,7 @@ import AutomatedQualityAssurance from "@/components/oasis/AutomatedQualityAssura
 import ProactiveDocumentationAssistant from "@/components/oasis/ProactiveDocumentationAssistant";
 import ComprehensiveOASISReviewer from "@/components/oasis/ComprehensiveOASISReviewer";
 import OASISPDFComparison from "@/components/oasis/OASISPDFComparison";
+import { toast } from 'sonner';
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -1558,7 +1559,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 setUseDataEntryAssistant(false);
 
                 // Show success message
-                alert("Data confirmed! Now analyzing with AI-extracted information...");
+                toast.error("Data confirmed! Now analyzing with AI-extracted information...");
               }}
             />
           ) : null}

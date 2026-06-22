@@ -23,6 +23,7 @@ import {
   Scissors,
   Home
 } from "lucide-react";
+import { toast } from 'sonner';
 
 // Template definitions
 const VISIT_TYPE_TEMPLATES = [
@@ -177,7 +178,7 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
       });
     } catch (error) {
       console.error('Error generating template:', error);
-      alert('Failed to generate template. Please try again.');
+      toast.error('Failed to generate template. Please try again.');
     }
 
     setIsGenerating(false);

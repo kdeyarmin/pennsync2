@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function SmartRouteOptimizer({ 
   visits = [], 
@@ -32,7 +33,7 @@ export default function SmartRouteOptimizer({
 
   const optimizeRoute = async () => {
     if (visits.length < 2) {
-      alert("Need at least 2 visits to optimize route");
+      toast.error("Need at least 2 visits to optimize route");
       return;
     }
 

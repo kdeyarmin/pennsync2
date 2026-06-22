@@ -18,6 +18,7 @@ import {
   Target,
   Clock
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = false }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -288,7 +289,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
       setPredictions(result);
     } catch (error) {
       console.error('Error performing predictive analysis:', error);
-      alert('Failed to perform predictive analysis. Please try again.');
+      toast.error('Failed to perform predictive analysis. Please try again.');
     }
     setIsAnalyzing(false);
   }, [patient, visits, incidents, carePlans]);

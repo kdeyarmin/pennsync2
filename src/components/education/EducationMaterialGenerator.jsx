@@ -26,6 +26,7 @@ import {
   Shield,
   AlertTriangle
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function EducationMaterialGenerator({ patient, teachBackHistory = [], onMaterialGenerated }) {
   const [searchTopic, setSearchTopic] = useState("");
@@ -105,7 +106,7 @@ export default function EducationMaterialGenerator({ patient, teachBackHistory =
   const generateMaterial = async () => {
     const topic = searchTopic || (patient?.primary_diagnosis);
     if (!topic) {
-      alert("Please enter a topic or select a patient with a diagnosis.");
+      toast.error("Please enter a topic or select a patient with a diagnosis.");
       return;
     }
 
@@ -223,7 +224,7 @@ Return JSON:
       }
     } catch (error) {
       console.error("Error generating material:", error);
-      alert("Error generating material. Please try again.");
+      toast.error("Error generating material. Please try again.");
     }
     setIsGenerating(false);
   };

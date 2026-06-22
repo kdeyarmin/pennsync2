@@ -296,7 +296,7 @@ export default function CarePlanManagement() {
     if (source.droppableId.startsWith("library-") && destination.droppableId === "care-plan-canvas") {
       const itemId = draggableId;
       if (planItems.some(i => i.id === itemId)) {
-        toast.error("This intervention is already in the plan.");
+        toast.success("This intervention is already in the plan.");
         return;
       }
       const item = findLibraryItem(itemId);

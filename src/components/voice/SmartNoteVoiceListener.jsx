@@ -7,6 +7,7 @@ import {
   MicOff,
   CheckCircle2
 } from "lucide-react";
+import { toast } from 'sonner';
 
 // Voice command patterns for Smart Note Assistant
 const _VOICE_COMMANDS = {
@@ -277,7 +278,7 @@ export default function SmartNoteVoiceListener({
         setIsListening(true);
       } catch (e) {
         console.error('Error starting voice listener:', e);
-        alert('Could not access microphone. Please grant permission.');
+        toast.error('Could not access microphone. Please grant permission.');
       }
     }
   };

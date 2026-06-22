@@ -37,6 +37,7 @@ import HandoutCustomizer from "../components/education/HandoutCustomizer";
 import HandoutPreview from "../components/education/HandoutPreview";
 import HandoutStyleCustomizer from "../components/education/HandoutStyleCustomizer";
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
+import { toast } from 'sonner';
 
 const PatientEducation = lazy(() => import("@/components/hub-tabs/PatientEducation"));
 const PatientEducationPortal = lazy(() => import("@/components/hub-tabs/PatientEducationPortal"));
@@ -352,7 +353,7 @@ export default function PatientEducationHub() {
       }
       
       const errorDetails = error?.response?.data?.error || error?.response?.data?.details || error?.message || 'Failed to generate handout. Please try again.';
-      alert(`Error generating handout:\n\n${errorDetails}\n\nCheck console for details.`);
+      toast.error(`Error generating handout:\n\n${errorDetails}\n\nCheck console for details.`);
     }
     
     setIsGenerating(false);
@@ -387,7 +388,7 @@ export default function PatientEducationHub() {
     } catch (error) {
       console.error('Error emailing handout:', error);
       const errorDetails = error?.response?.data?.error || error?.response?.data?.details || error?.message || 'Failed to email handout. Please try again.';
-      alert(`Error emailing handout:\n\n${errorDetails}`);
+      toast.error(`Error emailing handout:\n\n${errorDetails}`);
     }
     
     setIsEmailing(false);

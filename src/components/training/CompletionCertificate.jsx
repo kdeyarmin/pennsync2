@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Award, Download, CheckCircle2 } from "lucide-react";
 import { getAccessToken } from "@base44/sdk";
 import { appParams } from "@/lib/app-params";
+import { toast } from 'sonner';
 
 export default function CompletionCertificate({ completion, module, userName }) {
   const handleDownload = async () => {
@@ -47,7 +48,7 @@ export default function CompletionCertificate({ completion, module, userName }) 
       a.remove();
     } catch (error) {
       console.error('Error downloading certificate:', error);
-      alert('Failed to generate certificate. Please try again.');
+      toast.error('Failed to generate certificate. Please try again.');
     }
   };
 

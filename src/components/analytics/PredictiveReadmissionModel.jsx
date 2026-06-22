@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { AlertTriangle, TrendingUp, Users, Brain, Loader2 } from "lucide-react";
 import { differenceInDays } from "date-fns";
+import { toast } from 'sonner';
 
 export default function PredictiveReadmissionModel({ patients, visits, incidents }) {
   const [analyzing, setAnalyzing] = useState(false);
@@ -148,7 +149,7 @@ For each patient, provide:
       setPredictions(result.patients);
     } catch (error) {
       console.error("AI prediction error:", error);
-      alert("Failed to generate AI predictions");
+      toast.error("Failed to generate AI predictions");
     }
     
     setAnalyzing(false);

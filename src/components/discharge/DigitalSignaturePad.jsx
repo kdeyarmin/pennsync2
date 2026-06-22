@@ -3,6 +3,7 @@ import SignatureCanvas from 'react-signature-canvas';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Check, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function DigitalSignaturePad({ onSave, onCancel, signerName }) {
   const sigPad = useRef(null);
@@ -13,7 +14,7 @@ export default function DigitalSignaturePad({ onSave, onCancel, signerName }) {
 
   const save = () => {
     if (sigPad.current?.isEmpty()) {
-      alert('Please provide a signature');
+      toast.error('Please provide a signature');
       return;
     }
     const signatureData = sigPad.current.toDataURL();

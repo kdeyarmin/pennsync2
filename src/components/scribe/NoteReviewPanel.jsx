@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, AlertCircle, Edit2, Save, X, Loader2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
+import { toast } from 'sonner';
 
 export default function NoteReviewPanel({
   transcription,
@@ -45,7 +46,7 @@ ${editedNote}`,
       setSummary(typeof response === 'string' ? response : response.text || '');
     } catch (error) {
       console.error('Error generating summary:', error);
-      alert('Failed to generate summary');
+      toast.error('Failed to generate summary');
     } finally {
       setIsGeneratingSummary(false);
     }

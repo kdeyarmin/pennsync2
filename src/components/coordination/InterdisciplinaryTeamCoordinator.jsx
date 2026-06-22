@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   UserPlus
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function InterdisciplinaryTeamCoordinator({ 
   patientId,
@@ -152,10 +153,10 @@ Return recommendation with:
       });
 
       queryClient.invalidateQueries({ queryKey: ['careCoordinationAlerts'] });
-      alert('✅ Care coordination alert created');
+      toast.success('✅ Care coordination alert created');
     } catch (error) {
       console.error('Error creating alert:', error);
-      alert('Failed to create coordination alert');
+      toast.error('Failed to create coordination alert');
     }
     setIsCreatingAlert(false);
   };

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Mic, MicOff, Volume2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from 'sonner';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'en-US', name: 'English (US)', flag: '🇺🇸' },
@@ -125,7 +126,7 @@ export default function EnhancedVoiceCommands({
 
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition not supported in your browser');
+      toast.error('Speech recognition not supported in your browser');
       return;
     }
     

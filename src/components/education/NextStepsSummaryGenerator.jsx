@@ -21,6 +21,7 @@ import {
   Calendar,
   ArrowRight
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function NextStepsSummaryGenerator({ patient, educationMaterial, diagnosis }) {
   const [sessionNotes, setSessionNotes] = useState("");
@@ -140,7 +141,7 @@ Return JSON:
       setSelectedItems(initialSelected);
     } catch (error) {
       console.error("Error generating summary:", error);
-      alert("Error generating summary. Please try again.");
+      toast.error("Error generating summary. Please try again.");
     }
     setIsGenerating(false);
   };

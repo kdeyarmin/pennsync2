@@ -18,6 +18,7 @@ import {
   Stethoscope
 } from "lucide-react";
 import { trackScribeUsage, trackAISuggestion } from "../utils/performanceTracking";
+import { toast } from 'sonner';
 
 export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -96,7 +97,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Unable to access microphone: ' + error.message);
+      toast.error('Unable to access microphone: ' + error.message);
     }
   };
 
@@ -137,7 +138,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
       await transcribeMutation.mutateAsync(audioUrl);
     } catch (error) {
       console.error('Transcription error:', error);
-      alert('Failed to transcribe audio: ' + error.message);
+      toast.error('Failed to transcribe audio: ' + error.message);
     }
   };
 
@@ -162,7 +163,7 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    toast.success('Copied to clipboard!');
   };
 
   const isProcessing = uploadAudioMutation.isPending || transcribeMutation.isPending;

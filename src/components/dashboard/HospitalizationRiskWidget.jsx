@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { toast } from 'sonner';
 
 export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
   const [analyzing, setAnalyzing] = useState(false);
@@ -205,7 +206,7 @@ Return detailed risk assessment:`,
 
     } catch (error) {
       console.error('Risk analysis error:', error);
-      alert('Failed to analyze hospitalization risk');
+      toast.error('Failed to analyze hospitalization risk');
     } finally {
       setAnalyzing(false);
     }

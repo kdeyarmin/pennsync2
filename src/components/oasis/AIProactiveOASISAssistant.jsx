@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Download
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = false }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -245,7 +246,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       queryClient.invalidateQueries({ queryKey: ['complianceAudits', patientId] });
     } catch (error) {
       console.error('Error performing OASIS analysis:', error);
-      alert('Failed to perform OASIS analysis. Please try again.');
+      toast.error('Failed to perform OASIS analysis. Please try again.');
     }
     setIsAnalyzing(false);
   }, [patient, visits, incidents, carePlans, existingOASIS, patientId, queryClient, calculateAge]);

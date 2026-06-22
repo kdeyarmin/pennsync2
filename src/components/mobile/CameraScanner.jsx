@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload, X, Check, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { toast } from 'sonner';
 
 export default function CameraScanner({ onScanComplete, documentType = "general" }) {
   const [isScanning, setIsScanning] = useState(false);
@@ -46,7 +47,7 @@ export default function CameraScanner({ onScanComplete, documentType = "general"
       }
     } catch (error) {
       console.error("Camera access error:", error);
-      alert("Unable to access camera. Please check permissions.");
+      toast.error("Unable to access camera. Please check permissions.");
     }
   };
 
@@ -97,7 +98,7 @@ export default function CameraScanner({ onScanComplete, documentType = "general"
       setCapturedImage(null);
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload document. Please try again.");
+      toast.error("Failed to upload document. Please try again.");
     }
     setIsUploading(false);
   };
@@ -117,7 +118,7 @@ export default function CameraScanner({ onScanComplete, documentType = "general"
       });
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload file. Please try again.");
+      toast.error("Failed to upload file. Please try again.");
     }
     setIsUploading(false);
   };

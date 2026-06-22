@@ -31,6 +31,7 @@ import { formatDistanceToNow } from "date-fns";
 import { formatEastern } from "../components/utils/timezone";
 import { jsPDF } from "jspdf";
 import { toCsvRows } from "@/components/admin/csvExport";
+import { toast } from 'sonner';
 
 const UserActivityLog = lazy(() => import("@/components/hub-tabs/UserActivityLog"));
 
@@ -206,7 +207,7 @@ export default function UserActivityReport() {
   const exportToCSV = () => {
     try {
       if (processedStats.length === 0) {
-        alert('No data to export');
+        toast.error('No data to export');
         return;
       }
 
@@ -242,7 +243,7 @@ export default function UserActivityReport() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('CSV export error:', error);
-      alert('Failed to generate CSV report: ' + error.message);
+      toast.error('Failed to generate CSV report: ' + error.message);
     }
   };
 
@@ -250,7 +251,7 @@ export default function UserActivityReport() {
   const exportToPDF = () => {
     try {
       if (processedStats.length === 0) {
-        alert('No data to export');
+        toast.error('No data to export');
         return;
       }
 
@@ -314,7 +315,7 @@ export default function UserActivityReport() {
       doc.save(`user_activity_report_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('PDF export error:', error);
-      alert('Failed to generate PDF report: ' + error.message);
+      toast.error('Failed to generate PDF report: ' + error.message);
     }
   };
 

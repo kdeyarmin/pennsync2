@@ -2,8 +2,8 @@ import { useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload } from 'lucide-react';
-import { toast } from 'sonner';
 import { importProvidersCsv } from '@/functions/importProvidersCsv';
+import { toast } from 'sonner';
 
 export default function ProviderCsvImport({ onImported }) {
   const inputRef = useRef(null);

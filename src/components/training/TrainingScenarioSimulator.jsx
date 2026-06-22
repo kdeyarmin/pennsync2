@@ -18,6 +18,7 @@ import {
   Lightbulb,
   Award
 } from "lucide-react";
+import { toast } from 'sonner';
 
 const SCENARIO_TYPES = [
   { id: 'chf_admission', name: 'CHF Admission', icon: Heart, difficulty: 'intermediate' },
@@ -153,7 +154,7 @@ Return JSON:
     const response = userResponses[currentStep];
     
     if (!response || response.trim().length < 10) {
-      alert("Please provide a more detailed response.");
+      toast.error("Please provide a more detailed response.");
       return;
     }
 

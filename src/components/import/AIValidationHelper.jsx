@@ -11,6 +11,7 @@ import {
   Lightbulb,
   RefreshCw
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIValidationHelper({ validationErrors, _onApplySuggestions }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -64,7 +65,7 @@ Return a JSON array with this structure:
       setSuggestions(response.suggestions || []);
     } catch (error) {
       console.error('Failed to generate AI suggestions:', error);
-      alert('Failed to generate suggestions. Please try again.');
+      toast.error('Failed to generate suggestions. Please try again.');
     }
     setIsGenerating(false);
   };

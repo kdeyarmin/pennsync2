@@ -18,6 +18,7 @@ import {
   Copy
 } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { toast } from 'sonner';
 
 export default function CareCoordinationAnalyzer({ 
   patientId, 
@@ -182,7 +183,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
       setAlerts(result.alerts || []);
     } catch (error) {
       console.error('Error analyzing care coordination:', error);
-      alert('Failed to analyze care coordination. Please try again.');
+      toast.error('Failed to analyze care coordination. Please try again.');
     }
     setIsAnalyzing(false);
   }, [patient, incidents, visits, carePlans]);
@@ -219,10 +220,10 @@ Return comprehensive analysis with actionable coordination alerts.`,
       });
 
       queryClient.invalidateQueries({ queryKey: ['coordinationAlerts', patientId] });
-      alert('Care coordination alert created successfully!');
+      toast.success('Care coordination alert created successfully!');
     } catch (error) {
       console.error('Error saving alert:', error);
-      alert('Failed to save alert. Please try again.');
+      toast.error('Failed to save alert. Please try again.');
     }
   };
 

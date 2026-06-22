@@ -17,6 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner';
 
 export default function ReferralDocumentViewer({ patientId }) {
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
@@ -68,10 +69,10 @@ export default function ReferralDocumentViewer({ patientId }) {
       setSendDialogOpen(false);
       setMessageText("");
       setRecipientEmail("");
-      alert('Referral document sent successfully!');
+      toast.success('Referral document sent successfully!');
     } catch (error) {
       console.error('Error sending document:', error);
-      alert('Failed to send document. Please try again.');
+      toast.error('Failed to send document. Please try again.');
     } finally {
       setIsSending(false);
     }

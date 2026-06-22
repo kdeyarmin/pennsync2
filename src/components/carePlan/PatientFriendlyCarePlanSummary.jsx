@@ -17,6 +17,7 @@ import {
   User
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from 'sonner';
 
 export default function PatientFriendlyCarePlanSummary({ patient, carePlans, _onEmailSummary }) {
   const [summary, setSummary] = useState(null);
@@ -27,7 +28,7 @@ export default function PatientFriendlyCarePlanSummary({ patient, carePlans, _on
 
   const generateSummary = async () => {
     if (!patient || activeCarePlans.length === 0) {
-      alert('No active care plans to summarize');
+      toast.error('No active care plans to summarize');
       return;
     }
 
@@ -109,7 +110,7 @@ Return JSON:
       setSummary(result);
     } catch (error) {
       console.error('Error generating summary:', error);
-      alert('Failed to generate summary. Please try again.');
+      toast.error('Failed to generate summary. Please try again.');
     }
     setIsGenerating(false);
   };
@@ -156,7 +157,7 @@ Generated on ${format(new Date(), 'MMMM d, yyyy')}
 
   const handleEmail = async () => {
     if (!summary || !patient?.email) {
-      alert('Patient email not available');
+      toast.error('Patient email not available');
       return;
     }
 
@@ -193,10 +194,10 @@ Your Care Team
         body: body,
         from_name: 'Penn Sync Care Team'
       });
-      alert('Summary sent to patient!');
+      toast.success('Summary sent to patient!');
     } catch (error) {
       console.error('Failed to send email:', error);
-      alert('Failed to send email. Please try again.');
+      toast.error('Failed to send email. Please try again.');
     }
   };
 

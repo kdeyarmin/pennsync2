@@ -17,6 +17,7 @@ import {
   Edit,
   Save
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIAdmissionDocumentationAssistant({ 
   referralData, 
@@ -155,7 +156,7 @@ For each section, provide:
       setShowInputPrompts(response.subjective_prompts?.length > 0);
     } catch (error) {
       console.error("Error generating documentation:", error);
-      alert("Failed to generate documentation. Please try again.");
+      toast.error("Failed to generate documentation. Please try again.");
     }
     setIsGenerating(false);
   };
@@ -243,7 +244,7 @@ Return ONLY the enhanced documentation text.`
       setShowInputPrompts(false);
     } catch (error) {
       console.error("Error incorporating inputs:", error);
-      alert("Failed to incorporate subjective inputs. Please try again.");
+      toast.error("Failed to incorporate subjective inputs. Please try again.");
     }
     setIsGenerating(false);
   };

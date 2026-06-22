@@ -27,6 +27,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import { logSecurityEvent } from "../utils/security";
+import { toast } from 'sonner';
 
 export default function NoteScrubber({ 
   patient, 
@@ -341,7 +342,7 @@ Be thorough and specific. For critical items, provide exact template text the nu
 
     } catch (error) {
       console.error("Error running note scrubber:", error);
-      alert("Error running Medicare compliance check. Please try again.");
+      toast.error("Error running Medicare compliance check. Please try again.");
       await logSecurityEvent('NOTE_SCRUBBER_ERROR', { 
         visit_id: visit.id,
         error: error.message 

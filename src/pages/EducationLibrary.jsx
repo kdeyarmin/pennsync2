@@ -10,13 +10,13 @@ import {
 } from 'lucide-react';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
-import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import EducationMaterialEditor from '../components/education/EducationMaterialEditor';
 import PersonalizedMaterialSender from '../components/education/PersonalizedMaterialSender';
 import MaterialPreview from '../components/education/MaterialPreview';
+import { toast } from 'sonner';
 
 export default function EducationLibrary() {
   const queryClient = useQueryClient();

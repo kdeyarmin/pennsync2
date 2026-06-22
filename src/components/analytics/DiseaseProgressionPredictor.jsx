@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Brain, Activity, AlertTriangle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from 'sonner';
 
 export default function DiseaseProgressionPredictor({ patients, visits }) {
   const [analyzing, setAnalyzing] = useState(false);
@@ -148,7 +149,7 @@ Provide:
       setProgressionData(result);
     } catch (error) {
       console.error("Progression prediction error:", error);
-      alert("Failed to generate prediction");
+      toast.error("Failed to generate prediction");
     }
 
     setAnalyzing(false);

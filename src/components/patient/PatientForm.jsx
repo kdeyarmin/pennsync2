@@ -15,6 +15,7 @@ import { findDuplicatesForCandidate } from "./patientDuplicateUtils";
 import ValidationOverrideDialog from "./ValidationOverrideDialog";
 import PotentialDuplicateDialog from "./PotentialDuplicateDialog";
 import OCRDocumentExtractor from "./OCRDocumentExtractor";
+import { toast } from 'sonner';
 
 export default function PatientForm({ patient, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
@@ -174,7 +175,7 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
       await handleSecureError(
         error,
         'patient_form_submit',
-        (msg) => alert(msg)
+        (msg) => toast.error(msg)
       );
     } finally {
       setIsSubmitting(false);
@@ -200,11 +201,11 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
 
       const unovverriddenWarnings = blockingErrors.filter(e => e.severity === SEVERITY.WARNING && e.canOverride);
       if (unovverriddenWarnings.length > 0) {
-        alert(`Please review and override the following warnings:\n${unovverriddenWarnings.map(w => `• ${w.message}`).join('\n')}`);
+        toast.error('Please review and override the highlighted warnings before saving.');
         return;
       }
 
-      alert('Please fix validation errors before saving');
+      toast.error('Please fix validation errors before saving');
       return;
     }
 

@@ -18,6 +18,7 @@ import {
   Target
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from 'sonner';
 
 export default function AIPatientSummary({ patient }) {
   const [summary, setSummary] = useState(null);
@@ -47,7 +48,7 @@ export default function AIPatientSummary({ patient }) {
 
   const generateSummary = async () => {
     if (!patient) {
-      alert('No patient selected');
+      toast.error('No patient selected');
       return;
     }
     
@@ -120,7 +121,7 @@ Generate a clinical summary in JSON format:
       });
     } catch (error) {
       console.error('Error generating summary:', error);
-      alert('Failed to generate summary. Please try again.');
+      toast.error('Failed to generate summary. Please try again.');
     }
     setIsGenerating(false);
   };

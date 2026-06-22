@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function ProactiveClinicalTaskGenerator({ 
   patientId,
@@ -58,7 +59,7 @@ export default function ProactiveClinicalTaskGenerator({
       setExpandedTasks(highPriorityExpanded);
     } catch (error) {
       console.error('Failed to analyze patient:', error);
-      alert('Failed to analyze patient data. Please try again.');
+      toast.error('Failed to analyze patient data. Please try again.');
     }
     setAnalyzing(false);
   }, [patientId]);
@@ -90,7 +91,7 @@ export default function ProactiveClinicalTaskGenerator({
       onTasksCreated?.();
     } catch (error) {
       console.error('Failed to create task:', error);
-      alert('Failed to create task. Please try again.');
+      toast.error('Failed to create task. Please try again.');
     }
   };
 
@@ -123,10 +124,10 @@ export default function ProactiveClinicalTaskGenerator({
       setSuggestedTasks([]);
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       onTasksCreated?.();
-      alert(`Successfully created ${suggestedTasks.length} tasks!`);
+      toast.success(`Successfully created ${suggestedTasks.length} tasks!`);
     } catch (error) {
       console.error('Failed to create tasks:', error);
-      alert('Some tasks failed to create. Please try again.');
+      toast.error('Some tasks failed to create. Please try again.');
     }
     setCreatingTasks(false);
   };

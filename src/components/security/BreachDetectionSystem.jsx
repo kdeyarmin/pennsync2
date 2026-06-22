@@ -15,6 +15,7 @@ import {
   Clock
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
+import { toast } from 'sonner';
 
 /**
  * Breach Detection System
@@ -207,7 +208,7 @@ export default function BreachDetectionSystem() {
 
     } catch (error) {
       console.error('Breach detection error:', error);
-      alert('Failed to complete breach detection scan');
+      toast.error('Failed to complete breach detection scan');
     }
     
     setScanning(false);

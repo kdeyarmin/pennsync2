@@ -14,6 +14,7 @@ import {
   Download,
   Loader2
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function TrainingProgressTracker({ _userEmail, trainingProgress, practiceSubmissions }) {
   const [isDownloading, setIsDownloading] = React.useState(false);
@@ -96,7 +97,7 @@ export default function TrainingProgressTracker({ _userEmail, trainingProgress, 
       a.remove();
     } catch (error) {
       console.error('Error downloading certificate:', error);
-      alert('Failed to generate certificate');
+      toast.error('Failed to generate certificate');
     }
     setIsDownloading(false);
   };

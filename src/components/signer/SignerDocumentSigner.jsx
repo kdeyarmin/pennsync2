@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Download } from 'lucide-react';
-import { toast } from 'sonner';
 import SignaturePadCanvas from '@/components/signature/SignaturePadCanvas';
 import { submitSignerSignature } from '@/functions/submitSignerSignature';
+import { toast } from 'sonner';
 
 export default function SignerDocumentSigner({
   documentId,

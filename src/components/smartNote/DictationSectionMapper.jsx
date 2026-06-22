@@ -2,6 +2,7 @@ import { useState } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronUp, ChevronDown, Activity, Target, ClipboardList, BookOpen, Shield } from "lucide-react";
+import { toast } from 'sonner';
 
 const SECTION_ICONS = {
   vitals: Activity,
@@ -82,7 +83,7 @@ Rules:
       }
     } catch (err) {
       console.error("Section mapping error:", err);
-      alert("Failed to map sections. Please try again.");
+      toast.error("Failed to map sections. Please try again.");
     } finally {
       setLoading(false);
     }

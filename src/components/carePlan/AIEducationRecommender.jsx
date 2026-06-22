@@ -105,7 +105,7 @@ Return JSON:`,
 
     } catch (error) {
       console.error("Education recommendation error:", error);
-      alert("Failed to generate recommendations. Please try again.");
+      toast.error("Failed to generate recommendations. Please try again.");
     }
     setIsGenerating(false);
   };
@@ -119,7 +119,7 @@ Return JSON:`,
 
     const selected = recommendations.filter((_, idx) => selectedTopics[idx]);
     if (selected.length === 0) {
-      alert("Please select at least one education topic.");
+      toast.error("Please select at least one education topic.");
       return;
     }
 

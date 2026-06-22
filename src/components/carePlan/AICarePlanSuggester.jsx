@@ -16,6 +16,7 @@ import {
   Eye,
   EyeOff
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -39,7 +40,7 @@ export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
       }
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      alert('Failed to generate care plan suggestions. Please try again.');
+      toast.error('Failed to generate care plan suggestions. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -72,7 +73,7 @@ export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
       }
     } catch (error) {
       console.error('Error creating care plan:', error);
-      alert('Failed to create care plan. Please try again.');
+      toast.error('Failed to create care plan. Please try again.');
     } finally {
       setCreatingPlans(prev => {
         const next = new Set(prev);

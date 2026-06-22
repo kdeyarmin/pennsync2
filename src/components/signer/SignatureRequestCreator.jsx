@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Upload, Plus, Trash2, Send, FileText, LayoutTemplate, Bell, BookOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { generateSecureToken } from '@/components/utils/security';
+import { toast } from 'sonner';
 
 export default function SignatureRequestCreator({ onCancel }) {
   const [step, setStep] = useState(1);

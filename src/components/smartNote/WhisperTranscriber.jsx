@@ -3,8 +3,8 @@ import { configNotReadyMessage } from '@/lib/aiFeatureError';
 import { Mic, MicOff, Loader, AlertCircle, Copy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 /**
  * Real-time audio transcription component using OpenAI Whisper

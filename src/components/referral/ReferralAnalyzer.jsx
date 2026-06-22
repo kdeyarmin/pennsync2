@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Brain
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function ReferralAnalyzer({ referralData, onAnalysisComplete }) {
   const [analysis, setAnalysis] = useState(null);
@@ -147,7 +148,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
       }
     } catch (error) {
       console.error('Error analyzing referral:', error);
-      alert('Failed to analyze referral. Please try again.');
+      toast.error('Failed to analyze referral. Please try again.');
     }
     setIsAnalyzing(false);
   }, [referralData, onAnalysisComplete]);

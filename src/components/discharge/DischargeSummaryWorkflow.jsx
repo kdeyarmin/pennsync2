@@ -10,12 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
 import { 
   FileText, Loader2, CheckCircle, Sparkles, PenTool, Download, Eye
 } from 'lucide-react';
 
 import DigitalSignaturePad from './DigitalSignaturePad';
+import { toast } from 'sonner';
 
 export default function DischargeSummaryWorkflow({ patientId, onClose, onComplete }) {
   const [currentStep, setCurrentStep] = useState('generate'); // generate, review, sign, complete

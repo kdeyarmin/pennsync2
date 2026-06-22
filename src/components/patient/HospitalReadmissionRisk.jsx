@@ -37,6 +37,7 @@ import {
   Users
 } from "lucide-react";
 import { differenceInDays, parseISO, isValid } from "date-fns";
+import { toast } from 'sonner';
 
 export default function HospitalReadmissionRisk({ patient }) {
   const [showInterventions, setShowInterventions] = useState(false);
@@ -434,7 +435,7 @@ Return JSON format:
       
     } catch (error) {
       console.error('Error generating intervention plan:', error);
-      alert('Error generating plan. Please try again.');
+      toast.error('Error generating plan. Please try again.');
     }
     
     setIsGeneratingPlan(false);
@@ -757,7 +758,7 @@ Return JSON format:
             <Button 
               onClick={() => {
                 // Could add functionality to add to care plan or print
-                alert('Plan saved to patient record');
+                toast.success('Plan saved to patient record');
               }}
               className="bg-indigo-600 hover:bg-indigo-700"
             >

@@ -10,6 +10,7 @@ import { Sparkles, AlertTriangle, CheckCircle2, Edit3, Save, Plus, X, Target } f
 import AIFieldIndicator from "@/components/ui/ai-field-indicator";
 import ProgressFeedback from "@/components/ui/progress-feedback";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { toast } from 'sonner';
 
 export default function AICarePlanSuggestionEngine({ 
   referralData, 
@@ -40,7 +41,7 @@ export default function AICarePlanSuggestionEngine({
 
   const generateCarePlans = useCallback(async () => {
     if (!referralData) {
-      alert("No referral data available");
+      toast.error("No referral data available");
       return;
     }
 
@@ -167,7 +168,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
     } catch (error) {
       clearInterval(progressInterval);
       console.error('Error generating care plans:', error);
-      alert('Failed to generate care plans. Please try again.');
+      toast.error('Failed to generate care plans. Please try again.');
     } finally {
       setGenerating(false);
       setGenerationStage(0);
@@ -199,7 +200,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
 
   const handleCreateCarePlan = async (plan) => {
     if (!patientId) {
-      alert("Patient ID required to create care plan");
+      toast.error("Patient ID required to create care plan");
       return;
     }
 
@@ -218,10 +219,10 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
         status: 'active'
       });
 
-      alert("Care plan created successfully!");
+      toast.success("Care plan created successfully!");
     } catch (error) {
       console.error('Error creating care plan:', error);
-      alert('Failed to create care plan. Please try again.');
+      toast.error('Failed to create care plan. Please try again.');
     }
   };
 

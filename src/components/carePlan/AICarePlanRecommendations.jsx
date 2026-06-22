@@ -14,6 +14,7 @@ import {
   Target,
   Plus
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AICarePlanRecommendations({
   patient,
@@ -113,7 +114,7 @@ Return JSON:`,
       setRecommendations(result);
     } catch (error) {
       console.error("Analysis error:", error);
-      alert("Failed to generate recommendations. Please try again.");
+      toast.error("Failed to generate recommendations. Please try again.");
     }
     setIsAnalyzing(false);
   };

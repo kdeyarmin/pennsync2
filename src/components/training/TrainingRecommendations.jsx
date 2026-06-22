@@ -16,6 +16,7 @@ import {
   Zap,
   ChevronRight
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
   const [recommendations, setRecommendations] = useState(null);
@@ -122,7 +123,7 @@ Return JSON:
       setRecommendations(result);
     } catch (error) {
       console.error("Error analyzing:", error);
-      alert("Error generating recommendations. Please try again.");
+      toast.error("Error generating recommendations. Please try again.");
     }
     setIsAnalyzing(false);
   };

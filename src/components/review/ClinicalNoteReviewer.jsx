@@ -20,6 +20,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { toast } from 'sonner';
 
 export default function ClinicalNoteReviewer({ 
   noteContent,
@@ -187,7 +188,7 @@ Return detailed analysis with:
       setReviewResults(result);
     } catch (error) {
       console.error('Error reviewing note:', error);
-      alert('Failed to review note. Please try again.');
+      toast.error('Failed to review note. Please try again.');
     }
     setIsReviewing(false);
   }, [noteContent, visitType, diagnosis, patientData]);

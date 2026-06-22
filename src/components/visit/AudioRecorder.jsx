@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mic, MicOff, Trash2, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from 'sonner';
 
 export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -52,7 +53,7 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
 
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      alert("Could not access microphone. Please check your browser permissions.");
+      toast.error("Could not access microphone. Please check your browser permissions.");
     }
   };
 

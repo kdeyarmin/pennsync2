@@ -18,6 +18,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from "recharts";
+import { toast } from 'sonner';
 
 export default function AdvancedComplianceRiskScoring({ 
   timeRange = 30,
@@ -229,7 +230,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
       setRiskAnalysis(result);
     } catch (error) {
       console.error('Error analyzing risk:', error);
-      alert('Failed to analyze compliance risk. Please try again.');
+      toast.error('Failed to analyze compliance risk. Please try again.');
     }
     setIsAnalyzing(false);
   }, [alerts, audits, medicareRules, timeRange, trainingRecommendations]);

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FileDown, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function ImportReportGenerator({ 
   _importHistory, 
@@ -139,7 +140,7 @@ export default function ImportReportGenerator({
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('Failed to generate report');
+      toast.error('Failed to generate report');
     }
     
     setIsGenerating(false);
@@ -184,7 +185,7 @@ export default function ImportReportGenerator({
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error generating detailed report:', error);
-      alert('Failed to generate detailed report');
+      toast.error('Failed to generate detailed report');
     }
     
     setIsGenerating(false);

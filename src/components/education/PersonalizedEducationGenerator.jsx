@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from 'sonner';
 
 export default function PersonalizedEducationGenerator({ patient, carePlans = [], recentVisits = [] }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -191,10 +192,10 @@ Return JSON with the complete material:`,
         body: fullText
       });
 
-      alert(`Education material sent to ${patient.email}`);
+      toast.success(`Education material sent to ${patient.email}`);
     } catch (error) {
       console.error("Email error:", error);
-      alert("Failed to send email. Please try again.");
+      toast.error("Failed to send email. Please try again.");
     }
     setIsSending(false);
   };

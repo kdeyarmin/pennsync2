@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, Download, Loader2, Copy, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from 'sonner';
 
 export default function PatientSummaryGenerator({ patient, visits, carePlans, incidents }) {
   const [summaryFormat, setSummaryFormat] = useState("concise");
@@ -157,7 +158,7 @@ Provide actionable handoff information including:
       setSummaries(prev => ({ ...prev, [format]: result }));
     } catch (error) {
       console.error('Summary generation error:', error);
-      alert('Failed to generate summary. Please try again.');
+      toast.error('Failed to generate summary. Please try again.');
     }
     setIsGenerating(false);
   };
@@ -168,7 +169,7 @@ Provide actionable handoff information including:
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      alert('Failed to copy to clipboard');
+      toast.error('Failed to copy to clipboard');
     }
   };
 

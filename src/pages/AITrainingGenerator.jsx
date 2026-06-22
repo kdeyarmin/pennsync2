@@ -13,8 +13,8 @@ import { base44 } from '@/api/base44Client';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { generateTrainingCourse } from '@/functions/generateTrainingCourse';
+import { toast } from 'sonner';
 
 export default function AITrainingGenerator() {
   const [loading, setLoading] = useState(false);

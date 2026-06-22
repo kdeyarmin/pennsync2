@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from 'sonner';
 
 export default function AIGeneratedOASISAssessment({ patientId, visitId, visitType = "Start of Care", referralData, onSaved }) {
   const queryClient = useQueryClient();
@@ -62,7 +63,7 @@ export default function AIGeneratedOASISAssessment({ patientId, visitId, visitTy
       setAssessment(data);
     } catch (error) {
       console.error('Error generating OASIS assessment:', error);
-      alert('Failed to generate OASIS assessment. Please try again.');
+      toast.error('Failed to generate OASIS assessment. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -101,10 +102,10 @@ export default function AIGeneratedOASISAssessment({ patientId, visitId, visitTy
       queryClient.invalidateQueries({ queryKey: ['oasisAssessments', patientId] });
       onSaved?.();
       
-      alert('OASIS assessment saved successfully!');
+      toast.success('OASIS assessment saved successfully!');
     } catch (error) {
       console.error('Error saving OASIS assessment:', error);
-      alert('Failed to save OASIS assessment. Please try again.');
+      toast.error('Failed to save OASIS assessment. Please try again.');
     } finally {
       setIsSaving(false);
     }

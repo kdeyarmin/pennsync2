@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import {
@@ -7,6 +6,7 @@ import {
   removeFromSyncQueue,
   savePatients
 } from '@/lib/indexedDB';
+import { toast } from 'sonner';
 
 export default function OfflineManager() {
   const { isAuthenticated } = useAuth();

@@ -25,6 +25,7 @@ import {
   Loader2,
   Sparkles
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function VoiceDataEntry({ 
   onVitalsUpdate, 
@@ -340,7 +341,7 @@ Now parse the user's input above with maximum medical accuracy:`;
 
   const handleEdit = () => {
     // Keep dialog open, user can manually edit in the main form
-    alert("Please edit the values directly in the form fields above.");
+    toast.error("Please edit the values directly in the form fields above.");
   };
 
   const getConfidenceColor = (confidence) => {

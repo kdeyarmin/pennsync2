@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Brain, AlertTriangle, Target, TrendingUp, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIPatientAnalyzer({ patient, visits, carePlans, incidents }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -139,7 +140,7 @@ Format as JSON with clear, actionable clinical insights.`;
       setAnalysis(result);
     } catch (error) {
       console.error('Analysis error:', error);
-      alert('Failed to generate analysis. Please try again.');
+      toast.error('Failed to generate analysis. Please try again.');
     }
     setIsAnalyzing(false);
   };

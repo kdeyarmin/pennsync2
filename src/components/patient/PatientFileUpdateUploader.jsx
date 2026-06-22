@@ -23,6 +23,7 @@ import {
   Users,
   Eye,
 } from "lucide-react";
+import { toast } from 'sonner';
 
 const REPORT_OPTIONS = {
   active_census: {
@@ -113,7 +114,7 @@ export default function PatientFileUpdateUploader() {
       setPreview(previewResults.results);
       setStage("preview");
     } catch (error) {
-      alert(error.message || "Failed to analyze file");
+      toast.error(error.message || "Failed to analyze file");
       resetState();
     }
 
@@ -142,7 +143,7 @@ export default function PatientFileUpdateUploader() {
       setStage("done");
       queryClient.invalidateQueries({ queryKey: ["patients"] });
     } catch (error) {
-      alert(error.message || "Failed to import patients");
+      toast.error(error.message || "Failed to import patients");
     }
 
     setIsProcessing(false);

@@ -7,6 +7,7 @@ import { Sparkles, Copy, CheckCircle2, Edit3, Save, Eye } from "lucide-react";
 import AIFieldIndicator from "@/components/ui/ai-field-indicator";
 import ProgressFeedback from "@/components/ui/progress-feedback";
 import RealTimeDocumentationReviewer from "../documentation/RealTimeDocumentationReviewer";
+import { toast } from 'sonner';
 
 export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated, autoGenerate = false }) {
   const [generating, setGenerating] = useState(false);
@@ -33,7 +34,7 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
 
   const generateAdmissionNote = useCallback(async () => {
     if (!referralData) {
-      alert("No referral data available");
+      toast.error("No referral data available");
       return;
     }
 
@@ -239,7 +240,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
     } catch (error) {
       clearInterval(progressInterval);
       console.error('Error generating admission note:', error);
-      alert('Failed to generate admission note. Please try again.');
+      toast.error('Failed to generate admission note. Please try again.');
     } finally {
       setGenerating(false);
       setGenerationStage(0);

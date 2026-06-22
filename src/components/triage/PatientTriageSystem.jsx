@@ -27,6 +27,7 @@ import {
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, differenceInDays } from "date-fns";
+import { toast } from 'sonner';
 
 export default function PatientTriageSystem() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -59,7 +60,7 @@ export default function PatientTriageSystem() {
 
   const runTriageAnalysis = async () => {
     if (!patients || patients.length === 0) {
-      alert('No patients available for triage analysis.');
+      toast.error('No patients available for triage analysis.');
       return;
     }
     

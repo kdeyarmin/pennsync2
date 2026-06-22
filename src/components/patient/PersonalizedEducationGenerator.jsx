@@ -16,6 +16,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from 'sonner';
 
 export default function PersonalizedEducationGenerator({ patient, complianceData, visits }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -157,7 +158,7 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
 
   const handleEmail = async () => {
     if (!patient.caregiver_email && !patient.email) {
-      alert('No email address available for this patient or caregiver');
+      toast.error('No email address available for this patient or caregiver');
       return;
     }
 
@@ -191,10 +192,10 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
         subject: `Patient Education Materials - ${patient.first_name} ${patient.last_name}`,
         body: emailContent
       });
-      alert('Education materials sent successfully!');
+      toast.success('Education materials sent successfully!');
     } catch (error) {
       console.error('Email error:', error);
-      alert('Failed to send email');
+      toast.error('Failed to send email');
     }
   };
 

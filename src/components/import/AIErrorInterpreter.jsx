@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brain, Loader2, Lightbulb, RefreshCw } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIErrorInterpreter({ errors, _onApplySuggestions }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -66,7 +67,7 @@ Focus on the most common errors first.`;
       setAnalysis(response);
     } catch (error) {
       console.error('AI analysis error:', error);
-      alert('Failed to analyze errors: ' + error.message);
+      toast.error('Failed to analyze errors: ' + error.message);
     }
     
     setIsAnalyzing(false);

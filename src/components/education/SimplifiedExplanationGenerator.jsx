@@ -21,6 +21,7 @@ import {
   Lightbulb,
   MessageCircle
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function SimplifiedExplanationGenerator({ patient, diagnosis }) {
   const [nurseInput, setNurseInput] = useState("");
@@ -47,7 +48,7 @@ export default function SimplifiedExplanationGenerator({ patient, diagnosis }) {
 
   const generateExplanation = async () => {
     if (!nurseInput.trim()) {
-      alert("Please enter the medical information you want to explain.");
+      toast.error("Please enter the medical information you want to explain.");
       return;
     }
 
@@ -122,7 +123,7 @@ Return JSON:
       setExplanation(result);
     } catch (error) {
       console.error("Error generating explanation:", error);
-      alert("Error generating explanation. Please try again.");
+      toast.error("Error generating explanation. Please try again.");
     }
     setIsGenerating(false);
   };

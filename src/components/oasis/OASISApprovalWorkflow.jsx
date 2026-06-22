@@ -13,6 +13,7 @@ import {
   Shield,
   User
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) {
   const queryClient = useQueryClient();
@@ -79,7 +80,7 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
 
   const handleReject = (item) => {
     if (!approvalNotes) {
-      alert("Please provide rejection notes");
+      toast.error("Please provide rejection notes");
       return;
     }
     approveMutation.mutate({

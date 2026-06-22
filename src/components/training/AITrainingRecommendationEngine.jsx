@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles, Brain, AlertTriangle, Target, Loader2 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AITrainingRecommendationEngine({ nurseEmail, onAssignTraining }) {
   const [recommendations, setRecommendations] = useState(null);
@@ -128,7 +129,7 @@ Return JSON:
       setRecommendations(result);
     } catch (error) {
       console.error('AI analysis failed:', error);
-      alert('Failed to generate training recommendations');
+      toast.error('Failed to generate training recommendations');
     }
     setIsAnalyzing(false);
   };

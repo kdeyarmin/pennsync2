@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
+import { toast } from 'sonner';
 
 export default function ClinicalTrendsAnalyzer({ patientId }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -40,7 +41,7 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
       setAnalysis(data);
     } catch (error) {
       console.error('Error analyzing trends:', error);
-      alert('Failed to analyze trends. Please try again.');
+      toast.error('Failed to analyze trends. Please try again.');
     } finally {
       setIsAnalyzing(false);
     }

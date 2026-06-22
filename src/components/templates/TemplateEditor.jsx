@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Wand2
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function TemplateEditor({ 
   templateData, 
@@ -83,7 +84,7 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
       }
     } catch (error) {
       console.error('Error enhancing template:', error);
-      alert('Failed to enhance template. Please try again.');
+      toast.error('Failed to enhance template. Please try again.');
     }
     setIsEnhancing(false);
   };

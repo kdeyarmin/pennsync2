@@ -43,6 +43,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { subDays } from "date-fns";
+import { toast } from 'sonner';
 
 export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRange = 30, autoAnalyze = false }) {
   // Local state so the Time Range selector actually changes the range — the prop
@@ -340,7 +341,7 @@ Return detailed analysis suitable for management dashboard.`,
       setPerformanceData(result);
     } catch (error) {
       console.error('Error analyzing performance:', error);
-      alert('Failed to analyze performance. Please try again.');
+      toast.error('Failed to analyze performance. Please try again.');
     }
     setIsAnalyzing(false);
   }, [audits, recommendations, selectedNurse, timeRange, trainingCompletions, visits]);

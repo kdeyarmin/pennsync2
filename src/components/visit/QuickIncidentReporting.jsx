@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -924,16 +924,18 @@ Full report available in patient record.`;
         onIncidentReported(report);
       }
 
-      alert(notifyFailed
-        ? 'Incident report saved and added to documentation, but a notification email failed to send. Please notify the physician/office directly if needed.'
-        : 'Incident report created successfully! Report added to documentation.');
+      if (notifyFailed) {
+        toast.warning('Incident report saved and added to documentation, but a notification email failed to send. Please notify the physician/office directly if needed.');
+      } else {
+        toast.success('Incident report created successfully! Report added to documentation.');
+      }
       setShowDialog(false);
       setSelectedIncident(null);
       setIncidentData({});
 
     } catch (error) {
       console.error('Error creating incident report:', error);
-      alert('Error creating incident report. Please try again.');
+      toast.error('Error creating incident report. Please try again.');
     }
     setIsSubmitting(false);
   };

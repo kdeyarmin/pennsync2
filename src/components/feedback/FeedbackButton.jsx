@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { MessageSquare, Send, CheckCircle2 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function FeedbackButton() {
   const [open, setOpen] = useState(false);
@@ -59,7 +60,7 @@ Sent from Penn Sync Feedback Feature
       }, 2000);
     } catch (error) {
       console.error('Error sending feedback:', error);
-      alert('Failed to send feedback. Please try again.');
+      toast.error('Failed to send feedback. Please try again.');
     } finally {
       setSending(false);
     }

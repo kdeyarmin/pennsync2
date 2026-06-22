@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download, BookOpen, Users, Stethoscope, Star, Loader2, CheckCircle2, AlertTriangle, ListChecks, Lightbulb } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import { toast } from 'sonner';
 
 export default function UserGuides() {
   const [downloading, setDownloading] = useState(null);
@@ -27,7 +28,7 @@ export default function UserGuides() {
       a.remove();
     } catch (error) {
       console.error('Error downloading guide:', error);
-      alert('Failed to generate guide. Please try again.');
+      toast.error('Failed to generate guide. Please try again.');
     } finally {
       setDownloading(null);
     }

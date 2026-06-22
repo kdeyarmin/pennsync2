@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle2, Clock, AlertCircle, Filter } from 'lucide-rea
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
 import ReferralTriageAnalyzer from '../components/referral/ReferralTriageAnalyzer';
+import { toast } from 'sonner';
 
 /**
  * AI-Powered Referral Triage Workflow
@@ -84,10 +85,10 @@ export default function ReferralTriage() {
 
       setShowCreatePatient(false);
       setLastAnalysis(null);
-      alert(`Patient ${lastAnalysis.patient_name} created successfully!`);
+      toast.success(`Patient ${lastAnalysis.patient_name} created successfully!`);
     } catch (error) {
       console.error('Error creating patient:', error);
-      alert('Failed to create patient. Please try again.');
+      toast.error('Failed to create patient. Please try again.');
     }
   };
 

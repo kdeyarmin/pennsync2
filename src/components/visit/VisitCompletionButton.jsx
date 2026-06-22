@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Loader2, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
 import { processCompletedVisit } from '@/functions/processCompletedVisit';
+import { toast } from 'sonner';
 
 export default function VisitCompletionButton({ visitId, currentStatus, onCompleted }) {
   const [isProcessing, setIsProcessing] = useState(false);

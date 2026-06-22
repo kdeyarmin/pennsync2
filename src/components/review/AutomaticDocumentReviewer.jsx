@@ -25,6 +25,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { toast } from 'sonner';
 
 export default function AutomaticDocumentReviewer({
   noteContent,
@@ -55,7 +56,7 @@ export default function AutomaticDocumentReviewer({
 
   const performReview = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) {
-      alert('Note is too short for comprehensive review');
+      toast.error('Note is too short for comprehensive review');
       return;
     }
 
@@ -268,7 +269,7 @@ Return detailed JSON analysis.`,
 
     } catch (error) {
       console.error('Error reviewing document:', error);
-      alert('Failed to review document. Please try again.');
+      toast.error('Failed to review document. Please try again.');
     }
     setIsReviewing(false);
   }, [currentUser?.email, diagnosis, medicareRules, noteContent, nurseEmail, onReviewComplete, patientData.date_of_birth, queryClient, visitId, visitType, vitalSigns]);

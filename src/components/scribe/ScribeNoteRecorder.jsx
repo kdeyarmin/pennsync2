@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mic, Square, Upload, AlertCircle } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, onNoteGenerated }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -43,7 +44,7 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
         setRecordingTime((prev) => prev + 1);
       }, 1000);
     } catch (error) {
-      alert("Failed to access microphone: " + error.message);
+      toast.error("Failed to access microphone: " + error.message);
     }
   };
 
@@ -119,7 +120,7 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
       }
     } catch (error) {
       console.error("Error processing audio:", error);
-      alert("Failed to process recording: " + error.message);
+      toast.error("Failed to process recording: " + error.message);
     } finally {
       setIsProcessing(false);
     }

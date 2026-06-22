@@ -17,6 +17,7 @@ import {
   Save,
   Loader2
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIReferralCarePlanGenerator({ 
   referralData, 
@@ -44,7 +45,7 @@ export default function AIReferralCarePlanGenerator({
       setGeneratedPlans(plans);
     } catch (error) {
       console.error('Failed to generate care plans:', error);
-      alert('Failed to generate care plans. Please try again.');
+      toast.error('Failed to generate care plans. Please try again.');
     }
     setGenerating(false);
   };
@@ -73,7 +74,7 @@ export default function AIReferralCarePlanGenerator({
 
   const handleSaveAll = async () => {
     if (!patientId) {
-      alert('No patient selected. Please ensure patient is assigned to this referral.');
+      toast.error('No patient selected. Please ensure patient is assigned to this referral.');
       return;
     }
 
@@ -99,12 +100,12 @@ export default function AIReferralCarePlanGenerator({
         });
       }));
 
-      alert(`Successfully created ${generatedPlans.length} care plans!`);
+      toast.success(`Successfully created ${generatedPlans.length} care plans!`);
       setGeneratedPlans([]);
       onCarePlansSaved?.();
     } catch (error) {
       console.error('Failed to save care plans:', error);
-      alert('Failed to save care plans. Please try again.');
+      toast.error('Failed to save care plans. Please try again.');
     }
     setSaving(false);
   };

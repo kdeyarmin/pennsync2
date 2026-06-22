@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 
 export const useSpeechRecognition = (onFinalTranscript) => {
   const [listening, setListening] = useState(false);
@@ -7,7 +8,7 @@ export const useSpeechRecognition = (onFinalTranscript) => {
 
   const startDictation = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition not supported in your browser');
+      toast.error('Speech recognition not supported in your browser');
       return;
     }
 
@@ -74,7 +75,7 @@ export const useSpeechRecognition = (onFinalTranscript) => {
       recognition.start();
     } catch (error) {
       console.error('Failed to start dictation:', error);
-      alert('Failed to start voice dictation. Please try again.');
+      toast.error('Failed to start voice dictation. Please try again.');
     }
   };
 

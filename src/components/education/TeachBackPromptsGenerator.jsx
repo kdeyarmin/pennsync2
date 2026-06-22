@@ -30,6 +30,7 @@ import {
   Copy,
   Target
 } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function TeachBackPromptsGenerator({ 
   patient, 
@@ -61,7 +62,7 @@ export default function TeachBackPromptsGenerator({
   const generatePrompts = async () => {
     const topic = educationTopic || educationMaterial?.title || condition;
     if (!topic) {
-      alert("Please enter a condition or education topic.");
+      toast.error("Please enter a condition or education topic.");
       return;
     }
 
@@ -139,7 +140,7 @@ Return JSON:
       setPrompts(result);
     } catch (error) {
       console.error("Error generating prompts:", error);
-      alert("Error generating prompts. Please try again.");
+      toast.error("Error generating prompts. Please try again.");
     }
     setIsGenerating(false);
   };
@@ -196,7 +197,7 @@ Return JSON:
 
   const handleRecordResponse = () => {
     if (!currentResponse.trim() || !currentLevel) {
-      alert("Please enter the patient's response and select understanding level.");
+      toast.error("Please enter the patient's response and select understanding level.");
       return;
     }
 

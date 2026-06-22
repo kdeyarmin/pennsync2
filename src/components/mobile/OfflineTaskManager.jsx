@@ -16,6 +16,7 @@ import {
   Save
 } from "lucide-react";
 import offlineStorage from "./OfflineStorage";
+import { toast } from 'sonner';
 
 export default function OfflineTaskManager({ patientId, patientName }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -52,11 +53,11 @@ export default function OfflineTaskManager({ patientId, patientName }) {
 
   const handleSaveVisitNote = async () => {
     if (!formData.notes.trim()) {
-      alert('Please enter visit notes');
+      toast.error('Please enter visit notes');
       return;
     }
     if (!patientId) {
-      alert('No patient selected for this visit.');
+      toast.error('No patient selected for this visit.');
       return;
     }
 
@@ -101,18 +102,18 @@ export default function OfflineTaskManager({ patientId, patientName }) {
       }, 2000);
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save visit note');
+      toast.error('Failed to save visit note');
     }
     setSaving(false);
   };
 
   const handleSaveIncident = async () => {
     if (!formData.notes.trim()) {
-      alert('Please describe the incident');
+      toast.error('Please describe the incident');
       return;
     }
     if (!patientId) {
-      alert('No patient selected for this incident.');
+      toast.error('No patient selected for this incident.');
       return;
     }
 
@@ -138,7 +139,7 @@ export default function OfflineTaskManager({ patientId, patientName }) {
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to report incident');
+      toast.error('Failed to report incident');
     }
     setSaving(false);
   };

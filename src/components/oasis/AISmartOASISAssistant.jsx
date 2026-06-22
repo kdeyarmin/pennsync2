@@ -24,6 +24,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { toast } from 'sonner';
 
 export default function AISmartOASISAssistant({
   patientData,
@@ -452,7 +453,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
       setSuggestions(result);
     } catch (error) {
       console.error('Error analyzing patient data:', error);
-      alert('Failed to generate OASIS suggestions. Please try again.');
+      toast.error('Failed to generate OASIS suggestions. Please try again.');
     }
     setIsAnalyzing(false);
   }, [patientData, referralData, visitData]);

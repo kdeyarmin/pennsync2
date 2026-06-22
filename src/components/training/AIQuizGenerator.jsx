@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Sparkles, CheckCircle2, XCircle, HelpCircle, ArrowRight, RotateCcw, Trophy } from "lucide-react";
+import { toast } from 'sonner';
 
 export default function AIQuizGenerator({ trainingContent, moduleTitle, onComplete }) {
   const [generating, setGenerating] = useState(false);
@@ -79,7 +80,7 @@ Return JSON with:
       setShowResults(false);
     } catch (error) {
       console.error('Quiz generation error:', error);
-      alert('Failed to generate quiz. Please try again.');
+      toast.error('Failed to generate quiz. Please try again.');
     }
     setGenerating(false);
   };

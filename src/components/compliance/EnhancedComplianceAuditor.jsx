@@ -35,6 +35,7 @@ import {
   Flag
 } from "lucide-react";
 import { format, subDays } from "date-fns";
+import { toast } from 'sonner';
 
 export default function EnhancedComplianceAuditor({ onAuditComplete }) {
   const queryClient = useQueryClient();
@@ -81,7 +82,7 @@ export default function EnhancedComplianceAuditor({ onAuditComplete }) {
 
   const runComplianceAudit = async () => {
     if (activeRules.length === 0) {
-      alert('Please select at least one compliance rule to audit against.');
+      toast.error('Please select at least one compliance rule to audit against.');
       return;
     }
 
