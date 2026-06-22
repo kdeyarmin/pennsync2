@@ -36,6 +36,7 @@ import {
 import PageHeader from "@/components/ui/PageHeader";
 import { logSecurityEvent } from "@/components/utils/security";
 import PageContainer from "@/components/ui/PageContainer";
+import TabButton from "@/components/ui/TabButton";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
@@ -284,32 +285,16 @@ export default function UserSettings() {
       )}
 
       <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-5 gap-1 h-auto">
-          <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
-            <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Profile</span>
-            <span className="sm:hidden">Profile</span>
-          </TabsTrigger>
-          <TabsTrigger value="credentials" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
-            <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Credentials</span>
-            <span className="sm:hidden">Creds</span>
-          </TabsTrigger>
-          <TabsTrigger value="ai-behavior" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
-            <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">AI</span>
-            <span className="sm:hidden">AI</span>
-          </TabsTrigger>
-          <TabsTrigger value="features" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
-            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Features</span>
-            <span className="sm:hidden">Feat</span>
-          </TabsTrigger>
-          <TabsTrigger value="documentation" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
-            <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Docs</span>
-            <span className="sm:hidden">Docs</span>
-          </TabsTrigger>
+        <TabsList className="flex flex-wrap w-full gap-2 h-auto bg-transparent p-0">
+          {[
+            { value: "profile", label: "Profile", Icon: Heart },
+            { value: "credentials", label: "Credentials", Icon: Shield },
+            { value: "ai-behavior", label: "AI", Icon: Brain },
+            { value: "features", label: "Features", Icon: Sparkles },
+            { value: "documentation", label: "Docs", Icon: FileText },
+          ].map(({ value, label, Icon }) => (
+            <TabButton key={value} value={value} label={label} Icon={Icon} />
+          ))}
         </TabsList>
 
         {/* Profile / Role Tab */}
