@@ -19,6 +19,14 @@ import {
   BarChart3,
   Loader2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
 import PageHeader from "@/components/ui/PageHeader";
@@ -65,6 +73,25 @@ const tabLoader = (
   </div>
 );
 
+// Core "Send" actions — always visible as a segmented control.
+const SEND_TABS = [
+  { value: "upload",    Icon: Upload,     label: "Photo"  },
+  { value: "camera",    Icon: Smartphone, label: "Camera" },
+  { value: "documents", Icon: FileText,   label: "Doc"    },
+  { value: "batch",     Icon: Layers,     label: "Batch"  },
+];
+
+// Management tools — tucked into the "Manage" dropdown. Analytics is admin-only.
+const MANAGE_TABS = [
+  { value: "templates", Icon: BookTemplate, label: "Templates", adminOnly: false },
+  { value: "status",    Icon: Activity,     label: "Status",    adminOnly: false },
+  { value: "search",    Icon: Search,       label: "Search",    adminOnly: false },
+  { value: "history",   Icon: History,      label: "History",   adminOnly: false },
+  { value: "contacts",  Icon: BookUser,     label: "Contacts",  adminOnly: false },
+  { value: "logs",      Icon: Archive,      label: "Logs",      adminOnly: false },
+  { value: "analytics", Icon: BarChart3,    label: "Analytics", adminOnly: true  },
+];
+
 export default function SendFax() {
   const { data: currentUser, isLoading: isUserLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -83,6 +110,8 @@ export default function SendFax() {
   if (!isUserLoading && ADMIN_TABS.includes(activeTab) && !isAdmin) {
     activeTab = "upload";
   }
+
+  const manageTabs = MANAGE_TABS.filter((t) => !t.adminOnly || isAdmin);
 
   const [prefilledData, setPrefilledData] = useState(null);
 
@@ -120,27 +149,47 @@ export default function SendFax() {
 
         <EmbeddedPage>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-1 scrollbar-hide">
-            <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
-              {[
-                { value: "upload",     Icon: Upload,        label: "Photo"     },
-                { value: "camera",     Icon: Smartphone,    label: "Camera"    },
-                { value: "documents",  Icon: FileText,      label: "Doc"       },
-                { value: "batch",      Icon: Layers,        label: "Batch"     },
-                { value: "templates",  Icon: BookTemplate,  label: "Templates" },
-                { value: "status",     Icon: Activity,      label: "Status"    },
-                { value: "search",     Icon: Search,        label: "Search"    },
-                { value: "history",    Icon: History,       label: "History"   },
-                { value: "contacts",   Icon: BookUser,      label: "Contacts"  },
-                { value: "logs",       Icon: Archive,       label: "Logs"      },
-                ...(isAdmin ? [{ value: "analytics", Icon: BarChart3, label: "Analytics" }] : []),
-              ].map(({ value, Icon, label }) => (
-                <TabsTrigger key={value} value={value} className="flex flex-col sm:flex-row items-center gap-1 px-3 py-2 min-h-[52px] sm:min-h-[44px] min-w-[60px] sm:min-w-0 text-xs sm:text-sm whitespace-nowrap">
+          {/* Streamlined for mobile/tablet: the four core "Send" actions stay as a
+              segmented control, and the management tools fold into a single
+              "Manage" dropdown so the bar never overflows the screen. */}
+          <div className="flex items-stretch gap-2">
+            <TabsList className="grid grid-cols-4 flex-1 gap-1 h-auto p-1">
+              {SEND_TABS.map(({ value, Icon, label }) => (
+                <TabsTrigger key={value} value={value} className="flex flex-col sm:flex-row items-center justify-center gap-1 px-2 py-2 min-h-[52px] sm:min-h-[44px] text-xs sm:text-sm whitespace-nowrap">
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span>{label}</span>
                 </TabsTrigger>
               ))}
             </TabsList>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant={manageTabs.some((t) => t.value === activeTab) ? "default" : "outline"}
+                  className="h-auto min-h-[52px] sm:min-h-[44px] px-3 flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-sm"
+                >
+                  {(() => {
+                    const current = manageTabs.find((t) => t.value === activeTab);
+                    const Icon = current?.Icon || Layers;
+                    return <Icon className="w-4 h-4 flex-shrink-0" />;
+                  })()}
+                  <span>{manageTabs.find((t) => t.value === activeTab)?.label || "Manage"}</span>
+                  <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {manageTabs.map(({ value, Icon, label }) => (
+                  <DropdownMenuItem
+                    key={value}
+                    onSelect={() => handleTabChange(value)}
+                    className={`gap-2 ${activeTab === value ? "bg-accent font-medium" : ""}`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <TabsContent value="upload" className="mt-4 sm:mt-6">
