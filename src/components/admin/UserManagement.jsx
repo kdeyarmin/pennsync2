@@ -207,8 +207,8 @@ export default function UserManagement({ users }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center mb-4">
-            <div className="relative w-64">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search users..."
@@ -217,12 +217,12 @@ export default function UserManagement({ users }) {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 onClick={downloadUserRoster}
                 disabled={isDownloadingRoster}
                 variant="outline"
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 {isDownloadingRoster ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
@@ -232,7 +232,7 @@ export default function UserManagement({ users }) {
               </Button>
               <Button
                 onClick={() => setShowInviteDialog(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
               >
                 <Mail className="w-4 h-4 mr-2" />
                 Invite New User
@@ -264,8 +264,8 @@ export default function UserManagement({ users }) {
           )}
 
           {/* Users Table */}
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>

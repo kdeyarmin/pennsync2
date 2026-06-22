@@ -230,7 +230,7 @@ export default function Dashboard() {
 
       {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip).
           The first three deep-link into their domain so the metrics are actionable. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
         <Link to="/ClinicalDocumentation" className="block">
           <StatCard
             label="Today's Visits"

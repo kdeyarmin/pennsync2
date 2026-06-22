@@ -66,7 +66,7 @@ TableHead.displayName = "TableHead"
 const TableCell = React.forwardRef((props, ref) => (
   <td
     ref={ref}
-    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", props.className)}
+    className={cn("p-4 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0", props.className)}
     {...props}
   />
 ))

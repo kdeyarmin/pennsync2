@@ -108,7 +108,7 @@ export default function StatCard({
         className={cn("absolute inset-y-0 left-0 w-1", !useHex && t.rail)}
         style={useHex ? { backgroundColor: accent } : undefined}
       />
-      <div className="p-5 pl-6">
+      <div className="p-4 pl-5 sm:p-5 sm:pl-6">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             {heading && (
@@ -116,7 +116,7 @@ export default function StatCard({
                 {heading}
               </p>
             )}
-            <p className="mt-1.5 text-3xl font-bold tabular-nums tracking-tight text-slate-900">
+            <p className="mt-1.5 text-2xl sm:text-3xl font-bold tabular-nums tracking-tight text-slate-900 break-words leading-tight">
               {value}
             </p>
             {secondary && (
