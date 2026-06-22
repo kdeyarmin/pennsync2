@@ -532,12 +532,21 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Visit Type</label>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {VISIT_TYPES.map(v => (
-                      <button key={v.value} onClick={() => setVisitType(v.value)}
-                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${visitType === v.value ? "bg-navy-600 border-navy-600 text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-navy-300 hover:bg-navy-50"}`}>
-                        {v.label}
-                      </button>
-                    ))}
+                    {VISIT_TYPES.map(v => {
+                      const selected = visitType === v.value;
+                      return (
+                        <button
+                          key={v.value}
+                          type="button"
+                          onClick={() => setVisitType(v.value)}
+                          aria-pressed={selected}
+                          style={selected ? { backgroundColor: '#264491', borderColor: '#264491', color: '#ffffff' } : undefined}
+                          className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${selected ? "shadow-md" : "bg-slate-50 border-slate-200 text-slate-700 hover:border-navy-300 hover:bg-navy-50"}`}
+                        >
+                          {v.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
