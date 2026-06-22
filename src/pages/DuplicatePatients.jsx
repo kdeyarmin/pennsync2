@@ -30,6 +30,7 @@ export default function DuplicatePatients() {
   const [hasScanned, setHasScanned] = useState(false);
   const [duplicateGroups, setDuplicateGroups] = useState([]);
   const [mergingKey, setMergingKey] = useState(null);
+  const [isMergingAll, setIsMergingAll] = useState(false);
   const autoScanned = useRef(false);
   const queryClient = useQueryClient();
 
@@ -124,6 +125,50 @@ export default function DuplicatePatients() {
     setDuplicateGroups((prev) => prev.filter((_, i) => `group-${i}` !== groupKey));
   };
 
+  // One-click "fix everything": for every group, keep the suggested record and
+  // merge the rest into it. Same per-group logic as the manual button, just run
+  // across all groups so the admin doesn't have to do it one at a time.
+  const handleMergeAll = async () => {
+    const totalExtra = duplicateGroups.reduce((sum, g) => sum + g.duplicates.length, 0);
+    const ok = await confirm({
+      title: "Merge all duplicates?",
+      description:
+        `This will combine every duplicate group into a single record each, merging ` +
+        `${totalExtra} extra record(s) across ${duplicateGroups.length} group(s). The kept ` +
+        `record absorbs all visits and care plans; the duplicates are archived (recoverable).`,
+      confirmText: "Merge all",
+      destructive: true,
+    });
+    if (!ok) return;
+
+    setIsMergingAll(true);
+    let mergedGroups = 0;
+    let mergedRecords = 0;
+    try {
+      for (const group of duplicateGroups) {
+        const survivor = group.primary;
+        const others = group.duplicates.map((d) => d.patient).filter((p) => p.id !== survivor.id);
+        const { patientsMerged } = await mergePatientGroup(
+          survivor.id,
+          others.map((p) => p.id),
+          { mergedBy: currentUser?.email }
+        );
+        mergedGroups += 1;
+        mergedRecords += patientsMerged;
+      }
+      toast.success(`Merged ${mergedRecords} duplicate record(s) across ${mergedGroups} group(s).`);
+      setDuplicateGroups([]);
+      queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+    } catch (error) {
+      console.error('Merge all error:', error);
+      toast.error('Some duplicates could not be merged. Please rescan and try again.');
+      queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
+    } finally {
+      setIsMergingAll(false);
+    }
+  };
+
   const totalDuplicateRecords = duplicateGroups.reduce((sum, g) => sum + g.duplicates.length, 0);
 
   if (isLoading) {
@@ -176,22 +221,48 @@ export default function DuplicatePatients() {
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <p className="text-sm text-slate-600">
-            Total patients scanned: <strong>{patients.length}</strong>
+            We checked all <strong>{patients.length}</strong> patients.
             {hasScanned && !isScanning && (
               <>
-                {' · '}
+                {' '}
                 {duplicateGroups.length > 0 ? (
                   <span className="text-orange-600 font-medium">
-                    {duplicateGroups.length} duplicate group(s), {totalDuplicateRecords} extra record(s)
+                    We found {duplicateGroups.length} {duplicateGroups.length === 1 ? 'patient who appears' : 'patients who appear'}{' '}
+                    more than once ({totalDuplicateRecords} extra record{totalDuplicateRecords !== 1 ? 's' : ''} that look like duplicates).
                   </span>
                 ) : (
-                  <span className="text-emerald-600 font-medium">no duplicates found</span>
+                  <span className="text-emerald-600 font-medium">No duplicates found — every patient appears only once.</span>
                 )}
               </>
             )}
           </p>
+
+          {hasScanned && !isScanning && duplicateGroups.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-3">
+              <p className="text-sm text-orange-900 flex-1">
+                If these are the same patient, you can combine all of their records into one with a single click.
+              </p>
+              <Button
+                onClick={handleMergeAll}
+                disabled={isMergingAll}
+                className="bg-emerald-600 hover:bg-emerald-700 whitespace-nowrap"
+              >
+                {isMergingAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Merging…
+                  </>
+                ) : (
+                  <>
+                    <GitMerge className="w-4 h-4 mr-2" />
+                    Merge all duplicates
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -221,15 +292,16 @@ export default function DuplicatePatients() {
           <Alert className="bg-orange-50 border-orange-200">
             <AlertTriangle className="w-4 h-4 text-orange-600" />
             <AlertDescription className="text-orange-900">
-              <strong>{duplicateGroups.length} potential duplicate group(s) found.</strong> Choose the
-              record to keep in each group — its visits and care plans absorb the others, which are
-              archived (recoverable).
+              <strong>{duplicateGroups.length} {duplicateGroups.length === 1 ? 'patient appears' : 'patients appear'} more than once.</strong>{' '}
+              Use <strong>Merge all duplicates</strong> above to fix them all at once, or review each group
+              below and pick the record to keep — its visits and care plans move onto it, and the others
+              are archived (recoverable).
             </AlertDescription>
           </Alert>
 
           {duplicateGroups.map((group, idx) => {
             const groupKey = `group-${idx}`;
-            const isMerging = mergingKey === groupKey;
+            const isMerging = mergingKey === groupKey || isMergingAll;
             const records = [
               { patient: group.primary, isPrimary: true, confidencePercent: null, confidenceLevel: null, matches: [] },
               ...group.duplicates.map((d) => ({ patient: d.patient, isPrimary: false, ...d })),
