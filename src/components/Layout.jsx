@@ -325,7 +325,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main id="main-content" className="flex-1 pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-slate-50/80 to-navy-50/50 w-0 md:w-auto">
+        <main id="main-content" className="flex-1 pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-navy-100 w-0 md:w-auto">
           <div className="p-4 sm:p-6 md:p-8 lg:p-10 min-w-0 animate-fade-in max-w-[1600px] mx-auto">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}
