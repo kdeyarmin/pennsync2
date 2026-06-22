@@ -25,7 +25,7 @@ export default function DesktopSidebar({
   isActive, onLogout,
 }) {
   return (
-    <aside className={`hidden md:flex flex-col bg-gradient-to-b from-navy-50 to-slate-100 border-r border-slate-200 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0 flex-shrink-0`}>
+    <aside className={`hidden md:flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0 flex-shrink-0`}>
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-3 border-b border-slate-200 flex-shrink-0">
         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 min-w-0">
