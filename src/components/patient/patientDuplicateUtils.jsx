@@ -229,11 +229,18 @@ function scoreNames(p1, p2, add) {
     return true; // name fully resolved
   }
 
+  // Soundex is deliberately coarse and collides clearly-different surnames
+  // (e.g. "Snyder" and "Smithers" both encode to S536). A phonetic code match
+  // alone therefore is NOT proof two people are the same — require the actual
+  // name strings to also be reasonably similar before trusting it, so spelling
+  // collisions can't bridge unrelated patients.
   const phonetic =
     soundex(p1.first_name) === soundex(p2.first_name) &&
     soundex(p1.last_name) === soundex(p2.last_name) &&
     soundex(p1.first_name) !== '' &&
-    soundex(p1.last_name) !== '';
+    soundex(p1.last_name) !== '' &&
+    similarity(firstName1, firstName2) >= 70 &&
+    similarity(lastName1, lastName2) >= 70;
 
   if (name1 && name1 === name2) {
     add(45, REASON.FULL_NAME);
