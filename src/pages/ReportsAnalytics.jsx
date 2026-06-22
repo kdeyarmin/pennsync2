@@ -4,12 +4,11 @@ import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
-import { BarChart3, TrendingUp, Activity, Building2, Loader2 } from "lucide-react";
+import { BarChart3, Activity, Building2, Loader2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
 import ReferralVolumeReport from "@/components/reports/ReferralVolumeReport";
-import PatientOutcomesReport from "@/components/reports/PatientOutcomesReport";
 import NursePerformanceReport from "@/components/reports/NursePerformanceReport";
 import OASISComplianceReport from "@/components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementReport";
@@ -24,7 +23,7 @@ const AnalyticsDashboard = lazy(() => import("@/pages/AnalyticsDashboard"));
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired Reports Center / Analytics Dashboard pages
 // redirect to the right tab.
-const TAB_KEYS = ["kpi", "perf-dashboard", "referrals", "outcomes", "performance", "oasis", "pdgm", "reports-center"];
+const TAB_KEYS = ["kpi", "perf-dashboard", "referrals", "performance", "oasis", "pdgm", "reports-center"];
 
 const tabLoader = (
   <div className="flex justify-center py-12">
@@ -92,10 +91,6 @@ export default function ReportsAnalytics() {
             <TabsTrigger value="referrals" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               Referral Volume
             </TabsTrigger>
-            <TabsTrigger value="outcomes" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Patient Outcomes
-            </TabsTrigger>
             <TabsTrigger value="performance" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               Nurse Performance
             </TabsTrigger>
@@ -124,10 +119,6 @@ export default function ReportsAnalytics() {
 
         <TabsContent value="referrals">
           <ReferralVolumeReport dateRange={dateRange} />
-        </TabsContent>
-
-        <TabsContent value="outcomes">
-          <PatientOutcomesReport dateRange={dateRange} />
         </TabsContent>
 
         <TabsContent value="performance">
