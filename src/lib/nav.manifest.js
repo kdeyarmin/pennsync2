@@ -29,7 +29,7 @@ import {
   Mail, BookUser, Video, HelpCircle, AlertTriangle,
   Phone, Send, Heart, Database, Lock, Award,
   Clipboard, Filter, Globe,
-  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays
+  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays, ShieldAlert
 } from "lucide-react";
 
 import { PAGE_NAMES, REDIRECTS } from "@/routes";
@@ -177,6 +177,17 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: null,
     keywords: ["referral", "intake", "admission", "office"],
+  },
+  {
+    // Admin-only incident review queue — staff report on /Incidents, admins
+    // triage and resolve here. Lives in the back-office Office section.
+    page: "IncidentReview",
+    label: "Incident Review",
+    icon: ShieldAlert,
+    category: "Office",
+    adminOnly: true,
+    breadcrumbParent: "Incidents",
+    keywords: ["incident", "review", "queue", "approve", "acknowledge", "resolve", "office", "state reportable"],
   },
   {
     page: "ClinicalDocumentation",
