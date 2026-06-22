@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -100,48 +117,15 @@ Pay special attention to:
 - Social determinants of health
 - Gaps in care or documentation
 
-Be specific and evidence-based in your predictions.`;
+Be specific and evidence-based in your predictions.
 
-    const riskPredictions = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: predictionPrompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          overall_risk_level: {
-            type: 'string',
-            enum: ['low', 'medium', 'high', 'critical']
-          },
-          risk_assessments: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                risk_type: { type: 'string' },
-                risk_score: { type: 'number' },
-                urgency: { type: 'string' },
-                contributing_factors: {
-                  type: 'array',
-                  items: { type: 'string' }
-                },
-                recommendations: {
-                  type: 'array',
-                  items: { type: 'string' }
-                },
-                evidence: { type: 'string' }
-              }
-            }
-          },
-          immediate_actions_needed: {
-            type: 'array',
-            items: { type: 'string' }
-          },
-          monitoring_priorities: {
-            type: 'array',
-            items: { type: 'string' }
-          }
-        }
-      }
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"overall_risk_level":"low|medium|high|critical","risk_assessments":[{"risk_type":"","risk_score":0,"urgency":"low|medium|high|critical","contributing_factors":[""],"recommendations":[""],"evidence":""}],"immediate_actions_needed":[""],"monitoring_priorities":[""]}`;
+
+    const rawRiskPredictions = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: predictionPrompt
     });
+    const riskPredictions = parseLLMJson(rawRiskPredictions) || {};
 
     // Create alerts for high-risk findings. `risk_assessments` is not a required
     // field in the LLM response schema, so guard against a missing/non-array

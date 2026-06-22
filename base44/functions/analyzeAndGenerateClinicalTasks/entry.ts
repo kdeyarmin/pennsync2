@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -103,36 +120,15 @@ Prioritize based on:
 - MEDIUM: Important follow-ups, care plan assessments, routine coordination
 - LOW: Documentation updates, routine education, non-urgent scheduling
 
-Generate 3-7 tasks maximum, focusing on most clinically relevant items.`;
+Generate 3-7 tasks maximum, focusing on most clinically relevant items.
 
-    const response = await base44.integrations.Core.InvokeLLM({
-      prompt: prompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          tasks: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                description: { type: "string" },
-                type: { type: "string" },
-                priority: { type: "string" },
-                due_timeframe: { type: "string" },
-                clinical_rationale: { type: "string" },
-                intervention_type: { type: "string" },
-                risk_level: { type: "string" },
-                suggested_actions: {
-                  type: "array",
-                  items: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      }
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"tasks":[{"title":"","description":"","type":"call|notify|schedule|order|coordinate|document|safety|followup|assessment|other","priority":"high|medium|low","due_timeframe":"today|24_hours|48_hours|this_week|next_visit","clinical_rationale":"","intervention_type":"monitoring|medication|education|safety|coordination|assessment","risk_level":"critical|high|moderate|low","suggested_actions":[""]}]}`;
+
+    const rawResponse = await base44.integrations.Core.InvokeLLM({
+      prompt: prompt
     });
+    const response = parseLLMJson(rawResponse) || {};
 
     const suggestedTasks = response.tasks || [];
 
