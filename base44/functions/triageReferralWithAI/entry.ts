@@ -1,5 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -17,7 +34,7 @@ Deno.serve(async (req) => {
     }
 
     // Use OpenAI to analyze and structure the referral
-    const analysis = await base44.integrations.Core.InvokeLLM({
+    const rawAnalysis = await base44.integrations.Core.InvokeLLM({
       prompt: `You are an expert home health triage nurse. Analyze the following unstructured referral data and provide a structured assessment.
 
 REFERRAL DATA:
@@ -46,33 +63,8 @@ Provide a JSON response with this exact structure:
 }
 
 Return ONLY valid JSON, no markdown or explanation.`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          patient_name: { type: 'string' },
-          date_of_birth: { type: 'string' },
-          primary_diagnosis: { type: 'string' },
-          secondary_diagnoses: { type: 'array', items: { type: 'string' } },
-          urgency_level: { type: 'string', enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] },
-          urgency_reason: { type: 'string' },
-          key_risk_factors: { type: 'array', items: { type: 'string' } },
-          clinical_summary: { type: 'string' },
-          preliminary_care_plan: {
-            type: 'object',
-            properties: {
-              skilled_nursing_frequency: { type: 'string' },
-              initial_focus_areas: { type: 'array', items: { type: 'string' } },
-              medications_to_reconcile: { type: 'string' },
-              equipment_needed: { type: 'array', items: { type: 'string' } },
-              safety_concerns: { type: 'array', items: { type: 'string' } },
-              discharge_readiness: { type: 'string' },
-            },
-          },
-          admission_notes: { type: 'string' },
-          data_gaps: { type: 'array', items: { type: 'string' } },
-        },
-      },
     });
+    const analysis = parseLLMJson(rawAnalysis) || {};
 
     // Log the triage analysis for audit trail
     await base44.entities.UserActivity.create({

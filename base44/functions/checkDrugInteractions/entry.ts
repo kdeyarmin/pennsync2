@@ -108,6 +108,22 @@ function findDeterministicInteractions(medications) {
   }
   return results;
 }
+// Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
+// response_json_schema, because the provider rejects deeply-nested object
+// schemas that lack an explicit `required` array at every level.
+function parseLLMJson(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  const text = String(raw).trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+}
 function mergeInteractions(aiInteractions, deterministic) {
   const norm = (s) => String(s || '').toLowerCase().trim();
   const pairKey = (x) => [norm(x.drug_a), norm(x.drug_b)].sort().join('|');
@@ -169,7 +185,7 @@ Deno.serve(async (req) => {
     );
 
     // Use AI to analyze drug interactions based on medication names and known interactions
-    const aiAnalysis = await base44.integrations.Core.InvokeLLM({
+    const rawAiAnalysis = await base44.integrations.Core.InvokeLLM({
       prompt: `You are a clinical pharmacist AI assistant. Analyze the following medications for potential drug-drug interactions, contraindications, and safety concerns.
 
 Medications:
@@ -185,45 +201,12 @@ Analyze and identify:
 4. Clinical significance of each interaction
 5. Specific recommendations for each interaction found
 
-Provide detailed, clinically actionable information.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          interactions: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                drug_a: { type: "string" },
-                drug_b: { type: "string" },
-                severity: {
-                  type: "string",
-                  enum: ["critical", "major", "moderate", "minor"]
-                },
-                interaction_type: {
-                  type: "string",
-                  enum: ["pharmacodynamic", "pharmacokinetic", "duplicate_therapy", "contraindication", "dose_adjustment"]
-                },
-                description: { type: "string" },
-                clinical_significance: { type: "string" },
-                recommendation: { type: "string" },
-                monitoring_required: { type: "boolean" },
-                requires_intervention: { type: "boolean" }
-              }
-            }
-          },
-          overall_risk_level: {
-            type: "string",
-            enum: ["critical", "high", "moderate", "low"]
-          },
-          summary: { type: "string" },
-          immediate_actions: {
-            type: "array",
-            items: { type: "string" }
-          }
-        }
-      }
+Provide detailed, clinically actionable information.
+
+Return ONLY valid JSON, no prose or code fences, with this shape:
+{"interactions":[{"drug_a":"","drug_b":"","severity":"critical|major|moderate|minor","interaction_type":"pharmacodynamic|pharmacokinetic|duplicate_therapy|contraindication|dose_adjustment","description":"","clinical_significance":"","recommendation":"","monitoring_required":false,"requires_intervention":false}],"overall_risk_level":"critical|high|moderate|low","summary":"","immediate_actions":[""]}`
     });
+    const aiAnalysis = parseLLMJson(rawAiAnalysis) || {};
 
     // Deterministic safety net: surface well-established high-severity
     // interactions even if the model missed them, and tag AI-only findings
