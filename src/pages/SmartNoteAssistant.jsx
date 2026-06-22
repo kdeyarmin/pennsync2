@@ -616,8 +616,13 @@ export default function SmartNoteAssistant({ visitId = null }) {
                   <span className={`text-xs shrink-0 ${ready ? "text-emerald-600 font-medium" : "text-slate-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
-                  <Button onClick={startReview} disabled={!ready} className="bg-navy-600 hover:bg-navy-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
-                    <Sparkles className="w-4 h-4" /> Check Compliance <ArrowRight className="w-3.5 h-3.5" />
+                  <Button
+                    onClick={startReview}
+                    disabled={!ready}
+                    style={ready ? { backgroundColor: '#264491', color: '#ffffff' } : undefined}
+                    className="hover:bg-navy-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
+                  >
+                    <Sparkles className="w-4 h-4" /> Generate Note <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
