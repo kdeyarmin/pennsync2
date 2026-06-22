@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,7 +31,6 @@ export default function DuplicatePatients() {
   const [duplicateGroups, setDuplicateGroups] = useState([]);
   const [mergingKey, setMergingKey] = useState(null);
   const [isMergingAll, setIsMergingAll] = useState(false);
-  const autoScanned = useRef(false);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -45,7 +44,12 @@ export default function DuplicatePatients() {
       const all = await base44.entities.Patient.list('-created_date', 10000);
       // Don't surface already-archived/merged records as fresh duplicates.
       return all.filter((p) => !p.is_archived);
-    }
+    },
+    // Always pull a fresh roster when the page mounts. Caching let the page show
+    // duplicate groups computed from a STALE roster (and from before matching-logic
+    // fixes deployed), which looked like "the fix didn't work" when it actually had.
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const { data: allVisits = [], isLoading: visitsLoading } = useQuery({
@@ -70,12 +74,13 @@ export default function DuplicatePatients() {
 
   // Auto-scan once the roster (and its visits, for corroboration) have loaded —
   // the admin shouldn't have to click a button to find out the database is dirty.
+  // Keyed off the actual data identity so a fresh fetch re-scans instead of
+  // reusing groups computed from an earlier (possibly stale) roster.
   useEffect(() => {
-    if (autoScanned.current) return;
     if (isLoading || visitsLoading) return;
     if (patients.length === 0) return;
-    autoScanned.current = true;
     runScan(patients, allVisits);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, visitsLoading, patients, allVisits]);
 
   const rescan = () => runScan(patients, allVisits);
