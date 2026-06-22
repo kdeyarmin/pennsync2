@@ -405,22 +405,20 @@ export default function PatientEducationHub() {
       />
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
-          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
-            <TabsTrigger value="create" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Create &amp; Customize
-            </TabsTrigger>
-            <TabsTrigger value="teachback" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Teach-Back
-            </TabsTrigger>
-            <TabsTrigger value="tracking" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <Send className="h-4 w-4 mr-2" />
-              Sent / Tracking
-            </TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="create" className="min-h-[44px] flex-1 gap-2 sm:flex-none">
+            <BookOpen className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <span>Create &amp; Customize</span>
+          </TabsTrigger>
+          <TabsTrigger value="teachback" className="min-h-[44px] flex-1 gap-2 sm:flex-none">
+            <MessageSquare className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <span>Teach-Back</span>
+          </TabsTrigger>
+          <TabsTrigger value="tracking" className="min-h-[44px] flex-1 gap-2 sm:flex-none">
+            <Send className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <span>Sent / Tracking</span>
+          </TabsTrigger>
+        </TabsList>
 
         <TabsContent value="create" className="space-y-4 sm:space-y-6">
       {/* AI Personalized Generator for Selected Patient */}

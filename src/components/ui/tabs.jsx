@@ -1,9 +1,6 @@
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-
-function cn(...inputs) {
-  return inputs.filter(Boolean).join(' ')
-}
+import { cn } from "@/lib/utils"
 
 const Tabs = TabsPrimitive.Root
 
@@ -29,7 +26,9 @@ const TabsTrigger = React.forwardRef((props, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex flex-shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 ring-offset-white transition-all hover:bg-white/70 hover:text-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-navy-800 data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-slate-900/5",
+      // gap-2 + [&_svg] rules keep the icon and label on a single inline row with
+      // consistent spacing and a fixed icon size, regardless of what a page passes.
+      "inline-flex flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 ring-offset-white transition-all [&_svg]:h-4 [&_svg]:w-4 [&_svg]:flex-shrink-0 hover:bg-white/70 hover:text-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-navy-800 data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-slate-900/5",
       props.className
     )}
     {...props}

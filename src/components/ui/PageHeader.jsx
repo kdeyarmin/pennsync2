@@ -6,7 +6,11 @@ import { cn } from "@/lib/utils";
 
 export default function PageHeader({
   icon: IconProp,
-  iconColor = "bg-gradient-to-br from-navy-600 to-navy-800",
+  // Solid navy fill (not a gradient): custom-palette gradient color-stop
+  // utilities like `from-navy-600`/`to-navy-800` are not reliably generated
+  // under this app's Tailwind setup, which rendered the icon box transparent
+  // and the white icon invisible. A solid background renders consistently.
+  iconColor = "bg-navy-700",
   iconClassName,
   eyebrow,
   title,
