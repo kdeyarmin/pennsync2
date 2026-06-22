@@ -62,8 +62,6 @@ export default function AnnouncementManager() {
     queryFn: async () => {
       try {
         const result = await base44.entities.Announcement.list('-created_date');
-        console.log('✅ Fetched announcements count:', result?.length);
-        console.log('✅ Raw announcements data:', result);
         return result || [];
       } catch (error) {
         console.error('❌ Error fetching announcements:', error);
@@ -78,16 +76,12 @@ export default function AnnouncementManager() {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      console.log('📤 Creating announcement:', data);
       const result = await base44.entities.Announcement.create(data);
-      console.log('✅ Created successfully:', result);
       return result;
     },
     onSuccess: async (_data) => {
-      console.log('🔄 Refetching announcements...');
       await queryClient.invalidateQueries({ queryKey: ['announcements'] });
       const refetchResult = await refetch();
-      console.log('✅ Refetch complete, count:', refetchResult.data?.length);
       setIsDialogOpen(false);
       resetForm();
     },
@@ -185,7 +179,6 @@ export default function AnnouncementManager() {
       dataToSubmit.expires_at = formData.expires_at.toISOString();
     }
     
-    console.log('📝 Submitting announcement:', dataToSubmit);
     
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: dataToSubmit });

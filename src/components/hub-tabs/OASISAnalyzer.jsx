@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { CHART_COLORS } from "@/constants/chartColors";
 import { invokeLLM } from "@/lib/invokeLLM";
@@ -1939,7 +1939,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             pdgmData={pdgmData}
             patientId={selectedPatientId}
             patientName={patientName}
-            onTasksCreated={(count) => console.log(`${count} tasks created`)}
+            onTasksCreated={() => {}}
           />
 
           {/* Export Manager — exports include revenue optimization fields; admins only */}
@@ -2437,7 +2437,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             <AIDocumentationAssistant 
               analysisResults={analysisResults} 
               pdgmData={pdgmData}
-              onInsertText={(text) => console.log("Insert text:", text)}
+              onInsertText={() => {}}
             />
             <AIAuditRiskPredictor 
               analysisResults={analysisResults} 
@@ -2461,7 +2461,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             pdgmData={pdgmData}
             analysisResults={analysisResults}
             patientId={selectedPatientId}
-            onTasksCreated={(count) => console.log(`${count} pathway tasks created`)}
+            onTasksCreated={() => {}}
             onPathwaysTriggered={(pathways) => setTriggeredPathways(pathways)}
           />
 

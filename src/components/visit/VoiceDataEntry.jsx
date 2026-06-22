@@ -102,7 +102,6 @@ export default function VoiceDataEntry({
         try {
           recognition.start();
         } catch {
-          console.log("Recognition restart prevented");
         }
       }
     };

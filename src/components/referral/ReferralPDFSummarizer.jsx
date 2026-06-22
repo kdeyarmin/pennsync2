@@ -1274,7 +1274,6 @@ export default function ReferralPDFSummarizer({
             referralData={extractedData}
             autoGenerate={true}
             onNoteGenerated={(noteData) => {
-              console.log('Admission note generated:', noteData);
             }}
           />
 
@@ -1295,7 +1294,6 @@ export default function ReferralPDFSummarizer({
                 referralData={extractedData}
                 autoAnalyze={true}
                 onApplySuggestion={(item) => {
-                  console.log('Applied OASIS suggestion:', item);
                   setOasisResults(item);
                 }}
               />
@@ -1309,7 +1307,6 @@ export default function ReferralPDFSummarizer({
             patientId={patientId}
             autoGenerate={true}
             onCarePlansGenerated={(plans, summary) => {
-              console.log('Care plans generated:', plans, summary);
             }}
           />
 

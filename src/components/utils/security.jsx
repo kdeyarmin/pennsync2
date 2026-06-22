@@ -289,7 +289,6 @@ export async function logSecurityEvent(action, details = {}, severity = 'info') 
     const logStyle = severity === 'critical' ? 'background: red; color: white; padding: 2px 4px; border-radius: 2px;' :
                      severity === 'warning' ? 'background: orange; color: white; padding: 2px 4px; border-radius: 2px;' :
                      'background: blue; color: white; padding: 2px 4px; border-radius: 2px;';
-    console.log(`%c[SECURITY ${severity.toUpperCase()}]`, logStyle, action, logEntry);
     
     // Store in SecurityLog entity - don't await to avoid blocking
     base44.entities.SecurityLog.create(logEntry).catch(err => {

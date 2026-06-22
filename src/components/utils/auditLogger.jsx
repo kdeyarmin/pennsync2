@@ -116,7 +116,6 @@ export async function logAudit({
       });
     }
 
-    console.log('[Audit]', action, entityType, entityId);
   } catch (error) {
     console.error('Audit logging failed:', error);
     // Don't throw - audit logging shouldn't break the app

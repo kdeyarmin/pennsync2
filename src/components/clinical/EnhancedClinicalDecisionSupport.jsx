@@ -440,7 +440,7 @@ Return comprehensive JSON:
                   carePlans={carePlans}
                   incidents={incidents}
                   onInsertRecommendation={onInsertRecommendation}
-                  onAlertGenerated={(alert) => console.log('Risk alert:', alert)}
+                  onAlertGenerated={() => {}}
                   compact={true}
                 />
               </TabsContent>

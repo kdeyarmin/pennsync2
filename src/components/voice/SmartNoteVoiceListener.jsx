@@ -197,7 +197,6 @@ export default function SmartNoteVoiceListener({
   useEffect(() => {
     // Check for Web Speech API support
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.log('Speech recognition not supported');
       return;
     }
 
@@ -216,7 +215,6 @@ export default function SmartNoteVoiceListener({
     };
 
     recognition.onerror = (event) => {
-      console.log('Speech recognition error:', event.error);
       if (event.error !== 'no-speech') {
         setIsListening(false);
       }
@@ -228,7 +226,6 @@ export default function SmartNoteVoiceListener({
         try {
           recognitionRef.current.start();
         } catch (e) {
-          console.log('Recognition restart failed:', e);
         }
       }
     };

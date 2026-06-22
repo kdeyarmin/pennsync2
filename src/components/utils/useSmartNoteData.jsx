@@ -35,7 +35,6 @@ export const useSmartNoteData = (selectedPatientId) => {
         
         // Fallback: If list returns empty, try filter
         if (!patientArray || patientArray.length === 0) {
-          console.log('List returned empty, trying filter...');
           const filterResult = await base44.entities.Patient.filter({}, '-updated_date', 1000);
           patientArray = normalizeApiResponse(filterResult);
         }

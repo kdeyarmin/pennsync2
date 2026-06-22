@@ -225,13 +225,11 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
       recognition.onstart = () => {
         setVoiceCommandStatus("listening");
         isListeningRef.current = true;
-        console.log("Voice command listening started...");
       };
 
       recognition.onresult = (event) => {
         setVoiceCommandStatus("processing");
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-        console.log("Voice command received:", transcript);
 
         const incidentId = commandMap[transcript];
         if (incidentId) {
@@ -243,7 +241,6 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
             setVoiceCommandStatus("idle"); // No matching incident, back to idle
           }
         } else {
-          console.log("No matching command for:", transcript);
           setVoiceCommandStatus("idle"); // No matching command, back to idle
         }
       };
@@ -258,7 +255,6 @@ export default function QuickIncidentReporting({ patient, visit, onIncidentRepor
 
       recognition.onend = () => {
         isListeningRef.current = false; // Mark as not listening
-        console.log("Voice command listening ended.");
         // If it ended and we're not showing a dialog or actively processing a command,
         // revert to idle. The main useEffect logic will handle restarting if needed.
         if (!showDialog && voiceCommandStatus !== "processing") {

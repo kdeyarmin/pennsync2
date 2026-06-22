@@ -253,7 +253,6 @@ export default function WorkflowExecutionEngine({
     // Check if this execution has already been performed (using queryClient cache as persistent storage)
     const executedWorkflows = queryClient.getQueryData(['executedWorkflows']) || {};
     if (executedWorkflows[idempotencyKey]) {
-      console.log('Workflow already executed for this idempotency key:', idempotencyKey);
       return;
     }
 

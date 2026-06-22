@@ -1848,7 +1848,7 @@ Generate the complete clinical narrative based on the audio and context:`;
              previousVisits={allVisits}
              carePlans={carePlans}
              onInsertRecommendation={(text) => handleAddSuggestion(text, 'enhanced_clinical_decision_support')}
-             onAlertAcknowledged={(alertId) => console.log('Alert acknowledged:', alertId)}
+             onAlertAcknowledged={() => {}}
              autoAnalyze={true}
            />
           )}
