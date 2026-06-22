@@ -10,7 +10,7 @@ function navItemClasses(active) {
   return `group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
     active
       ? "bg-navy-700 text-white font-semibold"
-      : "text-navy-100 hover:bg-navy-700 hover:text-white"
+      : "text-slate-200 hover:bg-navy-700 hover:text-white"
   }`;
 }
 
@@ -42,7 +42,7 @@ export default function DesktopSidebar({
         </Link>
         <Button
           variant="ghost" size="icon"
-          className="h-7 w-7 text-navy-200 hover:text-white hover:bg-navy-700 flex-shrink-0"
+          className="h-7 w-7 text-slate-300 hover:text-white hover:bg-navy-700 flex-shrink-0"
           onClick={onToggleCollapse}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={!collapsed}
@@ -57,14 +57,14 @@ export default function DesktopSidebar({
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
-          className={`flex items-center gap-2 rounded-lg border border-navy-700 bg-navy-900/40 text-navy-200 hover:bg-navy-700 hover:text-white transition-colors mb-2 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'w-full px-3 py-2'}`}
+          className={`flex items-center gap-2 rounded-lg border border-navy-700 bg-navy-900/40 text-slate-300 hover:bg-navy-700 hover:text-white transition-colors mb-2 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'w-full px-3 py-2'}`}
           title="Search pages (Ctrl/Cmd+K)"
         >
           <Search className="w-4 h-4 flex-shrink-0" />
           {!collapsed && (
             <>
               <span className="text-sm flex-1 text-left">Search…</span>
-              <kbd className="text-[10px] font-mono bg-navy-900 text-navy-200 rounded px-1.5 py-0.5 border border-navy-700">⌘K</kbd>
+              <kbd className="text-[10px] font-mono bg-navy-900 text-slate-300 rounded px-1.5 py-0.5 border border-navy-700">⌘K</kbd>
             </>
           )}
         </button>
@@ -87,7 +87,7 @@ export default function DesktopSidebar({
               <Link
                 key={`fav-patient-${patient.id}`}
                 to={createPageUrl(`PatientDetails?id=${patient.id}`)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-navy-100 hover:bg-navy-700 hover:text-white"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-navy-700 hover:text-white"
                 title={collapsed ? patient.name : undefined}
               >
                 <Users className="w-4 h-4 flex-shrink-0" />
@@ -101,7 +101,7 @@ export default function DesktopSidebar({
         {navCategories.map((category, catIndex) => (
           <div key={catIndex}>
             {category.category && !collapsed && (
-              <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-navy-300 uppercase tracking-wider">
+              <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 {category.category}
               </p>
             )}
@@ -142,7 +142,7 @@ export default function DesktopSidebar({
             {adminItems.map((category, catIndex) => (
               <div key={catIndex}>
                 {category.category && !collapsed && (
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-navy-300 uppercase tracking-wider">
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     {category.category}
                   </p>
                 )}
@@ -199,13 +199,13 @@ export default function DesktopSidebar({
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{currentUser?.full_name || 'User'}</p>
-              <p className="text-xs text-navy-300 truncate capitalize">{currentUser?.role || 'user'}</p>
+              <p className="text-xs text-slate-400 truncate capitalize">{currentUser?.role || 'user'}</p>
             </div>
           )}
           <Button
             variant="ghost" size="icon"
             onClick={onLogout}
-            className="h-8 w-8 text-navy-200 hover:text-red-400 hover:bg-navy-700 flex-shrink-0"
+            className="h-8 w-8 text-slate-300 hover:text-red-400 hover:bg-navy-700 flex-shrink-0"
             title="Logout"
             aria-label="Log out"
           >
