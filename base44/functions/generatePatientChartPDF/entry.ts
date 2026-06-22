@@ -29,8 +29,6 @@ Deno.serve(async (req) => {
       includeIncidents ? base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 100) : []
     ]);
 
-    // Format medications
-    const medicationsList = patient.current_medications?.map(m => `${m.name} ${m.dosage} ${m.frequency}`).join('; ') || 'None';
     const secondaryDiagnoses = patient.secondary_diagnoses?.join(', ') || 'None';
     const pastMedicalHistory = patient.past_medical_history?.join('; ') || 'None';
 
@@ -59,7 +57,6 @@ CLINICAL INFORMATION:
 Primary Diagnosis: ${patient.primary_diagnosis || 'N/A'}
 Secondary Diagnoses: ${secondaryDiagnoses}
 Allergies: ${patient.allergies || 'No known allergies'}
-Current Medications: ${medicationsList}
 Past Medical History: ${pastMedicalHistory}
 
 BASELINE VITALS:

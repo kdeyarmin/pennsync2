@@ -36,18 +36,6 @@ const PATIENT_SCHEMA = {
       type: "array",
       items: { type: "string" },
       description: "Past medical conditions"
-    },
-    current_medications: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          name: { type: "string" },
-          dosage: { type: "string" },
-          frequency: { type: "string" }
-        }
-      },
-      description: "Current medications"
     }
   }
 };

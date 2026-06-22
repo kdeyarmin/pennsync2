@@ -30,9 +30,6 @@ Deno.serve(async (req) => {
     // Fetch care plans
     const carePlans = await base44.entities.CarePlan.filter({ patient_id });
 
-    // Fetch medications
-    const medications = await base44.entities.Medication.filter({ patient_id });
-
     // Fetch education materials sent
     const educationMaterials = await base44.entities.SentEducationMaterial.filter(
       { patient_id }
@@ -48,19 +45,6 @@ Deno.serve(async (req) => {
       ['skilled_nursing', 'admission', 'recertification'].includes(v.visit_type)
     );
     const therapyVisits = visits.filter(v => v.visit_type === 'therapy');
-
-    // Track medication changes
-    const activeMeds = medications.filter(m => m.status === 'active');
-    const discontinuedMeds = medications.filter(m => m.status === 'discontinued');
-
-    const medicationChanges = [];
-    discontinuedMeds.forEach(med => {
-      medicationChanges.push({
-        change_type: 'discontinued',
-        medication: `${med.name} ${med.dosage}`,
-        reason: med.notes || 'As directed by physician'
-      });
-    });
 
     // Generate comprehensive AI summary
     const aiPrompt = `You are a home health discharge summary specialist. Generate a comprehensive, Medicare-compliant discharge summary based on the following patient data.
@@ -91,9 +75,6 @@ Goal: ${cp.goal}
 Status: ${cp.status}
 Interventions: ${cp.interventions?.join(', ') || 'None listed'}
 `).join('\n')}
-
-CURRENT MEDICATIONS:
-${activeMeds.map(m => `${m.name} ${m.dosage} ${m.frequency}`).join('\n')}
 
 PATIENT EDUCATION PROVIDED:
 ${educationMaterials.map(e => e.material_title).join(', ')}
@@ -152,11 +133,6 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
         visit_highlights: visitHighlights
       },
       care_plan_outcomes: carePlanOutcomes,
-      medication_summary: {
-        medications_at_admission: [],
-        medications_at_discharge: activeMeds.map(m => `${m.name} ${m.dosage} ${m.frequency}`),
-        medication_changes: medicationChanges
-      },
       functional_status: {
         at_admission: 'See admission assessment',
         at_discharge: 'Patient improved overall functional status',
@@ -184,7 +160,6 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
       ai_generation_metadata: {
         visits_analyzed: visits.length,
         care_plans_analyzed: carePlans.length,
-        medications_tracked: medications.length,
         generation_confidence: 95
       }
     });

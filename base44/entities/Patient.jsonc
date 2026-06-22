@@ -74,12 +74,6 @@
     "allergies": {
       "type": "string"
     },
-    "current_medications": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
     "past_medical_history": {
       "type": "array",
       "items": {
