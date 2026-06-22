@@ -1,4 +1,4 @@
-const CACHE_NAME = 'base44-offline-v3';
+const CACHE_NAME = 'base44-offline-v4';
 
 self.addEventListener('install', () => {
   // Activate the new worker immediately; do not precache the app shell so an
