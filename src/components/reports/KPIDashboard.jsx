@@ -12,6 +12,15 @@ import {
   CheckCircle2
 } from "lucide-react";
 
+const KPI_COLOR_CLASSES = {
+  purple: { border: "border-l-purple-500", bg: "bg-purple-100", text: "text-purple-600" },
+  blue: { border: "border-l-blue-500", bg: "bg-blue-100", text: "text-blue-600" },
+  green: { border: "border-l-green-500", bg: "bg-green-100", text: "text-green-600" },
+  indigo: { border: "border-l-indigo-500", bg: "bg-indigo-100", text: "text-indigo-600" },
+  emerald: { border: "border-l-emerald-500", bg: "bg-emerald-100", text: "text-emerald-600" },
+  red: { border: "border-l-red-500", bg: "bg-red-100", text: "text-red-600" },
+};
+
 export default function KPIDashboard({ dateRange }) {
   const { data: referrals = [] } = useQuery({
     queryKey: ['allReferrals', dateRange],
@@ -154,23 +163,26 @@ export default function KPIDashboard({ dateRange }) {
     <div className="space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {kpis.map((kpi, index) => (
-          <Card key={index} className={`border-l-4 border-l-${kpi.color}-500`}>
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 bg-${kpi.color}-100 rounded-lg flex items-center justify-center`}>
-                  <kpi.icon className={`w-6 h-6 text-${kpi.color}-600`} />
+        {kpis.map((kpi, index) => {
+          const colorClasses = KPI_COLOR_CLASSES[kpi.color] || KPI_COLOR_CLASSES.blue;
+          return (
+            <Card key={index} className={`border-l-4 ${colorClasses.border}`}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-12 h-12 ${colorClasses.bg} rounded-lg flex items-center justify-center`}>
+                    <kpi.icon className={`w-6 h-6 ${colorClasses.text}`} />
+                  </div>
+                  <Badge className={kpi.trendUp ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                    {kpi.trendUp ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                    {kpi.trend}%
+                  </Badge>
                 </div>
-                <Badge className={kpi.trendUp ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                  {kpi.trendUp ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                  {kpi.trend}%
-                </Badge>
-              </div>
-              <p className="text-3xl font-bold text-slate-900 mb-1">{kpi.value}</p>
-              <p className="text-sm text-slate-600">{kpi.title}</p>
-            </CardContent>
-          </Card>
-        ))}
+                <p className="text-3xl font-bold text-slate-900 mb-1">{kpi.value}</p>
+                <p className="text-sm text-slate-600">{kpi.title}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
 

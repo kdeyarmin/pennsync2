@@ -23,6 +23,7 @@ const isAdminLike = (u) =>
     u.email === SUPER_ADMIN_EMAIL);
 
 const round = (n) => Math.round(n);
+const MISSED_CALL_STATUSES = new Set(['failed', 'no_answer', 'busy', 'canceled', 'cancelled']);
 
 function rate(delivered, outbound) {
   if (!outbound || outbound <= 0) return 0;
@@ -73,7 +74,7 @@ function summarize(messages, calls, faxes, now) {
   const callsMissed = callRows.filter(
     (c) =>
       c.direction === 'inbound' &&
-      (c.has_voicemail === true || c.status === 'failed' || c.status === 'ringing'),
+      (c.has_voicemail === true || MISSED_CALL_STATUSES.has(c.status)),
   );
   const voicemailBacklog = callRows.filter((c) => c.has_voicemail === true);
   const durations = callRows

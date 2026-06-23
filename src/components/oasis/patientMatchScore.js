@@ -178,10 +178,35 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
     // identity check exactly when formats differ.
     const parseDobParts = (dob) => {
       const s = String(dob || '').trim();
+      const isValidParts = (y, mo, d) => {
+        const parsed = new Date(Date.UTC(y, mo - 1, d));
+        return (
+          !Number.isNaN(parsed.getTime()) &&
+          parsed.getUTCFullYear() === y &&
+          parsed.getUTCMonth() + 1 === mo &&
+          parsed.getUTCDate() === d
+        );
+      };
+      const pivotYear = (year) => {
+        const candidate = 2000 + Number(year);
+        const referenceYear = new Date().getUTCFullYear();
+        return candidate > referenceYear ? candidate - 100 : candidate;
+      };
       let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/); // ISO YYYY-MM-DD
-      if (m) return { y: +m[1], mo: +m[2], d: +m[3] };
+      if (m) {
+        const parts = { y: +m[1], mo: +m[2], d: +m[3] };
+        return isValidParts(parts.y, parts.mo, parts.d) ? parts : null;
+      }
       m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);     // US MM/DD/YYYY
-      if (m) return { y: +m[3], mo: +m[1], d: +m[2] };
+      if (m) {
+        const parts = { y: +m[3], mo: +m[1], d: +m[2] };
+        return isValidParts(parts.y, parts.mo, parts.d) ? parts : null;
+      }
+      m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})(?!\d)/); // US MM/DD/YY
+      if (m) {
+        const parts = { y: pivotYear(m[3]), mo: +m[1], d: +m[2] };
+        return isValidParts(parts.y, parts.mo, parts.d) ? parts : null;
+      }
       const yearOnly = s.match(/(\d{4})/);                      // year-only fallback
       if (yearOnly) return { y: +yearOnly[1], mo: null, d: null };
       return null;

@@ -72,8 +72,8 @@ test('call metrics: missed, voicemail backlog, avg duration', () => {
   assert.equal(out.calls.outbound, 2);
   assert.equal(out.calls.completed, 3);
   assert.equal(out.calls.failed, 1);
-  // inbound w/ voicemail + inbound failed + inbound ringing = 3 missed
-  assert.equal(out.calls.missed, 3);
+  // inbound w/ voicemail + inbound failed = 2 missed; active ringing is not terminal.
+  assert.equal(out.calls.missed, 2);
   assert.equal(out.calls.voicemail_backlog, 1);
   // durations 30,90,60 (zero excluded) => avg 60
   assert.equal(out.calls.avg_duration_secs, 60);

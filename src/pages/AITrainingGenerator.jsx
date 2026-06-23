@@ -15,6 +15,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { generateTrainingCourse } from '@/functions/generateTrainingCourse';
 import { toast } from 'sonner';
+import { createPageUrl } from '@/utils';
 
 export default function AITrainingGenerator() {
   const [loading, setLoading] = useState(false);
@@ -295,7 +296,7 @@ export default function AITrainingGenerator() {
 
             <div className="flex gap-3">
               <Button
-                onClick={() => window.location.href = `/CourseApprovalQueue?course=${generatedCourse.course_id}`}
+                onClick={() => window.location.href = `${createPageUrl('AdminTraining')}?tab=courses&course=${generatedCourse.course_id}`}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <BookOpen className="w-4 h-4 mr-2" />

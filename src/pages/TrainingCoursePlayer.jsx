@@ -87,15 +87,16 @@ export default function TrainingCoursePlayer() {
   }, [startTime, step]);
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
-  const { data: assignment } = useQuery({
+  const { data: assignment, isLoading: assignmentLoading, isFetched: assignmentFetched } = useQuery({
     queryKey: ["training-assignment", assignmentId],
     queryFn: async () => (await base44.entities.TrainingAssignment.filter({ id: assignmentId }))[0],
     enabled: !!assignmentId && !previewMode,
   });
-  const { data: course } = useQuery({
+  const activeCourseId = previewMode ? courseId : assignment?.course_id;
+  const { data: course, isLoading: courseLoading, isFetched: courseFetched } = useQuery({
     queryKey: ["training-course", previewMode ? courseId : assignment?.course_id],
-    queryFn: async () => (await base44.entities.TrainingCourse.filter({ id: previewMode ? courseId : assignment?.course_id }))[0],
-    enabled: !!(previewMode ? courseId : assignment?.course_id),
+    queryFn: async () => (await base44.entities.TrainingCourse.filter({ id: activeCourseId }))[0],
+    enabled: !!activeCourseId,
   });
   const { data: rawModules = [] } = useQuery({
     queryKey: ["training-modules", previewMode ? courseId : assignment?.course_id],
@@ -189,11 +190,46 @@ export default function TrainingCoursePlayer() {
     }
   };
 
-  if (!course) {
+  const renderUnavailable = (title, message) => (
+    <PageContainer>
+      <PageHeader
+        icon={GraduationCap}
+        eyebrow="My Learning"
+        title="Course Player"
+        favoritePage="TrainingCoursePlayer"
+      />
+      <Card className="border-amber-200 bg-amber-50">
+        <CardContent className="p-6 text-center space-y-4">
+          <AlertTriangle className="w-10 h-10 text-amber-600 mx-auto" />
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            <p className="text-sm text-slate-600 mt-1">{message}</p>
+          </div>
+          <Button onClick={() => navigate(createPageUrl("LearningCenter"))}>
+            Back to Learning Center
+          </Button>
+        </CardContent>
+      </Card>
+    </PageContainer>
+  );
+
+  if (!previewMode && !assignmentId) {
+    return renderUnavailable("Missing assignment", "Open this course from your Learning Center assignment list.");
+  }
+  if (previewMode && !courseId) {
+    return renderUnavailable("Missing course", "Open preview mode from a course in Training Manager.");
+  }
+  if (!previewMode && assignmentLoading) {
+    return <LoadingState label="Loading assignment..." className="py-24" />;
+  }
+  if (!previewMode && assignmentFetched && !assignment) {
+    return renderUnavailable("Assignment not found", "This assignment may have been removed or is no longer available.");
+  }
+  if (courseLoading) {
     return <LoadingState label="Loading course..." className="py-24" />;
   }
-  if (!previewMode && !assignment) {
-    return <LoadingState label="Loading assignment..." className="py-24" />;
+  if (activeCourseId && courseFetched && !course) {
+    return renderUnavailable("Course not found", "This course may have been removed or is no longer available.");
   }
 
   const progressValue = STEP_PROGRESS[step] || 0;

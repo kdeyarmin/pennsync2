@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, ShieldAlert, Image as ImageIcon, CheckCircle2, Eye, Clock } from "lucide-react";
-import { format } from "date-fns";
 import { toast } from "sonner";
 
 const severityClasses = {

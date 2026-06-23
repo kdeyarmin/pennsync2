@@ -55,6 +55,12 @@ test('DOB verifies across formats (US MM/DD/YYYY document vs ISO record)', () =>
   assert.ok(r.matchFactors.some(f => f.includes('Date of birth verified')));
 });
 
+test('DOB verifies when a document uses a 2-digit year', () => {
+  const r = calculatePatientMatchScore('Jane', patient, '03/15/50');
+  assert.equal(r.dobMatch, true);
+  assert.ok(r.matchFactors.some(f => f.includes('Date of birth verified')));
+});
+
 test('same year but different month/day does not falsely verify', () => {
   const r = calculatePatientMatchScore('Jane', patient, '11/22/1950');
   assert.equal(r.dobMatch, false);

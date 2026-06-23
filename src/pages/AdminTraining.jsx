@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,17 @@ import ManagerSkillGapAreas from "@/components/training/ManagerSkillGapAreas";
 import ManagerSkillGapPeople from "@/components/training/ManagerSkillGapPeople";
 import StaffEducationComplianceReport from "@/components/training/StaffEducationComplianceReport";
 
+const TAB_KEYS = [
+  "overview",
+  "courses",
+  "learning-plans",
+  "ai-inservices",
+  "annual-mandatory",
+  "skill-gaps",
+  "video-studio",
+  "compliance-report",
+];
+
 const isManager = (user) => 
   user?.role === "admin" || 
   user?.account_type === "agency_admin" || 
@@ -26,6 +37,7 @@ const isManager = (user) =>
 
 export default function AdminTraining() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -37,6 +49,20 @@ export default function AdminTraining() {
   // completions). Unlike the team-scoped Skill Gaps tab, it is not limited to a
   // manager's team, so restrict it to admins.
   const isAdmin = currentUser?.role === 'admin';
+  const requestedTab = searchParams.get("tab");
+  const adminOnlyTabs = new Set(["video-studio", "compliance-report"]);
+  let activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "overview";
+  if (adminOnlyTabs.has(activeTab) && !isAdmin) activeTab = "overview";
+
+  const handleTabChange = (value) => {
+    setSearchParams(value === "overview" ? {} : { tab: value });
+  };
+
+  useEffect(() => {
+    if (!userLoading && !hasAccess) {
+      navigate('/', { replace: true });
+    }
+  }, [hasAccess, navigate, userLoading]);
 
   const { data: users = [] } = useQuery({
     queryKey: ["skill-gap-users"],
@@ -172,7 +198,6 @@ export default function AdminTraining() {
   }
 
   if (!hasAccess) {
-    navigate('/', { replace: true });
     return null;
   }
 
@@ -186,7 +211,7 @@ export default function AdminTraining() {
         favoritePage="AdminTraining"
       />
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
             <TabsTrigger value="overview" className="min-h-[44px] px-4 text-sm whitespace-nowrap">

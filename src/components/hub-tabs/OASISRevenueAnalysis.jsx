@@ -19,7 +19,7 @@ export default function OASISRevenueAnalysis() {
         <Card>
           <CardContent className="p-6">
             <p className="text-slate-600">No analysis data available. Please analyze an OASIS document first.</p>
-            <Link to={createPageUrl("OASISAnalyzer")}>
+            <Link to={`${createPageUrl("OASISCenter")}?tab=analyze`}>
               <Button className="mt-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Analyzer
