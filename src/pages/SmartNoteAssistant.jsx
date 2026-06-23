@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -65,10 +66,24 @@ import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 
 export default function SmartNoteAssistant({ visitId = null }) {
-  const [patientId, setPatientId] = useState("");
-  const [visitType, setVisitType] = useState("routine_visit");
+  const [searchParams] = useSearchParams();
+  const queryPatientId = searchParams.get("patientId") || searchParams.get("patient_id") || "";
+  const queryVisitType = searchParams.get("visitType") || searchParams.get("visit_type") || "";
+  const referralDraftNote = useMemo(() => {
+    if (searchParams.get("referral_mode") !== "true") return "";
+    const raw = searchParams.get("referral_data");
+    if (!raw) return "";
+    try {
+      const parsed = JSON.parse(raw);
+      return String(parsed.roughNote || "").trim();
+    } catch {
+      return "";
+    }
+  }, [searchParams]);
+  const [patientId, setPatientId] = useState(queryPatientId);
+  const [visitType, setVisitType] = useState(queryVisitType || "routine_visit");
   const visitDate = todayEastern();
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(referralDraftNote);
   // Structured vital signs (canonical vital_signs shape) saved onto the visit so
   // they reach the chart, trends, and escalation — restoring the capture the
   // retired Document Visit page provided.
@@ -180,6 +195,11 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
   // Restore saved patient context across tabs
   useEffect(() => {
+    if (queryPatientId || queryVisitType) {
+      if (queryPatientId) setPatientId(queryPatientId);
+      if (queryVisitType) setVisitType(queryVisitType);
+      return;
+    }
     const saved = sessionStorage.getItem(SAVED_PATIENT_KEY);
     if (saved) {
       try {
@@ -188,7 +208,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
         if (parsed.visitType) setVisitType(parsed.visitType);
       } catch {}
     }
-  }, []);
+  }, [queryPatientId, queryVisitType]);
 
   // Persist patient context across tabs
   useEffect(() => {
@@ -198,6 +218,11 @@ export default function SmartNoteAssistant({ visitId = null }) {
   // On first mount, restore the draft for whatever bucket we start in (the saved
   // patient, or the unassigned bucket) so an in-progress note survives a reload.
   useEffect(() => {
+    if (referralDraftNote) {
+      setNote(referralDraftNote);
+      setDraftRestored(true);
+      return;
+    }
     const saved = sessionStorage.getItem(draftKeyFor(patientIdRef.current));
     if (!saved) { tryRestoreDurableDraft(patientIdRef.current); return; }
     try {
@@ -208,7 +233,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
         setDraftRestored(true);
       }
     } catch { /* ignore a corrupt draft */ }
-  }, []);
+  }, [referralDraftNote]);
 
   // When the selected patient changes, load that patient's saved draft (resume
   // where you left off). The outgoing patient's note was already autosaved under

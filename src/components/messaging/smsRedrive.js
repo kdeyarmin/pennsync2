@@ -48,7 +48,8 @@ export function shouldRedriveSms(row, now = Date.now(), { maxAttempts = 4, baseG
   if (!isTransientFailureReason(row.failure_reason)) return false;
 
   const created = new Date(row.created_date).getTime();
-  if (Number.isFinite(created) && now - created > maxAgeMs) return false; // too old; give up
+  if (!Number.isFinite(created)) return false;
+  if (now - created > maxAgeMs) return false; // too old; give up
 
   // Escalating backoff between attempts: baseGap, 2×, 4×, …
   const last = row.last_retry_at ? new Date(row.last_retry_at).getTime() : created;

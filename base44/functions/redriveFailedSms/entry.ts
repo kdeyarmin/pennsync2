@@ -43,7 +43,8 @@ function shouldRedriveSms(row, now = Date.now(), maxAttempts = 4, baseGapMs = 60
   if (attempts >= maxAttempts) return false;
   if (!isTransientFailureReason(row.failure_reason)) return false;
   const created = new Date(row.created_date).getTime();
-  if (Number.isFinite(created) && now - created > maxAgeMs) return false;
+  if (!Number.isFinite(created)) return false;
+  if (now - created > maxAgeMs) return false;
   const last = row.last_retry_at ? new Date(row.last_retry_at).getTime() : created;
   const requiredGap = baseGapMs * 2 ** attempts;
   if (Number.isFinite(last) && now - last < requiredGap) return false;

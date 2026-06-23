@@ -61,3 +61,8 @@ test("shouldRedriveSms gives up on rows past the age ceiling", () => {
   const old = { ...baseRow, created_date: new Date(NOW - 48 * 60 * 60 * 1000).toISOString(), last_retry_at: null };
   assert.equal(shouldRedriveSms(old, NOW), false);
 });
+
+test("shouldRedriveSms refuses rows with missing or invalid creation timestamps", () => {
+  assert.equal(shouldRedriveSms({ ...baseRow, created_date: "not-a-date" }, NOW), false);
+  assert.equal(shouldRedriveSms({ ...baseRow, created_date: null }, NOW), false);
+});

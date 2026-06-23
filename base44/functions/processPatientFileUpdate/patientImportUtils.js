@@ -12,6 +12,16 @@ export const normalizeText = (value) => cleanValue(value).toLowerCase().replace(
 export const normalizeName = (value) => normalizeText(value).replace(/[^a-z0-9 ]/g, '');
 export const normalizeMrn = (value) => cleanValue(value).toLowerCase().replace(/[^a-z0-9]/g, '');
 
+const isValidYmd = (year, month, day) => {
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getUTCFullYear() === Number(year) &&
+    date.getUTCMonth() + 1 === Number(month) &&
+    date.getUTCDate() === Number(day)
+  );
+};
+
 // Convert a wide range of date inputs to a canonical YYYY-MM-DD string.
 //
 // Two-digit years are pivoted so they never land in the future relative to
@@ -29,9 +39,10 @@ export const toIsoDate = (value, referenceYear = new Date().getUTCFullYear()) =>
     return String(candidate > referenceYear ? candidate - 100 : candidate);
   };
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    const date = new Date(`${raw}T00:00:00Z`);
-    return Number.isNaN(date.getTime()) ? null : raw;
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return isValidYmd(year, month, day) ? raw : null;
   }
 
   const slashMatch = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
@@ -39,11 +50,7 @@ export const toIsoDate = (value, referenceYear = new Date().getUTCFullYear()) =>
     let [, month, day, year] = slashMatch;
     year = pivotYear(year);
     const iso = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const date = new Date(`${iso}T00:00:00Z`);
-    if (Number.isNaN(date.getTime())) return null;
-    // Reject impossible calendar dates (e.g. 13/40/2020) that Date rolls over.
-    if (date.getUTCMonth() + 1 !== Number(month) || date.getUTCDate() !== Number(day)) return null;
-    return iso;
+    return isValidYmd(year, month, day) ? iso : null;
   }
 
   const parsed = new Date(raw);

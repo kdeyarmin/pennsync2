@@ -16,6 +16,12 @@ import {
 } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 
+const parseValidDate = (value) => {
+  if (!value) return null;
+  const date = parseISO(String(value));
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 export default function RealTimePatientAlerts({ 
   patients = [], 
   visits = [], 
@@ -50,10 +56,12 @@ export default function RealTimePatientAlerts({
       // Alert: No recent visits (>7 days)
       const lastVisit = patientVisits
         .filter(v => v.status === 'completed')
-        .sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date))[0];
+        .map(v => ({ visit: v, date: parseValidDate(v.visit_date) }))
+        .filter(({ date }) => date)
+        .sort((a, b) => b.date - a.date)[0];
       
       if (lastVisit) {
-        const daysSinceVisit = differenceInDays(today, parseISO(lastVisit.visit_date));
+        const daysSinceVisit = differenceInDays(today, lastVisit.date);
         if (daysSinceVisit > 7) {
           newAlerts.push({
             type: 'overdue_visit',
@@ -70,7 +78,9 @@ export default function RealTimePatientAlerts({
       patientCarePlans
         .filter(cp => cp.status === 'active' && cp.target_date)
         .forEach(cp => {
-          const daysUntilTarget = differenceInDays(parseISO(cp.target_date), today);
+          const targetDate = parseValidDate(cp.target_date);
+          if (!targetDate) return;
+          const daysUntilTarget = differenceInDays(targetDate, today);
           if (daysUntilTarget <= 7 && daysUntilTarget >= 0) {
             newAlerts.push({
               type: 'goal_deadline',
@@ -85,17 +95,20 @@ export default function RealTimePatientAlerts({
 
       // Alert: Recent incidents
       const recentIncidents = patientIncidents.filter(i => {
-        const incidentDate = parseISO(i.incident_date);
+        const incidentDate = parseValidDate(i.incident_date);
+        if (!incidentDate) return false;
         return differenceInDays(today, incidentDate) <= 3;
       });
 
       recentIncidents.forEach(incident => {
+        const incidentDate = parseValidDate(incident.incident_date);
+        if (!incidentDate) return;
         newAlerts.push({
           type: 'recent_incident',
           severity: 'high',
           patientId: patient.id,
           patientName: `${patient.first_name} ${patient.last_name}`,
-          message: `Recent ${incident.incident_name || incident.incident_type}: ${format(parseISO(incident.incident_date), 'MMM d')}`,
+          message: `Recent ${incident.incident_name || incident.incident_type}: ${format(incidentDate, 'MMM d')}`,
           icon: AlertTriangle
         });
       });
@@ -110,7 +123,7 @@ export default function RealTimePatientAlerts({
           v.visit_date === format(today, 'yyyy-MM-dd') && v.status !== 'cancelled'
         );
         if (!todayVisit && lastVisit) {
-          const daysSince = differenceInDays(today, parseISO(lastVisit.visit_date));
+          const daysSince = differenceInDays(today, lastVisit.date);
           if (daysSince >= 3) {
             newAlerts.push({
               type: 'high_risk',

@@ -8,7 +8,29 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Trim a value to a clean string ('' for null/undefined).
 function cleanValue(value) {
   if (value === null || value === undefined) return '';
-  return String(value).trim();
+  return String(value).replace(/\uFEFF/g, '').trim();
+}
+
+function normalizeText(value) {
+  return cleanValue(value).toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function normalizeName(value) {
+  return normalizeText(value).replace(/[^a-z0-9 ]/g, '');
+}
+
+function normalizeMrn(value) {
+  return cleanValue(value).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function isValidYmd(year, month, day) {
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getUTCFullYear() === Number(year) &&
+    date.getUTCMonth() + 1 === Number(month) &&
+    date.getUTCDate() === Number(day)
+  );
 }
 
 // RFC-4180-ish CSV parser: handles quoted fields, escaped quotes ("") and
@@ -29,8 +51,9 @@ function parseCsv(text) {
       } else {
         field += ch;
       }
-    } else if (ch === '"') {
+    } else if (ch === '"' && field.trim() === '') {
       inQuotes = true;
+      field = '';
     } else if (ch === ',') {
       row.push(field); field = '';
     } else if (ch === '\n') {
@@ -69,18 +92,22 @@ function buildRowObject(headers, cols) {
 function normalizeDob(value) {
   const v = cleanValue(value);
   if (!v) return '';
-  let m = v.match(/^(\d{4})\D(\d{1,2})\D(\d{1,2})/); // YYYY-MM-DD
-  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
-  m = v.match(/^(\d{1,2})\D(\d{1,2})\D(\d{4})/); // MM/DD/YYYY
-  if (m) return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
-  m = v.match(/^(\d{1,2})\D(\d{1,2})\D(\d{2})(?!\d)/); // MM/DD/YY
-  if (m) {
+  const pivotYear = (year) => {
+    if (year.length !== 2) return year;
     const ref = new Date().getFullYear();
-    let year = 2000 + Number(m[3]);
-    if (year > ref) year -= 100;
-    return `${year}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+    const candidate = 2000 + Number(year);
+    return String(candidate > ref ? candidate - 100 : candidate);
+  };
+  let m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/); // YYYY-MM-DD
+  if (m) return isValidYmd(m[1], m[2], m[3]) ? `${m[1]}-${m[2]}-${m[3]}` : '';
+  m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/); // MM/DD/YYYY or MM/DD/YY
+  if (m) {
+    const year = pivotYear(m[3]);
+    return isValidYmd(year, m[1], m[2]) ? `${year}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}` : '';
   }
-  return v;
+  const parsed = new Date(v);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString().slice(0, 10);
 }
 
 const firstOf = (row, keys) => {
@@ -90,26 +117,59 @@ const firstOf = (row, keys) => {
   return '';
 };
 
+function parseFullName(value) {
+  const raw = cleanValue(value);
+  if (!raw) return { first_name: '', middle_name: '', last_name: '' };
+  if (raw.includes(',')) {
+    const [lastNamePart, firstNamePart] = raw.split(',').map((part) => cleanValue(part));
+    const firstParts = (firstNamePart || '').split(/\s+/).filter(Boolean);
+    return {
+      first_name: firstParts[0] || '',
+      middle_name: firstParts.length > 2 ? firstParts.slice(1, -1).join(' ') : firstParts[1] || '',
+      last_name: lastNamePart || (firstParts.length > 1 ? firstParts[firstParts.length - 1] : ''),
+    };
+  }
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return { first_name: parts[0], middle_name: '', last_name: '' };
+  return {
+    first_name: parts[0] || '',
+    middle_name: parts.length > 2 ? parts.slice(1, -1).join(' ') : '',
+    last_name: parts[parts.length - 1] || '',
+  };
+}
+
 // Build the normalized lookups used to detect matches against existing patients.
+function pushToLookup(map, key, value) {
+  if (!key) return;
+  const existing = map.get(key) || [];
+  existing.push(value);
+  map.set(key, existing);
+}
+
+function getNameDobKey(patient) {
+  const first = normalizeName(patient.first_name);
+  const last = normalizeName(patient.last_name);
+  const dob = normalizeDob(patient.date_of_birth);
+  if (!first || !last || !dob) return null;
+  return `${first}|${last}|${dob}`;
+}
+
 function buildExistingLookups(existingPatients) {
   const existingByMrn = new Map();
   const existingByNameDob = new Map();
   for (const p of existingPatients || []) {
-    const mrn = cleanValue(p.medical_record_number).toLowerCase();
-    if (mrn) existingByMrn.set(mrn, p);
-    const first = cleanValue(p.first_name).toLowerCase();
-    const last = cleanValue(p.last_name).toLowerCase();
-    const dob = normalizeDob(p.date_of_birth);
-    if (first && last && dob) existingByNameDob.set(`${first}|${last}|${dob}`, p);
+    pushToLookup(existingByMrn, normalizeMrn(p.medical_record_number), p);
+    pushToLookup(existingByNameDob, getNameDobKey(p), p);
   }
   return { existingByMrn, existingByNameDob };
 }
 
 // Parse a raw CSV row object into a normalized patient shape used downstream.
 function parseUploadedPatient(row, rowNumber) {
-  const first_name = firstOf(row, ['first_name', 'firstname', 'first', 'patient_first_name']);
-  const last_name = firstOf(row, ['last_name', 'lastname', 'last', 'patient_last_name']);
-  const middle_name = firstOf(row, ['middle_name', 'middlename', 'middle', 'mi']);
+  const parsedName = parseFullName(firstOf(row, ['patient', 'patient_name', 'name']));
+  const first_name = firstOf(row, ['first_name', 'firstname', 'first', 'patient_first_name']) || parsedName.first_name;
+  const last_name = firstOf(row, ['last_name', 'lastname', 'last', 'patient_last_name']) || parsedName.last_name;
+  const middle_name = firstOf(row, ['middle_name', 'middlename', 'middle', 'mi']) || parsedName.middle_name;
   const medical_record_number = firstOf(row, ['medical_record_number', 'mrn', 'record_number', 'patient_id', 'chart_number']);
   const date_of_birth = normalizeDob(firstOf(row, ['date_of_birth', 'dob', 'birth_date', 'birthdate']));
   const admission_date = normalizeDob(firstOf(row, ['admission_date', 'soc_date', 'start_of_care', 'admit_date']));
@@ -139,35 +199,39 @@ function parseUploadedPatient(row, rowNumber) {
 // The de-dup keys a parsed patient contributes (MRN and/or name+DOB).
 function buildUploadKeys(patient) {
   const keys = [];
-  const mrn = cleanValue(patient.medical_record_number).toLowerCase();
+  const mrn = normalizeMrn(patient.medical_record_number);
   if (mrn) keys.push(`mrn:${mrn}`);
-  const first = cleanValue(patient.first_name).toLowerCase();
-  const last = cleanValue(patient.last_name).toLowerCase();
-  const dob = normalizeDob(patient.date_of_birth);
-  if (first && last && dob) keys.push(`nd:${first}|${last}|${dob}`);
+  const nameDobKey = getNameDobKey(patient);
+  if (nameDobKey) keys.push(`namedob:${nameDobKey}`);
   return keys;
 }
 
 // Resolve a parsed patient against the existing lookups.
 // Returns { match, matchedBy } or { error } when it can't be safely verified.
 function resolveMatch(patient, existingByMrn, existingByNameDob) {
-  const mrn = cleanValue(patient.medical_record_number).toLowerCase();
-  if (mrn && existingByMrn.has(mrn)) {
-    return { match: existingByMrn.get(mrn), matchedBy: 'MRN' };
+  const mrn = normalizeMrn(patient.medical_record_number);
+  const nameDobKey = getNameDobKey(patient);
+  const mrnMatches = mrn ? (existingByMrn.get(mrn) || []) : [];
+  const nameDobMatches = nameDobKey ? (existingByNameDob.get(nameDobKey) || []) : [];
+  const mrnMatch = mrnMatches[0] || null;
+  const nameDobMatch = nameDobMatches[0] || null;
+
+  if (mrnMatches.length > 1) {
+    return { error: 'Multiple existing patients already share this MRN.' };
   }
-  const first = cleanValue(patient.first_name).toLowerCase();
-  const last = cleanValue(patient.last_name).toLowerCase();
-  const dob = normalizeDob(patient.date_of_birth);
-  if (first && last && dob) {
-    const key = `${first}|${last}|${dob}`;
-    if (existingByNameDob.has(key)) {
-      return { match: existingByNameDob.get(key), matchedBy: 'name + DOB' };
-    }
+  if (nameDobMatches.length > 1) {
+    return { error: 'Multiple existing patients already share this name and DOB.' };
   }
-  if (!mrn && !(first && last && dob)) {
+  if (mrnMatch && nameDobMatch && mrnMatch.id !== nameDobMatch.id) {
+    return { error: 'MRN matched one patient, but name and DOB matched a different patient.' };
+  }
+  if (!mrn && !nameDobKey) {
     return { error: 'Cannot safely verify this patient. Provide an MRN or a name with DOB.' };
   }
-  return { match: null, matchedBy: null };
+  return {
+    match: mrnMatch || nameDobMatch || null,
+    matchedBy: mrnMatch ? 'MRN' : nameDobMatch ? 'Name + DOB' : null,
+  };
 }
 
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /

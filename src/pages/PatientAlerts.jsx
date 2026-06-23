@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +25,8 @@ import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
 export default function PatientAlerts() {
-  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [searchParams] = useSearchParams();
+  const [selectedPatientId, setSelectedPatientId] = useState(searchParams.get("patientId") || searchParams.get("id") || "");
   const [analysisResults, setAnalysisResults] = useState(null);
 
   const { data: patients = [] } = useQuery({

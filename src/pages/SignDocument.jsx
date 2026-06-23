@@ -38,11 +38,13 @@ export default function SignDocument() {
     enabled: !!signatureId
   });
 
+  const effectivePatientId = patientId || signatureRecord?.patient_id || "";
+
   const { data: patient } = useQuery({
-    queryKey: ['patient', patientId],
-    queryFn: () => base44.entities.Patient.filter({ id: patientId }),
+    queryKey: ['patient', effectivePatientId],
+    queryFn: () => base44.entities.Patient.filter({ id: effectivePatientId }),
     select: (data) => data[0],
-    enabled: !!patientId
+    enabled: !!effectivePatientId
   });
 
   const updateSignatureMutation = useMutation({
@@ -126,7 +128,7 @@ export default function SignDocument() {
   // Guard on `signers` too: the render and submit handlers call
   // signatureRecord.signers.map/.filter/.every, which throw if the entity has no
   // signers array. Treat a record without signers as not-yet-ready.
-  if (!signatureRecord || !patient || !Array.isArray(signatureRecord.signers)) {
+  if (!signatureRecord || (effectivePatientId && !patient) || !Array.isArray(signatureRecord.signers)) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <Card>
@@ -155,7 +157,7 @@ export default function SignDocument() {
         icon={Pen}
         eyebrow="Documentation"
         title="Sign Document"
-        description={`${patient.first_name} ${patient.last_name} • ${signatureRecord.document_title}`}
+        description={`${patient ? `${patient.first_name} ${patient.last_name}` : 'Document'} • ${signatureRecord.document_title}`}
         favoritePage="SignDocument"
       />
 

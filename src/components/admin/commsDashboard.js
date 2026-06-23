@@ -12,6 +12,7 @@
  */
 
 const round = (n) => Math.round(n);
+const MISSED_CALL_STATUSES = new Set(['failed', 'no_answer', 'busy', 'canceled', 'cancelled']);
 
 /** delivered / outbound as a rounded whole-number percent; 0 when no outbound. */
 function rate(delivered, outbound) {
@@ -70,12 +71,12 @@ export function summarizeComms({ messages = [], calls = [], faxes = [] } = {}, n
   const callsOutbound = callRows.filter((c) => c.direction === 'outbound');
   const callsCompleted = callRows.filter((c) => c.status === 'completed');
   const callsFailed = callRows.filter((c) => c.status === 'failed');
-  // "missed": an inbound call that left a voicemail, or any inbound call that
-  // failed / never reached in_progress (a no-answer heuristic).
+  // "missed": an inbound call that reached a terminal non-completed outcome, or
+  // one that left a voicemail. Active ringing calls are still in progress.
   const callsMissed = callRows.filter(
     (c) =>
       c.direction === 'inbound' &&
-      (c.has_voicemail === true || c.status === 'failed' || c.status === 'ringing'),
+      (c.has_voicemail === true || MISSED_CALL_STATUSES.has(c.status)),
   );
   const voicemailBacklog = callRows.filter((c) => c.has_voicemail === true);
   const durations = callRows

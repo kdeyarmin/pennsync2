@@ -39,6 +39,7 @@ test("toIsoDate rejects empty and impossible dates", () => {
   assert.equal(toIsoDate(""), null);
   assert.equal(toIsoDate("not a date"), null);
   assert.equal(toIsoDate("13/40/2020"), null);
+  assert.equal(toIsoDate("2020-02-30"), null);
 });
 
 test("a 2-digit-year upload matches the same patient stored with a 4-digit DOB", () => {
