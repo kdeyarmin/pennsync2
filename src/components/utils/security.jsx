@@ -285,11 +285,6 @@ export async function logSecurityEvent(action, details = {}, severity = 'info') 
       user_agent: navigator.userAgent
     };
     
-    // Enhanced console logging with severity-based formatting
-    const logStyle = severity === 'critical' ? 'background: red; color: white; padding: 2px 4px; border-radius: 2px;' :
-                     severity === 'warning' ? 'background: orange; color: white; padding: 2px 4px; border-radius: 2px;' :
-                     'background: blue; color: white; padding: 2px 4px; border-radius: 2px;';
-    
     // Store in SecurityLog entity - don't await to avoid blocking
     base44.entities.SecurityLog.create(logEntry).catch(err => {
       console.error('Failed to store security log:', err);

@@ -81,7 +81,7 @@ export default function AnnouncementManager() {
     },
     onSuccess: async (_data) => {
       await queryClient.invalidateQueries({ queryKey: ['announcements'] });
-      const refetchResult = await refetch();
+      await refetch();
       setIsDialogOpen(false);
       resetForm();
     },

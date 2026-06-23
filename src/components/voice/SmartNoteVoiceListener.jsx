@@ -225,7 +225,8 @@ export default function SmartNoteVoiceListener({
       if (isListeningRef.current && recognitionRef.current) {
         try {
           recognitionRef.current.start();
-        } catch (e) {
+        } catch {
+          // Recognition may already be running; ignore the redundant start.
         }
       }
     };
