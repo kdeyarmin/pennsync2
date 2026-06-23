@@ -136,10 +136,22 @@ export default function Patients() {
   const calculateAge = (dob) => {
     if (!dob) return null;
     const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    // Parse a bare ISO date (YYYY-MM-DD) as PLAIN calendar components. `new
+    // Date("YYYY-MM-DD")` parses as UTC midnight, so in a timezone behind UTC the
+    // local day shifts back one (e.g. 1961-12-01 → 1961-11-30), which can flip the
+    // birthday comparison and report the wrong age at the Medicare-band boundary.
+    let birthYear, birthMonth, birthDay;
+    const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(dob).trim());
+    if (iso) {
+      birthYear = Number(iso[1]); birthMonth = Number(iso[2]) - 1; birthDay = Number(iso[3]);
+    } else {
+      const birthDate = new Date(dob);
+      if (Number.isNaN(birthDate.getTime())) return null;
+      birthYear = birthDate.getFullYear(); birthMonth = birthDate.getMonth(); birthDay = birthDate.getDate();
+    }
+    let age = today.getFullYear() - birthYear;
+    const m = today.getMonth() - birthMonth;
+    if (m < 0 || (m === 0 && today.getDate() < birthDay)) {
       age--;
     }
     return age;

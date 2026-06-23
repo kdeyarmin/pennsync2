@@ -156,6 +156,10 @@ export default function UserManagement() {
     onSuccess: (data) => {
       setResetPasswordResult(data?.data || data);
     },
+    onError: (error) => {
+      setResetPasswordResult({ success: false, error: error?.message || 'Failed to reset password' });
+      toast.error('Failed to reset password: ' + (error?.message || 'Unknown error'));
+    },
   });
 
   const deleteUserMutation = useMutation({

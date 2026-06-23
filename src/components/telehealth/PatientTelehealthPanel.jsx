@@ -226,7 +226,7 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
                   <p className="text-sm text-slate-500 flex items-center gap-2"><Calendar className="w-3 h-3" />{session.scheduled_at ? new Date(session.scheduled_at).toLocaleString() : 'Now'}</p>
                   {session.invite_link && (
                     <div className="flex flex-wrap items-center gap-3 mt-1">
-                      <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1" onClick={() => { navigator.clipboard.writeText(session.invite_link); toast.success('Join link copied'); }}><Copy className="w-3 h-3" />Copy join link</button>
+                      <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1" onClick={async () => { try { await navigator.clipboard.writeText(session.invite_link); toast.success('Join link copied'); } catch { toast.error("Couldn't copy the link — copy it manually."); } }}><Copy className="w-3 h-3" />Copy join link</button>
                       <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1 disabled:opacity-50" disabled={textLink.isPending} onClick={() => textPatient(session)}><MessageSquare className="w-3 h-3" />Text to patient</button>
                     </div>
                   )}

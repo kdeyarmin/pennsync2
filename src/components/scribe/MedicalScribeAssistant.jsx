@@ -161,9 +161,13 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
     });
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard!');
+    } catch {
+      toast.error("Couldn't copy to the clipboard — copy the text manually.");
+    }
   };
 
   const isProcessing = uploadAudioMutation.isPending || transcribeMutation.isPending;
