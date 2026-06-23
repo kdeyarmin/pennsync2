@@ -63,6 +63,15 @@ test("upcomingRows returns future pending rows soonest-first", () => {
   assert.deepEqual(upcomingRows(rows, now).map((r) => r.id), [2, 1]);
 });
 
+test("upcomingRows excludes pending rows with an unparseable send_at", () => {
+  const rows = [
+    { id: 1, status: "pending", send_at: at(5000) },
+    { id: 2, status: "pending", send_at: "not-a-date" }, // malformed, excluded
+    { id: 3, status: "pending", send_at: null }, // missing, excluded
+  ];
+  assert.deepEqual(upcomingRows(rows, now).map((r) => r.id), [1]);
+});
+
 test("canCancel only allows pending rows", () => {
   assert.equal(canCancel({ status: "pending" }), true);
   assert.equal(canCancel({ status: "sent" }), false);

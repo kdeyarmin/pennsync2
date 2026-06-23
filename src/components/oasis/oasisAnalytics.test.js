@@ -20,6 +20,14 @@ test("computeAge accounts for whether the birthday has occurred (no off-by-one)"
   assert.ok(Number.isNaN(computeAge(undefined, ref)));
 });
 
+test("computeAge rejects a malformed-but-ISO-shaped dob (out-of-range month/day)", () => {
+  const ref = new Date(2026, 5, 5);
+  assert.ok(Number.isNaN(computeAge("2020-99-99", ref)));
+  assert.ok(Number.isNaN(computeAge("2020-13-01", ref)));
+  assert.ok(Number.isNaN(computeAge("2020-02-30", ref))); // Feb 30 doesn't exist
+  assert.equal(computeAge("2020-02-29", ref), 6); // valid leap day still works
+});
+
 test("aggregateDemographics classifies gender and age ranges", () => {
   const { gender, age } = aggregateDemographics([
     u({ pdgm_data: { patient_info: { gender: "Male", dob: "1950-01-01" } } }), // ~75-84

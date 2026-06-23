@@ -41,8 +41,16 @@ export function dueRows(rows, now = new Date()) {
 
 /** Upcoming (pending, not yet due) rows, soonest first. */
 export function upcomingRows(rows, now = new Date()) {
+  const nowMs = now.getTime();
+  // Require a *valid future* send time. Using `!isDue` alone would let a row with
+  // an unparseable send_at (isDue → false) leak into the upcoming list and then
+  // sort by a NaN key, producing an unstable order and surfacing a broken row.
   return (Array.isArray(rows) ? rows : [])
-    .filter((r) => r && r.status === "pending" && !isDue(r, now))
+    .filter((r) => {
+      if (!r || r.status !== "pending") return false;
+      const t = new Date(r.send_at).getTime();
+      return !Number.isNaN(t) && t > nowMs;
+    })
     .sort((a, b) => new Date(a.send_at).getTime() - new Date(b.send_at).getTime());
 }
 
