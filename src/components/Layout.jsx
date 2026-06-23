@@ -10,7 +10,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 import { buildNavCategories, buildAdminItems, NAV_MANIFEST } from "@/lib/nav.manifest";
-import { isSuperAdmin } from "@/lib/superAdmin";
 import { getRoleView } from "@/lib/roles";
 
 import DesktopSidebar from "@/components/layout/DesktopSidebar";
