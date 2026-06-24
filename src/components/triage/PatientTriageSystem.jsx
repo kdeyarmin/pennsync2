@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, parseISO } from "date-fns";
 import { toast } from 'sonner';
 
 export default function PatientTriageSystem() {
@@ -78,7 +78,7 @@ export default function PatientTriageSystem() {
         
         // Calculate days since last visit
         const daysSinceLastVisit = lastVisit 
-          ? differenceInDays(new Date(), new Date(lastVisit.visit_date))
+          ? differenceInDays(new Date(), parseISO(lastVisit.visit_date))
           : 999;
 
         // Analyze vital sign trends
@@ -218,7 +218,7 @@ export default function PatientTriageSystem() {
     // Recent hospitalizations
     const recentHospitalizations = incidents.filter(i => 
       i.incident_type === 'hospitalized' && 
-      differenceInDays(new Date(), new Date(i.incident_date)) <= 30
+      differenceInDays(new Date(), parseISO(i.incident_date)) <= 30
     );
     if (recentHospitalizations.length > 0) {
       factors.push({ type: 'hospitalization', description: `Recent hospitalization within 30 days (${recentHospitalizations.length})`, severity: 'high' });
@@ -228,7 +228,7 @@ export default function PatientTriageSystem() {
     // Recent falls
     const recentFalls = incidents.filter(i => 
       i.incident_type === 'fall' && 
-      differenceInDays(new Date(), new Date(i.incident_date)) <= 14
+      differenceInDays(new Date(), parseISO(i.incident_date)) <= 14
     );
     if (recentFalls.length > 0) {
       factors.push({ type: 'fall', description: `Recent fall(s) within 14 days (${recentFalls.length})`, severity: 'high' });
@@ -247,7 +247,7 @@ export default function PatientTriageSystem() {
     // No recent visits
     const lastVisit = visits[0];
     if (lastVisit) {
-      const daysSince = differenceInDays(new Date(), new Date(lastVisit.visit_date));
+      const daysSince = differenceInDays(new Date(), parseISO(lastVisit.visit_date));
       if (daysSince > 14) {
         factors.push({ type: 'visit_gap', description: `No visit in ${daysSince} days`, severity: daysSince > 30 ? 'high' : 'medium' });
         score += daysSince > 30 ? 20 : 10;
@@ -720,7 +720,7 @@ function TriageResultCard({ result, rank }) {
                               {incident.incident_type.replace(/_/g, ' ')}
                             </Badge>
                             <span className="text-slate-600">
-                              {format(new Date(incident.incident_date), 'MMM d, yyyy')}
+                              {format(parseISO(incident.incident_date), 'MMM d, yyyy')}
                             </span>
                           </div>
                         ))}
