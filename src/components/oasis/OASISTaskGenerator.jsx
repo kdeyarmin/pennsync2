@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -173,8 +174,10 @@ export default function OASISTaskGenerator({
 
       setTasksCreated(true);
       onTasksCreated?.(tasksToCreate.length);
+      toast.success(`Created ${tasksToCreate.length} task${tasksToCreate.length === 1 ? '' : 's'}.`);
     } catch (err) {
       console.error("Error creating tasks:", err);
+      toast.error("Some tasks couldn't be created. Please try again.");
     }
     
     setIsCreating(false);

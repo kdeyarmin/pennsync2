@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,6 +90,9 @@ export default function OASISScenarioManager({
       setShowSaveDialog(false);
       setScenarioName("");
       setScenarioDescription("");
+    },
+    onError: () => {
+      toast.error("Couldn't save the scenario. Please try again.");
     }
   });
 
@@ -97,6 +101,9 @@ export default function OASISScenarioManager({
     mutationFn: (id) => base44.entities.OASISScenario.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oasis-scenarios', analysisId] });
+    },
+    onError: () => {
+      toast.error("Couldn't delete the scenario. Please try again.");
     }
   });
 

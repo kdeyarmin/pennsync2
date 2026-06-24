@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,10 @@ export default function TrainingAttachmentManager({ course }) {
       queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
       queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
       queryClient.invalidateQueries({ queryKey: ["training-modules-for-attachments", course?.id] });
+      toast.success("Attachments uploaded.");
+    },
+    onError: () => {
+      toast.error("Couldn't upload the attachments. Please try again.");
     }
   });
 

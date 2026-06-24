@@ -18,11 +18,13 @@ import { toast } from 'sonner';
 export default function ReferralAnalyzer({ referralData, onAnalysisComplete }) {
   const [analysis, setAnalysis] = useState(null);
   const [_isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
 
   const analyzeReferral = useCallback(async () => {
     if (!referralData) return;
 
     setIsAnalyzing(true);
+    setAnalysisError(false);
     try {
       const result = await invokeLLM({
         prompt: `You are an expert home health intake coordinator. Analyze this patient referral and provide:
@@ -148,6 +150,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
       }
     } catch (error) {
       console.error('Error analyzing referral:', error);
+      setAnalysisError(true);
       toast.error('Failed to analyze referral. Please try again.');
     }
     setIsAnalyzing(false);
@@ -160,6 +163,23 @@ Referral Data: ${JSON.stringify(referralData)}`,
   }, [referralData, analyzeReferral]);
 
   if (!analysis) {
+    if (analysisError) {
+      return (
+        <Card className="border-2 border-red-300">
+          <CardContent className="p-8 text-center">
+            <XCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
+            <p className="text-slate-700 mb-4">Couldn't analyze this referral.</p>
+            <button
+              type="button"
+              onClick={analyzeReferral}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700"
+            >
+              Retry analysis
+            </button>
+          </CardContent>
+        </Card>
+      );
+    }
     return (
       <Card className="border-2 border-blue-300">
         <CardContent className="p-8 text-center">
