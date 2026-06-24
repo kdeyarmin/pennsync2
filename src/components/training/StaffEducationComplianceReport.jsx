@@ -51,7 +51,7 @@ export default function StaffEducationComplianceReport() {
     cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeframe));
 
     const recentCompletions = allCompletions.filter(c => 
-      new Date(c.created_date) >= cutoffDate
+      new Date(c.completion_date || c.created_date) >= cutoffDate
     );
 
     const nurses = allUsers.filter(u => u.role === 'user' && u.is_approved);
@@ -59,7 +59,7 @@ export default function StaffEducationComplianceReport() {
     const staffMetrics = nurses.map(nurse => {
       const nurseCompletions = recentCompletions.filter(c => c.nurse_email === nurse.email);
       const completed = nurseCompletions.filter(c => c.status === 'completed').length;
-      const avgScore = nurseCompletions.filter(c => c.score).reduce((sum, c) => sum + c.score, 0) / (nurseCompletions.filter(c => c.score).length || 1);
+      const avgScore = nurseCompletions.filter(c => c.score != null).reduce((sum, c) => sum + c.score, 0) / (nurseCompletions.filter(c => c.score != null).length || 1);
       const overdue = nurseCompletions.filter(c => c.status !== 'completed' && c.due_date && new Date(c.due_date) < new Date()).length;
       
       return {
@@ -90,7 +90,7 @@ export default function StaffEducationComplianceReport() {
       staffMetrics: staffMetrics.sort((a, b) => b.completed - a.completed),
       totalStaff: nurses.length,
       totalCompletions: recentCompletions.filter(c => c.status === 'completed').length,
-      avgScore: Math.round(recentCompletions.filter(c => c.score).reduce((sum, c) => sum + c.score, 0) / (recentCompletions.filter(c => c.score).length || 1)),
+      avgScore: Math.round(recentCompletions.filter(c => c.score != null).reduce((sum, c) => sum + c.score, 0) / (recentCompletions.filter(c => c.score != null).length || 1)),
       complianceRate,
       totalRequired,
       completedRequired,

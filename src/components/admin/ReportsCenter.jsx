@@ -1253,7 +1253,12 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                     <CardContent className="p-4">
                       <p className="text-xs text-slate-600 mb-1">Completion Rate</p>
                       <p className="text-2xl font-bold text-green-600">
-                        {Math.round((reportPreview.reduce((sum, d) => sum + d.completed, 0) / reportPreview.reduce((sum, d) => sum + d.visits, 0)) * 100)}%
+                        {(() => {
+                          const totalVisits = reportPreview.reduce((sum, d) => sum + d.visits, 0);
+                          return totalVisits > 0
+                            ? Math.round((reportPreview.reduce((sum, d) => sum + d.completed, 0) / totalVisits) * 100)
+                            : 0;
+                        })()}%
                       </p>
                     </CardContent>
                   </Card>

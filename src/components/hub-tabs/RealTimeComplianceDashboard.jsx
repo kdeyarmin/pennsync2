@@ -92,7 +92,7 @@ export default function RealTimeComplianceDashboard() {
   // Filter data by date range
   const filteredAudits = useMemo(() => {
     if (!filterDate) return complianceAudits;
-    return complianceAudits.filter(a => new Date(a.created_date) >= filterDate);
+    return complianceAudits.filter(a => new Date(a.audit_date || a.created_date) >= filterDate);
   }, [complianceAudits, filterDate]);
 
   const filteredOASIS = useMemo(() => {
@@ -112,14 +112,14 @@ export default function RealTimeComplianceDashboard() {
     // Smart Note compliance scores
     const noteComplianceActivities = filteredActivities.filter(a => a.action === 'note_compliance_check');
     noteComplianceActivities.forEach(activity => {
-      if (activity.details?.overall_score) {
+      if (Number.isFinite(activity.details?.overall_score)) {
         scores.push(activity.details.overall_score);
       }
     });
 
     // Compliance audit scores
     filteredAudits.forEach(audit => {
-      if (audit.compliance_score) {
+      if (Number.isFinite(audit.compliance_score)) {
         scores.push(audit.compliance_score);
       }
     });
@@ -144,7 +144,7 @@ export default function RealTimeComplianceDashboard() {
       const weekEnd = endOfWeek(subDays(today, i * 7));
       
       const weekAudits = complianceAudits.filter(a => {
-        const date = new Date(a.created_date);
+        const date = new Date(a.audit_date || a.created_date);
         return date >= weekStart && date <= weekEnd;
       });
 
@@ -161,7 +161,7 @@ export default function RealTimeComplianceDashboard() {
       const avgScore = [...weekAudits.map(a => a.compliance_score), 
                         ...weekOASIS.map(o => o.scores?.compliance),
                         ...weekNoteChecks.map(n => n.details?.overall_score)]
-        .filter(s => s)
+        .filter(s => Number.isFinite(s))
         .reduce((sum, s, idx, arr) => sum + s / arr.length, 0);
 
       weeks.push({
@@ -288,7 +288,7 @@ export default function RealTimeComplianceDashboard() {
     features.smartNotes.total = noteEnhancements.length;
     features.smartNotes.enhancements = noteEnhancements.length;
     features.smartNotes.complianceChecks = noteChecks.length;
-    const noteScores = noteChecks.map(n => n.details?.overall_score).filter(s => s);
+    const noteScores = noteChecks.map(n => n.details?.overall_score).filter(s => Number.isFinite(s));
     features.smartNotes.avgScore = noteScores.length > 0 
       ? Math.round(noteScores.reduce((a, b) => a + b, 0) / noteScores.length) 
       : 0;
@@ -296,8 +296,8 @@ export default function RealTimeComplianceDashboard() {
     // OASIS
     features.oasisAnalyzer.total = filteredOASIS.length;
     features.oasisAnalyzer.uploads = filteredOASIS.length;
-    const oasisComplianceScores = filteredOASIS.map(o => o.scores?.compliance).filter(s => s);
-    const oasisAccuracyScores = filteredOASIS.map(o => o.scores?.accuracy).filter(s => s);
+    const oasisComplianceScores = filteredOASIS.map(o => o.scores?.compliance).filter(s => Number.isFinite(s));
+    const oasisAccuracyScores = filteredOASIS.map(o => o.scores?.accuracy).filter(s => Number.isFinite(s));
     features.oasisAnalyzer.avgScore = oasisComplianceScores.length > 0
       ? Math.round(oasisComplianceScores.reduce((a, b) => a + b, 0) / oasisComplianceScores.length)
       : 0;
@@ -309,7 +309,7 @@ export default function RealTimeComplianceDashboard() {
     features.complianceAudits.total = filteredAudits.length;
     features.complianceAudits.passed = filteredAudits.filter(a => a.status === 'passed').length;
     features.complianceAudits.flagged = filteredAudits.filter(a => a.status === 'flagged' || a.status === 'critical').length;
-    const auditScores = filteredAudits.map(a => a.compliance_score).filter(s => s);
+    const auditScores = filteredAudits.map(a => a.compliance_score).filter(s => Number.isFinite(s));
     features.complianceAudits.avgScore = auditScores.length > 0
       ? Math.round(auditScores.reduce((a, b) => a + b, 0) / auditScores.length)
       : 0;
@@ -339,7 +339,7 @@ export default function RealTimeComplianceDashboard() {
 
     // Smart Note scores
     filteredActivities.filter(a => a.action === 'note_compliance_check').forEach(activity => {
-      if (nurseMap[activity.user_email] && activity.details?.overall_score) {
+      if (nurseMap[activity.user_email] && Number.isFinite(activity.details?.overall_score)) {
         nurseMap[activity.user_email].noteCount++;
         nurseMap[activity.user_email].noteAvgScore += activity.details.overall_score;
       }

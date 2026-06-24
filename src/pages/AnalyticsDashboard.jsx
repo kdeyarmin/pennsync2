@@ -81,7 +81,7 @@ export default function AnalyticsDashboard() {
     queryKey: ['complianceAudits', selectedUser, startDate, endDate],
     queryFn: () => base44.entities.ComplianceAudit.list('-audit_date'),
     select: (data) => data.filter(ca => {
-      const caDate = new Date(ca.created_date);
+      const caDate = new Date(ca.audit_date || ca.created_date);
       const inDateRange = caDate >= new Date(startDate) && caDate <= new Date(endDate);
       const userMatch = selectedUser === 'all' || ca.nurse_email === selectedUser;
       return inDateRange && userMatch;
@@ -196,7 +196,7 @@ export default function AnalyticsDashboard() {
     }
 
     complianceAudits.forEach(ca => {
-      const dateKey = format(new Date(ca.created_date), 'yyyy-MM-dd');
+      const dateKey = format(new Date(ca.audit_date || ca.created_date), 'yyyy-MM-dd');
       if (days[dateKey]) {
         days[dateKey].compliance.push(ca.compliance_score || 0);
       }
@@ -249,6 +249,7 @@ export default function AnalyticsDashboard() {
         notesCount: 0,
         avgDocTime: 0,
         avgCompliance: 0,
+        auditCount: 0,
         avgQuality: 0,
         aiUsageCount: 0,
         totalActions: 0
@@ -266,6 +267,7 @@ export default function AnalyticsDashboard() {
     complianceAudits.forEach(ca => {
       if (userStats[ca.nurse_email]) {
         userStats[ca.nurse_email].avgCompliance += ca.compliance_score || 0;
+        userStats[ca.nurse_email].auditCount++;
       }
     });
 
@@ -283,7 +285,7 @@ export default function AnalyticsDashboard() {
     return Object.values(userStats).map(user => ({
       ...user,
       avgDocTime: user.notesCount > 0 ? (user.avgDocTime / user.notesCount).toFixed(1) : 0,
-      avgCompliance: user.notesCount > 0 ? (user.avgCompliance / user.notesCount).toFixed(1) : 0,
+      avgCompliance: user.auditCount > 0 ? (user.avgCompliance / user.auditCount).toFixed(1) : 0,
       avgQuality: user.notesCount > 0 ? (user.avgQuality / user.notesCount).toFixed(1) : 0,
       aiUtilization: user.totalActions > 0 ? ((user.aiUsageCount / user.totalActions) * 100).toFixed(1) : 0
     })).filter(user => user.notesCount > 0);

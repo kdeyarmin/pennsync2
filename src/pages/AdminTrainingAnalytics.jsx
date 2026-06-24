@@ -228,7 +228,7 @@ export default function AdminTrainingAnalytics() {
                           <Badge className="bg-emerald-500">{nurse.avgScore}% avg</Badge>
                         </div>
                       </div>
-                      <Progress value={(nurse.completions / modules.length) * 100} className="h-2" />
+                      <Progress value={modules.length > 0 ? Math.min(100, (nurse.completions / modules.length) * 100) : 0} className="h-2" />
                     </div>
                   </div>
                 ))}
