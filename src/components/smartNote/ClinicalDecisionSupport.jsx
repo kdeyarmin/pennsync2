@@ -1085,7 +1085,7 @@ Return JSON:
                   <Phone className="w-4 h-4" />
                   <AlertDescription>
                     <p className="text-xs font-bold mb-1">
-                      Physician Notification Required - {proactiveAlerts.physician_notification.urgency.toUpperCase()}
+                      Physician Notification Required - {(proactiveAlerts.physician_notification.urgency || 'routine').toUpperCase()}
                     </p>
                     <div className="bg-white p-2 rounded text-xs space-y-1">
                       <p><strong>Report to MD:</strong> {proactiveAlerts.physician_notification.findings_to_report}</p>

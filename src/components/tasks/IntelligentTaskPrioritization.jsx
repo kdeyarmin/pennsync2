@@ -56,7 +56,7 @@ export default function IntelligentTaskPrioritization({
       // confirms — otherwise a failed update made it look completed.
       setPrioritizedTasks((prev) =>
         prev
-          ? { ...prev, prioritized_tasks: prev.prioritized_tasks.filter((t) => t.task_id !== variables.id) }
+          ? { ...prev, prioritized_tasks: (prev.prioritized_tasks || []).filter((t) => t.task_id !== variables.id) }
           : prev
       );
       onTaskCompleted && onTaskCompleted();
