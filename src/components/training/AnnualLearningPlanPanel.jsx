@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const templates = [
   { name: 'Penn Hospice Annual Mandatory Education', business_line_scope: 'hospice', description: 'Starter annual plan for Penn Hospice staff.' },
@@ -21,35 +22,56 @@ export default function AnnualLearningPlanPanel({ plans = [], courses = [], year
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
 
   const createPlan = async () => {
-    const created = await base44.entities.LearningPlan.create({ name: planDraft.name, description: planDraft.description, business_line_scope: planDraft.business_line_scope, year, plan_type: 'annual', active: true, auto_enroll: false, auto_enroll_criteria: {}, total_courses: 0 });
-    setSelectedPlanId(created.id);
-    onRefresh?.();
+    try {
+      const created = await base44.entities.LearningPlan.create({ name: planDraft.name, description: planDraft.description, business_line_scope: planDraft.business_line_scope, year, plan_type: 'annual', active: true, auto_enroll: false, auto_enroll_criteria: {}, total_courses: 0 });
+      setSelectedPlanId(created.id);
+      onRefresh?.();
+      toast.success("Learning plan created.");
+    } catch {
+      toast.error("Couldn't create the learning plan. Please try again.");
+    }
   };
 
   const createStarterPlan = async (template) => {
-    const created = await base44.entities.LearningPlan.create({ name: `${year} ${template.name}`, description: template.description, business_line_scope: template.business_line_scope, year, plan_type: 'annual', active: true, auto_enroll: false, auto_enroll_criteria: {}, total_courses: 0 });
-    setSelectedPlanId(created.id);
-    onRefresh?.();
+    try {
+      const created = await base44.entities.LearningPlan.create({ name: `${year} ${template.name}`, description: template.description, business_line_scope: template.business_line_scope, year, plan_type: 'annual', active: true, auto_enroll: false, auto_enroll_criteria: {}, total_courses: 0 });
+      setSelectedPlanId(created.id);
+      onRefresh?.();
+      toast.success("Starter plan created.");
+    } catch {
+      toast.error("Couldn't create the starter plan. Please try again.");
+    }
   };
 
   const savePlanCourses = async () => {
     if (!selectedPlan) return;
-    const existing = await base44.entities.LearningPlanCourse.filter({ plan_id: selectedPlan.id }, 'order_index', 200);
-    await Promise.all(existing.map((item) => base44.entities.LearningPlanCourse.delete(item.id)));
-    await Promise.all(selectedCourses.map((courseId, index) => {
-      const course = courses.find((item) => item.id === courseId);
-      return base44.entities.LearningPlanCourse.create({ plan_id: selectedPlan.id, course_id: courseId, course_title: course?.title, order_index: index, is_required: true });
-    }));
-    await base44.entities.LearningPlan.update(selectedPlan.id, { total_courses: selectedCourses.length });
+    try {
+      const existing = await base44.entities.LearningPlanCourse.filter({ plan_id: selectedPlan.id }, 'order_index', 200);
+      await Promise.all(existing.map((item) => base44.entities.LearningPlanCourse.delete(item.id)));
+      await Promise.all(selectedCourses.map((courseId, index) => {
+        const course = courses.find((item) => item.id === courseId);
+        return base44.entities.LearningPlanCourse.create({ plan_id: selectedPlan.id, course_id: courseId, course_title: course?.title, order_index: index, is_required: true });
+      }));
+      await base44.entities.LearningPlan.update(selectedPlan.id, { total_courses: selectedCourses.length });
+      onRefresh?.();
+      toast.success("Plan courses saved.");
+    } catch {
+      toast.error("Couldn't save the plan courses. Please try again.");
+    }
   };
 
   const duplicatePlan = async () => {
     if (!selectedPlan) return;
-    const created = await base44.entities.LearningPlan.create({ name: `${selectedPlan.name} (Copy)`, description: selectedPlan.description, business_line_scope: selectedPlan.business_line_scope, year, plan_type: 'annual', active: true, auto_enroll: false, auto_enroll_criteria: {}, total_courses: selectedPlan.total_courses || 0 });
-    const items = await base44.entities.LearningPlanCourse.filter({ plan_id: selectedPlan.id }, 'order_index', 200);
-    await Promise.all(items.map((item, index) => base44.entities.LearningPlanCourse.create({ plan_id: created.id, course_id: item.course_id, course_title: item.course_title, order_index: index, is_required: item.is_required })));
-    setSelectedPlanId(created.id);
-    onRefresh?.();
+    try {
+      const created = await base44.entities.LearningPlan.create({ name: `${selectedPlan.name} (Copy)`, description: selectedPlan.description, business_line_scope: selectedPlan.business_line_scope, year, plan_type: 'annual', active: true, auto_enroll: false, auto_enroll_criteria: {}, total_courses: selectedPlan.total_courses || 0 });
+      const items = await base44.entities.LearningPlanCourse.filter({ plan_id: selectedPlan.id }, 'order_index', 200);
+      await Promise.all(items.map((item, index) => base44.entities.LearningPlanCourse.create({ plan_id: created.id, course_id: item.course_id, course_title: item.course_title, order_index: index, is_required: item.is_required })));
+      setSelectedPlanId(created.id);
+      onRefresh?.();
+      toast.success("Plan duplicated.");
+    } catch {
+      toast.error("Couldn't duplicate the plan. Please try again.");
+    }
   };
 
   return (

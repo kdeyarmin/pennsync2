@@ -70,10 +70,14 @@ export default function DataQualityDashboard() {
       ? ((visits.length - visitIssues.length) / visits.length * 100).toFixed(1)
       : 100;
 
-    // Credential tracking
-    const missingCredentials = users.length - credentials.length;
+    // Credential tracking. PersonnelCredential is 1-to-many per user (multiple
+    // credential types / renewals), so the row count is not the number of users
+    // covered — counting unique user_ids prevents >100% coverage and a negative
+    // "missing" figure.
+    const coveredUsers = new Set(credentials.map(c => c.user_id).filter(Boolean)).size;
+    const missingCredentials = Math.max(0, users.length - coveredUsers);
     const credentialCoverage = users.length > 0
-      ? ((credentials.length / users.length) * 100).toFixed(1)
+      ? ((coveredUsers / users.length) * 100).toFixed(1)
       : 0;
 
     return {

@@ -202,12 +202,12 @@ Return JSON:
         prompt: `You are a clinical documentation expert evaluating a nurse's response to a simulated scenario.
 
 SCENARIO:
-${moduleContent.scenario.title}
-${moduleContent.scenario.patient_context}
-Challenge: ${moduleContent.scenario.challenge}
+${moduleContent?.scenario?.title || ''}
+${moduleContent?.scenario?.patient_context || ''}
+Challenge: ${moduleContent?.scenario?.challenge || ''}
 
 IDEAL RESPONSE SHOULD INCLUDE:
-${moduleContent.scenario.ideal_response_elements.join('\n')}
+${(moduleContent?.scenario?.ideal_response_elements || []).join('\n')}
 
 NURSE'S RESPONSE:
 ${scenarioResponse}
@@ -428,7 +428,7 @@ Return JSON:
                         value={quizAnswers[idx]?.toString()}
                         onValueChange={(value) => setQuizAnswers(prev => ({...prev, [idx]: parseInt(value)}))}
                       >
-                        {q.options.map((option, optIdx) => (
+                        {(q.options || []).map((option, optIdx) => (
                           <div key={optIdx} className="flex items-center space-x-2">
                             <RadioGroupItem value={optIdx.toString()} id={`q${idx}-opt${optIdx}`} />
                             <Label htmlFor={`q${idx}-opt${optIdx}`} className="cursor-pointer">{option}</Label>
@@ -467,7 +467,7 @@ Return JSON:
                           <p className="font-medium">{r.question}</p>
                           {!r.isCorrect && (
                             <p className="text-sm text-red-700 mt-1">
-                              Correct answer: {moduleContent.quiz.questions[idx].options[r.correctAnswer]}
+                              Correct answer: {moduleContent?.quiz?.questions?.[idx]?.options?.[r.correctAnswer] ?? 'N/A'}
                             </p>
                           )}
                           <p className="text-sm text-slate-600 mt-2">{r.explanation}</p>

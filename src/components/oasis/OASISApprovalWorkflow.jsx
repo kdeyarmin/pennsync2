@@ -67,6 +67,9 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
       setSelectedItem(null);
       setApprovalNotes("");
     },
+    onError: (error) => {
+      toast.error(`Couldn't record the review: ${error?.message || 'please try again.'}`);
+    },
   });
 
   const handleApprove = (item) => {

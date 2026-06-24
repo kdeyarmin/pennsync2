@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -139,7 +140,23 @@ Make it realistic, educational, and clinically accurate.`,
         }
       });
 
-      setSimulation(result);
+      // The LLM schema doesn't *require* patient_profile/steps, so a partial
+      // response could otherwise crash the simulation UI on first render.
+      // Validate the essentials and normalize the optional arrays up front.
+      const steps = Array.isArray(result?.steps) ? result.steps : [];
+      if (!result?.patient_profile || steps.length === 0) {
+        toast.error("The simulation couldn't be generated. Please try again.");
+        setIsGenerating(false);
+        return;
+      }
+      setSimulation({
+        ...result,
+        patient_profile: result.patient_profile || {},
+        steps: steps.map((s) => ({
+          ...s,
+          ideal_response_elements: Array.isArray(s?.ideal_response_elements) ? s.ideal_response_elements : [],
+        })),
+      });
       setCurrentStep(0);
       setUserResponses([]);
       setFeedback(null);
@@ -147,6 +164,7 @@ Make it realistic, educational, and clinically accurate.`,
       setFinalScore(null);
     } catch (error) {
       console.error("Error generating simulation:", error);
+      toast.error("The simulation couldn't be generated. Please try again.");
     }
     setIsGenerating(false);
   };

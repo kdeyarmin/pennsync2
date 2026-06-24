@@ -80,7 +80,6 @@ export default function DuplicatePatients() {
     if (isLoading || visitsLoading) return;
     if (patients.length === 0) return;
     runScan(patients, allVisits);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, visitsLoading, patients, allVisits]);
 
   const rescan = () => runScan(patients, allVisits);

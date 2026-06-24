@@ -52,8 +52,6 @@ import CareScopeSelector from "../components/profile/CareScopeSelector";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
 import DutyStatusCard from "../components/voice/DutyStatusCard";
 
-const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
-
 export default function UserSettings() {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);

@@ -260,10 +260,14 @@ export default function PatientEducationPanel({ patientId }) {
                         Print/Save
                       </Button>
                       <Button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          navigator.clipboard.writeText(`${material.title}\n\n${material.content}`);
-                          toast.success('Content copied to clipboard!');
+                          try {
+                            await navigator.clipboard.writeText(`${material.title}\n\n${material.content}`);
+                            toast.success('Content copied to clipboard!');
+                          } catch {
+                            toast.error("Couldn't copy — copy the content manually.");
+                          }
                         }}
                         variant="outline"
                         size="sm"

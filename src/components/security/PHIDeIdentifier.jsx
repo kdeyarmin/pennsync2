@@ -102,9 +102,13 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
     toast.success(`${replacements.length} item(s) masked — review output before sharing`);
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard');
+    } catch {
+      toast.error("Couldn't copy to the clipboard — copy the text manually.");
+    }
   };
 
   return (

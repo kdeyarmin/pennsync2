@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,9 @@ export default function SkillsTracker({ nurseEmail }) {
       queryClient.invalidateQueries({ queryKey: ['nurseSkills'] });
       setShowAddDialog(false);
       resetForm();
+    },
+    onError: () => {
+      toast.error("Couldn't add the skill. Please try again.");
     }
   });
 
@@ -64,12 +68,18 @@ export default function SkillsTracker({ nurseEmail }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nurseSkills'] });
       setEditingSkill(null);
+    },
+    onError: () => {
+      toast.error("Couldn't update the skill. Please try again.");
     }
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.NurseSkill.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nurseSkills'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nurseSkills'] }),
+    onError: () => {
+      toast.error("Couldn't delete the skill. Please try again.");
+    }
   });
 
   const resetForm = () => {

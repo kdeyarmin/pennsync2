@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles, Loader2, AlertCircle, Video } from "lucide-react";
 import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { base44 } from "@/api/base44Client";
@@ -128,62 +129,87 @@ export default function AIComplianceInServicesHub() {
   };
 
   const savePromptAsTemplate = async () => {
-    await base44.entities.TrainingTemplate.create({
-      name: generator.topic || 'Custom template',
-      description: generator.purpose_of_training,
-      training_category: generator.training_category,
-      business_line: generator.business_line,
-      prompt_json: generator,
-      active: true
-    });
-    queryClient.invalidateQueries({ queryKey: ["training-templates"] });
+    try {
+      await base44.entities.TrainingTemplate.create({
+        name: generator.topic || 'Custom template',
+        description: generator.purpose_of_training,
+        training_category: generator.training_category,
+        business_line: generator.business_line,
+        prompt_json: generator,
+        active: true
+      });
+      queryClient.invalidateQueries({ queryKey: ["training-templates"] });
+      toast.success("Template saved.");
+    } catch {
+      toast.error("Couldn't save the template. Please try again.");
+    }
   };
 
   const createManualDraft = async () => {
-    const created = await base44.entities.TrainingCourse.create({
-      ...manualDraft,
-      training_type: 'in_service',
-      status: 'draft',
-      employee_audience: 'employee',
-      learning_objectives: [],
-      ai_generated: false,
-      requires_attestation: true,
-      enable_certificate: true,
-      short_description: manualDraft.description,
-      test_settings_json: { show_correct_answers_after_completion: false }
-    });
-    await createAuditLog('course_created', created.id, { title: created.title, status: 'draft' }, 'created');
-    setManualDraft({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
-    queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+    try {
+      const created = await base44.entities.TrainingCourse.create({
+        ...manualDraft,
+        training_type: 'in_service',
+        status: 'draft',
+        employee_audience: 'employee',
+        learning_objectives: [],
+        ai_generated: false,
+        requires_attestation: true,
+        enable_certificate: true,
+        short_description: manualDraft.description,
+        test_settings_json: { show_correct_answers_after_completion: false }
+      });
+      await createAuditLog('course_created', created.id, { title: created.title, status: 'draft' }, 'created');
+      setManualDraft({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
+      queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+      toast.success("Draft course created.");
+    } catch {
+      toast.error("Couldn't create the draft course. Please try again.");
+    }
   };
 
   const confirmAssignment = async () => {
     if (!pendingAssignmentPayload) return;
-    await assignInService({
-      courseId: selectedCourseId,
-      dueDate,
-      userEmails: pendingAssignmentPayload.userEmails,
-      filters: pendingAssignmentPayload.filters,
-      settings: assignmentSettings
-    });
-    setPendingAssignmentPayload(null);
-    queryClient.invalidateQueries({ queryKey: ["in-service-assignments"] });
+    try {
+      await assignInService({
+        courseId: selectedCourseId,
+        dueDate,
+        userEmails: pendingAssignmentPayload.userEmails,
+        filters: pendingAssignmentPayload.filters,
+        settings: assignmentSettings
+      });
+      setPendingAssignmentPayload(null);
+      queryClient.invalidateQueries({ queryKey: ["in-service-assignments"] });
+      toast.success("In-service assigned.");
+    } catch {
+      toast.error("Couldn't assign the in-service. Please try again.");
+    }
   };
 
   const updateCourseStatus = async (course, status) => {
-    await base44.entities.TrainingCourse.update(course.id, {
-      status,
-      published_by: status === 'published' ? currentUser?.email : course.published_by,
-      published_date: status === 'published' ? new Date().toISOString() : course.published_date,
-      archived_status: status === 'archived'
-    });
-    await createAuditLog(status === 'published' ? 'course_published' : 'course_archived', course.id, { status }, status === 'published' ? 'published' : 'archived');
-    queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+    try {
+      await base44.entities.TrainingCourse.update(course.id, {
+        status,
+        published_by: status === 'published' ? currentUser?.email : course.published_by,
+        published_date: status === 'published' ? new Date().toISOString() : course.published_date,
+        archived_status: status === 'archived'
+      });
+      await createAuditLog(status === 'published' ? 'course_published' : 'course_archived', course.id, { status }, status === 'published' ? 'published' : 'archived');
+      queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+      toast.success(status === 'published' ? "Course published." : "Course archived.");
+    } catch {
+      toast.error("Couldn't update the course status. Please try again.");
+    }
   };
 
   const duplicateCourse = async (courseId) => {
-    await duplicateInService({ courseId });
-    queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+    try {
+      await duplicateInService({ courseId });
+      queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+      toast.success("Course duplicated.");
+    } catch {
+      toast.error("Couldn't duplicate the course. Please try again.");
+    }
   };
 
   return (

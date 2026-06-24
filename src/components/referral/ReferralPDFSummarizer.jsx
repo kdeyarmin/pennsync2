@@ -1273,8 +1273,7 @@ export default function ReferralPDFSummarizer({
           <AIAdmissionNoteGenerator
             referralData={extractedData}
             autoGenerate={true}
-            onNoteGenerated={(noteData) => {
-            }}
+            onNoteGenerated={() => {}}
           />
 
           {/* AI OASIS Assistant */}
@@ -1306,8 +1305,7 @@ export default function ReferralPDFSummarizer({
             oasisData={oasisResults || extractedData.oasis_assessment}
             patientId={patientId}
             autoGenerate={true}
-            onCarePlansGenerated={(plans, summary) => {
-            }}
+            onCarePlansGenerated={() => {}}
           />
 
           {/* Admission Packet Customizer */}

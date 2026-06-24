@@ -38,7 +38,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
     const completed = completions.filter(c => c.status === 'completed').length;
     const inProgress = completions.filter(c => c.status === 'in_progress').length;
     const assigned = completions.filter(c => c.status === 'assigned').length;
-    const avgScore = completions.filter(c => c.score).reduce((sum, c) => sum + c.score, 0) / (completions.filter(c => c.score).length || 1);
+    const avgScore = completions.filter(c => c.score != null).reduce((sum, c) => sum + c.score, 0) / (completions.filter(c => c.score != null).length || 1);
     const totalTime = completions.reduce((sum, c) => {
       const module = modules.find(m => m.id === c.training_module_id);
       return sum + (module?.duration_minutes || 0);

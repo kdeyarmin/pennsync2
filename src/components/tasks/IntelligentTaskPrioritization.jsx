@@ -22,6 +22,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function IntelligentTaskPrioritization({ 
   nurseEmail,
@@ -49,9 +50,19 @@ export default function IntelligentTaskPrioritization({
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Task.update(id, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['nurseTasks'] });
+      // Only drop the task from the local prioritized list once the server
+      // confirms — otherwise a failed update made it look completed.
+      setPrioritizedTasks((prev) =>
+        prev
+          ? { ...prev, prioritized_tasks: (prev.prioritized_tasks || []).filter((t) => t.task_id !== variables.id) }
+          : prev
+      );
       onTaskCompleted && onTaskCompleted();
+    },
+    onError: () => {
+      toast.error('Could not complete the task. Please try again.');
     }
   });
 
@@ -176,14 +187,6 @@ Return JSON:
       id: taskId,
       data: { status: 'completed', completion_notes: 'Completed via Smart Task Manager' }
     });
-    
-    // Update local state
-    if (prioritizedTasks) {
-      setPrioritizedTasks({
-        ...prioritizedTasks,
-        prioritized_tasks: prioritizedTasks.prioritized_tasks.filter(t => t.task_id !== taskId)
-      });
-    }
   };
 
   const getPriorityColor = (level) => {

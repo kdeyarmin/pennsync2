@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,9 +156,15 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
       };
     });
 
-    await createTasksMutation.mutateAsync(tasksToCreate);
-    setSuggestedActions([]);
-    setSelectedActions([]);
+    try {
+      await createTasksMutation.mutateAsync(tasksToCreate);
+      setSuggestedActions([]);
+      setSelectedActions([]);
+      toast.success(`Created ${tasksToCreate.length} task${tasksToCreate.length === 1 ? '' : 's'}.`);
+    } catch (err) {
+      console.error('Failed to create tasks:', err);
+      toast.error('Failed to create tasks. Please try again.');
+    }
   };
 
   const getPriorityColor = (priority) => {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,9 @@ export default function OASISAutomationSettings() {
       resetForm();
       setIsDialogOpen(false);
     },
+    onError: () => {
+      toast.error("Couldn't save the rule. Please try again.");
+    },
   });
 
   // Delete rule
@@ -81,6 +85,9 @@ export default function OASISAutomationSettings() {
     mutationFn: (id) => base44.entities.OASISAutomationRule.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['automationRules'] });
+    },
+    onError: () => {
+      toast.error("Couldn't delete the rule. Please try again.");
     },
   });
 
@@ -90,6 +97,9 @@ export default function OASISAutomationSettings() {
       base44.entities.OASISAutomationRule.update(id, { is_active }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['automationRules'] });
+    },
+    onError: () => {
+      toast.error("Couldn't update the rule. Please try again.");
     },
   });
 

@@ -24,6 +24,17 @@ export function computeAge(dob, now = new Date()) {
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(dob).trim());
   if (iso) {
     year = Number(iso[1]); month = Number(iso[2]); day = Number(iso[3]);
+    // Validate the components so a malformed-but-ISO-shaped value (e.g.
+    // "2020-99-99" from a bad OCR extract) is treated as Unknown rather than
+    // silently producing a real-looking age band. Round-trip through a UTC date.
+    const probe = new Date(Date.UTC(year, month - 1, day));
+    if (
+      probe.getUTCFullYear() !== year ||
+      probe.getUTCMonth() !== month - 1 ||
+      probe.getUTCDate() !== day
+    ) {
+      return NaN;
+    }
   } else {
     const d = new Date(dob);
     if (Number.isNaN(d.getTime())) return NaN;

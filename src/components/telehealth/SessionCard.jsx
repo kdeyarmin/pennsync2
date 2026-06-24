@@ -22,10 +22,13 @@ const visitLabels = {
 };
 
 export default function SessionCard({ session, onJoin, onCancel, onTextPatient }) {
-  const copyLink = () => {
-    if (session.invite_link) {
-      navigator.clipboard.writeText(session.invite_link);
+  const copyLink = async () => {
+    if (!session.invite_link) return;
+    try {
+      await navigator.clipboard.writeText(session.invite_link);
       toast.success("Invite link copied!");
+    } catch {
+      toast.error("Couldn't copy the link — copy it manually.");
     }
   };
 

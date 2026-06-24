@@ -89,7 +89,10 @@ export default function CarePlanManagement() {
     initialData: [],
   });
 
-  const myPatientIds = [...new Set(myVisits.map(v => v.patient_id))];
+  const myPatientIds = useMemo(
+    () => [...new Set(myVisits.map(v => v.patient_id))],
+    [myVisits]
+  );
 
   // Fetch all care plans
   const { data: carePlans = [], isLoading } = useQuery({

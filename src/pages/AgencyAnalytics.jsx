@@ -150,10 +150,10 @@ export default function AgencyAnalytics() {
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-sm text-slate-600">AI Enhancement Rate</span>
-                        <span className="text-sm font-semibold">{overallStats.visits.total > 0 ? Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100) : 0}%</span>
+                        <span className="text-sm font-semibold">{overallStats.visits.total > 0 ? Math.min(100, Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100)) : 0}%</span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
-                        <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${overallStats.visits.total > 0 ? Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100) : 0}%` }}></div>
+                        <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${overallStats.visits.total > 0 ? Math.min(100, Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100)) : 0}%` }}></div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 pt-4 border-t">
