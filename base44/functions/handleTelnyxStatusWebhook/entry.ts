@@ -264,7 +264,9 @@ const DEFAULT_URGENT_KEYWORDS = [
 ];
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function detectUrgency(text, extra = []) {
-  const s = String(text || '');
+  // Normalize curly apostrophes to straight so a smart-quote "can't breathe"
+  // (common from phone keyboards/autocorrect) still escalates.
+  const s = String(text || '').replace(/[‘’]/g, "'");
   if (!s.trim()) return { urgent: false, matches: [] };
   const extras = (Array.isArray(extra) ? extra : []).map((k) => String(k || '').toLowerCase().trim()).filter(Boolean);
   const all = [...new Set([...DEFAULT_URGENT_KEYWORDS, ...extras])];

@@ -27,7 +27,11 @@ function escapeRegExp(s) {
  * settings) are merged with the defaults.
  */
 export function detectUrgency(text, extraKeywords = []) {
-  const s = String(text || "");
+  // Normalize curly apostrophes (U+2018/U+2019) to straight: phone keyboards and
+  // autocorrect insert them, so "can't breathe" with a smart quote would
+  // otherwise match neither "can't breathe" nor "cant breathe" and a
+  // life-critical message would not escalate.
+  const s = String(text || "").replace(/[‘’]/g, "'");
   if (!s.trim()) return { urgent: false, matches: [] };
   const extras = (Array.isArray(extraKeywords) ? extraKeywords : [])
     .map((k) => String(k || "").toLowerCase().trim())

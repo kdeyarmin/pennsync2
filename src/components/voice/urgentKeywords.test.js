@@ -51,3 +51,11 @@ test("the default keyword list is non-empty and lowercase", () => {
   assert.ok(DEFAULT_URGENT_KEYWORDS.length > 5);
   for (const k of DEFAULT_URGENT_KEYWORDS) assert.equal(k, k.toLowerCase());
 });
+
+test("detectUrgency escalates 'can't breathe' written with a curly apostrophe", () => {
+  // Regression: phone keyboards insert U+2019; previously this matched neither
+  // "can't breathe" nor "cant breathe", so the life-critical text was dropped.
+  assert.equal(detectUrgency("I can’t breathe").urgent, true);
+  assert.equal(detectUrgency("I can't breathe").urgent, true);
+  assert.equal(detectUrgency("I can‘t breathe").urgent, true);
+});

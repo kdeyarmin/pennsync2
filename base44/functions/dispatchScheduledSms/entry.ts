@@ -172,11 +172,12 @@ const AREA_CODE_TIMEZONE = {
   779: "America/Chicago", 785: "America/Chicago", 815: "America/Chicago", 816: "America/Chicago",
   817: "America/Chicago", 830: "America/Chicago", 832: "America/Chicago", 847: "America/Chicago",
   870: "America/Chicago", 872: "America/Chicago", 901: "America/Chicago", 903: "America/Chicago",
-  913: "America/Chicago", 915: "America/Chicago", 918: "America/Chicago", 920: "America/Chicago",
+  913: "America/Chicago", 918: "America/Chicago", 920: "America/Chicago",
   936: "America/Chicago", 940: "America/Chicago", 952: "America/Chicago",
   956: "America/Chicago", 972: "America/Chicago", 979: "America/Chicago",
   // Mountain
   208: "America/Denver", 303: "America/Denver", 307: "America/Denver", 385: "America/Denver",
+  915: "America/Denver", // El Paso, TX — Mountain time, not Central
   406: "America/Denver", 435: "America/Denver", 505: "America/Denver", 575: "America/Denver",
   719: "America/Denver", 720: "America/Denver", 801: "America/Denver", 970: "America/Denver",
   // Arizona (no DST)

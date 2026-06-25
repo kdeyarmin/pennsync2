@@ -21,6 +21,18 @@ test("extractVitals parses BP, HR, and O2", () => {
   assert.equal(v.o2, 95);
 });
 
+test("extractVitals reads O2 saturation with the filler words nurses actually write", () => {
+  // Regression: only the bare "O2 85%" form matched, so the severe-hypoxia
+  // escalation was silently missed for "O2 sat 85%", "SpO2 of 86%", etc.
+  assert.equal(extractVitals("O2 sat 85% on room air").o2, 85);
+  assert.equal(extractVitals("O2 saturation 84%").o2, 84);
+  assert.equal(extractVitals("SpO2 of 86%").o2, 86);
+  assert.equal(extractVitals("O2 sat: 90%").o2, 90);
+  assert.equal(extractVitals("pulse ox 88%").o2, 88);
+  // Must not false-match an oxygen-flow-rate mention with no saturation percent.
+  assert.equal(extractVitals("oxygen therapy at 2 L per minute").o2, undefined);
+});
+
 test("extractNumbersAndMeasurements captures unit-bearing values only", () => {
   const tokens = extractNumbersAndMeasurements("BP 148/90, O2 95%, wound 2x3 cm, gave 500 mg, pain 3/10");
   assert.ok(tokens.includes("148/90"));

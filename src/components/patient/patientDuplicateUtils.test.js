@@ -59,6 +59,14 @@ test('normalizeName strips punctuation and collapses whitespace', () => {
   assert.equal(normalizeName("O'Brien"), 'obrien');
 });
 
+test('normalizeName folds accented letters to ASCII instead of deleting them', () => {
+  // Regression: diacritics were stripped (José -> "jos"), so accented spellings
+  // failed to match their ASCII equivalents in exact/full-name scoring.
+  assert.equal(normalizeName('José'), 'jose');
+  assert.equal(normalizeName('Zoë Brontë'), 'zoe bronte');
+  assert.equal(normalizeName('José'), normalizeName('Jose'));
+});
+
 test('normalizeAddress removes street types and units', () => {
   assert.equal(normalizeAddress('123 Main Street Apt 4'), '123 main');
   assert.equal(normalizeAddress('123 Main St'), '123 main');

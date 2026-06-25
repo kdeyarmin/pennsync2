@@ -78,10 +78,15 @@ export function similarity(str1, str2) {
   return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
 }
 
-/** Normalize a name: lowercase, strip punctuation, collapse whitespace. */
+/** Normalize a name: fold accents, lowercase, strip punctuation, collapse whitespace. */
 export function normalizeName(name) {
   return (
     String(name ?? '')
+      // Fold accented letters to their base ASCII form (José -> jose) BEFORE the
+      // a-z strip; otherwise diacritics are deleted (José -> "jos"), corrupting
+      // exact/full-name match scoring for accented names.
+      .normalize('NFKD')
+      .replace(/[̀-ͯ]/g, '')
       .toLowerCase()
       .trim()
       .replace(/[^a-z\s]/g, '')

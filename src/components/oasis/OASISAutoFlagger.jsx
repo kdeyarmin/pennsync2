@@ -29,7 +29,10 @@ async function autoFlagOASIS(oasisUpload, analysisResults) {
   } else if (analysisResults.compliance_score < 70) {
     flagReason = 'low_compliance';
     priority = 'high';
-  } else if (analysisResults.specific_rescore_opportunities?.length > 3) {
+  } else if (analysisResults.specific_rescore_opportunities?.length > 2) {
+    // Must match the shouldFlag trigger above (> 2). Previously > 3, so a record
+    // flagged solely for having exactly 3 rescore opportunities fell through to
+    // the default low_accuracy/medium labels instead of revenue_opportunity/high.
     flagReason = 'revenue_opportunity';
     priority = 'high';
   } else if (analysisResults.audit_risk_areas?.some(r => r.risk_level === 'high')) {
