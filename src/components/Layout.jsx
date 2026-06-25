@@ -120,7 +120,11 @@ export default function Layout({ children, currentPageName }) {
   });
 
   const { data: allActiveAlerts = [] } = useQuery({
-    queryKey: ['active-alerts', currentUser?.email],
+    // `chartedVisits` must be part of the key: the queryFn filters alerts against
+    // it, so when the nurse charts a new patient the cache must re-key and refetch
+    // (otherwise the new patient's alert stays hidden for the whole stale window).
+    // Mirrors NotificationCenter's ['active-alerts-nc', email, chartedVisits] key.
+    queryKey: ['active-alerts', currentUser?.email, chartedVisits],
     queryFn: async () => {
       const alerts = await base44.entities.PatientAlert.filter({ status: 'active' }, '-created_date', 50);
       // Filter to only alerts for patients this clinician has charted on
