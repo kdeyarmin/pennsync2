@@ -88,6 +88,24 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
       return;
     }
 
+    // Validate numeric vitals against absolute sanity bounds before queuing — the
+    // offline sync worker writes visitData verbatim to the Visit record, so an
+    // impossible/typo value (e.g. weight -150, O2 9000) would corrupt the chart.
+    const VITAL_BOUNDS = {
+      blood_pressure_systolic: [40, 300], blood_pressure_diastolic: [20, 200],
+      heart_rate: [10, 300], respiratory_rate: [3, 80], temperature: [80, 115],
+      oxygen_saturation: [50, 100], pain_level: [0, 10], weight: [1, 1500],
+    };
+    for (const [field, [min, max]] of Object.entries(VITAL_BOUNDS)) {
+      const raw = visitData.vitals?.[field];
+      if (raw === undefined || raw === null || raw === '') continue;
+      const n = parseFloat(raw);
+      if (!Number.isFinite(n) || n < min || n > max) {
+        toast.error(`${field.replace(/_/g, ' ')} must be between ${min} and ${max}`);
+        return;
+      }
+    }
+
     try {
       // Save to offline queue
       const _savedId = OfflineStorageManager.saveToQueue('visit', {

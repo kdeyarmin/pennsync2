@@ -15,6 +15,7 @@ import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 import { logActivity, ActivityActions } from "../utils/activityLogger";
 import { todayEastern } from "../utils/timezone";
 import { toast } from "sonner";
+import { validateFileUpload } from "@/components/utils/security";
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },
@@ -159,10 +160,17 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setUploadedAudio(file);
-      processAudioMutation.mutate(file);
-    }
+    if (!file) return;
+    // The accept="audio/*" attribute is only a UI hint (trivially bypassed by
+    // renaming a file); validate type + size before uploading.
+    const check = validateFileUpload(file, {
+      maxSize: 100 * 1024 * 1024,
+      allowedTypes: ['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'],
+      allowedExtensions: ['.webm', '.wav', '.mp3', '.mpeg', '.m4a', '.mp4', '.ogg'],
+    });
+    if (!check.valid) { toast.error(check.error); return; }
+    setUploadedAudio(file);
+    processAudioMutation.mutate(file);
   };
 
   const handleSave = async (api) => {

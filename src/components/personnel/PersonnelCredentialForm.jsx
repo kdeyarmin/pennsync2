@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { toast } from 'sonner';
+import { validateFileUpload } from '@/components/utils/security';
 
 // Common personnel file items. Picking a preset fills in the type + title so
 // staff don't have to figure out the right wording. Auto insurance and car
@@ -151,7 +152,19 @@ export default function PersonnelCredentialForm({ currentUser, existingItem, onD
 
       <div>
         <Label>Upload current document</Label>
-        <Input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+        <Input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => {
+          const f = e.target.files?.[0] || null;
+          if (f) {
+            // accept="" is only a UI hint; validate type + size before accepting.
+            const check = validateFileUpload(f, {
+              maxSize: 15 * 1024 * 1024,
+              allowedTypes: ['application/pdf', 'image/png', 'image/jpeg'],
+              allowedExtensions: ['.pdf', '.png', '.jpg', '.jpeg'],
+            });
+            if (!check.valid) { toast.error(check.error); e.target.value = ''; setFile(null); return; }
+          }
+          setFile(f);
+        }} />
         <p className="text-xs text-slate-500 mt-1">Uploading a copy does not replace the expiration date above.</p>
       </div>
 

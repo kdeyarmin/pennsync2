@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Heart, Thermometer, Wind, TrendingDown, TrendingUp, Clock } from "lucide-react";
+import { toast } from "sonner";
 
 const VITAL_THRESHOLDS = {
   heart_rate: { min: 60, max: 100, unit: "bpm" },
@@ -15,6 +16,28 @@ const VITAL_THRESHOLDS = {
   respiratory_rate: { min: 12, max: 20, unit: "breaths/min" },
   oxygen_saturation: { min: 95, max: 100, unit: "%" },
 };
+
+// Absolute physiological sanity bounds (much wider than the "normal" thresholds
+// above, which are only used for red/green coloring). Values outside these are
+// impossible/typos — reject them so a fat-fingered "9000" or "-50" isn't persisted
+// to the chart verbatim.
+const VITAL_SANITY_BOUNDS = {
+  heart_rate: { min: 10, max: 300 },
+  blood_pressure_systolic: { min: 40, max: 300 },
+  blood_pressure_diastolic: { min: 20, max: 200 },
+  temperature: { min: 80, max: 115 },
+  respiratory_rate: { min: 3, max: 80 },
+  oxygen_saturation: { min: 50, max: 100 },
+};
+
+function vitalSanityError(field, value) {
+  const b = VITAL_SANITY_BOUNDS[field];
+  if (!b) return null;
+  if (!Number.isFinite(value) || value < b.min || value > b.max) {
+    return `${field.replace(/_/g, ' ')} must be between ${b.min} and ${b.max}`;
+  }
+  return null;
+}
 
 const VITAL_ICONS = {
   heart_rate: Heart,
@@ -76,6 +99,10 @@ export default function RealtimeVitalMonitor({ _sessionId, patientId }) {
   const handleRecordVital = async (field) => {
     if (manualInput[field] === null) return;
 
+    // Reject physiologically impossible values rather than storing them verbatim.
+    const err = vitalSanityError(field, manualInput[field]);
+    if (err) { toast.error(err); return; }
+
     const vitalData = {
       patient_id: patientId,
       [field]: manualInput[field],
@@ -83,6 +110,8 @@ export default function RealtimeVitalMonitor({ _sessionId, patientId }) {
     };
 
     if (field === 'blood_pressure_systolic' && manualInput['blood_pressure_diastolic']) {
+      const dErr = vitalSanityError('blood_pressure_diastolic', manualInput['blood_pressure_diastolic']);
+      if (dErr) { toast.error(dErr); return; }
       vitalData.blood_pressure_diastolic = manualInput['blood_pressure_diastolic'];
     }
 

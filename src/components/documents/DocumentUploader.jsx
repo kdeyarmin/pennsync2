@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Loader2, FileText, AlertCircle, Brain } from "lucide-react";
 import { toast } from "sonner";
+import { validateFileUpload } from "@/components/utils/security";
 import { analyzeDocument } from "@/functions/analyzeDocument";
 
 const CATEGORIES = [
@@ -128,7 +129,19 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
       toast.error("Please select a category");
       return;
     }
-    
+    // The file input has no `accept`, so guard type + size before uploading.
+    const check = validateFileUpload(file, {
+      maxSize: 50 * 1024 * 1024,
+      allowedTypes: [
+        'application/pdf', 'image/png', 'image/jpeg',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+      ],
+      allowedExtensions: ['.pdf', '.png', '.jpg', '.jpeg', '.doc', '.docx', '.txt'],
+    });
+    if (!check.valid) { toast.error(check.error); return; }
+
     uploadMutation.mutate({
       file,
       ...formData,
