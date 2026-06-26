@@ -83,16 +83,22 @@ export default function ScenarioBuilder({ courseId, onSave }) {
 
   const deleteNode = (nodeId) => {
     if (nodeId === 'node-start' || nodeId === 'node-end') return;
-    const updated = { ...nodes };
-    delete updated[nodeId];
-    setNodes(updated);
-    // Remove references from other nodes
-    Object.values(updated).forEach(node => {
-      node.choices?.forEach(choice => {
-        if (choice.nextNodeId === nodeId) {
-          choice.nextNodeId = null;
-        }
-      });
+    // Rebuild immutably in a single update: drop the node AND clear any choice
+    // that pointed at it. The old code shallow-copied then mutated the shared
+    // node/choice objects in place (and after setNodes), so the dangling-link
+    // cleanup never re-rendered.
+    setNodes(prev => {
+      const next = {};
+      for (const [id, node] of Object.entries(prev)) {
+        if (id === nodeId) continue;
+        next[id] = {
+          ...node,
+          choices: (node.choices || []).map(choice =>
+            choice.nextNodeId === nodeId ? { ...choice, nextNodeId: null } : choice
+          ),
+        };
+      }
+      return next;
     });
     setSelectedNodeId('node-start');
   };
@@ -101,7 +107,11 @@ export default function ScenarioBuilder({ courseId, onSave }) {
     const finalScenario = {
       ...scenario,
       courseId,
-      scenarioFlow: nodes['node-start']
+      // Persist the FULL node map, not just the start node. Previously only
+      // nodes['node-start'] was saved, so every branch authored via addBranch was
+      // silently discarded and the player's choices pointed at missing nodes.
+      scenarioFlow: { startNodeId: 'node-start', nodes },
+      totalNodes: Object.keys(nodes).length,
     };
     onSave(finalScenario);
   };

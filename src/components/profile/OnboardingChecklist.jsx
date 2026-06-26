@@ -28,12 +28,11 @@ export default function OnboardingChecklist({ user, credentials = [] }) {
         link: '/PersonnelFile',
         action: 'Upload Insurance'
       },
-      {
-        label: 'Complete Onboarding Training',
-        completed: false, // Check TrainingAssignment later
-        link: '/MyTraining',
-        action: 'Start Training'
-      }
+      // NOTE: an "Onboarding Training" step was here hardcoded completed:false, so
+      // a fully-onboarded user maxed out at 3/4 (75%) and the card — which dismisses
+      // only when completedCount === steps.length — never went away. Removed until
+      // training completion can actually be queried (TrainingAssignment), so the
+      // checklist reflects only steps it can really measure and can reach 100%.
     ];
   }, [user, credentials]);
 

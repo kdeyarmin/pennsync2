@@ -14,45 +14,20 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
   const [scenarioComplete, setScenarioComplete] = useState(false);
   const [score, setScore] = useState(null);
   const [passed, setPassed] = useState(null);
+  const [resultCounts, setResultCounts] = useState({ correct: 0, total: 0 });
   const [startTime] = useState(new Date());
 
-  const nodes = scenario.scenarioFlow;
-  const currentNode = findNode(scenario.scenarioFlow, currentNodeId);
-
-  function findNode(flow, nodeId) {
-    if (!flow) return null;
-    if (flow.id === nodeId) return flow;
-    for (const choice of flow.choices || []) {
-      const found = findNode(nodes[choice.nextNodeId], nodeId);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  // Reconstruct flat node map from tree
-  function _flattenNodes(node, map = {}) {
-    if (!node) return map;
-    map[node.id] = node;
-    (node.choices || []).forEach(choice => {
-      if (choice.nextNodeId) {
-        const next = findNodeById(nodes, choice.nextNodeId);
-        if (next) _flattenNodes(next, map);
-      }
-    });
-    return map;
-  }
-
-  function findNodeById(node, nodeId) {
-    if (!node) return null;
-    if (node.id === nodeId) return node;
-    for (const choice of node.choices || []) {
-      if (choice.nextNodeId) {
-        const found = findNodeById(scenario.scenarioFlow, choice.nextNodeId);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
+  // Resolve the node map. New scenarios store { startNodeId, nodes }; legacy ones
+  // stored the start node object directly (before branches were persisted). Either
+  // way, look nodes up by id from a flat map — the old tree-recursion indexed the
+  // start node as if it were the map, so it never found anything past node 1.
+  const flow = scenario.scenarioFlow;
+  const nodeMap = flow?.nodes
+    ? flow.nodes
+    : (flow?.id ? { [flow.id]: flow } : {});
+  const currentNode = nodeMap[currentNodeId] || null;
+  // Terminal when we've reached the end sentinel or a node with no choices.
+  const isTerminal = currentNodeId === 'node-end' || !currentNode || !(currentNode.choices?.length);
 
   const handleChoice = (choiceIndex) => {
     const choice = currentNode.choices[choiceIndex];
@@ -81,12 +56,19 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
   };
 
   const handleFinishScenario = async () => {
-    const correctDecisions = decisions.filter(d => d.isCorrect).length;
-    const scorePercentage = decisions.length > 0 ? Math.round((correctDecisions / decisions.length) * 100) : 0;
+    // Score by distinct decision POINT, keeping each node's FINAL answer — a wrong
+    // attempt doesn't advance the node, so dividing correct-by-total-clicks (the
+    // old formula) failed a user who picked wrong then right on the same step.
+    const finalByNode = new Map();
+    for (const d of decisions) finalByNode.set(d.nodeId, d);
+    const distinct = [...finalByNode.values()];
+    const correctDecisions = distinct.filter(d => d.isCorrect).length;
+    const scorePercentage = distinct.length > 0 ? Math.round((correctDecisions / distinct.length) * 100) : 0;
     const hasPassed = scorePercentage >= scenario.passingScore;
 
     setScore(scorePercentage);
     setPassed(hasPassed);
+    setResultCounts({ correct: correctDecisions, total: distinct.length });
     setScenarioComplete(true);
 
     // Save attempt
@@ -102,7 +84,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
         completed_at: endTime.toISOString(),
         decisions_made_json: decisions,
         correct_decisions: correctDecisions,
-        total_decisions: decisions.length,
+        total_decisions: distinct.length,
         score_percentage: scorePercentage,
         passed: hasPassed,
         time_spent_minutes: timeSpentMinutes
@@ -142,7 +124,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
           </div>
 
           <p className="text-slate-600 mb-6">
-            Correct decisions: {decisions.filter(d => d.isCorrect).length} / {decisions.length}
+            Correct decisions: {resultCounts.correct} / {resultCounts.total}
           </p>
 
           <Button onClick={() => {
@@ -187,9 +169,13 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
           <CardTitle>{scenario.title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Scenario Text */}
+          {/* Scenario Text (or an end-of-scenario prompt at the terminal node) */}
           <div className="p-4 bg-slate-50 rounded-lg">
-            <p className="text-slate-900 whitespace-pre-wrap">{currentNode?.text}</p>
+            <p className="text-slate-900 whitespace-pre-wrap">
+              {currentNode?.text || (isTerminal
+                ? 'You have reached the end of this scenario. Click "Finish Scenario" to see your results.'
+                : '')}
+            </p>
           </div>
 
           {/* Feedback */}
@@ -231,8 +217,8 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
             </div>
           )}
 
-          {/* Finish Button */}
-          {(currentNodeId === 'node-end' || decisions.length > 0) && !showFeedback && (
+          {/* Finish Button — only at a terminal node, not after any single decision */}
+          {isTerminal && !showFeedback && (
             <Button
               onClick={handleFinishScenario}
               className="w-full bg-green-600 hover:bg-green-700"

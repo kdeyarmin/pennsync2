@@ -46,7 +46,7 @@ export default function PersonnelApprovalsPanel({ items = [], currentUser }) {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                <p className="text-sm text-slate-500">{item.user_name} • {item.item_type} • expires {new Date(item.expiration_date).toLocaleDateString()}</p>
+                <p className="text-sm text-slate-500">{item.user_name} • {item.item_type} • expires {item.expiration_date ? new Date(`${item.expiration_date}T00:00:00`).toLocaleDateString() : '—'}</p>
                 {item.uploaded_file_url && <a href={item.uploaded_file_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">Open uploaded copy</a>}
               </div>
               <PersonnelStatusBadge status={item.status} />
