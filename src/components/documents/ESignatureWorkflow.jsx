@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { sendInAppNotification } from "@/lib/notify";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -128,14 +129,13 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
 
       // Send signing requests to signers
       for (let signer of signers) {
-        await base44.entities.Notification.create({
+        await sendInAppNotification({
           user_email: signer.email,
           title: `Signature Requested: ${normalizedDocumentName}`,
           message: `${patient?.first_name} ${patient?.last_name} requests your signature on the following document: ${normalizedDocumentName}\n\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}`,
           type: "signature_request",
           related_entity: "DocumentSignature",
           related_id: docRecord.id,
-          is_read: false
         });
 
         // Send email notification with deadline

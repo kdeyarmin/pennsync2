@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { sendInAppNotification } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
@@ -18,7 +19,7 @@ export default function PersonnelApprovalsPanel({ items = [], currentUser }) {
         rejection_reason: status === 'rejected' ? reasons[item.id] || '' : '',
       });
 
-      await base44.entities.Notification.create({
+      await sendInAppNotification({
         user_email: item.user_id,
         title: status === 'approved' ? 'Personnel file item approved' : 'Personnel file item needs correction',
         message: status === 'approved'
