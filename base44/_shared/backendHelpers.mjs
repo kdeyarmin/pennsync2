@@ -12,7 +12,32 @@
  * in another). One canonical source + a parity check makes a fix land everywhere.
  */
 
+import { AREA_CODE_TIMEZONE } from '../../src/components/voice/quietHours.js';
+import { DEFAULT_URGENT_KEYWORDS } from '../../src/components/voice/urgentKeywords.js';
+
+// The area-code -> timezone table's single source of truth is the FRONTEND
+// quietHours.js (a 915-was-Central drift bug across the backend copies is exactly
+// why this exists). Generate the inlined backend const from that live object so a
+// fix to the frontend table auto-propagates to every backend SMS function.
+function areaCodeTimezoneSource() {
+  const lines = Object.entries(AREA_CODE_TIMEZONE)
+    .map(([code, tz]) => `  ${code}: ${JSON.stringify(tz)},`)
+    .join('\n');
+  return `const AREA_CODE_TIMEZONE = {\n${lines}\n};`;
+}
+
+// Urgent-keyword list — single source of truth is the frontend urgentKeywords.js
+// (the curly-apostrophe "can't breathe" miss was drift between the two copies).
+function urgentKeywordsSource() {
+  const items = DEFAULT_URGENT_KEYWORDS.map((k) => JSON.stringify(k)).join(', ');
+  return `const DEFAULT_URGENT_KEYWORDS = [${items}];`;
+}
+
 export const SHARED_HELPERS = {
+  // Generated from the frontend table (see above) — do not hand-edit consumers.
+  areaCodeTimezone: areaCodeTimezoneSource(),
+  urgentKeywords: urgentKeywordsSource(),
+
   // SSRF guard used by every function that fetches or hands a user-supplied URL to
   // a provider integration. Keep in step with src/components/utils/security.
   isSafeFetchUrl: `// SSRF guard: only fetch https URLs on public hosts, never internal IPs /

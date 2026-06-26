@@ -256,12 +256,9 @@ function isAgencyOpen(settings, now = new Date()) {
 }
 
 // ---- urgent-keyword detection (mirrors src/components/voice/urgentKeywords.js) ----
-const DEFAULT_URGENT_KEYWORDS = [
-  'emergency', 'urgent', '911', 'chest pain', "can't breathe", 'cant breathe',
-  'trouble breathing', 'short of breath', 'suicidal', 'kill myself', 'overdose',
-  'bleeding', 'fell', 'fall', 'fallen', 'passed out', 'unconscious',
-  'stroke', 'seizure', 'severe pain', 'help me', 'not breathing', 'unresponsive',
-];
+// <<<BEGIN SHARED HELPER: urgentKeywords — generated, edit base44/_shared/backendHelpers.mjs>>>
+const DEFAULT_URGENT_KEYWORDS = ["emergency", "urgent", "911", "chest pain", "can't breathe", "cant breathe", "trouble breathing", "short of breath", "suicidal", "kill myself", "overdose", "bleeding", "fell", "fall", "fallen", "passed out", "unconscious", "stroke", "seizure", "severe pain", "help me", "not breathing", "unresponsive"];
+// <<<END SHARED HELPER: urgentKeywords>>>
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function detectUrgency(text, extra = []) {
   // Normalize curly apostrophes to straight so a smart-quote "can't breathe"
