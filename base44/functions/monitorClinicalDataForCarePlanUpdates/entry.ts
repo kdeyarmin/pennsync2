@@ -221,7 +221,15 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
       // parseLLMJson tolerates both a returned object and raw/fenced JSON text.
       const analysis = parseLLMJson(rawAnalysis) || {};
 
-      if (analysis.requires_care_plan_update && analysis.findings?.length > 0) {
+      // Confidence gate: don't auto-create review artifacts from low-confidence AI
+      // output. The model returns confidence_score (0–100); below the floor we skip
+      // proposal creation entirely (a human can still review the chart directly).
+      // Override with CARE_PLAN_MONITOR_MIN_CONFIDENCE.
+      const minConfidence = Number(Deno.env.get('CARE_PLAN_MONITOR_MIN_CONFIDENCE') || '60');
+      const confidence = Number(analysis.confidence_score);
+      const confidentEnough = !Number.isFinite(confidence) || confidence >= minConfidence;
+
+      if (analysis.requires_care_plan_update && analysis.findings?.length > 0 && confidentEnough) {
         // Create care plan proposal for each significant finding
         for (const finding of analysis.findings) {
           if (finding.severity === 'low') continue; // Skip low-severity findings

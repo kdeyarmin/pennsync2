@@ -249,9 +249,18 @@ Return comprehensive risk assessment:`,
     // set is coerced to a safe default so PatientAlert.create won't reject.
     const ALLOWED_SEVERITIES = new Set(['critical', 'high', 'medium', 'low']);
 
+    // Confidence/risk gate: the prompt asks for alerts only at risk_score >= 50,
+    // but nothing enforces it — without a floor a low-risk AI alert auto-creates a
+    // PatientAlert and adds to alert fatigue. Skip anything below the threshold
+    // (override with RISK_ALERT_MIN_SCORE).
+    const minRiskScore = Number(Deno.env.get('RISK_ALERT_MIN_SCORE') || '50');
+
     // Create or update patient alerts for high-risk findings
     const createdAlerts = [];
     for (const alert of riskAnalysis.high_risk_alerts || []) {
+      const riskScore = Number(alert.risk_score);
+      if (Number.isFinite(riskScore) && riskScore < minRiskScore) continue;
+
       const alertType = ALLOWED_ALERT_TYPES.has(alert.alert_type)
         ? alert.alert_type
         : 'urgent_intervention';
