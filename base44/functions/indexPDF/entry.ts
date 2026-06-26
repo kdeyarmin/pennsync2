@@ -1,5 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { PDFDocument } from 'npm:pdf-lib@1.17.1';
+// unpdf is a serverless-friendly PDF text extractor (pdf.js under the hood) that
+// runs in Deno/edge — replaces the previous placeholder that stored "[Page N]"
+// stubs, so searchPDFs can finally match real document content.
+import { extractText, getDocumentProxy } from 'npm:unpdf@1.6.2';
 
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
@@ -73,26 +76,19 @@ Deno.serve(async (req) => {
     }
     
     const pdfBytes = await response.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-    const pageCount = pdfDoc.getPageCount();
 
-    // Extract text from all pages
+    // Extract real, per-page text. mergePages:false returns one string per page.
+    const pdf = await getDocumentProxy(new Uint8Array(pdfBytes));
+    const { totalPages, text: perPageText } = await extractText(pdf, { mergePages: false });
+    const pageCount = totalPages || (Array.isArray(perPageText) ? perPageText.length : 0);
+    const pages = Array.isArray(perPageText) ? perPageText : [perPageText];
+
     const pageContents = [];
     let fullText = '';
-
     for (let i = 0; i < pageCount; i++) {
-      const page = pdfDoc.getPage(i);
-      
-      // Get text content from page
-      // Note: pdf-lib doesn't have built-in text extraction, so we'll use a workaround
-      // In a production environment, you'd use pdf-parse or similar
-      const textContent = `[Page ${i + 1} content]`;
-      
-      pageContents.push({
-        page_number: i + 1,
-        text: textContent
-      });
-      
+      // Collapse the whitespace pdf.js emits between text runs.
+      const textContent = String(pages[i] || '').replace(/\s+/g, ' ').trim();
+      pageContents.push({ page_number: i + 1, text: textContent });
       fullText += textContent + '\n';
     }
 
