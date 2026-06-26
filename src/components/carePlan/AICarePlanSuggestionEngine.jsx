@@ -141,7 +141,9 @@ Return JSON with suggestions array.`,
       problem: suggestion.problem,
       goal: suggestion.goal,
       interventions: suggestion.interventions,
-      target_date: targetDate.toISOString().split('T')[0],
+      // Local calendar date — toISOString() converts to UTC and, for a plan
+      // created in the evening in any US timezone, rolls target_date a day late.
+      target_date: `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`,
       status: 'active',
       baseline_measurement: suggestion.baseline_measurement,
       frequency: suggestion.frequency

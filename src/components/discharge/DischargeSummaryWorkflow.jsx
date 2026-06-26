@@ -92,6 +92,12 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
   const handleReviewComplete = async () => {
     try {
       await updateMutation.mutateAsync({
+        // Persist the clinician's edits to the narrative fields. Without this the
+        // edits lived only in local state, so the reviewed/signed/locked record
+        // (and the generated PDF) kept the ORIGINAL AI text — the clinician would
+        // sign content that was never stored, a legal-integrity defect.
+        summary_of_care: summary?.summary_of_care,
+        discharge_instructions: summary?.discharge_instructions,
         status: 'reviewed',
         reviewed_by: currentUser?.email,
         reviewed_date: new Date().toISOString(),
