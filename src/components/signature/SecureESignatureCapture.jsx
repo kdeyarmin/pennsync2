@@ -19,7 +19,6 @@ import {
   MapPin
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { buildSignatureIntegrityPayload, generateSignatureHash } from './signatureUtils';
 import { toast } from 'sonner';
 
 export default function SecureESignatureCapture({
@@ -162,26 +161,9 @@ export default function SecureESignatureCapture({
           ? 'clinician'
           : 'other';
 
-      // Build the canonical integrity payload from the flat attestation data so the
-      // tamper-evident hash stays computed over the same fields used historically.
-      const integritySource = {
-        document_type: documentType,
-        document_id: documentId,
-        document_title: documentTitle,
-        signature_data: signatureData,
-        signed_by: user.email,
-        signed_by_name: user.full_name,
-        signed_by_credentials: credentials,
-        signed_date: timestamp,
-        ip_address: ipAddress,
-        location_data: locationData,
-        user_agent: navigator.userAgent,
-        attestation_accepted: attestation,
-        attestation_text: `I attest that I am ${user.full_name} and that the information in this ${documentType} is accurate and complete to the best of my knowledge.`,
-        signature_method: 'signature_image',
-        device_type: deviceType,
-      };
-      const signatureHash = generateSignatureHash(buildSignatureIntegrityPayload(integritySource));
+      // Tamper-evidence is now computed SERVER-SIDE (signatureIntegrity backend
+      // function) over the stored record, after the create below — the client no
+      // longer produces a forgeable hash.
 
       // Persist a schema-valid DocumentSignature record. This is a single-clinician
       // attestation, so the document is fully signed (status: completed) and the
@@ -214,13 +196,28 @@ export default function SecureESignatureCapture({
             action: 'signed',
             timestamp,
             signer_id: 1,
-            notes: `Signed by ${user.full_name} (${credentials}); role=${signerRole}; device=${deviceType}; hash=${signatureHash}; ip=${ipAddress || 'Unknown'}`,
+            notes: `Signed by ${user.full_name} (${credentials}); role=${signerRole}; device=${deviceType}; ip=${ipAddress || 'Unknown'}`,
           },
         ],
       };
 
       // Save to DocumentSignature entity
       const savedSignature = await base44.entities.DocumentSignature.create(signatureRecord);
+
+      // Stamp the server-side tamper-evidence MAC over the saved record. Best-effort
+      // like the audit log below: the signature is already legally captured, so a
+      // stamp failure must not make the user re-sign (which would duplicate it) —
+      // the record simply verifies as "unsigned" until re-stamped.
+      let integrityAlg = null;
+      try {
+        const stampResp = await base44.functions.invoke('signatureIntegrity', {
+          action: 'stamp',
+          signature_id: savedSignature.id,
+        });
+        integrityAlg = stampResp?.data?.alg || null;
+      } catch (stampError) {
+        console.error('Signature integrity stamp failed (signature was saved):', stampError);
+      }
 
       // Create audit log entry. This runs AFTER the signature is already saved, so
       // a failure here must not surface as "signature failed" (which would make
@@ -235,7 +232,7 @@ export default function SecureESignatureCapture({
             document_id: documentId,
             signature_id: savedSignature.id,
             signature_role: signatureRole,
-            signature_hash: signatureHash,
+            integrity_alg: integrityAlg,
             timestamp: timestamp,
             ip_address: ipAddress,
             location: locationData

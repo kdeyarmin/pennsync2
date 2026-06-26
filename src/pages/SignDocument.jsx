@@ -48,8 +48,16 @@ export default function SignDocument() {
   });
 
   const updateSignatureMutation = useMutation({
-    mutationFn: async ({ signatureData }) => {
-      return await base44.entities.DocumentSignature.update(signatureId, signatureData);
+    // Route completion through the server: it authorizes the caller against the
+    // document (admin / owner / assigned nurse), records who collected the
+    // signatures, and stamps tamper-evidence. The page used to do a client-side
+    // DocumentSignature.update keyed only on the URL id, so any authenticated user
+    // with an id could blanket-complete a document they had no relationship to.
+    mutationFn: async ({ signatures }) => {
+      return await base44.functions.invoke('submitDocumentSignatures', {
+        signature_id: signatureId,
+        signatures,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['signature-record'] });
@@ -78,42 +86,27 @@ export default function SignDocument() {
   const handleSubmitAll = async () => {
     if (!signatureRecord) return;
 
-    const updatedSigners = signatureRecord.signers.map(signer => {
-      const sig = signatures[signer.id];
-      return {
-        ...signer,
-        signature: sig?.dataUrl || null,
-        signature_method: sig?.method || null,
-        signed_date: sig?.timestamp || null,
-        ip_address: "unknown" // Could be enhanced with real IP tracking
-      };
-    });
-
-    const allRequiredSigned = updatedSigners
+    // Client-side completeness check for fast feedback; the server re-validates.
+    const allRequiredSigned = signatureRecord.signers
       .filter(s => s.required)
-      .every(s => s.signature);
+      .every(s => signatures[s.id]?.dataUrl || s.signature);
 
     if (!allRequiredSigned) {
       toast.error("Please complete all required signatures");
       return;
     }
 
+    // Send only the per-signer signature fields just captured; the server applies
+    // them onto the canonical signer rows and stamps integrity.
+    const submitted = Object.entries(signatures).map(([signerId, sig]) => ({
+      signer_id: signerId,
+      signature: sig.dataUrl,
+      signature_method: sig.method,
+      signed_date: sig.timestamp,
+    }));
+
     try {
-      await updateSignatureMutation.mutateAsync({
-        signatureData: {
-          signers: updatedSigners,
-          status: "completed",
-          completed_date: new Date().toISOString(),
-          audit_trail: [
-            ...(signatureRecord.audit_trail || []),
-            {
-              action: "all_signatures_completed",
-              timestamp: new Date().toISOString(),
-              notes: `${updatedSigners.length} signature(s) collected`
-            }
-          ]
-        }
-      });
+      await updateSignatureMutation.mutateAsync({ signatures: submitted });
 
       toast.success("Document signed successfully!");
       

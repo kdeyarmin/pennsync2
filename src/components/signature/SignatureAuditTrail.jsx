@@ -15,7 +15,7 @@ import {
   Download,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { verifySignatureIntegrity } from './signatureUtils';
+import { verifySignatureIntegrityRemote } from './signatureUtils';
 import { toast } from 'sonner';
 
 export default function SignatureAuditTrail({ documentId, documentType }) {
@@ -32,11 +32,13 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
 
       setSignatures(signatureResults);
 
-      // Verify each signature using the shared integrity util (same hash used to sign)
+      // Verify each signature SERVER-SIDE (the MAC and its secret live on the
+      // server; the client can't recompute or forge it).
+      const verdicts = await Promise.all(
+        signatureResults.map((s) => verifySignatureIntegrityRemote(s.id)),
+      );
       const results = {};
-      for (const signature of signatureResults) {
-        results[signature.id] = verifySignatureIntegrity(signature);
-      }
+      signatureResults.forEach((s, i) => { results[s.id] = verdicts[i]; });
       setVerificationResults(results);
     } catch (error) {
       console.error('Failed to load signatures:', error);
