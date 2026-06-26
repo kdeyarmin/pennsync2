@@ -41,7 +41,7 @@ export default function ProactiveRiskAnalyzer({ _users = [] }) {
   // Fetch patients
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
   });
 
   // Fetch recent visits

@@ -14,7 +14,7 @@ export default function RealTimeRiskScoring({ patientId, compact = false }) {
   // Fetch patient data
   const { data: patient } = useQuery({
     queryKey: ['patient', patientId],
-    queryFn: () => base44.entities.Patient.list().then(patients => 
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000).then(patients => 
       patients.find(p => p.id === patientId)
     ),
     enabled: !!patientId

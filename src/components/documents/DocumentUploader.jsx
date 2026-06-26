@@ -47,7 +47,7 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
 
   const { data: allPatients = [] } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
     initialData: [],
     enabled: !patientId
   });

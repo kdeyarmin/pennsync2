@@ -5,7 +5,9 @@ import { useMemo } from 'react';
 export const usePatientData = (selectedPatientId) => {
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    // Without a limit Base44 returns only 50 rows, so selectedPatient lookups for
+    // any patient beyond the first 50 silently failed (no clinical context loaded).
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
     initialData: [],
   });
 

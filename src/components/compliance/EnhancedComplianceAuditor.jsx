@@ -55,7 +55,7 @@ export default function EnhancedComplianceAuditor({ onAuditComplete }) {
 
   const { data: patients = [] } = useQuery({
     queryKey: ['auditPatients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
   });
 
   const { data: complianceRules = [] } = useQuery({

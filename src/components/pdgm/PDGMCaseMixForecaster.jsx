@@ -31,7 +31,9 @@ export default function PDGMCaseMixForecaster({ compact = false }) {
   const [_selectedPatient, _setSelectedPatient] = useState("all");
 
   const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
+    // Namespaced active-only set — see note in PatientAlerts: the bare ['patients']
+    // key collided with all-patients (Patient.list) queries in the shared cache.
+    queryKey: ['patients', 'active'],
     queryFn: () => base44.entities.Patient.filter({ status: 'active' }),
     initialData: []
   });

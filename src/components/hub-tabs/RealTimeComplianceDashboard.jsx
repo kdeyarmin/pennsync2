@@ -74,7 +74,7 @@ export default function RealTimeComplianceDashboard() {
 
   const { data: allPatients = [] } = useQuery({
     queryKey: ['allPatients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
   });
 
   const { data: allCarePlans = [] } = useQuery({

@@ -115,7 +115,7 @@ export default function CarePlanManagement() {
     queryKey: ['carePlanPatients', visiblePatientIds],
     queryFn: async () => {
       if (visiblePatientIds.length === 0) return [];
-      const allPatients = await base44.entities.Patient.list();
+      const allPatients = await base44.entities.Patient.list('-updated_date', 2000);
       return allPatients.filter(p => visiblePatientIds.includes(p.id));
     },
     enabled: visiblePatientIds.length > 0,

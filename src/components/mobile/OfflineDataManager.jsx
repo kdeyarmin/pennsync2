@@ -72,7 +72,7 @@ export default function OfflineDataManager() {
       });
 
       const patientIds = [...new Set(todayVisits.map(v => v.patient_id))];
-      const patients = await base44.entities.Patient.list();
+      const patients = await base44.entities.Patient.list('-updated_date', 2000);
       const todayPatients = patients.filter(p => patientIds.includes(p.id));
 
       // Get care plans and recent visits for each patient

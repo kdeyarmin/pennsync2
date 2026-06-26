@@ -101,7 +101,7 @@ export default function ComplianceCenter() {
 
   const { data: _patients = [] } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
     initialData: [],
   });
 

@@ -46,7 +46,7 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list().catch(() => [])
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000).catch(() => [])
   });
 
   const analyzeAndRecommend = async () => {
