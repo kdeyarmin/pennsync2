@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 // the generated documentation note previously used DIFFERENT thresholds, so the
 // same encounter could be recorded "fair"/"poor" while the note read "adequate
 // understanding" — contradictory clinical documentation.
-function computeOverallLevel(levels) {
+export function computeOverallLevel(levels) {
   const good = levels.filter(l => l === 'good').length;
   const fair = levels.filter(l => l === 'fair').length;
   if (good > levels.length / 2) return 'good';
