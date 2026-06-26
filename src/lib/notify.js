@@ -44,7 +44,10 @@ export function validateNotification({ user_email, title, message, type, priorit
  * input so callers don't silently persist malformed/abusable notifications.
  */
 export async function sendInAppNotification(params = {}) {
-  const { user_email, title, message, type, action_url, action_label, metadata, ...rest } = params;
+  // Destructure `priority` out so it lands in neither path twice — leaving it in
+  // `rest` would let the trailing `...rest` spread overwrite the validated
+  // safePriority with the original (possibly out-of-range) value.
+  const { user_email, title, message, type, priority: _priority, action_url, action_label, metadata, ...rest } = params;
   const check = validateNotification(params);
   if (!check.valid) throw new Error(check.error);
 
