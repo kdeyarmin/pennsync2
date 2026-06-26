@@ -110,13 +110,59 @@ Deno.serve(async (req) => {
       if (sig.signature_hash) {
         return Response.json({ error: 'Signature is already stamped; re-stamping is not allowed.' }, { status: 409 });
       }
+      const stampedAt = new Date().toISOString();
       const { hash, alg } = await computeHash(canonicalPayload(sig));
+      // Append (never rewrite) an audit-trail entry recording the integrity stamp —
+      // an immutable record of who sealed the document, when, and with which alg.
+      const auditEntry = {
+        action: 'integrity_stamped',
+        timestamp: stampedAt,
+        notes: `Tamper-evidence MAC computed (${alg}) by ${user.full_name || user.email}.`,
+      };
       await base44.asServiceRole.entities.DocumentSignature.update(signature_id, {
         signature_hash: hash,
         signature_hash_alg: alg,
-        signature_hash_at: new Date().toISOString(),
+        signature_hash_at: stampedAt,
+        audit_trail: [...(Array.isArray(sig.audit_trail) ? sig.audit_trail : []), auditEntry],
       });
-      return Response.json({ success: true, alg });
+      return Response.json({ success: true, alg, stamped_at: stampedAt });
+    }
+
+    if (action === 'certificate') {
+      // Verification summary for a certificate of completion — the integrity verdict
+      // plus the signer roster and the document's identity/timestamps.
+      const stored = sig.signature_hash || null;
+      let verification = { isValid: false, status: 'unsigned', alg: null };
+      if (stored) {
+        const { hash, error } = await computeHash(canonicalPayload(sig), sig.signature_hash_alg);
+        if (error === 'secret_unconfigured') {
+          verification = { isValid: false, status: 'unverifiable', alg: sig.signature_hash_alg };
+        } else {
+          const ok = timingSafeEqual(hash, stored);
+          verification = { isValid: ok, status: ok ? 'valid' : 'tampered', alg: sig.signature_hash_alg || 'sha256-unkeyed' };
+        }
+      }
+      const signers = (Array.isArray(sig.signers) ? sig.signers : []).map((s) => ({
+        name: s?.name ?? null,
+        email: s?.email ?? null,
+        role: s?.role ?? null,
+        status: s?.status ?? null,
+        signed_date: s?.signed_date ?? null,
+      }));
+      return Response.json({
+        success: true,
+        certificate: {
+          document_id: sig.id,
+          document_title: sig.document_title || sig.document_type || 'Document',
+          patient_id: sig.patient_id || null,
+          status: sig.status || null,
+          completed_date: sig.completed_date || null,
+          stamped_at: sig.signature_hash_at || null,
+          verification,
+          signers,
+          generated_at: new Date().toISOString(),
+        },
+      });
     }
 
     // Default action: verify.
