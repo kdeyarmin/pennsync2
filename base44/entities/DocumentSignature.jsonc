@@ -187,7 +187,7 @@
     },
     "signature_hash": {
       "type": "string",
-      "description": "Server-computed tamper-evidence MAC over the canonical signature payload (signers, dates, document identity). Set only by the signSignatureIntegrity backend function; never client-supplied."
+      "description": "Server-computed tamper-evidence MAC over the canonical signature payload (signers, dates, document identity). Set only by the signatureIntegrity backend function (action 'stamp'); never client-supplied."
     },
     "signature_hash_alg": {
       "type": "string",

@@ -100,10 +100,14 @@ Deno.serve(async (req) => {
     const sig = await base44.asServiceRole.entities.DocumentSignature.get(signature_id).catch(() => null);
     if (!sig) return Response.json({ error: 'Signature not found' }, { status: 404 });
 
+    // Authorize EVERY action (the record is fetched via asServiceRole). verify and
+    // certificate return integrity status + the signer roster, which is PHI — so an
+    // unauthorized caller must not read them for an arbitrary signature_id (IDOR).
+    if (!(await canMutate(base44, user, sig))) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     if (action === 'stamp') {
-      if (!(await canMutate(base44, user, sig))) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
       // Stamp exactly once, at signing. Re-stamping would let someone edit a signed
       // record and then recompute a fresh "valid" MAC over the tampered data, which
       // would defeat the entire tamper-evidence guarantee.

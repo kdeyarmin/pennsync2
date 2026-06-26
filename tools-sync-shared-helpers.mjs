@@ -11,6 +11,7 @@
 //   node tools-sync-shared-helpers.mjs --check    # exit 1 if any copy is out of sync (CI)
 
 import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import { SHARED_HELPERS } from './base44/_shared/backendHelpers.mjs';
 
 const FUNCTIONS_DIR = new URL('./base44/functions/', import.meta.url);
@@ -85,6 +86,8 @@ async function main() {
 }
 
 // Only run when invoked directly (allows importing applyHelpers in tests).
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Use pathToFileURL so the comparison is robust to relative paths / spaces —
+// a bare `file://${process.argv[1]}` can be a malformed URL and silently skip main().
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => { console.error(err); process.exit(1); });
 }
