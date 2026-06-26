@@ -59,12 +59,12 @@
     "tcpa_quiet_start_hour": {
       "type": "number",
       "default": 8,
-      "description": "Start hour (local) of the TCPA quiet-hours window"
+      "description": "Earliest allowed contact hour (local, inclusive). The code treats [start, end) as the ALLOWED outbound window, not the blocked window — default 8 = 8:00am."
     },
     "tcpa_quiet_end_hour": {
       "type": "number",
       "default": 21,
-      "description": "End hour (local) of the TCPA quiet-hours window"
+      "description": "Latest allowed contact hour (local, exclusive). End of the ALLOWED outbound window — default 21 = up to 9:00pm; outside [start, end) is blocked."
     },
     "monthly_sms_cap": {
       "type": "number",
