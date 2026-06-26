@@ -9,10 +9,48 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { document_id, signer_emails, reminder_days, deadline_date } = await req.json();
+    const { document_id, reminder_days, deadline_date } = await req.json();
 
-    if (!document_id || !signer_emails || !reminder_days) {
+    if (!document_id || !reminder_days) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Load the signature request and authorize the caller against IT. Previously
+    // this trusted a caller-supplied document_id + signer_emails, so any logged-in
+    // user could send trusted-system "please sign" notifications to ARBITRARY
+    // addresses (platform-blessed phishing) and flip reminder_sent on any
+    // document they don't own. Mirror sendSignatureReminder's ownership model and
+    // derive recipients from the document's own signer list.
+    const sigRows = await base44.asServiceRole.entities.DocumentSignature.filter({ id: document_id });
+    if (!sigRows || sigRows.length === 0) {
+      return Response.json({ error: 'Document not found' }, { status: 404 });
+    }
+    const sig = sigRows[0];
+
+    const patientRows = sig.patient_id
+      ? await base44.asServiceRole.entities.Patient.filter({ id: sig.patient_id }).catch(() => [])
+      : [];
+    const patient = patientRows[0] || {};
+
+    const role = user.role;
+    const privilegedRole = role === 'admin' || role === 'clinician' || role === 'nurse_manager';
+    const ownsSignature = sig.created_by === user.email
+      || sig.requested_by === user.email
+      || sig.sender_email === user.email;
+    const assignedToPatient = patient.created_by === user.email
+      || (Array.isArray(patient.assigned_nurses) && patient.assigned_nurses.includes(user.email));
+    if (!privilegedRole && !ownsSignature && !assignedToPatient) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Recipients come from the document's own pending signers, NOT the request
+    // body — so the caller can't redirect reminders to arbitrary inboxes.
+    const recipients = (Array.isArray(sig.signers) ? sig.signers : [])
+      .filter((s) => s && s.email && s.status !== 'completed')
+      .map((s) => String(s.email).trim())
+      .filter(Boolean);
+    if (recipients.length === 0) {
+      return Response.json({ error: 'No pending signers with an email to remind' }, { status: 400 });
     }
 
     const deadlineTime = new Date(deadline_date).getTime();
@@ -20,20 +58,11 @@ Deno.serve(async (req) => {
     const now = new Date().getTime();
 
     // If the computed reminder time is already in the past, schedule it for NOW
-    // rather than silently dropping it. (The previous else-branch returned
-    // success: true with the message "sending immediately" but created no
-    // reminder record at all — the reminder was lost.)
+    // rather than silently dropping it.
     const immediate = reminderTime <= now;
     const reminderIso = new Date(immediate ? now : reminderTime).toISOString();
 
-    // Create reminder records for tracking
-    for (const email of signer_emails) {
-      // The previous create used the user-scoped client (Notification write-RLS
-      // is admin-only) AND a `subject` field, an invalid `type`, and non-existent
-      // `related_*`/`scheduled_for` fields — so every call threw on the first
-      // signer and NO reminder was ever created (the loop 500'd for all callers).
-      // Use the service-role client and the real schema (required
-      // user_email/title/message/type + a valid enum type).
+    for (const email of recipients) {
       await base44.asServiceRole.entities.Notification.create({
         user_email: email,
         title: 'Signature Pending — Document Due Soon',
@@ -41,24 +70,17 @@ Deno.serve(async (req) => {
         type: 'task_due_soon',
         priority: 'high',
         is_read: false,
-        // No action_url: the signer portal is reached via a per-signer tokenized
-        // link (/signer?token=...) which this cron doesn't have, and a bare
-        // /SignerPortal?document= path doesn't exist — a dead link is worse than none.
       });
     }
 
-    // Update the document to track reminder was set
-    const docRecord = await base44.entities.DocumentSignature.filter({ id: document_id });
-    if (docRecord && docRecord.length > 0) {
-      await base44.asServiceRole.entities.DocumentSignature.update(document_id, {
-        reminder_sent: true
-      });
-    }
+    await base44.asServiceRole.entities.DocumentSignature.update(document_id, {
+      reminder_sent: true
+    });
 
     return Response.json({
       success: true,
       message: immediate ? 'Reminder date had passed; reminders created immediately' : 'Reminders scheduled successfully',
-      reminder_count: signer_emails.length,
+      reminder_count: recipients.length,
       reminder_date: reminderIso
     });
   } catch (error) {

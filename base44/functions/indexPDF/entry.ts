@@ -41,9 +41,26 @@ Deno.serve(async (req) => {
     } = await req.json();
 
     if (!pdf_url || !document_name) {
-      return Response.json({ 
-        error: 'Missing required fields: pdf_url, document_name' 
+      return Response.json({
+        error: 'Missing required fields: pdf_url, document_name'
       }, { status: 400 });
+    }
+
+    // Authorization: a PDFIndex row is access-controlled by its patient_id
+    // (searchPDFs scopes results on it). Without a check here a non-admin could
+    // index a PDF holding another patient's PHI under a patient THEY can read —
+    // surfacing it in their scope — and the pdf_url-keyed update branch below
+    // could clobber an index belonging to a scope they can't access. Mirror
+    // searchPDFs' patient-scope check for both the target and the existing row.
+    const isAdmin = user.role === 'admin';
+    const assertPatientAccess = async (pid) => {
+      if (!pid || isAdmin) return true;
+      const [p] = await base44.asServiceRole.entities.Patient.filter({ id: pid }).catch(() => []);
+      return Boolean(p) && (p.created_by === user.email
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.includes(user.email)));
+    };
+    if (!(await assertPatientAccess(patient_id))) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     if (!isSafeFetchUrl(pdf_url)) {
@@ -117,6 +134,10 @@ Deno.serve(async (req) => {
 
     let indexId;
     if (existingIndex.length > 0) {
+      // Don't let a caller overwrite an index scoped to a patient they can't access.
+      if (!(await assertPatientAccess(existingIndex[0].patient_id))) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
       await base44.asServiceRole.entities.PDFIndex.update(existingIndex[0].id, indexData);
       indexId = existingIndex[0].id;
     } else {
