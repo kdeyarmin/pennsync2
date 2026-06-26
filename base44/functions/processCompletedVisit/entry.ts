@@ -25,11 +25,37 @@ Deno.serve(async (req) => {
 
     // Only process if visit is completed
     if (visit.status !== 'completed') {
-      return Response.json({ 
+      return Response.json({
         error: 'Visit must be completed before processing',
-        visit_status: visit.status 
+        visit_status: visit.status
       }, { status: 400 });
     }
+
+    // Idempotency guard. This function has no client idempotency key, so a
+    // double-click / retry would otherwise (a) overwrite nurse_notes with a fresh
+    // narrative generated FROM the previous narrative — progressively corrupting
+    // the documentation — and (b) create duplicate follow-up tasks + notifications
+    // every time. If AI follow-up tasks already exist for this visit it has been
+    // processed; return the prior result instead of re-running.
+    const existingAiTasks = await base44.entities.Task
+      .filter({ related_visit_id: visit_id, source: 'ai_generated' })
+      .catch(() => []);
+    if (existingAiTasks && existingAiTasks.length > 0) {
+      return Response.json({
+        success: true,
+        already_processed: true,
+        visit,
+        tasks_created: 0,
+        tasks: existingAiTasks,
+      });
+    }
+
+    // Always generate the narrative from the ORIGINAL raw input, never from a
+    // prior AI narrative. raw_transcription is the canonical raw source; fall back
+    // to nurse_notes for older visits that predate it.
+    const rawNotes = (visit.raw_transcription && visit.raw_transcription.trim())
+      ? visit.raw_transcription
+      : (visit.nurse_notes || '');
 
     // Patient and active care plans are independent reads — fetch concurrently.
     const [patient, carePlans] = await Promise.all([
@@ -64,7 +90,7 @@ ${visit.vital_signs ? `
 ` : 'No vital signs recorded'}
 
 NURSE NOTES (RAW):
-${visit.nurse_notes || 'No notes provided'}
+${rawNotes || 'No notes provided'}
 
 ACTIVE CARE PLANS:
 ${carePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || 'None'}
@@ -155,13 +181,19 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
       tasksPromise
     ]);
 
-    // Update visit with enhanced narrative
+    // Update visit with enhanced narrative. Snapshot the original raw notes into
+    // raw_transcription before nurse_notes is overwritten, so the canonical raw
+    // input survives for any future regeneration (and isn't lost to the narrative).
     const narrativeText = typeof narrativeResponse === 'string' ? narrativeResponse : JSON.stringify(narrativeResponse);
-    const updatedVisit = await base44.entities.Visit.update(visit_id, {
+    const visitUpdate = {
       nurse_notes: narrativeText,
       ai_tags: extractTags(narrativeText),
       status: 'completed'
-    });
+    };
+    if (!visit.raw_transcription || !visit.raw_transcription.trim()) {
+      visitUpdate.raw_transcription = rawNotes;
+    }
+    const updatedVisit = await base44.entities.Visit.update(visit_id, visitUpdate);
 
     // Allowed Task enums; the AI can emit values outside the enum (which a plain
     // `|| default` would not catch since it only handles falsy), so validate
