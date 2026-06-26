@@ -262,7 +262,10 @@ export default function SupplyManagementDashboard() {
 
           <div className="space-y-3">
             {filteredSupplies.map((supply) => {
-              const percentFull = (supply.current_quantity / supply.low_stock_threshold) * 100;
+              // Guard a 0 (or missing) threshold so the bar width isn't Infinity/NaN.
+              const percentFull = supply.low_stock_threshold > 0
+                ? (supply.current_quantity / supply.low_stock_threshold) * 100
+                : (supply.current_quantity > 0 ? 100 : 0);
               const statusColor =
                 supply.status === "out_of_stock"
                   ? "bg-red-100 text-red-800"

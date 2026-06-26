@@ -24,6 +24,13 @@ import {
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 
+// Guarded date formatter: format(parseISO(undefined)) throws a RangeError, which
+// would white-screen the whole approvals card if any credential has a null date.
+const fmtDate = (value) => {
+  if (!value) return "—";
+  try { return format(parseISO(value), "MMM d, yyyy"); } catch { return "—"; }
+};
+
 export default function AdminCredentialApproval() {
   const [selectedCredential, setSelectedCredential] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -78,7 +85,7 @@ Your credential renewal has been approved:
 
 Credential: ${credential.title}
 Type: ${credential.item_type}
-New Expiration: ${format(parseISO(credential.expiration_date), 'MMM d, yyyy')}
+New Expiration: ${fmtDate(credential.expiration_date)}
 Approved By: ${currentUser?.full_name}
 
 Your personnel file has been updated. You can view your current credentials in the Personnel File section.
@@ -191,10 +198,10 @@ Credential Management System`
                     </p>
                     <div className="mt-2 text-sm">
                       <p className="text-slate-600">
-                        New Expiration: <span className="font-medium">{format(parseISO(cred.expiration_date), 'MMM d, yyyy')}</span>
+                        New Expiration: <span className="font-medium">{fmtDate(cred.expiration_date)}</span>
                       </p>
                       <p className="text-slate-600">
-                        Submitted: {format(parseISO(cred.created_date), 'MMM d, yyyy')}
+                        Submitted: {fmtDate(cred.created_date)}
                       </p>
                     </div>
                   </div>

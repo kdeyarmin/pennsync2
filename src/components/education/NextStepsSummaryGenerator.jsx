@@ -157,6 +157,11 @@ Return JSON:
   const handlePrint = () => {
     if (!summary) return;
 
+    // Respect the selection checkboxes — an unchecked step/daily item is excluded
+    // from the printed patient handout (previously every item was always printed).
+    const selectedSteps = (summary.immediate_next_steps || []).filter((_, idx) => selectedItems[`step_${idx}`]);
+    const selectedDaily = (summary.daily_checklist || []).filter((_, idx) => selectedItems[`daily_${idx}`]);
+
     const escapeHtml = (str) => {
       if (str == null) return '';
       return String(str)
@@ -193,14 +198,14 @@ Return JSON:
           <div class="section">
             <h2>✅ Do This First</h2>
             <ul class="checklist">
-              ${summary.immediate_next_steps?.map(step => `<li><strong>${escapeHtml(step.action)}</strong> - ${escapeHtml(step.when)}<br><small>${escapeHtml(step.how)}</small></li>`).join('') || ''}
+              ${selectedSteps.map(step => `<li><strong>${escapeHtml(step.action)}</strong> - ${escapeHtml(step.when)}<br><small>${escapeHtml(step.how)}</small></li>`).join('') || ''}
             </ul>
           </div>
           
           <div class="section">
             <h2>📅 Daily Checklist</h2>
             <ul class="checklist">
-              ${summary.daily_checklist?.map(item => `<li><strong>${escapeHtml(item.item)}</strong> (${escapeHtml(item.time_of_day)})<br><small>${escapeHtml(item.details)}</small></li>`).join('') || ''}
+              ${selectedDaily.map(item => `<li><strong>${escapeHtml(item.item)}</strong> (${escapeHtml(item.time_of_day)})<br><small>${escapeHtml(item.details)}</small></li>`).join('') || ''}
             </ul>
           </div>
           
