@@ -23,10 +23,14 @@ async function autoFlagOASIS(oasisUpload, analysisResults) {
   let flagReason = 'low_accuracy';
   let priority = 'medium';
 
+  // Each arm must line up with a shouldFlag trigger, otherwise a record flagged
+  // for one reason falls through to the generic default and is mislabeled.
   if (analysisResults.accuracy_score < 60) {
     flagReason = 'low_accuracy';
     priority = 'critical';
-  } else if (analysisResults.compliance_score < 70) {
+  } else if (analysisResults.compliance_score < THRESHOLDS.compliance) {
+    // Was < 70 while the trigger uses < 80, so a compliance shortfall in [70, 80)
+    // fell through to the default low_accuracy/medium labels.
     flagReason = 'low_compliance';
     priority = 'high';
   } else if (analysisResults.specific_rescore_opportunities?.length > 2) {
@@ -37,6 +41,10 @@ async function autoFlagOASIS(oasisUpload, analysisResults) {
     priority = 'high';
   } else if (analysisResults.audit_risk_areas?.some(r => r.risk_level === 'high')) {
     flagReason = 'high_audit_risk';
+    priority = 'high';
+  } else if (analysisResults.accuracy_score < THRESHOLDS.accuracy) {
+    // Accuracy in [60, 75) — a genuine accuracy flag, not the generic default.
+    flagReason = 'low_accuracy';
     priority = 'high';
   }
 
