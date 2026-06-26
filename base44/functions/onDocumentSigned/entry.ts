@@ -44,6 +44,16 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
+    // Idempotency: once the package is completed, the completion side effects
+    // (status stamp + admin email) have already run on the transition. This
+    // entity-trigger re-fires on every later DocumentSignature update (another
+    // signer, a re-save, a platform retry), so without this guard each re-fire
+    // would re-stamp completed_at (last-write-wins, losing the true time) and send
+    // a duplicate "Document Signed" email to every admin.
+    if (pkg.status === 'completed') {
+      return Response.json({ success: true, already_completed: true });
+    }
+
     // Determine completion from the package's declared membership
     // (pkg.document_signatures = array of signature ids), the authoritative
     // source. The creators don't always back-fill package_id onto each
@@ -63,7 +73,7 @@ Deno.serve(async (req) => {
     if (allSigned) {
       await base44.asServiceRole.entities.DocumentPackage.update(pkg.id, {
         status: 'completed',
-        completed_at: new Date().toISOString(),
+        completed_at: pkg.completed_at || new Date().toISOString(),
       });
     }
 
