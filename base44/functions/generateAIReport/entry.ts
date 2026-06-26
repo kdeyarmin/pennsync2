@@ -6,15 +6,14 @@ import { jsPDF } from 'npm:jspdf@2.5.2';
  * Generates customizable reports with AI insights for patient outcomes, compliance, and staff performance
  */
 
-// Mirror of src/lib/superAdmin.js isAdminLike. Every other admin surface accepts
-// agency_admin / super_admin / owner too, so a bare role==='admin' gate locked
-// those tiers out of this admin tool. Keep in sync with superAdmin.js.
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
 const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 const isAdminLike = (u) => !!u && (
   u.role === 'admin' || u.account_type === 'agency_admin' ||
   u.account_type === 'super_admin' || sameEmail(u.email, SUPER_ADMIN_EMAIL)
 );
+// <<<END SHARED HELPER: isAdminLike>>>
 
 Deno.serve(async (req) => {
   try {
