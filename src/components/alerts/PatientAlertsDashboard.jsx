@@ -143,12 +143,16 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
     return matchesSeverity && matchesType && matchesStatus && matchesSearch;
   });
 
-  // Group by severity for summary
+  // Group by severity for summary. "Open" = active OR acknowledged (acknowledged
+  // is seen-but-not-resolved); the Active tab already counts both, so counting
+  // only 'active' here undercounted open alerts — an acknowledged critical alert
+  // vanished from the Critical summary while still showing in the list.
+  const isOpen = (a) => a.status === 'active' || a.status === 'acknowledged';
   const alertCounts = {
-    critical: alerts.filter(a => a.severity === 'critical' && a.status === 'active').length,
-    high: alerts.filter(a => a.severity === 'high' && a.status === 'active').length,
-    medium: alerts.filter(a => a.severity === 'medium' && a.status === 'active').length,
-    low: alerts.filter(a => a.severity === 'low' && a.status === 'active').length
+    critical: alerts.filter(a => a.severity === 'critical' && isOpen(a)).length,
+    high: alerts.filter(a => a.severity === 'high' && isOpen(a)).length,
+    medium: alerts.filter(a => a.severity === 'medium' && isOpen(a)).length,
+    low: alerts.filter(a => a.severity === 'low' && isOpen(a)).length
   };
 
   const handleAcknowledge = (alert) => {

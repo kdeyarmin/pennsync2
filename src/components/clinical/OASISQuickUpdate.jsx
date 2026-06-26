@@ -9,11 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Brain, CheckCircle2, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
 
+// OASIS-E ADL/IADL (M1800–M1870) scale. Was truncated to 0–3, so a nurse could
+// not record substantial/maximal assistance (4), dependent (5), or unable (6) —
+// understating impairment by up to two levels. Labels mirror the unified scale
+// this codebase already uses in referralExtraction.js.
 const FUNCTIONAL_OPTIONS = [
   { value: "0", label: "0 – Independent" },
-  { value: "1", label: "1 – With supervision" },
-  { value: "2", label: "2 – With assistance" },
-  { value: "3", label: "3 – Dependent" },
+  { value: "1", label: "1 – With assistive device" },
+  { value: "2", label: "2 – Minimal assistance from person" },
+  { value: "3", label: "3 – Moderate assistance from person" },
+  { value: "4", label: "4 – Substantial/maximal assistance" },
+  { value: "5", label: "5 – Dependent, does not participate" },
+  { value: "6", label: "6 – Unable to perform" },
 ];
 
 const _PAIN_OPTIONS = Array.from({ length: 11 }, (_, i) => ({ value: String(i), label: String(i) }));

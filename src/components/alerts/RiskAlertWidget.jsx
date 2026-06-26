@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertTriangle,
   CheckCircle2,
-  X,
   Eye,
   Users
 } from "lucide-react";
@@ -165,14 +164,10 @@ function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }
                         </p>
                       )}
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0"
-                      onClick={() => resolveMutation.mutate(alert.id)}
-                    >
-                      <X className="w-4 h-4 text-slate-400" />
-                    </Button>
+                    {/* The top-right "X" used to call resolveMutation, so a
+                        glance-and-dismiss click permanently resolved the alert for
+                        EVERYONE. Removed — use the explicit Acknowledge / Resolve
+                        actions below, which carry the right intent and audit. */}
                   </div>
 
                   {alert.recommended_actions?.length > 0 && (

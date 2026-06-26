@@ -11,6 +11,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { TrendingUp, TrendingDown, Users, Activity, AlertTriangle } from "lucide-react";
 import { format, subDays, eachDayOfInterval } from "date-fns";
+import { computeAge } from "@/components/oasis/oasisAnalytics";
 
 export default function PopulationTrendAnalyzer({ patients, visits, incidents }) {
   const [timeRange, setTimeRange] = useState("90");
@@ -82,7 +83,10 @@ export default function PopulationTrendAnalyzer({ patients, visits, incidents })
       const ageGroups = { "0-50": 0, "51-65": 0, "66-75": 0, "76-85": 0, "86+": 0 };
       patients.forEach(p => {
         if (!p.date_of_birth) return;
-        const age = new Date().getFullYear() - new Date(p.date_of_birth).getFullYear();
+        // Month/day-aware (and ISO-timezone-safe) — a bare year subtraction
+        // mis-buckets patients near their birthday.
+        const age = computeAge(p.date_of_birth);
+        if (Number.isNaN(age)) return;
         if (age <= 50) ageGroups["0-50"]++;
         else if (age <= 65) ageGroups["51-65"]++;
         else if (age <= 75) ageGroups["66-75"]++;

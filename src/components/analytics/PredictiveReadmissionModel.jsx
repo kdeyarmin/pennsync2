@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { AlertTriangle, TrendingUp, Users, Brain, Loader2 } from "lucide-react";
 import { differenceInDays } from "date-fns";
+import { computeAge } from "@/components/oasis/oasisAnalytics";
 import { toast } from 'sonner';
 
 export default function PredictiveReadmissionModel({ patients, visits, incidents }) {
@@ -56,9 +57,11 @@ export default function PredictiveReadmissionModel({ patients, visits, incidents
         riskFactors.push("Multiple comorbidities");
       }
 
-      // Age factor
+      // Age factor. Month/day-aware so the 75+ threshold doesn't flip on/off for
+      // months around a patient's birthday (a bare year subtraction over- or
+      // under-counts by a year depending on whether their birthday has passed).
       if (patient.date_of_birth) {
-        const age = new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear();
+        const age = computeAge(patient.date_of_birth);
         if (age >= 75) {
           riskScore += 10;
           riskFactors.push("Age 75+");
@@ -114,7 +117,7 @@ Patient ${idx + 1}:
 - Primary Diagnosis: ${r.patient.primary_diagnosis}
 - Risk Score: ${r.riskScore}/100
 - Risk Factors: ${r.riskFactors.join(", ")}
-- Age: ${r.patient.date_of_birth ? new Date().getFullYear() - new Date(r.patient.date_of_birth).getFullYear() : "Unknown"}
+- Age: ${r.patient.date_of_birth && !Number.isNaN(computeAge(r.patient.date_of_birth)) ? computeAge(r.patient.date_of_birth) : "Unknown"}
 - Living Situation: ${r.patient.social_history?.living_situation || "Unknown"}
 `).join("\n")}
 
