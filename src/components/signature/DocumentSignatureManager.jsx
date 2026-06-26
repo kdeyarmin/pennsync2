@@ -27,6 +27,30 @@ import {
 
 export default function DocumentSignatureManager({ documentId, documentType, patientId }) {
   const [expandedSignatures, setExpandedSignatures] = useState({});
+  const [downloadingCert, setDownloadingCert] = useState(null);
+
+  // Download the server-rendered Certificate of Completion PDF for a signature.
+  const downloadCertificate = async (signatureId) => {
+    setDownloadingCert(signatureId);
+    try {
+      const response = await base44.functions.invoke('generateSignatureCertificate', {
+        signature_id: signatureId,
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificate-of-completion-${signatureId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error('Failed to download certificate:', err);
+    } finally {
+      setDownloadingCert(null);
+    }
+  };
 
   // Fetch signatures for this document
   const { data: signatures = [], isLoading } = useQuery({
@@ -223,6 +247,18 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                   >
                     <Eye className="w-4 h-4" />
                     {expandedSignatures[signature.id] ? "Hide Details" : "View Details"}
+                  </Button>
+
+                  {/* Certificate of Completion (server-verified PDF) */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadCertificate(signature.id)}
+                    disabled={downloadingCert === signature.id}
+                    className="w-full justify-start gap-2 text-slate-600"
+                  >
+                    <FileCheck className="w-4 h-4" />
+                    {downloadingCert === signature.id ? "Generating…" : "Download Certificate"}
                   </Button>
 
                   {/* Expanded Details */}
