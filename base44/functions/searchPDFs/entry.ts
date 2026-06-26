@@ -1,30 +1,41 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Simple fuzzy match implementation
-function fuzzyMatch(text, query) {
-  const textLower = text.toLowerCase();
-  const queryLower = query.toLowerCase();
-  
-  // Exact match
-  if (textLower.includes(queryLower)) {
-    return { score: 100, matches: [query] };
+// ---- BM25 relevance ranking (algorithm mirrors src/lib/bm25.js, tested there) ----
+// BM25 weights term frequency by document length and term rarity (IDF), so a rare
+// clinical term that recurs in a short note outranks a common word in a long one —
+// a real improvement over the previous substring-or-fraction-of-words scoring.
+const TOKEN_RE = /[a-z0-9]+/g;
+function tokenize(text) {
+  return String(text || '').toLowerCase().match(TOKEN_RE) || [];
+}
+function buildBm25(docs, k1 = 1.5, b = 0.75) {
+  const N = docs.length;
+  const docTokens = docs.map((d) => tokenize(d.text));
+  const docLen = docTokens.map((t) => t.length);
+  const avgdl = N ? docLen.reduce((a, c) => a + c, 0) / N : 0;
+  const df = new Map();
+  for (const tokens of docTokens) {
+    for (const term of new Set(tokens)) df.set(term, (df.get(term) || 0) + 1);
   }
-  
-  // Word match
-  const queryWords = queryLower.split(/\s+/);
-  const textWords = textLower.split(/\s+/);
-  let matchedWords = 0;
-  const matches = [];
-  
-  queryWords.forEach(qWord => {
-    if (textWords.some(tWord => tWord.includes(qWord) || qWord.includes(tWord))) {
-      matchedWords++;
-      matches.push(qWord);
-    }
+  const tf = docTokens.map((tokens) => {
+    const m = new Map();
+    for (const t of tokens) m.set(t, (m.get(t) || 0) + 1);
+    return m;
   });
-  
-  const score = (matchedWords / queryWords.length) * 80;
-  return { score, matches };
+  return { N, docLen, avgdl, df, tf, k1, b };
+}
+function bm25Score(model, i, queryTerms) {
+  const { tf, docLen, avgdl, k1, b } = model;
+  let score = 0;
+  for (const term of queryTerms) {
+    const f = tf[i]?.get(term) || 0;
+    if (f === 0) continue;
+    const n = model.df.get(term) || 0;
+    const idf = Math.log(1 + (model.N - n + 0.5) / (n + 0.5));
+    const denom = f + k1 * (1 - b + b * (docLen[i] / (avgdl || 1)));
+    score += idf * (f * (k1 + 1)) / denom;
+  }
+  return score;
 }
 
 Deno.serve(async (req) => {
@@ -91,42 +102,53 @@ Deno.serve(async (req) => {
       limit * 2 // Fetch more to filter
     );
 
-    // Search and score results
+    // Search and score results with BM25 over the fetched corpus (IDF needs the
+    // whole set), plus exact-phrase and keyword boosts.
+    const queryLower = query.toLowerCase();
+    const qTerms = [...new Set(tokenize(query))];
+    const model = buildBm25(allDocs.map((d) => ({ text: d.extracted_text || '' })));
+
     const results = allDocs
-      .map(doc => {
-        const matchResult = fuzzyMatch(doc.extracted_text, query);
-        
-        // Also check keywords
-        const keywordMatches = doc.keywords?.filter(k => 
-          k.includes(query.toLowerCase()) || query.toLowerCase().includes(k)
+      .map((doc, i) => {
+        const bm = bm25Score(model, i, qTerms);
+        const matched = qTerms.filter((t) => (model.tf[i]?.get(t) || 0) > 0);
+        const textLower = (doc.extracted_text || '').toLowerCase();
+        const exactPhrase = Boolean(queryLower) && textLower.includes(queryLower);
+
+        const keywordMatches = doc.keywords?.filter((k) =>
+          k.includes(queryLower) || queryLower.includes(k)
         ) || [];
-        
-        // Boost score for keyword matches
-        const keywordBoost = keywordMatches.length * 10;
-        const totalScore = matchResult.score + keywordBoost;
-        
-        if (totalScore === 0 && !fuzzy) return null;
-        if (totalScore < 20 && fuzzy) return null;
-        
-        // Find page matches
+
+        // Composite relevance: BM25 + exact-phrase + keyword boosts.
+        const totalScore = bm + (exactPhrase ? 100 : 0) + keywordMatches.length * 5;
+
+        const hasAnyMatch = bm > 0 || exactPhrase || keywordMatches.length > 0;
+        const hasAllTerms = qTerms.length > 0 && matched.length === qTerms.length;
+        if (!hasAnyMatch) return null;
+        // Exact (non-fuzzy) mode requires the full phrase or every query term.
+        if (!fuzzy && !exactPhrase && !hasAllTerms) return null;
+
+        // Find page matches (substring / all-terms-present per page).
         const pageMatches = doc.page_contents
           ?.map(page => {
-            const pageMatch = fuzzyMatch(page.text, query);
-            if (pageMatch.score > 30) {
+            const pl = (page.text || '').toLowerCase();
+            const phraseHit = Boolean(queryLower) && pl.includes(queryLower);
+            const allTermsHit = qTerms.length > 0 && qTerms.every((t) => pl.includes(t));
+            if (phraseHit || allTermsHit) {
               return {
                 page_number: page.page_number,
-                score: pageMatch.score,
+                score: phraseHit ? 100 : 60,
                 snippet: extractSnippet(page.text, query)
               };
             }
             return null;
           })
           .filter(Boolean) || [];
-        
+
         return {
           ...doc,
-          search_score: totalScore,
-          matched_terms: [...matchResult.matches, ...keywordMatches],
+          search_score: Math.round(totalScore * 100) / 100,
+          matched_terms: [...new Set([...matched, ...keywordMatches])],
           page_matches: pageMatches,
           snippet: extractSnippet(doc.extracted_text, query)
         };
