@@ -12,6 +12,25 @@ export default function PersonnelApprovalsPanel({ items = [], currentUser }) {
 
   const decisionMutation = useMutation({
     mutationFn: async ({ item, status }) => {
+      // On approval, supersede any prior approved credential of the same type for
+      // this user (mirrors AdminCredentialApproval) — otherwise approving a renewal
+      // leaves two simultaneously-active rows for the same license.
+      if (status === 'approved') {
+        const prior = await base44.entities.PersonnelCredential.filter({
+          user_id: item.user_id,
+          title: item.title,
+          status: 'approved',
+        }).catch(() => []);
+        await Promise.all(
+          (prior || [])
+            .filter((old) => old.id !== item.id)
+            .map((old) => base44.entities.PersonnelCredential.update(old.id, {
+              status: 'expired',
+              notes: (old.notes || '') + `\n[Superseded by renewal on ${new Date().toISOString().slice(0, 10)}]`,
+            }))
+        );
+      }
+
       await base44.entities.PersonnelCredential.update(item.id, {
         status,
         approved_by: status === 'approved' ? currentUser.email : item.approved_by,
