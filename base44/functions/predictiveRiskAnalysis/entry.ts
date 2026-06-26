@@ -107,8 +107,12 @@ BASELINE VITALS:
 - Weight: ${patientData.baseline_vitals?.weight} lbs
 `;
 
-    // Generate risk analysis
-    const rawRiskAnalysis = await base44.integrations.Core.InvokeLLM({
+    // Generate risk analysis. Uses response_json_schema, so the structured object
+    // is returned directly. (Was assigned to `rawRiskAnalysis` while every use
+    // below referenced an undeclared `riskAnalysis` — a guaranteed ReferenceError
+    // that 500'd every call, so this clinical feature produced no risk scores or
+    // alerts at all.)
+    const riskAnalysis = await base44.integrations.Core.InvokeLLM({
       prompt: `You are an expert clinical risk assessment AI for home health/hospice care. Analyze this patient's comprehensive data to predict risk of adverse events and recommend preventative interventions.
 
 ${patientContext}

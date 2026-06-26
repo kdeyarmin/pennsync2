@@ -107,7 +107,10 @@ Deno.serve(async (req) => {
       // Current care plan interventions
       const currentInterventions = carePlans.flatMap(cp => cp.interventions || []);
 
-      // AI Analysis
+      // AI Analysis. The raw result must go through parseLLMJson (this function
+      // intentionally omits response_json_schema). Every use below referenced an
+      // undeclared `analysis` — a guaranteed ReferenceError that 500'd the run, so
+      // no CarePlanProposal/notification/alert was ever produced. Parse it here.
       const rawAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: `You are a clinical AI monitoring patient data to propose care plan updates when clinical thresholds are met.
 
@@ -214,6 +217,9 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
           }
         }
       });
+
+      // parseLLMJson tolerates both a returned object and raw/fenced JSON text.
+      const analysis = parseLLMJson(rawAnalysis) || {};
 
       if (analysis.requires_care_plan_update && analysis.findings?.length > 0) {
         // Create care plan proposal for each significant finding
