@@ -39,15 +39,17 @@ export default function AgencyAnalytics() {
     initialData: [],
   });
 
+  // Sibling Incident/ComplianceAudit/TrainingCompletion queries pass limits;
+  // these two didn't, capping agency stats and top-performers at 50 rows.
   const { data: users = [] } = useQuery({
     queryKey: ['all-users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => base44.entities.User.list('-created_date', 5000),
     initialData: [],
   });
 
   const { data: allPatients = [] } = useQuery({
     queryKey: ['all-patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-created_date', 5000),
     initialData: [],
   });
 

@@ -10,7 +10,8 @@ import { format } from "date-fns";
 export default function PDGMReimbursementReport({ dateRange }) {
   const { data: oasisAssessments = [] } = useQuery({
     queryKey: ['allOASISAssessments'],
-    queryFn: () => base44.entities.OASISAssessment.list(),
+    // Without a limit Base44 caps at 50, truncating the reimbursement totals.
+    queryFn: () => base44.entities.OASISAssessment.list('-created_date', 10000),
     initialData: [],
   });
 

@@ -67,7 +67,9 @@ export default function AnalyticsDashboard() {
   // Fetch note conversions
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['noteConversions', selectedUser, startDate, endDate],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date'),
+    // Without a limit Base44 returns only the 50 newest rows, so any selected date
+    // range older than those 50 showed zero/partial data and skewed the averages.
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
     select: (data) => data.filter(nc => {
       const ncDate = new Date(nc.created_date);
       const inDateRange = ncDate >= new Date(startDate) && ncDate <= new Date(endDate);
@@ -79,7 +81,7 @@ export default function AnalyticsDashboard() {
   // Fetch compliance audits
   const { data: complianceAudits = [] } = useQuery({
     queryKey: ['complianceAudits', selectedUser, startDate, endDate],
-    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date'),
+    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 10000),
     select: (data) => data.filter(ca => {
       const caDate = new Date(ca.audit_date || ca.created_date);
       const inDateRange = caDate >= new Date(startDate) && caDate <= new Date(endDate);
@@ -91,7 +93,7 @@ export default function AnalyticsDashboard() {
   // Fetch user activities
   const { data: userActivities = [] } = useQuery({
     queryKey: ['userActivities', selectedUser, startDate, endDate],
-    queryFn: () => base44.entities.UserActivity.list('-created_date'),
+    queryFn: () => base44.entities.UserActivity.list('-created_date', 10000),
     select: (data) => data.filter(ua => {
       const uaDate = new Date(ua.created_date);
       const inDateRange = uaDate >= new Date(startDate) && uaDate <= new Date(endDate);

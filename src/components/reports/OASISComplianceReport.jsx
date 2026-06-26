@@ -8,15 +8,16 @@ import { exportToPDF } from "../utils/pdfExporter";
 import { format } from "date-fns";
 
 export default function OASISComplianceReport({ dateRange }) {
+  // Without a limit Base44 caps at 50, truncating the compliance rates below.
   const { data: oasisAssessments = [] } = useQuery({
     queryKey: ['allOASISAssessments'],
-    queryFn: () => base44.entities.OASISAssessment.list(),
+    queryFn: () => base44.entities.OASISAssessment.list('-created_date', 10000),
     initialData: [],
   });
 
   const { data: complianceAudits = [] } = useQuery({
     queryKey: ['allComplianceAudits'],
-    queryFn: () => base44.entities.ComplianceAudit.list(),
+    queryFn: () => base44.entities.ComplianceAudit.list('-created_date', 10000),
     initialData: [],
   });
 

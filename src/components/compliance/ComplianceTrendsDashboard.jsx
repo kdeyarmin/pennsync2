@@ -44,13 +44,15 @@ export default function ComplianceTrendsDashboard() {
 
   const { data: users = [] } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => base44.entities.User.list('-created_date', 5000),
     initialData: [],
   });
 
   const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    // Namespaced + limited: the bare ['patients'] key collided with active-only
+    // ['patients'] queries elsewhere, and the missing limit capped trends at 50.
+    queryKey: ['patients', 'all', 5000],
+    queryFn: () => base44.entities.Patient.list('-created_date', 5000),
     initialData: [],
   });
 
