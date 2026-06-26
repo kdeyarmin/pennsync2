@@ -8,35 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Brain, CheckCircle2, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { optionsForItem, PAIN_FREQUENCY_OPTIONS } from "@/components/oasis/oasisScales";
 
-// OASIS-E ADL/IADL (M1800–M1870) scale. Was truncated to 0–3, so a nurse could
-// not record substantial/maximal assistance (4), dependent (5), or unable (6) —
-// understating impairment by up to two levels. Labels mirror the unified scale
-// this codebase already uses in referralExtraction.js.
-const FUNCTIONAL_OPTIONS = [
-  { value: "0", label: "0 – Independent" },
-  { value: "1", label: "1 – With assistive device" },
-  { value: "2", label: "2 – Minimal assistance from person" },
-  { value: "3", label: "3 – Moderate assistance from person" },
-  { value: "4", label: "4 – Substantial/maximal assistance" },
-  { value: "5", label: "5 – Dependent, does not participate" },
-  { value: "6", label: "6 – Unable to perform" },
-];
-
-const _PAIN_OPTIONS = Array.from({ length: 11 }, (_, i) => ({ value: String(i), label: String(i) }));
-
+// Each OASIS-E item uses its OWN valid range (M1810/M1845 = 0–3, M1850 = 0–5,
+// M1830/M1860 = 0–6) — see oasisScales.js. A single flat list either truncated the
+// 0–6 items or offered codes that don't exist for the 0–3/0–5 items.
 const QUICK_FIELDS = [
-  { key: "ambulation", label: "Ambulation (M1860)", options: FUNCTIONAL_OPTIONS },
-  { key: "bathing", label: "Bathing (M1830)", options: FUNCTIONAL_OPTIONS },
-  { key: "dressing_upper", label: "Dressing Upper (M1810)", options: FUNCTIONAL_OPTIONS },
-  { key: "transferring", label: "Transferring (M1850)", options: FUNCTIONAL_OPTIONS },
-  { key: "toileting", label: "Toileting (M1845)", options: FUNCTIONAL_OPTIONS },
-  { key: "pain_frequency", label: "Pain Frequency (M1242)", options: [
-    { value: "0", label: "0 – No pain" },
-    { value: "1", label: "1 – Less than daily" },
-    { value: "2", label: "2 – Daily, not constantly" },
-    { value: "3", label: "3 – All the time" },
-  ]},
+  { key: "ambulation", label: "Ambulation (M1860)", options: optionsForItem("m1860") },
+  { key: "bathing", label: "Bathing (M1830)", options: optionsForItem("m1830") },
+  { key: "dressing_upper", label: "Dressing Upper (M1810)", options: optionsForItem("m1810") },
+  { key: "transferring", label: "Transferring (M1850)", options: optionsForItem("m1850") },
+  { key: "toileting", label: "Toileting (M1845)", options: optionsForItem("m1845") },
+  { key: "pain_frequency", label: "Pain Frequency (M1242)", options: PAIN_FREQUENCY_OPTIONS },
 ];
 
 export default function OASISQuickUpdate({ patient, currentUser }) {
