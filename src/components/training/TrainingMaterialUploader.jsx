@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, Video, File, CheckCircle2, X } from "lucide-react";
+import { validateFileUpload } from "@/components/utils/security";
 
 export default function TrainingMaterialUploader({ _moduleId, existingContent, onUploadComplete }) {
   const [uploading, setUploading] = useState(false);
@@ -12,6 +13,21 @@ export default function TrainingMaterialUploader({ _moduleId, existingContent, o
   const [error, setError] = useState(null);
 
   const handleFileUpload = async (file, fileType) => {
+    // Validate type + size before uploading (the picker's accept is only a hint).
+    const check = validateFileUpload(file, {
+      maxSize: 200 * 1024 * 1024,
+      allowedTypes: [
+        'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo',
+        'application/pdf', 'image/png', 'image/jpeg', 'image/webp',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ],
+      allowedExtensions: ['.mp4', '.webm', '.mov', '.avi', '.pdf', '.png', '.jpg', '.jpeg', '.webp', '.doc', '.docx', '.ppt', '.pptx'],
+    });
+    if (!check.valid) { setError(check.error); return; }
+
     setUploading(true);
     setError(null);
 
