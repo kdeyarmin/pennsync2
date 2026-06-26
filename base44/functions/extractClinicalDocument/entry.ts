@@ -1,9 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// SSRF guard (mirrors indexPDF): only https URLs on public hosts, never internal
-// IPs / cloud metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict
-// to your storage host(s). The fetch ultimately happens provider-side via the
-// integration, so this is defense-in-depth for consistency with the rest of the app.
+// <<<BEGIN SHARED HELPER: isSafeFetchUrl — generated, edit base44/_shared/backendHelpers.mjs>>>
+// SSRF guard: only fetch https URLs on public hosts, never internal IPs /
+// metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
+// storage host(s).
 function isSafeFetchUrl(raw) {
   let u;
   try { u = new URL(String(raw)); } catch { return false; }
@@ -23,6 +23,7 @@ function isSafeFetchUrl(raw) {
   }
   return true;
 }
+// <<<END SHARED HELPER: isSafeFetchUrl>>>
 
 Deno.serve(async (req) => {
   try {
