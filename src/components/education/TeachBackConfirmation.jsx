@@ -19,12 +19,25 @@ import {
 } from "lucide-react";
 import { toast } from 'sonner';
 
+// Single source of truth for the overall teach-back level. The saved record and
+// the generated documentation note previously used DIFFERENT thresholds, so the
+// same encounter could be recorded "fair"/"poor" while the note read "adequate
+// understanding" — contradictory clinical documentation.
+export function computeOverallLevel(levels) {
+  const good = levels.filter(l => l === 'good').length;
+  const fair = levels.filter(l => l === 'fair').length;
+  if (good > levels.length / 2) return 'good';
+  if (good + fair > levels.length / 2) return 'fair';
+  return 'poor';
+}
+
 export default function TeachBackConfirmation({ material, patient, onRecorded }) {
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [responses, setResponses] = useState([]);
   const [currentResponse, setCurrentResponse] = useState("");
   const [understandingLevel, setUnderstandingLevel] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [overallLevel, setOverallLevel] = useState('');
   const [showQuestions, setShowQuestions] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -66,12 +79,10 @@ export default function TeachBackConfirmation({ material, patient, onRecorded })
     } else {
       setIsComplete(true);
       
-      // Calculate overall understanding
+      // Calculate overall understanding (shared with the documentation note).
       const levels = updatedResponses.map(r => r.understandingLevel);
-      const goodCount = levels.filter(l => l === 'good').length;
-      const fairCount = levels.filter(l => l === 'fair').length;
-      const overallLevel = goodCount > levels.length / 2 ? 'good' : 
-                          fairCount + goodCount > levels.length / 2 ? 'fair' : 'poor';
+      const overallLevel = computeOverallLevel(levels);
+      setOverallLevel(overallLevel);
 
       if (onRecorded) {
         onRecorded({
@@ -101,9 +112,12 @@ ${idx + 1}. Question: "${r.question}"
 `).join('')}
 
 OVERALL ASSESSMENT:
-Patient ${responses.filter(r => r.understandingLevel === 'good').length >= responses.length / 2 ? 
-  'demonstrated adequate understanding of material via teach-back method.' : 
-  'requires additional education. Follow-up teaching planned.'}
+Patient ${
+  overallLevel === 'good'
+    ? 'demonstrated adequate understanding of material via teach-back method.'
+    : overallLevel === 'fair'
+      ? 'demonstrated partial understanding; key points were reinforced and follow-up teaching planned.'
+      : 'requires additional education. Follow-up teaching planned.'}
 
 Nurse Signature: _______________________`;
 

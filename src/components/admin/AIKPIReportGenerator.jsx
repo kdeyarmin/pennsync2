@@ -38,7 +38,7 @@ export default function AIKPIReportGenerator() {
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patientsForKPI'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
     initialData: [],
   });
 

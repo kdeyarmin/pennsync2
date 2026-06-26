@@ -16,18 +16,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * sync with superAdmin.js when changing the owner.
  */
 
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
 const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
-
-const sameEmail = (a, b) =>
-  String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
-
-const isAdminLike = (u) =>
-  !!u && (
-    u.role === 'admin' ||
-    u.account_type === 'agency_admin' ||
-    u.account_type === 'super_admin' ||
-    sameEmail(u.email, SUPER_ADMIN_EMAIL)
-  );
+const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+const isAdminLike = (u) => !!u && (
+  u.role === 'admin' || u.account_type === 'agency_admin' ||
+  u.account_type === 'super_admin' || sameEmail(u.email, SUPER_ADMIN_EMAIL)
+);
+// <<<END SHARED HELPER: isAdminLike>>>
 
 const isPlainObject = (v) =>
   !!v && typeof v === 'object' && !Array.isArray(v);

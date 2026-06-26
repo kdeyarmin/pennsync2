@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { validateFileUpload } from "@/components/utils/security";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -67,7 +68,18 @@ export default function TrainingAttachmentManager({ course }) {
         </div>
         <div>
           <Label>Upload PDFs, regulatory docs, or images</Label>
-          <input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(e) => setFiles(e.target.files || [])} className="block mt-2 w-full text-sm" />
+          <input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(e) => {
+            const picked = Array.from(e.target.files || []);
+            // accept is only a UI hint; validate each file's type + size.
+            const opts = {
+              maxSize: 25 * 1024 * 1024,
+              allowedTypes: ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'],
+              allowedExtensions: ['.pdf', '.png', '.jpg', '.jpeg', '.webp'],
+            };
+            const bad = picked.map(f => validateFileUpload(f, opts)).find(r => !r.valid);
+            if (bad) { toast.error(bad.error); e.target.value = ''; setFiles([]); return; }
+            setFiles(e.target.files || []);
+          }} className="block mt-2 w-full text-sm" />
         </div>
         <Button className="w-full" disabled={uploadMutation.isPending || !files.length} onClick={() => uploadMutation.mutate()}>
           <Upload className="w-4 h-4 mr-2" />

@@ -10,6 +10,8 @@ test("timezoneForNumber resolves area codes across zones", () => {
   assert.equal(timezoneForNumber("+16025550100"), "America/Phoenix"); // 602 AZ
   assert.equal(timezoneForNumber("+14155550100"), "America/Los_Angeles"); // 415 SF
   assert.equal(timezoneForNumber("+18085550100"), "Pacific/Honolulu"); // 808 HI
+  // Regression: 915 (El Paso, TX) is Mountain time, not Central.
+  assert.equal(timezoneForNumber("+19155550100"), "America/Denver"); // 915 El Paso
 });
 
 test("timezoneForNumber returns null for unknown / malformed numbers", () => {

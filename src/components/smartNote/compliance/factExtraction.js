@@ -59,8 +59,12 @@ export function extractVitals(text) {
   const hrMatch = text.match(/(?:hr|heart\s*rate)\s*(\d{2,3})/i);
   if (hrMatch) vitals.hr = parseInt(hrMatch[1]);
 
+  // Allow the filler words nurses routinely write between the keyword and the
+  // value ("O2 sat 85%", "SpO2 of 86%", "pulse ox 88%", "O2 sat: 90%").
+  // Without this only the bare "O2 85%" form matched, so the severe-hypoxia
+  // escalation was silently missed for the most common SpO2 phrasings.
   const o2Match =
-    text.match(/(?:o2|spo2|oxygen)\s*(\d{2,3})\s*%/i) ||
+    text.match(/(?:o2|spo2|oxygen|pulse\s*ox)\s*(?:sat(?:uration)?)?\s*(?:of)?\s*:?\s*(\d{2,3})\s*%/i) ||
     text.match(/(\d{2,3})\s*%\s*(?:ra|on ra|o2|room air)/i);
   if (o2Match) vitals.o2 = parseInt(o2Match[1]);
 

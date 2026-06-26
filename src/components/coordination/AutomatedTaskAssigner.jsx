@@ -99,11 +99,18 @@ Focus on tasks that require specialized expertise or coordination.`,
       const tasksToCreate = selectedTasks.map(idx => suggestedTasks[idx]);
 
       for (const task of tasksToCreate) {
-        // Find appropriate assignee
-        const roleMatch = users.find(u => 
-          u.role === 'admin' || 
-          u.full_name?.toLowerCase().includes((task.assignee_role || '').toLowerCase())
-        );
+        // Find appropriate assignee. Previously this was a single find() whose
+        // first clause (u.role === 'admin') short-circuited true for the first
+        // admin in the list, so EVERY task landed on that admin; the second clause
+        // also matched the role title against full_name (wrong field). Match the
+        // requested role first (exact, then partial), and only fall back to an
+        // admin / any user when no role match exists.
+        const wantedRole = (task.assignee_role || '').toLowerCase().trim();
+        const roleMatch =
+          (wantedRole && users.find(u => (u.role || '').toLowerCase() === wantedRole)) ||
+          (wantedRole && users.find(u => (u.role || '').toLowerCase().includes(wantedRole))) ||
+          users.find(u => u.role === 'admin') ||
+          users[0];
 
         const timeframeMap = {
           'today': 'today',

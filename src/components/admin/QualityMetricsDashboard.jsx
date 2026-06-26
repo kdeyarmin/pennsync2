@@ -69,7 +69,9 @@ export default function QualityMetricsDashboard() {
 
   const { data: allPatients } = useQuery({
     queryKey: ['allPatientsMetrics'],
-    queryFn: () => base44.entities.Patient.list(),
+    // The sibling Visit/Incident/SecurityLog queries here pass limits; this one
+    // didn't, so patient-derived metrics were capped at Base44's default 50.
+    queryFn: () => base44.entities.Patient.list('-updated_date', 5000),
     initialData: [],
   });
 

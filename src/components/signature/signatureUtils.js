@@ -1,44 +1,36 @@
-export function generateSignatureHash(data) {
-  const str = JSON.stringify(data);
-  let hash = 0;
+import { base44 } from '@/api/base44Client';
 
-  for (let i = 0; i < str.length; i += 1) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash &= hash;
+/**
+ * Verify a signature's tamper-evidence MAC SERVER-SIDE.
+ *
+ * The previous client-side `verifySignatureIntegrity` recomputed a keyless 32-bit
+ * hash that anyone could forge, and read it from a top-level field the capture
+ * never wrote — so it provided no real assurance and reported every captured
+ * record as invalid. Verification now runs in the `signatureIntegrity` backend
+ * function, which recomputes the MAC over the stored record with a server-held
+ * secret and returns a verdict.
+ *
+ * @param {string} signatureId - DocumentSignature id
+ * @returns {Promise<{isValid: boolean, status: string, alg?: string, reason?: string}>}
+ */
+export async function verifySignatureIntegrityRemote(signatureId) {
+  if (!signatureId) return { isValid: false, status: 'unsigned' };
+  try {
+    const resp = await base44.functions.invoke('signatureIntegrity', {
+      action: 'verify',
+      signature_id: signatureId,
+    });
+    const data = resp?.data || {};
+    return {
+      isValid: Boolean(data.isValid),
+      status: data.status || (data.isValid ? 'valid' : 'tampered'),
+      alg: data.alg,
+      reason: data.reason,
+    };
+  } catch (err) {
+    console.error('Signature integrity verification failed:', err?.message);
+    return { isValid: false, status: 'error' };
   }
-
-  return Math.abs(hash).toString(16);
-}
-
-export function buildSignatureIntegrityPayload(signature) {
-  return {
-    document_type: signature.document_type,
-    document_id: signature.document_id,
-    document_title: signature.document_title,
-    signature_data: signature.signature_data,
-    signed_by: signature.signed_by,
-    signed_by_name: signature.signed_by_name,
-    signed_by_credentials: signature.signed_by_credentials,
-    signed_date: signature.signed_date,
-    ip_address: signature.ip_address,
-    location_data: signature.location_data,
-    user_agent: signature.user_agent,
-    attestation_accepted: signature.attestation_accepted,
-    attestation_text: signature.attestation_text,
-    signature_method: signature.signature_method,
-    device_type: signature.device_type,
-  };
-}
-
-export function verifySignatureIntegrity(signature) {
-  const calculatedHash = generateSignatureHash(buildSignatureIntegrityPayload(signature));
-
-  return {
-    isValid: calculatedHash === signature.signature_hash,
-    calculatedHash,
-    storedHash: signature.signature_hash,
-  };
 }
 
 export function getDocumentDisplayName(signatureRecord) {

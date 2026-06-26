@@ -308,8 +308,11 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
   }
 
   const scores = analysis.scores || {};
+  // Default each sub-score to 0 — if the AI omits one, the bare sum/avg renders
+  // "NaN%". (These fields aren't required in the LLM schema.)
   const avgScore = Math.round(
-    (scores.compliance_score + scores.completeness_score + scores.clarity_score + scores.pdgm_optimization_score) / 4
+    ((scores.compliance_score || 0) + (scores.completeness_score || 0) +
+     (scores.clarity_score || 0) + (scores.pdgm_optimization_score || 0)) / 4
   );
 
   return (

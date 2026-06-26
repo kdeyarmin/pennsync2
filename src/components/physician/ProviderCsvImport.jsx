@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Upload } from 'lucide-react';
 import { importProvidersCsv } from '@/functions/importProvidersCsv';
 import { toast } from 'sonner';
+import { validateFileUpload } from '@/components/utils/security';
 
 export default function ProviderCsvImport({ onImported }) {
   const inputRef = useRef(null);
@@ -12,6 +13,13 @@ export default function ProviderCsvImport({ onImported }) {
   const handleChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    const check = validateFileUpload(file, {
+      maxSize: 10 * 1024 * 1024,
+      allowedTypes: ['text/csv', 'application/vnd.ms-excel', 'text/plain', ''],
+      allowedExtensions: ['.csv'],
+    });
+    if (!check.valid) { toast.error(check.error); return; }
 
     setIsImporting(true);
     try {

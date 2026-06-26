@@ -12,7 +12,8 @@ import { format } from "date-fns";
 export default function ReferralVolumeReport({ dateRange }) {
   const { data: referrals = [] } = useQuery({
     queryKey: ['allReferrals'],
-    queryFn: () => base44.entities.Referral.list(),
+    // Without a limit Base44 caps at 50, truncating referral volume counts.
+    queryFn: () => base44.entities.Referral.list('-created_date', 10000),
     initialData: [],
   });
 

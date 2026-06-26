@@ -33,6 +33,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: "consent_status must be 'opted_in' or 'opted_out'." }, { status: 400 });
     }
 
+    // A consumer-initiated STOP (keyword_stop, captured by the inbound webhook) is
+    // a hard legal revocation — only the consumer can lift it by texting START.
+    // The send-gate resolves consent from the single newest row, so without this a
+    // staff-recorded manual opt-in would become "latest" and silently re-enable
+    // texting to a number that legally opted out (TCPA violation). Refuse it.
+    if (status === 'opted_in') {
+      const latest = await base44.asServiceRole.entities.SmsConsent
+        .filter({ phone_e164: phone }, '-captured_at', 1)
+        .catch(() => []);
+      if (latest[0]?.consent_status === 'opted_out' && latest[0]?.consent_source === 'keyword_stop') {
+        return Response.json({
+          error: 'This number sent STOP and must text START to re-subscribe; a manual opt-in cannot override a consumer opt-out.',
+          consent_status: 'opted_out',
+        }, { status: 409 });
+      }
+    }
+
     const row = await base44.asServiceRole.entities.SmsConsent.create({
       patient_id: body.patient_id || null,
       phone_e164: phone,

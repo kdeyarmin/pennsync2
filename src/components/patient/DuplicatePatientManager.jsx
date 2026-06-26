@@ -42,7 +42,7 @@ export default function DuplicatePatientManager() {
 
   const { data: patients = [], isLoading, refetch } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
   });
 
   const deleteMutation = useMutation({

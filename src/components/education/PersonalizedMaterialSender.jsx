@@ -69,14 +69,9 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
 
   const sendMutation = useMutation({
     mutationFn: async () => {
-      // Update usage count
-      await base44.entities.EducationMaterial.update(material.id, {
-        usage_count: (material.usage_count || 0) + 1,
-        last_used_date: new Date().toISOString()
-      });
-
-      // Create sent record
-      return base44.entities.SentEducationMaterial.create({
+      // Create the sent record FIRST, then bump usage_count — otherwise a failed
+      // create left the counter incremented for a send that never happened.
+      const sent = await base44.entities.SentEducationMaterial.create({
         material_id: material.id,
         material_title: material.title,
         patient_id: selectedPatientId,
@@ -87,6 +82,13 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
         delivery_method: deliveryMethod,
         notes: notes
       });
+
+      await base44.entities.EducationMaterial.update(material.id, {
+        usage_count: (material.usage_count || 0) + 1,
+        last_used_date: new Date().toISOString()
+      });
+
+      return sent;
     },
     onSuccess: () => {
       toast.success('Education material sent successfully');

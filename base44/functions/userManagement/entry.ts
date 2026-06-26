@@ -101,6 +101,12 @@ async function inviteUser(base44, currentUser, params, isAdmin) {
     return Response.json({ error: 'Email and full name are required' }, { status: 400 });
   }
 
+  // Same role model as updateUser: only 'admin' (facility admin) or 'user' (nurse)
+  // may be invited; super admin is an account_type, not granted via invitation.
+  if (role !== undefined && !(typeof role === 'string' && ['admin', 'user'].includes(role))) {
+    return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+  }
+
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -334,6 +340,17 @@ async function updateUser(base44, currentUser, params, isAdmin) {
   const { user_id, full_name, phone, credential_type, role } = params;
   if (!user_id) {
     return Response.json({ error: 'user_id is required' }, { status: 400 });
+  }
+
+  // The app's role model has three tiers: super admin, facility admin, nurse.
+  // Super admin is an account_type (managed via SuperAdminConfig/ensureSuperAdmin),
+  // NOT settable through this role field — which is exactly the privilege boundary
+  // we want. So the only assignable `role` values are the two the user-management
+  // UI offers: 'admin' (facility admin) and 'user' (nurse). Reject anything else
+  // rather than writing an arbitrary/garbage or privilege-implying role string.
+  const ASSIGNABLE_ROLES = new Set(['admin', 'user']);
+  if (role !== undefined && !(typeof role === 'string' && ASSIGNABLE_ROLES.has(role))) {
+    return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
   }
 
   // Only include fields that were actually provided so we never wipe values.

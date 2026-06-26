@@ -30,7 +30,12 @@ export default function PatientAlerts() {
   const [analysisResults, setAnalysisResults] = useState(null);
 
   const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
+    // Namespaced: this is the ACTIVE-only patient set. The bare ['patients'] key is
+    // also used by all-patients (Patient.list) queries elsewhere, so sharing it let
+    // React Query serve this active-only screen the full unfiltered roster (or vice
+    // versa) depending on mount order. A ['patients']-prefix invalidate still
+    // refreshes this key.
+    queryKey: ['patients', 'active'],
     queryFn: () => base44.entities.Patient.filter({ status: 'active' })
   });
 

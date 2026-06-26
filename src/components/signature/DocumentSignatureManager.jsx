@@ -22,11 +22,35 @@ import {
   getDocumentDisplayName,
   getNormalizedSignatureStatus,
   getSignatureSignedAt,
-  verifySignatureIntegrity,
+  verifySignatureIntegrityRemote,
 } from "./signatureUtils";
 
 export default function DocumentSignatureManager({ documentId, documentType, patientId }) {
   const [expandedSignatures, setExpandedSignatures] = useState({});
+  const [downloadingCert, setDownloadingCert] = useState(null);
+
+  // Download the server-rendered Certificate of Completion PDF for a signature.
+  const downloadCertificate = async (signatureId) => {
+    setDownloadingCert(signatureId);
+    try {
+      const response = await base44.functions.invoke('generateSignatureCertificate', {
+        signature_id: signatureId,
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificate-of-completion-${signatureId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error('Failed to download certificate:', err);
+    } finally {
+      setDownloadingCert(null);
+    }
+  };
 
   // Fetch signatures for this document
   const { data: signatures = [], isLoading } = useQuery({
@@ -50,13 +74,31 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
   });
 
   const documentLogs = useMemo(() => auditLogs.filter((log) => log.event_details?.document_id === documentId), [auditLogs, documentId]);
+
+  // Integrity verification runs server-side (the MAC + secret live on the server).
+  // Fetch a verdict per signature; the map keys verdicts by signature id.
+  const signatureIds = useMemo(() => signatures.map((s) => s.id), [signatures]);
+  const { data: integrityVerdicts = {} } = useQuery({
+    queryKey: ["signature-integrity", signatureIds],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        signatureIds.map(async (id) => [id, await verifySignatureIntegrityRemote(id)]),
+      );
+      return Object.fromEntries(entries);
+    },
+    initialData: {},
+    enabled: signatureIds.length > 0,
+  });
+
   const normalizedSignatures = useMemo(() => signatures.map((signature) => ({
     ...signature,
     normalizedStatus: getNormalizedSignatureStatus(signature),
     normalizedName: getDocumentDisplayName(signature),
     normalizedSignedAt: getSignatureSignedAt(signature),
-    integrity: verifySignatureIntegrity(signature),
-  })), [signatures]);
+    // Default to a non-valid "pending" verdict until the server check resolves, so
+    // the UI never claims "Verified" before verification has actually run.
+    integrity: integrityVerdicts[signature.id] || { isValid: false, status: 'pending' },
+  })), [signatures, integrityVerdicts]);
 
   const allSigned = normalizedSignatures.length > 0 && normalizedSignatures.every((signature) => signature.normalizedStatus === 'signed');
   const isPartiallyReviewed = normalizedSignatures.some((signature) => signature.reviewed_by);
@@ -140,7 +182,11 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
           </CardHeader>
           <CardContent className="space-y-3">
             {normalizedSignatures.map((signature) => (
-              <Card key={signature.id} className={`border ${signature.integrity.isValid ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
+              <Card key={signature.id} className={`border ${
+                signature.integrity.isValid ? "border-green-200 bg-green-50"
+                : signature.integrity.status === 'tampered' ? "border-red-200 bg-red-50"
+                : "border-slate-200 bg-slate-50"
+              }`}>
                 <CardContent className="p-4">
                   {/* Signature Header */}
                   <div className="flex items-start justify-between gap-2 mb-3">
@@ -159,8 +205,17 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Badge className={signature.integrity.isValid ? "bg-green-600" : "bg-red-600"}>
-                        {signature.integrity.isValid ? "Verified" : "Tampered"}
+                      <Badge className={
+                        signature.integrity.isValid ? "bg-green-600"
+                        : signature.integrity.status === 'tampered' ? "bg-red-600"
+                        : "bg-slate-500"
+                      }>
+                        {signature.integrity.isValid ? "Verified"
+                          : signature.integrity.status === 'tampered' ? "Tampered"
+                          : signature.integrity.status === 'pending' ? "Checking…"
+                          : signature.integrity.status === 'unsigned' ? "Not stamped"
+                          : signature.integrity.status === 'unverifiable' ? "Unverifiable"
+                          : "Unverified"}
                       </Badge>
                       {signature.device_type && (
                         <div className="flex items-center gap-1 text-xs text-slate-600">
@@ -192,6 +247,18 @@ export default function DocumentSignatureManager({ documentId, documentType, pat
                   >
                     <Eye className="w-4 h-4" />
                     {expandedSignatures[signature.id] ? "Hide Details" : "View Details"}
+                  </Button>
+
+                  {/* Certificate of Completion (server-verified PDF) */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadCertificate(signature.id)}
+                    disabled={downloadingCert === signature.id}
+                    className="w-full justify-start gap-2 text-slate-600"
+                  >
+                    <FileCheck className="w-4 h-4" />
+                    {downloadingCert === signature.id ? "Generating…" : "Download Certificate"}
                   </Button>
 
                   {/* Expanded Details */}

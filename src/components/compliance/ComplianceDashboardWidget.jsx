@@ -22,7 +22,7 @@ export default function ComplianceDashboardWidget() {
 
   const { data: patients = [] } = useQuery({
     queryKey: ['allPatients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
     initialData: [],
   });
 

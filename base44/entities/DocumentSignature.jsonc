@@ -185,6 +185,19 @@
       "type": "string",
       "description": "URL to the stamped/signed PDF artifact produced once all signatures are completed"
     },
+    "signature_hash": {
+      "type": "string",
+      "description": "Server-computed tamper-evidence MAC over the canonical signature payload (signers, dates, document identity). Set only by the signatureIntegrity backend function (action 'stamp'); never client-supplied."
+    },
+    "signature_hash_alg": {
+      "type": "string",
+      "description": "Algorithm for signature_hash: 'hmac-sha256' (keyed, forgery-resistant — SIGNATURE_HMAC_SECRET configured) or 'sha256-unkeyed' (fallback; detects accidental corruption only)."
+    },
+    "signature_hash_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When signature_hash was last computed by the server."
+    },
     "audit_trail": {
       "type": "array",
       "items": {

@@ -1,13 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import jsPDF from 'npm:jspdf@2.5.2';
 
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
+const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
+const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+const isAdminLike = (u) => !!u && (
+  u.role === 'admin' || u.account_type === 'agency_admin' ||
+  u.account_type === 'super_admin' || sameEmail(u.email, SUPER_ADMIN_EMAIL)
+);
+// <<<END SHARED HELPER: isAdminLike>>>
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
+    if (!isAdminLike(user)) {
+      return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
     const { reportType, dateRange, includeCharts = false } = await req.json();

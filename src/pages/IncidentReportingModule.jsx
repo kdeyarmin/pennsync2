@@ -66,7 +66,7 @@ export default function IncidentReportingModule() {
   const { data: myPatients = [] } = useQuery({
     queryKey: ['myPatients'],
     queryFn: async () => {
-      const allPatients = await base44.entities.Patient.list();
+      const allPatients = await base44.entities.Patient.list('-updated_date', 2000);
       return allPatients.filter(p => p.assigned_nurses?.includes(currentUser?.email));
     },
     enabled: !!currentUser,
@@ -81,7 +81,7 @@ export default function IncidentReportingModule() {
 
   const { data: patients = [] } = useQuery({
     queryKey: ['allPatients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
     initialData: [],
   });
 

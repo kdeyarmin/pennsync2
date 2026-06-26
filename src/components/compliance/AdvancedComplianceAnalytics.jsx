@@ -157,11 +157,16 @@ export default function AdvancedComplianceAnalytics({
             critical: 0,
             high: 0,
             medium: 0,
+            // 'low' is a valid severity in the auditor schema; without a counter
+            // here `categories[cat]['low']++` did `undefined++` and wrote low: NaN.
+            low: 0,
             affectedNurses: new Set(),
             trend: []
           };
         }
         categories[cat].count++;
+        // Guard against any unexpected severity so we never write a NaN counter.
+        if (categories[cat][issue.severity] === undefined) categories[cat][issue.severity] = 0;
         categories[cat][issue.severity || 'medium']++;
         categories[cat].affectedNurses.add(audit.nurse_email);
       });

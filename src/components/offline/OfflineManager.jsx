@@ -16,12 +16,13 @@ export default function OfflineManager() {
   const isDrainingRef = useRef(false);
 
   useEffect(() => {
-    const handleOnline = async () => {
-      setIsOnline(true);
-
+    // Drains the IndexedDB sync queue. Called both from the `online` event AND
+    // once on mount when already online — otherwise a visit queued offline in a
+    // prior session (tab closed before reconnect) never syncs, because no
+    // `online` event fires when the app simply loads already-connected.
+    const drainQueue = async () => {
       if (isDrainingRef.current) return;
       isDrainingRef.current = true;
-      toast.success('Back online! Syncing data...');
 
       let syncedCount = 0;
       try {
@@ -84,6 +85,12 @@ export default function OfflineManager() {
       }
     };
 
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast.success('Back online! Syncing data...');
+      drainQueue();
+    };
+
     const handleOffline = () => {
       setIsOnline(false);
       toast.warning('You are offline. Changes will be saved locally and synced when you reconnect.');
@@ -100,6 +107,11 @@ export default function OfflineManager() {
           savePatients(patients);
         })
         .catch(console.error);
+
+      // Drain any items left in the queue from a prior session. No `online` event
+      // fires when the app loads already-connected, so without this an offline
+      // visit captured last session would sit unsynced until the next reconnect.
+      drainQueue();
     }
 
     return () => {

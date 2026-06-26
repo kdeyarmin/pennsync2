@@ -21,6 +21,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { toast } from "sonner";
+import { validateFileUpload } from "@/components/utils/security";
 import { format, parseISO, differenceInDays, addMonths } from "date-fns";
 
 export default function CredentialRenewalPortal({ userId }) {
@@ -53,6 +54,13 @@ export default function CredentialRenewalPortal({ userId }) {
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const check = validateFileUpload(file, {
+      maxSize: 15 * 1024 * 1024,
+      allowedTypes: ['application/pdf', 'image/png', 'image/jpeg'],
+      allowedExtensions: ['.pdf', '.png', '.jpg', '.jpeg'],
+    });
+    if (!check.valid) { toast.error(check.error); return; }
 
     setUploading(true);
     try {

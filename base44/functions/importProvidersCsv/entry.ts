@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: isSafeFetchUrl — generated, edit base44/_shared/backendHelpers.mjs>>>
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
 // storage host(s).
@@ -22,6 +23,7 @@ function isSafeFetchUrl(raw) {
   }
   return true;
 }
+// <<<END SHARED HELPER: isSafeFetchUrl>>>
 
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
@@ -109,8 +111,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid or disallowed file_url' }, { status: 400 });
     }
 
-    const response = await fetch(file_url);
-    if (!response.ok) {
+    // Follow redirects manually so each hop is re-validated. With the default
+    // redirect:'follow', isSafeFetchUrl only checks the first URL and a 3xx to
+    // http://169.254.169.254/... or an internal IP would be fetched anyway.
+    let response;
+    let nextUrl = file_url;
+    for (let hop = 0; hop < 4; hop++) {
+      response = await fetch(nextUrl, { redirect: 'manual' });
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get('location');
+        if (!location) break;
+        const resolved = new URL(location, nextUrl).toString();
+        if (!isSafeFetchUrl(resolved)) {
+          return Response.json({ error: 'Redirect to a disallowed host blocked' }, { status: 400 });
+        }
+        nextUrl = resolved;
+        continue;
+      }
+      break;
+    }
+    if (!response || !response.ok) {
       return Response.json({ error: 'Unable to download CSV file' }, { status: 400 });
     }
 

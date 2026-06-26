@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { trackScribeUsage, trackAISuggestion } from "../utils/performanceTracking";
 import { toast } from 'sonner';
+import { validateFileUpload } from '@/components/utils/security';
 
 export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -125,9 +126,14 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setAudioFile(file);
-    }
+    if (!file) return;
+    const check = validateFileUpload(file, {
+      maxSize: 500 * 1024 * 1024,
+      allowedTypes: ['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'],
+      allowedExtensions: ['.webm', '.wav', '.mp3', '.mpeg', '.m4a', '.mp4', '.ogg'],
+    });
+    if (!check.valid) { toast.error(check.error); return; }
+    setAudioFile(file);
   };
 
   const handleTranscribe = async () => {

@@ -68,21 +68,30 @@ Deno.serve(async (req) => {
       discharged_count: 0,
       files_closed: 0,
       not_found: 0,
+      ambiguous: 0,
       discharged_patients: [],
       not_found_patients: [],
+      ambiguous_patients: [],
       errors: []
     };
 
-    // Create lookup maps
+    // Create lookup maps. The name map BUCKETS patients per name key: with
+    // last-write-wins a second "John Smith" would shadow the first, and a
+    // name-only discharge match would then silently discharge whichever patient
+    // happened to be iterated last — possibly the wrong John Smith. Bucketing lets
+    // us detect the ambiguity and refuse to guess (mirrors processPatientFileUpdate,
+    // which errors on >1 match). The discharge extraction schema carries no DOB, so
+    // MRN is the only available disambiguator.
     const mrnMap = new Map();
     const nameMap = new Map();
-    
+
     for (const patient of allPatients) {
       if (patient.medical_record_number) {
         mrnMap.set(patient.medical_record_number.trim().toLowerCase(), patient);
       }
       const nameKey = `${patient.first_name?.toLowerCase()}_${patient.last_name?.toLowerCase()}`;
-      nameMap.set(nameKey, patient);
+      if (!nameMap.has(nameKey)) nameMap.set(nameKey, []);
+      nameMap.get(nameKey).push(patient);
     }
 
     // Process each discharged patient with batching
@@ -102,7 +111,19 @@ Deno.serve(async (req) => {
 
         if (!matchingPatient && dischargeData.first_name && dischargeData.last_name) {
           const nameKey = `${dischargeData.first_name.toLowerCase()}_${dischargeData.last_name.toLowerCase()}`;
-          matchingPatient = nameMap.get(nameKey);
+          const candidates = nameMap.get(nameKey) || [];
+          if (candidates.length > 1) {
+            // Ambiguous name with no MRN to disambiguate — refuse to discharge a
+            // guess. Surface for manual review instead of mutating a chart.
+            results.ambiguous++;
+            results.ambiguous_patients.push({
+              name: `${dischargeData.first_name} ${dischargeData.last_name}`,
+              mrn: dischargeData.medical_record_number,
+              candidate_count: candidates.length,
+            });
+            continue;
+          }
+          matchingPatient = candidates[0] || null;
         }
 
         if (!matchingPatient) {

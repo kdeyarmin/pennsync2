@@ -321,10 +321,15 @@ ${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    const pdfFiles = files.filter(file => file.type === 'application/pdf');
-
-    if (pdfFiles.length !== files.length) {
+    const typeOk = files.filter(file => file.type === 'application/pdf');
+    if (typeOk.length !== files.length) {
       toast.error("Only PDF files are allowed");
+    }
+    // Size guard (was missing): reject oversized PDFs before they're uploaded.
+    const MAX_PDF_BYTES = 50 * 1024 * 1024;
+    const pdfFiles = typeOk.filter(file => file.size <= MAX_PDF_BYTES);
+    if (pdfFiles.length !== typeOk.length) {
+      toast.error("Each PDF must be 50MB or smaller");
     }
 
     const newFiles = pdfFiles.map(file => ({

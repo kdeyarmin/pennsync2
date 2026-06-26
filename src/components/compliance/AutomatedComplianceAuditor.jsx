@@ -130,10 +130,16 @@ Return JSON:
           }
         });
 
-        // Determine status based on score and issues
+        // Determine status based on score AND issues. A critical issue (e.g. a
+        // missing homebound statement — an automatic Medicare denial) must block
+        // regardless of the numeric score; previously escalation only ran inside
+        // the sub-threshold branch, so a high-scoring note with a critical
+        // violation was silently recorded as 'passed'.
         let status = 'passed';
-        if (auditResult.compliance_score < threshold) {
-          status = auditResult.issues?.some(i => i.severity === 'critical') ? 'critical' : 'flagged';
+        if (auditResult.issues?.some(i => i.severity === 'critical')) {
+          status = 'critical';
+        } else if (auditResult.compliance_score < threshold) {
+          status = 'flagged';
         }
 
         // Create audit record

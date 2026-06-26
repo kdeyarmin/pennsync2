@@ -39,6 +39,17 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, already_awarded: true, badges_awarded: 0, badges: [] });
     }
 
+    // Claim the attempt BEFORE awarding. The marker was previously written only at
+    // the very end, so two concurrent requests for the same attempt both passed the
+    // check above and double-bumped streak/courses/points (the UserBadge backstop
+    // only dedups badge rows, not the leaderboard increments). Writing it first
+    // shrinks the race window to near-zero. (Base44 has no conditional update, so
+    // this isn't a perfect CAS; a mid-run failure after this point forfeits this
+    // attempt's badges rather than risking a double award — the safer trade.)
+    await base44.entities.TrainingAttempt.update(attemptData.id, {
+      badges_processed_at: new Date().toISOString(),
+    }).catch((e) => console.error('Failed to claim attempt badges_processed_at:', e?.message));
+
     const badgesAwarded = [];
 
     // Get or create leaderboard entry
@@ -194,11 +205,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Mark the attempt processed so any replay short-circuits at the top. Done
-    // last so a mid-processing failure doesn't mark it done with no awards.
-    await base44.entities.TrainingAttempt.update(attemptData.id, {
-      badges_processed_at: new Date().toISOString(),
-    }).catch((e) => console.error('Failed to mark attempt badges_processed_at:', e?.message));
+    // (badges_processed_at is claimed up front, before any awards — see above.)
 
     return Response.json({
       success: true,

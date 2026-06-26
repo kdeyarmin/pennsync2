@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mic, Square, Upload, AlertCircle } from "lucide-react";
 import { toast } from 'sonner';
+import { validateFileUpload } from '@/components/utils/security';
 
 export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, onNoteGenerated }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -76,9 +77,14 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setAudioBlob(file);
-    }
+    if (!file) return;
+    const check = validateFileUpload(file, {
+      maxSize: 500 * 1024 * 1024,
+      allowedTypes: ['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'],
+      allowedExtensions: ['.webm', '.wav', '.mp3', '.mpeg', '.m4a', '.mp4', '.ogg'],
+    });
+    if (!check.valid) { toast.error(check.error); return; }
+    setAudioBlob(file);
   };
 
   const formatFileSize = (bytes) => {

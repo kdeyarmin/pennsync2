@@ -1,6 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { PDFDocument } from 'npm:pdf-lib@1.17.1';
+// unpdf is a serverless-friendly PDF text extractor (pdf.js under the hood) that
+// runs in Deno/edge — replaces the previous placeholder that stored "[Page N]"
+// stubs, so searchPDFs can finally match real document content.
+import { extractText, getDocumentProxy } from 'npm:unpdf@1.6.2';
 
+// <<<BEGIN SHARED HELPER: isSafeFetchUrl — generated, edit base44/_shared/backendHelpers.mjs>>>
 // SSRF guard: only fetch https URLs on public hosts, never internal IPs /
 // metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
 // storage host(s).
@@ -23,6 +27,7 @@ function isSafeFetchUrl(raw) {
   }
   return true;
 }
+// <<<END SHARED HELPER: isSafeFetchUrl>>>
 
 Deno.serve(async (req) => {
   try {
@@ -41,9 +46,26 @@ Deno.serve(async (req) => {
     } = await req.json();
 
     if (!pdf_url || !document_name) {
-      return Response.json({ 
-        error: 'Missing required fields: pdf_url, document_name' 
+      return Response.json({
+        error: 'Missing required fields: pdf_url, document_name'
       }, { status: 400 });
+    }
+
+    // Authorization: a PDFIndex row is access-controlled by its patient_id
+    // (searchPDFs scopes results on it). Without a check here a non-admin could
+    // index a PDF holding another patient's PHI under a patient THEY can read —
+    // surfacing it in their scope — and the pdf_url-keyed update branch below
+    // could clobber an index belonging to a scope they can't access. Mirror
+    // searchPDFs' patient-scope check for both the target and the existing row.
+    const isAdmin = user.role === 'admin';
+    const assertPatientAccess = async (pid) => {
+      if (!pid || isAdmin) return true;
+      const [p] = await base44.asServiceRole.entities.Patient.filter({ id: pid }).catch(() => []);
+      return Boolean(p) && (p.created_by === user.email
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.includes(user.email)));
+    };
+    if (!(await assertPatientAccess(patient_id))) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     if (!isSafeFetchUrl(pdf_url)) {
@@ -56,26 +78,19 @@ Deno.serve(async (req) => {
     }
     
     const pdfBytes = await response.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-    const pageCount = pdfDoc.getPageCount();
 
-    // Extract text from all pages
+    // Extract real, per-page text. mergePages:false returns one string per page.
+    const pdf = await getDocumentProxy(new Uint8Array(pdfBytes));
+    const { totalPages, text: perPageText } = await extractText(pdf, { mergePages: false });
+    const pageCount = totalPages || (Array.isArray(perPageText) ? perPageText.length : 0);
+    const pages = Array.isArray(perPageText) ? perPageText : [perPageText];
+
     const pageContents = [];
     let fullText = '';
-
     for (let i = 0; i < pageCount; i++) {
-      const page = pdfDoc.getPage(i);
-      
-      // Get text content from page
-      // Note: pdf-lib doesn't have built-in text extraction, so we'll use a workaround
-      // In a production environment, you'd use pdf-parse or similar
-      const textContent = `[Page ${i + 1} content]`;
-      
-      pageContents.push({
-        page_number: i + 1,
-        text: textContent
-      });
-      
+      // Collapse the whitespace pdf.js emits between text runs.
+      const textContent = String(pages[i] || '').replace(/\s+/g, ' ').trim();
+      pageContents.push({ page_number: i + 1, text: textContent });
       fullText += textContent + '\n';
     }
 
@@ -117,6 +132,10 @@ Deno.serve(async (req) => {
 
     let indexId;
     if (existingIndex.length > 0) {
+      // Don't let a caller overwrite an index scoped to a patient they can't access.
+      if (!(await assertPatientAccess(existingIndex[0].patient_id))) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
       await base44.asServiceRole.entities.PDFIndex.update(existingIndex[0].id, indexData);
       indexId = existingIndex[0].id;
     } else {

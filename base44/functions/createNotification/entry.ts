@@ -38,6 +38,34 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
+    // This endpoint is callable by any authenticated user (e.g. to notify admins
+    // of an account-deletion request), so the recipient must stay flexible — but
+    // that also means a caller could otherwise spoof a system alert to anyone with
+    // an arbitrary type and an EXTERNAL link (in-app + email phishing). Constrain
+    // the attacker-controlled fields: `type`/`priority` to their schema enums, and
+    // `action_url` to a relative in-app path (no absolute/external URLs).
+    const ALLOWED_TYPES = new Set([
+      'report_ready', 'compliance_alert', 'critical_alert', 'patient_alert',
+      'task_assigned', 'task_due_soon', 'new_referral', 'referral_urgent',
+      'training_due', 'system_update', 'message_received', 'sms_failed',
+      'sms_urgent', 'sms_received', 'fax_delivered', 'fax_failed', 'voicemail',
+      'info', 'expiration_warning', 'credential_expiration',
+      'admin_expiration_summary', 'care_plan_proposal', 'signature_request',
+    ]);
+    if (!ALLOWED_TYPES.has(type)) {
+      return Response.json({ error: 'Invalid notification type' }, { status: 400 });
+    }
+    const safePriority = ['low', 'medium', 'high', 'critical'].includes(priority) ? priority : 'medium';
+    // Reject anything that isn't a same-app relative path ("/Foo?x=1"). Protocol-
+    // relative ("//evil") and absolute ("https://evil") links are disallowed.
+    let safeActionUrl = action_url;
+    if (action_url != null) {
+      const a = String(action_url);
+      if (!a.startsWith('/') || a.startsWith('//')) {
+        return Response.json({ error: 'action_url must be a relative in-app path' }, { status: 400 });
+      }
+    }
+
     // If this is a patient-related notification, verify the recipient has charted on this patient
     if (patient_id && type !== 'compliance_alert' && type !== 'report_ready' && type !== 'training_due') {
       const chartedVisits = await base44.asServiceRole.entities.Visit.filter({
@@ -79,8 +107,8 @@ Deno.serve(async (req) => {
         title,
         message,
         type,
-        priority,
-        action_url,
+        priority: safePriority,
+        action_url: safeActionUrl,
         action_label,
         metadata,
         is_read: false,
@@ -128,7 +156,7 @@ Deno.serve(async (req) => {
       }
 
       // Send email if not in quiet hours or if critical priority
-      if (!inQuietHours || priority === 'critical') {
+      if (!inQuietHours || safePriority === 'critical') {
         try {
           await base44.asServiceRole.integrations.Core.SendEmail({
             to: user_email,
@@ -136,7 +164,7 @@ Deno.serve(async (req) => {
             body: `
               ${message}
               
-              ${action_url ? `\n\nView details: ${action_url}` : ''}
+              ${safeActionUrl ? `\n\nView details: ${safeActionUrl}` : ''}
               
               ---
               This notification was sent because you have email notifications enabled for this type of alert.

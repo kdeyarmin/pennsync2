@@ -34,7 +34,7 @@ export default function OASISReview() {
   // Fetch patients with pending OASIS reviews
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
   });
 
   // Fetch all OASIS uploads with AI suggestions

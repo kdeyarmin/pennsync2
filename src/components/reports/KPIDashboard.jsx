@@ -22,33 +22,36 @@ const KPI_COLOR_CLASSES = {
 };
 
 export default function KPIDashboard({ dateRange }) {
+  // Base44 list/filter silently cap at 50 rows when no limit is passed, so these
+  // KPI aggregates were computed over only the first 50 records — wrong totals and
+  // percentages for any agency with more. Pass the SDK's 5000/request max.
   const { data: referrals = [] } = useQuery({
     queryKey: ['allReferrals', dateRange],
-    queryFn: () => base44.entities.Referral.list(),
+    queryFn: () => base44.entities.Referral.list('-created_date', 5000),
     initialData: [],
   });
 
   const { data: patients = [] } = useQuery({
     queryKey: ['allPatients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-created_date', 5000),
     initialData: [],
   });
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['allNoteConversions', dateRange],
-    queryFn: () => base44.entities.NoteConversion.list(),
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 5000),
     initialData: [],
   });
 
   const { data: oasisAssessments = [] } = useQuery({
     queryKey: ['allOASISAssessments', dateRange],
-    queryFn: () => base44.entities.OASISAssessment.list(),
+    queryFn: () => base44.entities.OASISAssessment.list('-created_date', 5000),
     initialData: [],
   });
 
   const { data: complianceAudits = [] } = useQuery({
     queryKey: ['allComplianceAudits', dateRange],
-    queryFn: () => base44.entities.ComplianceAudit.list(),
+    queryFn: () => base44.entities.ComplianceAudit.list('-created_date', 5000),
     initialData: [],
   });
 

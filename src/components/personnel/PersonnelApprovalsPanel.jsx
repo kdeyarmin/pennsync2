@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { sendInAppNotification } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
@@ -11,6 +12,25 @@ export default function PersonnelApprovalsPanel({ items = [], currentUser }) {
 
   const decisionMutation = useMutation({
     mutationFn: async ({ item, status }) => {
+      // On approval, supersede any prior approved credential of the same type for
+      // this user (mirrors AdminCredentialApproval) — otherwise approving a renewal
+      // leaves two simultaneously-active rows for the same license.
+      if (status === 'approved') {
+        const prior = await base44.entities.PersonnelCredential.filter({
+          user_id: item.user_id,
+          title: item.title,
+          status: 'approved',
+        }).catch(() => []);
+        await Promise.all(
+          (prior || [])
+            .filter((old) => old.id !== item.id)
+            .map((old) => base44.entities.PersonnelCredential.update(old.id, {
+              status: 'expired',
+              notes: (old.notes || '') + `\n[Superseded by renewal on ${new Date().toISOString().slice(0, 10)}]`,
+            }))
+        );
+      }
+
       await base44.entities.PersonnelCredential.update(item.id, {
         status,
         approved_by: status === 'approved' ? currentUser.email : item.approved_by,
@@ -18,7 +38,7 @@ export default function PersonnelApprovalsPanel({ items = [], currentUser }) {
         rejection_reason: status === 'rejected' ? reasons[item.id] || '' : '',
       });
 
-      await base44.entities.Notification.create({
+      await sendInAppNotification({
         user_email: item.user_id,
         title: status === 'approved' ? 'Personnel file item approved' : 'Personnel file item needs correction',
         message: status === 'approved'
@@ -46,7 +66,7 @@ export default function PersonnelApprovalsPanel({ items = [], currentUser }) {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                <p className="text-sm text-slate-500">{item.user_name} • {item.item_type} • expires {new Date(item.expiration_date).toLocaleDateString()}</p>
+                <p className="text-sm text-slate-500">{item.user_name} • {item.item_type} • expires {item.expiration_date ? new Date(`${item.expiration_date}T00:00:00`).toLocaleDateString() : '—'}</p>
                 {item.uploaded_file_url && <a href={item.uploaded_file_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">Open uploaded copy</a>}
               </div>
               <PersonnelStatusBadge status={item.status} />

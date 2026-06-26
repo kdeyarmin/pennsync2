@@ -10,21 +10,23 @@ import { exportToPDF } from "../utils/pdfExporter";
 import { format } from "date-fns";
 
 export default function NursePerformanceReport({ dateRange }) {
+  // Base44 caps un-limited list() at 50 rows; these per-nurse aggregates need the
+  // full set or counts/averages are wrong and nurses go missing from the report.
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['allNoteConversions', dateRange.start, dateRange.end],
-    queryFn: () => base44.entities.NoteConversion.list(),
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
     initialData: [],
   });
 
   const { data: complianceAudits = [] } = useQuery({
     queryKey: ['allComplianceAudits', dateRange.start, dateRange.end],
-    queryFn: () => base44.entities.ComplianceAudit.list(),
+    queryFn: () => base44.entities.ComplianceAudit.list('-created_date', 10000),
     initialData: [],
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => base44.entities.User.list('-created_date', 5000),
     initialData: [],
   });
 

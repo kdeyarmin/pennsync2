@@ -44,9 +44,18 @@ export default function OASISTaskGenerator({
     if (!analysisResults) return;
 
     const tasks = [];
-    const now = new Date();
-    const tomorrow = new Date(now.setDate(now.getDate() + 1)).toISOString().split('T')[0];
-    const nextWeek = new Date(now.setDate(now.getDate() + 6)).toISOString().split('T')[0];
+    // setDate() mutates the receiver, so chaining off the same `now` made
+    // nextWeek = today+7 (the +6 was applied on top of the already-advanced
+    // tomorrow). Compute each offset from a fresh date.
+    // Local calendar date — toISOString() converts to UTC and would roll the due
+    // date a day late when generated in the evening in any US timezone.
+    const addDaysLocal = (n) => {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const tomorrow = addDaysLocal(1);
+    const nextWeek = addDaysLocal(6);
 
     // Critical accuracy issues
     if (analysisResults.accuracy_score < 70) {
