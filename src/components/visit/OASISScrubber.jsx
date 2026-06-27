@@ -5,6 +5,7 @@ import { invokeLLM } from "@/lib/invokeLLM";
 import { buildFunctionalPhrases, buildClinicalAlerts, getRiskColor, getImpactBadge } from "./oasisScrubberData";
 import { buildOASISScrubberPrompt, oasisScrubberResponseSchema } from "./oasisScrubberPrompt";
 import ClinicalAlertsPanel from "./ClinicalAlertsPanel";
+import ComorbiditiesSummary from "./ComorbiditiesSummary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -524,27 +525,10 @@ export default function OASISScrubber({
                   />
 
                   {/* Comorbidities Summary */}
-                  {extractedIndicators.comorbidities.count > 0 && (
-                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-green-900">Identified Comorbidities</span>
-                        <Badge className={`${
-                          extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
-                          extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-slate-500'
-                        }`}>
-                          {extractedIndicators.comorbidities.adjustment} adjustment
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {extractedIndicators.comorbidities.high.map((c, i) => (
-                          <Badge key={`h-${i}`} className="bg-green-600 text-white text-xs">{c.name}</Badge>
-                        ))}
-                        {extractedIndicators.comorbidities.low.map((c, i) => (
-                          <Badge key={`l-${i}`} variant="outline" className="text-xs">{c.name}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <ComorbiditiesSummary
+                    comorbidities={extractedIndicators.comorbidities}
+                    variant="compact"
+                  />
 
                   {/* Functional Phrases Summary */}
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-xs">
@@ -706,55 +690,10 @@ export default function OASISScrubber({
                       </Card>
 
                       {/* Comorbidities */}
-                      <Card className="border-green-200">
-                        <CardHeader className="py-3 bg-green-50">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-green-600" />
-                            Comorbidity Analysis
-                            <Badge className={`ml-auto ${
-                              extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
-                              extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-slate-500'
-                            }`}>
-                              {extractedIndicators.comorbidities.adjustment?.toUpperCase()} Adjustment
-                            </Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-green-50 p-3 rounded border border-green-200">
-                              <p className="text-xs font-semibold text-green-800 mb-2">High-Impact (1 = HIGH adj)</p>
-                              {extractedIndicators.comorbidities.high.length > 0 ? (
-                                <ul className="space-y-1">
-                                  {extractedIndicators.comorbidities.high.map((c, i) => (
-                                    <li key={i} className="text-sm flex items-center gap-2">
-                                      <CheckCircle2 className="w-3 h-3 text-green-600" />
-                                      <span className="text-green-900">{c.name}</span>
-                                      <span className="text-xs text-green-600">({c.icd10_codes?.join(', ')})</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p className="text-sm text-slate-500">None identified</p>
-                              )}
-                            </div>
-                            <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
-                              <p className="text-xs font-semibold text-yellow-800 mb-2">Low-Impact (2+ = LOW adj)</p>
-                              {extractedIndicators.comorbidities.low.length > 0 ? (
-                                <ul className="space-y-1">
-                                  {extractedIndicators.comorbidities.low.map((c, i) => (
-                                    <li key={i} className="text-sm flex items-center gap-2">
-                                      <CheckCircle2 className="w-3 h-3 text-yellow-600" />
-                                      <span className="text-yellow-900">{c.name}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p className="text-sm text-slate-500">None identified</p>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <ComorbiditiesSummary
+                        comorbidities={extractedIndicators.comorbidities}
+                        variant="expanded"
+                      />
 
                       {/* Clinical Indicators Detail */}
                       <Card>
